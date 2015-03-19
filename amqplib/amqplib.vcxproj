@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="io.h" />
     <ClInclude Include="socketio.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

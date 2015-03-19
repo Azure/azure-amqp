@@ -1,14 +1,14 @@
-#ifndef SOCKETIO_H
-#define SOCKETIO_H
+#ifndef IO_H
+#define IO_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#include "io.h"
+	typedef void* IO_HANDLE;
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* SOCKETIO_H */
+#endif /* IO_H */

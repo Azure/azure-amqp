@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="..\inc\io.h" />
     <ClInclude Include="..\inc\socketio.h" />
+    <ClInclude Include="amqplib.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\socketio_win32.c" />

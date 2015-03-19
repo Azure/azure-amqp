@@ -24,7 +24,7 @@
     <ClInclude Include="amqplib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="platform.h">
+    <ClInclude Include="..\inc\platform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

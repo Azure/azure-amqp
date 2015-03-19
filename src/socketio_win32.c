@@ -1,8 +1,10 @@
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "socketio.h"
+#include "winsock2.h"
+#include "ws2tcpip.h"
 #include "windows.h"
-#include "winsock.h"
 
 typedef struct SOCKET_IO_DATA_TAG
 {
@@ -29,6 +31,24 @@ IO_HANDLE socketio_create(void* config)
 			{
 				free(result);
 				result = NULL;
+			}
+			else
+			{
+				ADDRINFO* addrInfo;
+				char portString[16];
+
+				sprintf(portString, "%u", socket_io_config->port);
+				if (getaddrinfo(socket_io_config->hostname, portString, NULL, &addrInfo) != 0)
+				{
+
+				}
+				else
+				{
+					if (connect(result->socket, addrInfo->ai_addr, sizeof(*addrInfo->ai_addr)) != 0)
+					{
+
+					}
+				}
 			}
 		}
 	}

@@ -13,3 +13,4 @@
 *.idb
 *.obj
 *.tlog
+*.cache

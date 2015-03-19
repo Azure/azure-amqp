@@ -1,12 +1,34 @@
 #include <stdlib.h>
 #include "amqplib.h"
 #include "socketio.h"
+#include "platform.h"
 
 typedef struct AMQPLIB_DATA_TAG
 {
 	IO_HANDLE socket_io;
 	IO_HANDLE used_io;
 } AMQPLIB_DATA;
+
+int amqplib_init(void)
+{
+	int result;
+
+	if (platform_init())
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		result = 0;
+	}
+
+	return result;
+}
+
+void amqplib_deinit(void)
+{
+	platform_deinit();
+}
 
 AMQPLIB_HANDLE amqplib_create(const char* host, int port)
 {

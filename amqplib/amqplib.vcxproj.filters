@@ -35,5 +35,8 @@
     <ClCompile Include="..\src\amqplib.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\platform_win32.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -18,6 +18,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\amqplib.c" />
+    <ClCompile Include="..\src\platform_win32.c" />
     <ClCompile Include="..\src\socketio_win32.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

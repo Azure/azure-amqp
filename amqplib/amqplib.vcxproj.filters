@@ -29,5 +29,8 @@
     <ClCompile Include="..\src\socketio_win32.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="amqplib.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

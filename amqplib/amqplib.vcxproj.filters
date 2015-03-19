@@ -23,7 +23,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\socketio.c">
+    <ClCompile Include="..\src\socketio_win32.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

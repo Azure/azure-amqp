@@ -10,6 +10,12 @@ extern "C" {
 
 #include "io.h"
 
+typedef struct SOCKETIO_CONFIG_TAG
+{
+	const char* hostname;
+	int port;
+} SOCKETIO_CONFIG;
+
 extern IO_HANDLE socketio_create(void* config);
 extern void socketio_destroy(IO_HANDLE handle);
 extern void socketio_send(IO_HANDLE handle, const void* buffer, size_t size);

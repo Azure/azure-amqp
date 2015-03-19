@@ -14,6 +14,7 @@
     <ClInclude Include="..\inc\io.h" />
     <ClInclude Include="..\inc\socketio.h" />
     <ClInclude Include="amqplib.h" />
+    <ClInclude Include="platform.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\amqplib.c" />

@@ -10,6 +10,9 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="socketio.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{666A1F7D-0127-4C52-ACEC-16F3DF9E5CE2}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

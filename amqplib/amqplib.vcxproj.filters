@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="socketio.h">
+    <ClInclude Include="..\inc\io.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="io.h">
+    <ClInclude Include="..\inc\socketio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

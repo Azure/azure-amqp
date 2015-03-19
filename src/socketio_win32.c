@@ -7,6 +7,7 @@
 typedef struct SOCKET_IO_DATA_TAG
 {
 	SOCKET socket;
+	IO_RECEIVE_CALLBACK receive_callback;
 } SOCKET_IO_DATA;
 
 IO_HANDLE socketio_create(void* config)
@@ -24,7 +25,7 @@ IO_HANDLE socketio_create(void* config)
 		if (result != NULL)
 		{
 			result->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-			if (result->socket == NULL)
+			if (result->socket == INVALID_SOCKET)
 			{
 				free(result);
 				result = NULL;
@@ -40,6 +41,79 @@ void socketio_destroy(IO_HANDLE handle)
 	if (handle != NULL)
 	{
 		SOCKET_IO_DATA* socket_io_data = (SOCKET_IO_DATA*)handle;
+		/* we cannot do much if the close fails, so just ignore the result */
+		(void)closesocket(socket_io_data->socket);
 		free(handle);
 	}
+}
+
+int socketio_send(IO_HANDLE handle, const void* buffer, size_t size)
+{
+	int result;
+
+	if ((handle == NULL) ||
+		(buffer == NULL) ||
+		(size == 0))
+	{
+		/* Invalid arguments */
+		result = __LINE__;
+	}
+	else
+	{
+		result = 0;
+	}
+
+	return result;
+}
+
+int socketio_startreceive(IO_HANDLE handle, IO_RECEIVE_CALLBACK callback)
+{
+	int result;
+
+	if ((handle == NULL) ||
+		(callback == NULL))
+	{
+		/* Invalid arguments */
+		result = __LINE__;
+	}
+	else
+	{
+		SOCKET_IO_DATA* socket_io_data = (SOCKET_IO_DATA*)handle;
+
+		/* simply save the callback for later */
+		socket_io_data->receive_callback = callback;
+		result = 0;
+	}
+
+	return result;
+}
+
+int socketio_dowork(IO_HANDLE handle)
+{
+	int result;
+
+	if (handle == NULL)
+	{
+		/* Invalid arguments */
+		result = __LINE__;
+	}
+	else
+	{
+		SOCKET_IO_DATA* socket_io_data = (SOCKET_IO_DATA*)handle;
+		unsigned char c;
+		int received = 1;
+
+		while (received > 0)
+		{
+			received = recv(socket_io_data->socket, &c, 1, 0);
+			if (socket_io_data->receive_callback != NULL)
+			{
+				socket_io_data->receive_callback(handle, &c, 1);
+			}
+		}
+
+		result = 0;
+	}
+
+	return result;
 }

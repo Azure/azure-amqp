@@ -8,3 +8,8 @@
 *.sdf
 *.suo
 *.~vsdx
+*.lib
+*.pdb
+*.idb
+*.obj
+*.tlog

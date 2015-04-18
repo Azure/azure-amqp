@@ -54,6 +54,11 @@ void amqplib_deinit(void)
 
 static unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 
+static int connection_send_open(void)
+{
+	return 0;
+}
+
 static void connection_byte_received(AMQPLIB_DATA* amqp_lib, unsigned char b)
 {
 	switch (amqp_lib->connection_state)
@@ -76,6 +81,15 @@ static void connection_byte_received(AMQPLIB_DATA* amqp_lib, unsigned char b)
 					amqp_lib->connection_state = CONNECTION_STATE_HDR_EXCH;
 
 					/* handshake done, send open frame */
+					if (connection_send_open() != 0)
+					{
+						io_destroy(amqp_lib->used_io);
+						amqp_lib->connection_state = CONNECTION_STATE_END;
+					}
+					else
+					{
+						amqp_lib->connection_state = CONNECTION_STATE_OPEN_SENT;
+					}
 				}
 			}
 			break;

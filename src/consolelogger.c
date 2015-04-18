@@ -6,6 +6,6 @@ void consolelogger_log(char* format, ...)
 {
 	va_list args;
 	va_start(args, format);
-	(void)printf(format, args);
+	(void)vprintf(format, args);
 	va_end(args);
 }

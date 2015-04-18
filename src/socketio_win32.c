@@ -50,13 +50,17 @@ IO_HANDLE socketio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 				sprintf(portString, "%u", socket_io_config->port);
 				if (getaddrinfo(socket_io_config->hostname, portString, NULL, &addrInfo) != 0)
 				{
-
+					closesocket(result->socket);
+					free(result);
+					result = NULL;
 				}
 				else
 				{
 					if (connect(result->socket, addrInfo->ai_addr, sizeof(*addrInfo->ai_addr)) != 0)
 					{
-
+						closesocket(result->socket);
+						free(result);
+						result = NULL;
 					}
 				}
 			}

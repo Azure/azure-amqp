@@ -51,12 +51,17 @@ void amqplib_deinit(void)
 	platform_deinit();
 }
 
+static void connection_receive_callback(IO_HANDLE handle, const void* buffer, size_t size)
+{
+
+}
+
 AMQPLIB_HANDLE amqplib_create(const char* host, int port)
 {
 	AMQPLIB_DATA* result = malloc(sizeof(AMQPLIB_DATA));
 	if (result != NULL)
 	{
-		SOCKETIO_CONFIG socket_io_config = { host, port };
+		SOCKETIO_CONFIG socket_io_config = { host, port, connection_receive_callback };
 		result->socket_io = io_create(socketio_get_interface_description(), &socket_io_config, consolelogger_log);
 		result->connection_state = CONNECTION_STATE_START;
 
@@ -89,6 +94,7 @@ static int connection_sendheader(AMQPLIB_DATA* amqp_lib)
 	}
 	else
 	{
+		amqp_lib->connection_state = CONNECTION_STATE_HDR_SENT;
 		result = 0;
 	}
 

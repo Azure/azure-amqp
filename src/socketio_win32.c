@@ -20,7 +20,7 @@ static const IO_INTERFACE_DESCRIPTION socket_io_interface_description =
 	socketio_dowork
 };
 
-IO_HANDLE socketio_create(void* io_create_parameters, LOGGER_LOG logger_log)
+IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, LOGGER_LOG logger_log)
 {
 	SOCKETIO_CONFIG* socket_io_config = io_create_parameters;
 	SOCKET_IO_DATA* result;
@@ -36,6 +36,8 @@ IO_HANDLE socketio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 		{
 			result->receive_callback = NULL;
 			result->logger_log = logger_log;
+			result->receive_callback = receive_callback;
+
 			result->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (result->socket == INVALID_SOCKET)
 			{
@@ -107,30 +109,9 @@ int socketio_send(IO_HANDLE handle, const void* buffer, size_t size)
 			{
 				socket_io_data->logger_log("S%02x ", ((unsigned char*)buffer)[i]);
 			}
+
 			result = 0;
 		}
-	}
-
-	return result;
-}
-
-int socketio_startreceive(IO_HANDLE handle, IO_RECEIVE_CALLBACK callback)
-{
-	int result;
-
-	if ((handle == NULL) ||
-		(callback == NULL))
-	{
-		/* Invalid arguments */
-		result = __LINE__;
-	}
-	else
-	{
-		SOCKET_IO_DATA* socket_io_data = (SOCKET_IO_DATA*)handle;
-
-		/* simply save the callback for later */
-		socket_io_data->receive_callback = callback;
-		result = 0;
 	}
 
 	return result;

@@ -27,6 +27,9 @@
     <ClInclude Include="..\inc\amqplib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\logger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\socketio_win32.c">

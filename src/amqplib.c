@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include "io.h"
 #include "amqplib.h"
 #include "socketio.h"
 #include "platform.h"

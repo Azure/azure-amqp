@@ -11,6 +11,7 @@ typedef struct SOCKET_IO_DATA_TAG
 	SOCKET socket;
 	IO_RECEIVE_CALLBACK receive_callback;
 	LOGGER_LOG logger_log;
+	void* context;
 } SOCKET_IO_DATA;
 
 static const IO_INTERFACE_DESCRIPTION socket_io_interface_description = 
@@ -20,7 +21,7 @@ static const IO_INTERFACE_DESCRIPTION socket_io_interface_description =
 	socketio_dowork
 };
 
-IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, LOGGER_LOG logger_log)
+IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log)
 {
 	SOCKETIO_CONFIG* socket_io_config = io_create_parameters;
 	SOCKET_IO_DATA* result;
@@ -37,6 +38,7 @@ IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receiv
 			result->receive_callback = NULL;
 			result->logger_log = logger_log;
 			result->receive_callback = receive_callback;
+			result->context = context;
 
 			result->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (result->socket == INVALID_SOCKET)

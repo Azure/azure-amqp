@@ -8,13 +8,13 @@ typedef struct IO_DATA_TAG
 	IO_HANDLE concrete_io_handle;
 } IO_DATA;
 
-IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, LOGGER_LOG logger_log)
+IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log)
 {
 	IO_DATA* io_data = (IO_DATA*)malloc(sizeof(IO_DATA));
 	if (io_data != NULL)
 	{
 		io_data->io_interface_description = io_interface_description;
-		io_data->concrete_io_handle = io_data->io_interface_description->io_create(io_create_parameters, receive_callback, logger_log);
+		io_data->concrete_io_handle = io_data->io_interface_description->io_create(io_create_parameters, receive_callback, context, logger_log);
 	}
 	return (IO_HANDLE)io_data;
 }

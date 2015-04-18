@@ -26,6 +26,7 @@ IO_HANDLE socketio_create(void* config)
 		result = malloc(sizeof(SOCKET_IO_DATA));
 		if (result != NULL)
 		{
+			result->receive_callback = NULL;
 			result->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (result->socket == INVALID_SOCKET)
 			{

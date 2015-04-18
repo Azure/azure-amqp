@@ -10,7 +10,7 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		amqplib_handle = amqplib_create("localhost", 5671);
+		amqplib_handle = amqplib_create("127.0.0.1", 5671);
 
 		while (1)
 		{

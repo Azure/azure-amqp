@@ -6,8 +6,17 @@ extern "C" {
 #endif /* __cplusplus */
 
 	typedef void* IO_HANDLE;
-	typedef void(*IO_RECEIVE_CALLBACK)(IO_HANDLE handle, const void* buffer, size_t size);
+	typedef IO_HANDLE(*IO_CREATE)(void* io_create_parameters);
 	typedef int(*IO_SEND)(IO_HANDLE handle, const void* buffer, size_t size);
+	typedef int(*IO_DOWORK)(IO_HANDLE handle);
+	typedef void(*IO_RECEIVE_CALLBACK)(IO_HANDLE handle, const void* buffer, size_t size);
+
+	typedef struct IO_INTERFACE_DESCRIPTION_TAG
+	{
+		IO_CREATE io_create;
+		IO_SEND io_send;
+		IO_DOWORK io_dowork;
+	} IO_INTERFACE_DESCRIPTION;
 
 	int io_send(IO_HANDLE handle, const void* buffer, size_t size);
 

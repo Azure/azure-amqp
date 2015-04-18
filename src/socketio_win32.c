@@ -12,6 +12,13 @@ typedef struct SOCKET_IO_DATA_TAG
 	IO_RECEIVE_CALLBACK receive_callback;
 } SOCKET_IO_DATA;
 
+static const IO_INTERFACE_DESCRIPTION socket_io_interface_description = 
+{
+	socketio_create,
+	socketio_send,
+	socketio_dowork
+};
+
 IO_HANDLE socketio_create(void* config)
 {
 	SOCKETIO_CONFIG* socket_io_config = config;
@@ -137,4 +144,9 @@ int socketio_dowork(IO_HANDLE handle)
 	}
 
 	return result;
+}
+
+const IO_INTERFACE_DESCRIPTION* socketio_get_interface_description(void)
+{
+	return &socket_io_interface_description;
 }

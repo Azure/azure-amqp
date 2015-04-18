@@ -1,6 +1,8 @@
 #ifndef IO_H
 #define IO_H
 
+#include "logger.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -18,7 +20,8 @@ extern "C" {
 		IO_DOWORK io_dowork;
 	} IO_INTERFACE_DESCRIPTION;
 
-	int io_send(IO_HANDLE handle, const void* buffer, size_t size);
+	extern IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, void* io_create_parameters, LOGGER_LOG logger_log);
+	extern int io_send(IO_HANDLE handle, const void* buffer, size_t size);
 
 #ifdef __cplusplus
 }

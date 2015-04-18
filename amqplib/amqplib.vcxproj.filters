@@ -41,7 +41,7 @@
     <ClCompile Include="..\src\platform_win32.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\io.c">
+    <ClCompile Include="..\src\io.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

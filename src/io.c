@@ -6,14 +6,16 @@ typedef struct IO_DATA_TAG
 {
 	const IO_INTERFACE_DESCRIPTION* io_interface_description;
 	IO_HANDLE concrete_io_handle;
+	LOGGER_LOG logger_log;
 } IO_DATA;
 
-IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, void* io_create_parameters)
+IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, void* io_create_parameters, LOGGER_LOG logger_log)
 {
 	IO_DATA* io_data = (IO_DATA*)malloc(sizeof(IO_DATA));
 	if (io_data != NULL)
 	{
 		io_data->io_interface_description = io_interface_description;
+		io_data->logger_log = logger_log;
 		io_data->concrete_io_handle = io_data->io_interface_description->io_create(io_create_parameters);
 	}
 	return (IO_HANDLE)io_data;

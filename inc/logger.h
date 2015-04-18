@@ -5,7 +5,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-	typedef void(*logger_log)(char* format, ...);
+	typedef void(*LOGGER_LOG)(char* format, ...);
 
 #ifdef __cplusplus
 }

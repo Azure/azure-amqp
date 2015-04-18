@@ -9,20 +9,23 @@ extern "C" {
 
 	typedef void* IO_HANDLE;
 	
-	typedef void(*IO_RECEIVE_CALLBACK)(IO_HANDLE handle, const void* buffer, size_t size);
+	typedef void(*IO_RECEIVE_CALLBACK)(IO_HANDLE handle, void* context, const void* buffer, size_t size);
 
-	typedef IO_HANDLE(*IO_CREATE)(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* conext, LOGGER_LOG logger_log);
-	typedef int(*IO_SEND)(IO_HANDLE handle, const void* buffer, size_t size);
-	typedef int(*IO_DOWORK)(IO_HANDLE handle);
+	typedef IO_HANDLE (*IO_CREATE)(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* conext, LOGGER_LOG logger_log);
+	typedef void(*IO_DESTROY)(IO_HANDLE handle);
+	typedef int (*IO_SEND)(IO_HANDLE handle, const void* buffer, size_t size);
+	typedef int (*IO_DOWORK)(IO_HANDLE handle);
 
 	typedef struct IO_INTERFACE_DESCRIPTION_TAG
 	{
 		IO_CREATE io_create;
+		IO_DESTROY io_destroy;
 		IO_SEND io_send;
 		IO_DOWORK io_dowork;
 	} IO_INTERFACE_DESCRIPTION;
 
 	extern IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log);
+	extern void io_destroy(IO_HANDLE handle);
 	extern int io_send(IO_HANDLE handle, const void* buffer, size_t size);
 	extern int io_dowork(IO_HANDLE handle);
 

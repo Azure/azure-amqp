@@ -17,6 +17,7 @@ typedef struct SOCKET_IO_DATA_TAG
 static const IO_INTERFACE_DESCRIPTION socket_io_interface_description = 
 {
 	socketio_create,
+	socketio_destroy,
 	socketio_send,
 	socketio_dowork
 };
@@ -143,7 +144,7 @@ int socketio_dowork(IO_HANDLE handle)
 
 				if (socket_io_data->receive_callback != NULL)
 				{
-					socket_io_data->receive_callback(handle, &c, 1);
+					socket_io_data->receive_callback(handle, socket_io_data->context, &c, 1);
 				}
 			}
 		}

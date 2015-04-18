@@ -27,6 +27,7 @@ typedef struct AMQPLIB_DATA_TAG
 {
 	IO_HANDLE socket_io;
 	IO_HANDLE used_io;
+	size_t header_bytes_received;
 	CONNECTION_STATE connection_state;
 } AMQPLIB_DATA;
 
@@ -51,6 +52,8 @@ void amqplib_deinit(void)
 	platform_deinit();
 }
 
+static unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
 static void connection_byte_received(AMQPLIB_DATA* amqp_lib, unsigned char b)
 {
 	switch (amqp_lib->connection_state)
@@ -59,6 +62,22 @@ static void connection_byte_received(AMQPLIB_DATA* amqp_lib, unsigned char b)
 			break;
 
 		case CONNECTION_STATE_HDR_SENT:
+			if (b != amqp_header[amqp_lib->header_bytes_received])
+			{
+				/* close connection */
+				io_destroy(amqp_lib->used_io);
+				amqp_lib->connection_state = CONNECTION_STATE_END;
+			}
+			else
+			{
+				amqp_lib->header_bytes_received++;
+				if (amqp_lib->header_bytes_received == sizeof(amqp_header))
+				{
+					amqp_lib->connection_state = CONNECTION_STATE_HDR_EXCH;
+
+					/* handshake done, send open frame */
+				}
+			}
 			break;
 	}
 }
@@ -68,7 +87,7 @@ static void connection_receive_callback(IO_HANDLE handle, void* context, const v
 	size_t i;
 	for (i = 0; i < size; i++)
 	{
-		connection_byte_received(handle, ((unsigned char*)buffer)[i]);
+		connection_byte_received((AMQPLIB_DATA*)context, ((unsigned char*)buffer)[i]);
 	}
 }
 
@@ -79,10 +98,19 @@ AMQPLIB_HANDLE amqplib_create(const char* host, int port)
 	{
 		SOCKETIO_CONFIG socket_io_config = { host, port };
 		result->socket_io = io_create(socketio_get_interface_description(), &socket_io_config, connection_receive_callback, result, consolelogger_log);
-		result->connection_state = CONNECTION_STATE_START;
+		if (result->socket_io == NULL)
+		{
+			free(result);
+			result = NULL;
+		}
+		else
+		{
+			result->connection_state = CONNECTION_STATE_START;
+			result->header_bytes_received = 0;
 
-		/* For now directly talk to the socket IO. By doing this there is no SASL, no SSL, pure AMQP only */
-		result->used_io = result->socket_io;
+			/* For now directly talk to the socket IO. By doing this there is no SASL, no SSL, pure AMQP only */
+			result->used_io = result->socket_io;
+		}
 	}
 
 	return result;
@@ -93,7 +121,7 @@ void amqplib_destroy(AMQPLIB_HANDLE handle)
 	if (handle != NULL)
 	{
 		AMQPLIB_DATA* amqp_lib = (AMQPLIB_DATA*)handle;
-		socketio_destroy(amqp_lib->socket_io);
+		io_destroy(amqp_lib->socket_io);
 		free(handle);
 	}
 }
@@ -101,9 +129,8 @@ void amqplib_destroy(AMQPLIB_HANDLE handle)
 static int connection_sendheader(AMQPLIB_DATA* amqp_lib)
 {
 	int result;
-	unsigned char header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 
-	if (io_send(amqp_lib->used_io, header, sizeof(header)) != 0)
+	if (io_send(amqp_lib->used_io, amqp_header, sizeof(amqp_header)) != 0)
 	{
 		result = __LINE__;
 	}

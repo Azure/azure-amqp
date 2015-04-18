@@ -87,8 +87,7 @@ static int connection_sendheader(AMQPLIB_DATA* amqp_lib)
 	int result;
 	unsigned char header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 
-	int bytes_sent = io_send(amqp_lib->used_io, header, sizeof(header));
-	if (bytes_sent != sizeof(header))
+	if (io_send(amqp_lib->used_io, header, sizeof(header)) != 0)
 	{
 		result = __LINE__;
 	}
@@ -134,7 +133,7 @@ int amqplib_dowork(AMQPLIB_HANDLE handle)
 		result = connection_dowork(amqp_lib);
 		if (result == 0)
 		{
-			result = socketio_dowork(amqp_lib->socket_io);
+			result = io_dowork(amqp_lib->socket_io);
 		}
 	}
 

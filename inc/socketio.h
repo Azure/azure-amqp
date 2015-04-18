@@ -21,6 +21,7 @@ extern IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK
 extern void socketio_destroy(IO_HANDLE handle);
 extern int socketio_send(IO_HANDLE handle, const void* buffer, size_t size);
 extern int socketio_dowork(IO_HANDLE handle);
+extern const IO_INTERFACE_DESCRIPTION* socketio_get_interface_description(void);
 
 #ifdef __cplusplus
 }

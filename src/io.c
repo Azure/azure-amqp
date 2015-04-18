@@ -35,3 +35,20 @@ int io_send(IO_HANDLE handle, const void* buffer, size_t size)
 
 	return result;
 }
+
+int io_dowork(IO_HANDLE handle)
+{
+	int result;
+
+	if (handle == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		IO_DATA* io_data = (IO_DATA*)handle;
+		result = io_data->io_interface_description->io_dowork(io_data->concrete_io_handle);
+	}
+
+	return result;
+}

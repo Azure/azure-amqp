@@ -10,6 +10,7 @@ typedef struct SOCKET_IO_DATA_TAG
 {
 	SOCKET socket;
 	IO_RECEIVE_CALLBACK receive_callback;
+	LOGGER_LOG logger_log;
 } SOCKET_IO_DATA;
 
 static const IO_INTERFACE_DESCRIPTION socket_io_interface_description = 
@@ -34,6 +35,7 @@ IO_HANDLE socketio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 		if (result != NULL)
 		{
 			result->receive_callback = NULL;
+			result->logger_log = logger_log;
 			result->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (result->socket == INVALID_SOCKET)
 			{
@@ -88,7 +90,21 @@ int socketio_send(IO_HANDLE handle, const void* buffer, size_t size)
 	}
 	else
 	{
-		result = 0;
+		SOCKET_IO_DATA* socket_io_data = (SOCKET_IO_DATA*)handle;
+		int send_result = send(socket_io_data->socket, buffer, size, 0);
+		if (send_result != size)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			size_t i;
+			for (i = 0; i < size; i++)
+			{
+				socket_io_data->logger_log("S%02x ", ((unsigned char*)buffer)[i]);
+			}
+			result = 0;
+		}
 	}
 
 	return result;
@@ -134,9 +150,14 @@ int socketio_dowork(IO_HANDLE handle)
 		while (received > 0)
 		{
 			received = recv(socket_io_data->socket, &c, 1, 0);
-			if (socket_io_data->receive_callback != NULL)
+			if (received > 0)
 			{
-				socket_io_data->receive_callback(handle, &c, 1);
+				socket_io_data->logger_log("R%02x ", (unsigned char)c);
+
+				if (socket_io_data->receive_callback != NULL)
+				{
+					socket_io_data->receive_callback(handle, &c, 1);
+				}
 			}
 		}
 

@@ -15,7 +15,6 @@ typedef struct SOCKETIO_CONFIG_TAG
 {
 	const char* hostname;
 	int port;
-	IO_RECEIVE_CALLBACK receiveCallback;
 } SOCKETIO_CONFIG;
 
 extern IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, LOGGER_LOG logger_log);

@@ -61,8 +61,8 @@ AMQPLIB_HANDLE amqplib_create(const char* host, int port)
 	AMQPLIB_DATA* result = malloc(sizeof(AMQPLIB_DATA));
 	if (result != NULL)
 	{
-		SOCKETIO_CONFIG socket_io_config = { host, port, connection_receive_callback };
-		result->socket_io = io_create(socketio_get_interface_description(), &socket_io_config, consolelogger_log);
+		SOCKETIO_CONFIG socket_io_config = { host, port };
+		result->socket_io = io_create(socketio_get_interface_description(), &socket_io_config, connection_receive_callback, consolelogger_log);
 		result->connection_state = CONNECTION_STATE_START;
 
 		/* For now directly talk to the socket IO. By doing this there is no SASL, no SSL, pure AMQP only */

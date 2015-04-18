@@ -22,7 +22,7 @@ extern "C" {
 		IO_DOWORK io_dowork;
 	} IO_INTERFACE_DESCRIPTION;
 
-	extern IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, void* io_create_parameters, LOGGER_LOG logger_log);
+	extern IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, LOGGER_LOG logger_log);
 	extern int io_send(IO_HANDLE handle, const void* buffer, size_t size);
 	const IO_INTERFACE_DESCRIPTION* socketio_get_interface_description(void);
 

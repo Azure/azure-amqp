@@ -11,10 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\inc\amqplib.h" />
     <ClInclude Include="..\inc\io.h" />
     <ClInclude Include="..\inc\platform.h" />
     <ClInclude Include="..\inc\socketio.h" />
-    <ClInclude Include="amqplib.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\amqplib.c" />

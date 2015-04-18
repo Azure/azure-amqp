@@ -21,10 +21,10 @@
     <ClInclude Include="..\inc\socketio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="amqplib.h">
+    <ClInclude Include="..\inc\platform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\inc\platform.h">
+    <ClInclude Include="..\inc\amqplib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

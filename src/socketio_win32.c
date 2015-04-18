@@ -19,9 +19,9 @@ static const IO_INTERFACE_DESCRIPTION socket_io_interface_description =
 	socketio_dowork
 };
 
-IO_HANDLE socketio_create(void* config)
+IO_HANDLE socketio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 {
-	SOCKETIO_CONFIG* socket_io_config = config;
+	SOCKETIO_CONFIG* socket_io_config = io_create_parameters;
 	SOCKET_IO_DATA* result;
 
 	if (socket_io_config == NULL)

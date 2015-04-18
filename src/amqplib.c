@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "io.h"
+#include "consolelogger.h"
 #include "amqplib.h"
 #include "socketio.h"
 #include "platform.h"
@@ -56,7 +57,7 @@ AMQPLIB_HANDLE amqplib_create(const char* host, int port)
 	if (result != NULL)
 	{
 		SOCKETIO_CONFIG socket_io_config = { host, port };
-		result->socket_io = socketio_create(&socket_io_config);
+		result->socket_io = socketio_create(&socket_io_config, consolelogger_log);
 		result->connection_state = CONNECTION_STATE_START;
 
 		/* For now directly talk to the socket IO. By doing this there is no SASL, no SSL, pure AMQP only */

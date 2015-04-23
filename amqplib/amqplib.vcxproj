@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="..\inc\amqplib.h" />
     <ClInclude Include="..\inc\consolelogger.h" />
+    <ClInclude Include="..\inc\encoder.h" />
     <ClInclude Include="..\inc\io.h" />
     <ClInclude Include="..\inc\platform.h" />
     <ClInclude Include="..\inc\socketio.h" />
@@ -21,6 +22,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\amqplib.c" />
     <ClCompile Include="..\src\consolelogger.c" />
+    <ClCompile Include="..\src\encoder.c" />
     <ClCompile Include="..\src\io.c" />
     <ClCompile Include="..\src\platform_win32.c" />
     <ClCompile Include="..\src\socketio_win32.c" />

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdint.h>
 #include "io.h"
 #include "consolelogger.h"
 #include "amqplib.h"
@@ -54,8 +55,22 @@ void amqplib_deinit(void)
 
 static unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 
-static int connection_send_open(void)
+#define FRAME_HEADER_SIZE 8
+
+static int connection_send_open(AMQPLIB_DATA* amqp_lib)
 {
+	size_t open_performative_size = 4;
+	uint32_t frame_size = FRAME_HEADER_SIZE + open_performative_size;
+	uint8_t doff = 2;
+	uint8_t type = 0;
+	uint16_t channel = 0;
+
+	(void)io_send(amqp_lib->used_io, &frame_size, sizeof(frame_size));
+	(void)io_send(amqp_lib->used_io, &doff, sizeof(doff));
+	(void)io_send(amqp_lib->used_io, &type, sizeof(type));
+	(void)io_send(amqp_lib->used_io, &channel, sizeof(channel));
+	(void)io_send(amqp_lib->used_io, &frame_size, sizeof(frame_size));
+
 	return 0;
 }
 
@@ -81,7 +96,7 @@ static void connection_byte_received(AMQPLIB_DATA* amqp_lib, unsigned char b)
 					amqp_lib->connection_state = CONNECTION_STATE_HDR_EXCH;
 
 					/* handshake done, send open frame */
-					if (connection_send_open() != 0)
+					if (connection_send_open(amqp_lib) != 0)
 					{
 						io_destroy(amqp_lib->used_io);
 						amqp_lib->connection_state = CONNECTION_STATE_END;

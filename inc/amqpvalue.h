@@ -12,6 +12,7 @@ extern "C" {
 
 	extern AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_create_ulong(uint64_t value);
+	extern AMQP_VALUE amqpvalue_create_string(const char* string, uint32_t length);
 	extern void amqpvalue_destroy(AMQP_VALUE value);
 
 #ifdef __cplusplus

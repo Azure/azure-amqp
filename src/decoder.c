@@ -110,6 +110,61 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 					}
 				}
 				break;
+
+			case 0xA1:
+				/* str8-utf8 */
+				if (decoderData->pos < decoderData->size)
+				{
+					size_t length = decoderData->buffer[decoderData->pos++];
+
+					if (decoderData->size - decoderData->pos < length)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						*amqp_value = amqpvalue_create_string(&decoderData->buffer[decoderData->pos], length);
+						if (*amqp_value == NULL)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							decoderData->pos += length;
+							result = 0;
+						}
+					}
+				}
+				break;
+
+			case 0xB1:
+				/* str32-utf8 */
+				if (decoderData->size - decoderData->pos < 4)
+				{
+					uint32_t length = decoderData->buffer[decoderData->pos++] << 24;
+					length += decoderData->buffer[decoderData->pos++] << 16;
+					length += decoderData->buffer[decoderData->pos++] << 8;
+					length += decoderData->buffer[decoderData->pos++];
+
+					if (decoderData->size - decoderData->pos < length)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						*amqp_value = amqpvalue_create_string(&decoderData->buffer[decoderData->pos], length);
+						if (*amqp_value == NULL)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							decoderData->pos += length;
+							result = 0;
+						}
+					}
+				}
+				break;
 			}
 		}
 

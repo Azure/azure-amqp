@@ -6,6 +6,7 @@
 #include "socketio.h"
 #include "platform.h"
 #include "encoder.h"
+#include "decoder.h"
 
 typedef enum CONNECTION_STATE_TAG
 {
@@ -172,13 +173,13 @@ static int connection_decode_received_amqp_frame(AMQPLIB_DATA* amqp_lib)
 	uint8_t doff = amqp_lib->receive_frame_buffer[4];
 	unsigned char* frame_body;
 	uint32_t frame_body_size = amqp_lib->receive_frame_size - doff * 4;
-	//DECODER_HANDLE decoder_handle;
+	DECODER_HANDLE decoder_handle;
 
 	channel = amqp_lib->receive_frame_buffer[6] << 8;
 	channel += amqp_lib->receive_frame_buffer[7];
 
 	frame_body = &amqp_lib->receive_frame_buffer[4 * doff];
-	//decoder_handle = decoder_create(frame_body, frame_body_size);
+	decoder_handle = decoder_create(frame_body, frame_body_size);
 
 	return 0;
 }

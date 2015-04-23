@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\amqplib.c" />
+    <ClCompile Include="..\src\amqpvalue.c" />
     <ClCompile Include="..\src\consolelogger.c" />
     <ClCompile Include="..\src\decoder.c" />
     <ClCompile Include="..\src\encoder.c" />

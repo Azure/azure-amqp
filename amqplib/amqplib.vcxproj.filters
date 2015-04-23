@@ -68,5 +68,8 @@
     <ClCompile Include="..\src\decoder.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\amqpvalue.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -5,6 +5,7 @@
 #include "amqplib.h"
 #include "socketio.h"
 #include "platform.h"
+#include "encoder.h"
 
 typedef enum CONNECTION_STATE_TAG
 {
@@ -57,18 +58,70 @@ static unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 
 #define FRAME_HEADER_SIZE 8
 
-static int connection_send_open(AMQPLIB_DATA* amqp_lib)
+static int connection_frame_write_bytes(void* context, const void* bytes, size_t length)
+{
+	IO_HANDLE io_handle = (IO_HANDLE)context;
+	return io_send(io_handle, bytes, length);
+}
+
+static int connection_send_open(AMQPLIB_DATA* amqp_lib, const char* containerId)
 {
 	size_t open_performative_size = 4;
 	uint32_t frame_size = FRAME_HEADER_SIZE + open_performative_size;
 	uint8_t doff = 2;
 	uint8_t type = 0;
 	uint16_t channel = 0;
+	ENCODER_HANDLE encoderHandle = encoder_create(NULL, NULL);
+	int result;
 
-	(void)io_send(amqp_lib->used_io, &frame_size, sizeof(frame_size));
-	(void)io_send(amqp_lib->used_io, &doff, sizeof(doff));
-	(void)io_send(amqp_lib->used_io, &type, sizeof(type));
-	(void)io_send(amqp_lib->used_io, &channel, sizeof(channel));
+	if (encoderHandle == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		if ((encoder_encode_string(encoderHandle, containerId) != 0) ||
+			(encoder_get_encoded_size(encoderHandle, &frame_size) != 0))
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			frame_size += FRAME_HEADER_SIZE;
+			result = 0;
+		}
+
+		encoder_destroy(encoderHandle);
+	}
+
+	if (result == 0)
+	{
+		encoderHandle = encoder_create(connection_frame_write_bytes, amqp_lib->used_io);
+		if (encoderHandle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			(void)io_send(amqp_lib->used_io, &frame_size, sizeof(frame_size));
+			(void)io_send(amqp_lib->used_io, &doff, sizeof(doff));
+			(void)io_send(amqp_lib->used_io, &type, sizeof(type));
+			(void)io_send(amqp_lib->used_io, &channel, sizeof(channel));
+
+			if (encoder_encode_string(encoderHandle, containerId) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				frame_size += FRAME_HEADER_SIZE;
+				result = 0;
+			}
+
+			encoder_destroy(encoderHandle);
+		}
+	}
+
 	(void)io_send(amqp_lib->used_io, &frame_size, sizeof(frame_size));
 
 	return 0;
@@ -96,7 +149,7 @@ static void connection_byte_received(AMQPLIB_DATA* amqp_lib, unsigned char b)
 					amqp_lib->connection_state = CONNECTION_STATE_HDR_EXCH;
 
 					/* handshake done, send open frame */
-					if (connection_send_open(amqp_lib) != 0)
+					if (connection_send_open(amqp_lib, "1") != 0)
 					{
 						io_destroy(amqp_lib->used_io);
 						amqp_lib->connection_state = CONNECTION_STATE_END;

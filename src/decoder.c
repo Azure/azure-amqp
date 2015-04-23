@@ -58,6 +58,11 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 					}
 					else
 					{
+						if (more != NULL)
+						{
+							*more = (decoderData->pos < decoderData->size);
+						}
+
 						result = 0;
 					}
 				}

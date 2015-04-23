@@ -25,12 +25,23 @@ typedef enum CONNECTION_STATE_TAG
 	CONNECTION_STATE_END
 } CONNECTION_STATE;
 
+typedef enum RECEIVE_FRAME_STATE_TAG
+{
+	RECEIVE_FRAME_STATE_FRAME_SIZE,
+	RECEIVE_FRAME_STATE_FRAME_DATA
+} RECEIVE_FRAME_STATE;
+
 typedef struct AMQPLIB_DATA_TAG
 {
 	IO_HANDLE socket_io;
 	IO_HANDLE used_io;
 	size_t header_bytes_received;
 	CONNECTION_STATE connection_state;
+	RECEIVE_FRAME_STATE receive_frame_state;
+	size_t receive_frame_bytes;
+	size_t receive_frame_consumed_bytes;
+	uint32_t receive_frame_size;
+	unsigned char receive_frame_buffer[2048];
 } AMQPLIB_DATA;
 
 int amqplib_init(void)
@@ -97,6 +108,8 @@ static int connection_send_open(AMQPLIB_DATA* amqp_lib, const char* container_id
 	}
 	else
 	{
+		consolelogger_log("\r\n> [Open] container-id=%s\r\n", container_id);
+
 		if ((connection_encode_open(encoderHandle, container_id) != 0) ||
 			(encoder_get_encoded_size(encoderHandle, &frame_size) != 0))
 		{
@@ -120,10 +133,22 @@ static int connection_send_open(AMQPLIB_DATA* amqp_lib, const char* container_id
 		}
 		else
 		{
-			(void)io_send(amqp_lib->used_io, &frame_size, sizeof(frame_size));
+			unsigned char b;
+
+			b = (frame_size >> 24) & 0xFF;
+			(void)io_send(amqp_lib->used_io, &b, 1);
+			b = (frame_size >> 16) & 0xFF;
+			(void)io_send(amqp_lib->used_io, &b, 1);
+			b = (frame_size >> 8) & 0xFF;
+			(void)io_send(amqp_lib->used_io, &b, 1);
+			b = (frame_size) & 0xFF;
+			(void)io_send(amqp_lib->used_io, &b, 1);
 			(void)io_send(amqp_lib->used_io, &doff, sizeof(doff));
 			(void)io_send(amqp_lib->used_io, &type, sizeof(type));
-			(void)io_send(amqp_lib->used_io, &channel, sizeof(channel));
+			b = (channel >> 8) & 0xFF;
+			(void)io_send(amqp_lib->used_io, &b, 1);
+			b = (channel) & 0xFF;
+			(void)io_send(amqp_lib->used_io, &b, 1);
 
 			if (connection_encode_open(encoderHandle, container_id) != 0)
 			{
@@ -139,6 +164,64 @@ static int connection_send_open(AMQPLIB_DATA* amqp_lib, const char* container_id
 	}
 
 	return 0;
+}
+
+static int connection_decode_received_frame(AMQPLIB_DATA* amqp_lib)
+{
+
+	return 0;
+}
+
+static int connection_receive_frame(AMQPLIB_DATA* amqp_lib, unsigned char b)
+{
+	int result;
+
+	amqp_lib->receive_frame_buffer[amqp_lib->receive_frame_bytes] = b;
+	amqp_lib->receive_frame_bytes++;
+
+	switch (amqp_lib->receive_frame_state)
+	{
+		default:
+			result = __LINE__;
+
+		case RECEIVE_FRAME_STATE_FRAME_SIZE:
+			if (amqp_lib->receive_frame_bytes - amqp_lib->receive_frame_consumed_bytes >= 4)
+			{
+				amqp_lib->receive_frame_size = amqp_lib->receive_frame_buffer[amqp_lib->receive_frame_consumed_bytes++] << 24;
+				amqp_lib->receive_frame_size += amqp_lib->receive_frame_buffer[amqp_lib->receive_frame_consumed_bytes++] << 16;
+				amqp_lib->receive_frame_size += amqp_lib->receive_frame_buffer[amqp_lib->receive_frame_consumed_bytes++] << 8;
+				amqp_lib->receive_frame_size += amqp_lib->receive_frame_buffer[amqp_lib->receive_frame_consumed_bytes++];
+				amqp_lib->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_DATA;
+			}
+
+			result = 0;
+			break;
+
+		case RECEIVE_FRAME_STATE_FRAME_DATA:
+			if (amqp_lib->receive_frame_bytes - amqp_lib->receive_frame_consumed_bytes == amqp_lib->receive_frame_size - 4)
+			{
+				/* done receiving */
+				if (connection_decode_received_frame(amqp_lib) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+
+				amqp_lib->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
+				amqp_lib->receive_frame_bytes = 0;
+				amqp_lib->receive_frame_consumed_bytes = 0;
+			}
+			else
+			{
+				result = 0;
+			}
+			break;
+	}
+
+	return result;
 }
 
 static void connection_byte_received(AMQPLIB_DATA* amqp_lib, unsigned char b)
@@ -161,6 +244,9 @@ static void connection_byte_received(AMQPLIB_DATA* amqp_lib, unsigned char b)
 				if (amqp_lib->header_bytes_received == sizeof(amqp_header))
 				{
 					amqp_lib->connection_state = CONNECTION_STATE_HDR_EXCH;
+					amqp_lib->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
+					amqp_lib->receive_frame_bytes = 0;
+					amqp_lib->receive_frame_consumed_bytes = 0;
 
 					/* handshake done, send open frame */
 					if (connection_send_open(amqp_lib, "1") != 0)
@@ -174,6 +260,10 @@ static void connection_byte_received(AMQPLIB_DATA* amqp_lib, unsigned char b)
 					}
 				}
 			}
+			break;
+
+		case CONNECTION_STATE_OPEN_SENT:
+			(void)connection_receive_frame(amqp_lib, b);
 			break;
 	}
 }

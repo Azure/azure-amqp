@@ -108,7 +108,9 @@ static int connection_send_open(AMQPLIB_DATA* amqp_lib, const char* containerId)
 			(void)io_send(amqp_lib->used_io, &type, sizeof(type));
 			(void)io_send(amqp_lib->used_io, &channel, sizeof(channel));
 
-			if (encoder_encode_string(encoderHandle, containerId) != 0)
+			if ((encoder_encode_descriptor_header(encoderHandle) != 0) ||
+				(encoder_encode_ulong(encoderHandle, 0x10) != 0) ||
+				(encoder_encode_string(encoderHandle, containerId) != 0))
 			{
 				result = __LINE__;
 			}

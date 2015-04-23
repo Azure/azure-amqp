@@ -150,3 +150,21 @@ int encoder_get_encoded_size(ENCODER_HANDLE handle, size_t* size)
 
 	return result;
 }
+
+int encoder_encode_descriptor_header(ENCODER_HANDLE handle)
+{
+	int result;
+	if (handle == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		ENCODER_DATA* encoderData = (ENCODER_DATA*)handle;
+		output_byte(encoderData, 0x00);
+
+		result = 0;
+	}
+
+	return result;
+}

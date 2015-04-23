@@ -166,10 +166,53 @@ static int connection_send_open(AMQPLIB_DATA* amqp_lib, const char* container_id
 	return 0;
 }
 
-static int connection_decode_received_frame(AMQPLIB_DATA* amqp_lib)
+static int connection_decode_received_amqp_frame(AMQPLIB_DATA* amqp_lib)
 {
+	uint16_t channel;
+	uint8_t doff = amqp_lib->receive_frame_buffer[4];
+	unsigned char* frame_body;
+	uint32_t frame_body_size = amqp_lib->receive_frame_size - doff * 4;
+	//DECODER_HANDLE decoder_handle;
+
+	channel = amqp_lib->receive_frame_buffer[6] << 8;
+	channel += amqp_lib->receive_frame_buffer[7];
+
+	frame_body = &amqp_lib->receive_frame_buffer[4 * doff];
+	//decoder_handle = decoder_create(frame_body, frame_body_size);
 
 	return 0;
+}
+
+static int connection_decode_received_sasl_frame(AMQPLIB_DATA* amqp_lib)
+{
+	/* not implemented */
+	return __LINE__;
+}
+
+static int connection_decode_received_frame(AMQPLIB_DATA* amqp_lib)
+{
+	int result;
+
+	/* decode type */
+	uint8_t type = amqp_lib->receive_frame_buffer[5];
+
+	switch (type)
+	{
+		default:
+			consolelogger_log("Unknown frame.\r\n");
+			result = __LINE__;
+			break;
+
+		case 0:
+			result = connection_decode_received_amqp_frame(amqp_lib);
+			break;
+
+		case 1:
+			result = connection_decode_received_sasl_frame(amqp_lib);
+			break;
+	}
+
+	return result;
 }
 
 static int connection_receive_frame(AMQPLIB_DATA* amqp_lib, unsigned char b)

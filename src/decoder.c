@@ -81,7 +81,11 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 
 			case 0x53:
 				/* smallulong */
-				if (decoderData->pos < decoderData->size)
+				if (decoderData->pos >= decoderData->size)
+				{
+					result = __LINE__;
+				}
+				else
 				{
 					*amqp_value = amqpvalue_create_ulong(decoderData->buffer[decoderData->pos++]);
 					if (*amqp_value == NULL)
@@ -97,9 +101,21 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 
 			case 0x80:
 				/* ulong */
-				if (decoderData->pos < decoderData->size)
+				if (decoderData->size - decoderData->pos < 4)
 				{
-					*amqp_value = amqpvalue_create_ulong(decoderData->buffer[decoderData->pos++]);
+					result = __LINE__;
+				}
+				else
+				{
+					uint64_t value = (uint64_t)decoderData->buffer[decoderData->pos++] << 56;
+					value += (uint64_t)decoderData->buffer[decoderData->pos++] << 48;
+					value += (uint64_t)decoderData->buffer[decoderData->pos++] << 40;
+					value += (uint64_t)decoderData->buffer[decoderData->pos++] << 32;
+					value += (uint64_t)decoderData->buffer[decoderData->pos++] << 24;
+					value += (uint64_t)decoderData->buffer[decoderData->pos++] << 16;
+					value += (uint64_t)decoderData->buffer[decoderData->pos++] << 8;
+					value += (uint64_t)decoderData->buffer[decoderData->pos++];
+					*amqp_value = amqpvalue_create_ulong(value);
 					if (*amqp_value == NULL)
 					{
 						result = __LINE__;
@@ -113,7 +129,11 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 
 			case 0xA1:
 				/* str8-utf8 */
-				if (decoderData->pos < decoderData->size)
+				if (decoderData->pos >= decoderData->size)
+				{
+					result = __LINE__;
+				}
+				else
 				{
 					size_t length = decoderData->buffer[decoderData->pos++];
 
@@ -141,10 +161,14 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 				/* str32-utf8 */
 				if (decoderData->size - decoderData->pos < 4)
 				{
-					uint32_t length = decoderData->buffer[decoderData->pos++] << 24;
-					length += decoderData->buffer[decoderData->pos++] << 16;
-					length += decoderData->buffer[decoderData->pos++] << 8;
-					length += decoderData->buffer[decoderData->pos++];
+					result = __LINE__;
+				}
+				else
+				{
+					uint32_t length = (uint32_t)decoderData->buffer[decoderData->pos++] << 24;
+					length += (uint32_t)decoderData->buffer[decoderData->pos++] << 16;
+					length += (uint32_t)decoderData->buffer[decoderData->pos++] << 8;
+					length += (uint32_t)decoderData->buffer[decoderData->pos++];
 
 					if (decoderData->size - decoderData->pos < length)
 					{

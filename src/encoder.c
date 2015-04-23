@@ -74,7 +74,7 @@ int encoder_encode_string(ENCODER_HANDLE handle, const char* value)
 		ENCODER_DATA* encoderData = (ENCODER_DATA*)handle;
 		size_t length = strlen(value);
 		
-		if (length > 255)
+		if (length <= 255)
 		{
 			output_byte(encoderData, (unsigned char)0xA1);
 			output_byte(encoderData, (unsigned char)length);
@@ -88,6 +88,44 @@ int encoder_encode_string(ENCODER_HANDLE handle, const char* value)
 			output_byte(encoderData, (length >> 8) & 0xFF);
 			output_byte(encoderData, length & 0xFF);
 			output_bytes(encoderData, value, length);
+		}
+
+		result = 0;
+	}
+
+	return result;
+}
+
+int encoder_encode_ulong(ENCODER_HANDLE handle, uint64_t value)
+{
+	int result;
+	if (handle == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		ENCODER_DATA* encoderData = (ENCODER_DATA*)handle;
+
+		if (value == 0)
+		{
+			output_byte(encoderData, 0x44);
+		}
+		else if (value <= 255)
+		{
+			output_byte(encoderData, 0x53);
+			output_byte(encoderData, value & 0xFF);
+		}
+		else
+		{
+			output_byte(encoderData, (value >> 56) & 0xFF);
+			output_byte(encoderData, (value >> 48) & 0xFF);
+			output_byte(encoderData, (value >> 40) & 0xFF);
+			output_byte(encoderData, (value >> 32) & 0xFF);
+			output_byte(encoderData, (value >> 24) & 0xFF);
+			output_byte(encoderData, (value >> 16) & 0xFF);
+			output_byte(encoderData, (value >> 8) & 0xFF);
+			output_byte(encoderData, value & 0xFF);
 		}
 
 		result = 0;

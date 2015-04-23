@@ -24,7 +24,7 @@ ENCODER_HANDLE encoder_create(ENCODER_OUTPUT encoderOutput, void* context)
 
 void encoder_destroy(ENCODER_HANDLE handle)
 {
-	(void)handle;
+	free(handle);
 }
 
 static int output_byte(ENCODER_DATA* encoderData, unsigned char b)
@@ -82,7 +82,12 @@ int encoder_encode_string(ENCODER_HANDLE handle, const char* value)
 		}
 		else
 		{
-
+			output_byte(encoderData, 0xB1);
+			output_byte(encoderData, (length >> 24) & 0xFF);
+			output_byte(encoderData, (length >> 16) & 0xFF);
+			output_byte(encoderData, (length >> 8) & 0xFF);
+			output_byte(encoderData, length & 0xFF);
+			output_bytes(encoderData, value, length);
 		}
 
 		result = 0;

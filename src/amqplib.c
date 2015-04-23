@@ -175,6 +175,7 @@ static int connection_decode_received_amqp_frame(AMQPLIB_DATA* amqp_lib)
 	uint32_t frame_body_size = amqp_lib->receive_frame_size - doff * 4;
 	DECODER_HANDLE decoder_handle;
 	AMQP_VALUE descriptor;
+	AMQP_VALUE container_id;
 	int result;
 	bool more;
 
@@ -185,13 +186,14 @@ static int connection_decode_received_amqp_frame(AMQPLIB_DATA* amqp_lib)
 	decoder_handle = decoder_create(frame_body, frame_body_size);
 
 	if ((decoder_decode(decoder_handle, &descriptor, &more) != 0) ||
-		(!more))
+		(!more) ||
+		(decoder_decode(decoder_handle, &container_id, &more) != 0))
 	{
 		result = __LINE__;
 	}
 	else
 	{
-
+		result = 0;
 	}
 
 	return result;

@@ -84,8 +84,7 @@ static int connection_encode_open(ENCODER_HANDLE encoderHandle, const char* cont
 
 static int connection_send_open(AMQPLIB_DATA* amqp_lib, const char* container_id)
 {
-	size_t open_performative_size = 4;
-	uint32_t frame_size = FRAME_HEADER_SIZE + open_performative_size;
+	uint32_t frame_size;
 	uint8_t doff = 2;
 	uint8_t type = 0;
 	uint16_t channel = 0;
@@ -98,9 +97,15 @@ static int connection_send_open(AMQPLIB_DATA* amqp_lib, const char* container_id
 	}
 	else
 	{
-		if ((result = connection_encode_open(encoderHandle, container_id)) == 0)
+		if ((connection_encode_open(encoderHandle, container_id) != 0) ||
+			(encoder_get_encoded_size(encoderHandle, &frame_size) != 0))
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			frame_size += FRAME_HEADER_SIZE;
+			result = 0;
 		}
 
 		encoder_destroy(encoderHandle);
@@ -132,8 +137,6 @@ static int connection_send_open(AMQPLIB_DATA* amqp_lib, const char* container_id
 			encoder_destroy(encoderHandle);
 		}
 	}
-
-	(void)io_send(amqp_lib->used_io, &frame_size, sizeof(frame_size));
 
 	return 0;
 }

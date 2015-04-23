@@ -9,6 +9,7 @@ extern "C" {
 
 	typedef enum AMQP_TYPE_TAG
 	{
+		AMQP_TYPE_DESCRIPTOR,
 		AMQP_TYPE_STRING,
 		AMQP_TYPE_ULONG
 	} AMQP_TYPE;

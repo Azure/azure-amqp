@@ -2,7 +2,9 @@
 #define DECODER_H
 
 #include <stddef.h>
+#include <stdbool.h>
 #include "amqp_types.h"
+#include "amqpvalue.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,9 +12,9 @@ extern "C" {
 
 	typedef void* DECODER_HANDLE;
 
-	extern DECODER_HANDLE decoder_create(void* buffer, size_t length);
+	extern DECODER_HANDLE decoder_create(const void* buffer, size_t length);
 	extern void decoder_destroy(DECODER_HANDLE handle);
-	extern int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value);
+	extern int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more);
 
 #ifdef __cplusplus
 }

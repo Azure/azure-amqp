@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\inc\amqplib.h" />
+    <ClInclude Include="..\inc\amqpvalue.h" />
     <ClInclude Include="..\inc\amqp_types.h" />
     <ClInclude Include="..\inc\consolelogger.h" />
     <ClInclude Include="..\inc\decoder.h" />

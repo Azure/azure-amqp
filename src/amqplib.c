@@ -174,6 +174,9 @@ static int connection_decode_received_amqp_frame(AMQPLIB_DATA* amqp_lib)
 	unsigned char* frame_body;
 	uint32_t frame_body_size = amqp_lib->receive_frame_size - doff * 4;
 	DECODER_HANDLE decoder_handle;
+	AMQP_VALUE descriptor;
+	int result;
+	bool more;
 
 	channel = amqp_lib->receive_frame_buffer[6] << 8;
 	channel += amqp_lib->receive_frame_buffer[7];
@@ -181,7 +184,17 @@ static int connection_decode_received_amqp_frame(AMQPLIB_DATA* amqp_lib)
 	frame_body = &amqp_lib->receive_frame_buffer[4 * doff];
 	decoder_handle = decoder_create(frame_body, frame_body_size);
 
-	return 0;
+	if ((decoder_decode(decoder_handle, &descriptor, &more) != 0) ||
+		(!more))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+
+	}
+
+	return result;
 }
 
 static int connection_decode_received_sasl_frame(AMQPLIB_DATA* amqp_lib)

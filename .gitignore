@@ -17,3 +17,4 @@
 *.exe
 *.ilk
 /src/amqplib.c~RF521d7ee.TMP
+*.TMP

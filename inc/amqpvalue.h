@@ -2,6 +2,7 @@
 #define ANQPVALUE_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,6 +11,7 @@ extern "C" {
 	typedef void* AMQP_VALUE;
 
 	extern AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value);
+	extern AMQP_VALUE amqpvalue_create_ulong(uint64_t value);
 	extern void amqpvalue_destroy(AMQP_VALUE value);
 
 #ifdef __cplusplus

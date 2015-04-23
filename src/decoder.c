@@ -40,7 +40,9 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 		if (decoderData->pos < decoderData->size)
 		{
 			unsigned char first_constructor_byte = decoderData->buffer[decoderData->pos++];
-			if (first_constructor_byte == 0x00)
+			switch (first_constructor_byte)
+			{
+			case 0x00:
 			{
 				/* descriptor */
 				AMQP_VALUE descriptorValue;
@@ -66,6 +68,53 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 						result = 0;
 					}
 				}
+				break;
+			}
+
+			case 0x44:
+				/* ulong0 */
+				*amqp_value = amqpvalue_create_ulong(0);
+				if (*amqp_value == NULL)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+				break;
+
+			case 0x53:
+				/* smallulong */
+				if (decoderData->pos < decoderData->size)
+				{
+					*amqp_value = amqpvalue_create_ulong(decoderData->buffer[decoderData->pos++]);
+					if (*amqp_value == NULL)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
+				}
+				break;
+
+			case 0x80:
+				/* ulong */
+				if (decoderData->pos < decoderData->size)
+				{
+					*amqp_value = amqpvalue_create_ulong(decoderData->buffer[decoderData->pos++]);
+					if (*amqp_value == NULL)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
+				}
+				break;
 			}
 		}
 		result = 0;

@@ -109,10 +109,12 @@ int encoder_encode_ulong(ENCODER_HANDLE handle, uint64_t value)
 
 		if (value == 0)
 		{
+			/* ulong0 */
 			output_byte(encoderData, 0x44);
 		}
 		else if (value <= 255)
 		{
+			/* smallulong */
 			output_byte(encoderData, 0x53);
 			output_byte(encoderData, value & 0xFF);
 		}

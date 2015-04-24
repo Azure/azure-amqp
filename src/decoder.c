@@ -42,6 +42,10 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 			unsigned char first_constructor_byte = decoderData->buffer[decoderData->pos++];
 			switch (first_constructor_byte)
 			{
+            default:
+                result = __LINE__;
+                break;
+
 			case 0x00:
 			{
 				/* descriptor */

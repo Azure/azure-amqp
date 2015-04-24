@@ -61,12 +61,20 @@ IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receiv
 				}
 				else
 				{
+                    u_long iMode = 1;
+
 					if (connect(result->socket, addrInfo->ai_addr, sizeof(*addrInfo->ai_addr)) != 0)
 					{
 						closesocket(result->socket);
 						free(result);
 						result = NULL;
 					}
+                    else if (ioctlsocket(result->socket, FIONBIO, &iMode))
+                    {
+                        closesocket(result->socket);
+                        free(result);
+                        result = NULL;
+                    }
 				}
 			}
 		}
@@ -110,7 +118,7 @@ int socketio_send(IO_HANDLE handle, const void* buffer, size_t size)
 			size_t i;
 			for (i = 0; i < size; i++)
 			{
-				socket_io_data->logger_log("S%02x ", ((unsigned char*)buffer)[i]);
+				socket_io_data->logger_log("%02x-> ", ((unsigned char*)buffer)[i]);
 			}
 
 			result = 0;
@@ -140,7 +148,7 @@ int socketio_dowork(IO_HANDLE handle)
 			received = recv(socket_io_data->socket, &c, 1, 0);
 			if (received > 0)
 			{
-				socket_io_data->logger_log("R%02x ", (unsigned char)c);
+				socket_io_data->logger_log("<-%02x ", (unsigned char)c);
 
 				if (socket_io_data->receive_callback != NULL)
 				{

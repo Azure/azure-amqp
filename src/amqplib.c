@@ -109,7 +109,7 @@ static int connection_send_open(AMQPLIB_DATA* amqp_lib, const char* container_id
 	}
 	else
 	{
-		consolelogger_log("\r\n> [Open] container-id=%s\r\n", container_id);
+		consolelogger_log("\r\n-> [Open] container-id=%s\r\n", container_id);
 
 		if ((connection_encode_open(encoderHandle, container_id) != 0) ||
 			(encoder_get_encoded_size(encoderHandle, &frame_size) != 0))
@@ -401,6 +401,10 @@ static int connection_dowork(AMQPLIB_DATA* amqp_lib)
 		case CONNECTION_STATE_START:
 			result = connection_sendheader(amqp_lib);
 			break;
+
+        case CONNECTION_STATE_HDR_SENT:
+            result = 0;
+            break;
 	}
 
 	return result;

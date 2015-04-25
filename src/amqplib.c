@@ -222,6 +222,11 @@ static int connection_decode_received_amqp_frame(AMQPLIB_DATA* amqp_lib)
 	}
 	else
 	{
+		if (amqp_lib->connection_state == CONNECTION_STATE_OPEN_SENT)
+		{
+			amqp_lib->connection_state = CONNECTION_STATE_OPENED;
+		}
+
 		result = 0;
 	}
 
@@ -433,7 +438,8 @@ static int connection_dowork(AMQPLIB_DATA* amqp_lib)
 
         case CONNECTION_STATE_HDR_SENT:
         case CONNECTION_STATE_OPEN_SENT:
-            result = 0;
+		case CONNECTION_STATE_OPENED:
+			result = 0;
             break;
 
         case CONNECTION_STATE_HDR_EXCH:

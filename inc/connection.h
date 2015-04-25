@@ -12,9 +12,9 @@ extern "C" {
 
 	typedef void* CONNECTION_HANDLE;
 
-	extern CONNECTION_HANDLE connection_create(IO_HANDLE io);
+	extern CONNECTION_HANDLE connection_create(const char* host, int port);
 	extern void connection_destroy(CONNECTION_HANDLE handle);
-	extern void connection_dowork(CONNECTION_HANDLE handle);
+	extern int connection_dowork(CONNECTION_HANDLE handle);
 
 #ifdef __cplusplus
 }

@@ -14,22 +14,26 @@
     <ClInclude Include="..\inc\amqplib.h" />
     <ClInclude Include="..\inc\amqpvalue.h" />
     <ClInclude Include="..\inc\amqp_types.h" />
+    <ClInclude Include="..\inc\connection.h" />
     <ClInclude Include="..\inc\consolelogger.h" />
     <ClInclude Include="..\inc\decoder.h" />
     <ClInclude Include="..\inc\encoder.h" />
     <ClInclude Include="..\inc\io.h" />
     <ClInclude Include="..\inc\platform.h" />
+    <ClInclude Include="..\inc\session.h" />
     <ClInclude Include="..\inc\socketio.h" />
     <ClInclude Include="inc\logger.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\amqplib.c" />
     <ClCompile Include="..\src\amqpvalue.c" />
+    <ClCompile Include="..\src\connection.c" />
     <ClCompile Include="..\src\consolelogger.c" />
     <ClCompile Include="..\src\decoder.c" />
     <ClCompile Include="..\src\encoder.c" />
     <ClCompile Include="..\src\io.c" />
     <ClCompile Include="..\src\platform_win32.c" />
+    <ClCompile Include="..\src\session.c" />
     <ClCompile Include="..\src\socketio_win32.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

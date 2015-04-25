@@ -193,7 +193,50 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 					}
 				}
 				break;
-			}
+
+            case 0xD0:
+                /* list32 */
+                if (decoderData->size - decoderData->pos < 4)
+                {
+                    result = __LINE__;
+                }
+                else
+                {
+                    uint32_t i;
+                    uint32_t length = (uint32_t)decoderData->buffer[decoderData->pos++] << 24;
+                    length += (uint32_t)decoderData->buffer[decoderData->pos++] << 16;
+                    length += (uint32_t)decoderData->buffer[decoderData->pos++] << 8;
+                    length += (uint32_t)decoderData->buffer[decoderData->pos++];
+
+                    *amqp_value = amqpvalue_create_list(length);
+                    if (*amqp_value == NULL)
+                    {
+                        result = __LINE__;
+                    }
+                    else
+                    {
+                        for (i = 0; i < length; i++)
+                        {
+							AMQP_VALUE child_amqp_value;
+							if (decoder_decode(handle, &child_amqp_value, NULL) != 0)
+							{
+								break;
+							}
+							else if(amqpvalue_set_list_item(*amqp_value, i, child_amqp_value) != 0)
+							{
+								break;
+							}
+                        }
+
+						if (i < length)
+						{
+							result = __LINE__;
+						}
+                    }
+
+                }
+                break;
+            }
 		}
 
 		if (more != NULL)

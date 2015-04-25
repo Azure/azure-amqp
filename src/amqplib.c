@@ -403,7 +403,17 @@ static int connection_dowork(AMQPLIB_DATA* amqp_lib)
 			break;
 
         case CONNECTION_STATE_HDR_SENT:
+        case CONNECTION_STATE_OPEN_SENT:
             result = 0;
+            break;
+
+        case CONNECTION_STATE_HDR_EXCH:
+            connection_send_open(amqp_lib, "1");
+            break;
+
+        case CONNECTION_STATE_OPEN_RCVD:
+            /* peer wants to open, let's panic */
+            result = __LINE__;
             break;
 	}
 

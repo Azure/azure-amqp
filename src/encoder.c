@@ -1,4 +1,6 @@
 #include "encoder.h"
+#include "amqpvalue.h"
+#include "amqp_types.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -11,15 +13,15 @@ typedef struct ENCODER_DATA_TAG
 
 ENCODER_HANDLE encoder_create(ENCODER_OUTPUT encoderOutput, void* context)
 {
-	ENCODER_DATA* encoderData = (ENCODER_DATA*)malloc(sizeof(ENCODER_DATA));
-	if (encoderData != NULL)
+	ENCODER_DATA* encoder_data = (ENCODER_DATA*)malloc(sizeof(ENCODER_DATA));
+	if (encoder_data != NULL)
 	{
-		encoderData->encodedBytes = 0;
-		encoderData->encoderOutput = encoderOutput;
-		encoderData->context = context;
+		encoder_data->encodedBytes = 0;
+		encoder_data->encoderOutput = encoderOutput;
+		encoder_data->context = context;
 	}
 
-	return encoderData;
+	return encoder_data;
 }
 
 void encoder_destroy(ENCODER_HANDLE handle)
@@ -27,14 +29,14 @@ void encoder_destroy(ENCODER_HANDLE handle)
 	free(handle);
 }
 
-static int output_byte(ENCODER_DATA* encoderData, unsigned char b)
+static int output_byte(ENCODER_DATA* encoder_data, unsigned char b)
 {
 	int result;
 
-	encoderData->encodedBytes++;
-	if (encoderData->encoderOutput != NULL)
+	encoder_data->encodedBytes++;
+	if (encoder_data->encoderOutput != NULL)
 	{
-		result = encoderData->encoderOutput(encoderData->context, &b, 1);
+		result = encoder_data->encoderOutput(encoder_data->context, &b, 1);
 	}
 	else
 	{
@@ -44,14 +46,14 @@ static int output_byte(ENCODER_DATA* encoderData, unsigned char b)
 	return result;
 }
 
-static int output_bytes(ENCODER_DATA* encoderData, const void* bytes, size_t length)
+static int output_bytes(ENCODER_DATA* encoder_data, const void* bytes, size_t length)
 {
 	int result;
 
-	encoderData->encodedBytes += length;
-	if (encoderData->encoderOutput != NULL)
+	encoder_data->encodedBytes += length;
+	if (encoder_data->encoderOutput != NULL)
 	{
-		result = encoderData->encoderOutput(encoderData->context, bytes, length);
+		result = encoder_data->encoderOutput(encoder_data->context, bytes, length);
 	}
 	else
 	{
@@ -71,23 +73,23 @@ int encoder_encode_string(ENCODER_HANDLE handle, const char* value)
 	}
 	else
 	{
-		ENCODER_DATA* encoderData = (ENCODER_DATA*)handle;
+		ENCODER_DATA* encoder_data = (ENCODER_DATA*)handle;
 		size_t length = strlen(value);
 		
 		if (length <= 255)
 		{
-			output_byte(encoderData, (unsigned char)0xA1);
-			output_byte(encoderData, (unsigned char)length);
-			output_bytes(encoderData, value, length);
+			output_byte(encoder_data, (unsigned char)0xA1);
+			output_byte(encoder_data, (unsigned char)length);
+			output_bytes(encoder_data, value, length);
 		}
 		else
 		{
-			output_byte(encoderData, 0xB1);
-			output_byte(encoderData, (length >> 24) & 0xFF);
-			output_byte(encoderData, (length >> 16) & 0xFF);
-			output_byte(encoderData, (length >> 8) & 0xFF);
-			output_byte(encoderData, length & 0xFF);
-			output_bytes(encoderData, value, length);
+			output_byte(encoder_data, 0xB1);
+			output_byte(encoder_data, (length >> 24) & 0xFF);
+			output_byte(encoder_data, (length >> 16) & 0xFF);
+			output_byte(encoder_data, (length >> 8) & 0xFF);
+			output_byte(encoder_data, length & 0xFF);
+			output_bytes(encoder_data, value, length);
 		}
 
 		result = 0;
@@ -105,29 +107,29 @@ int encoder_encode_ulong(ENCODER_HANDLE handle, uint64_t value)
 	}
 	else
 	{
-		ENCODER_DATA* encoderData = (ENCODER_DATA*)handle;
+		ENCODER_DATA* encoder_data = (ENCODER_DATA*)handle;
 
 		if (value == 0)
 		{
 			/* ulong0 */
-			output_byte(encoderData, 0x44);
+			output_byte(encoder_data, 0x44);
 		}
 		else if (value <= 255)
 		{
 			/* smallulong */
-			output_byte(encoderData, 0x53);
-			output_byte(encoderData, value & 0xFF);
+			output_byte(encoder_data, 0x53);
+			output_byte(encoder_data, value & 0xFF);
 		}
 		else
 		{
-			output_byte(encoderData, (value >> 56) & 0xFF);
-			output_byte(encoderData, (value >> 48) & 0xFF);
-			output_byte(encoderData, (value >> 40) & 0xFF);
-			output_byte(encoderData, (value >> 32) & 0xFF);
-			output_byte(encoderData, (value >> 24) & 0xFF);
-			output_byte(encoderData, (value >> 16) & 0xFF);
-			output_byte(encoderData, (value >> 8) & 0xFF);
-			output_byte(encoderData, value & 0xFF);
+			output_byte(encoder_data, (value >> 56) & 0xFF);
+			output_byte(encoder_data, (value >> 48) & 0xFF);
+			output_byte(encoder_data, (value >> 40) & 0xFF);
+			output_byte(encoder_data, (value >> 32) & 0xFF);
+			output_byte(encoder_data, (value >> 24) & 0xFF);
+			output_byte(encoder_data, (value >> 16) & 0xFF);
+			output_byte(encoder_data, (value >> 8) & 0xFF);
+			output_byte(encoder_data, value & 0xFF);
 		}
 
 		result = 0;
@@ -162,11 +164,115 @@ int encoder_encode_descriptor_header(ENCODER_HANDLE handle)
 	}
 	else
 	{
-		ENCODER_DATA* encoderData = (ENCODER_DATA*)handle;
-		output_byte(encoderData, 0x00);
+		ENCODER_DATA* encoder_data = (ENCODER_DATA*)handle;
+		output_byte(encoder_data, 0x00);
 
 		result = 0;
 	}
 
+	return result;
+}
+
+int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
+{
+	int result;
+	AMQP_TYPE amqp_type;
+
+	if (amqpvalue_get_type(value, &amqp_type) != 0)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		switch (amqp_type)
+		{
+		default:
+			result = __LINE__;
+			break;
+
+		case AMQP_TYPE_STRING:
+			if (encoder_encode_string(handle, amqpvalue_get_string(value)) != 0)
+			{
+				return __LINE__;
+			}
+			else
+			{
+				return 0;
+			}
+			break;
+
+		case AMQP_TYPE_LIST:
+		{
+			size_t item_count;
+			size_t i;
+			ENCODER_DATA* get_size_encoder_handle = encoder_create(NULL, NULL);
+			if (get_size_encoder_handle == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (amqpvalue_get_list_item_count(value, &item_count) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					ENCODER_DATA* encoder_data = (ENCODER_DATA*)handle;
+					uint32_t size;
+
+					output_byte(encoder_data, 0xD0);
+
+					for (i = 0; i < item_count; i++)
+					{
+						if (encoder_encode_amqp_value(get_size_encoder_handle, amqpvalue_get_list_item(value, i)) != 0)
+						{
+							break;
+						}
+					}
+
+					if ((i < item_count) ||
+						(encoder_get_encoded_size(get_size_encoder_handle, &size) != 0))
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						output_byte(encoder_data, (size >> 24) & 0xFF);
+						output_byte(encoder_data, (size >> 16) & 0xFF);
+						output_byte(encoder_data, (size >> 8) & 0xFF);
+						output_byte(encoder_data, size & 0xFF);
+
+						output_byte(encoder_data, (item_count >> 24) & 0xFF);
+						output_byte(encoder_data, (item_count >> 16) & 0xFF);
+						output_byte(encoder_data, (item_count >> 8) & 0xFF);
+						output_byte(encoder_data, item_count & 0xFF);
+
+						for (i = 0; i < item_count; i++)
+						{
+							if (encoder_encode_amqp_value(handle, amqpvalue_get_list_item(value, i)) != 0)
+							{
+								break;
+							}
+						}
+
+						if (i < item_count)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							result = 0;
+						}
+					}
+				}
+
+				encoder_destroy(get_size_encoder_handle);
+			}
+
+			break;
+		}
+		}
+	}
 	return result;
 }

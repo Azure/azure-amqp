@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "amqpvalue.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,6 +18,7 @@ extern "C" {
 	extern int encoder_encode_ulong(ENCODER_HANDLE handle, uint64_t value);
 	extern int encoder_encode_descriptor_header(ENCODER_HANDLE handle);
 	extern int encoder_get_encoded_size(ENCODER_HANDLE handle, size_t* size);
+	extern int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value);
 
 #ifdef __cplusplus
 }

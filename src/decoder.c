@@ -147,7 +147,7 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 					}
 					else
 					{
-						*amqp_value = amqpvalue_create_string(&decoderData->buffer[decoderData->pos], length);
+						*amqp_value = amqpvalue_create_string_with_length(&decoderData->buffer[decoderData->pos], length);
 						if (*amqp_value == NULL)
 						{
 							result = __LINE__;
@@ -180,7 +180,7 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 					}
 					else
 					{
-						*amqp_value = amqpvalue_create_string(&decoderData->buffer[decoderData->pos], length);
+						*amqp_value = amqpvalue_create_string_with_length(&decoderData->buffer[decoderData->pos], length);
 						if (*amqp_value == NULL)
 						{
 							result = __LINE__;
@@ -196,26 +196,31 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 
             case 0xD0:
                 /* list32 */
-                if (decoderData->size - decoderData->pos < 4)
+                if (decoderData->size - decoderData->pos < 8)
                 {
                     result = __LINE__;
                 }
                 else
                 {
                     uint32_t i;
-                    uint32_t length = (uint32_t)decoderData->buffer[decoderData->pos++] << 24;
-                    length += (uint32_t)decoderData->buffer[decoderData->pos++] << 16;
-                    length += (uint32_t)decoderData->buffer[decoderData->pos++] << 8;
-                    length += (uint32_t)decoderData->buffer[decoderData->pos++];
+                    uint32_t size = (uint32_t)decoderData->buffer[decoderData->pos++] << 24;
+					size += (uint32_t)decoderData->buffer[decoderData->pos++] << 16;
+					size += (uint32_t)decoderData->buffer[decoderData->pos++] << 8;
+					size += (uint32_t)decoderData->buffer[decoderData->pos++];
 
-                    *amqp_value = amqpvalue_create_list(length);
+					uint32_t count = (uint32_t)decoderData->buffer[decoderData->pos++] << 24;
+					count += (uint32_t)decoderData->buffer[decoderData->pos++] << 16;
+					count += (uint32_t)decoderData->buffer[decoderData->pos++] << 8;
+					count += (uint32_t)decoderData->buffer[decoderData->pos++];
+
+                    *amqp_value = amqpvalue_create_list(count);
                     if (*amqp_value == NULL)
                     {
                         result = __LINE__;
                     }
                     else
                     {
-                        for (i = 0; i < length; i++)
+                        for (i = 0; i < count; i++)
                         {
 							AMQP_VALUE child_amqp_value;
 							if (decoder_decode(handle, &child_amqp_value, NULL) != 0)
@@ -228,7 +233,7 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 							}
                         }
 
-						if (i < length)
+						if (i < count)
 						{
 							result = __LINE__;
 						}

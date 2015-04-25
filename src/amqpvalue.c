@@ -7,7 +7,7 @@
 typedef struct AMQP_LIST_VALUE_TAG
 {
 	AMQP_VALUE* items;
-	size_t size;
+	size_t count;
 } AMQP_LIST_VALUE;
 
 typedef struct AMQP_STRING_VALUE_TAG
@@ -52,26 +52,53 @@ AMQP_VALUE amqpvalue_create_ulong(uint64_t value)
 	return result;
 }
 
-AMQP_VALUE amqpvalue_create_string(const char* string, uint32_t length)
+AMQP_VALUE amqpvalue_create_string(const char* string)
 {
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
-	if (result != NULL)
+	AMQP_VALUE_DATA* result;
+	if (string == NULL)
 	{
-		result->type = AMQP_TYPE_STRING;
-		result->value.string_value.length = strlen(string);
-		result->value.string_value.chars = malloc(result->value.string_value.length + 1);
-		if (result->value.string_value.chars == NULL)
+		result = NULL;
+	}
+	else
+	{
+		size_t length = strlen(string);
+		result = amqpvalue_create_string_with_length(string, length);
+	}
+	return result;
+}
+
+AMQP_VALUE amqpvalue_create_string_with_length(const char* string, size_t length)
+{
+	AMQP_VALUE_DATA* result;
+	if (string == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+		if (result != NULL)
 		{
-			free(result);
-			result = NULL;
-		}
-		else
-		{
-			if (strncpy(result->value.string_value.chars, string, length) != 0)
+			result->type = AMQP_TYPE_STRING;
+			result->value.string_value.chars = malloc(length + 1);
+			result->value.string_value.length = length;
+			if (result->value.string_value.chars == NULL)
 			{
-				free(result->value.string_value.chars);
 				free(result);
 				result = NULL;
+			}
+			else
+			{
+				if (strncpy(result->value.string_value.chars, string, length) == NULL)
+				{
+					free(result->value.string_value.chars);
+					free(result);
+					result = NULL;
+				}
+				else
+				{
+					result->value.string_value.chars[length] = 0;
+				}
 			}
 		}
 	}
@@ -84,6 +111,7 @@ AMQP_VALUE amqpvalue_create_list(size_t size)
 	if (result != NULL)
 	{
 		result->type = AMQP_TYPE_LIST;
+		result->value.list_value.count = size;
 		result->value.list_value.items = (AMQP_VALUE*)malloc(sizeof(AMQP_VALUE*) * size);
 		if (result->value.list_value.items == NULL)
 		{
@@ -112,7 +140,7 @@ int amqpvalue_set_list_item(AMQP_VALUE value, size_t index, AMQP_VALUE list_item
 		}
 		else
 		{
-			if (index >= value_data->value.list_value.size)
+			if (index >= value_data->value.list_value.count)
 			{
 				result = __LINE__;
 			}
@@ -139,4 +167,98 @@ void amqpvalue_destroy(AMQP_VALUE value)
 
 		free(value);
 	}
+}
+
+int amqpvalue_get_type(AMQP_VALUE value, AMQP_TYPE* type)
+{
+	int result;
+
+	if ((value == NULL) ||
+		(type == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		*type = value_data->type;
+		result = 0;
+	}
+
+	return result;
+}
+
+int amqpvalue_get_list_item_count(AMQP_VALUE value, size_t* count)
+{
+	int result;
+
+	if ((value == NULL) ||
+		(count == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_LIST)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			*count = value_data->value.list_value.count;
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index)
+{
+	AMQP_VALUE result;
+
+	if (value == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_LIST)
+		{
+			result = NULL;
+		}
+		else
+		{
+			result = value_data->value.list_value.items[index];
+		}
+	}
+
+	return result;
+}
+
+const char* amqpvalue_get_string(AMQP_VALUE value)
+{
+	const char* result;
+
+	if (value == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_STRING)
+		{
+			result = NULL;
+		}
+		else
+		{
+			result = value_data->value.string_value.chars;
+		}
+	}
+
+	return result;
+
 }

@@ -8,10 +8,12 @@
 #include "encoder.h"
 #include "decoder.h"
 #include "connection.h"
+#include "session.h"
 
 typedef struct AMQPLIB_DATA_TAG
 {
 	CONNECTION_HANDLE connection;
+	SESSION_HANDLE session;
 } AMQPLIB_DATA;
 
 int amqplib_init(void)
@@ -46,6 +48,16 @@ AMQPLIB_HANDLE amqplib_create(const char* host, int port)
 			free(result);
 			result = NULL;
 		}
+		else
+		{
+			result->session = session_create(result->connection);
+			if (result->session == NULL)
+			{
+				connection_destroy(result->connection);
+				free(result);
+				result = NULL;
+			}
+		}
 	}
 
 	return result;
@@ -56,6 +68,7 @@ void amqplib_destroy(AMQPLIB_HANDLE handle)
 	if (handle != NULL)
 	{
 		AMQPLIB_DATA* amqp_lib = (AMQPLIB_DATA*)handle;
+		session_destroy(amqp_lib->session);
 		connection_destroy(amqp_lib->connection);
 		free(handle);
 	}

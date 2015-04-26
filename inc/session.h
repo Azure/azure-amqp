@@ -14,7 +14,7 @@ extern "C" {
 
 	extern SESSION_HANDLE session_create(CONNECTION_HANDLE connection);
 	extern void session_destroy(SESSION_HANDLE handle);
-	extern void session_dowork(SESSION_HANDLE handle);
+	extern int session_dowork(SESSION_HANDLE handle);
 
 #ifdef __cplusplus
 }

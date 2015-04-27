@@ -274,6 +274,16 @@ AMQP_VALUE amqpvalue_create_uint(uint32_t value)
 	return result;
 }
 
+AMQP_VALUE amqpvalue_create_null(void)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
+	{
+		result->type = AMQP_TYPE_NULL;
+	}
+	return result;
+}
+
 int amqpvalue_get_uint(AMQP_VALUE value, uint32_t* uint_value)
 {
 	int result;

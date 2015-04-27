@@ -3,6 +3,10 @@
 #include "connection.h"
 #include "amqpvalue.h"
 #include "amqp_protocol_types.h"
+#include "encoder.h"
+#include "consolelogger.h"
+
+#define FRAME_HEADER_SIZE 8
 
 typedef enum SESION_STATE_TAG
 {
@@ -48,6 +52,12 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 	}
 	else
 	{
+		uint32_t frame_size;
+		uint8_t doff = 2;
+		uint8_t type = 0;
+		uint16_t channel = 0;
+		ENCODER_HANDLE connection_frame_write_bytes;
+
 		AMQP_VALUE next_outgoing_id_value = amqpvalue_create_transfer_number(next_outgoing_id);
 		AMQP_VALUE incoming_window_value = amqpvalue_create_transfer_number(incoming_window);
 		AMQP_VALUE outgoing_window_value = amqpvalue_create_transfer_number(outgoing_window);
@@ -71,6 +81,77 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 		amqpvalue_destroy(incoming_window_value);
 		amqpvalue_destroy(outgoing_window_value);
 		amqpvalue_destroy(send_list_value);
+
+		ENCODER_HANDLE encoder_handle = encoder_create(NULL, NULL);
+		int result;
+
+		if (encoder_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			consolelogger_log("\r\n-> [Begin]\r\n");
+
+			if ((encoder_encode_amqp_value(encoder_handle, send_list_value) != 0) ||
+				(encoder_get_encoded_size(encoder_handle, &frame_size) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				frame_size += FRAME_HEADER_SIZE;
+				result = 0;
+			}
+
+			encoder_destroy(encoder_handle);
+		}
+
+		if (result == 0)
+		{
+			encoder_handle = encoder_create(connection_frame_write_bytes, session_data->connection->used_io);
+			if (encoder_handle == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				unsigned char b;
+
+				b = (frame_size >> 24) & 0xFF;
+				(void)io_send(connection->used_io, &b, 1);
+				b = (frame_size >> 16) & 0xFF;
+				(void)io_send(connection->used_io, &b, 1);
+				b = (frame_size >> 8) & 0xFF;
+				(void)io_send(connection->used_io, &b, 1);
+				b = (frame_size)& 0xFF;
+				(void)io_send(connection->used_io, &b, 1);
+				(void)io_send(connection->used_io, &doff, sizeof(doff));
+				(void)io_send(connection->used_io, &type, sizeof(type));
+				b = (channel >> 8) & 0xFF;
+				(void)io_send(connection->used_io, &b, 1);
+				b = (channel)& 0xFF;
+				(void)io_send(connection->used_io, &b, 1);
+
+				if (connection_encode_open(encoder_handle, container_id) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+
+				encoder_destroy(encoder_handle);
+			}
+		}
+
+		return 0;
+
+		if (encoder_encode_amqp_value(encoder_handle, open_frame_list) != 0)
+		{
+
+		}
 	}
 
 	return result;

@@ -252,6 +252,10 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 						{
 							result = __LINE__;
 						}
+						else
+						{
+							result = 0;
+						}
                     }
 
                 }

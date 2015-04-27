@@ -8,24 +8,6 @@
 static unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 #define FRAME_HEADER_SIZE 8
 
-typedef enum CONNECTION_STATE_TAG
-{
-	CONNECTION_STATE_START,
-	CONNECTION_STATE_HDR_RCVD,
-	CONNECTION_STATE_HDR_SENT,
-	CONNECTION_STATE_HDR_EXCH,
-	CONNECTION_STATE_OPEN_PIPE,
-	CONNECTION_STATE_OC_PIPE,
-	CONNECTION_STATE_OPEN_RCVD,
-	CONNECTION_STATE_OPEN_SENT,
-	CONNECTION_STATE_CLOSE_PIPE,
-	CONNECTION_STATE_OPENED,
-	CONNECTION_STATE_CLOSE_RCVD,
-	CONNECTION_STATE_CLOSE_SENT,
-	CONNECTION_STATE_DISCARDING,
-	CONNECTION_STATE_END
-} CONNECTION_STATE;
-
 typedef enum RECEIVE_FRAME_STATE_TAG
 {
 	RECEIVE_FRAME_STATE_FRAME_SIZE,
@@ -431,6 +413,24 @@ int connection_dowork(CONNECTION_HANDLE handle)
 	if (result == 0)
 	{
 		result = io_dowork(connection->socket_io);
+	}
+
+	return result;
+}
+
+int connection_get_state(CONNECTION_HANDLE handle, CONNECTION_STATE* connection_state)
+{
+	int result;
+	CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;
+
+	if (connection == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		*connection_state = connection->connection_state;
+		result = 0;
 	}
 
 	return result;

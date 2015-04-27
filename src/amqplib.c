@@ -87,6 +87,10 @@ int amqplib_dowork(AMQPLIB_HANDLE handle)
 		AMQPLIB_DATA* amqp_lib = (AMQPLIB_DATA*)handle;
 
 		result = connection_dowork(amqp_lib->connection);
+		if (result == 0)
+		{
+			result = session_dowork(amqp_lib->session);
+		}
 	}
 
 	return result;

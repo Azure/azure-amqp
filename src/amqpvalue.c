@@ -261,7 +261,6 @@ const char* amqpvalue_get_string(AMQP_VALUE value)
 	}
 
 	return result;
-
 }
 
 AMQP_VALUE amqpvalue_create_uint(uint32_t value)
@@ -272,5 +271,30 @@ AMQP_VALUE amqpvalue_create_uint(uint32_t value)
 		result->type = AMQP_TYPE_UINT;
 		result->value.uint = value;
 	}
+	return result;
+}
+
+int amqpvalue_get_uint(AMQP_VALUE value, uint32_t* uint_value)
+{
+	int result;
+
+	if (value == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_UINT)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			*uint_value = value_data->value.uint;
+			result = 0;
+		}
+	}
+
 	return result;
 }

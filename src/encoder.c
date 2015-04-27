@@ -1,8 +1,8 @@
+#include <stdlib.h>
+#include <string.h>
 #include "encoder.h"
 #include "amqpvalue.h"
 #include "amqp_types.h"
-#include <stdlib.h>
-#include <string.h>
 
 typedef struct ENCODER_DATA_TAG
 {
@@ -122,10 +122,48 @@ int encoder_encode_ulong(ENCODER_HANDLE handle, uint64_t value)
 		}
 		else
 		{
+			output_byte(encoder_data, 0x70);
 			output_byte(encoder_data, (value >> 56) & 0xFF);
 			output_byte(encoder_data, (value >> 48) & 0xFF);
 			output_byte(encoder_data, (value >> 40) & 0xFF);
 			output_byte(encoder_data, (value >> 32) & 0xFF);
+			output_byte(encoder_data, (value >> 24) & 0xFF);
+			output_byte(encoder_data, (value >> 16) & 0xFF);
+			output_byte(encoder_data, (value >> 8) & 0xFF);
+			output_byte(encoder_data, value & 0xFF);
+		}
+
+		result = 0;
+	}
+
+	return result;
+}
+
+int encoder_encode_uint(ENCODER_HANDLE handle, uint32_t value)
+{
+	int result;
+	if (handle == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		ENCODER_DATA* encoder_data = (ENCODER_DATA*)handle;
+
+		if (value == 0)
+		{
+			/* uint0 */
+			output_byte(encoder_data, 0x43);
+		}
+		else if (value <= 255)
+		{
+			/* smalluint */
+			output_byte(encoder_data, 0x52);
+			output_byte(encoder_data, value & 0xFF);
+		}
+		else
+		{
+			output_byte(encoder_data, 0x70);
 			output_byte(encoder_data, (value >> 24) & 0xFF);
 			output_byte(encoder_data, (value >> 16) & 0xFF);
 			output_byte(encoder_data, (value >> 8) & 0xFF);
@@ -200,6 +238,21 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 				return 0;
 			}
 			break;
+
+		case AMQP_TYPE_UINT:
+		{
+			uint32_t uint_value;
+			if ((amqpvalue_get_uint(value, &uint_value) != 0) ||
+				(encoder_encode_uint(handle, uint_value) != 0))
+			{
+				return __LINE__;
+			}
+			else
+			{
+				return 0;
+			}
+			break;
+		}
 
 		case AMQP_TYPE_LIST:
 		{

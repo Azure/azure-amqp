@@ -64,7 +64,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 		}
 		else
 		{
-
+			result = 0;
 		}
 
 		amqpvalue_destroy(next_outgoing_id_value);

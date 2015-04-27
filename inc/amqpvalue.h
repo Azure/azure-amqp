@@ -22,6 +22,7 @@ extern "C" {
 	extern int amqpvalue_get_list_item_count(AMQP_VALUE value, size_t* count);
 	extern AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index);
 	extern const char* amqpvalue_get_string(AMQP_VALUE value);
+	extern int amqpvalue_get_uint(AMQP_VALUE value, uint32_t* uint_value);
 	extern void amqpvalue_destroy(AMQP_VALUE value);
 
 #ifdef __cplusplus

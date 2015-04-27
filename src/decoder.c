@@ -70,6 +70,21 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 				break;
 			}
 
+			case 0x40:
+			{
+				/* null */
+				*amqp_value = amqpvalue_create_null();
+				if (*amqp_value == NULL)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+				break;
+			}
+
 			case 0x44:
 				/* ulong0 */
 				*amqp_value = amqpvalue_create_ulong(0);

@@ -12,6 +12,7 @@ extern "C" {
 	typedef void* AMQP_VALUE;
 
 	extern AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value);
+	extern AMQP_VALUE amqpvalue_create_null(void);
 	extern AMQP_VALUE amqpvalue_create_ulong(uint64_t value);
 	extern AMQP_VALUE amqpvalue_create_string(const char* value);
 	extern AMQP_VALUE amqpvalue_create_uint(uint32_t value);

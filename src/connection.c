@@ -115,7 +115,7 @@ static int connection_encode_open(ENCODER_HANDLE encoder_handle, const char* con
 	return result;
 }
 
-static int connection_send_open(CONNECTION_DATA* connection, const char* container_id)
+static int send_open(CONNECTION_DATA* connection, const char* container_id)
 {
 	uint32_t frame_size;
 	uint8_t doff = 2;
@@ -334,7 +334,7 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 				connection->receive_frame_consumed_bytes = 0;
 
 				/* handshake done, send open frame */
-				if (connection_send_open(connection, "1") != 0)
+				if (send_open(connection, "1") != 0)
 				{
 					io_destroy(connection->used_io);
 					connection->connection_state = CONNECTION_STATE_END;
@@ -419,7 +419,7 @@ int connection_dowork(CONNECTION_HANDLE handle)
 		break;
 
 	case CONNECTION_STATE_HDR_EXCH:
-		connection_send_open(connection, "1");
+		send_open(connection, "1");
 		break;
 
 	case CONNECTION_STATE_OPEN_RCVD:

@@ -20,6 +20,7 @@ typedef union AMQP_VALUE_UNION_TAG
 {
 	AMQP_VALUE descriptor;
 	uint64_t ulong;
+	uint32_t uint;
 	AMQP_STRING_VALUE string_value;
 	AMQP_LIST_VALUE list_value;
 } AMQP_VALUE_UNION;
@@ -52,25 +53,25 @@ AMQP_VALUE amqpvalue_create_ulong(uint64_t value)
 	return result;
 }
 
-AMQP_VALUE amqpvalue_create_string(const char* string)
+AMQP_VALUE amqpvalue_create_string(const char* value)
 {
 	AMQP_VALUE_DATA* result;
-	if (string == NULL)
+	if (value == NULL)
 	{
 		result = NULL;
 	}
 	else
 	{
-		size_t length = strlen(string);
-		result = amqpvalue_create_string_with_length(string, length);
+		size_t length = strlen(value);
+		result = amqpvalue_create_string_with_length(value, length);
 	}
 	return result;
 }
 
-AMQP_VALUE amqpvalue_create_string_with_length(const char* string, size_t length)
+AMQP_VALUE amqpvalue_create_string_with_length(const char* value, size_t length)
 {
 	AMQP_VALUE_DATA* result;
-	if (string == NULL)
+	if (value == NULL)
 	{
 		result = NULL;
 	}
@@ -89,7 +90,7 @@ AMQP_VALUE amqpvalue_create_string_with_length(const char* string, size_t length
 			}
 			else
 			{
-				if (strncpy(result->value.string_value.chars, string, length) == NULL)
+				if (strncpy(result->value.string_value.chars, value, length) == NULL)
 				{
 					free(result->value.string_value.chars);
 					free(result);
@@ -261,4 +262,15 @@ const char* amqpvalue_get_string(AMQP_VALUE value)
 
 	return result;
 
+}
+
+AMQP_VALUE amqpvalue_create_uint(uint32_t value)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
+	{
+		result->type = AMQP_TYPE_UINT;
+		result->value.uint = value;
+	}
+	return result;
 }

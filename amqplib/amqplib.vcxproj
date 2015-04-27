@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="..\inc\amqplib.h" />
     <ClInclude Include="..\inc\amqpvalue.h" />
+    <ClInclude Include="..\inc\amqp_protocol_types.h" />
     <ClInclude Include="..\inc\amqp_types.h" />
     <ClInclude Include="..\inc\connection.h" />
     <ClInclude Include="..\inc\consolelogger.h" />

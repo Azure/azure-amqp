@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include "connection.h"
-#include "encoder.h"
 #include "decoder.h"
 #include "consolelogger.h"
 #include "frame_codec.h"

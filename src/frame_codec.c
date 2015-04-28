@@ -33,7 +33,7 @@ FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log)
 	return result;
 }
 
-void frame_codec_free(FRAME_CODEC_HANDLE handle)
+void frame_codec_destroy(FRAME_CODEC_HANDLE handle)
 {
 	free(handle);
 }

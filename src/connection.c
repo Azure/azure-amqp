@@ -276,11 +276,21 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 		}
 		else
 		{
-			result->connection_state = CONNECTION_STATE_START;
-			result->header_bytes_received = 0;
+			result->frame_codec = frame_codec_create(result->socket_io, consolelogger_log);
+			if (result->frame_codec == NULL)
+			{
+				io_destroy(result->socket_io);
+				free(result);
+				result = NULL;
+			}
+			else
+			{
+				result->connection_state = CONNECTION_STATE_START;
+				result->header_bytes_received = 0;
 
-			/* For now directly talk to the socket IO. By doing this there is no SASL, no SSL, pure AMQP only */
-			result->used_io = result->socket_io;
+				/* For now directly talk to the socket IO. By doing this there is no SASL, no SSL, pure AMQP only */
+				result->used_io = result->socket_io;
+			}
 		}
 	}
 
@@ -292,6 +302,7 @@ void connection_destroy(CONNECTION_HANDLE handle)
 	if (handle != NULL)
 	{
 		CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;
+		frame_codec_destroy(connection->frame_codec);
 		io_destroy(connection->socket_io);
 		free(handle);
 	}

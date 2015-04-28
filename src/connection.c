@@ -52,111 +52,26 @@ static int connection_frame_write_bytes(void* context, const void* bytes, size_t
 	return io_send(io_handle, bytes, length);
 }
 
-static int connection_encode_open(ENCODER_HANDLE encoder_handle, const char* container_id)
-{
-	int result;
-
-	if ((encoder_encode_descriptor_header(encoder_handle) != 0) ||
-		(encoder_encode_ulong(encoder_handle, 0x10) != 0))
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		AMQP_VALUE open_frame_list;
-		if ((open_frame_list = amqpvalue_create_list(1)) == NULL)
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			AMQP_VALUE container_id_value = amqpvalue_create_string(container_id);
-			if (container_id_value == NULL)
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				if ((amqpvalue_set_list_item(open_frame_list, 0, container_id_value) != 0) ||
-					(encoder_encode_amqp_value(encoder_handle, open_frame_list) != 0))
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					result = 0;
-				}
-
-				amqpvalue_destroy(container_id_value);
-			}
-
-			amqpvalue_destroy(open_frame_list);
-		}
-
-		result = 0;
-	}
-
-	return result;
-}
-
 static int send_open(CONNECTION_DATA* connection, const char* container_id)
 {
-	uint32_t frame_size;
-	uint8_t doff = 2;
-	uint8_t type = 0;
-	uint16_t channel = 0;
-	ENCODER_HANDLE encoder_handle = encoder_create(NULL, NULL);
 	int result;
 
-	if (encoder_handle == NULL)
+	AMQP_VALUE open_frame_list;
+	if ((open_frame_list = amqpvalue_create_list(1)) == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		consolelogger_log("\r\n-> [Open] container-id=%s\r\n", container_id);
-
-		if ((connection_encode_open(encoder_handle, container_id) != 0) ||
-			(encoder_get_encoded_size(encoder_handle, &frame_size) != 0))
+		AMQP_VALUE container_id_value = amqpvalue_create_string(container_id);
+		if (container_id_value == NULL)
 		{
 			result = __LINE__;
 		}
 		else
 		{
-			frame_size += FRAME_HEADER_SIZE;
-			result = 0;
-		}
-
-		encoder_destroy(encoder_handle);
-	}
-
-	if (result == 0)
-	{
-		encoder_handle = encoder_create(connection_frame_write_bytes, connection->used_io);
-		if (encoder_handle == NULL)
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			unsigned char b;
-
-			b = (frame_size >> 24) & 0xFF;
-			(void)io_send(connection->used_io, &b, 1);
-			b = (frame_size >> 16) & 0xFF;
-			(void)io_send(connection->used_io, &b, 1);
-			b = (frame_size >> 8) & 0xFF;
-			(void)io_send(connection->used_io, &b, 1);
-			b = (frame_size)& 0xFF;
-			(void)io_send(connection->used_io, &b, 1);
-			(void)io_send(connection->used_io, &doff, sizeof(doff));
-			(void)io_send(connection->used_io, &type, sizeof(type));
-			b = (channel >> 8) & 0xFF;
-			(void)io_send(connection->used_io, &b, 1);
-			b = (channel)& 0xFF;
-			(void)io_send(connection->used_io, &b, 1);
-
-			if (connection_encode_open(encoder_handle, container_id) != 0)
+			if ((amqpvalue_set_list_item(open_frame_list, 0, container_id_value) != 0) ||
+				(frame_codec_encode(connection->frame_codec, 0x10, open_frame_list) != 0))
 			{
 				result = __LINE__;
 			}
@@ -165,11 +80,13 @@ static int send_open(CONNECTION_DATA* connection, const char* container_id)
 				result = 0;
 			}
 
-			encoder_destroy(encoder_handle);
+			amqpvalue_destroy(container_id_value);
 		}
+
+		amqpvalue_destroy(open_frame_list);
 	}
 
-	return 0;
+	return result;
 }
 
 static int connection_decode_received_amqp_frame(CONNECTION_DATA* connection)

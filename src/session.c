@@ -41,8 +41,8 @@ void session_destroy(SESSION_HANDLE handle)
 static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
 {
 	int result;
-	AMQP_VALUE begin_list_value = amqpvalue_create_list(1);
-	if (begin_list_value == NULL)
+	AMQP_VALUE begin_frame_list = amqpvalue_create_list(1);
+	if (begin_frame_list == NULL)
 	{
 		result = __LINE__;
 	}
@@ -56,9 +56,9 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 		if ((next_outgoing_id_value == NULL) ||
 			(incoming_window_value == NULL) ||
 			(outgoing_window_value == NULL) ||
-			(amqpvalue_set_list_item(begin_list_value, 0, next_outgoing_id_value) != 0) ||
-			(amqpvalue_set_list_item(begin_list_value, 1, incoming_window_value) != 0) ||
-			(amqpvalue_set_list_item(begin_list_value, 2, outgoing_window_value) != 0))
+			(amqpvalue_set_list_item(begin_frame_list, 0, next_outgoing_id_value) != 0) ||
+			(amqpvalue_set_list_item(begin_frame_list, 1, incoming_window_value) != 0) ||
+			(amqpvalue_set_list_item(begin_frame_list, 2, outgoing_window_value) != 0))
 		{
 			result = __LINE__;
 		}
@@ -66,7 +66,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 		{
 			FRAME_CODEC_HANDLE frame_codec;
 			if (((frame_codec = connection_get_frame_codec(session_data->connection)) == NULL) ||
-				(frame_codec_encode(frame_codec, 0x11, begin_list_value) != 0))
+				(frame_codec_encode(frame_codec, 0x11, begin_frame_list) != 0))
 			{
 				result = __LINE__;
 			}
@@ -79,7 +79,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 		amqpvalue_destroy(next_outgoing_id_value);
 		amqpvalue_destroy(incoming_window_value);
 		amqpvalue_destroy(outgoing_window_value);
-		amqpvalue_destroy(begin_list_value);
+		amqpvalue_destroy(begin_frame_list);
 	}
 
 	return result;

@@ -20,6 +20,27 @@ static int frame_codec_write_bytes(void* context, const void* bytes, size_t leng
 	return io_send(io_handle, bytes, length);
 }
 
+static const char* performative_name(uint64_t performative)
+{
+	const char* result;
+	switch (performative)
+	{
+	default:
+		result = "Unknown";
+		break;
+
+	case 0x10:
+		result = "open";
+		break;
+
+	case 0x11:
+		result = "begin";
+		break;
+	}
+
+	return result;
+}
+
 FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log)
 {
 	FRAME_CODEC_DATA* result;
@@ -56,11 +77,11 @@ int frame_codec_encode(FRAME_CODEC_HANDLE handle, uint64_t performative, AMQP_VA
 	{
 		if (frame_codec->logger_log != NULL)
 		{
-			frame_codec->logger_log("\r\n-> [Begin]\r\n");
+			frame_codec->logger_log("\r\n-> [%s]\r\n", performative_name(performative));
 		}
 
 		if ((encoder_encode_descriptor_header(encoder_handle) != 0) ||
-			(encoder_encode_ulong(encoder_handle, 0x11) != 0) ||
+			(encoder_encode_ulong(encoder_handle, performative) != 0) ||
 			(encoder_encode_amqp_value(encoder_handle, frame_content) != 0) ||
 			(encoder_get_encoded_size(encoder_handle, &frame_size) != 0))
 		{
@@ -102,7 +123,7 @@ int frame_codec_encode(FRAME_CODEC_HANDLE handle, uint64_t performative, AMQP_VA
 			(void)io_send(frame_codec->io, &b, 1);
 
 			if ((encoder_encode_descriptor_header(encoder_handle) != 0) ||
-				(encoder_encode_ulong(encoder_handle, 0x11) != 0) ||
+				(encoder_encode_ulong(encoder_handle, performative) != 0) ||
 				(encoder_encode_amqp_value(encoder_handle, frame_content) != 0))
 			{
 				result = __LINE__;

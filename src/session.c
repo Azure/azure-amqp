@@ -73,8 +73,8 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 			(incoming_window_value == NULL) ||
 			(outgoing_window_value == NULL) ||
 			(amqpvalue_set_list_item(begin_list_value, 0, next_outgoing_id_value) != 0) ||
-			(amqpvalue_set_list_item(begin_list_value, 0, incoming_window_value) != 0) ||
-			(amqpvalue_set_list_item(begin_list_value, 0, outgoing_window_value) != 0))
+			(amqpvalue_set_list_item(begin_list_value, 1, incoming_window_value) != 0) ||
+			(amqpvalue_set_list_item(begin_list_value, 2, outgoing_window_value) != 0))
 		{
 			result = __LINE__;
 		}
@@ -84,7 +84,6 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 		}
 
 		encoder_handle = encoder_create(NULL, NULL);
-		int result;
 
 		if (encoder_handle == NULL)
 		{
@@ -184,6 +183,10 @@ int session_dowork(SESSION_HANDLE handle)
 				if (connection_state == CONNECTION_STATE_OPENED)
 				{
 					result = send_begin(session_data, 0, 1, 1);
+					if (result == 0)
+					{
+						session_data->session_state = SESSION_STATE_BEGIN_SENT;
+					}
 				}
 				else
 				{

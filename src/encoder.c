@@ -98,6 +98,29 @@ int encoder_encode_string(ENCODER_HANDLE handle, const char* value)
 	return result;
 }
 
+int encoder_encode_null(ENCODER_HANDLE handle)
+{
+	int result;
+	if (handle == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		ENCODER_DATA* encoder_data = (ENCODER_DATA*)handle;
+		if (output_byte(encoder_data, (unsigned char)0x40) != 0)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
 int encoder_encode_ulong(ENCODER_HANDLE handle, uint64_t value)
 {
 	int result;
@@ -226,6 +249,17 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 		{
 		default:
 			result = __LINE__;
+			break;
+
+		case AMQP_TYPE_NULL:
+			if (encoder_encode_null(handle) != 0)
+			{
+				return __LINE__;
+			}
+			else
+			{
+				return 0;
+			}
 			break;
 
 		case AMQP_TYPE_STRING:

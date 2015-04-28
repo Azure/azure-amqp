@@ -41,24 +41,27 @@ void session_destroy(SESSION_HANDLE handle)
 static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
 {
 	int result;
-	AMQP_VALUE begin_frame_list = amqpvalue_create_list(1);
+	AMQP_VALUE begin_frame_list = amqpvalue_create_list(4);
 	if (begin_frame_list == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
+		AMQP_VALUE remote_channel_value = amqpvalue_create_null();
 		AMQP_VALUE next_outgoing_id_value = amqpvalue_create_transfer_number(next_outgoing_id);
 		AMQP_VALUE incoming_window_value = amqpvalue_create_transfer_number(incoming_window);
 		AMQP_VALUE outgoing_window_value = amqpvalue_create_transfer_number(outgoing_window);
 		/* do not set remote_channel for now */
 
-		if ((next_outgoing_id_value == NULL) ||
+		if ((remote_channel_value == NULL) ||
+			(next_outgoing_id_value == NULL) ||
 			(incoming_window_value == NULL) ||
 			(outgoing_window_value == NULL) ||
-			(amqpvalue_set_list_item(begin_frame_list, 0, next_outgoing_id_value) != 0) ||
-			(amqpvalue_set_list_item(begin_frame_list, 1, incoming_window_value) != 0) ||
-			(amqpvalue_set_list_item(begin_frame_list, 2, outgoing_window_value) != 0))
+			(amqpvalue_set_list_item(begin_frame_list, 0, remote_channel_value) != 0) ||
+			(amqpvalue_set_list_item(begin_frame_list, 1, next_outgoing_id_value) != 0) ||
+			(amqpvalue_set_list_item(begin_frame_list, 2, incoming_window_value) != 0) ||
+			(amqpvalue_set_list_item(begin_frame_list, 3, outgoing_window_value) != 0))
 		{
 			result = __LINE__;
 		}
@@ -76,6 +79,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 			}
 		}
 
+		amqpvalue_destroy(remote_channel_value);
 		amqpvalue_destroy(next_outgoing_id_value);
 		amqpvalue_destroy(incoming_window_value);
 		amqpvalue_destroy(outgoing_window_value);

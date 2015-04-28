@@ -1,12 +1,15 @@
 #ifndef ENCODER_H
 #define ENCODER_H
 
-#include <stddef.h>
-#include <stdint.h>
 #include "amqpvalue.h"
 
 #ifdef __cplusplus
+#include <cstddef>
+#include <cstdint>
 extern "C" {
+#else
+#include <stddef.h>
+#include <stdint.h>
 #endif /* __cplusplus */
 
 	typedef void* ENCODER_HANDLE;

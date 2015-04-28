@@ -435,3 +435,20 @@ int connection_get_state(CONNECTION_HANDLE handle, CONNECTION_STATE* connection_
 
 	return result;
 }
+
+IO_HANDLE connection_get_io(CONNECTION_HANDLE handle)
+{
+	IO_HANDLE result;
+	CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;
+
+	if (connection == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = connection->used_io;
+	}
+
+	return result;
+}

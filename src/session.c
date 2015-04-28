@@ -42,11 +42,17 @@ void session_destroy(SESSION_HANDLE handle)
 	free(handle);
 }
 
+static int session_frame_write_bytes(void* context, const void* bytes, size_t length)
+{
+	IO_HANDLE io_handle = (IO_HANDLE)context;
+	return io_send(io_handle, bytes, length);
+}
+
 static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
 {
 	int result;
-	AMQP_VALUE send_list_value = amqpvalue_create_list(1);
-	if (send_list_value == NULL)
+	AMQP_VALUE begin_list_value = amqpvalue_create_list(1);
+	if (begin_list_value == NULL)
 	{
 		result = __LINE__;
 	}
@@ -56,7 +62,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 		uint8_t doff = 2;
 		uint8_t type = 0;
 		uint16_t channel = 0;
-		ENCODER_HANDLE connection_frame_write_bytes;
+		ENCODER_HANDLE encoder_handle;
 
 		AMQP_VALUE next_outgoing_id_value = amqpvalue_create_transfer_number(next_outgoing_id);
 		AMQP_VALUE incoming_window_value = amqpvalue_create_transfer_number(incoming_window);
@@ -66,9 +72,9 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 		if ((next_outgoing_id_value == NULL) ||
 			(incoming_window_value == NULL) ||
 			(outgoing_window_value == NULL) ||
-			(amqpvalue_set_list_item(send_list_value, 0, next_outgoing_id_value) != 0) ||
-			(amqpvalue_set_list_item(send_list_value, 0, incoming_window_value) != 0) ||
-			(amqpvalue_set_list_item(send_list_value, 0, outgoing_window_value) != 0))
+			(amqpvalue_set_list_item(begin_list_value, 0, next_outgoing_id_value) != 0) ||
+			(amqpvalue_set_list_item(begin_list_value, 0, incoming_window_value) != 0) ||
+			(amqpvalue_set_list_item(begin_list_value, 0, outgoing_window_value) != 0))
 		{
 			result = __LINE__;
 		}
@@ -77,12 +83,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 			result = 0;
 		}
 
-		amqpvalue_destroy(next_outgoing_id_value);
-		amqpvalue_destroy(incoming_window_value);
-		amqpvalue_destroy(outgoing_window_value);
-		amqpvalue_destroy(send_list_value);
-
-		ENCODER_HANDLE encoder_handle = encoder_create(NULL, NULL);
+		encoder_handle = encoder_create(NULL, NULL);
 		int result;
 
 		if (encoder_handle == NULL)
@@ -93,7 +94,9 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 		{
 			consolelogger_log("\r\n-> [Begin]\r\n");
 
-			if ((encoder_encode_amqp_value(encoder_handle, send_list_value) != 0) ||
+			if ((encoder_encode_descriptor_header(encoder_handle) != 0) ||
+				(encoder_encode_ulong(encoder_handle, 0x11) != 0) ||
+				(encoder_encode_amqp_value(encoder_handle, begin_list_value) != 0) ||
 				(encoder_get_encoded_size(encoder_handle, &frame_size) != 0))
 			{
 				result = __LINE__;
@@ -109,7 +112,8 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 
 		if (result == 0)
 		{
-			encoder_handle = encoder_create(connection_frame_write_bytes, session_data->connection->used_io);
+			IO_HANDLE io = connection_get_io(session_data->connection);
+			encoder_handle = encoder_create(session_frame_write_bytes, io);
 			if (encoder_handle == NULL)
 			{
 				result = __LINE__;
@@ -119,21 +123,23 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 				unsigned char b;
 
 				b = (frame_size >> 24) & 0xFF;
-				(void)io_send(connection->used_io, &b, 1);
+				(void)io_send(io, &b, 1);
 				b = (frame_size >> 16) & 0xFF;
-				(void)io_send(connection->used_io, &b, 1);
+				(void)io_send(io, &b, 1);
 				b = (frame_size >> 8) & 0xFF;
-				(void)io_send(connection->used_io, &b, 1);
+				(void)io_send(io, &b, 1);
 				b = (frame_size)& 0xFF;
-				(void)io_send(connection->used_io, &b, 1);
-				(void)io_send(connection->used_io, &doff, sizeof(doff));
-				(void)io_send(connection->used_io, &type, sizeof(type));
+				(void)io_send(io, &b, 1);
+				(void)io_send(io, &doff, sizeof(doff));
+				(void)io_send(io, &type, sizeof(type));
 				b = (channel >> 8) & 0xFF;
-				(void)io_send(connection->used_io, &b, 1);
+				(void)io_send(io, &b, 1);
 				b = (channel)& 0xFF;
-				(void)io_send(connection->used_io, &b, 1);
+				(void)io_send(io, &b, 1);
 
-				if (connection_encode_open(encoder_handle, container_id) != 0)
+				if ((encoder_encode_descriptor_header(encoder_handle) != 0) ||
+					(encoder_encode_ulong(encoder_handle, 0x11) != 0) ||
+					(encoder_encode_amqp_value(encoder_handle, begin_list_value) != 0))
 				{
 					result = __LINE__;
 				}
@@ -146,12 +152,10 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 			}
 		}
 
-		return 0;
-
-		if (encoder_encode_amqp_value(encoder_handle, open_frame_list) != 0)
-		{
-
-		}
+		amqpvalue_destroy(next_outgoing_id_value);
+		amqpvalue_destroy(incoming_window_value);
+		amqpvalue_destroy(outgoing_window_value);
+		amqpvalue_destroy(begin_list_value);
 	}
 
 	return result;

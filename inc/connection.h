@@ -34,6 +34,7 @@ extern "C" {
 	extern void connection_destroy(CONNECTION_HANDLE handle);
 	extern int connection_dowork(CONNECTION_HANDLE handle);
 	extern int connection_get_state(CONNECTION_HANDLE handle, CONNECTION_STATE* connection_state);
+	extern IO_HANDLE connection_get_io(CONNECTION_HANDLE handle);
 
 #ifdef __cplusplus
 }

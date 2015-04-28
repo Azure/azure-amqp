@@ -3,6 +3,7 @@
 #include "encoder.h"
 #include "decoder.h"
 #include "consolelogger.h"
+#include "frame_codec.h"
 #include "socketio.h"
 
 static unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
@@ -25,6 +26,7 @@ typedef struct CONNECTION_DATA_TAG
 	size_t receive_frame_consumed_bytes;
 	uint32_t receive_frame_size;
 	unsigned char receive_frame_buffer[2048];
+	FRAME_CODEC_HANDLE frame_codec;
 } CONNECTION_DATA;
 
 static int connection_sendheader(CONNECTION_DATA* connection)
@@ -436,9 +438,9 @@ int connection_get_state(CONNECTION_HANDLE handle, CONNECTION_STATE* connection_
 	return result;
 }
 
-IO_HANDLE connection_get_io(CONNECTION_HANDLE handle)
+FRAME_CODEC_HANDLE connection_get_frame_codec(CONNECTION_HANDLE handle)
 {
-	IO_HANDLE result;
+	FRAME_CODEC_HANDLE result;
 	CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;
 
 	if (connection == NULL)
@@ -447,7 +449,7 @@ IO_HANDLE connection_get_io(CONNECTION_HANDLE handle)
 	}
 	else
 	{
-		result = connection->used_io;
+		result = connection->frame_codec;
 	}
 
 	return result;

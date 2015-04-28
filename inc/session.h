@@ -3,7 +3,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "amqpvalue.h"
 #include "connection.h"
 
 #ifdef __cplusplus

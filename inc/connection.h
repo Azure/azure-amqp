@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "io.h"
+#include "frame_codec.h"
 #include "connection.h"
 
 #ifdef __cplusplus
@@ -34,7 +34,7 @@ extern "C" {
 	extern void connection_destroy(CONNECTION_HANDLE handle);
 	extern int connection_dowork(CONNECTION_HANDLE handle);
 	extern int connection_get_state(CONNECTION_HANDLE handle, CONNECTION_STATE* connection_state);
-	extern IO_HANDLE connection_get_io(CONNECTION_HANDLE handle);
+	extern FRAME_CODEC_HANDLE connection_get_frame_codec(CONNECTION_HANDLE handle);
 
 #ifdef __cplusplus
 }

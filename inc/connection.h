@@ -34,6 +34,7 @@ extern "C" {
 	extern void connection_destroy(CONNECTION_HANDLE handle);
 	extern int connection_dowork(CONNECTION_HANDLE handle);
 	extern int connection_get_state(CONNECTION_HANDLE handle, CONNECTION_STATE* connection_state);
+	extern int connection_set_session_frame_receive_callback(CONNECTION_HANDLE handle, FRAME_RECEIVED_CALLBACK callback, void* context);
 	extern FRAME_CODEC_HANDLE connection_get_frame_codec(CONNECTION_HANDLE handle);
 
 #ifdef __cplusplus

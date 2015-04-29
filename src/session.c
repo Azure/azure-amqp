@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdint.h>
 #include "session.h"
 #include "connection.h"
 #include "amqpvalue.h"
@@ -20,23 +21,6 @@ typedef struct SESSION_DATA_TAG
 	CONNECTION_HANDLE connection;
 	SESSION_STATE session_state;
 } SESSION_DATA;
-
-SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
-{
-	SESSION_DATA* result = malloc(sizeof(SESSION_DATA));
-	if (result != NULL)
-	{
-		result->session_state = SESSION_STATE_UNMAPPED;
-		result->connection = connection;
-	}
-
-	return result;
-}
-
-void session_destroy(SESSION_HANDLE handle)
-{
-	free(handle);
-}
 
 static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
 {
@@ -87,6 +71,35 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 	}
 
 	return result;
+}
+
+static void frame_received(void* context, uint64_t performative, AMQP_VALUE frame_list_value)
+{
+}
+
+SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
+{
+	SESSION_DATA* result = malloc(sizeof(SESSION_DATA));
+	if (result != NULL)
+	{
+		if (connection_set_session_frame_receive_callback(connection, frame_received, result) != 0)
+		{
+			free(result);
+			result = NULL;
+		}
+		else
+		{
+			result->session_state = SESSION_STATE_UNMAPPED;
+			result->connection = connection;
+		}
+	}
+
+	return result;
+}
+
+void session_destroy(SESSION_HANDLE handle)
+{
+	free(handle);
 }
 
 int session_dowork(SESSION_HANDLE handle)

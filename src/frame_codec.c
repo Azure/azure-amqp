@@ -87,7 +87,7 @@ static int decode_received_amqp_frame(FRAME_CODEC_DATA* frame_codec)
 		/* notify of received frame */
 		if (frame_codec->frame_received_callback != NULL)
 		{
-			frame_codec->frame_received_callback(frame_codec->context, 0x10, frame_list_value);
+			frame_codec->frame_received_callback(frame_codec->context, descriptor_ulong_value, frame_list_value);
 		}
 
 		result = 0;

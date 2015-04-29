@@ -133,13 +133,13 @@ static void connection_receive_callback(IO_HANDLE io, void* context, const void*
 	}
 }
 
-static void connection_frame_received(void* context, uint32_t performative, AMQP_VALUE frame_list_value)
+static void connection_frame_received(void* context, uint64_t performative, AMQP_VALUE frame_list_value)
 {
 	CONNECTION_DATA* connection = (CONNECTION_DATA*)context;
 	switch (performative)
 	{
 	default:
-		consolelogger_log("Bad performative: %lu", (unsigned long)performative);
+		consolelogger_log("Bad performative: %llu", (unsigned long long)performative);
 		break;
 
 	case 0x10:

@@ -21,8 +21,8 @@ typedef struct CONNECTION_DATA_TAG
 	size_t header_bytes_received;
 	CONNECTION_STATE connection_state;
 	FRAME_CODEC_HANDLE frame_codec;
-	FRAME_RECEIVED_CALLBACK session_frame_received_callback;
-	void* session_frame_received_callback_context;
+	FRAME_RECEIVED_CALLBACK frame_received_callback;
+	void* frame_received_callback_context;
 } CONNECTION_DATA;
 
 static int connection_sendheader(CONNECTION_DATA* connection)
@@ -165,9 +165,9 @@ static void connection_frame_received(void* context, uint64_t performative, AMQP
 		break;
 
 	case 0x11:
-		if (connection->session_frame_received_callback != NULL)
+		if (connection->frame_received_callback != NULL)
 		{
-			connection->session_frame_received_callback(connection->session_frame_received_callback_context, performative, frame_list_value);
+			connection->frame_received_callback(connection->frame_received_callback_context, performative, frame_list_value);
 		}
 		break;
 	}
@@ -196,7 +196,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 			}
 			else
 			{
-				result->session_frame_received_callback = NULL;
+				result->frame_received_callback = NULL;
 				result->connection_state = CONNECTION_STATE_START;
 				result->header_bytes_received = 0;
 
@@ -304,8 +304,8 @@ int connection_set_session_frame_receive_callback(CONNECTION_HANDLE handle, FRAM
 	}
 	else
 	{
-		connection->session_frame_received_callback = callback;
-		connection->session_frame_received_callback_context = context;
+		connection->frame_received_callback = callback;
+		connection->frame_received_callback_context = context;
 		result = 0;
 	}
 

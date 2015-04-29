@@ -75,6 +75,19 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 
 static void frame_received(void* context, uint64_t performative, AMQP_VALUE frame_list_value)
 {
+	SESSION_DATA* session = (SESSION_DATA*)context;
+	if (performative == 0x11)
+	{
+		switch (session->session_state)
+		{
+		default:
+			break;
+
+		case SESSION_STATE_BEGIN_SENT:
+			session->session_state = SESSION_STATE_MAPPED;
+			break;
+		}
+	}
 }
 
 SESSION_HANDLE session_create(CONNECTION_HANDLE connection)

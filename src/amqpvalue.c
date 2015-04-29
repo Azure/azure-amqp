@@ -308,3 +308,52 @@ int amqpvalue_get_uint(AMQP_VALUE value, uint32_t* uint_value)
 
 	return result;
 }
+
+int amqpvalue_get_ulong(AMQP_VALUE value, uint64_t* ulong_value)
+{
+	int result;
+
+	if (value == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_ULONG)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			*ulong_value = value_data->value.ulong;
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value)
+{
+	AMQP_VALUE result;
+
+	if (value == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_DESCRIPTOR)
+		{
+			result = NULL;
+		}
+		else
+		{
+			result = value_data->value.descriptor;
+		}
+	}
+
+	return result;
+}

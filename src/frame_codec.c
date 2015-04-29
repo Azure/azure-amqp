@@ -66,6 +66,7 @@ static int decode_received_amqp_frame(FRAME_CODEC_DATA* frame_codec)
 	AMQP_VALUE frame_list_value;
 	int result;
 	bool more;
+	uint64_t descriptor_ulong_value;
 
 	channel = frame_codec->receive_frame_buffer[6] << 8;
 	channel += frame_codec->receive_frame_buffer[7];
@@ -75,12 +76,14 @@ static int decode_received_amqp_frame(FRAME_CODEC_DATA* frame_codec)
 
 	if ((decoder_decode(decoder_handle, &descriptor, &more) != 0) ||
 		(!more) ||
-		(decoder_decode(decoder_handle, &frame_list_value, &more) != 0))
+		(decoder_decode(decoder_handle, &frame_list_value, &more) != 0) ||
+		(amqpvalue_get_ulong(amqpvalue_get_descriptor(descriptor), &descriptor_ulong_value) != 0))
 	{
 		result = __LINE__;
 	}
 	else
 	{
+
 		/* notify of received frame */
 		if (frame_codec->frame_received_callback != NULL)
 		{

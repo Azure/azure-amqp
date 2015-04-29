@@ -18,7 +18,7 @@ extern "C" {
 	extern SESSION_HANDLE session_create(CONNECTION_HANDLE connection);
 	extern void session_destroy(SESSION_HANDLE handle);
 	extern int session_dowork(SESSION_HANDLE handle);
-	extern int session_set_receive_callback(SESSION_HANDLE handle, SESSION_FRAME_RECEIVED_CALLBACK callback, void* context);
+	extern int session_set_frame_received_callback(SESSION_HANDLE handle, SESSION_FRAME_RECEIVED_CALLBACK callback, void* context);
 
 #ifdef __cplusplus
 }

@@ -158,7 +158,7 @@ int session_dowork(SESSION_HANDLE handle)
 	return result;
 }
 
-int session_set_receive_callback(SESSION_HANDLE handle, SESSION_FRAME_RECEIVED_CALLBACK callback, void* context)
+int session_set_frame_received_callback(SESSION_HANDLE handle, SESSION_FRAME_RECEIVED_CALLBACK callback, void* context)
 {
 	int result;
 

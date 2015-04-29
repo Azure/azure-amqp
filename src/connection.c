@@ -20,11 +20,6 @@ typedef struct CONNECTION_DATA_TAG
 	IO_HANDLE used_io;
 	size_t header_bytes_received;
 	CONNECTION_STATE connection_state;
-	RECEIVE_FRAME_STATE receive_frame_state;
-	size_t receive_frame_bytes;
-	size_t receive_frame_consumed_bytes;
-	uint32_t receive_frame_size;
-	unsigned char receive_frame_buffer[2048];
 	FRAME_CODEC_HANDLE frame_codec;
 } CONNECTION_DATA;
 
@@ -88,127 +83,6 @@ static int send_open(CONNECTION_DATA* connection, const char* container_id)
 	return result;
 }
 
-static int connection_decode_received_amqp_frame(CONNECTION_DATA* connection)
-{
-	uint16_t channel;
-	uint8_t doff = connection->receive_frame_buffer[4];
-	unsigned char* frame_body;
-	uint32_t frame_body_size = connection->receive_frame_size - doff * 4;
-	DECODER_HANDLE decoder_handle;
-	AMQP_VALUE descriptor;
-	AMQP_VALUE container_id;
-	int result;
-	bool more;
-
-	channel = connection->receive_frame_buffer[6] << 8;
-	channel += connection->receive_frame_buffer[7];
-
-	frame_body = &connection->receive_frame_buffer[4 * doff];
-	decoder_handle = decoder_create(frame_body, frame_body_size);
-
-	if ((decoder_decode(decoder_handle, &descriptor, &more) != 0) ||
-		(!more) ||
-		(decoder_decode(decoder_handle, &container_id, &more) != 0))
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		if (connection->connection_state == CONNECTION_STATE_OPEN_SENT)
-		{
-			connection->connection_state = CONNECTION_STATE_OPENED;
-		}
-
-		result = 0;
-	}
-
-	return result;
-}
-
-static int connection_decode_received_sasl_frame(CONNECTION_DATA* connection)
-{
-	/* not implemented */
-	return __LINE__;
-}
-
-static int connection_decode_received_frame(CONNECTION_DATA* connection)
-{
-	int result;
-
-	/* decode type */
-	uint8_t type = connection->receive_frame_buffer[5];
-
-	switch (type)
-	{
-	default:
-		consolelogger_log("Unknown frame.\r\n");
-		result = __LINE__;
-		break;
-
-	case 0:
-		result = connection_decode_received_amqp_frame(connection);
-		break;
-
-	case 1:
-		result = connection_decode_received_sasl_frame(connection);
-		break;
-	}
-
-	return result;
-}
-
-static int connection_receive_frame(CONNECTION_DATA* connection, unsigned char b)
-{
-	int result;
-
-	connection->receive_frame_buffer[connection->receive_frame_bytes] = b;
-	connection->receive_frame_bytes++;
-
-	switch (connection->receive_frame_state)
-	{
-	default:
-		result = __LINE__;
-
-	case RECEIVE_FRAME_STATE_FRAME_SIZE:
-		if (connection->receive_frame_bytes - connection->receive_frame_consumed_bytes >= 4)
-		{
-			connection->receive_frame_size = connection->receive_frame_buffer[connection->receive_frame_consumed_bytes++] << 24;
-			connection->receive_frame_size += connection->receive_frame_buffer[connection->receive_frame_consumed_bytes++] << 16;
-			connection->receive_frame_size += connection->receive_frame_buffer[connection->receive_frame_consumed_bytes++] << 8;
-			connection->receive_frame_size += connection->receive_frame_buffer[connection->receive_frame_consumed_bytes++];
-			connection->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_DATA;
-		}
-
-		result = 0;
-		break;
-
-	case RECEIVE_FRAME_STATE_FRAME_DATA:
-		if (connection->receive_frame_bytes - connection->receive_frame_consumed_bytes == connection->receive_frame_size - 4)
-		{
-			/* done receiving */
-			if (connection_decode_received_frame(connection) != 0)
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				result = 0;
-			}
-
-			connection->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
-			connection->receive_frame_bytes = 0;
-			connection->receive_frame_consumed_bytes = 0;
-		}
-		else
-		{
-			result = 0;
-		}
-		break;
-	}
-
-	return result;
-}
-
 static void connection_byte_received(CONNECTION_DATA* connection, unsigned char b)
 {
 	switch (connection->connection_state)
@@ -229,9 +103,6 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 			if (connection->header_bytes_received == sizeof(amqp_header))
 			{
 				connection->connection_state = CONNECTION_STATE_HDR_EXCH;
-				connection->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
-				connection->receive_frame_bytes = 0;
-				connection->receive_frame_consumed_bytes = 0;
 
 				/* handshake done, send open frame */
 				if (send_open(connection, "1") != 0)
@@ -248,12 +119,12 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 		break;
 
 	case CONNECTION_STATE_OPEN_SENT:
-		(void)connection_receive_frame(connection, b);
+		(void)frame_codec_receive_bytes(connection->frame_codec, &b, 1);
 		break;
 	}
 }
 
-static void connection_receive_callback(IO_HANDLE handle, void* context, const void* buffer, size_t size)
+static void connection_receive_callback(IO_HANDLE io, void* context, const void* buffer, size_t size)
 {
 	size_t i;
 	for (i = 0; i < size; i++)

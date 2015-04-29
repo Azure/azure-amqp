@@ -16,6 +16,7 @@ extern "C" {
 
 	extern FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log);
 	extern void frame_codec_destroy(FRAME_CODEC_HANDLE handle);
+	extern int frame_codec_receive_bytes(FRAME_CODEC_HANDLE handle, const void* buffer, size_t size);
 	extern int frame_codec_encode(FRAME_CODEC_HANDLE frame_codec, uint64_t performative, AMQP_VALUE frame_content);
 
 #ifdef __cplusplus

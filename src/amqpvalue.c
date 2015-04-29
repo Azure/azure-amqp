@@ -21,6 +21,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	AMQP_VALUE descriptor;
 	uint64_t ulong;
 	uint32_t uint;
+	uint16_t ushort;
 	AMQP_STRING_VALUE string_value;
 	AMQP_LIST_VALUE list_value;
 } AMQP_VALUE_UNION;
@@ -49,6 +50,17 @@ AMQP_VALUE amqpvalue_create_ulong(uint64_t value)
 	{
 		result->type = AMQP_TYPE_ULONG;
 		result->value.ulong = value;
+	}
+	return result;
+}
+
+AMQP_VALUE amqpvalue_create_ushort(uint16_t value)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
+	{
+		result->type = AMQP_TYPE_USHORT;
+		result->value.ushort = value;
 	}
 	return result;
 }

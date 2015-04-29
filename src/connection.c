@@ -121,6 +121,7 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 		break;
 
 	case CONNECTION_STATE_OPEN_SENT:
+	case CONNECTION_STATE_OPENED:
 		(void)frame_codec_receive_bytes(connection->frame_codec, &b, 1);
 		break;
 	}

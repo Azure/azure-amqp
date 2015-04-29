@@ -16,6 +16,7 @@ extern "C" {
 	extern AMQP_VALUE amqpvalue_create_ulong(uint64_t value);
 	extern AMQP_VALUE amqpvalue_create_string(const char* value);
 	extern AMQP_VALUE amqpvalue_create_uint(uint32_t value);
+	extern AMQP_VALUE amqpvalue_create_ushort(uint16_t value);
 	extern AMQP_VALUE amqpvalue_create_string_with_length(const char* value, size_t length);
 	extern AMQP_VALUE amqpvalue_create_list(size_t size);
 	extern int amqpvalue_set_list_item(AMQP_VALUE value, size_t index, AMQP_VALUE list_item_value);

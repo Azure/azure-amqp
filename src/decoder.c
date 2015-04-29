@@ -118,6 +118,28 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 				}
 				break;
 
+			case 0x60:
+				/* ushort */
+				if (decoderData->size - decoderData->pos < 2)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					uint16_t ushort_value = decoderData->buffer[decoderData->pos++] << 8;
+					ushort_value += decoderData->buffer[decoderData->pos++];
+					*amqp_value = amqpvalue_create_ushort(ushort_value);
+					if (*amqp_value == NULL)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
+				}
+				break;
+
 			case 0x80:
 				/* ulong */
 				if (decoderData->size - decoderData->pos < 4)

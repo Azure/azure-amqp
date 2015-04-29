@@ -196,6 +196,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 			}
 			else
 			{
+				result->session_frame_received_callback = NULL;
 				result->connection_state = CONNECTION_STATE_START;
 				result->header_bytes_received = 0;
 

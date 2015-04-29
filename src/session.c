@@ -20,6 +20,8 @@ typedef struct SESSION_DATA_TAG
 {
 	CONNECTION_HANDLE connection;
 	SESSION_STATE session_state;
+	SESSION_FRAME_RECEIVED_CALLBACK frame_received_callback;
+	void* frame_received_callback_context;
 } SESSION_DATA;
 
 static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
@@ -102,6 +104,7 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 		}
 		else
 		{
+			result->frame_received_callback = NULL;
 			result->session_state = SESSION_STATE_UNMAPPED;
 			result->connection = connection;
 		}
@@ -150,6 +153,25 @@ int session_dowork(SESSION_HANDLE handle)
 			}
 			break;
 		}
+	}
+
+	return result;
+}
+
+int session_set_receive_callback(SESSION_HANDLE handle, SESSION_FRAME_RECEIVED_CALLBACK callback, void* context)
+{
+	int result;
+
+	SESSION_DATA* session = (SESSION_DATA*)handle;
+	if (session == NULL)
+	{
+		session->frame_received_callback = callback;
+		session->frame_received_callback_context = context;
+		result = __LINE__;
+	}
+	else
+	{
+		result = 0;
 	}
 
 	return result;

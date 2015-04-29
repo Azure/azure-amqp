@@ -19,6 +19,8 @@ typedef struct FRAME_CODEC_DATA_TAG
 {
 	IO_HANDLE io;
 	LOGGER_LOG logger_log;
+	FRAME_RECEIVED_CALLBACK frame_received_callback;
+	void* context;
 	RECEIVE_FRAME_STATE receive_frame_state;
 	size_t receive_frame_bytes;
 	size_t receive_frame_consumed_bytes;
@@ -61,7 +63,7 @@ static int decode_received_amqp_frame(FRAME_CODEC_DATA* frame_codec)
 	uint32_t frame_body_size = frame_codec->receive_frame_size - doff * 4;
 	DECODER_HANDLE decoder_handle;
 	AMQP_VALUE descriptor;
-	AMQP_VALUE container_id;
+	AMQP_VALUE frame_list_value;
 	int result;
 	bool more;
 
@@ -73,17 +75,17 @@ static int decode_received_amqp_frame(FRAME_CODEC_DATA* frame_codec)
 
 	if ((decoder_decode(decoder_handle, &descriptor, &more) != 0) ||
 		(!more) ||
-		(decoder_decode(decoder_handle, &container_id, &more) != 0))
+		(decoder_decode(decoder_handle, &frame_list_value, &more) != 0))
 	{
 		result = __LINE__;
 	}
 	else
 	{
 		/* notify of received frame */
-/*		if (frame_codec->frame_codec_state == frame_codec_STATE_OPEN_SENT)
+		if (frame_codec->frame_received_callback != NULL)
 		{
-			frame_codec->frame_codec_state = frame_codec_STATE_OPENED;
-		}*/
+			frame_codec->frame_received_callback(frame_codec->context, 0x10, frame_list_value);
+		}
 
 		result = 0;
 	}
@@ -175,7 +177,7 @@ static int receive_frame_byte(FRAME_CODEC_DATA* frame_codec, unsigned char b)
 	return result;
 }
 
-FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log)
+FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, FRAME_RECEIVED_CALLBACK frame_received_callback, void* context, LOGGER_LOG logger_log)
 {
 	FRAME_CODEC_DATA* result;
 	result = malloc(sizeof(FRAME_CODEC_DATA));
@@ -183,6 +185,8 @@ FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log)
 	{
 		result->io = io;
 		result->logger_log = logger_log;
+		result->frame_received_callback = frame_received_callback;
+		result->context = context;
 		result->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
 		result->receive_frame_bytes = 0;
 		result->receive_frame_consumed_bytes = 0;

@@ -133,6 +133,36 @@ static void connection_receive_callback(IO_HANDLE io, void* context, const void*
 	}
 }
 
+static void connection_frame_received(void* context, uint32_t performative, AMQP_VALUE frame_list_value)
+{
+	CONNECTION_DATA* connection = (CONNECTION_DATA*)context;
+	switch (performative)
+	{
+	default:
+		consolelogger_log("Bad performative: %lu", (unsigned long)performative);
+		break;
+
+	case 0x10:
+		switch (connection->connection_state)
+		{
+		default:
+			break;
+
+		case CONNECTION_STATE_OPEN_SENT:
+			connection->connection_state = CONNECTION_STATE_OPENED;
+			break;
+
+		case CONNECTION_STATE_HDR_EXCH:
+			connection->connection_state = CONNECTION_STATE_OPEN_RCVD;
+
+			/* respond with an open here */
+
+			break;
+		}
+		break;
+	}
+}
+
 CONNECTION_HANDLE connection_create(const char* host, int port)
 {
 	CONNECTION_DATA* result = malloc(sizeof(CONNECTION_DATA));
@@ -147,7 +177,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 		}
 		else
 		{
-			result->frame_codec = frame_codec_create(result->socket_io, consolelogger_log);
+			result->frame_codec = frame_codec_create(result->socket_io, connection_frame_received, result, consolelogger_log);
 			if (result->frame_codec == NULL)
 			{
 				io_destroy(result->socket_io);

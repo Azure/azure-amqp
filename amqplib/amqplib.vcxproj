@@ -21,6 +21,7 @@
     <ClInclude Include="..\inc\encoder.h" />
     <ClInclude Include="..\inc\frame_codec.h" />
     <ClInclude Include="..\inc\io.h" />
+    <ClInclude Include="..\inc\link.h" />
     <ClInclude Include="..\inc\platform.h" />
     <ClInclude Include="..\inc\session.h" />
     <ClInclude Include="..\inc\socketio.h" />
@@ -35,6 +36,7 @@
     <ClCompile Include="..\src\encoder.c" />
     <ClCompile Include="..\src\frame_codec.c" />
     <ClCompile Include="..\src\io.c" />
+    <ClCompile Include="..\src\link.c" />
     <ClCompile Include="..\src\platform_win32.c" />
     <ClCompile Include="..\src\session.c" />
     <ClCompile Include="..\src\socketio_win32.c" />

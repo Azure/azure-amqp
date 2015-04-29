@@ -1,12 +1,15 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#include <stddef.h>
-#include <stdint.h>
 #include "connection.h"
 
 #ifdef __cplusplus
 extern "C" {
+#include <cstddef>
+#include <cstdint>
+#else
+#include <stddef.h>
+#include <stdint.h>
 #endif /* __cplusplus */
 
 	typedef void* SESSION_HANDLE;

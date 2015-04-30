@@ -1,12 +1,24 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "link.h"
 #include "session.h"
 #include "amqpvalue.h"
+#include "amqp_protocol_types.h"
+
+typedef enum LINK_STATE_TAG
+{
+	LINK_STATE_DETACHED,
+	LINK_STATE_HALF_ATTACHED,
+	LINK_STATE_ATTACHED
+} LINK_STATE;
 
 typedef struct LINK_DATA_TAG
 {
 	SESSION_HANDLE session;
+	LINK_STATE link_state;
+	AMQP_VALUE source;
+	AMQP_VALUE target;
 } LINK_DATA;
 
 static void link_frame_received(void* context, uint64_t performative, AMQP_VALUE frame_list_value)
@@ -14,7 +26,64 @@ static void link_frame_received(void* context, uint64_t performative, AMQP_VALUE
 
 }
 
-LINK_HANDLE link_create(SESSION_HANDLE session)
+static int send_attach(LINK_DATA* link, const char* name, handle handle, role role, sender_settle_mode snd_settle_mode, receiver_settle_mode rcv_settle_mode, AMQP_VALUE source, AMQP_VALUE target)
+{
+	int result;
+	AMQP_VALUE attach_frame_list = amqpvalue_create_list(4);
+	if (attach_frame_list == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE name_value = amqpvalue_create_string(name);
+		AMQP_VALUE handle_value = amqpvalue_create_handle(handle);
+		AMQP_VALUE role_value = amqpvalue_create_role(role);
+		AMQP_VALUE snd_settle_mode_value = amqpvalue_create_sender_settle_mode(snd_settle_mode);
+		AMQP_VALUE rcv_settle_mode_value = amqpvalue_create_reeiver_settle_mode(rcv_settle_mode);
+		/* do not set remote_channel for now */
+
+		if ((name_value == NULL) ||
+			(handle_value == NULL) ||
+			(role_value == NULL) ||
+			(snd_settle_mode_value == NULL) ||
+			(rcv_settle_mode_value == NULL) ||
+			(amqpvalue_set_list_item(attach_frame_list, 0, name_value) != 0) ||
+			(amqpvalue_set_list_item(attach_frame_list, 1, handle_value) != 0) ||
+			(amqpvalue_set_list_item(attach_frame_list, 2, role_value) != 0) ||
+			(amqpvalue_set_list_item(attach_frame_list, 3, snd_settle_mode_value) != 0) ||
+			(amqpvalue_set_list_item(attach_frame_list, 4, rcv_settle_mode_value) != 0) ||
+			(amqpvalue_set_list_item(attach_frame_list, 5, source) != 0) ||
+			(amqpvalue_set_list_item(attach_frame_list, 6, target) != 0))
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			FRAME_CODEC_HANDLE frame_codec;
+			if (((frame_codec = session_get_frame_codec(link->session)) == NULL) ||
+				(frame_codec_encode(frame_codec, 0x11, attach_frame_list) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		amqpvalue_destroy(name_value);
+		amqpvalue_destroy(handle_value);
+		amqpvalue_destroy(role_value);
+		amqpvalue_destroy(snd_settle_mode_value);
+		amqpvalue_destroy(rcv_settle_mode_value);
+		amqpvalue_destroy(attach_frame_list);
+	}
+
+	return result;
+}
+
+LINK_HANDLE link_create(SESSION_HANDLE session, AMQP_VALUE source, AMQP_VALUE target)
 {
 	LINK_DATA* result = malloc(sizeof(LINK_DATA));
 	if (result != NULL)
@@ -26,6 +95,9 @@ LINK_HANDLE link_create(SESSION_HANDLE session)
 		}
 		else
 		{
+			result->link_state = LINK_STATE_DETACHED;
+			result->source = source;
+			result->target = target;
 			result->session = session;
 		}
 	}
@@ -40,7 +112,29 @@ void link_destroy(LINK_HANDLE handle)
 
 int link_dowork(LINK_HANDLE handle)
 {
-	int result = 0;
+	int result;
+	LINK_DATA* link = (LINK_DATA*)handle;
+	SESSION_STATE session_state;
+
+	if (session_get_state(link->session, &session_state) != 0)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		result = 0;
+
+		if (session_state == SESSION_STATE_MAPPED)
+		{
+			if (link->link_state == LINK_STATE_DETACHED)
+			{
+				if (send_attach(link, "fake", 1, sender, unsettled, first, link->source, link->target) != 0)
+				{
+					result = __LINE__;
+				}
+			}
+		}
+	}
 
 	return result;
 }

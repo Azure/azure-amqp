@@ -5,17 +5,6 @@
 #include "amqpvalue.h"
 #include "amqp_protocol_types.h"
 
-typedef enum SESION_STATE_TAG
-{
-	SESSION_STATE_UNMAPPED,
-	SESSION_STATE_BEGIN_SENT,
-	SESSION_STATE_BEGIN_RCVD,
-	SESSION_STATE_MAPPED,
-	SESSION_STATE_END_SENT,
-	SESSION_STATE_END_RCVD,
-	SESSION_STATE_DISCARDING
-} SESSION_STATE;
-
 typedef struct SESSION_DATA_TAG
 {
 	CONNECTION_HANDLE connection;
@@ -172,6 +161,41 @@ int session_set_frame_received_callback(SESSION_HANDLE handle, SESSION_FRAME_REC
 	else
 	{
 		result = 0;
+	}
+
+	return result;
+}
+
+int session_get_state(SESSION_HANDLE handle, SESSION_STATE* session_state)
+{
+	int result;
+
+	SESSION_DATA* session = (SESSION_DATA*)handle;
+	if (session == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		*session_state = session->session_state;
+		result = 0;
+	}
+
+	return result;
+}
+
+FRAME_CODEC_HANDLE session_get_frame_codec(SESSION_HANDLE handle)
+{
+	FRAME_CODEC_HANDLE result;
+
+	SESSION_DATA* session = (SESSION_DATA*)handle;
+	if (session == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = connection_get_frame_codec(session->connection);
 	}
 
 	return result;

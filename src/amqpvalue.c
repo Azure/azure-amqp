@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 #include "amqp_types.h"
 #include "amqpvalue.h"
 
@@ -22,6 +23,8 @@ typedef union AMQP_VALUE_UNION_TAG
 	uint64_t ulong;
 	uint32_t uint;
 	uint16_t ushort;
+	unsigned char ubyte;
+	bool bool_value;
 	AMQP_STRING_VALUE string_value;
 	AMQP_LIST_VALUE list_value;
 } AMQP_VALUE_UNION;
@@ -282,6 +285,28 @@ AMQP_VALUE amqpvalue_create_uint(uint32_t value)
 	{
 		result->type = AMQP_TYPE_UINT;
 		result->value.uint = value;
+	}
+	return result;
+}
+
+AMQP_VALUE amqpvalue_create_ubyte(unsigned char value)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
+	{
+		result->type = AMQP_TYPE_UBYTE;
+		result->value.ubyte = value;
+	}
+	return result;
+}
+
+AMQP_VALUE amqpvalue_create_bool(bool value)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
+	{
+		result->type = AMQP_TYPE_BOOL;
+		result->value.bool_value = value;
 	}
 	return result;
 }

@@ -9,7 +9,7 @@ extern "C" {
 
 typedef void* LINK_HANDLE;
 
-extern LINK_HANDLE link_create(SESSION_HANDLE session);
+extern LINK_HANDLE link_create(SESSION_HANDLE session, AMQP_VALUE source, AMQP_VALUE target);
 extern void link_destroy(LINK_HANDLE handle);
 extern int link_dowork(LINK_HANDLE handle);
 

@@ -50,6 +50,10 @@ static const char* performative_name(uint64_t performative)
 	case 0x11:
 		result = "begin";
 		break;
+
+	case 0x12:
+		result = "attach";
+		break;
 	}
 
 	return result;

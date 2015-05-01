@@ -30,6 +30,7 @@ extern "C" {
 	extern int amqpvalue_set_list_item(AMQP_VALUE value, size_t index, AMQP_VALUE list_item_value);
 	extern int amqpvalue_get_type(AMQP_VALUE value, AMQP_TYPE* type);
 	extern int amqpvalue_get_list_item_count(AMQP_VALUE value, size_t* count);
+	extern AMQP_VALUE amqpvalue_get_composite_descriptor(AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_get_composite_list(AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index);
 	extern const char* amqpvalue_get_string(AMQP_VALUE value);

@@ -13,7 +13,7 @@ typedef struct AMQP_LIST_VALUE_TAG
 
 typedef struct AMQP_COMPOSITE_VALUE_TAG
 {
-	uint64_t uint64_descriptor;
+	AMQP_VALUE descriptor;
 	AMQP_VALUE list;
 } AMQP_COMPOSITE_VALUE;
 
@@ -151,13 +151,31 @@ AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor,
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
-		result->type = AMQP_TYPE_COMPOSITE;
-		result->value.composite_value.uint64_descriptor = descriptor;
-		result->value.composite_value.list = amqpvalue_create_list(size);
-		if (result->value.composite_value.list == NULL)
+		AMQP_VALUE descriptor_ulong_value = amqpvalue_create_ulong(descriptor);
+		if (descriptor_ulong_value == NULL)
 		{
 			free(result);
 			result = NULL;
+		}
+		else
+		{
+			result->type = AMQP_TYPE_COMPOSITE;
+			result->value.composite_value.descriptor = amqpvalue_create_descriptor(descriptor_ulong_value);
+			if (result->value.composite_value.descriptor == NULL)
+			{
+				free(descriptor_ulong_value);
+				free(result);
+				result = NULL;
+			}
+			else
+			{
+				result->value.composite_value.list = amqpvalue_create_list(size);
+				if (result->value.composite_value.list == NULL)
+				{
+					free(result);
+					result = NULL;
+				}
+			}
 		}
 	}
 
@@ -414,6 +432,30 @@ AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value)
 		else
 		{
 			result = value_data->value.descriptor;
+		}
+	}
+
+	return result;
+}
+
+AMQP_VALUE amqpvalue_get_composite_descriptor(AMQP_VALUE value)
+{
+	AMQP_VALUE result;
+
+	if (value == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_COMPOSITE)
+		{
+			result = NULL;
+		}
+		else
+		{
+			result = value_data->value.composite_value.descriptor;
 		}
 	}
 

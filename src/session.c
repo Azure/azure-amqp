@@ -118,6 +118,11 @@ int session_dowork(SESSION_HANDLE handle)
 			result = __LINE__;
 			break;
 
+		case SESSION_STATE_BEGIN_SENT:
+		case SESSION_STATE_MAPPED:
+			result = 0;
+			break;
+
 		case SESSION_STATE_UNMAPPED:
 		{
 			CONNECTION_STATE connection_state;

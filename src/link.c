@@ -62,7 +62,7 @@ static int send_attach(LINK_DATA* link, const char* name, handle handle, role ro
 		{
 			FRAME_CODEC_HANDLE frame_codec;
 			if (((frame_codec = session_get_frame_codec(link->session)) == NULL) ||
-				(frame_codec_encode(frame_codec, 0x11, attach_frame_list) != 0))
+				(frame_codec_encode(frame_codec, 0x12, attach_frame_list) != 0))
 			{
 				result = __LINE__;
 			}

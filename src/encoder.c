@@ -162,6 +162,34 @@ int encoder_encode_ulong(ENCODER_HANDLE handle, uint64_t value)
 	return result;
 }
 
+int encoder_encode_bool(ENCODER_HANDLE handle, bool value)
+{
+	int result;
+	if (handle == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		ENCODER_DATA* encoder_data = (ENCODER_DATA*)handle;
+
+		if (value == false)
+		{
+			/* false */
+			output_byte(encoder_data, 0x42);
+		}
+		else
+		{
+			/* true */
+			output_byte(encoder_data, 0x41);
+		}
+
+		result = 0;
+	}
+
+	return result;
+}
+
 int encoder_encode_uint(ENCODER_HANDLE handle, uint32_t value)
 {
 	int result;
@@ -272,6 +300,21 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 				return 0;
 			}
 			break;
+
+		case AMQP_TYPE_BOOL:
+		{
+			bool bool_value;
+			if ((amqpvalue_get_bool(value, &bool_value) != 0) ||
+				(encoder_encode_bool(handle, bool_value) != 0))
+			{
+				return __LINE__;
+			}
+			else
+			{
+				return 0;
+			}
+			break;
+		}
 
 		case AMQP_TYPE_UINT:
 		{

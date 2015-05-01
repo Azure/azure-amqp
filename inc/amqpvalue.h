@@ -34,6 +34,7 @@ extern "C" {
 	extern AMQP_VALUE amqpvalue_get_composite_list(AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index);
 	extern const char* amqpvalue_get_string(AMQP_VALUE value);
+	extern int amqpvalue_get_bool(AMQP_VALUE value, bool* bool_value);
 	extern int amqpvalue_get_uint(AMQP_VALUE value, uint32_t* uint_value);
 	extern int amqpvalue_get_ulong(AMQP_VALUE value, uint64_t* ulong_value);
 	extern AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value);

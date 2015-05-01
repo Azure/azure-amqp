@@ -389,6 +389,31 @@ int amqpvalue_get_bool(AMQP_VALUE value, bool* bool_value)
 	return result;
 }
 
+int amqpvalue_get_ubyte(AMQP_VALUE value, unsigned char* ubyte_value)
+{
+	int result;
+
+	if (value == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_UBYTE)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			*ubyte_value = value_data->value.ubyte;
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
 int amqpvalue_get_uint(AMQP_VALUE value, uint32_t* uint_value)
 {
 	int result;

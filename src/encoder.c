@@ -190,6 +190,27 @@ int encoder_encode_bool(ENCODER_HANDLE handle, bool value)
 	return result;
 }
 
+int encoder_encode_ubyte(ENCODER_HANDLE handle, unsigned char value)
+{
+	int result;
+	if (handle == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		ENCODER_DATA* encoder_data = (ENCODER_DATA*)handle;
+
+		/* ubyte */
+		output_byte(encoder_data, 0x50);
+		output_byte(encoder_data, value);
+
+		result = 0;
+	}
+
+	return result;
+}
+
 int encoder_encode_uint(ENCODER_HANDLE handle, uint32_t value)
 {
 	int result;
@@ -306,6 +327,21 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 			bool bool_value;
 			if ((amqpvalue_get_bool(value, &bool_value) != 0) ||
 				(encoder_encode_bool(handle, bool_value) != 0))
+			{
+				return __LINE__;
+			}
+			else
+			{
+				return 0;
+			}
+			break;
+		}
+
+		case AMQP_TYPE_UBYTE:
+		{
+			unsigned char ubyte_value;
+			if ((amqpvalue_get_ubyte(value, &ubyte_value) != 0) ||
+				(encoder_encode_ubyte(handle, ubyte_value) != 0))
 			{
 				return __LINE__;
 			}

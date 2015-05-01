@@ -11,6 +11,12 @@ typedef struct AMQP_LIST_VALUE_TAG
 	size_t count;
 } AMQP_LIST_VALUE;
 
+typedef struct AMQP_COMPOSITE_VALUE_TAG
+{
+	uint64_t uint64_descriptor;
+	AMQP_VALUE list;
+} AMQP_COMPOSITE_VALUE;
+
 typedef struct AMQP_STRING_VALUE_TAG
 {
 	char* chars;
@@ -27,6 +33,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	bool bool_value;
 	AMQP_STRING_VALUE string_value;
 	AMQP_LIST_VALUE list_value;
+	AMQP_COMPOSITE_VALUE composite_value;
 } AMQP_VALUE_UNION;
 
 typedef struct AMQP_VALUE_DATA_TAG
@@ -130,6 +137,24 @@ AMQP_VALUE amqpvalue_create_list(size_t size)
 		result->value.list_value.count = size;
 		result->value.list_value.items = (AMQP_VALUE*)malloc(sizeof(AMQP_VALUE*) * size);
 		if (result->value.list_value.items == NULL)
+		{
+			free(result);
+			result = NULL;
+		}
+	}
+
+	return result;
+}
+
+AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor, size_t size)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
+	{
+		result->type = AMQP_TYPE_COMPOSITE;
+		result->value.composite_value.uint64_descriptor = descriptor;
+		result->value.composite_value.list = amqpvalue_create_list(size);
+		if (result->value.composite_value.list == NULL)
 		{
 			free(result);
 			result = NULL;
@@ -389,6 +414,55 @@ AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value)
 		else
 		{
 			result = value_data->value.descriptor;
+		}
+	}
+
+	return result;
+}
+
+AMQP_VALUE amqpvalue_get_composite_list(AMQP_VALUE value)
+{
+	AMQP_VALUE result;
+
+	if (value == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_COMPOSITE)
+		{
+			result = NULL;
+		}
+		else
+		{
+			result = value_data->value.composite_value.list;
+		}
+	}
+
+	return result;
+}
+
+AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
+{
+	AMQP_VALUE result;
+	if (value == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		switch (value_data->type)
+		{
+		default:
+			result = NULL;
+			break;
+
+		case AMQP_TYPE_STRING:
+			result = amqpvalue_create_string(value_data->value.string_value.chars);
+			break;
 		}
 	}
 

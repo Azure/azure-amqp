@@ -9,11 +9,14 @@
 #include "decoder.h"
 #include "connection.h"
 #include "session.h"
+#include "link.h"
+#include "messaging.h"
 
 typedef struct AMQPLIB_DATA_TAG
 {
 	CONNECTION_HANDLE connection;
 	SESSION_HANDLE session;
+	LINK_HANDLE link;
 } AMQPLIB_DATA;
 
 int amqplib_init(void)
@@ -56,6 +59,24 @@ AMQPLIB_HANDLE amqplib_create(const char* host, int port)
 				connection_destroy(result->connection);
 				free(result);
 				result = NULL;
+			}
+			else
+			{
+				AMQP_VALUE source_address = amqpvalue_create_string("/");
+				AMQP_VALUE target_address = amqpvalue_create_string("/");
+
+				if ((source_address == NULL) ||
+					(target_address == NULL))
+				{
+					connection_destroy(result->connection);
+					link_destroy(result->link);
+					free(result);
+					result = NULL;
+				}
+				else
+				{
+					result->link = link_create(result->session, messaging_create_source(source_address), messaging_create_target(amqpvalue_create_string(target_address)));
+				}
 			}
 		}
 	}

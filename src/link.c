@@ -29,7 +29,7 @@ static void link_frame_received(void* context, uint64_t performative, AMQP_VALUE
 static int send_attach(LINK_DATA* link, const char* name, handle handle, role role, sender_settle_mode snd_settle_mode, receiver_settle_mode rcv_settle_mode, AMQP_VALUE source, AMQP_VALUE target)
 {
 	int result;
-	AMQP_VALUE attach_frame_list = amqpvalue_create_list(4);
+	AMQP_VALUE attach_frame_list = amqpvalue_create_list(7);
 	if (attach_frame_list == NULL)
 	{
 		result = __LINE__;

@@ -383,6 +383,21 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 			break;
 		}
 
+		case AMQP_TYPE_ULONG:
+		{
+			uint64_t ulong_value;
+			if ((amqpvalue_get_ulong(value, &ulong_value) != 0) ||
+				(encoder_encode_ulong(handle, ulong_value) != 0))
+			{
+				return __LINE__;
+			}
+			else
+			{
+				return 0;
+			}
+			break;
+		}
+
 		case AMQP_TYPE_COMPOSITE:
 		{
 			AMQP_VALUE descriptor_value = amqpvalue_get_composite_descriptor(value);

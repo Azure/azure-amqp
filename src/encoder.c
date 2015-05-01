@@ -311,6 +311,22 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 			}
 			break;
 
+		case AMQP_TYPE_DESCRIPTOR:
+		{
+			AMQP_VALUE descriptor_value = amqpvalue_get_descriptor(value);
+			if ((descriptor_value == NULL) ||
+				(encoder_encode_descriptor_header(handle) != 0) ||
+				(encoder_encode_amqp_value(handle, descriptor_value) != 0))
+			{
+				return __LINE__;
+			}
+			else
+			{
+				return 0;
+			}
+			break;
+		}
+
 		case AMQP_TYPE_STRING:
 			if (encoder_encode_string(handle, amqpvalue_get_string(value)) != 0)
 			{

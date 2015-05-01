@@ -8,6 +8,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 extern AMQP_VALUE messaging_create_source(AMQP_VALUE address);
+extern AMQP_VALUE messaging_create_target(AMQP_VALUE address);
 
 #ifdef __cplusplus
 }

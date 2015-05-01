@@ -77,6 +77,9 @@ AMQPLIB_HANDLE amqplib_create(const char* host, int port)
 				{
 					result->link = link_create(result->session, messaging_create_source(source_address), messaging_create_target(amqpvalue_create_string(target_address)));
 				}
+
+				amqpvalue_destroy(source_address);
+				amqpvalue_destroy(target_address);
 			}
 		}
 	}

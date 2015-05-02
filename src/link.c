@@ -23,7 +23,16 @@ typedef struct LINK_DATA_TAG
 
 static void link_frame_received(void* context, uint64_t performative, AMQP_VALUE frame_list_value)
 {
-
+	LINK_DATA* link = (LINK_DATA*)context;
+	switch (performative)
+	{
+	case 0x12:
+		if (link->link_state == LINK_STATE_HALF_ATTACHED)
+		{
+			link->link_state = LINK_STATE_ATTACHED;
+		}
+		break;
+	}
 }
 
 static int send_attach(LINK_DATA* link, const char* name, handle handle, role role, sender_settle_mode snd_settle_mode, receiver_settle_mode rcv_settle_mode, AMQP_VALUE source, AMQP_VALUE target)
@@ -132,6 +141,8 @@ int link_dowork(LINK_HANDLE handle)
 				{
 					result = __LINE__;
 				}
+
+				link->link_state = LINK_STATE_HALF_ATTACHED;
 			}
 		}
 	}

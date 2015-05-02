@@ -21,8 +21,6 @@ extern "C" {
 		AMQP_TYPE_COMPOSITE
 	} AMQP_TYPE;
 
-	typedef void* AMQP_VALUE;
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

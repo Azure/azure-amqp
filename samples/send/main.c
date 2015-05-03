@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 	{
 		LINK_HANDLE link;
 		AMQP_VALUE payload;
-		bool sent = false;
+		int sent = 0;
 
 		amqplib_handle = amqplib_create("127.0.0.1", 5672);
 		link = amqplib_get_link(amqplib_handle);
@@ -25,10 +25,10 @@ int main(int argc, char** argv)
 			(void)amqplib_dowork(amqplib_handle);
 			if ((link_get_state(link, &link_state) == 0) &&
 				(link_state == LINK_STATE_ATTACHED) &&
-				(!sent))
+				(sent < 1000))
 			{
 				link_transfer(link, &payload, 1);
-				sent = true;
+				sent++;
 			}
 		}
 

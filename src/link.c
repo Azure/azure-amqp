@@ -98,7 +98,7 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 	else
 	{
 		AMQP_VALUE handle_value = amqpvalue_create_handle(link->handle);
-		AMQP_VALUE delivery_id_value = amqpvalue_create_delivery_number(link->delivery_id);
+		AMQP_VALUE delivery_id_value = amqpvalue_create_delivery_number(link->delivery_id++);
 		AMQP_VALUE delivery_tag_value = amqpvalue_create_delivery_tag(&link->delivery_id, sizeof(link->delivery_id));
 
 		if ((handle_value == NULL) ||

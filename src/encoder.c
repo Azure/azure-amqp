@@ -337,11 +337,11 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 		case AMQP_TYPE_NULL:
 			if (encoder_encode_null(handle) != 0)
 			{
-				return __LINE__;
+				result = __LINE__;
 			}
 			else
 			{
-				return 0;
+				result = 0;
 			}
 			break;
 
@@ -352,11 +352,11 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 				(encoder_encode_descriptor_header(handle) != 0) ||
 				(encoder_encode_amqp_value(handle, descriptor_value) != 0))
 			{
-				return __LINE__;
+				result = __LINE__;
 			}
 			else
 			{
-				return 0;
+				result = 0;
 			}
 			break;
 		}
@@ -364,11 +364,11 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 		case AMQP_TYPE_STRING:
 			if (encoder_encode_string(handle, amqpvalue_get_string(value)) != 0)
 			{
-				return __LINE__;
+				result = __LINE__;
 			}
 			else
 			{
-				return 0;
+				result = 0;
 			}
 			break;
 
@@ -396,11 +396,11 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 			if ((amqpvalue_get_bool(value, &bool_value) != 0) ||
 				(encoder_encode_bool(handle, bool_value) != 0))
 			{
-				return __LINE__;
+				result = __LINE__;
 			}
 			else
 			{
-				return 0;
+				result = 0;
 			}
 			break;
 		}
@@ -411,11 +411,11 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 			if ((amqpvalue_get_ubyte(value, &ubyte_value) != 0) ||
 				(encoder_encode_ubyte(handle, ubyte_value) != 0))
 			{
-				return __LINE__;
+				result = __LINE__;
 			}
 			else
 			{
-				return 0;
+				result = 0;
 			}
 			break;
 		}
@@ -426,11 +426,11 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 			if ((amqpvalue_get_uint(value, &uint_value) != 0) ||
 				(encoder_encode_uint(handle, uint_value) != 0))
 			{
-				return __LINE__;
+				result = __LINE__;
 			}
 			else
 			{
-				return 0;
+				result = 0;
 			}
 			break;
 		}
@@ -441,11 +441,11 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 			if ((amqpvalue_get_ulong(value, &ulong_value) != 0) ||
 				(encoder_encode_ulong(handle, ulong_value) != 0))
 			{
-				return __LINE__;
+				result = __LINE__;
 			}
 			else
 			{
-				return 0;
+				result = 0;
 			}
 			break;
 		}

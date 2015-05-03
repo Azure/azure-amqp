@@ -12,7 +12,7 @@ typedef void* LINK_HANDLE;
 extern LINK_HANDLE link_create(SESSION_HANDLE session, AMQP_VALUE source, AMQP_VALUE target);
 extern void link_destroy(LINK_HANDLE handle);
 extern int link_dowork(LINK_HANDLE handle);
-extern int link_transfer(LINK_HANDLE link, AMQP_VALUE message_payload);
+extern int link_transfer(LINK_HANDLE link, const AMQP_VALUE* payload_chunks, size_t payload_chunk_count);
 
 #ifdef __cplusplus
 }

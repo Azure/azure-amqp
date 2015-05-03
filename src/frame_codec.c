@@ -240,7 +240,7 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE handle, const void* buffer, siz
 	return result;
 }
 
-int frame_codec_encode(FRAME_CODEC_HANDLE handle, uint64_t performative, AMQP_VALUE frame_content)
+int frame_codec_encode(FRAME_CODEC_HANDLE handle, uint64_t performative, const AMQP_VALUE* frame_content_chunks, size_t frame_content_chunk_count)
 {
 	int result;
 	ENCODER_HANDLE encoder_handle = encoder_create(NULL, NULL);
@@ -250,7 +250,9 @@ int frame_codec_encode(FRAME_CODEC_HANDLE handle, uint64_t performative, AMQP_VA
 	uint16_t channel = 0;
 	FRAME_CODEC_DATA* frame_codec = (FRAME_CODEC_DATA*)handle;
 
-	if (encoder_handle == NULL)
+	if ((encoder_handle == NULL) ||
+		(frame_content_chunks == NULL) ||
+		frame_content_chunk_count == 0)
 	{
 		result = __LINE__;
 	}
@@ -262,16 +264,32 @@ int frame_codec_encode(FRAME_CODEC_HANDLE handle, uint64_t performative, AMQP_VA
 		}
 
 		if ((encoder_encode_descriptor_header(encoder_handle) != 0) ||
-			(encoder_encode_ulong(encoder_handle, performative) != 0) ||
-			(encoder_encode_amqp_value(encoder_handle, frame_content) != 0) ||
-			(encoder_get_encoded_size(encoder_handle, &frame_size) != 0))
+			(encoder_encode_ulong(encoder_handle, performative) != 0))
 		{
 			result = __LINE__;
 		}
 		else
 		{
-			frame_size += FRAME_HEADER_SIZE;
-			result = 0;
+			size_t i;
+
+			for (i = 0; i < frame_content_chunk_count; i++)
+			{
+				if (encoder_encode_amqp_value(encoder_handle, frame_content_chunks[i]) != 0)
+				{
+					break;
+				}
+			}
+
+			if ((i < frame_content_chunk_count) ||
+				(encoder_get_encoded_size(encoder_handle, &frame_size) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				frame_size += FRAME_HEADER_SIZE;
+				result = 0;
+			}
 		}
 
 		encoder_destroy(encoder_handle);
@@ -304,14 +322,31 @@ int frame_codec_encode(FRAME_CODEC_HANDLE handle, uint64_t performative, AMQP_VA
 			(void)io_send(frame_codec->io, &b, 1);
 
 			if ((encoder_encode_descriptor_header(encoder_handle) != 0) ||
-				(encoder_encode_ulong(encoder_handle, performative) != 0) ||
-				(encoder_encode_amqp_value(encoder_handle, frame_content) != 0))
+				(encoder_encode_ulong(encoder_handle, performative) != 0))
 			{
 				result = __LINE__;
 			}
 			else
 			{
-				result = 0;
+				size_t i;
+
+				for (i = 0; i < frame_content_chunk_count; i++)
+				{
+					if (encoder_encode_amqp_value(encoder_handle, frame_content_chunks[i]) != 0)
+					{
+						break;
+					}
+				}
+
+				if ((i < frame_content_chunk_count) ||
+					(encoder_get_encoded_size(encoder_handle, &frame_size) != 0))
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
 			}
 
 			encoder_destroy(encoder_handle);

@@ -67,7 +67,7 @@ static int send_open(CONNECTION_DATA* connection, const char* container_id)
 		else
 		{
 			if ((amqpvalue_set_list_item(open_frame_list, 0, container_id_value) != 0) ||
-				(frame_codec_encode(connection->frame_codec, 0x10, open_frame_list) != 0))
+				(frame_codec_encode(connection->frame_codec, 0x10, &open_frame_list, 1) != 0))
 			{
 				result = __LINE__;
 			}

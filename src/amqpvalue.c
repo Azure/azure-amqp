@@ -20,8 +20,14 @@ typedef struct AMQP_COMPOSITE_VALUE_TAG
 typedef struct AMQP_STRING_VALUE_TAG
 {
 	char* chars;
-	size_t length;
+	uint32_t length;
 } AMQP_STRING_VALUE;
+
+typedef struct AMQP_BINARY_VALUE_TAG
+{
+	unsigned char* bytes;
+	uint32_t length;
+} AMQP_BINARY_VALUE;
 
 typedef union AMQP_VALUE_UNION_TAG
 {
@@ -32,6 +38,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	unsigned char ubyte;
 	bool bool_value;
 	AMQP_STRING_VALUE string_value;
+	AMQP_BINARY_VALUE binary_value;
 	AMQP_LIST_VALUE list_value;
 	AMQP_COMPOSITE_VALUE composite_value;
 } AMQP_VALUE_UNION;
@@ -128,7 +135,7 @@ AMQP_VALUE amqpvalue_create_string_with_length(const char* value, uint32_t lengt
 	return result;
 }
 
-AMQP_VALUE amqpvalue_create_binary(const unsigned char* value, uint32_t length)
+AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length)
 {
 	AMQP_VALUE_DATA* result;
 	if (value == NULL)
@@ -152,7 +159,7 @@ AMQP_VALUE amqpvalue_create_binary(const unsigned char* value, uint32_t length)
 			{
 				if (memcpy(result->value.binary_value.bytes, value, length) == NULL)
 				{
-					free(result->value.binary_value.chars);
+					free(result->value.binary_value.bytes);
 					free(result);
 					result = NULL;
 				}
@@ -349,6 +356,32 @@ const char* amqpvalue_get_string(AMQP_VALUE value)
 		else
 		{
 			result = value_data->value.string_value.chars;
+		}
+	}
+
+	return result;
+}
+
+const unsigned char* amqpvalue_get_binary_content(AMQP_VALUE value, uint32_t* length)
+{
+	const char* result;
+
+	if ((value == NULL) ||
+		(length == NULL))
+	{
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_BINARY)
+		{
+			result = NULL;
+		}
+		else
+		{
+			*length = value_data->value.binary_value.length;
+			result = value_data->value.binary_value.bytes;
 		}
 	}
 

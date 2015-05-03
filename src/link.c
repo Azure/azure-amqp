@@ -73,7 +73,7 @@ static int send_attach(LINK_DATA* link, const char* name, handle handle, role ro
 		{
 			FRAME_CODEC_HANDLE frame_codec;
 			if (((frame_codec = session_get_frame_codec(link->session)) == NULL) ||
-				(frame_codec_encode(frame_codec, 0x12, attach_frame_list) != 0))
+				(frame_codec_encode(frame_codec, 0x12, &attach_frame_list, 1) != 0))
 			{
 				result = __LINE__;
 			}
@@ -94,7 +94,7 @@ static int send_attach(LINK_DATA* link, const char* name, handle handle, role ro
 	return result;
 }
 
-static int send_tranfer(LINK_DATA* link, AMQP_VALUE* payload_chunks, size_t payload_chunk_count)
+static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_t payload_chunk_count)
 {
 	int result;
 	AMQP_VALUE transfer_frame_list = amqpvalue_create_list(3);
@@ -216,7 +216,7 @@ int link_dowork(LINK_HANDLE handle)
 	return result;
 }
 
-int link_transfer(LINK_HANDLE handle, AMQP_VALUE payload)
+int link_transfer(LINK_HANDLE handle, const AMQP_VALUE* payload_chunks, size_t payload_chunk_count)
 {
 	int result;
 	LINK_DATA* link = (LINK_DATA*)handle;
@@ -226,7 +226,7 @@ int link_transfer(LINK_HANDLE handle, AMQP_VALUE payload)
 	}
 	else
 	{
-		result = send_tranfer(link, payload);
+		result = send_tranfer(link, payload_chunks, payload_chunk_count);
 	}
 
 	return result;

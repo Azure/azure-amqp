@@ -248,7 +248,7 @@ int connection_dowork(CONNECTION_HANDLE handle)
 		break;
 
 	case CONNECTION_STATE_HDR_EXCH:
-		send_open(connection, "1");
+		result = send_open(connection, "1");
 		break;
 
 	case CONNECTION_STATE_OPEN_RCVD:

@@ -119,7 +119,7 @@ AMQP_VALUE amqpvalue_create_string_with_length(const char* value, uint32_t lengt
 			}
 			else
 			{
-				if (strncpy(result->value.string_value.chars, value, length) == NULL)
+				if (memcpy(result->value.string_value.chars, value, length) == NULL)
 				{
 					free(result->value.string_value.chars);
 					free(result);

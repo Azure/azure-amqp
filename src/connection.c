@@ -142,7 +142,7 @@ static void connection_frame_received(void* context, uint64_t performative, AMQP
 	switch (performative)
 	{
 	default:
-		consolelogger_log("Bad performative: %llu", (unsigned long long)performative);
+		consolelogger_log("Bad performative: %02x", performative);
 		break;
 
 	case 0x10:
@@ -165,6 +165,12 @@ static void connection_frame_received(void* context, uint64_t performative, AMQP
 		break;
 
 	case 0x11:
+	case 0x12:
+	case 0x13:
+	case 0x14:
+	case 0x15:
+	case 0x16:
+	case 0x17:
 		if (connection->frame_received_callback != NULL)
 		{
 			connection->frame_received_callback(connection->frame_received_callback_context, performative, frame_list_value);

@@ -54,6 +54,30 @@ static const char* performative_name(uint64_t performative)
 	case 0x12:
 		result = "attach";
 		break;
+
+	case 0x13:
+		result = "flow";
+		break;
+
+	case 0x14:
+		result = "transfer";
+		break;
+
+	case 0x15:
+		result = "disposition";
+		break;
+
+	case 0x16:
+		result = "detach";
+		break;
+
+	case 0x17:
+		result = "end";
+		break;
+
+	case 0x18:
+		result = "close";
+		break;
 	}
 
 	return result;
@@ -338,8 +362,7 @@ int frame_codec_encode(FRAME_CODEC_HANDLE handle, uint64_t performative, const A
 					}
 				}
 
-				if ((i < frame_content_chunk_count) ||
-					(encoder_get_encoded_size(encoder_handle, &frame_size) != 0))
+				if (i < frame_content_chunk_count)
 				{
 					result = __LINE__;
 				}

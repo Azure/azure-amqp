@@ -85,6 +85,57 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 				break;
 			}
 
+			case 0x41:
+			{
+				/* true */
+				*amqp_value = amqpvalue_create_bool(true);
+				if (*amqp_value == NULL)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+				break;
+			}
+
+			case 0x42:
+			{
+				/* false */
+				*amqp_value = amqpvalue_create_bool(false);
+				if (*amqp_value == NULL)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+				break;
+			}
+
+			case 0x50:
+				/* ubyte */
+				if (decoderData->size - decoderData->pos < 1)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					unsigned char ubyte_value = decoderData->buffer[decoderData->pos++];
+					*amqp_value = amqpvalue_create_ubyte(ubyte_value);
+					if (*amqp_value == NULL)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
+				}
+				break;
+
 			case 0x60:
 				/* ushort */
 				if (decoderData->size - decoderData->pos < 2)

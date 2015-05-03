@@ -10,11 +10,26 @@ int main(int argc, char** argv)
 	}
 	else
 	{
+		LINK_HANDLE link;
+		AMQP_VALUE payload;
+		bool sent = false;
+
 		amqplib_handle = amqplib_create("127.0.0.1", 5672);
+		link = amqplib_get_link(amqplib_handle);
+		payload = amqpvalue_create_null();
 
 		while (1)
 		{
+			LINK_STATE link_state;
+
 			(void)amqplib_dowork(amqplib_handle);
+			if ((link_get_state(link, &link_state) == 0) &&
+				(link_state == LINK_STATE_ATTACHED) &&
+				(!sent))
+			{
+				link_transfer(link, &payload, 1);
+				sent = true;
+			}
 		}
 
 		amqplib_destroy(amqplib_handle);

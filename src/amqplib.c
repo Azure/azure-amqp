@@ -123,3 +123,9 @@ int amqplib_dowork(AMQPLIB_HANDLE handle)
 
 	return result;
 }
+
+LINK_HANDLE amqplib_get_link(AMQPLIB_HANDLE handle)
+{
+	AMQPLIB_DATA* amqp_lib = (AMQPLIB_DATA*)handle;
+	return amqp_lib->link;
+}

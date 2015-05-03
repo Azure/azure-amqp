@@ -6,13 +6,6 @@
 #include "amqpvalue.h"
 #include "amqp_protocol_types.h"
 
-typedef enum LINK_STATE_TAG
-{
-	LINK_STATE_DETACHED,
-	LINK_STATE_HALF_ATTACHED,
-	LINK_STATE_ATTACHED
-} LINK_STATE;
-
 typedef struct LINK_DATA_TAG
 {
 	SESSION_HANDLE session;
@@ -174,6 +167,8 @@ LINK_HANDLE link_create(SESSION_HANDLE session, AMQP_VALUE source, AMQP_VALUE ta
 			result->source = source;
 			result->target = target;
 			result->session = session;
+			result->handle = 1;
+			result->delivery_id = 0;
 		}
 	}
 
@@ -211,6 +206,25 @@ int link_dowork(LINK_HANDLE handle)
 				link->link_state = LINK_STATE_HALF_ATTACHED;
 			}
 		}
+	}
+
+	return result;
+}
+
+int link_get_state(LINK_HANDLE handle, LINK_STATE* link_state)
+{
+	int result;
+	LINK_DATA* link = (LINK_DATA*)handle;
+
+	if ((link == NULL) ||
+		(link_state == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		*link_state = link->link_state;
+		result = 0;
 	}
 
 	return result;

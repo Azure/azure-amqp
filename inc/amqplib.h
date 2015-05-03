@@ -1,6 +1,8 @@
 #ifndef AMQPLIB_H
 #define AMQPLIB_H
 
+#include "link.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -12,6 +14,7 @@ extern void amqplib_deinit(void);
 extern AMQPLIB_HANDLE amqplib_create(const char* host, int port);
 extern void amqplib_destroy(AMQPLIB_HANDLE handle);
 extern int amqplib_dowork(AMQPLIB_HANDLE handle);
+extern LINK_HANDLE amqplib_get_link(AMQPLIB_HANDLE handle);
 
 #ifdef __cplusplus
 }

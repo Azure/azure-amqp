@@ -4,6 +4,7 @@
 #include "connection.h"
 #include "amqpvalue.h"
 #include "amqp_protocol_types.h"
+#include "consolelogger.h"
 
 typedef struct SESSION_DATA_TAG
 {
@@ -67,7 +68,13 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 static void frame_received(void* context, uint64_t performative, AMQP_VALUE frame_list_value)
 {
 	SESSION_DATA* session = (SESSION_DATA*)context;
-	if (performative == 0x11)
+	switch (performative)
+	{
+	default:
+		consolelogger_log("Bad performative: %llu", (unsigned long long)performative);
+		break;
+
+	case 0x11:
 	{
 		switch (session->session_state)
 		{
@@ -78,6 +85,19 @@ static void frame_received(void* context, uint64_t performative, AMQP_VALUE fram
 			session->session_state = SESSION_STATE_MAPPED;
 			break;
 		}
+		break;
+	}
+
+	case 0x12:
+	case 0x13:
+	case 0x14:
+	case 0x15:
+	case 0x16:
+		if (session->frame_received_callback != NULL)
+		{
+			session->frame_received_callback(session->frame_received_callback_context, performative, frame_list_value);
+		}
+		break;
 	}
 }
 
@@ -159,12 +179,12 @@ int session_set_frame_received_callback(SESSION_HANDLE handle, SESSION_FRAME_REC
 	SESSION_DATA* session = (SESSION_DATA*)handle;
 	if (session == NULL)
 	{
-		session->frame_received_callback = callback;
-		session->frame_received_callback_context = context;
 		result = __LINE__;
 	}
 	else
 	{
+		session->frame_received_callback = callback;
+		session->frame_received_callback_context = context;
 		result = 0;
 	}
 

@@ -1,5 +1,28 @@
+#include <stdlib.h>
 #include "messaging.h"
 #include "amqpvalue.h"
+#include "link.h"
+
+typedef struct MESSAGING_DATA_TAG
+{
+	LINK_HANDLE link;
+} MESSAGING_DATA;
+
+MESSAGING_HANDLE messaging_create(void)
+{
+	MESSAGING_DATA* messaging = (MESSAGING_DATA*)malloc(sizeof(MESSAGING_DATA));
+	if (messaging != NULL)
+	{
+
+	}
+
+	return messaging;
+}
+
+void messaging_destroy(MESSAGING_HANDLE handle)
+{
+	free(handle);
+}
 
 AMQP_VALUE messaging_create_source(AMQP_VALUE address)
 {

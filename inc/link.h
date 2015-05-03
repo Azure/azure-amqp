@@ -12,7 +12,7 @@ typedef void* LINK_HANDLE;
 extern LINK_HANDLE link_create(SESSION_HANDLE session, AMQP_VALUE source, AMQP_VALUE target);
 extern void link_destroy(LINK_HANDLE handle);
 extern int link_dowork(LINK_HANDLE handle);
-extern LINK_HANDLE link_transfer(SESSION_HANDLE session, AMQP_VALUE source, AMQP_VALUE target);
+extern int link_transfer(LINK_HANDLE link, AMQP_VALUE message_payload);
 
 #ifdef __cplusplus
 }

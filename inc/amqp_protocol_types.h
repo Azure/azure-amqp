@@ -7,6 +7,7 @@
 
 typedef uint32_t sequence_no;
 typedef sequence_no transfer_number;
+typedef sequence_no delivery_number;
 typedef uint32_t handle;
 
 typedef enum role_tag
@@ -31,8 +32,10 @@ typedef enum receiver_settle_mode_tag
 #define amqpvalue_create_sequence_no amqpvalue_create_uint
 #define amqpvalue_create_transfer_number amqpvalue_create_sequence_no
 #define amqpvalue_create_handle amqpvalue_create_uint
+#define amqpvalue_create_delivery_number amqpvalue_create_sequence_no
 #define amqpvalue_create_role amqpvalue_create_bool
 #define amqpvalue_create_sender_settle_mode amqpvalue_create_ubyte
-#define amqpvalue_create_reeiver_settle_mode amqpvalue_create_ubyte
+#define amqpvalue_create_receiver_settle_mode amqpvalue_create_ubyte
+#define amqpvalue_create_delivery_tag amqpvalue_create_binary
 
 #endif /* AMQP_PROTOCOL_TYPES */

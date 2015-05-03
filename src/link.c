@@ -19,6 +19,8 @@ typedef struct LINK_DATA_TAG
 	LINK_STATE link_state;
 	AMQP_VALUE source;
 	AMQP_VALUE target;
+	handle handle;
+	delivery_number delivery_id;
 } LINK_DATA;
 
 static void link_frame_received(void* context, uint64_t performative, AMQP_VALUE frame_list_value)
@@ -49,7 +51,7 @@ static int send_attach(LINK_DATA* link, const char* name, handle handle, role ro
 		AMQP_VALUE handle_value = amqpvalue_create_handle(handle);
 		AMQP_VALUE role_value = amqpvalue_create_role(role);
 		AMQP_VALUE snd_settle_mode_value = amqpvalue_create_sender_settle_mode(snd_settle_mode);
-		AMQP_VALUE rcv_settle_mode_value = amqpvalue_create_reeiver_settle_mode(rcv_settle_mode);
+		AMQP_VALUE rcv_settle_mode_value = amqpvalue_create_receiver_settle_mode(rcv_settle_mode);
 		/* do not set remote_channel for now */
 
 		if ((name_value == NULL) ||
@@ -87,6 +89,70 @@ static int send_attach(LINK_DATA* link, const char* name, handle handle, role ro
 		amqpvalue_destroy(snd_settle_mode_value);
 		amqpvalue_destroy(rcv_settle_mode_value);
 		amqpvalue_destroy(attach_frame_list);
+	}
+
+	return result;
+}
+
+static int send_tranfer(LINK_DATA* link, AMQP_VALUE* payload_chunks, size_t payload_chunk_count)
+{
+	int result;
+	AMQP_VALUE transfer_frame_list = amqpvalue_create_list(3);
+	if (transfer_frame_list == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE handle_value = amqpvalue_create_handle(link->handle);
+		AMQP_VALUE delivery_id_value = amqpvalue_create_delivery_number(link->delivery_id);
+		AMQP_VALUE delivery_tag_value = amqpvalue_create_delivery_tag(&link->delivery_id, sizeof(link->delivery_id));
+
+		if ((handle_value == NULL) ||
+			(delivery_id_value == NULL) ||
+			(delivery_tag_value == NULL) ||
+			(amqpvalue_set_list_item(transfer_frame_list, 0, handle_value) != 0) ||
+			(amqpvalue_set_list_item(transfer_frame_list, 1, delivery_id_value) != 0) ||
+			(amqpvalue_set_list_item(transfer_frame_list, 2, delivery_tag_value) != 0))
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			AMQP_VALUE* chunks = malloc(sizeof(AMQP_VALUE) * (payload_chunk_count + 1));
+			if (chunks == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				FRAME_CODEC_HANDLE frame_codec;
+				size_t i;
+
+				chunks[0] = transfer_frame_list;
+				for (i = 0; i < payload_chunk_count; i++)
+				{
+					chunks[i + 1] = payload_chunks[i];
+				}
+
+				if (((frame_codec = session_get_frame_codec(link->session)) == NULL) ||
+					(frame_codec_encode(frame_codec, 0x14, chunks, payload_chunk_count + 1) != 0))
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+
+				free(chunks);
+			}
+		}
+
+		amqpvalue_destroy(handle_value);
+		amqpvalue_destroy(delivery_id_value);
+		amqpvalue_destroy(delivery_tag_value);
+		amqpvalue_destroy(transfer_frame_list);
 	}
 
 	return result;
@@ -145,6 +211,22 @@ int link_dowork(LINK_HANDLE handle)
 				link->link_state = LINK_STATE_HALF_ATTACHED;
 			}
 		}
+	}
+
+	return result;
+}
+
+int link_transfer(LINK_HANDLE handle, AMQP_VALUE payload)
+{
+	int result;
+	LINK_DATA* link = (LINK_DATA*)handle;
+	if (link == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		result = send_tranfer(link, payload);
 	}
 
 	return result;

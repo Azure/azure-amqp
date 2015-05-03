@@ -1,4 +1,5 @@
 #include "amqplib.h"
+#include "messaging.h"
 
 int main(int argc, char** argv)
 {
@@ -12,6 +13,7 @@ int main(int argc, char** argv)
 	{
 		LINK_HANDLE link;
 		AMQP_VALUE payload;
+		MESSAGING_HANDLE messaging;
 		int sent = 0;
 
 		amqplib_handle = amqplib_create("127.0.0.1", 5672);

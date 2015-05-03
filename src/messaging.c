@@ -10,13 +10,13 @@ typedef struct MESSAGING_DATA_TAG
 
 MESSAGING_HANDLE messaging_create(void)
 {
-	MESSAGING_DATA* messaging = (MESSAGING_DATA*)malloc(sizeof(MESSAGING_DATA));
-	if (messaging != NULL)
+	MESSAGING_DATA* result = (MESSAGING_DATA*)malloc(sizeof(MESSAGING_DATA));
+	if (result != NULL)
 	{
-
+		result->link = NULL;
 	}
 
-	return messaging;
+	return result;
 }
 
 void messaging_destroy(MESSAGING_HANDLE handle)

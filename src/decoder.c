@@ -288,6 +288,69 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 				}
 				break;
 
+			case 0xA0:
+				/* vbin8 */
+				if (decoderData->pos >= decoderData->size)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					size_t length = decoderData->buffer[decoderData->pos++];
+
+					if (decoderData->size - decoderData->pos < length)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						*amqp_value = amqpvalue_create_binary(&decoderData->buffer[decoderData->pos], length);
+						if (*amqp_value == NULL)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							decoderData->pos += length;
+							result = 0;
+						}
+					}
+				}
+				break;
+
+			case 0xB0:
+				/* vbin32 */
+				if (decoderData->size - decoderData->pos < 4)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					uint32_t length = (uint32_t)decoderData->buffer[decoderData->pos++] << 24;
+					length += (uint32_t)decoderData->buffer[decoderData->pos++] << 16;
+					length += (uint32_t)decoderData->buffer[decoderData->pos++] << 8;
+					length += (uint32_t)decoderData->buffer[decoderData->pos++];
+
+					if (decoderData->size - decoderData->pos < length)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						*amqp_value = amqpvalue_create_binary(&decoderData->buffer[decoderData->pos], length);
+						if (*amqp_value == NULL)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							decoderData->pos += length;
+							result = 0;
+						}
+					}
+				}
+				break;
+
             case 0xD0:
                 /* list32 */
                 if (decoderData->size - decoderData->pos < 8)

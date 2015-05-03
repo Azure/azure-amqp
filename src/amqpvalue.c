@@ -90,7 +90,7 @@ AMQP_VALUE amqpvalue_create_string(const char* value)
 	return result;
 }
 
-AMQP_VALUE amqpvalue_create_string_with_length(const char* value, size_t length)
+AMQP_VALUE amqpvalue_create_string_with_length(const char* value, uint32_t length)
 {
 	AMQP_VALUE_DATA* result;
 	if (value == NULL)
@@ -121,6 +121,40 @@ AMQP_VALUE amqpvalue_create_string_with_length(const char* value, size_t length)
 				else
 				{
 					result->value.string_value.chars[length] = 0;
+				}
+			}
+		}
+	}
+	return result;
+}
+
+AMQP_VALUE amqpvalue_create_binary(const unsigned char* value, uint32_t length)
+{
+	AMQP_VALUE_DATA* result;
+	if (value == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+		if (result != NULL)
+		{
+			result->type = AMQP_TYPE_BINARY;
+			result->value.binary_value.bytes = malloc(length);
+			result->value.binary_value.length = length;
+			if (result->value.binary_value.bytes == NULL)
+			{
+				free(result);
+				result = NULL;
+			}
+			else
+			{
+				if (memcpy(result->value.binary_value.bytes, value, length) == NULL)
+				{
+					free(result->value.binary_value.chars);
+					free(result);
+					result = NULL;
 				}
 			}
 		}

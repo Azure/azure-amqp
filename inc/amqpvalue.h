@@ -24,9 +24,10 @@ extern "C" {
 	extern AMQP_VALUE amqpvalue_create_ushort(uint16_t value);
 	extern AMQP_VALUE amqpvalue_create_ubyte(unsigned char value);
 	extern AMQP_VALUE amqpvalue_create_bool(bool value);
-	extern AMQP_VALUE amqpvalue_create_string_with_length(const char* value, size_t length);
+	extern AMQP_VALUE amqpvalue_create_string_with_length(const char* value, uint32_t length);
 	extern AMQP_VALUE amqpvalue_create_list(size_t size);
 	extern AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor, size_t size);
+	extern AMQP_VALUE amqpvalue_create_binary(const unsigned char* value, uint32_t length);
 	extern int amqpvalue_set_list_item(AMQP_VALUE value, size_t index, AMQP_VALUE list_item_value);
 	extern int amqpvalue_get_type(AMQP_VALUE value, AMQP_TYPE* type);
 	extern int amqpvalue_get_list_item_count(AMQP_VALUE value, size_t* count);

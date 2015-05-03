@@ -20,6 +20,7 @@ extern "C" {
 	extern ENCODER_HANDLE encoder_create(ENCODER_OUTPUT encoderOutput, void* context);
 	extern void encoder_destroy(ENCODER_HANDLE handle);
 	extern int encoder_encode_string(ENCODER_HANDLE handle, const char* value);
+	extern int encoder_encode_binary(ENCODER_HANDLE handle, const unsigned char* value, uint32_t length);
 	extern int encoder_encode_ulong(ENCODER_HANDLE handle, uint64_t value);
 	extern int encoder_encode_bool(ENCODER_HANDLE handle, bool value);
 	extern int encoder_encode_ubyte(ENCODER_HANDLE handle, unsigned char value);

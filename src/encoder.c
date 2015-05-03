@@ -98,6 +98,40 @@ int encoder_encode_string(ENCODER_HANDLE handle, const char* value)
 	return result;
 }
 
+int encoder_encode_binary(ENCODER_HANDLE handle, const unsigned char* value, uint32_t length)
+{
+	int result;
+	if ((handle == NULL) ||
+		(value == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		ENCODER_DATA* encoder_data = (ENCODER_DATA*)handle;
+
+		if (length <= 255)
+		{
+			output_byte(encoder_data, 0xA0);
+			output_byte(encoder_data, (unsigned char)length);
+			output_bytes(encoder_data, value, length);
+		}
+		else
+		{
+			output_byte(encoder_data, 0xB0);
+			output_byte(encoder_data, (length >> 24) & 0xFF);
+			output_byte(encoder_data, (length >> 16) & 0xFF);
+			output_byte(encoder_data, (length >> 8) & 0xFF);
+			output_byte(encoder_data, length & 0xFF);
+			output_bytes(encoder_data, value, length);
+		}
+
+		result = 0;
+	}
+
+	return result;
+}
+
 int encoder_encode_null(ENCODER_HANDLE handle)
 {
 	int result;
@@ -337,6 +371,23 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 				return 0;
 			}
 			break;
+
+		case AMQP_TYPE_BINARY:
+		{
+			uint32_t length;
+
+			if ((amqpvalue_get_binary_length(value, &length) != 0) ||
+				(encoder_encode_binary(handle, amqpvalue_get_binary_bytes(value), amqpvalue_get_binary_length(value)) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+
+			break;
+		}
 
 		case AMQP_TYPE_BOOL:
 		{

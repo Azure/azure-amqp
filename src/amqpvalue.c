@@ -410,7 +410,7 @@ AMQP_VALUE amqpvalue_create_ubyte(unsigned char value)
 	return result;
 }
 
-AMQP_VALUE amqpvalue_create_bool(bool value)
+AMQP_VALUE amqpvalue_create_boolean(bool value)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
@@ -431,7 +431,7 @@ AMQP_VALUE amqpvalue_create_null(void)
 	return result;
 }
 
-int amqpvalue_get_bool(AMQP_VALUE value, bool* bool_value)
+int amqpvalue_get_boolean(AMQP_VALUE value, bool* bool_value)
 {
 	int result;
 

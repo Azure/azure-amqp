@@ -393,7 +393,7 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 		case AMQP_TYPE_BOOL:
 		{
 			bool bool_value;
-			if ((amqpvalue_get_bool(value, &bool_value) != 0) ||
+			if ((amqpvalue_get_boolean(value, &bool_value) != 0) ||
 				(encoder_encode_bool(handle, bool_value) != 0))
 			{
 				result = __LINE__;

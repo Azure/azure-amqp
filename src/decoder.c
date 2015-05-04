@@ -88,7 +88,7 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 			case 0x41:
 			{
 				/* true */
-				*amqp_value = amqpvalue_create_bool(true);
+				*amqp_value = amqpvalue_create_boolean(true);
 				if (*amqp_value == NULL)
 				{
 					result = __LINE__;
@@ -103,7 +103,7 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 			case 0x42:
 			{
 				/* false */
-				*amqp_value = amqpvalue_create_bool(false);
+				*amqp_value = amqpvalue_create_boolean(false);
 				if (*amqp_value == NULL)
 				{
 					result = __LINE__;

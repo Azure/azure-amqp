@@ -25,3 +25,4 @@
 /Release
 /samples/send/Release
 *.zip
+/Source/Native/ISSAgent/Windows/Win32/Release/MicroMock/MicroMock.pch

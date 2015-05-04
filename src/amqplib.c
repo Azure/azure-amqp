@@ -40,48 +40,11 @@ void amqplib_deinit(void)
 	platform_deinit();
 }
 
-AMQPLIB_HANDLE amqplib_create(const char* host, int port)
+AMQPLIB_HANDLE amqplib_create(void)
 {
 	AMQPLIB_DATA* result = malloc(sizeof(AMQPLIB_DATA));
 	if (result != NULL)
 	{
-		result->connection = connection_create(host, port);
-		if (result->connection == NULL)
-		{
-			free(result);
-			result = NULL;
-		}
-		else
-		{
-			result->session = session_create(result->connection);
-			if (result->session == NULL)
-			{
-				connection_destroy(result->connection);
-				free(result);
-				result = NULL;
-			}
-			else
-			{
-				AMQP_VALUE source_address = amqpvalue_create_string("/");
-				AMQP_VALUE target_address = amqpvalue_create_string("/");
-
-				if ((source_address == NULL) ||
-					(target_address == NULL))
-				{
-					connection_destroy(result->connection);
-					link_destroy(result->link);
-					free(result);
-					result = NULL;
-				}
-				else
-				{
-					result->link = link_create(result->session, messaging_create_source(source_address), messaging_create_target(amqpvalue_create_string(target_address)));
-				}
-
-				amqpvalue_destroy(source_address);
-				amqpvalue_destroy(target_address);
-			}
-		}
 	}
 
 	return result;

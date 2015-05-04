@@ -11,6 +11,8 @@ extern "C" {
 
 	extern MESSAGE_HANDLE message_create(void);
 	extern void message_destroy(MESSAGE_HANDLE handle);
+	extern int message_set_to(MESSAGE_HANDLE handle, const char* to);
+	extern const char* message_get_to(MESSAGE_HANDLE handle);
 
 #ifdef __cplusplus
 }

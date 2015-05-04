@@ -1,10 +1,15 @@
 #include <stdlib.h>
+#include <string.h>
 #include "messaging.h"
+#include "message.h"
 #include "amqpvalue.h"
 #include "link.h"
 
 typedef struct MESSAGING_DATA_TAG
 {
+	CONNECTION_HANDLE* connections;
+	size_t connection_count;
+	SESSION_HANDLE session;
 	LINK_HANDLE link;
 } MESSAGING_DATA;
 
@@ -13,7 +18,8 @@ MESSAGING_HANDLE messaging_create(void)
 	MESSAGING_DATA* result = (MESSAGING_DATA*)malloc(sizeof(MESSAGING_DATA));
 	if (result != NULL)
 	{
-		result->link = NULL;
+		result->connections = NULL;
+		result->connection_count = 0;
 	}
 
 	return result;
@@ -90,4 +96,72 @@ AMQP_VALUE messaging_create_target(AMQP_VALUE address)
 	}
 
 	return result;
+}
+
+int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message)
+{
+	int result;
+	MESSAGING_DATA* messaging = (MESSAGING_DATA*)handle;
+	CONNECTION_HANDLE connection;
+
+	if (messaging == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		size_t i;
+		const char* to = message_get_to(message);
+
+		for (i = 0; i < messaging->connection_count; i++)
+		{
+			if (strcmp(connection_get_address(messaging->connections[i]), to) == 0)
+			{
+				connection = messaging->connections[i];
+				break;
+			}
+		}
+
+		if (i == messaging->connection_count)
+		{
+			/* create connection */
+			connection = connection_create(to, 5672);
+		}
+
+		if (connection == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			messaging->session = session_create(result->connection);
+			if (result->session == NULL)
+			{
+				connection_destroy(result->connection);
+				free(result);
+				result = NULL;
+			}
+			else
+			{
+				AMQP_VALUE source_address = amqpvalue_create_string("/");
+				AMQP_VALUE target_address = amqpvalue_create_string("/");
+
+				if ((source_address == NULL) ||
+					(target_address == NULL))
+				{
+					connection_destroy(result->connection);
+					link_destroy(result->link);
+					free(result);
+					result = NULL;
+				}
+				else
+				{
+					result->link = link_create(result->session, messaging_create_source(source_address), messaging_create_target(amqpvalue_create_string(target_address)));
+				}
+
+				amqpvalue_destroy(source_address);
+				amqpvalue_destroy(target_address);
+			}
+		}
+	}
 }

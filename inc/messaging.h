@@ -12,7 +12,7 @@ extern "C" {
 
 	extern MESSAGING_HANDLE messaging_create(void);
 	extern void messaging_destroy(MESSAGING_HANDLE handle);
-	extern int messaging_send(MESSAGE_HANDLE message);
+	extern int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message);
 	extern AMQP_VALUE messaging_create_source(AMQP_VALUE address);
 	extern AMQP_VALUE messaging_create_target(AMQP_VALUE address);
 

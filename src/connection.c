@@ -317,3 +317,8 @@ int connection_set_session_frame_receive_callback(CONNECTION_HANDLE handle, FRAM
 
 	return result;
 }
+
+const char* connection_get_address(CONNECTION_HANDLE handle)
+{
+	return NULL;
+}

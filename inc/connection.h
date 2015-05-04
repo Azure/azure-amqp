@@ -36,6 +36,7 @@ extern "C" {
 	extern int connection_get_state(CONNECTION_HANDLE handle, CONNECTION_STATE* connection_state);
 	extern int connection_set_session_frame_receive_callback(CONNECTION_HANDLE handle, FRAME_RECEIVED_CALLBACK callback, void* context);
 	extern FRAME_CODEC_HANDLE connection_get_frame_codec(CONNECTION_HANDLE handle);
+	extern const char* connection_get_address(CONNECTION_HANDLE handle);
 
 #ifdef __cplusplus
 }

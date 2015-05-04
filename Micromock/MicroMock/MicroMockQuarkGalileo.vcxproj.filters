@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="DetoursHookClass.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MicroMockCharStarArenullTerminatedStrings.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MicromockException.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MockCallRecorder.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MockValueBase.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MockMethodCallBase.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DetoursHookClass.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalMock.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MicroMock.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MicroMockCallMacros.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MicroMockCharStarArenullTerminatedStrings.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MicroMockCommon.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MicroMockException.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MicroMockTestRunnerHooks.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MockCallArgument.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MockCallArgumentBase.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MockCallComparer.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Mock.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MockCallRecorder.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeDiscreteMicroMockCallMacros.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeDiscreteMicroMock.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadSafeGlobalMock.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="StrictUnorderedCallComparer.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="StrictOrderedCallComparer.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="RuntimeMock.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="NiceCallComparer.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MockValueBase.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MockValue.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MockResultValue.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MockMethodCallBase.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="MockMethodCall.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="MicroMock.xps" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{e6296bc0-902a-4fb1-905a-64bc71240311}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header">
+      <UniqueIdentifier>{543b6844-8f08-4c17-b5fe-eb1a71e8ca04}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

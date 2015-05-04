@@ -27,9 +27,6 @@
     <ClInclude Include="..\inc\amqplib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="inc\logger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\inc\consolelogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdbool.h>
 #include "list.h"
 
 typedef struct LIST_ITEM_TAG

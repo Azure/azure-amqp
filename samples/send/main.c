@@ -19,6 +19,11 @@ int main(int argc, char** argv)
 		message_set_to(message, "amqp://127.0.0.1");
 		(void)messaging_send(messaging, message);
 
+		while (1)
+		{
+			messaging_dowork(messaging);
+		}
+
 		amqplib_deinit();
 	}
 

@@ -22,6 +22,7 @@
     <ClInclude Include="..\inc\frame_codec.h" />
     <ClInclude Include="..\inc\io.h" />
     <ClInclude Include="..\inc\link.h" />
+    <ClInclude Include="..\inc\list.h" />
     <ClInclude Include="..\inc\message.h" />
     <ClInclude Include="..\inc\messaging.h" />
     <ClInclude Include="..\inc\platform.h" />
@@ -38,6 +39,7 @@
     <ClCompile Include="..\src\frame_codec.c" />
     <ClCompile Include="..\src\io.c" />
     <ClCompile Include="..\src\link.c" />
+    <ClCompile Include="..\src\list.c" />
     <ClCompile Include="..\src\message.c" />
     <ClCompile Include="..\src\messaging.c" />
     <ClCompile Include="..\src\platform_win32.c" />

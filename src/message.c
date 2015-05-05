@@ -5,6 +5,7 @@
 typedef struct MESSAGE_DATA_TAG
 {
 	AMQP_VALUE to;
+	AMQP_VALUE body;
 } MESSAGE_DATA;
 
 MESSAGE_HANDLE message_create(void)
@@ -61,6 +62,41 @@ const char* message_get_to(MESSAGE_HANDLE handle)
 	else
 	{
 		result = message->to;
+	}
+
+	return result;
+}
+
+int message_set_body(MESSAGE_HANDLE handle, AMQP_VALUE body)
+{
+	int result;
+
+	MESSAGE_DATA* message = (MESSAGE_DATA*)handle;
+	if (message == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		message->body = body;
+		result = 0;
+	}
+
+	return result;
+}
+
+AMQP_VALUE message_get_body(MESSAGE_HANDLE handle)
+{
+	AMQP_VALUE result;
+
+	MESSAGE_DATA* message = (MESSAGE_DATA*)handle;
+	if (message == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = message->body;
 	}
 
 	return result;

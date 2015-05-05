@@ -102,7 +102,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message)
 {
 	int result;
 	MESSAGING_DATA* messaging = (MESSAGING_DATA*)handle;
-	CONNECTION_HANDLE connection;
+	CONNECTION_HANDLE connection = NULL;
 
 	if (messaging == NULL)
 	{
@@ -134,29 +134,48 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message)
 		}
 		else
 		{
-			messaging->session = session_create(result->connection);
-			if (result->session == NULL)
+			if (messaging->session == NULL)
 			{
-				connection_destroy(result->connection);
-				free(result);
-				result = NULL;
+				messaging->session = session_create(connection);
+				if (messaging->session == NULL)
+				{
+					result = __LINE__;
+				}
+			}
+
+			if (messaging->session == NULL)
+			{
+				result = __LINE__;
 			}
 			else
 			{
 				AMQP_VALUE source_address = amqpvalue_create_string("/");
 				AMQP_VALUE target_address = amqpvalue_create_string("/");
 
-				if ((source_address == NULL) ||
-					(target_address == NULL))
+				if (messaging->link == NULL)
 				{
-					connection_destroy(result->connection);
-					link_destroy(result->link);
-					free(result);
-					result = NULL;
+					messaging->link = link_create(messaging->session, source_address, target_address);
+					if (messaging->link == NULL)
+					{
+						result = __LINE__;
+					}
+				}
+
+				if (messaging->link == NULL)
+				{
+					result = __LINE__;
 				}
 				else
 				{
-					result->link = link_create(result->session, messaging_create_source(source_address), messaging_create_target(amqpvalue_create_string(target_address)));
+					AMQP_VALUE message_payload = message_get_body(message);
+					if (message_payload == NULL)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = link_transfer(messaging->link, &message_payload, 1);
+					}
 				}
 
 				amqpvalue_destroy(source_address);
@@ -164,4 +183,6 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message)
 			}
 		}
 	}
+
+	return result;
 }

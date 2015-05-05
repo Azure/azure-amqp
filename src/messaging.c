@@ -133,7 +133,8 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message)
 		if (i == messaging->connection_count)
 		{
 			/* create connection */
-			messaging->connection = connection_create(to, 5672);
+			connection = connection_create(to, 5672);
+			messaging->connection = connection;
 		}
 
 		if (connection == NULL)
@@ -182,13 +183,16 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message)
 					}
 					else
 					{
+						messaging->outgoing_messages = messages;
 						messaging->outgoing_messages[messaging->outgoing_message_count] = message;
 						messaging->outgoing_message_count++;
+
+						result = 0;
 					}
 				}
 
-				amqpvalue_destroy(source_address);
-				amqpvalue_destroy(target_address);
+//				amqpvalue_destroy(source_address);
+//				amqpvalue_destroy(target_address);
 			}
 		}
 	}
@@ -208,6 +212,7 @@ int messaging_dowork(MESSAGING_HANDLE handle)
 	{
 		MESSAGING_DATA* messaging = (MESSAGING_DATA*)handle;
 		LINK_STATE link_state;
+
 		if (link_get_state(messaging->link, &link_state) != 0)
 		{
 			result = __LINE__;

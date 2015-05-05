@@ -138,7 +138,8 @@ AMQP_VALUE amqpvalue_create_string_with_length(const char* value, uint32_t lengt
 AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length)
 {
 	AMQP_VALUE_DATA* result;
-	if (value == NULL)
+	if ((value == NULL) &&
+		(length > 0))
 	{
 		result = NULL;
 	}

@@ -14,6 +14,7 @@ MESSAGE_HANDLE message_create(void)
 	if (result != NULL)
 	{
 		result->to = NULL;
+		result->body = NULL;
 	}
 
 	return result;
@@ -61,7 +62,7 @@ const char* message_get_to(MESSAGE_HANDLE handle)
 	}
 	else
 	{
-		result = message->to;
+		result = amqpvalue_get_string(message->to);
 	}
 
 	return result;

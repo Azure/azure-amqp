@@ -28,3 +28,4 @@
 /Source/Native/ISSAgent/Windows/Win32/Release/MicroMock/MicroMock.pch
 /Source/Native/ISSAgent/Windows/Win32/Debug/MicroMock/MicroMock.pch
 /ipch/amqpvalue_unittests-1e17bc3d/amqpvalue_unittests-66ad55a4.ipch
+*.ipch

@@ -4,11 +4,11 @@
 #include "message.h"
 #include "amqpvalue.h"
 #include "link.h"
+#include "list.h"
 
 typedef struct MESSAGING_DATA_TAG
 {
-	CONNECTION_HANDLE* connections;
-	size_t connection_count;
+	LIST_HANDLE connections;
 	CONNECTION_HANDLE* connection;
 	SESSION_HANDLE session;
 	LINK_HANDLE link;
@@ -21,8 +21,7 @@ MESSAGING_HANDLE messaging_create(void)
 	MESSAGING_DATA* result = (MESSAGING_DATA*)malloc(sizeof(MESSAGING_DATA));
 	if (result != NULL)
 	{
-		result->connections = NULL;
-		result->connection_count = 0;
+		result->connections = list_create();
 		result->connection = NULL;
 		result->session = NULL;
 		result->link = NULL;
@@ -35,7 +34,12 @@ MESSAGING_HANDLE messaging_create(void)
 
 void messaging_destroy(MESSAGING_HANDLE handle)
 {
-	free(handle);
+	if (handle != NULL)
+	{
+		MESSAGING_DATA* messaging = (MESSAGING_DATA*)handle;
+		list_destroy(messaging);
+		free(handle);
+	}
 }
 
 AMQP_VALUE messaging_create_source(AMQP_VALUE address)
@@ -118,19 +122,19 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message)
 	}
 	else
 	{
-		size_t i;
+//		size_t i;
 		const char* to = message_get_to(message);
 
-		for (i = 0; i < messaging->connection_count; i++)
+/*		for (i = 0; i < messaging->connection_count; i++)
 		{
 			if (strcmp(connection_get_address(messaging->connections[i]), to) == 0)
 			{
 				connection = messaging->connections[i];
 				break;
 			}
-		}
+		}*/
 
-		if (i == messaging->connection_count)
+		if (true)
 		{
 			/* create connection */
 			connection = connection_create(to, 5672);

@@ -66,6 +66,9 @@
     <ClInclude Include="..\inc\list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\inc\amqp_alloc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\socketio_win32.c">
@@ -111,6 +114,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\list.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\amqp_alloc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

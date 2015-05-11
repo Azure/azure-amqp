@@ -9,13 +9,15 @@ namespace amqpvalue_unittests
 	{
 	public:
 
-		TEST_METHOD(x)
+		TEST_METHOD(when_underlying_calls_suceed_list_create_succeeds)
 		{
 			// arrange
 
 			// act
+			LIST_HANDLE result = list_create();
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 		}
 	};
 }

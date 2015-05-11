@@ -91,16 +91,27 @@ void* list_get_head(LIST_HANDLE handle)
 	LIST_DATA* list = (LIST_DATA*)handle;
 	void* result;
 	
-	if (list->head == NULL)
+	if (list == NULL)
 	{
+		/* Codes_SRS_LIST_01_009: [If the handle argument is NULL, list_get_head shall return NULL.] */
 		result = NULL;
 	}
 	else
 	{
+		/* Codes_SRS_LIST_01_008: [list_get_head shall return the head of the list and remove the retrieved item from the list.] */
 		LIST_ITEM* head = list->head;
-		result = head->item;
-		list->head = list->head->next;
-		amqp_free(head);
+
+		if (head == NULL)
+		{
+			/* Codes_SRS_LIST_01_010: [If the list is empty, list_get_head_shall_return NULL.] */
+			result = NULL;
+		}
+		else
+		{
+			result = head->item;
+			list->head = list->head->next;
+			amqp_free(head);
+		}
 	}
 
 	return result;

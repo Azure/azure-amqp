@@ -10,6 +10,7 @@ public:
 	MOCK_STATIC_METHOD_1(, void*, amqp_malloc, size_t, size)
 	MOCK_METHOD_END(void*, malloc(size));
 	MOCK_STATIC_METHOD_1(, void, amqp_free, void*, ptr)
+		free(ptr);
 	MOCK_VOID_METHOD_END();
 };
 
@@ -151,6 +152,7 @@ namespace amqpvalue_unittests
 		}
 
 		/* Tests_SRS_LIST_01_005: [list_add shall add one item to the tail of the list and on success it shall return 0.] */
+		/* Tests_SRS_LIST_01_008: [list_get_head shall return the head of the list and remove the retrieved item from the list.] */
 		TEST_METHOD(list_add_adds_the_item_and_returns_zero)
 		{
 			// arrange
@@ -173,6 +175,7 @@ namespace amqpvalue_unittests
 		}
 
 		/* Tests_SRS_LIST_01_005: [list_add shall add one item to the tail of the list and on success it shall return 0.] */
+		/* Tests_SRS_LIST_01_008: [list_get_head shall return the head of the list and remove the retrieved item from the list.] */
 		TEST_METHOD(list_add_when_an_item_is_in_the_list_adds_at_the_end)
 		{
 			// arrange
@@ -201,7 +204,7 @@ namespace amqpvalue_unittests
 		}
 
 		/* Tests_SRS_LIST_01_007: [If allocating the new list node fails, list_add shall return a non-zero value.] */
-		TEST_METHOD(whne_the_underlying_malloc_fails_list_add_fails)
+		TEST_METHOD(when_the_underlying_malloc_fails_list_add_fails)
 		{
 			// arrange
 			list_mocks mocks;
@@ -217,6 +220,56 @@ namespace amqpvalue_unittests
 
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* list_get_head */
+
+		/* Tests_SRS_LIST_01_010: [If the list is empty, list_get_head_shall_return NULL.] */
+		TEST_METHOD(when_the_list_is_empty_list_get_head_yields_NULL)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			mocks.ResetAllCalls();
+
+			// act
+			void* result = list_get_head(handle);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_LIST_01_009: [If the handle argument is NULL, list_get_head shall return NULL.] */
+		TEST_METHOD(list_get_head_with_NULL_handle_yields_NULL)
+		{
+			// arrange
+			list_mocks mocks;
+
+			// act
+			void* result = list_get_head(NULL);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_LIST_01_008: [list_get_head shall return the head of the list and remove the retrieved item from the list.] */
+		TEST_METHOD(list_get_head_removes_the_item)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			int x = 42;
+			(void)list_add(handle, &x);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqp_free(IGNORED_PTR_ARG));
+
+			// act
+			int* head = (int*)list_get_head(handle);
+
+			// assert
+			ASSERT_IS_NOT_NULL(head);
+			ASSERT_ARE_EQUAL(int, x, *head);
 		}
 	};
 }

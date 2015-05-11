@@ -130,8 +130,8 @@ public: \
 INSTALL_HOOK_CLASS_NAME(__LINE__) INSTALL_HOOK_CLASS_NAME(__LINE__); \
 
 #define MOCK_METHOD_END(resultType, value)                                                  \
-    resultType resultValue = value;                                                         \
-    if (NULL != result) resultValue = dynamic_cast<CMockValue<resultType>*>(result)->GetValue(); \
+    resultType resultValue;                                                         \
+    if (NULL != result) resultValue = dynamic_cast<CMockValue<resultType>*>(result)->GetValue(); else resultValue = value; \
     return resultValue;                                                                     \
 }
 

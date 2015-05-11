@@ -2,14 +2,22 @@
 #include "MicroMock.h"
 #include "list.h"
 
+bool fail_alloc_calls;
+
 TYPED_MOCK_CLASS(list_mocks, CGlobalMock)
 {
 public:
 	MOCK_STATIC_METHOD_1(, void*, amqp_malloc, size_t, size)
 	MOCK_METHOD_END(void*, malloc(size));
+	MOCK_STATIC_METHOD_1(, void, amqp_free, void*, ptr)
+	MOCK_VOID_METHOD_END();
 };
 
-DECLARE_GLOBAL_MOCK_METHOD_1(list_mocks, , void*, amqp_malloc, size_t, size);
+extern "C"
+{
+	DECLARE_GLOBAL_MOCK_METHOD_1(list_mocks, , void*, amqp_malloc, size_t, size);
+	DECLARE_GLOBAL_MOCK_METHOD_1(list_mocks, , void, amqp_free, void*, ptr);
+}
 
 MICROMOCK_MUTEX_HANDLE test_serialize_mutex;
 
@@ -35,13 +43,14 @@ namespace amqpvalue_unittests
 			{
 				ASSERT_FAIL("Could not acquire test serialization mutex.");
 			}
+			fail_alloc_calls = false;
 		}
 
 		TEST_METHOD_CLEANUP(method_cleanup)
 		{
 			if (!MicroMockReleaseMutex(test_serialize_mutex))
 			{
-				ASSERT_FAIL("Could not acquire test serialization mutex.");
+				ASSERT_FAIL("Could not release test serialization mutex.");
 			}
 		}
 
@@ -49,6 +58,8 @@ namespace amqpvalue_unittests
 		{
 			// arrange
 			list_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqp_malloc(IGNORE));
 
 			// act
 			LIST_HANDLE result = list_create();

@@ -1,6 +1,6 @@
-#include <stdlib.h>
 #include <stdbool.h>
 #include "list.h"
+#include "amqp_alloc.h"
 
 typedef struct LIST_ITEM_TAG
 {
@@ -16,7 +16,7 @@ typedef struct LIST_DATA_TAG
 LIST_HANDLE list_create(void)
 {
 	LIST_DATA* result;
-	result = (LIST_DATA*)malloc(sizeof(LIST_DATA));
+	result = (LIST_DATA*)amqp_malloc(sizeof(LIST_DATA));
 	if (result != NULL)
 	{
 		result->head = NULL;
@@ -29,16 +29,11 @@ void list_destroy(LIST_HANDLE handle)
 {
 	if (handle != NULL)
 	{
-		free(handle);
+		amqp_free(handle);
 	}
 }
 
 void* list_find(LIST_HANDLE handle, LIST_MATCH_FUNCTION match_function)
 {
-	if (handle != NULL)
-	{
-		free(handle);
-	}
-
 	return NULL;
 }

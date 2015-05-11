@@ -171,5 +171,52 @@ namespace amqpvalue_unittests
 			ASSERT_IS_NOT_NULL(head);
 			ASSERT_ARE_EQUAL(int, x, *head);
 		}
+
+		/* Tests_SRS_LIST_01_005: [list_add shall add one item to the tail of the list and on success it shall return 0.] */
+		TEST_METHOD(list_add_when_an_item_is_in_the_list_adds_at_the_end)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			int x1 = 42;
+			int x2 = 43;
+
+			list_add(handle, &x1);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqp_malloc(IGNORE));
+
+			// act
+			int result = list_add(handle, &x2);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			int* head = (int*)list_get_head(handle);
+			ASSERT_IS_NOT_NULL(head);
+			ASSERT_ARE_EQUAL(int, x1, *head);
+			head = (int*)list_get_head(handle);
+			ASSERT_IS_NOT_NULL(head);
+			ASSERT_ARE_EQUAL(int, x2, *head);
+		}
+
+		/* Tests_SRS_LIST_01_007: [If allocating the new list node fails, list_add shall return a non-zero value.] */
+		TEST_METHOD(whne_the_underlying_malloc_fails_list_add_fails)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			int x = 42;
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqp_malloc(IGNORE))
+				.SetReturn((void*)NULL);
+
+			// act
+			int result = list_add(handle, &x);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
 	};
 }

@@ -55,6 +55,7 @@ int list_add(LIST_HANDLE handle, void* item)
 
 		if (new_item == NULL)
 		{
+			/* Codes_SRS_LIST_01_007: [If allocating the new list node fails, list_add shall return a non-zero value.] */
 			result = __LINE__;
 		}
 		else

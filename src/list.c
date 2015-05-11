@@ -50,8 +50,56 @@ int list_add(LIST_HANDLE handle, void* item)
 	}
 	else
 	{
-		/* Codes_SRS_LIST_01_005: [list_add shall add one item to the tail of the list and on success it shall return 0.] */
-		result = 0;
+		LIST_DATA* list = (LIST_DATA*)handle;
+		LIST_ITEM* new_item = amqp_malloc(sizeof(LIST_ITEM));
+
+		if (new_item == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_LIST_01_005: [list_add shall add one item to the tail of the list and on success it shall return 0.] */
+			new_item->next = NULL;
+			new_item->item = item;
+
+			if (list->head == NULL)
+			{
+				list->head = new_item;
+			}
+			else
+			{
+				LIST_ITEM* current = list->head;
+				while (current->next != NULL)
+				{
+					current = current->next;
+				}
+
+				current->next = new_item;
+			}
+
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+void* list_get_head(LIST_HANDLE handle)
+{
+	LIST_DATA* list = (LIST_DATA*)handle;
+	void* result;
+	
+	if (list->head == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		LIST_ITEM* head = list->head;
+		result = head->item;
+		list->head = list->head->next;
+		amqp_free(head);
 	}
 
 	return result;

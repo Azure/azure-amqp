@@ -121,7 +121,7 @@ namespace amqpvalue_unittests
 
 		/* list_add */
 
-		/* Tests_SRS_LIST_01_005: [list_add shall add one item to the tail of the list and on success it shall return 0.] */
+		/* Tests_SRS_LIST_01_006: [If any of the arguments is NULL, list_add shall not add the item to the list and return a non-zero value.] */
 		TEST_METHOD(list_add_with_NULL_handle_fails)
 		{
 			// arrange
@@ -135,7 +135,7 @@ namespace amqpvalue_unittests
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
 
-		/* Tests_SRS_LIST_01_005: [list_add shall add one item to the tail of the list and on success it shall return 0.] */
+		/* Tests_SRS_LIST_01_006: [If any of the arguments is NULL, list_add shall not add the item to the list and return a non-zero value.] */
 		TEST_METHOD(list_add_with_NULL_item_fails)
 		{
 			// arrange
@@ -159,11 +159,17 @@ namespace amqpvalue_unittests
 			mocks.ResetAllCalls();
 			int x = 42;
 
+			EXPECTED_CALL(mocks, amqp_malloc(IGNORE));
+
 			// act
 			int result = list_add(handle, &x);
 
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			int* head = (int*)list_get_head(handle);
+			ASSERT_IS_NOT_NULL(head);
+			ASSERT_ARE_EQUAL(int, x, *head);
 		}
 	};
 }

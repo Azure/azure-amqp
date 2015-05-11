@@ -4,7 +4,7 @@
 
 typedef struct LIST_ITEM_TAG
 {
-	void* item;
+	const void* item;
 	void* next;
 } LIST_ITEM;
 
@@ -86,10 +86,10 @@ int list_add(LIST_HANDLE handle, void* item)
 	return result;
 }
 
-void* list_get_head(LIST_HANDLE handle)
+const void* list_get_head(LIST_HANDLE handle)
 {
 	LIST_DATA* list = (LIST_DATA*)handle;
-	void* result;
+	const void* result;
 	
 	if (list == NULL)
 	{
@@ -117,7 +117,46 @@ void* list_get_head(LIST_HANDLE handle)
 	return result;
 }
 
-void* list_find(LIST_HANDLE handle, void* look_for, LIST_MATCH_FUNCTION match_function)
+const void* list_find(LIST_HANDLE handle, LIST_MATCH_FUNCTION match_function, const void* match_context)
 {
-	return NULL;
+	const void* result;
+
+	if ((handle == NULL) ||
+		(match_function == NULL))
+	{
+		/* Codes_SRS_LIST_01_012: [If the handle or the match_function argument is NULL, list_find shall return NULL.] */
+		result = NULL;
+	}
+	else
+	{
+		LIST_DATA* list = (LIST_DATA*)handle;
+		LIST_ITEM* current = list->head;
+
+		/* Codes_SRS_LIST_01_011: [list_find shall iterate through all items in a list and return the one that satisfies a certain match function.] */
+		while (current != NULL)
+		{
+			/* Codes_SRS_LIST_01_014: [list find shall determine whether an item satisfies the match criteria by invoking the match function for each item in the list until a matching item is found.] */
+			/* Codes_SRS_LIST_01_013: [The match_function shall get as arguments the list item being attempted to be matched and the match_context as is.] */
+			if (match_function(current->item, match_context) == true)
+			{
+				/* Codes_SRS_LIST_01_017: [If the match function returns true, list_find shall consider that item as matching.] */
+				break;
+			}
+
+			/* Codes_SRS_LIST_01_016: [If the match function returns false, list_find shall consider that item as not matching.] */
+			current = current->next;
+		}
+
+		if (current == NULL)
+		{
+			/* Codes_SRS_LIST_01_015: [If the list is empty, list_find shall return NULL.] */
+			result = NULL;
+		}
+		else
+		{
+			result = current->item;
+		}
+	}
+
+	return result;
 }

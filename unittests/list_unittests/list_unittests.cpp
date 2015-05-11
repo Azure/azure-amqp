@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "TestRunnerSwitcher.h"
 #include "MicroMock.h"
 #include "list.h"
@@ -12,15 +13,20 @@ public:
 	MOCK_STATIC_METHOD_1(, void, amqp_free, void*, ptr)
 		free(ptr);
 	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_2(, bool, test_match_function, const void*, list_item, const void*, match_context)
+	MOCK_METHOD_END(bool, true);
 };
 
 extern "C"
 {
 	DECLARE_GLOBAL_MOCK_METHOD_1(list_mocks, , void*, amqp_malloc, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(list_mocks, , void, amqp_free, void*, ptr);
+	DECLARE_GLOBAL_MOCK_METHOD_2(list_mocks, , bool, test_match_function, const void*, list_item, const void*, match_context);
 }
 
 MICROMOCK_MUTEX_HANDLE test_serialize_mutex;
+
+#define TEST_CONTEXT ((const void*)0x4242)
 
 namespace amqpvalue_unittests
 {
@@ -233,7 +239,7 @@ namespace amqpvalue_unittests
 			mocks.ResetAllCalls();
 
 			// act
-			void* result = list_get_head(handle);
+			const void* result = list_get_head(handle);
 
 			// assert
 			ASSERT_IS_NULL(result);
@@ -246,7 +252,7 @@ namespace amqpvalue_unittests
 			list_mocks mocks;
 
 			// act
-			void* result = list_get_head(NULL);
+			const void* result = list_get_head(NULL);
 
 			// assert
 			ASSERT_IS_NULL(result);
@@ -270,6 +276,173 @@ namespace amqpvalue_unittests
 			// assert
 			ASSERT_IS_NOT_NULL(head);
 			ASSERT_ARE_EQUAL(int, x, *head);
+		}
+
+		/* list_find */
+
+		/* Tets_SRS_LIST_01_012: [If the handle or the match_function argument is NULL, list_find shall return NULL.] */
+		TEST_METHOD(list_find_with_NULL_handle_fails_with_NULL)
+		{
+			// arrange
+			list_mocks mocks;
+
+			// act
+			int* result = (int*)list_find(NULL, test_match_function, TEST_CONTEXT);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tets_SRS_LIST_01_012: [If the handle or the match_function argument is NULL, list_find shall return NULL.] */
+		TEST_METHOD(list_find_with_NULL__fails_with_NULL)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			int x = 42;
+			(void)list_add(handle, &x);
+			mocks.ResetAllCalls();
+
+			// act
+			int* result = (int*)list_find(handle, NULL, TEST_CONTEXT);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_LIST_01_011: [list_find shall iterate through all items in a list and return the one that satisfies a certain match function.] */
+		/* Tests_SRS_LIST_01_014: [list find shall determine whether an item satisfies the match criteria by invoking the match function for each item in the list until a matching item is found.] */
+		/* Tests_SRS_LIST_01_013: [The match_function shall get as arguments the list item being attempted to be matched and the match_context as is.] */
+		/* Tests_SRS_LIST_01_017: [If the match function returns true, list_find shall consider that item as matching.] */
+		TEST_METHOD(list_find_on_a_list_with_1_matching_item_yields_that_item)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			int x = 42;
+			(void)list_add(handle, &x);
+			mocks.ResetAllCalls();
+
+			STRICT_EXPECTED_CALL(mocks, test_match_function(&x, TEST_CONTEXT));
+
+			// act
+			int* result = (int*)list_find(handle, test_match_function, TEST_CONTEXT);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+			ASSERT_ARE_EQUAL(int, x, *result);
+		}
+
+		/* Tests_SRS_LIST_01_016: [If the match function returns false, list_find shall consider that item as not matching.] */
+		TEST_METHOD(list_find_on_a_list_with_1_items_that_does_not_match_returns_NULL)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			int x = 42;
+			(void)list_add(handle, &x);
+			mocks.ResetAllCalls();
+
+			STRICT_EXPECTED_CALL(mocks, test_match_function(&x, TEST_CONTEXT))
+				.SetReturn(false);
+
+			// act
+			int* result = (int*)list_find(handle, test_match_function, TEST_CONTEXT);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_LIST_01_011: [list_find shall iterate through all items in a list and return the one that satisfies a certain match function.] */
+		/* Tests_SRS_LIST_01_014: [list find shall determine whether an item satisfies the match criteria by invoking the match function for each item in the list until a matching item is found.] */
+		/* Tests_SRS_LIST_01_013: [The match_function shall get as arguments the list item being attempted to be matched and the match_context as is.] */
+		/* Tests_SRS_LIST_01_017: [If the match function returns true, list_find shall consider that item as matching.] */
+		TEST_METHOD(list_find_on_a_list_with_2_items_where_the_first_matches_yields_the_first_item)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			int x1 = 42;
+			int x2 = 43;
+			(void)list_add(handle, &x1);
+			(void)list_add(handle, &x2);
+			mocks.ResetAllCalls();
+
+			STRICT_EXPECTED_CALL(mocks, test_match_function(&x1, TEST_CONTEXT));
+
+			// act
+			int* result = (int*)list_find(handle, test_match_function, TEST_CONTEXT);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+			ASSERT_ARE_EQUAL(int, x1, *result);
+		}
+
+		/* Tests_SRS_LIST_01_011: [list_find shall iterate through all items in a list and return the one that satisfies a certain match function.] */
+		/* Tests_SRS_LIST_01_014: [list find shall determine whether an item satisfies the match criteria by invoking the match function for each item in the list until a matching item is found.] */
+		/* Tests_SRS_LIST_01_013: [The match_function shall get as arguments the list item being attempted to be matched and the match_context as is.] */
+		/* Tests_SRS_LIST_01_017: [If the match function returns true, list_find shall consider that item as matching.] */
+		/* Tests_SRS_LIST_01_016: [If the match function returns false, list_find shall consider that item as not matching.] */
+		TEST_METHOD(list_find_on_a_list_with_2_items_where_the_second_matches_yields_the_second_item)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			int x1 = 42;
+			int x2 = 43;
+			(void)list_add(handle, &x1);
+			(void)list_add(handle, &x2);
+			mocks.ResetAllCalls();
+
+			STRICT_EXPECTED_CALL(mocks, test_match_function(&x1, TEST_CONTEXT))
+				.SetReturn(false);
+			STRICT_EXPECTED_CALL(mocks, test_match_function(&x2, TEST_CONTEXT));
+
+			// act
+			int* result = (int*)list_find(handle, test_match_function, TEST_CONTEXT);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+			ASSERT_ARE_EQUAL(int, x2, *result);
+		}
+
+		/* Tests_SRS_LIST_01_016: [If the match function returns false, list_find shall consider that item as not matching.] */
+		TEST_METHOD(list_find_on_a_list_with_2_items_where_none_matches_returns_NULL)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			int x1 = 42;
+			int x2 = 43;
+			(void)list_add(handle, &x1);
+			(void)list_add(handle, &x2);
+			mocks.ResetAllCalls();
+
+			STRICT_EXPECTED_CALL(mocks, test_match_function(&x1, TEST_CONTEXT))
+				.SetReturn(false);
+			STRICT_EXPECTED_CALL(mocks, test_match_function(&x2, TEST_CONTEXT))
+				.SetReturn(false);
+
+			// act
+			int* result = (int*)list_find(handle, test_match_function, TEST_CONTEXT);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_LIST_01_015: [If the list is empty, list_find shall return NULL.] */
+		TEST_METHOD(list_find_on_a_list_with_no_items_yields_NULL)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			mocks.ResetAllCalls();
+
+			// act
+			int* result = (int*)list_find(handle, test_match_function, TEST_CONTEXT);
+
+			// assert
+			ASSERT_IS_NULL(result);
 		}
 	};
 }

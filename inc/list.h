@@ -13,6 +13,8 @@ extern "C" {
 
 	extern LIST_HANDLE list_create(void);
 	extern void list_destroy(LIST_HANDLE handle);
+	extern int list_add(LIST_HANDLE handle, void* item);
+	extern void* list_find(LIST_HANDLE handle, void* look_for, LIST_MATCH_FUNCTION match_function);
 
 #ifdef __cplusplus
 }

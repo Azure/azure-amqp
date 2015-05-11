@@ -38,7 +38,26 @@ void list_destroy(LIST_HANDLE handle)
 	}
 }
 
-void* list_find(LIST_HANDLE handle, LIST_MATCH_FUNCTION match_function)
+int list_add(LIST_HANDLE handle, void* item)
+{
+	int result;
+
+	/* Codes_SRS_LIST_01_006: [If any of the arguments is NULL, list_add shall not add the item to the list and return a non-zero value.] */
+	if ((handle == NULL) ||
+		(item == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		/* Codes_SRS_LIST_01_005: [list_add shall add one item to the tail of the list and on success it shall return 0.] */
+		result = 0;
+	}
+
+	return result;
+}
+
+void* list_find(LIST_HANDLE handle, void* look_for, LIST_MATCH_FUNCTION match_function)
 {
 	return NULL;
 }

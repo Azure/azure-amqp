@@ -118,5 +118,52 @@ namespace amqpvalue_unittests
 			// assert
 			// uMock checks the calls
 		}
+
+		/* list_add */
+
+		/* Tests_SRS_LIST_01_005: [list_add shall add one item to the tail of the list and on success it shall return 0.] */
+		TEST_METHOD(list_add_with_NULL_handle_fails)
+		{
+			// arrange
+			list_mocks mocks;
+			int x = 42;
+
+			// act
+			int result = list_add(NULL, &x);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_LIST_01_005: [list_add shall add one item to the tail of the list and on success it shall return 0.] */
+		TEST_METHOD(list_add_with_NULL_item_fails)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			mocks.ResetAllCalls();
+
+			// act
+			int result = list_add(handle, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_LIST_01_005: [list_add shall add one item to the tail of the list and on success it shall return 0.] */
+		TEST_METHOD(list_add_adds_the_item_and_returns_zero)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			mocks.ResetAllCalls();
+			int x = 42;
+
+			// act
+			int result = list_add(handle, &x);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
 	};
 }

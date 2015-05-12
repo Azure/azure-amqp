@@ -86,10 +86,10 @@ int list_add(LIST_HANDLE handle, void* item)
 	return result;
 }
 
-const void* list_get_head(LIST_HANDLE handle)
+LIST_ITEM_HANDLE list_get_head(LIST_HANDLE handle)
 {
 	LIST_DATA* list = (LIST_DATA*)handle;
-	const void* result;
+	LIST_ITEM_HANDLE result;
 	
 	if (list == NULL)
 	{
@@ -98,28 +98,22 @@ const void* list_get_head(LIST_HANDLE handle)
 	}
 	else
 	{
-		/* Codes_SRS_LIST_01_008: [list_get_head shall return the head of the list and remove the retrieved item from the list.] */
-		LIST_ITEM* head = list->head;
-
-		if (head == NULL)
-		{
-			/* Codes_SRS_LIST_01_010: [If the list is empty, list_get_head_shall_return NULL.] */
-			result = NULL;
-		}
-		else
-		{
-			result = head->item;
-			list->head = list->head->next;
-			amqp_free(head);
-		}
+		/* Codes_SRS_LIST_01_008: [list_get_head shall return the head of the list.] */
+		/* Codes_SRS_LIST_01_010: [If the list is empty, list_get_head_shall_return NULL.] */
+		result = list->head;
 	}
 
 	return result;
 }
 
-const void* list_find(LIST_HANDLE handle, LIST_MATCH_FUNCTION match_function, const void* match_context)
+LIST_ITEM_HANDLE list_get_next(LIST_ITEM_HANDLE item_handle)
 {
-	const void* result;
+	return NULL;
+}
+
+LIST_ITEM_HANDLE list_find(LIST_HANDLE handle, LIST_MATCH_FUNCTION match_function, const void* match_context)
+{
+	LIST_ITEM_HANDLE result;
 
 	if ((handle == NULL) ||
 		(match_function == NULL))
@@ -137,7 +131,7 @@ const void* list_find(LIST_HANDLE handle, LIST_MATCH_FUNCTION match_function, co
 		{
 			/* Codes_SRS_LIST_01_014: [list find shall determine whether an item satisfies the match criteria by invoking the match function for each item in the list until a matching item is found.] */
 			/* Codes_SRS_LIST_01_013: [The match_function shall get as arguments the list item being attempted to be matched and the match_context as is.] */
-			if (match_function(current->item, match_context) == true)
+			if (match_function((LIST_ITEM_HANDLE)current, match_context) == true)
 			{
 				/* Codes_SRS_LIST_01_017: [If the match function returns true, list_find shall consider that item as matching.] */
 				break;
@@ -154,7 +148,7 @@ const void* list_find(LIST_HANDLE handle, LIST_MATCH_FUNCTION match_function, co
 		}
 		else
 		{
-			result = current->item;
+			result = current;
 		}
 	}
 

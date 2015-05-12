@@ -9,13 +9,15 @@ extern "C" {
 #endif /* __cplusplus */
 
 	typedef void* LIST_HANDLE;
-	typedef bool LIST_MATCH_FUNCTION(const void* list_item, const void* match_context);
+	typedef void* LIST_ITEM_HANDLE;
+	typedef bool LIST_MATCH_FUNCTION(LIST_ITEM_HANDLE list_item, const void* match_context);
 
 	extern LIST_HANDLE list_create(void);
 	extern void list_destroy(LIST_HANDLE handle);
 	extern int list_add(LIST_HANDLE handle, const void* item);
-	extern const void* list_get_head(LIST_HANDLE handle);
-	extern const void* list_find(LIST_HANDLE handle, LIST_MATCH_FUNCTION match_function, const void* match_context);
+	extern LIST_ITEM_HANDLE list_get_head(LIST_HANDLE handle);
+	extern LIST_ITEM_HANDLE list_get_next(LIST_ITEM_HANDLE item_handle);
+	extern LIST_ITEM_HANDLE list_find(LIST_HANDLE handle, LIST_MATCH_FUNCTION match_function, const void* match_context);
 
 #ifdef __cplusplus
 }

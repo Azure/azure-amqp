@@ -158,7 +158,7 @@ namespace amqpvalue_unittests
 		}
 
 		/* Tests_SRS_LIST_01_005: [list_add shall add one item to the tail of the list and on success it shall return 0.] */
-		/* Tests_SRS_LIST_01_008: [list_get_head shall return the head of the list and remove the retrieved item from the list.] */
+		/* Tests_SRS_LIST_01_008: [list_get_head shall return the head of the list.] */
 		TEST_METHOD(list_add_adds_the_item_and_returns_zero)
 		{
 			// arrange
@@ -181,7 +181,7 @@ namespace amqpvalue_unittests
 		}
 
 		/* Tests_SRS_LIST_01_005: [list_add shall add one item to the tail of the list and on success it shall return 0.] */
-		/* Tests_SRS_LIST_01_008: [list_get_head shall return the head of the list and remove the retrieved item from the list.] */
+		/* Tests_SRS_LIST_01_008: [list_get_head shall return the head of the list.] */
 		TEST_METHOD(list_add_when_an_item_is_in_the_list_adds_at_the_end)
 		{
 			// arrange
@@ -204,7 +204,7 @@ namespace amqpvalue_unittests
 			int* head = (int*)list_get_head(handle);
 			ASSERT_IS_NOT_NULL(head);
 			ASSERT_ARE_EQUAL(int, x1, *head);
-			head = (int*)list_get_head(handle);
+			head = (int*)list_get_next(handle);
 			ASSERT_IS_NOT_NULL(head);
 			ASSERT_ARE_EQUAL(int, x2, *head);
 		}
@@ -258,7 +258,7 @@ namespace amqpvalue_unittests
 			ASSERT_IS_NULL(result);
 		}
 
-		/* Tests_SRS_LIST_01_008: [list_get_head shall return the head of the list and remove the retrieved item from the list.] */
+		/* Tests_SRS_LIST_01_008: [list_get_head shall return the head of the list.] */
 		TEST_METHOD(list_get_head_removes_the_item)
 		{
 			// arrange

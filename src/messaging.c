@@ -133,17 +133,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 	}
 	else
 	{
-//		size_t i;
 		const char* to = message_get_to(message);
-
-/*		for (i = 0; i < messaging->connection_count; i++)
-		{
-			if (strcmp(connection_get_address(messaging->connections[i]), to) == 0)
-			{
-				connection = messaging->connections[i];
-				break;
-			}
-		}*/
 
 		if (true)
 		{
@@ -208,8 +198,8 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 					}
 				}
 
-//				amqpvalue_destroy(source_address);
-//				amqpvalue_destroy(target_address);
+				amqpvalue_destroy(source_address);
+				amqpvalue_destroy(target_address);
 			}
 		}
 	}

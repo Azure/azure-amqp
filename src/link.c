@@ -165,8 +165,8 @@ LINK_HANDLE link_create(SESSION_HANDLE session, AMQP_VALUE source, AMQP_VALUE ta
 		else
 		{
 			result->link_state = LINK_STATE_DETACHED;
-			result->source = source;
-			result->target = target;
+			result->source = amqpvalue_clone(source);
+			result->target = amqpvalue_clone(target);
 			result->session = session;
 			result->handle = 1;
 			result->delivery_id = 0;
@@ -178,7 +178,13 @@ LINK_HANDLE link_create(SESSION_HANDLE session, AMQP_VALUE source, AMQP_VALUE ta
 
 void link_destroy(LINK_HANDLE handle)
 {
-	amqpalloc_free(handle);
+	if (handle != NULL)
+	{
+		LINK_DATA* link = (LINK_DATA*)handle;
+		amqpvalue_destroy(link->source);
+		amqpvalue_destroy(link->target);
+		amqpalloc_free(handle);
+	}
 }
 
 int link_dowork(LINK_HANDLE handle)

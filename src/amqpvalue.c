@@ -633,6 +633,7 @@ AMQP_VALUE amqpvalue_get_composite_list(AMQP_VALUE value)
 AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 {
 	AMQP_VALUE result;
+
 	if (value == NULL)
 	{
 		result = NULL;
@@ -646,8 +647,24 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 			result = NULL;
 			break;
 
+		case AMQP_TYPE_DESCRIPTOR:
+		case AMQP_TYPE_NULL:
+		case AMQP_TYPE_LIST:
+			result = NULL;
+			break;
+
 		case AMQP_TYPE_STRING:
-			result = amqpvalue_create_string(value_data->value.string_value.chars);
+			result = amqpvalue_create_string_with_length(value_data->value.string_value.chars, value_data->value.string_value.length);
+			break;
+
+		case AMQP_TYPE_ULONG:
+		case AMQP_TYPE_UINT:
+		case AMQP_TYPE_USHORT:
+		case AMQP_TYPE_BOOL:
+		case AMQP_TYPE_UBYTE:
+		case AMQP_TYPE_COMPOSITE:
+		case AMQP_TYPE_BINARY:
+			result = NULL;
 			break;
 		}
 	}

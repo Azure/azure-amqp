@@ -6,6 +6,7 @@
 #include "decoder.h"
 #include "logger.h"
 #include "io.h"
+#include "amqpalloc.h"
 
 #define FRAME_HEADER_SIZE 8
 
@@ -211,7 +212,7 @@ static int receive_frame_byte(FRAME_CODEC_DATA* frame_codec, unsigned char b)
 FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, FRAME_RECEIVED_CALLBACK frame_received_callback, void* context, LOGGER_LOG logger_log)
 {
 	FRAME_CODEC_DATA* result;
-	result = malloc(sizeof(FRAME_CODEC_DATA));
+	result = amqpalloc_malloc(sizeof(FRAME_CODEC_DATA));
 	if (result != NULL)
 	{
 		result->io = io;
@@ -228,7 +229,7 @@ FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, FRAME_RECEIVED_CALLBACK fram
 
 void frame_codec_destroy(FRAME_CODEC_HANDLE handle)
 {
-	free(handle);
+	amqpalloc_free(handle);
 }
 
 int frame_codec_receive_bytes(FRAME_CODEC_HANDLE handle, const void* buffer, size_t size)

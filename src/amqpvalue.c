@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "amqp_types.h"
 #include "amqpvalue.h"
+#include "amqpalloc.h"
 
 typedef struct AMQP_LIST_VALUE_TAG
 {
@@ -51,7 +52,7 @@ typedef struct AMQP_VALUE_DATA_TAG
 
 AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value)
 {
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
 		result->type = AMQP_TYPE_DESCRIPTOR;
@@ -62,7 +63,7 @@ AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value)
 
 AMQP_VALUE amqpvalue_create_ulong(uint64_t value)
 {
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
 		result->type = AMQP_TYPE_ULONG;
@@ -73,7 +74,7 @@ AMQP_VALUE amqpvalue_create_ulong(uint64_t value)
 
 AMQP_VALUE amqpvalue_create_ushort(uint16_t value)
 {
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
 		result->type = AMQP_TYPE_USHORT;
@@ -106,23 +107,23 @@ AMQP_VALUE amqpvalue_create_string_with_length(const char* value, uint32_t lengt
 	}
 	else
 	{
-		result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+		result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 		if (result != NULL)
 		{
 			result->type = AMQP_TYPE_STRING;
-			result->value.string_value.chars = malloc(length + 1);
+			result->value.string_value.chars = amqpalloc_malloc(length + 1);
 			result->value.string_value.length = length;
 			if (result->value.string_value.chars == NULL)
 			{
-				free(result);
+				amqpalloc_free(result);
 				result = NULL;
 			}
 			else
 			{
 				if (memcpy(result->value.string_value.chars, value, length) == NULL)
 				{
-					free(result->value.string_value.chars);
-					free(result);
+					amqpalloc_free(result->value.string_value.chars);
+					amqpalloc_free(result);
 					result = NULL;
 				}
 				else
@@ -145,23 +146,23 @@ AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length)
 	}
 	else
 	{
-		result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+		result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 		if (result != NULL)
 		{
 			result->type = AMQP_TYPE_BINARY;
-			result->value.binary_value.bytes = malloc(length);
+			result->value.binary_value.bytes = amqpalloc_malloc(length);
 			result->value.binary_value.length = length;
 			if (result->value.binary_value.bytes == NULL)
 			{
-				free(result);
+				amqpalloc_free(result);
 				result = NULL;
 			}
 			else
 			{
 				if (memcpy(result->value.binary_value.bytes, value, length) == NULL)
 				{
-					free(result->value.binary_value.bytes);
-					free(result);
+					amqpalloc_free(result->value.binary_value.bytes);
+					amqpalloc_free(result);
 					result = NULL;
 				}
 			}
@@ -172,15 +173,15 @@ AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length)
 
 AMQP_VALUE amqpvalue_create_list(size_t size)
 {
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
 		result->type = AMQP_TYPE_LIST;
 		result->value.list_value.count = size;
-		result->value.list_value.items = (AMQP_VALUE*)malloc(sizeof(AMQP_VALUE*) * size);
+		result->value.list_value.items = (AMQP_VALUE*)amqpalloc_malloc(sizeof(AMQP_VALUE*) * size);
 		if (result->value.list_value.items == NULL)
 		{
-			free(result);
+			amqpalloc_free(result);
 			result = NULL;
 		}
 	}
@@ -190,13 +191,13 @@ AMQP_VALUE amqpvalue_create_list(size_t size)
 
 AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor, size_t size)
 {
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
 		AMQP_VALUE descriptor_ulong_value = amqpvalue_create_ulong(descriptor);
 		if (descriptor_ulong_value == NULL)
 		{
-			free(result);
+			amqpalloc_free(result);
 			result = NULL;
 		}
 		else
@@ -205,8 +206,8 @@ AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor,
 			result->value.composite_value.descriptor = amqpvalue_create_descriptor(descriptor_ulong_value);
 			if (result->value.composite_value.descriptor == NULL)
 			{
-				free(descriptor_ulong_value);
-				free(result);
+				amqpalloc_free(descriptor_ulong_value);
+				amqpalloc_free(result);
 				result = NULL;
 			}
 			else
@@ -214,7 +215,7 @@ AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor,
 				result->value.composite_value.list = amqpvalue_create_list(size);
 				if (result->value.composite_value.list == NULL)
 				{
-					free(result);
+					amqpalloc_free(result);
 					result = NULL;
 				}
 			}
@@ -263,10 +264,10 @@ void amqpvalue_destroy(AMQP_VALUE value)
 		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
 		if (value_data->type == AMQP_TYPE_LIST)
 		{
-			free(value_data->value.list_value.items);
+			amqpalloc_free(value_data->value.list_value.items);
 		}
 
-		free(value);
+		amqpalloc_free(value);
 	}
 }
 
@@ -391,7 +392,7 @@ const unsigned char* amqpvalue_get_binary_content(AMQP_VALUE value, uint32_t* le
 
 AMQP_VALUE amqpvalue_create_uint(uint32_t value)
 {
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
 		result->type = AMQP_TYPE_UINT;
@@ -402,7 +403,7 @@ AMQP_VALUE amqpvalue_create_uint(uint32_t value)
 
 AMQP_VALUE amqpvalue_create_ubyte(unsigned char value)
 {
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
 		result->type = AMQP_TYPE_UBYTE;
@@ -413,7 +414,7 @@ AMQP_VALUE amqpvalue_create_ubyte(unsigned char value)
 
 AMQP_VALUE amqpvalue_create_boolean(bool value)
 {
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
 		result->type = AMQP_TYPE_BOOL;
@@ -424,7 +425,7 @@ AMQP_VALUE amqpvalue_create_boolean(bool value)
 
 AMQP_VALUE amqpvalue_create_null(void)
 {
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
 		result->type = AMQP_TYPE_NULL;

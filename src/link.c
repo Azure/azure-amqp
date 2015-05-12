@@ -5,6 +5,7 @@
 #include "session.h"
 #include "amqpvalue.h"
 #include "amqp_protocol_types.h"
+#include "amqpalloc.h"
 
 typedef struct LINK_DATA_TAG
 {
@@ -112,7 +113,7 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 		}
 		else
 		{
-			AMQP_VALUE* chunks = malloc(sizeof(AMQP_VALUE) * (payload_chunk_count + 1));
+			AMQP_VALUE* chunks = amqpalloc_malloc(sizeof(AMQP_VALUE) * (payload_chunk_count + 1));
 			if (chunks == NULL)
 			{
 				result = __LINE__;
@@ -138,7 +139,7 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 					result = 0;
 				}
 
-				free(chunks);
+				amqpalloc_free(chunks);
 			}
 		}
 
@@ -153,12 +154,12 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 
 LINK_HANDLE link_create(SESSION_HANDLE session, AMQP_VALUE source, AMQP_VALUE target)
 {
-	LINK_DATA* result = malloc(sizeof(LINK_DATA));
+	LINK_DATA* result = amqpalloc_malloc(sizeof(LINK_DATA));
 	if (result != NULL)
 	{
 		if (session_set_frame_received_callback(session, link_frame_received, result) != 0)
 		{
-			free(result);
+			amqpalloc_free(result);
 			result = NULL;
 		}
 		else
@@ -177,7 +178,7 @@ LINK_HANDLE link_create(SESSION_HANDLE session, AMQP_VALUE source, AMQP_VALUE ta
 
 void link_destroy(LINK_HANDLE handle)
 {
-	free(handle);
+	amqpalloc_free(handle);
 }
 
 int link_dowork(LINK_HANDLE handle)

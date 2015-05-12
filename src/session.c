@@ -5,6 +5,7 @@
 #include "amqpvalue.h"
 #include "amqp_protocol_types.h"
 #include "consolelogger.h"
+#include "amqpalloc.h"
 
 typedef struct SESSION_DATA_TAG
 {
@@ -103,12 +104,12 @@ static void frame_received(void* context, uint64_t performative, AMQP_VALUE fram
 
 SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 {
-	SESSION_DATA* result = malloc(sizeof(SESSION_DATA));
+	SESSION_DATA* result = amqpalloc_malloc(sizeof(SESSION_DATA));
 	if (result != NULL)
 	{
 		if (connection_set_session_frame_receive_callback(connection, frame_received, result) != 0)
 		{
-			free(result);
+			amqpalloc_free(result);
 			result = NULL;
 		}
 		else
@@ -124,7 +125,7 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 
 void session_destroy(SESSION_HANDLE handle)
 {
-	free(handle);
+	amqpalloc_free(handle);
 }
 
 int session_dowork(SESSION_HANDLE handle)

@@ -5,6 +5,7 @@
 #include "winsock2.h"
 #include "ws2tcpip.h"
 #include "windows.h"
+#include "amqpalloc.h"
 
 typedef struct SOCKET_IO_DATA_TAG
 {
@@ -33,7 +34,7 @@ IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receiv
 	}
 	else
 	{
-		result = malloc(sizeof(SOCKET_IO_DATA));
+		result = amqpalloc_malloc(sizeof(SOCKET_IO_DATA));
 		if (result != NULL)
 		{
 			result->receive_callback = NULL;
@@ -44,7 +45,7 @@ IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receiv
 			result->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (result->socket == INVALID_SOCKET)
 			{
-				free(result);
+				amqpalloc_free(result);
 				result = NULL;
 			}
 			else
@@ -56,7 +57,7 @@ IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receiv
 				if (getaddrinfo(socket_io_config->hostname, portString, NULL, &addrInfo) != 0)
 				{
 					closesocket(result->socket);
-					free(result);
+					amqpalloc_free(result);
 					result = NULL;
 				}
 				else
@@ -66,13 +67,13 @@ IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receiv
 					if (connect(result->socket, addrInfo->ai_addr, sizeof(*addrInfo->ai_addr)) != 0)
 					{
 						closesocket(result->socket);
-						free(result);
+						amqpalloc_free(result);
 						result = NULL;
 					}
                     else if (ioctlsocket(result->socket, FIONBIO, &iMode))
                     {
                         closesocket(result->socket);
-                        free(result);
+                        amqpalloc_free(result);
                         result = NULL;
                     }
 				}
@@ -90,7 +91,7 @@ void socketio_destroy(IO_HANDLE handle)
 		SOCKET_IO_DATA* socket_io_data = (SOCKET_IO_DATA*)handle;
 		/* we cannot do much if the close fails, so just ignore the result */
 		(void)closesocket(socket_io_data->socket);
-		free(handle);
+		amqpalloc_free(handle);
 	}
 }
 

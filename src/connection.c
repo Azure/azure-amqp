@@ -4,6 +4,7 @@
 #include "consolelogger.h"
 #include "frame_codec.h"
 #include "socketio.h"
+#include "amqpalloc.h"
 
 static unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 #define FRAME_HEADER_SIZE 8
@@ -181,14 +182,14 @@ static void connection_frame_received(void* context, uint64_t performative, AMQP
 
 CONNECTION_HANDLE connection_create(const char* host, int port)
 {
-	CONNECTION_DATA* result = malloc(sizeof(CONNECTION_DATA));
+	CONNECTION_DATA* result = amqpalloc_malloc(sizeof(CONNECTION_DATA));
 	if (result != NULL)
 	{
 		SOCKETIO_CONFIG socket_io_config = { host, port };
 		result->socket_io = io_create(socketio_get_interface_description(), &socket_io_config, connection_receive_callback, result, consolelogger_log);
 		if (result->socket_io == NULL)
 		{
-			free(result);
+			amqpalloc_free(result);
 			result = NULL;
 		}
 		else
@@ -197,7 +198,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 			if (result->frame_codec == NULL)
 			{
 				io_destroy(result->socket_io);
-				free(result);
+				amqpalloc_free(result);
 				result = NULL;
 			}
 			else
@@ -222,7 +223,7 @@ void connection_destroy(CONNECTION_HANDLE handle)
 		CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;
 		frame_codec_destroy(connection->frame_codec);
 		io_destroy(connection->socket_io);
-		free(handle);
+		amqpalloc_free(handle);
 	}
 }
 

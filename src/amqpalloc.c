@@ -17,8 +17,8 @@ typedef struct ALLOCATION_TAG
 } ALLOCATION;
 
 static ALLOCATION* head = NULL;
-static size_t totalSize = 0;
-static size_t maxSize = 0;
+static size_t total_size = 0;
+static size_t max_size = 0;
 
 void* trace_malloc(size_t size)
 {
@@ -43,10 +43,10 @@ void* trace_malloc(size_t size)
 			allocation->next = head;
 			head = allocation;
 
-			totalSize += size;
-			if (maxSize < totalSize)
+			total_size += size;
+			if (max_size < total_size)
 			{
-				maxSize = totalSize;
+				max_size = total_size;
 			}
 		}
 	}
@@ -77,10 +77,10 @@ void* trace_calloc(size_t nmemb, size_t size)
 			allocation->next = head;
 			head = allocation;
 
-			totalSize += allocation->size;
-			if (maxSize < totalSize)
+			total_size += allocation->size;
+			if (max_size < total_size)
 			{
-				maxSize = totalSize;
+				max_size = total_size;
 			}
 		}
 	}
@@ -134,7 +134,7 @@ void* trace_realloc(void* ptr, size_t size)
 			if (ptr != NULL)
 			{
 				allocation->ptr = result;
-				totalSize -= allocation->size;
+				total_size -= allocation->size;
 				allocation->size = size;
 			}
 			else
@@ -146,11 +146,11 @@ void* trace_realloc(void* ptr, size_t size)
 				head = allocation;
 			}
 
-			totalSize += size;
+			total_size += size;
 
-			if (maxSize < totalSize)
+			if (max_size < total_size)
 			{
-				maxSize = totalSize;
+				max_size = total_size;
 			}
 		}
 	}
@@ -168,7 +168,7 @@ void trace_free(void* ptr)
 		if (curr->ptr == ptr)
 		{
 			free(ptr);
-			totalSize -= curr->size;
+			total_size -= curr->size;
 			if (prev != NULL)
 			{
 				prev->next = curr->next;
@@ -251,12 +251,17 @@ void* amqpalloc_realloc(void* ptr, size_t size)
 	return result;
 }
 
-size_t amqpalloc_getMaximumMemoryUsed(void)
+size_t amqpalloc_get_maximum_memory_used(void)
 {
-    return maxSize;
+    return max_size;
 }
 
-size_t gballoc_getCurrentMemoryUsed(void)
+size_t amqpalloc_get_current_memory_used(void)
 {
-	return totalSize;
+	return total_size;
+}
+
+void amqpalloc_set_memory_tracing_enabled(bool memory_tracing_enabled)
+{
+	alloc_trace = memory_tracing_enabled;
 }

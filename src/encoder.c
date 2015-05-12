@@ -3,6 +3,7 @@
 #include "encoder.h"
 #include "amqpvalue.h"
 #include "amqp_types.h"
+#include "amqpalloc.h"
 
 typedef struct ENCODER_DATA_TAG
 {
@@ -13,7 +14,7 @@ typedef struct ENCODER_DATA_TAG
 
 ENCODER_HANDLE encoder_create(ENCODER_OUTPUT encoderOutput, void* context)
 {
-	ENCODER_DATA* encoder_data = (ENCODER_DATA*)malloc(sizeof(ENCODER_DATA));
+	ENCODER_DATA* encoder_data = (ENCODER_DATA*)amqpalloc_malloc(sizeof(ENCODER_DATA));
 	if (encoder_data != NULL)
 	{
 		encoder_data->encodedBytes = 0;
@@ -26,7 +27,7 @@ ENCODER_HANDLE encoder_create(ENCODER_OUTPUT encoderOutput, void* context)
 
 void encoder_destroy(ENCODER_HANDLE handle)
 {
-	free(handle);
+	amqpalloc_free(handle);
 }
 
 static int output_byte(ENCODER_DATA* encoder_data, unsigned char b)

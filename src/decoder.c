@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "decoder.h"
+#include "amqpalloc.h"
 
 typedef struct DECODER_DATA_TAG
 {
@@ -10,7 +11,7 @@ typedef struct DECODER_DATA_TAG
 
 DECODER_HANDLE decoder_create(void* buffer, size_t size)
 {
-	DECODER_DATA* decoderData = (DECODER_DATA*)malloc(sizeof(DECODER_DATA));
+	DECODER_DATA* decoderData = (DECODER_DATA*)amqpalloc_malloc(sizeof(DECODER_DATA));
 	if (decoderData != NULL)
 	{
 		decoderData->buffer = buffer;
@@ -23,7 +24,7 @@ DECODER_HANDLE decoder_create(void* buffer, size_t size)
 
 void decoder_destroy(DECODER_HANDLE handle)
 {
-	free(handle);
+	amqpalloc_free(handle);
 }
 
 int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)

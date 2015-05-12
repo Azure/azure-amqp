@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include "io.h"
+#include "amqpalloc.h"
 
 typedef struct IO_DATA_TAG
 {
@@ -10,7 +11,7 @@ typedef struct IO_DATA_TAG
 
 IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log)
 {
-	IO_DATA* io_data = (IO_DATA*)malloc(sizeof(IO_DATA));
+	IO_DATA* io_data = (IO_DATA*)amqpalloc_malloc(sizeof(IO_DATA));
 	if (io_data != NULL)
 	{
 		io_data->io_interface_description = io_interface_description;

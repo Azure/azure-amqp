@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "message.h"
 #include "amqpvalue.h"
+#include "amqpalloc.h"
 
 typedef struct MESSAGE_DATA_TAG
 {
@@ -10,7 +11,7 @@ typedef struct MESSAGE_DATA_TAG
 
 MESSAGE_HANDLE message_create(void)
 {
-	MESSAGE_DATA* result = (MESSAGE_DATA*)malloc(sizeof(MESSAGE_DATA));
+	MESSAGE_DATA* result = (MESSAGE_DATA*)amqpalloc_malloc(sizeof(MESSAGE_DATA));
 	if (result != NULL)
 	{
 		result->to = NULL;
@@ -23,7 +24,7 @@ MESSAGE_HANDLE message_create(void)
 
 void message_destroy(MESSAGE_HANDLE handle)
 {
-	free(handle);
+	amqpalloc_free(handle);
 }
 
 int message_set_to(MESSAGE_HANDLE handle, const char* to)

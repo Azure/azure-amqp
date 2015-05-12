@@ -5,6 +5,14 @@
 #include "amqpvalue.h"
 #include "link.h"
 #include "list.h"
+#include "amqpalloc.h"
+
+typedef struct MESSAGE_WITH_CALLBACK_TAG
+{
+	MESSAGE_HANDLE message;
+	MESSAGE_SEND_COMPLETE_CALLBACK callback;
+	const void* context;
+} MESSAGE_WITH_CALLBACK;
 
 typedef struct MESSAGING_DATA_TAG
 {
@@ -12,13 +20,13 @@ typedef struct MESSAGING_DATA_TAG
 	CONNECTION_HANDLE* connection;
 	SESSION_HANDLE session;
 	LINK_HANDLE link;
-	MESSAGE_HANDLE* outgoing_messages;
+	MESSAGE_WITH_CALLBACK* outgoing_messages;
 	size_t outgoing_message_count;
 } MESSAGING_DATA;
 
 MESSAGING_HANDLE messaging_create(void)
 {
-	MESSAGING_DATA* result = (MESSAGING_DATA*)malloc(sizeof(MESSAGING_DATA));
+	MESSAGING_DATA* result = (MESSAGING_DATA*)amqpalloc_malloc(sizeof(MESSAGING_DATA));
 	if (result != NULL)
 	{
 		result->connections = list_create();
@@ -38,7 +46,7 @@ void messaging_destroy(MESSAGING_HANDLE handle)
 	{
 		MESSAGING_DATA* messaging = (MESSAGING_DATA*)handle;
 		list_destroy(messaging);
-		free(handle);
+		amqpalloc_free(handle);
 	}
 }
 
@@ -110,7 +118,7 @@ AMQP_VALUE messaging_create_target(AMQP_VALUE address)
 	return result;
 }
 
-int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message)
+int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND_COMPLETE_CALLBACK callback, const void* callback_context)
 {
 	int result;
 	MESSAGING_DATA* messaging = (MESSAGING_DATA*)handle;
@@ -180,7 +188,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message)
 				}
 				else
 				{
-					MESSAGE_HANDLE* messages = (MESSAGE_HANDLE*)realloc(messaging->outgoing_messages, sizeof(MESSAGE_HANDLE) * (messaging->outgoing_message_count + 1));
+					MESSAGE_WITH_CALLBACK* messages = (MESSAGE_WITH_CALLBACK*)amqpalloc_realloc(messaging->outgoing_messages, sizeof(MESSAGE_WITH_CALLBACK) * (messaging->outgoing_message_count + 1));
 					if (messages == NULL)
 					{
 						result = __LINE__;
@@ -188,7 +196,9 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message)
 					else
 					{
 						messaging->outgoing_messages = messages;
-						messaging->outgoing_messages[messaging->outgoing_message_count] = message;
+						messaging->outgoing_messages[messaging->outgoing_message_count].message = message;
+						messaging->outgoing_messages[messaging->outgoing_message_count].callback = callback;
+						messaging->outgoing_messages[messaging->outgoing_message_count].context = callback_context;
 						messaging->outgoing_message_count++;
 
 						result = 0;
@@ -229,7 +239,7 @@ int messaging_dowork(MESSAGING_HANDLE handle)
 
 				for (i = 0; i < messaging->outgoing_message_count; i++)
 				{
-					AMQP_VALUE message_payload = message_get_body(messaging->outgoing_messages[i]);
+					AMQP_VALUE message_payload = message_get_body(messaging->outgoing_messages[i].message);
 					if (message_payload == NULL)
 					{
 						result = __LINE__;
@@ -237,6 +247,10 @@ int messaging_dowork(MESSAGING_HANDLE handle)
 					else
 					{
 						result = link_transfer(messaging->link, &message_payload, 1);
+						if (result == 0)
+						{
+							messaging->outgoing_messages[i].callback(MESSAGING_OK, messaging->outgoing_messages[i].context);
+						}
 					}
 				}
 

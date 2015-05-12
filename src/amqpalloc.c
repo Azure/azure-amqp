@@ -158,7 +158,7 @@ void* trace_realloc(void* ptr, size_t size)
 	return result;
 }
 
-void gballoc_free(void* ptr)
+void trace_free(void* ptr)
 {
 	ALLOCATION* curr = head;
 	ALLOCATION* prev = NULL;
@@ -195,7 +195,7 @@ void gballoc_free(void* ptr)
 void* amqpalloc_malloc(size_t size)
 {
 	void* result;
-	if (alloc_trace)
+	if (!alloc_trace)
 	{
 		result = malloc(size);
 	}
@@ -209,114 +209,54 @@ void* amqpalloc_malloc(size_t size)
 
 void amqpalloc_free(void* ptr)
 {
-	free(ptr);
+	if (!alloc_trace)
+	{
+		free(ptr);
+	}
+	else
+	{
+		trace_free(ptr);
+	}
 }
 
 void* amqpalloc_calloc(size_t nmemb, size_t size)
 {
-	return calloc(nmemb, size);
+	void* result;
+
+	if (!alloc_trace)
+	{
+		result = calloc(nmemb, size);
+	}
+	else
+	{
+		result = trace_calloc(nmemb, size);
+	}
+
+	return result;
 }
 
 void* amqpalloc_realloc(void* ptr, size_t size)
 {
-	return realloc(ptr, size);
+	void* result;
+
+	if (!alloc_trace)
+	{
+		result = realloc(ptr, size);
+	}
+	else
+	{
+		result = trace_realloc(ptr, size);
+	}
+
+	return result;
 }
 
-#if 0
-
-int gballoc_init(void)
+size_t amqpalloc_getMaximumMemoryUsed(void)
 {
-    int result;
-
-    if (gballocState != GBALLOC_STATE_NOT_INIT)
-    {
-        /* Codes_SRS_GBALLOC_01_025: [Init after Init shall fail and return a non-zero value.] */
-        result = __LINE__;
-    }
-    /* Codes_SRS_GBALLOC_01_026: [gballoc_Init shall create a lock handle that will be used to make the other gballoc APIs thread-safe.] */
-    else if ((gballocThreadSafeLock = Lock_Init()) == NULL)
-    {
-        /* Codes_SRS_GBALLOC_01_027: [If the Lock creation fails, gballoc_init shall return a non-zero value.]*/
-        result = __LINE__;
-    }
-    else
-    {
-        gballocState = GBALLOC_STATE_INIT;
-
-        /* Codes_ SRS_GBALLOC_01_002: [Upon initialization the total memory used and maximum total memory used tracked by the module shall be set to 0.] */
-        totalSize = 0;
-        maxSize = 0;
-
-        /* Codes_SRS_GBALLOC_01_024: [gballoc_init shall initialize the gballoc module and return 0 upon success.] */
-        result = 0;
-    }
-
-    return result;
-}
-
-void gballoc_deinit(void)
-{
-    if (gballocState == GBALLOC_STATE_INIT)
-    {
-        /* Codes_SRS_GBALLOC_01_028: [gballoc_deinit shall free all resources allocated by gballoc_init.] */
-        (void)Lock_Deinit(gballocThreadSafeLock);
-    }
-
-    gballocState = GBALLOC_STATE_NOT_INIT;
-}
-
-size_t gballoc_getMaximumMemoryUsed(void)
-{
-    size_t result;
-
-    /* Codes_SRS_GBALLOC_01_038: [If gballoc was not initialized gballoc_getMaximumMemoryUsed shall return MAX_INT_SIZE.] */
-    if (gballocState != GBALLOC_STATE_INIT)
-    {
-        LogError("gballoc is not initialized.\r\n");
-        result = SIZE_MAX;
-    }
-    /* Codes_SRS_GBALLOC_01_034: [gballoc_getMaximumMemoryUsed shall ensure thread safety by using the lock created by gballoc_Init.]  */
-    else if (LOCK_OK != Lock(gballocThreadSafeLock))
-    {
-        /* Codes_SRS_GBALLOC_01_050: [If the lock cannot be acquired, gballoc_getMaximumMemoryUsed shall return SIZE_MAX.]  */
-        LogError("Failed to get the Lock.\r\n");
-        result = SIZE_MAX;
-    }
-    else
-    {
-    /* Codes_SRS_GBALLOC_01_010: [gballoc_getMaximumMemoryUsed shall return the maximum amount of total memory used recorded since the module initialization.] */
-        result = maxSize;
-        Unlock(gballocThreadSafeLock);
-}
-
-    return result;
+    return maxSize;
 }
 
 size_t gballoc_getCurrentMemoryUsed(void)
 {
-    size_t result;
-
-    /* Codes_SRS_GBALLOC_01_044: [If gballoc was not initialized gballoc_getCurrentMemoryUsed shall return SIZE_MAX.] */
-    if (gballocState != GBALLOC_STATE_INIT)
-    {
-        LogError("gballoc is not initialized.\r\n");
-        result = SIZE_MAX;
-    }
-    /* Codes_SRS_GBALLOC_01_036: [gballoc_getCurrentMemoryUsed shall ensure thread safety by using the lock created by gballoc_Init.]*/
-    else if (LOCK_OK != Lock(gballocThreadSafeLock))
-    {
-        /* Codes_SRS_GBALLOC_01_051: [If the lock cannot be acquired, gballoc_getCurrentMemoryUsed shall return SIZE_MAX.] */
-        LogError("Failed to get the Lock.\r\n");
-        result = SIZE_MAX;
-    }
-    else
-    {
-    /*Codes_SRS_GBALLOC_02_001: [gballoc_getCurrentMemoryUsed shall return the currently used memory size.] */
-        result = totalSize;
-        Unlock(gballocThreadSafeLock);
-    }
-
-    return result;
+	return totalSize;
 }
-
-#endif

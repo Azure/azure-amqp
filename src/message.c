@@ -24,7 +24,13 @@ MESSAGE_HANDLE message_create(void)
 
 void message_destroy(MESSAGE_HANDLE handle)
 {
-	amqpalloc_free(handle);
+	if (handle != NULL)
+	{
+		MESSAGE_DATA* message = (MESSAGE_DATA*)handle;
+		amqpvalue_destroy(message->to);
+		amqpvalue_destroy(message->body);
+		amqpalloc_free(handle);
+	}
 }
 
 int message_set_to(MESSAGE_HANDLE handle, const char* to)

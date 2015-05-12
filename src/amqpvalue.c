@@ -262,9 +262,34 @@ void amqpvalue_destroy(AMQP_VALUE value)
 	if (value != NULL)
 	{
 		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		if (value_data->type == AMQP_TYPE_LIST)
+		switch (value_data->type)
 		{
+		default:
+			break;
+		case AMQP_TYPE_LIST:
+		{
+			size_t i;
+			for (i = 0; i < value_data->value.list_value.count; i++)
+			{
+				amqpvalue_destroy(value_data->value.list_value.items[i]);
+			}
+
 			amqpalloc_free(value_data->value.list_value.items);
+			break;
+		}
+		case AMQP_TYPE_BINARY:
+			amqpalloc_free(value_data->value.binary_value.bytes);
+			break;
+		case AMQP_TYPE_STRING:
+			amqpalloc_free(value_data->value.string_value.chars);
+			break;
+		case AMQP_TYPE_COMPOSITE:
+			amqpvalue_destroy(value_data->value.composite_value.descriptor);
+			amqpvalue_destroy(value_data->value.composite_value.list);
+			break;
+		case AMQP_TYPE_DESCRIPTOR:
+			amqpvalue_destroy(value_data->value.descriptor);
+			break;
 		}
 
 		amqpalloc_free(value);

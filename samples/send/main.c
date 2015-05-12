@@ -18,6 +18,8 @@ void message_send_callback(MESSAGING_RESULT send_result, const void* context)
 
 int main(int argc, char** argv)
 {
+	amqpalloc_set_memory_tracing_enabled(true);
+
 	if (amqplib_init() != 0)
 	{
 		/* init failed */
@@ -28,8 +30,6 @@ int main(int argc, char** argv)
 		MESSAGE_HANDLE message;
 		size_t max_memory_used = 0;
 		size_t last_memory_used = 0;
-
-		amqpalloc_set_memory_tracing_enabled(true);
 
 		messaging = messaging_create();
 		message = message_create();

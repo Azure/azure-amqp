@@ -276,6 +276,98 @@ namespace amqpvalue_unittests
 			ASSERT_ARE_EQUAL(int, x, *(const int*)list_item_get_value(head));
 		}
 
+		/* list_get_next_item */
+
+		/* Tests_SRS_LIST_01_018: [list_get_next_item shall return the next item in the list following the item item_handle.] */
+		TEST_METHOD(list_get_next_item_gets_the_next_item)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			int x1 = 42;
+			int x2 = 43;
+			(void)list_add(handle, &x1);
+			(void)list_add(handle, &x2);
+			mocks.ResetAllCalls();
+			LIST_ITEM_HANDLE item = list_get_head_item(handle);
+
+			// act
+			item = list_get_next_item(item);
+
+			// assert
+			ASSERT_IS_NOT_NULL(item);
+			ASSERT_ARE_EQUAL(int, x2, *(const int*)list_item_get_value(item));
+		}
+
+		/* Tests_SRS_LIST_01_019: [If item_handle is NULL then list_get_next_item shall return NULL.] */
+		TEST_METHOD(list_get_next_item_with_NULL_item_handle_returns_NULL)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			mocks.ResetAllCalls();
+
+			// act
+			LIST_ITEM_HANDLE item = list_get_next_item(NULL);
+
+			// assert
+			ASSERT_IS_NULL(item);
+		}
+
+		/* Tests_SRS_LIST_01_022: [If no more items exist in the list after the item_handle item, list_get_next_item shall return NULL.] */
+		TEST_METHOD(list_get_next_item_when_no_more_items_in_list_returns_NULL)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			int x1 = 42;
+			int x2 = 43;
+			(void)list_add(handle, &x1);
+			(void)list_add(handle, &x2);
+			mocks.ResetAllCalls();
+			LIST_ITEM_HANDLE item = list_get_head_item(handle);
+			item = list_get_next_item(item);
+
+			// act
+			item = list_get_next_item(item);
+
+			// assert
+			ASSERT_IS_NULL(item);
+		}
+
+		/* list_item_get_value */
+
+		/* Tests_SRS_LIST_01_020: [list_item_get_value shall return the value associated with the list item identified by the item_handle argument.] */
+		TEST_METHOD(list_item_get_value_returns_the_item_value)
+		{
+			// arrange
+			list_mocks mocks;
+			LIST_HANDLE handle = list_create();
+			int x = 42;
+			(void)list_add(handle, &x);
+			mocks.ResetAllCalls();
+			LIST_ITEM_HANDLE item = list_get_head_item(handle);
+
+			// act
+			int result = *(const int*)list_item_get_value(item);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, x, result);
+		}
+
+		/* Tests_SRS_LIST_01_021: [If item_handle is NULL, list_item_get_value shall return NULL.] */
+		TEST_METHOD(list_item_get_value_with_NULL_item_returns_NULL)
+		{
+			// arrange
+			list_mocks mocks;
+
+			// act
+			const void* result = list_item_get_value(NULL);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
 		/* list_find */
 
 		/* Tets_SRS_LIST_01_012: [If the handle or the match_function argument is NULL, list_find shall return NULL.] */

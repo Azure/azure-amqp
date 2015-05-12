@@ -112,11 +112,13 @@ LIST_ITEM_HANDLE list_get_next_item(LIST_ITEM_HANDLE item_handle)
 
     if (item_handle == NULL)
     {
+		/* Codes_SRS_LIST_01_019: [If item_handle is NULL then list_get_next_item shall return NULL.] */
         result = NULL;
     }
     else
     {
-        result = ((LIST_ITEM*)item_handle)->next;
+		/* Codes_SRS_LIST_01_018: [list_get_next_item shall return the next item in the list following the item item_handle.] */
+		result = ((LIST_ITEM*)item_handle)->next;
     }
 
     return result;
@@ -128,11 +130,13 @@ const void* list_item_get_value(LIST_ITEM_HANDLE item_handle)
 
     if (item_handle == NULL)
     {
+		/* Codes_SRS_LIST_01_021: [If item_handle is NULL, list_item_get_value shall return NULL.] */
         result = NULL;
     }
     else
     {
-        result = ((LIST_ITEM*)item_handle)->item;
+		/* Codes_SRS_LIST_01_020: [list_item_get_value shall return the value associated with the list item identified by the item_handle argument.] */
+		result = ((LIST_ITEM*)item_handle)->item;
     }
 
     return result;

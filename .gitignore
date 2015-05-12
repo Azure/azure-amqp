@@ -30,3 +30,4 @@
 /ipch/amqpvalue_unittests-1e17bc3d/amqpvalue_unittests-66ad55a4.ipch
 *.ipch
 /doc/~$st_requirements.docm
+*.pch

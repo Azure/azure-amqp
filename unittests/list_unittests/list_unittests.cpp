@@ -1,6 +1,6 @@
 #include <stdbool.h>
-#include "TestRunnerSwitcher.h"
-#include "MicroMock.h"
+#include "testrunnerswitcher.h"
+#include "micromock.h"
 #include "list.h"
 
 bool fail_alloc_calls;
@@ -13,7 +13,7 @@ public:
 	MOCK_STATIC_METHOD_1(, void, amqp_free, void*, ptr)
 		free(ptr);
 	MOCK_VOID_METHOD_END();
-	MOCK_STATIC_METHOD_2(, bool, test_match_function, const void*, list_item, const void*, match_context)
+    MOCK_STATIC_METHOD_2(, bool, test_match_function, LIST_ITEM_HANDLE, list_item, const void*, match_context)
 	MOCK_METHOD_END(bool, true);
 };
 
@@ -21,7 +21,7 @@ extern "C"
 {
 	DECLARE_GLOBAL_MOCK_METHOD_1(list_mocks, , void*, amqp_malloc, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(list_mocks, , void, amqp_free, void*, ptr);
-	DECLARE_GLOBAL_MOCK_METHOD_2(list_mocks, , bool, test_match_function, const void*, list_item, const void*, match_context);
+	DECLARE_GLOBAL_MOCK_METHOD_2(list_mocks, , bool, test_match_function, LIST_ITEM_HANDLE, list_item, const void*, match_context);
 }
 
 MICROMOCK_MUTEX_HANDLE test_serialize_mutex;

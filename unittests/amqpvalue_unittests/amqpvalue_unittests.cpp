@@ -1,6 +1,4 @@
-#include "TestRunnerSwitcher.h"
-
-using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+#include "testrunnerswitcher.h"
 
 namespace amqpvalue_unittests
 {		

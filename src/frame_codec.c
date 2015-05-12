@@ -91,8 +91,8 @@ static int decode_received_amqp_frame(FRAME_CODEC_DATA* frame_codec)
 	unsigned char* frame_body;
 	uint32_t frame_body_size = frame_codec->receive_frame_size - doff * 4;
 	DECODER_HANDLE decoder_handle;
-	AMQP_VALUE descriptor;
-	AMQP_VALUE frame_list_value;
+	AMQP_VALUE descriptor = NULL;
+	AMQP_VALUE frame_list_value = NULL;
 	int result;
 	bool more;
 	uint64_t descriptor_ulong_value;
@@ -102,24 +102,35 @@ static int decode_received_amqp_frame(FRAME_CODEC_DATA* frame_codec)
 
 	frame_body = &frame_codec->receive_frame_buffer[4 * doff];
 	decoder_handle = decoder_create(frame_body, frame_body_size);
-
-	if ((decoder_decode(decoder_handle, &descriptor, &more) != 0) ||
-		(!more) ||
-		(decoder_decode(decoder_handle, &frame_list_value, &more) != 0) ||
-		(amqpvalue_get_ulong(amqpvalue_get_descriptor(descriptor), &descriptor_ulong_value) != 0))
+	if (decoder_handle == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-
-		/* notify of received frame */
-		if (frame_codec->frame_received_callback != NULL)
+		if ((decoder_decode(decoder_handle, &descriptor, &more) != 0) ||
+			(!more) ||
+			(decoder_decode(decoder_handle, &frame_list_value, &more) != 0) ||
+			(amqpvalue_get_ulong(amqpvalue_get_descriptor(descriptor), &descriptor_ulong_value) != 0))
 		{
-			frame_codec->frame_received_callback(frame_codec->context, descriptor_ulong_value, frame_list_value);
+			result = __LINE__;
+		}
+		else
+		{
+
+			/* notify of received frame */
+			if (frame_codec->frame_received_callback != NULL)
+			{
+				frame_codec->frame_received_callback(frame_codec->context, descriptor_ulong_value, frame_list_value);
+			}
+
+			result = 0;
 		}
 
-		result = 0;
+		amqpvalue_destroy(descriptor);
+		amqpvalue_destroy(frame_list_value);
+
+		decoder_destroy(decoder_handle);
 	}
 
 	return result;

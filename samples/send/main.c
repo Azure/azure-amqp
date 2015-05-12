@@ -32,7 +32,6 @@ int main(int argc, char** argv)
 	{
 		MESSAGING_HANDLE messaging;
 		MESSAGE_HANDLE message;
-		size_t max_memory_used = 0;
 		size_t last_memory_used = 0;
 
 		messaging = messaging_create();
@@ -41,13 +40,11 @@ int main(int argc, char** argv)
 		message_set_body(message, amqpvalue_create_binary(NULL, 0));
 		(void)messaging_send(messaging, message, message_send_callback, NULL);
 
-/*		while (!sent)
+		while (!sent)
 		{
-			size_t memory_used;
 			size_t current_memory_used;
 			messaging_dowork(messaging);
 
-			memory_used = amqpalloc_get_maximum_memory_used();
 			current_memory_used = amqpalloc_get_current_memory_used();
 			
 			if (current_memory_used != last_memory_used)
@@ -55,18 +52,13 @@ int main(int argc, char** argv)
 				printf("Current memory usage:%lu\r\n", (unsigned long)current_memory_used);
 				last_memory_used = current_memory_used;
 			}
-
-			if (memory_used > max_memory_used)
-			{
-				max_memory_used = memory_used;
-				printf("Max memory usage:%lu\r\n", (unsigned long)max_memory_used);
-			}
 		}
-		*/
+		
 		message_destroy(message);
 		messaging_destroy(messaging);
 		amqplib_deinit();
 
+		printf("Max memory usage:%lu\r\n", (unsigned long)amqpalloc_get_maximum_memory_used());
 		printf("Current memory usage:%lu\r\n", (unsigned long)amqpalloc_get_current_memory_used());
 	}
 

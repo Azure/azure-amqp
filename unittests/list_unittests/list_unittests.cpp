@@ -201,12 +201,12 @@ namespace amqpvalue_unittests
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
 			mocks.AssertActualAndExpectedCalls();
-			int* head = (int*)list_get_head_item(handle);
-			ASSERT_IS_NOT_NULL(head);
-			ASSERT_ARE_EQUAL(int, x1, *head);
-			head = (int*)list_get_next_item(handle);
-			ASSERT_IS_NOT_NULL(head);
-			ASSERT_ARE_EQUAL(int, x2, *head);
+			LIST_ITEM_HANDLE list_item = list_get_head_item(handle);
+			ASSERT_IS_NOT_NULL(list_item);
+			ASSERT_ARE_EQUAL(int, x1, *(const int*)list_item_get_value(list_item));
+			list_item = list_get_next_item(list_item);
+			ASSERT_IS_NOT_NULL(list_item);
+			ASSERT_ARE_EQUAL(int, x2, *(const int*)list_item_get_value(list_item));
 		}
 
 		/* Tests_SRS_LIST_01_007: [If allocating the new list node fails, list_add shall return a non-zero value.] */
@@ -239,7 +239,7 @@ namespace amqpvalue_unittests
 			mocks.ResetAllCalls();
 
 			// act
-			const void* result = list_get_head_item(handle);
+			LIST_ITEM_HANDLE result = list_get_head_item(handle);
 
 			// assert
 			ASSERT_IS_NULL(result);
@@ -252,7 +252,7 @@ namespace amqpvalue_unittests
 			list_mocks mocks;
 
 			// act
-			const void* result = list_get_head_item(NULL);
+			LIST_ITEM_HANDLE result = list_get_head_item(NULL);
 
 			// assert
 			ASSERT_IS_NULL(result);
@@ -268,14 +268,12 @@ namespace amqpvalue_unittests
 			(void)list_add(handle, &x);
 			mocks.ResetAllCalls();
 
-			EXPECTED_CALL(mocks, amqp_free(IGNORED_PTR_ARG));
-
 			// act
-			int* head = (int*)list_get_head_item(handle);
+			LIST_ITEM_HANDLE head = list_get_head_item(handle);
 
 			// assert
 			ASSERT_IS_NOT_NULL(head);
-			ASSERT_ARE_EQUAL(int, x, *head);
+			ASSERT_ARE_EQUAL(int, x, *(const int*)list_item_get_value(head));
 		}
 
 		/* list_find */
@@ -287,7 +285,7 @@ namespace amqpvalue_unittests
 			list_mocks mocks;
 
 			// act
-			int* result = (int*)list_find(NULL, test_match_function, TEST_CONTEXT);
+			LIST_ITEM_HANDLE result = list_find(NULL, test_match_function, TEST_CONTEXT);
 
 			// assert
 			ASSERT_IS_NULL(result);
@@ -304,7 +302,7 @@ namespace amqpvalue_unittests
 			mocks.ResetAllCalls();
 
 			// act
-			int* result = (int*)list_find(handle, NULL, TEST_CONTEXT);
+			LIST_ITEM_HANDLE result = list_find(handle, NULL, TEST_CONTEXT);
 
 			// assert
 			ASSERT_IS_NULL(result);
@@ -323,14 +321,15 @@ namespace amqpvalue_unittests
 			(void)list_add(handle, &x);
 			mocks.ResetAllCalls();
 
-			STRICT_EXPECTED_CALL(mocks, test_match_function(&x, TEST_CONTEXT));
+			STRICT_EXPECTED_CALL(mocks, test_match_function(IGNORED_PTR_ARG, TEST_CONTEXT))
+				.IgnoreArgument(1);
 
 			// act
-			int* result = (int*)list_find(handle, test_match_function, TEST_CONTEXT);
+			LIST_ITEM_HANDLE result = list_find(handle, test_match_function, TEST_CONTEXT);
 
 			// assert
 			ASSERT_IS_NOT_NULL(result);
-			ASSERT_ARE_EQUAL(int, x, *result);
+			ASSERT_ARE_EQUAL(int, x, *(const int*)list_item_get_value(result));
 		}
 
 		/* Tests_SRS_LIST_01_016: [If the match function returns false, list_find shall consider that item as not matching.] */
@@ -343,11 +342,11 @@ namespace amqpvalue_unittests
 			(void)list_add(handle, &x);
 			mocks.ResetAllCalls();
 
-			STRICT_EXPECTED_CALL(mocks, test_match_function(&x, TEST_CONTEXT))
-				.SetReturn(false);
+			STRICT_EXPECTED_CALL(mocks, test_match_function(IGNORED_PTR_ARG, TEST_CONTEXT))
+				.IgnoreArgument(1).SetReturn(false);
 
 			// act
-			int* result = (int*)list_find(handle, test_match_function, TEST_CONTEXT);
+			LIST_ITEM_HANDLE result = list_find(handle, test_match_function, TEST_CONTEXT);
 
 			// assert
 			ASSERT_IS_NULL(result);
@@ -368,14 +367,15 @@ namespace amqpvalue_unittests
 			(void)list_add(handle, &x2);
 			mocks.ResetAllCalls();
 
-			STRICT_EXPECTED_CALL(mocks, test_match_function(&x1, TEST_CONTEXT));
+			STRICT_EXPECTED_CALL(mocks, test_match_function(IGNORED_PTR_ARG, TEST_CONTEXT))
+				.IgnoreArgument(1);
 
 			// act
-			int* result = (int*)list_find(handle, test_match_function, TEST_CONTEXT);
+			LIST_ITEM_HANDLE result = list_find(handle, test_match_function, TEST_CONTEXT);
 
 			// assert
 			ASSERT_IS_NOT_NULL(result);
-			ASSERT_ARE_EQUAL(int, x1, *result);
+			ASSERT_ARE_EQUAL(int, x1, *(int*)list_item_get_value(result));
 		}
 
 		/* Tests_SRS_LIST_01_011: [list_find shall iterate through all items in a list and return the one that satisfies a certain match function.] */
@@ -394,16 +394,17 @@ namespace amqpvalue_unittests
 			(void)list_add(handle, &x2);
 			mocks.ResetAllCalls();
 
-			STRICT_EXPECTED_CALL(mocks, test_match_function(&x1, TEST_CONTEXT))
-				.SetReturn(false);
-			STRICT_EXPECTED_CALL(mocks, test_match_function(&x2, TEST_CONTEXT));
+			STRICT_EXPECTED_CALL(mocks, test_match_function(IGNORED_PTR_ARG, TEST_CONTEXT))
+				.IgnoreArgument(1).SetReturn(false);
+			STRICT_EXPECTED_CALL(mocks, test_match_function(IGNORED_PTR_ARG, TEST_CONTEXT))
+				.IgnoreArgument(1);
 
 			// act
-			int* result = (int*)list_find(handle, test_match_function, TEST_CONTEXT);
+			LIST_ITEM_HANDLE result = list_find(handle, test_match_function, TEST_CONTEXT);
 
 			// assert
 			ASSERT_IS_NOT_NULL(result);
-			ASSERT_ARE_EQUAL(int, x2, *result);
+			ASSERT_ARE_EQUAL(int, x2, *(int*)list_item_get_value(result));
 		}
 
 		/* Tests_SRS_LIST_01_016: [If the match function returns false, list_find shall consider that item as not matching.] */
@@ -418,13 +419,13 @@ namespace amqpvalue_unittests
 			(void)list_add(handle, &x2);
 			mocks.ResetAllCalls();
 
-			STRICT_EXPECTED_CALL(mocks, test_match_function(&x1, TEST_CONTEXT))
-				.SetReturn(false);
-			STRICT_EXPECTED_CALL(mocks, test_match_function(&x2, TEST_CONTEXT))
-				.SetReturn(false);
+			STRICT_EXPECTED_CALL(mocks, test_match_function(IGNORED_PTR_ARG, TEST_CONTEXT))
+				.IgnoreArgument(1).SetReturn(false);
+			STRICT_EXPECTED_CALL(mocks, test_match_function(IGNORED_PTR_ARG, TEST_CONTEXT))
+				.IgnoreArgument(1).SetReturn(false);
 
 			// act
-			int* result = (int*)list_find(handle, test_match_function, TEST_CONTEXT);
+			LIST_ITEM_HANDLE result = list_find(handle, test_match_function, TEST_CONTEXT);
 
 			// assert
 			ASSERT_IS_NULL(result);
@@ -439,7 +440,7 @@ namespace amqpvalue_unittests
 			mocks.ResetAllCalls();
 
 			// act
-			int* result = (int*)list_find(handle, test_match_function, TEST_CONTEXT);
+			LIST_ITEM_HANDLE result = list_find(handle, test_match_function, TEST_CONTEXT);
 
 			// assert
 			ASSERT_IS_NULL(result);

@@ -86,29 +86,56 @@ int list_add(LIST_HANDLE handle, void* item)
 	return result;
 }
 
-LIST_ITEM_HANDLE list_get_head(LIST_HANDLE handle)
+LIST_ITEM_HANDLE list_get_head_item(LIST_HANDLE handle)
 {
 	LIST_DATA* list = (LIST_DATA*)handle;
 	LIST_ITEM_HANDLE result;
 	
 	if (list == NULL)
 	{
-		/* Codes_SRS_LIST_01_009: [If the handle argument is NULL, list_get_head shall return NULL.] */
+		/* Codes_SRS_LIST_01_009: [If the handle argument is NULL, list_get_head_item shall return NULL.] */
 		result = NULL;
 	}
 	else
 	{
-		/* Codes_SRS_LIST_01_008: [list_get_head shall return the head of the list.] */
-		/* Codes_SRS_LIST_01_010: [If the list is empty, list_get_head_shall_return NULL.] */
+		/* Codes_SRS_LIST_01_008: [list_get_head_item shall return the head of the list.] */
+		/* Codes_SRS_LIST_01_010: [If the list is empty, list_get_head_item_shall_return NULL.] */
 		result = list->head;
 	}
 
 	return result;
 }
 
-LIST_ITEM_HANDLE list_get_next(LIST_ITEM_HANDLE item_handle)
+LIST_ITEM_HANDLE list_get_next_item(LIST_ITEM_HANDLE item_handle)
 {
-	return NULL;
+    LIST_ITEM_HANDLE result;
+
+    if (item_handle == NULL)
+    {
+        result = NULL;
+    }
+    else
+    {
+        result = ((LIST_ITEM*)item_handle)->next;
+    }
+
+    return result;
+}
+
+const void* list_item_get_value(LIST_ITEM_HANDLE item_handle)
+{
+    const void* result;
+
+    if (item_handle == NULL)
+    {
+        result = NULL;
+    }
+    else
+    {
+        result = ((LIST_ITEM*)item_handle)->item;
+    }
+
+    return result;
 }
 
 LIST_ITEM_HANDLE list_find(LIST_HANDLE handle, LIST_MATCH_FUNCTION match_function, const void* match_context)

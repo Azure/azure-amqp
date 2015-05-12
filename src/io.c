@@ -26,6 +26,7 @@ void io_destroy(IO_HANDLE handle)
 	{
 		IO_DATA* io_data = (IO_DATA*)handle;
 		io_data->io_interface_description->io_destroy(io_data->concrete_io_handle);
+		amqpalloc_free(io_data);
 	}
 }
 

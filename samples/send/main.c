@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 		message_set_body(message, amqpvalue_create_binary(NULL, 0));
 		(void)messaging_send(messaging, message, message_send_callback, NULL);
 
-		while (!sent)
+/*		while (!sent)
 		{
 			size_t memory_used;
 			size_t current_memory_used;
@@ -62,7 +62,7 @@ int main(int argc, char** argv)
 				printf("Max memory usage:%lu\r\n", (unsigned long)max_memory_used);
 			}
 		}
-
+		*/
 		message_destroy(message);
 		messaging_destroy(messaging);
 		amqplib_deinit();

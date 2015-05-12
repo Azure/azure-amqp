@@ -49,6 +49,7 @@ void messaging_destroy(MESSAGING_HANDLE handle)
 		link_destroy(messaging->link);
 		session_destroy(messaging->session);
 		connection_destroy(messaging->connection);
+		amqpalloc_free(messaging->outgoing_messages);
 		amqpalloc_free(handle);
 	}
 }

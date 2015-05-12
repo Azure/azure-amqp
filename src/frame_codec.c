@@ -26,7 +26,7 @@ typedef struct FRAME_CODEC_DATA_TAG
 	size_t receive_frame_bytes;
 	size_t receive_frame_consumed_bytes;
 	uint32_t receive_frame_size;
-	unsigned char receive_frame_buffer[2048];
+	unsigned char receive_frame_buffer[512];
 } FRAME_CODEC_DATA;
 
 static int frame_codec_write_bytes(void* context, const void* bytes, size_t length)

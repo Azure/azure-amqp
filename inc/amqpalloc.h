@@ -8,10 +8,10 @@ extern "C" {
 #include "stddef.h"
 #endif /* __cplusplus */
 
-extern void* amqp_malloc(size_t size);
-extern void amqp_free(void* ptr);
-extern void* amqp_calloc(size_t nmemb, size_t size);
-extern void* amqp_realloc(void* ptr, size_t size);
+extern void* amqpalloc_malloc(size_t size);
+extern void amqpalloc_free(void* ptr);
+extern void* amqpalloc_calloc(size_t nmemb, size_t size);
+extern void* amqpalloc_realloc(void* ptr, size_t size);
 
 #ifdef __cplusplus
 }

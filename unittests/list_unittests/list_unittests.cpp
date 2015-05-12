@@ -8,9 +8,9 @@ bool fail_alloc_calls;
 TYPED_MOCK_CLASS(list_mocks, CGlobalMock)
 {
 public:
-	MOCK_STATIC_METHOD_1(, void*, amqp_malloc, size_t, size)
+	MOCK_STATIC_METHOD_1(, void*, amqpalloc_malloc, size_t, size)
 	MOCK_METHOD_END(void*, malloc(size));
-	MOCK_STATIC_METHOD_1(, void, amqp_free, void*, ptr)
+	MOCK_STATIC_METHOD_1(, void, amqpalloc_free, void*, ptr)
 		free(ptr);
 	MOCK_VOID_METHOD_END();
     MOCK_STATIC_METHOD_2(, bool, test_match_function, LIST_ITEM_HANDLE, list_item, const void*, match_context)
@@ -19,8 +19,8 @@ public:
 
 extern "C"
 {
-	DECLARE_GLOBAL_MOCK_METHOD_1(list_mocks, , void*, amqp_malloc, size_t, size);
-	DECLARE_GLOBAL_MOCK_METHOD_1(list_mocks, , void, amqp_free, void*, ptr);
+	DECLARE_GLOBAL_MOCK_METHOD_1(list_mocks, , void*, amqpalloc_malloc, size_t, size);
+	DECLARE_GLOBAL_MOCK_METHOD_1(list_mocks, , void, amqpalloc_free, void*, ptr);
 	DECLARE_GLOBAL_MOCK_METHOD_2(list_mocks, , bool, test_match_function, LIST_ITEM_HANDLE, list_item, const void*, match_context);
 }
 
@@ -69,7 +69,7 @@ namespace amqpvalue_unittests
 			// arrange
 			list_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqp_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 
 			// act
 			LIST_HANDLE result = list_create();
@@ -84,7 +84,7 @@ namespace amqpvalue_unittests
 			// arrange
 			list_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqp_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -104,7 +104,7 @@ namespace amqpvalue_unittests
 			LIST_HANDLE handle = list_create();
 			mocks.ResetAllCalls();
 
-			EXPECTED_CALL(mocks, amqp_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 			// act
 			list_destroy(handle);
@@ -167,7 +167,7 @@ namespace amqpvalue_unittests
 			mocks.ResetAllCalls();
 			int x = 42;
 
-			EXPECTED_CALL(mocks, amqp_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 
 			// act
 			int result = list_add(handle, &x);
@@ -193,7 +193,7 @@ namespace amqpvalue_unittests
 			list_add(handle, &x1);
 			mocks.ResetAllCalls();
 
-			EXPECTED_CALL(mocks, amqp_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 
 			// act
 			int result = list_add(handle, &x2);
@@ -218,7 +218,7 @@ namespace amqpvalue_unittests
 			int x = 42;
 			mocks.ResetAllCalls();
 
-			EXPECTED_CALL(mocks, amqp_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
 				.SetReturn((void*)NULL);
 
 			// act

@@ -31,3 +31,4 @@
 *.ipch
 /doc/~$st_requirements.docm
 *.pch
+*.user

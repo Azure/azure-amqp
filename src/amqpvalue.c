@@ -50,12 +50,13 @@ typedef struct AMQP_VALUE_DATA_TAG
 	AMQP_VALUE_UNION value;
 } AMQP_VALUE_DATA;
 
-/* Codes_SRS_AMQPVALUE_01_001: [amqpvalue_create_null shall return a handle to an AMQP_VALUE that stores a null value.] */
+/* Codes_SRS_AMQPVALUE_01_003: [1.6.1 null Indicates an empty value.] */
 AMQP_VALUE amqpvalue_create_null(void)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
+		/* Codes_SRS_AMQPVALUE_01_001: [amqpvalue_create_null shall return a handle to an AMQP_VALUE that stores a null value.] */
 		result->type = AMQP_TYPE_NULL;
 	}
 	return result;

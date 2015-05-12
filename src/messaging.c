@@ -45,7 +45,10 @@ void messaging_destroy(MESSAGING_HANDLE handle)
 	if (handle != NULL)
 	{
 		MESSAGING_DATA* messaging = (MESSAGING_DATA*)handle;
-		list_destroy(messaging);
+		list_destroy(messaging->connections);
+		link_destroy(messaging->link);
+		session_destroy(messaging->session);
+		connection_destroy(messaging->connection);
 		amqpalloc_free(handle);
 	}
 }

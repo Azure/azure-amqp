@@ -1,3 +1,7 @@
+#include <stdlib.h>
+#ifdef _CRT_DBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
 #include <stdio.h>
 #include <stdbool.h>
 #include "amqplib.h"
@@ -65,6 +69,10 @@ int main(int argc, char** argv)
 
 		printf("Current memory usage:%lu\r\n", (unsigned long)amqpalloc_get_current_memory_used());
 	}
+
+#ifdef _CRT_DBG_MAP_ALLOC
+	_CrtDumpMemoryLeaks();
+#endif
 
 	return 0;
 }

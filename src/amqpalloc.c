@@ -1,4 +1,7 @@
 #include <stdlib.h>
+#ifdef _CRT_DBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif /* _CRT_DBG_MAP_ALLOC */
 #include <stdbool.h>
 #include <stdint.h>
 #include "amqpalloc.h"

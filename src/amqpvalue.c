@@ -78,6 +78,37 @@ AMQP_VALUE amqpvalue_create_boolean(bool value)
 	return result;
 }
 
+int amqpvalue_get_boolean(AMQP_VALUE value, bool* bool_value)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_009: [If any of the arguments is NULL then amqpvalue_get_boolean shall return a non-zero value.] */
+	if ((value == NULL) ||
+		(bool_value == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		/* Codes_SRS_AMQPVALUE_01_011: [If the type of the value is not Boolean, then amqpvalue_get_boolean shall return a non-zero value.] */
+		if (value_data->type != AMQP_TYPE_BOOL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_008: [amqpvalue_get_boolean shall fill in the bool_value argument the Boolean value stored by the AMQP value indicated by the value argument.] */
+			*bool_value = value_data->value.bool_value;
+
+			/* Codes_SRS_AMQPVALUE_01_010: [On success amqpvalue_get_boolean shall return 0.] */
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
 AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
@@ -462,31 +493,6 @@ AMQP_VALUE amqpvalue_create_ubyte(unsigned char value)
 		result->type = AMQP_TYPE_UBYTE;
 		result->value.ubyte = value;
 	}
-	return result;
-}
-
-int amqpvalue_get_boolean(AMQP_VALUE value, bool* bool_value)
-{
-	int result;
-
-	if (value == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		if (value_data->type != AMQP_TYPE_BOOL)
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			*bool_value = value_data->value.bool_value;
-			result = 0;
-		}
-	}
-
 	return result;
 }
 

@@ -107,6 +107,22 @@ namespace amqpvalue_unittests
 			ASSERT_IS_NOT_NULL(result);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_006: [amqpvalue_create_boolean shall return a handle to an AMQP_VALUE that stores a boolean value.] */
+		/* Tests_SRS_AMQPVALUE_01_004: [1.6.2 boolean Represents a true or false value.] */
+		TEST_METHOD(amqpvalue_create_boolean_false_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_boolean(false);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_007: [If allocating the AMQP_VALUE fails then amqpvalue_create_boolean shall return NULL.] */
 		TEST_METHOD(when_allocating_memory_fails_then_amqpvalue_create_boolean_fails)
 		{
@@ -121,6 +137,89 @@ namespace amqpvalue_unittests
 
 			// assert
 			ASSERT_IS_NULL(result);
+		}
+
+		/* amqpvalue_get_boolean */
+
+		/* Tests_SRS_AMQPVALUE_01_008: [amqpvalue_get_boolean shall fill in the bool_value argument the Boolean value stored by the AMQP value indicated by the value argument.] */
+		/* Tests_SRS_AMQPVALUE_01_010: [On success amqpvalue_get_boolean shall return 0.] */
+		TEST_METHOD(amqpvalue_get_boolean_true_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			bool bool_value;
+			AMQP_VALUE value = amqpvalue_create_boolean(true);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_boolean(value, &bool_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(bool, true, bool_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_008: [amqpvalue_get_boolean shall fill in the bool_value argument the Boolean value stored by the AMQP value indicated by the value argument.] */
+		/* Tests_SRS_AMQPVALUE_01_010: [On success amqpvalue_get_boolean shall return 0.] */
+		TEST_METHOD(amqpvalue_get_boolean_false_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			bool bool_value;
+			AMQP_VALUE value = amqpvalue_create_boolean(false);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_boolean(value, &bool_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(bool, false, bool_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_009: [If any of the arguments is NULL then amqpvalue_get_boolean shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_boolean_with_a_NULL_amqpvalue_handle_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			bool bool_value;
+
+			// act
+			int result = amqpvalue_get_boolean(NULL, &bool_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_009: [If any of the arguments is NULL then amqpvalue_get_boolean shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_boolean_with_a_NULL_bool_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_boolean(false);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_boolean(value, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_011: [If the type of the value is not Boolean, then amqpvalue_get_boolean shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_boolean_with_an_amqpvalue_that_is_not_boolean_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			bool bool_value;
+			AMQP_VALUE value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_boolean(value, &bool_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
 	};
 }

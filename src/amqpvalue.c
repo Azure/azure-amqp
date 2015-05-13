@@ -119,6 +119,38 @@ AMQP_VALUE amqpvalue_create_ubyte(unsigned char value)
 		result->type = AMQP_TYPE_UBYTE;
 		result->value.ubyte = value;
 	}
+
+	return result;
+}
+
+int amqpvalue_get_ubyte(AMQP_VALUE value, unsigned char* ubyte_value)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_036: [If any of the arguments is NULL then amqpvalue_get_ubyte shall return a non-zero value.] */
+	if ((value == NULL) ||
+		(ubyte_value == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		/* Codes_SRS_AMQPVALUE_01_037: [If the type of the value is not ubyte (was not created with amqpvalue_create_ubyte), then amqpvalue_get_ubyte shall return a non-zero value.] */
+		if (value_data->type != AMQP_TYPE_UBYTE)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_034: [amqpvalue_get_ubyte shall fill in the ubyte_value argument the unsigned char value stored by the AMQP value indicated by the value argument.] */
+			*ubyte_value = value_data->value.ubyte;
+
+			/* Codes_SRS_AMQPVALUE_01_035: [On success amqpvalue_get_ubyte shall return 0.] */
+			result = 0;
+		}
+	}
+
 	return result;
 }
 
@@ -495,31 +527,6 @@ AMQP_VALUE amqpvalue_create_uint(uint32_t value)
 		result->type = AMQP_TYPE_UINT;
 		result->value.uint = value;
 	}
-	return result;
-}
-
-int amqpvalue_get_ubyte(AMQP_VALUE value, unsigned char* ubyte_value)
-{
-	int result;
-
-	if (value == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		if (value_data->type != AMQP_TYPE_UBYTE)
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			*ubyte_value = value_data->value.ubyte;
-			result = 0;
-		}
-	}
-
 	return result;
 }
 

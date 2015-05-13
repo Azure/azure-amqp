@@ -271,5 +271,88 @@ namespace amqpvalue_unittests
 			// assert
 			ASSERT_IS_NULL(result);
 		}
+
+		/* amqpvalue_get_ubyte */
+
+		/* Tests_SRS_AMQPVALUE_01_034: [amqpvalue_get_ubyte shall fill in the ubyte_value argument the unsigned char value stored by the AMQP value indicated by the value argument.] */
+		/* Tests_SRS_AMQPVALUE_01_035: [On success amqpvalue_get_ubyte shall return 0.] */
+		TEST_METHOD(amqpvalue_get_ubyte_0_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char ubyte_value;
+			AMQP_VALUE value = amqpvalue_create_ubyte(0);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_ubyte(value, &ubyte_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(uint8_t, 0, ubyte_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_034: [amqpvalue_get_ubyte shall fill in the ubyte_value argument the unsigned char value stored by the AMQP value indicated by the value argument.] */
+		/* Tests_SRS_AMQPVALUE_01_035: [On success amqpvalue_get_ubyte shall return 0.] */
+		TEST_METHOD(amqpvalue_get_ubyte_255_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char ubyte_value;
+			AMQP_VALUE value = amqpvalue_create_ubyte(255);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_ubyte(value, &ubyte_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(uint8_t, 255, ubyte_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_036: [If any of the arguments is NULL then amqpvalue_get_ubyte shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_ubyte_with_a_NULL_amqpvalue_handle_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char ubyte_value;
+
+			// act
+			int result = amqpvalue_get_ubyte(NULL, &ubyte_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_036: [If any of the arguments is NULL then amqpvalue_get_ubyte shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_ubyte_with_a_NULL_ubyte_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_ubyte(0);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_ubyte(value, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_037: [If the type of the value is not ubyte (was not created with amqpvalue_create_ubyte), then amqpvalue_get_ubyte shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_ubyte_with_an_amqpvalue_that_is_not_ubyte_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char ubyte_value;
+			AMQP_VALUE value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_ubyte(value, &ubyte_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
 	};
 }

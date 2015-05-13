@@ -20,6 +20,7 @@ extern "C" {
 	extern AMQP_VALUE amqpvalue_create_boolean(bool value);
 	extern int amqpvalue_get_boolean(AMQP_VALUE value, bool* bool_value);
 	extern AMQP_VALUE amqpvalue_create_ubyte(unsigned char value);
+	extern int amqpvalue_get_ubyte(AMQP_VALUE value, unsigned char* ubyte_value);
 
 	extern AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_create_ulong(uint64_t value);
@@ -39,7 +40,6 @@ extern "C" {
 	extern AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index);
 	extern const char* amqpvalue_get_string(AMQP_VALUE value);
 	extern const unsigned char* amqpvalue_get_binary_content(AMQP_VALUE value, uint32_t* length);
-	extern int amqpvalue_get_ubyte(AMQP_VALUE value, unsigned char* ubyte_value);
 	extern int amqpvalue_get_uint(AMQP_VALUE value, uint32_t* uint_value);
 	extern int amqpvalue_get_ulong(AMQP_VALUE value, uint64_t* ulong_value);
 	extern AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value);

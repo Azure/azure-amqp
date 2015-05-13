@@ -58,6 +58,7 @@ namespace amqpvalue_unittests
 		/* amqpvalue_create_null */
 
 		/* Tests_SRS_AMQPVALUE_01_001: [amqpvalue_create_null shall return a handle to an AMQP_VALUE that stores a null value.] */
+		/* Tests_SRS_AMQPVALUE_01_003: [1.6.1 null Indicates an empty value.] */
 		TEST_METHOD(amqpvalue_create_null_succeeds)
 		{
 			// arrange
@@ -72,7 +73,7 @@ namespace amqpvalue_unittests
 			ASSERT_IS_NOT_NULL(result);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_002: [If allocating the AMQP_VALUE fails then amqpvalue_create_null shall return a non-zero value.] */
+		/* Tests_SRS_AMQPVALUE_01_002: [If allocating the AMQP_VALUE fails then amqpvalue_create_null shall return NULL.] */
 		TEST_METHOD(when_allocating_memory_fails_then_amqpvalue_create_null_fails)
 		{
 			// arrange
@@ -83,6 +84,40 @@ namespace amqpvalue_unittests
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_null();
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* amqpvalue_create_boolean */
+
+		/* Tests_SRS_AMQPVALUE_01_006: [amqpvalue_create_boolean shall return a handle to an AMQP_VALUE that stores a boolean value.] */
+		/* Tests_SRS_AMQPVALUE_01_004: [1.6.2 boolean Represents a true or false value.] */
+		TEST_METHOD(amqpvalue_create_boolean_true_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_boolean(true);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_007: [If allocating the AMQP_VALUE fails then amqpvalue_create_boolean shall return NULL.] */
+		TEST_METHOD(when_allocating_memory_fails_then_amqpvalue_create_boolean_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_boolean(true);
 
 			// assert
 			ASSERT_IS_NULL(result);

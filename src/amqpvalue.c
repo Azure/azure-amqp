@@ -53,12 +53,28 @@ typedef struct AMQP_VALUE_DATA_TAG
 /* Codes_SRS_AMQPVALUE_01_003: [1.6.1 null Indicates an empty value.] */
 AMQP_VALUE amqpvalue_create_null(void)
 {
+	/* Codes_SRS_AMQPVALUE_01_002: [If allocating the AMQP_VALUE fails then amqpvalue_create_null shall return NULL.] */
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
 		/* Codes_SRS_AMQPVALUE_01_001: [amqpvalue_create_null shall return a handle to an AMQP_VALUE that stores a null value.] */
 		result->type = AMQP_TYPE_NULL;
 	}
+	return result;
+}
+
+/* Codes_SRS_AMQPVALUE_01_004: [1.6.2 boolean Represents a true or false value.] */
+AMQP_VALUE amqpvalue_create_boolean(bool value)
+{
+	/* Codes_SRS_AMQPVALUE_01_007: [If allocating the AMQP_VALUE fails then amqpvalue_create_boolean shall return NULL.] */
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
+	{
+		/* Codes_SRS_AMQPVALUE_01_006: [amqpvalue_create_boolean shall return a handle to an AMQP_VALUE that stores a boolean value.] */
+		result->type = AMQP_TYPE_BOOL;
+		result->value.bool_value = value;
+	}
+
 	return result;
 }
 
@@ -445,17 +461,6 @@ AMQP_VALUE amqpvalue_create_ubyte(unsigned char value)
 	{
 		result->type = AMQP_TYPE_UBYTE;
 		result->value.ubyte = value;
-	}
-	return result;
-}
-
-AMQP_VALUE amqpvalue_create_boolean(bool value)
-{
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
-	if (result != NULL)
-	{
-		result->type = AMQP_TYPE_BOOL;
-		result->value.bool_value = value;
 	}
 	return result;
 }

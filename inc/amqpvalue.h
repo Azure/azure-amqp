@@ -19,13 +19,13 @@ extern "C" {
 	extern AMQP_VALUE amqpvalue_create_null(void);
 	extern AMQP_VALUE amqpvalue_create_boolean(bool value);
 	extern int amqpvalue_get_boolean(AMQP_VALUE value, bool* bool_value);
+	extern AMQP_VALUE amqpvalue_create_ubyte(unsigned char value);
 
 	extern AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_create_ulong(uint64_t value);
 	extern AMQP_VALUE amqpvalue_create_string(const char* value);
 	extern AMQP_VALUE amqpvalue_create_uint(uint32_t value);
 	extern AMQP_VALUE amqpvalue_create_ushort(uint16_t value);
-	extern AMQP_VALUE amqpvalue_create_ubyte(unsigned char value);
 	extern AMQP_VALUE amqpvalue_create_string_with_length(const char* value, uint32_t length);
 	extern AMQP_VALUE amqpvalue_create_list(size_t size);
 	extern AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor, size_t size);

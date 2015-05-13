@@ -109,6 +109,19 @@ int amqpvalue_get_boolean(AMQP_VALUE value, bool* bool_value)
 	return result;
 }
 
+/* Codes_SRS_AMQPVALUE_01_005: [1.6.3 ubyte Integer in the range 0 to 28 - 1 inclusive.] */
+AMQP_VALUE amqpvalue_create_ubyte(unsigned char value)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
+	{
+		/* Codes_SRS_AMQPVALUE_01_032: [amqpvalue_create_ubyte shall return a handle to an AMQP_VALUE that stores a unsigned char value.] */
+		result->type = AMQP_TYPE_UBYTE;
+		result->value.ubyte = value;
+	}
+	return result;
+}
+
 AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
@@ -481,17 +494,6 @@ AMQP_VALUE amqpvalue_create_uint(uint32_t value)
 	{
 		result->type = AMQP_TYPE_UINT;
 		result->value.uint = value;
-	}
-	return result;
-}
-
-AMQP_VALUE amqpvalue_create_ubyte(unsigned char value)
-{
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
-	if (result != NULL)
-	{
-		result->type = AMQP_TYPE_UBYTE;
-		result->value.ubyte = value;
 	}
 	return result;
 }

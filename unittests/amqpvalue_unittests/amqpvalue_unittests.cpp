@@ -221,5 +221,55 @@ namespace amqpvalue_unittests
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
+
+		/* amqpvalue_create_ubyte */
+
+		/* Tests_SRS_AMQPVALUE_01_032: [amqpvalue_create_ubyte shall return a handle to an AMQP_VALUE that stores a unsigned char value.] */
+		/* Tests_SRS_AMQPVALUE_01_005: [1.6.3 ubyte Integer in the range 0 to 28 - 1 inclusive.] */
+		TEST_METHOD(amqpvalue_create_ubyte_0_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_ubyte(0);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_032: [amqpvalue_create_ubyte shall return a handle to an AMQP_VALUE that stores a unsigned char value.] */
+		/* Tests_SRS_AMQPVALUE_01_005: [1.6.3 ubyte Integer in the range 0 to 28 - 1 inclusive.] */
+		TEST_METHOD(amqpvalue_create_ubyte_255_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_ubyte(255);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_033: [If allocating the AMQP_VALUE fails then amqpvalue_create_ubyte shall return NULL.] */
+		TEST_METHOD(when_allocating_memory_fails_then_amqpvalue_create_ubyte_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_ubyte(0);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
 	};
 }

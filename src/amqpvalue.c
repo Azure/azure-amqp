@@ -33,11 +33,11 @@ typedef struct AMQP_BINARY_VALUE_TAG
 typedef union AMQP_VALUE_UNION_TAG
 {
 	AMQP_VALUE descriptor;
-	unsigned char ubyte;
-	uint16_t ushort;
-	uint32_t uint;
-	uint64_t ulong;
-	char byte;
+	unsigned char ubyte_value;
+	uint16_t ushort_value;
+	uint32_t uint_value;
+	uint64_t ulong_value;
+	char byte_value;
 	int16_t short_value;
 	int32_t int_value;
 	int64_t long_value;
@@ -121,7 +121,7 @@ AMQP_VALUE amqpvalue_create_ubyte(unsigned char value)
 	{
 		/* Codes_SRS_AMQPVALUE_01_032: [amqpvalue_create_ubyte shall return a handle to an AMQP_VALUE that stores a unsigned char value.] */
 		result->type = AMQP_TYPE_UBYTE;
-		result->value.ubyte = value;
+		result->value.ubyte_value = value;
 	}
 
 	return result;
@@ -148,7 +148,7 @@ int amqpvalue_get_ubyte(AMQP_VALUE value, unsigned char* ubyte_value)
 		else
 		{
 			/* Codes_SRS_AMQPVALUE_01_034: [amqpvalue_get_ubyte shall fill in the ubyte_value argument the unsigned char value stored by the AMQP value indicated by the value argument.] */
-			*ubyte_value = value_data->value.ubyte;
+			*ubyte_value = value_data->value.ubyte_value;
 
 			/* Codes_SRS_AMQPVALUE_01_035: [On success amqpvalue_get_ubyte shall return 0.] */
 			result = 0;
@@ -167,7 +167,7 @@ AMQP_VALUE amqpvalue_create_ushort(uint16_t value)
 	{
 		/* Codes_SRS_AMQPVALUE_01_038: [amqpvalue_create_ushort shall return a handle to an AMQP_VALUE that stores an uint16_t value.] */
 		result->type = AMQP_TYPE_USHORT;
-		result->value.ushort = value;
+		result->value.ushort_value = value;
 	}
 	return result;
 }
@@ -193,7 +193,7 @@ int amqpvalue_get_ushort(AMQP_VALUE value, uint16_t* ushort_value)
 		else
 		{
 			/* Codes_SRS_AMQPVALUE_01_040: [amqpvalue_get_ushort shall fill in the ushort_value argument the uint16_t value stored by the AMQP value indicated by the value argument.] */
-			*ushort_value = value_data->value.ushort;
+			*ushort_value = value_data->value.ushort_value;
 
 			/* Codes_SRS_AMQPVALUE_01_041: [On success amqpvalue_get_ushort shall return 0.] */
 			result = 0;
@@ -212,7 +212,7 @@ AMQP_VALUE amqpvalue_create_uint(uint32_t value)
 	{
 		/* Codes_SRS_AMQPVALUE_01_044: [amqpvalue_create_uint shall return a handle to an AMQP_VALUE that stores an uint32_t value.] */
 		result->type = AMQP_TYPE_UINT;
-		result->value.uint = value;
+		result->value.uint_value = value;
 	}
 	return result;
 }
@@ -238,7 +238,7 @@ int amqpvalue_get_uint(AMQP_VALUE value, uint32_t* uint_value)
 		else
 		{
 			/* Codes_SRS_AMQPVALUE_01_046: [amqpvalue_get_uint shall fill in the uint_value argument the uint32_t value stored by the AMQP value indicated by the value argument.] */
-			*uint_value = value_data->value.uint;
+			*uint_value = value_data->value.uint_value;
 
 			/* Codes_SRS_AMQPVALUE_01_047: [On success amqpvalue_get_uint shall return 0.] */
 			result = 0;
@@ -257,7 +257,7 @@ AMQP_VALUE amqpvalue_create_ulong(uint64_t value)
 	{
 		/* Codes_SRS_AMQPVALUE_01_049: [amqpvalue_create_ulong shall return a handle to an AMQP_VALUE that stores an uint64_t value.] */
 		result->type = AMQP_TYPE_ULONG;
-		result->value.ulong = value;
+		result->value.ulong_value = value;
 	}
 	return result;
 }
@@ -283,7 +283,7 @@ int amqpvalue_get_ulong(AMQP_VALUE value, uint64_t* ulong_value)
 		else
 		{
 			/* Codes_SRS_AMQPVALUE_01_051: [amqpvalue_get_ulong shall fill in the ulong_value argument the ulong64_t value stored by the AMQP value indicated by the value argument.] */
-			*ulong_value = value_data->value.ulong;
+			*ulong_value = value_data->value.ulong_value;
 
 			/* Codes_SRS_AMQPVALUE_01_052: [On success amqpvalue_get_ulong shall return 0.] */
 			result = 0;
@@ -302,7 +302,7 @@ AMQP_VALUE amqpvalue_create_byte(char value)
 	{
 		/* Codes_SRS_AMQPVALUE_01_055: [amqpvalue_create_byte shall return a handle to an AMQP_VALUE that stores a char value.] */
 		result->type = AMQP_TYPE_BYTE;
-		result->value.byte = value;
+		result->value.byte_value = value;
 	}
 	return result;
 }
@@ -328,7 +328,7 @@ int amqpvalue_get_byte(AMQP_VALUE value, char* byte_value)
 		else
 		{
 			/* Codes_SRS_AMQPVALUE_01_057: [amqpvalue_get_byte shall fill in the byte_value argument the char value stored by the AMQP value indicated by the value argument.] */
-			*byte_value = value_data->value.byte;
+			*byte_value = value_data->value.byte_value;
 
 			/* Codes_SRS_AMQPVALUE_01_058: [On success amqpvalue_get_byte shall return 0.] */
 			result = 0;

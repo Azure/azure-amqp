@@ -42,6 +42,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	int32_t int_value;
 	int64_t long_value;
 	bool bool_value;
+	float float_value;
 	AMQP_STRING_VALUE string_value;
 	AMQP_BINARY_VALUE binary_value;
 	AMQP_LIST_VALUE list_value;
@@ -466,6 +467,51 @@ int amqpvalue_get_long(AMQP_VALUE value, int64_t* long_value)
 			*long_value = value_data->value.long_value;
 
 			/* Codes_SRS_AMQPVALUE_01_076: [On success amqpvalue_get_long shall return 0.] */
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+/* Codes_SRS_AMQPVALUE_01_019: [1.6.11 float 32-bit floating point number (IEEE 754-2008 binary32).]  */
+AMQP_VALUE amqpvalue_create_float(float value)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	/* Codes_SRS_AMQPVALUE_01_081: [If allocating the AMQP_VALUE fails then amqpvalue_create_float shall return NULL.] */
+	if (result != NULL)
+	{
+		/* Codes_SRS_AMQPVALUE_01_080: [amqpvalue_create_float shall return a handle to an AMQP_VALUE that stores a float value.] */
+		result->type = AMQP_TYPE_FLOAT;
+		result->value.float_value = value;
+	}
+	return result;
+}
+
+int amqpvalue_get_float(AMQP_VALUE value, float* float_value)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_084: [If any of the arguments is NULL then amqpvalue_get_float shall return a non-zero value.] */
+	if ((value == NULL) ||
+		(float_value == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		/* Codes_SRS_AMQPVALUE_01_085: [If the type of the value is not float (was not created with amqpvalue_create_float), then amqpvalue_get_float shall return a non-zero value.] */
+		if (value_data->type != AMQP_TYPE_FLOAT)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_082: [amqpvalue_get_float shall fill in the float_value argument the float value stored by the AMQP value indicated by the value argument.] */
+			*float_value = value_data->value.float_value;
+
+			/* Codes_SRS_AMQPVALUE_01_083: [On success amqpvalue_get_float shall return 0.] */
 			result = 0;
 		}
 	}

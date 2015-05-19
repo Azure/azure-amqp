@@ -1551,5 +1551,151 @@ namespace amqpvalue_unittests
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
+
+		/* amqpvalue_create_char */
+
+		/* Tests_SRS_AMQPVALUE_01_092: [amqpvalue_create_char shall return a handle to an AMQP_VALUE that stores a single UTF-32 character value.] */
+		/* Tests_SRS_AMQPVALUE_01_024: [1.6.16 char A single Unicode character.] */
+		TEST_METHOD(amqpvalue_create_char_0x00_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_char(0x00);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_092: [amqpvalue_create_char shall return a handle to an AMQP_VALUE that stores a single UTF-32 character value.] */
+		/* Tests_SRS_AMQPVALUE_01_024: [1.6.16 char A single Unicode character.] */
+		TEST_METHOD(amqpvalue_create_char_0x10FFFF_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_char(0x10FFFF);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_098: [If the code point value is outside of the allowed range [0, 0x10FFFF] then amqpvalue_create_char shall return NULL.] */
+		TEST_METHOD(amqpvalue_create_char_0x110000_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_char(0x110000);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_093: [If allocating the AMQP_VALUE fails then amqpvalue_create_char shall return NULL.] */
+		TEST_METHOD(when_allocating_memory_fails_then_amqpvalue_create_char_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_char(0x0);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* amqpvalue_get_char */
+
+		/* Tests_SRS_AMQPVALUE_01_094: [amqpvalue_get_char shall fill in the char_value argument the UTF32 char value stored by the AMQP value indicated by the value argument.] */
+		/* Tests_SRS_AMQPVALUE_01_095: [On success amqpvalue_get_char shall return 0.] */
+		TEST_METHOD(amqpvalue_get_char_0x0_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint32_t char_value;
+			AMQP_VALUE value = amqpvalue_create_char(0x0);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_char(value, &char_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(char, 0x0, char_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_094: [amqpvalue_get_char shall fill in the char_value argument the UTF32 char value stored by the AMQP value indicated by the value argument.] */
+		/* Tests_SRS_AMQPVALUE_01_095: [On success amqpvalue_get_char shall return 0.] */
+		TEST_METHOD(amqpvalue_get_char_0x10FFFF_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint32_t char_value;
+			AMQP_VALUE value = amqpvalue_create_char(0x10FFFF);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_char(value, &char_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(char, 0x10FFFF, char_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_096: [If any of the arguments is NULL then amqpvalue_get_char shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_char_with_a_NULL_amqpvalue_handle_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint32_t char_value;
+
+			// act
+			int result = amqpvalue_get_char(NULL, &char_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_096: [If any of the arguments is NULL then amqpvalue_get_char shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_char_with_a_NULL_char_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_char(0x0);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_char(value, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_097: [If the type of the value is not char (was not created with amqpvalue_create_char), then amqpvalue_get_char shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_char_with_an_amqpvalue_that_is_not_char_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint32_t char_value;
+			AMQP_VALUE value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_char(value, &char_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
 	};
 }

@@ -44,6 +44,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	bool bool_value;
 	float float_value;
 	double double_value;
+	uint32_t char_value;
 	AMQP_STRING_VALUE string_value;
 	AMQP_BINARY_VALUE binary_value;
 	AMQP_LIST_VALUE list_value;
@@ -558,6 +559,61 @@ int amqpvalue_get_double(AMQP_VALUE value, double* double_value)
 			*double_value = value_data->value.double_value;
 
 			/* Codes_SRS_AMQPVALUE_01_089: [On success amqpvalue_get_double shall return 0.] */
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+/* Codes_SRS_AMQPVALUE_01_024: [1.6.16 char A single Unicode character.] */
+AMQP_VALUE amqpvalue_create_char(uint32_t value)
+{
+	AMQP_VALUE_DATA* result;
+
+	/* Codes_SRS_AMQPVALUE_01_098: [If the code point value is outside of the allowed range [0, 0x10FFFF] then amqpvalue_create_char shall return NULL.] */
+	if (value > 0x10FFFF)
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+		/* Codes_SRS_AMQPVALUE_01_093: [If allocating the AMQP_VALUE fails then amqpvalue_create_char shall return NULL.] */
+		if (result != NULL)
+		{
+			/* Codes_SRS_AMQPVALUE_01_092: [amqpvalue_create_char shall return a handle to an AMQP_VALUE that stores a single UTF-32 character value.] */
+			result->type = AMQP_TYPE_CHAR;
+			result->value.char_value = value;
+		}
+	}
+	return result;
+}
+
+int amqpvalue_get_char(AMQP_VALUE value, uint32_t* char_value)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_096: [If any of the arguments is NULL then amqpvalue_get_char shall return a non-zero value.] */
+	if ((value == NULL) ||
+		(char_value == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		/* Codes_SRS_AMQPVALUE_01_097: [If the type of the value is not char (was not created with amqpvalue_create_char), then amqpvalue_get_char shall return a non-zero value.] */
+		if (value_data->type != AMQP_TYPE_CHAR)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_094: [amqpvalue_get_char shall fill in the char_value argument the UTF32 char value stored by the AMQP value indicated by the value argument.] */
+			*char_value = value_data->value.char_value;
+
+			/* Codes_SRS_AMQPVALUE_01_095: [On success amqpvalue_get_char shall return 0.] */
 			result = 0;
 		}
 	}

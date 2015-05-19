@@ -43,6 +43,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	int64_t long_value;
 	bool bool_value;
 	float float_value;
+	double double_value;
 	AMQP_STRING_VALUE string_value;
 	AMQP_BINARY_VALUE binary_value;
 	AMQP_LIST_VALUE list_value;
@@ -512,6 +513,51 @@ int amqpvalue_get_float(AMQP_VALUE value, float* float_value)
 			*float_value = value_data->value.float_value;
 
 			/* Codes_SRS_AMQPVALUE_01_083: [On success amqpvalue_get_float shall return 0.] */
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+/* Codes_SRS_AMQPVALUE_01_020: [1.6.12 double 64-bit floating point number (IEEE 754-2008 binary64).] */
+AMQP_VALUE amqpvalue_create_double(double value)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	/* Codes_SRS_AMQPVALUE_01_087: [If allocating the AMQP_VALUE fails then amqpvalue_create_double shall return NULL.] */
+	if (result != NULL)
+	{
+		/* Codes_SRS_AMQPVALUE_01_086: [amqpvalue_create_double shall return a handle to an AMQP_VALUE that stores a double value.] */
+		result->type = AMQP_TYPE_DOUBLE;
+		result->value.double_value = value;
+	}
+	return result;
+}
+
+int amqpvalue_get_double(AMQP_VALUE value, double* double_value)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_090: [If any of the arguments is NULL then amqpvalue_get_double shall return a non-zero value.] */
+	if ((value == NULL) ||
+		(double_value == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		/* Codes_SRS_AMQPVALUE_01_091: [If the type of the value is not double (was not created with amqpvalue_create_double), then amqpvalue_get_double shall return a non-zero value.] */
+		if (value_data->type != AMQP_TYPE_DOUBLE)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_088: [amqpvalue_get_double shall fill in the double_value argument the double value stored by the AMQP value indicated by the value argument.] */
+			*double_value = value_data->value.double_value;
+
+			/* Codes_SRS_AMQPVALUE_01_089: [On success amqpvalue_get_double shall return 0.] */
 			result = 0;
 		}
 	}

@@ -37,6 +37,8 @@ extern "C" {
 	extern int amqpvalue_get_long(AMQP_VALUE value, int64_t* long_value);
 	extern AMQP_VALUE amqpvalue_create_float(float value);
 	extern int amqpvalue_get_float(AMQP_VALUE value, float* float_value);
+	extern AMQP_VALUE amqpvalue_create_double(double value);
+	extern int amqpvalue_get_double(AMQP_VALUE value, double* double_value);
 
 	extern AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_create_string(const char* value);

@@ -1418,5 +1418,138 @@ namespace amqpvalue_unittests
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
+
+		/* amqpvalue_create_double */
+
+		/* Tests_SRS_AMQPVALUE_01_086: [amqpvalue_create_double shall return a handle to an AMQP_VALUE that stores a double value.] */
+		/* Tests_SRS_AMQPVALUE_01_020: [1.6.12 double 64-bit floating point number (IEEE 754-2008 binary64).] */
+		TEST_METHOD(amqpvalue_create_double_minus_one_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_double(-1.0);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_086: [amqpvalue_create_double shall return a handle to an AMQP_VALUE that stores a double value.] */
+		/* Tests_SRS_AMQPVALUE_01_020: [1.6.12 double 64-bit floating point number (IEEE 754-2008 binary64).] */
+		TEST_METHOD(amqpvalue_create_double_42_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_double(42.0);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_087: [If allocating the AMQP_VALUE fails then amqpvalue_create_double shall return NULL.] */
+		TEST_METHOD(when_allocating_memory_fails_then_amqpvalue_create_double_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_double(0);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* amqpvalue_get_double */
+
+		/* Tests_SRS_AMQPVALUE_01_088: [amqpvalue_get_double shall fill in the double_value argument the double value stored by the AMQP value indicated by the value argument.] */
+		/* Tests_SRS_AMQPVALUE_01_089: [On success amqpvalue_get_double shall return 0.] */
+		TEST_METHOD(amqpvalue_get_double_minus_one_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			double double_value;
+			AMQP_VALUE value = amqpvalue_create_double(-1.0);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_double(value, &double_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(double, -1.0f, double_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_088: [amqpvalue_get_double shall fill in the double_value argument the double value stored by the AMQP value indicated by the value argument.] */
+		/* Tests_SRS_AMQPVALUE_01_089: [On success amqpvalue_get_double shall return 0.] */
+		TEST_METHOD(amqpvalue_get_double_42_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			double double_value;
+			AMQP_VALUE value = amqpvalue_create_double(42.0);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_double(value, &double_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(double, 42.0, double_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_090: [If any of the arguments is NULL then amqpvalue_get_double shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_double_with_a_NULL_amqpvalue_handle_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			double double_value;
+
+			// act
+			int result = amqpvalue_get_double(NULL, &double_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_090: [If any of the arguments is NULL then amqpvalue_get_double shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_double_with_a_NULL_double_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_double(0);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_double(value, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_091: [If the type of the value is not double (was not created with amqpvalue_create_double), then amqpvalue_get_double shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_double_with_an_amqpvalue_that_is_not_double_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			double double_value;
+			AMQP_VALUE value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_double(value, &double_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
 	};
 }

@@ -385,4 +385,57 @@ TEST_METHOD(io_send_with_non_NULL_buffer_and_zero_length_passes_the_args_down_an
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
+/* io_dowork */
+
+/* Tests_SRS_IO_01_012: [io_dowork shall call the concrete IO implementation specified in io_create, by calling the concrete_io_dowork function.] */
+/* Tests_SRS_IO_01_013: [On success, io_send shall return 0.] */
+TEST_METHOD(io_dowork_calls_the_concrete_dowork_and_succeeds)
+{
+	// arrange
+	io_mocks mocks;
+	unsigned char send_data[] = { 0x42, 43 };
+	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_io_dowork(TEST_CONCRETE_IO_HANDLE));
+
+	// act
+	int result = io_dowork(handle);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_IO_01_014: [If the underlying concrete_io_dowork fails, io_dowork shall return a non-zero value.] */
+TEST_METHOD(when_concrete_dowork_fails_then_io_dowork_fails_too)
+{
+	// arrange
+	io_mocks mocks;
+	unsigned char send_data[] = { 0x42, 43 };
+	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_io_dowork(TEST_CONCRETE_IO_HANDLE))
+		.SetReturn(42);
+
+	// act
+	int result = io_dowork(handle);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_IO_01_018: [When the handle argument is NULL, io_dowork shall return a non-zero value.] */
+TEST_METHOD(io_dowork_with_NULL_handle_fails)
+{
+	// arrange
+	io_mocks mocks;
+
+	// act
+	int result = io_dowork(NULL);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
 END_TEST_SUITE(io_unittests)

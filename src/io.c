@@ -87,6 +87,7 @@ int io_dowork(IO_HANDLE handle)
 {
 	int result;
 
+	/* Codes_SRS_IO_01_018: [When the handle argument is NULL, io_dowork shall return a non-zero value.] */
 	if (handle == NULL)
 	{
 		result = __LINE__;
@@ -94,6 +95,10 @@ int io_dowork(IO_HANDLE handle)
 	else
 	{
 		IO_DATA* io_data = (IO_DATA*)handle;
+
+		/* Codes_SRS_IO_01_012: [io_dowork shall call the concrete IO implementation specified in io_create, by calling the concrete_io_dowork function.] */
+		/* Codes_SRS_IO_01_013: [On success, io_send shall return 0.] */
+		/* Codes_SRS_IO_01_014: [If the underlying concrete_io_dowork fails, io_dowork shall return a non-zero value.] */
 		result = io_data->io_interface_description->concrete_io_dowork(io_data->concrete_io_handle);
 	}
 

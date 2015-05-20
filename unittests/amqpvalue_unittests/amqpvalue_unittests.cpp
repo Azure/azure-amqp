@@ -1969,5 +1969,193 @@ namespace amqpvalue_unittests
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
+
+		/* amqpvalue_create_binary */
+
+		/* Tests_SRS_AMQPVALUE_01_127: [amqpvalue_create_binary shall return a handle to an AMQP_VALUE that stores a sequence of bytes.] */
+		/* Tests_SRS_AMQPVALUE_01_027: [1.6.19 binary A sequence of octets.] */
+		TEST_METHOD(amqpvalue_create_binary_with_1_byte_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char input[] = { 0x0 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(1));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_binary(input, sizeof(input));
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_127: [amqpvalue_create_binary shall return a handle to an AMQP_VALUE that stores a sequence of bytes.] */
+		/* Tests_SRS_AMQPVALUE_01_027: [1.6.19 binary A sequence of octets.] */
+		TEST_METHOD(amqpvalue_create_binary_with_0_bytes_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_binary(NULL, 0);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_127: [amqpvalue_create_binary shall return a handle to an AMQP_VALUE that stores a sequence of bytes.] */
+		/* Tests_SRS_AMQPVALUE_01_027: [1.6.19 binary A sequence of octets.] */
+		TEST_METHOD(amqpvalue_create_binary_with_2_bytes_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char input[] = { 0x0, 0x42 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_binary(input, sizeof(input));
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_128: [If allocating the AMQP_VALUE fails then amqpvalue_create_binary shall return NULL.] */
+		TEST_METHOD(when_allocating_the_amqp_value_fails_then_amqpvalue_create_binary_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char input[] = { 0x0, 0x42 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_binary(input, sizeof(input));
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_128: [If allocating the AMQP_VALUE fails then amqpvalue_create_binary shall return NULL.] */
+		TEST_METHOD(when_allocating_the_binary_buffer_fails_then_amqpvalue_create_binary_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char input[] = { 0x0, 0x42 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_binary(input, sizeof(input));
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_129: [If value is NULL and length is positive then amqpvalue_create_binary shall return NULL.] */
+		TEST_METHOD(when_length_is_positive_and_buffer_is_NULL_then_amqpvalue_create_binary_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_binary(NULL, 1);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* amqpvalue_get_binary */
+
+		/* Tests_SRS_AMQPVALUE_01_131: [amqpvalue_get_binary shall return a pointer to the sequence of bytes held by the AMQP_VALUE and fill in the length argument the number of bytes copied.] */
+		TEST_METHOD(amqpvalue_get_binary_1_byte_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char input[] = { 0x42 };
+			uint32_t length;
+			AMQP_VALUE value = amqpvalue_create_binary(input, 1);
+			mocks.ResetAllCalls();
+
+			// act
+			const void* result = amqpvalue_get_binary(value, &length);
+
+			// assert
+			ASSERT_ARE_EQUAL(uint32_t, 1, length);
+			ASSERT_ARE_EQUAL(int, 0, memcmp(result, input, sizeof(input)));
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_134: [When amqpvalue_get_binary is called on a binary value with 0 bytes, amqpvalue_get_binary shall return a non-NULL value.] */
+		TEST_METHOD(amqpvalue_get_binary_0_byte_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char input[] = { 0x42 };
+			uint32_t length;
+			AMQP_VALUE value = amqpvalue_create_binary(NULL, 0);
+			mocks.ResetAllCalls();
+
+			// act
+			const void* result = amqpvalue_get_binary(value, &length);
+
+			// assert
+			ASSERT_ARE_EQUAL(uint32_t, 0, length);
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_132: [If any of the arguments is NULL then amqpvalue_get_binary shall return NULL.] */
+		TEST_METHOD(when_the_value_argument_is_NULL_amqpvalue_get_binary_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint32_t length;
+			mocks.ResetAllCalls();
+
+			// act
+			const void* result = amqpvalue_get_binary(NULL, &length);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_132: [If any of the arguments is NULL then amqpvalue_get_binary shall return NULL.] */
+		TEST_METHOD(when_the_length_argument_is_NULL_amqpvalue_get_binary_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char input[] = { 0x42 };
+			AMQP_VALUE value = amqpvalue_create_binary(NULL, 0);
+			mocks.ResetAllCalls();
+
+			// act
+			const void* result = amqpvalue_get_binary(value, NULL);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_133: [If the type of the value is not binary (was not created with amqpvalue_create_binary), then amqpvalue_get_binary shall return NULL.] */
+		TEST_METHOD(amqpvalue_get_binary_on_a_null_amqp_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint32_t length;
+			AMQP_VALUE value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			const void* result = amqpvalue_get_binary(value, &length);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
 	};
 }

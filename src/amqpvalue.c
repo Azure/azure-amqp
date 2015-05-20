@@ -722,24 +722,33 @@ int amqpvalue_get_uuid(AMQP_VALUE value, amqp_uuid* uuid_value)
 	return result;
 }
 
+/* Codes_SRS_AMQPVALUE_01_027: [1.6.19 binary A sequence of octets.] */
 AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length)
 {
 	AMQP_VALUE_DATA* result;
 	if ((value == NULL) &&
 		(length > 0))
 	{
+		/* Codes_SRS_AMQPVALUE_01_129: [If value is NULL and length is positive then amqpvalue_create_binary shall return NULL.] */
 		result = NULL;
 	}
 	else
 	{
+		/* Codes_SRS_AMQPVALUE_01_128: [If allocating the AMQP_VALUE fails then amqpvalue_create_binary shall return NULL.] */
 		result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 		if (result != NULL)
 		{
+			/* Codes_SRS_AMQPVALUE_01_127: [amqpvalue_create_binary shall return a handle to an AMQP_VALUE that stores a sequence of bytes.] */
 			result->type = AMQP_TYPE_BINARY;
-			result->value.binary_value.bytes = amqpalloc_malloc(length);
-			result->value.binary_value.length = length;
-			if (result->value.binary_value.bytes == NULL)
+			if (length > 0)
 			{
+				result->value.binary_value.bytes = amqpalloc_malloc(length);
+			}
+			result->value.binary_value.length = length;
+
+			if ((result->value.binary_value.bytes == NULL) && (length > 0))
+			{
+				/* Codes_SRS_AMQPVALUE_01_128: [If allocating the AMQP_VALUE fails then amqpvalue_create_binary shall return NULL.] */
 				amqpalloc_free(result);
 				result = NULL;
 			}
@@ -747,6 +756,7 @@ AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length)
 			{
 				if (memcpy(result->value.binary_value.bytes, value, length) == NULL)
 				{
+					/* Codes_SRS_AMQPVALUE_01_130: [If any other error occurs, amqpvalue_create_binary shall return NULL.] */
 					amqpalloc_free(result->value.binary_value.bytes);
 					amqpalloc_free(result);
 					result = NULL;
@@ -761,6 +771,7 @@ const void* amqpvalue_get_binary(AMQP_VALUE value, uint32_t* length)
 {
 	const char* result;
 
+	/* Codes_SRS_AMQPVALUE_01_132: [If any of the arguments is NULL then amqpvalue_get_binary shall return NULL.] */
 	if ((value == NULL) ||
 		(length == NULL))
 	{
@@ -775,8 +786,15 @@ const void* amqpvalue_get_binary(AMQP_VALUE value, uint32_t* length)
 		}
 		else
 		{
+			/* Codes_SRS_AMQPVALUE_01_131: [amqpvalue_get_binary shall return a pointer to the sequence of bytes held by the AMQP_VALUE and fill in the length argument the number of bytes held in the binary value.] */
 			*length = value_data->value.binary_value.length;
 			result = value_data->value.binary_value.bytes;
+
+			/* Codes_SRS_AMQPVALUE_01_134: [When amqpvalue_get_binary is called on a binary value with 0 bytes, amqpvalue_get_binary shall return a non-NULL value.] */
+			if (value_data->value.binary_value.length == 0)
+			{
+				result = value;
+			}
 		}
 	}
 

@@ -153,7 +153,7 @@ int socketio_dowork(IO_HANDLE handle)
 
 				if (socket_io_data->receive_callback != NULL)
 				{
-					socket_io_data->receive_callback(handle, socket_io_data->context, &c, 1);
+					socket_io_data->receive_callback(socket_io_data->context, &c, 1);
 				}
 			}
 		}

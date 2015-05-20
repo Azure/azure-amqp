@@ -46,13 +46,14 @@ extern "C" {
 	extern int amqpvalue_get_timestamp(AMQP_VALUE value, uint64_t* timestamp_value);
 	extern AMQP_VALUE amqpvalue_create_uuid(amqp_uuid value);
 	extern int amqpvalue_get_uuid(AMQP_VALUE value, amqp_uuid* uuid_value);
+	extern AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length);
+	extern const void* amqpvalue_get_binary(AMQP_VALUE value, uint32_t* length);
 
 	extern AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_create_string(const char* value);
 	extern AMQP_VALUE amqpvalue_create_string_with_length(const char* value, uint32_t length);
 	extern AMQP_VALUE amqpvalue_create_list(size_t size);
 	extern AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor, size_t size);
-	extern AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length);
 	extern AMQP_VALUE amqpvalue_clone(AMQP_VALUE value);
 	extern int amqpvalue_set_list_item(AMQP_VALUE value, size_t index, AMQP_VALUE list_item_value);
 	extern int amqpvalue_get_type(AMQP_VALUE value, AMQP_TYPE* type);
@@ -61,7 +62,6 @@ extern "C" {
 	extern AMQP_VALUE amqpvalue_get_composite_list(AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index);
 	extern const char* amqpvalue_get_string(AMQP_VALUE value);
-	extern const unsigned char* amqpvalue_get_binary_content(AMQP_VALUE value, uint32_t* length);
 	extern AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value);
 	extern void amqpvalue_destroy(AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_clone(AMQP_VALUE value);

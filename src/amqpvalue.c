@@ -722,6 +722,67 @@ int amqpvalue_get_uuid(AMQP_VALUE value, amqp_uuid* uuid_value)
 	return result;
 }
 
+AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length)
+{
+	AMQP_VALUE_DATA* result;
+	if ((value == NULL) &&
+		(length > 0))
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+		if (result != NULL)
+		{
+			result->type = AMQP_TYPE_BINARY;
+			result->value.binary_value.bytes = amqpalloc_malloc(length);
+			result->value.binary_value.length = length;
+			if (result->value.binary_value.bytes == NULL)
+			{
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				if (memcpy(result->value.binary_value.bytes, value, length) == NULL)
+				{
+					amqpalloc_free(result->value.binary_value.bytes);
+					amqpalloc_free(result);
+					result = NULL;
+				}
+			}
+		}
+	}
+	return result;
+}
+
+const void* amqpvalue_get_binary(AMQP_VALUE value, uint32_t* length)
+{
+	const char* result;
+
+	if ((value == NULL) ||
+		(length == NULL))
+	{
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_BINARY)
+		{
+			result = NULL;
+		}
+		else
+		{
+			*length = value_data->value.binary_value.length;
+			result = value_data->value.binary_value.bytes;
+		}
+	}
+
+	return result;
+}
+
 AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
@@ -779,41 +840,6 @@ AMQP_VALUE amqpvalue_create_string_with_length(const char* value, uint32_t lengt
 				else
 				{
 					result->value.string_value.chars[length] = 0;
-				}
-			}
-		}
-	}
-	return result;
-}
-
-AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length)
-{
-	AMQP_VALUE_DATA* result;
-	if ((value == NULL) &&
-		(length > 0))
-	{
-		result = NULL;
-	}
-	else
-	{
-		result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
-		if (result != NULL)
-		{
-			result->type = AMQP_TYPE_BINARY;
-			result->value.binary_value.bytes = amqpalloc_malloc(length);
-			result->value.binary_value.length = length;
-			if (result->value.binary_value.bytes == NULL)
-			{
-				amqpalloc_free(result);
-				result = NULL;
-			}
-			else
-			{
-				if (memcpy(result->value.binary_value.bytes, value, length) == NULL)
-				{
-					amqpalloc_free(result->value.binary_value.bytes);
-					amqpalloc_free(result);
-					result = NULL;
 				}
 			}
 		}
@@ -1033,32 +1059,6 @@ const char* amqpvalue_get_string(AMQP_VALUE value)
 		else
 		{
 			result = value_data->value.string_value.chars;
-		}
-	}
-
-	return result;
-}
-
-const unsigned char* amqpvalue_get_binary_content(AMQP_VALUE value, uint32_t* length)
-{
-	const char* result;
-
-	if ((value == NULL) ||
-		(length == NULL))
-	{
-		result = NULL;
-	}
-	else
-	{
-		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		if (value_data->type != AMQP_TYPE_BINARY)
-		{
-			result = NULL;
-		}
-		else
-		{
-			*length = value_data->value.binary_value.length;
-			result = value_data->value.binary_value.bytes;
 		}
 	}
 

@@ -376,7 +376,7 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 		case AMQP_TYPE_BINARY:
 		{
 			uint32_t length;
-			const unsigned char* bytes = amqpvalue_get_binary_content(value, &length);
+			const unsigned char* bytes = amqpvalue_get_binary(value, &length);
 
 			if ((bytes == NULL) ||
 				(encoder_encode_binary(handle, bytes, length) != 0))

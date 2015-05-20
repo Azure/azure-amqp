@@ -44,7 +44,7 @@ extern "C"
 	}
 }
 
-const IO_INTERFACE_DESCRIPTION TestIODescription =
+const IO_INTERFACE_DESCRIPTION test_io_description =
 {
 	test_io_create,
 	test_io_destroy,
@@ -96,7 +96,7 @@ TEST_METHOD(io_create_with_all_args_except_interface_description_NULL_succeeds)
 	STRICT_EXPECTED_CALL(mocks, test_io_create(NULL, NULL, NULL, NULL));
 
 	// act
-	IO_HANDLE result = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	IO_HANDLE result = io_create(&test_io_description, NULL, NULL, NULL, NULL);
 
 	// assert
 	ASSERT_IS_NOT_NULL(result);
@@ -112,7 +112,7 @@ TEST_METHOD(io_create_passes_the_args_to_the_concrete_io_implementation)
 	STRICT_EXPECTED_CALL(mocks, test_io_create((void*)0x4243, test_receive_callback, (void*)0x4245, test_logger_log));
 
 	// act
-	IO_HANDLE result = io_create(&TestIODescription, (void*)0x4243, test_receive_callback, (void*)0x4245, test_logger_log);
+	IO_HANDLE result = io_create(&test_io_description, (void*)0x4243, test_receive_callback, (void*)0x4245, test_logger_log);
 
 	// assert
 	ASSERT_IS_NOT_NULL(result);
@@ -131,7 +131,7 @@ TEST_METHOD(when_concrete_io_create_fails_then_io_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	IO_HANDLE result = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	IO_HANDLE result = io_create(&test_io_description, NULL, NULL, NULL, NULL);
 
 	// assert
 	ASSERT_IS_NULL(result);
@@ -240,7 +240,7 @@ TEST_METHOD(when_allocating_memory_Fails_then_io_create_fails)
 		.SetReturn((void*)NULL);
 
 	// act
-	IO_HANDLE result = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	IO_HANDLE result = io_create(&test_io_description, NULL, NULL, NULL, NULL);
 
 	// assert
 	ASSERT_IS_NULL(result);
@@ -254,7 +254,7 @@ TEST_METHOD(io_destroy_calls_concrete_io_destroy_and_frees_memory)
 {
 	// arrange
 	io_mocks mocks;
-	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL, NULL, NULL);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, test_io_destroy(TEST_CONCRETE_IO_HANDLE));
@@ -287,7 +287,7 @@ TEST_METHOD(io_send_calls_the_underlying_concrete_io_send_an_succeeds)
 	// arrange
 	io_mocks mocks;
 	unsigned char send_data[] = { 0x42, 43 };
-	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL, NULL, NULL);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, test_io_send(TEST_CONCRETE_IO_HANDLE, send_data, sizeof(send_data)));
@@ -320,7 +320,7 @@ TEST_METHOD(when_the_concrete_io_send_fails_then_io_send_fails)
 	// arrange
 	io_mocks mocks;
 	unsigned char send_data[] = { 0x42, 43 };
-	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL, NULL, NULL);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, test_io_send(TEST_CONCRETE_IO_HANDLE, send_data, sizeof(send_data)))
@@ -338,7 +338,7 @@ TEST_METHOD(io_send_with_NULL_buffer_and_nonzero_length_passes_the_args_down_and
 {
 	// arrange
 	io_mocks mocks;
-	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL, NULL, NULL);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, test_io_send(TEST_CONCRETE_IO_HANDLE, NULL, 1));
@@ -355,7 +355,7 @@ TEST_METHOD(io_send_with_NULL_buffer_and_zero_length_passes_the_args_down_and_su
 {
 	// arrange
 	io_mocks mocks;
-	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL, NULL, NULL);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, test_io_send(TEST_CONCRETE_IO_HANDLE, NULL, 0));
@@ -373,7 +373,7 @@ TEST_METHOD(io_send_with_non_NULL_buffer_and_zero_length_passes_the_args_down_an
 	// arrange
 	io_mocks mocks;
 	unsigned char send_data[] = { 0x42, 43 };
-	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL, NULL, NULL);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, test_io_send(TEST_CONCRETE_IO_HANDLE, send_data, 0));
@@ -394,7 +394,7 @@ TEST_METHOD(io_dowork_calls_the_concrete_dowork_and_succeeds)
 	// arrange
 	io_mocks mocks;
 	unsigned char send_data[] = { 0x42, 43 };
-	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL, NULL, NULL);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, test_io_dowork(TEST_CONCRETE_IO_HANDLE));
@@ -412,7 +412,7 @@ TEST_METHOD(when_concrete_dowork_fails_then_io_dowork_fails_too)
 	// arrange
 	io_mocks mocks;
 	unsigned char send_data[] = { 0x42, 43 };
-	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL, NULL, NULL);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, test_io_dowork(TEST_CONCRETE_IO_HANDLE))

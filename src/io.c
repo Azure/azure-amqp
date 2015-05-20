@@ -14,6 +14,7 @@ IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, vo
 	IO_DATA* io_data = (IO_DATA*)amqpalloc_malloc(sizeof(IO_DATA));
 	if (io_data != NULL)
 	{
+		/* Codes_SRS_IO_01_001: [io_create shall return on success a non-NULL handle to a new IO interface.] */
 		io_data->io_interface_description = io_interface_description;
 		io_data->concrete_io_handle = io_data->io_interface_description->concrete_io_create(io_create_parameters, receive_callback, receive_callback_context, logger_log);
 	}

@@ -8,7 +8,7 @@ TYPED_MOCK_CLASS(amqpvalue_mocks, CGlobalMock)
 {
 public:
 	MOCK_STATIC_METHOD_1(, void*, amqpalloc_malloc, size_t, size)
-		MOCK_METHOD_END(void*, malloc(size));
+	MOCK_METHOD_END(void*, malloc(size));
 	MOCK_STATIC_METHOD_1(, void, amqpalloc_free, void*, ptr)
 		free(ptr);
 	MOCK_VOID_METHOD_END();

@@ -22,11 +22,8 @@ extern "C"
 
 MICROMOCK_MUTEX_HANDLE test_serialize_mutex;
 
-namespace amqpvalue_unittests
-{
-	TEST_CLASS(amqpvalue_unittests)
-	{
-	public:
+BEGIN_TEST_SUITE(connection_unittests)
+
 		TEST_CLASS_INITIALIZE(suite_init)
 		{
 			test_serialize_mutex = MicroMockCreateMutex();
@@ -1032,7 +1029,7 @@ namespace amqpvalue_unittests
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 
 			// act
-			AMQP_VALUE result = amqpvalue_create_int(-2147483647-1);
+			AMQP_VALUE result = amqpvalue_create_int(-2147483647 - 1);
 
 			// assert
 			ASSERT_IS_NOT_NULL(result);
@@ -1079,14 +1076,14 @@ namespace amqpvalue_unittests
 			// arrange
 			amqpvalue_mocks mocks;
 			int32_t int_value;
-			AMQP_VALUE value = amqpvalue_create_int(-2147483647-1);
+			AMQP_VALUE value = amqpvalue_create_int(-2147483647 - 1);
 			mocks.ResetAllCalls();
 
 			// act
 			int result = amqpvalue_get_int(value, &int_value);
 
 			// assert
-			ASSERT_ARE_EQUAL(int32_t, -2147483647-1, int_value);
+			ASSERT_ARE_EQUAL(int32_t, -2147483647 - 1, int_value);
 			ASSERT_ARE_EQUAL(int, 0, result);
 		}
 
@@ -1165,7 +1162,7 @@ namespace amqpvalue_unittests
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 
 			// act
-			AMQP_VALUE result = amqpvalue_create_long(-9223372036854775807i64-1);
+			AMQP_VALUE result = amqpvalue_create_long(-9223372036854775807i64 - 1);
 
 			// assert
 			ASSERT_IS_NOT_NULL(result);
@@ -1212,7 +1209,7 @@ namespace amqpvalue_unittests
 			// arrange
 			amqpvalue_mocks mocks;
 			int64_t long_value;
-			AMQP_VALUE value = amqpvalue_create_long(-9223372036854775807i64-1);
+			AMQP_VALUE value = amqpvalue_create_long(-9223372036854775807i64 - 1);
 			mocks.ResetAllCalls();
 
 			// act
@@ -2157,5 +2154,5 @@ namespace amqpvalue_unittests
 			// assert
 			ASSERT_IS_NULL(result);
 		}
-	};
-}
+
+END_TEST_SUITE(connection_unittests)

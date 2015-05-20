@@ -28,11 +28,8 @@ MICROMOCK_MUTEX_HANDLE test_serialize_mutex;
 
 #define TEST_CONTEXT ((const void*)0x4242)
 
-namespace amqpvalue_unittests
-{
-	TEST_CLASS(list_unittests)
-	{
-	public:
+BEGIN_TEST_SUITE(list_unittests)
+
 		TEST_CLASS_INITIALIZE(suite_init)
 		{
 			test_serialize_mutex = MicroMockCreateMutex();
@@ -537,5 +534,5 @@ namespace amqpvalue_unittests
 			// assert
 			ASSERT_IS_NULL(result);
 		}
-	};
-}
+
+END_TEST_SUITE(list_unittests)

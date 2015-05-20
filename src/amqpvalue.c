@@ -780,6 +780,7 @@ const void* amqpvalue_get_binary(AMQP_VALUE value, uint32_t* length)
 	else
 	{
 		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		/* Codes_SRS_AMQPVALUE_01_133: [If the type of the value is not binary (was not created with amqpvalue_create_binary), then amqpvalue_get_binary shall return NULL.] */
 		if (value_data->type != AMQP_TYPE_BINARY)
 		{
 			result = NULL;

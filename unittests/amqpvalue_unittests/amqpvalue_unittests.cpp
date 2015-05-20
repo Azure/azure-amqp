@@ -1830,5 +1830,144 @@ namespace amqpvalue_unittests
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
+
+		/* amqpvalue_create_uuid */
+
+		/* Tests_SRS_AMQPVALUE_01_113: [amqpvalue_create_uuid shall return a handle to an AMQP_VALUE that stores an amqp_uuid value that represents a unique identifier per RFC-4122 section 4.1.2.] */
+		/* Tests_SRS_AMQPVALUE_01_026: [1.6.18 uuid A universally unique identifier as defined by RFC-4122 section 4.1.2 .] */
+		TEST_METHOD(amqpvalue_create_uuid_all_zeroes_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			amqp_uuid uuid = { 0x0 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_uuid(uuid);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_113: [amqpvalue_create_uuid shall return a handle to an AMQP_VALUE that stores an amqp_uuid value that represents a unique identifier per RFC-4122 section 4.1.2.] */
+		/* Tests_SRS_AMQPVALUE_01_026: [1.6.18 uuid A universally unique identifier as defined by RFC-4122 section 4.1.2 .] */
+		TEST_METHOD(amqpvalue_create_uuid_all_0xFF_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			amqp_uuid uuid = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_uuid(uuid);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_114: [If allocating the AMQP_VALUE fails then amqpvalue_create_uuid shall return NULL.] */
+		TEST_METHOD(when_allocating_memory_fails_then_amqpvalue_create_uuid_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			amqp_uuid uuid = { 0x0 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_uuid(uuid);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* amqpvalue_get_uuid */
+
+		/* Tests_SRS_AMQPVALUE_01_115: [amqpvalue_get_uuid shall fill in the uuid_value argument the uuid value stored by the AMQP value indicated by the value argument.] */
+		/* Tests_SRS_AMQPVALUE_01_116: [On success amqpvalue_get_uuid shall return 0.] */
+		TEST_METHOD(amqpvalue_get_uuid_0_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			amqp_uuid uuid = { 0x0 };
+			amqp_uuid uuid_value;
+			AMQP_VALUE value = amqpvalue_create_uuid(uuid);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_uuid(value, &uuid_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, memcmp(&uuid, &uuid_value, sizeof(uuid)));
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_115: [amqpvalue_get_uuid shall fill in the uuid_value argument the uuid value stored by the AMQP value indicated by the value argument.] */
+		/* Tests_SRS_AMQPVALUE_01_116: [On success amqpvalue_get_uuid shall return 0.] */
+		TEST_METHOD(amqpvalue_get_uuid_1311704463521_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			amqp_uuid uuid = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+			amqp_uuid uuid_value;
+			AMQP_VALUE value = amqpvalue_create_uuid(uuid);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_uuid(value, &uuid_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, memcmp(&uuid, &uuid_value, sizeof(uuid)));
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_117: [If any of the arguments is NULL then amqpvalue_get_uuid shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_uuid_with_a_NULL_amqpvalue_handle_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			amqp_uuid uuid_value;
+
+			// act
+			int result = amqpvalue_get_uuid(NULL, &uuid_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_117: [If any of the arguments is NULL then amqpvalue_get_uuid shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_uuid_with_a_NULL_uuid_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			amqp_uuid uuid = { 0x0 };
+			AMQP_VALUE value = amqpvalue_create_uuid(uuid);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_uuid(value, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_118: [If the type of the value is not uuid (was not created with amqpvalue_create_uuid), then amqpvalue_get_uuid shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_uuid_with_an_amqpvalue_that_is_not_uuid_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			amqp_uuid uuid_value;
+			AMQP_VALUE value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_uuid(value, &uuid_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
 	};
 }

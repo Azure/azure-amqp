@@ -46,6 +46,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	double double_value;
 	uint32_t char_value;
 	uint64_t timestamp_value;
+	amqp_uuid uuid_value;
 	AMQP_STRING_VALUE string_value;
 	AMQP_BINARY_VALUE binary_value;
 	AMQP_LIST_VALUE list_value;
@@ -661,6 +662,60 @@ int amqpvalue_get_timestamp(AMQP_VALUE value, uint64_t* timestamp_value)
 
 			/* Codes_SRS_AMQPVALUE_01_110: [On success amqpvalue_get_timestamp shall return 0.] */
 			result = 0;
+		}
+	}
+
+	return result;
+}
+
+/* Codes_SRS_AMQPVALUE_01_026: [1.6.18 uuid A universally unique identifier as defined by RFC-4122 section 4.1.2 .] */
+AMQP_VALUE amqpvalue_create_uuid(amqp_uuid value)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	/* Codes_SRS_AMQPVALUE_01_114: [If allocating the AMQP_VALUE fails then amqpvalue_create_uuid shall return NULL.] */
+	if (result != NULL)
+	{
+		/* Codes_SRS_AMQPVALUE_01_113: [amqpvalue_create_uuid shall return a handle to an AMQP_VALUE that stores an amqp_uuid value that represents a unique identifier per RFC-4122 section 4.1.2.] */
+		result->type = AMQP_TYPE_UUID;
+		if (memcpy(&result->value.uuid_value, value, sizeof(amqp_uuid)) == NULL)
+		{
+			free(result);
+			result = NULL;
+		}
+	}
+	return result;
+}
+
+int amqpvalue_get_uuid(AMQP_VALUE value, amqp_uuid* uuid_value)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_117: [If any of the arguments is NULL then amqpvalue_get_uuid shall return a non-zero value.] */
+	if ((value == NULL) ||
+		(uuid_value == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		/* Codes_SRS_AMQPVALUE_01_118: [If the type of the value is not uuid (was not created with amqpvalue_create_uuid), then amqpvalue_get_uuid shall return a non-zero value.] */
+		if (value_data->type != AMQP_TYPE_UUID)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_115: [amqpvalue_get_uuid shall fill in the uuid_value argument the uuid value stored by the AMQP value indicated by the value argument.] */
+			if (memcpy(*uuid_value, value_data->value.uuid_value, sizeof(amqp_uuid)) == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				/* Codes_SRS_AMQPVALUE_01_116: [On success amqpvalue_get_uuid shall return 0.] */
+				result = 0;
+			}
 		}
 	}
 

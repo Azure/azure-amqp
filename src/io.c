@@ -64,6 +64,8 @@ int io_send(IO_HANDLE handle, const void* buffer, size_t size)
 {
 	int result;
 
+	/* Codes_SRS_IO_01_011: [No error check shall be performed on buffer and size.] */
+	/* Codes_SRS_IO_01_010: [If handle is NULL, io_send shall return a non-zero value.] */
 	if (handle == NULL)
 	{
 		result = __LINE__;
@@ -71,6 +73,10 @@ int io_send(IO_HANDLE handle, const void* buffer, size_t size)
 	else
 	{
 		IO_DATA* io_data = (IO_DATA*)handle;
+
+		/* Codes_SRS_IO_01_008: [io_send shall pass the sequence of bytes pointed to by buffer to the concrete IO implementation specified in io_create, by calling the concrete_io_send function while passing down the buffer and size arguments to it.] */
+		/* Codes_SRS_IO_01_009: [On success, io_send shall return 0.] */
+		/* Codes_SRS_IO_01_015: [If the underlying concrete_io_send fails, io_send shall return a non-zero value.] */
 		result = io_data->io_interface_description->concrete_io_send(io_data->concrete_io_handle, buffer, size);
 	}
 

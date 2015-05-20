@@ -278,5 +278,111 @@ TEST_METHOD(io_destroy_with_null_handle_does_nothing)
 	// assert
 }
 
-END_TEST_SUITE(io_unittests)
+/* io_send */
 
+/* Tests_SRS_IO_01_008: [io_send shall pass the sequence of bytes pointed to by buffer to the concrete IO implementation specified in io_create, by calling the concrete_io_send function while passing down the buffer and size arguments to it.] */
+/* Tests_SRS_IO_01_009: [On success, io_send shall return 0.] */
+TEST_METHOD(io_send_calls_the_underlying_concrete_io_send_an_succeeds)
+{
+	// arrange
+	io_mocks mocks;
+	unsigned char send_data[] = { 0x42, 43 };
+	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_io_send(TEST_CONCRETE_IO_HANDLE, send_data, sizeof(send_data)));
+
+	// act
+	int result = io_send(handle, send_data, sizeof(send_data));
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_IO_01_010: [If handle is NULL, io_send shall return a non-zero value.] */
+TEST_METHOD(io_send_with_NULL_handle_fails)
+{
+	// arrange
+	io_mocks mocks;
+	unsigned char send_data[] = { 0x42, 43 };
+	mocks.ResetAllCalls();
+
+	// act
+	int result = io_send(NULL, send_data, sizeof(send_data));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_IO_01_015: [If the underlying concrete_io_send fails, io_send shall return a non-zero value.] */
+TEST_METHOD(when_the_concrete_io_send_fails_then_io_send_fails)
+{
+	// arrange
+	io_mocks mocks;
+	unsigned char send_data[] = { 0x42, 43 };
+	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_io_send(TEST_CONCRETE_IO_HANDLE, send_data, sizeof(send_data)))
+		.SetReturn(42);
+
+	// act
+	int result = io_send(handle, send_data, sizeof(send_data));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_IO_01_011: [No error check shall be performed on buffer and size.] */
+TEST_METHOD(io_send_with_NULL_buffer_and_nonzero_length_passes_the_args_down_and_succeeds)
+{
+	// arrange
+	io_mocks mocks;
+	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_io_send(TEST_CONCRETE_IO_HANDLE, NULL, 1));
+
+	// act
+	int result = io_send(handle, NULL, 1);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_IO_01_011: [No error check shall be performed on buffer and size.] */
+TEST_METHOD(io_send_with_NULL_buffer_and_zero_length_passes_the_args_down_and_succeeds)
+{
+	// arrange
+	io_mocks mocks;
+	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_io_send(TEST_CONCRETE_IO_HANDLE, NULL, 0));
+
+	// act
+	int result = io_send(handle, NULL, 0);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_IO_01_011: [No error check shall be performed on buffer and size.] */
+TEST_METHOD(io_send_with_non_NULL_buffer_and_zero_length_passes_the_args_down_and_succeeds)
+{
+	// arrange
+	io_mocks mocks;
+	unsigned char send_data[] = { 0x42, 43 };
+	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_io_send(TEST_CONCRETE_IO_HANDLE, send_data, 0));
+
+	// act
+	int result = io_send(handle, send_data, 0);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+END_TEST_SUITE(io_unittests)

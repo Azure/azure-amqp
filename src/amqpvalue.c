@@ -45,6 +45,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	float float_value;
 	double double_value;
 	uint32_t char_value;
+	uint64_t timestamp_value;
 	AMQP_STRING_VALUE string_value;
 	AMQP_BINARY_VALUE binary_value;
 	AMQP_LIST_VALUE list_value;
@@ -614,6 +615,51 @@ int amqpvalue_get_char(AMQP_VALUE value, uint32_t* char_value)
 			*char_value = value_data->value.char_value;
 
 			/* Codes_SRS_AMQPVALUE_01_095: [On success amqpvalue_get_char shall return 0.] */
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+/* Codes_SRS_AMQPVALUE_01_025: [1.6.17 timestamp An absolute point in time.] */
+AMQP_VALUE amqpvalue_create_timestamp(uint64_t value)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	/* Codes_SRS_AMQPVALUE_01_108: [If allocating the AMQP_VALUE fails then amqpvalue_create_timestamp shall return NULL.] */
+	if (result != NULL)
+	{
+		/* Codes_SRS_AMQPVALUE_01_107: [amqpvalue_create_timestamp shall return a handle to an AMQP_VALUE that stores an uint64_t value that represents a millisecond precision Unix time.] */
+		result->type = AMQP_TYPE_TIMESTAMP;
+		result->value.timestamp_value = value;
+	}
+	return result;
+}
+
+int amqpvalue_get_timestamp(AMQP_VALUE value, uint64_t* timestamp_value)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_111: [If any of the arguments is NULL then amqpvalue_get_timestamp shall return a non-zero value.] */
+	if ((value == NULL) ||
+		(timestamp_value == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		/* Codes_SRS_AMQPVALUE_01_112: [If the type of the value is not timestamp (was not created with amqpvalue_create_timestamp), then amqpvalue_get_timestamp shall return a non-zero value.] */
+		if (value_data->type != AMQP_TYPE_TIMESTAMP)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_109: [amqpvalue_get_timestamp shall fill in the timestamp_value argument the timestamp value stored by the AMQP value indicated by the value argument.] */
+			*timestamp_value = value_data->value.timestamp_value;
+
+			/* Codes_SRS_AMQPVALUE_01_110: [On success amqpvalue_get_timestamp shall return 0.] */
 			result = 0;
 		}
 	}

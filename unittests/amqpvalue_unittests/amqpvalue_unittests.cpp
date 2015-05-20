@@ -1697,5 +1697,138 @@ namespace amqpvalue_unittests
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
+
+		/* amqpvalue_create_timestamp */
+
+		/* Tests_SRS_AMQPVALUE_01_107: [amqpvalue_create_timestamp shall return a handle to an AMQP_VALUE that stores an uint64_t value that represents a millisecond precision Unix time.] */
+		/* Tests_SRS_AMQPVALUE_01_025: [1.6.17 timestamp An absolute point in time.] */
+		TEST_METHOD(amqpvalue_create_timestamp_0_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_timestamp(0);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_049: [amqpvalue_create_timestamp shall return a handle to an AMQP_VALUE that stores an uint64_t value.] */
+		/* Tests_SRS_AMQPVALUE_01_014: [1.6.6 timestamp Integer in the range 0 to 264 - 1 inclusive.] */
+		TEST_METHOD(amqpvalue_create_timestamp_1311704463521_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_timestamp(1311704463521);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_050: [If allocating the AMQP_VALUE fails then amqpvalue_create_timestamp shall return NULL.] */
+		TEST_METHOD(when_allocating_memory_fails_then_amqpvalue_create_timestamp_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_timestamp(0);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* amqpvalue_get_timestamp */
+
+		/* Tests_SRS_AMQPVALUE_01_109: [amqpvalue_get_timestamp shall fill in the timestamp_value argument the timestamp value stored by the AMQP value indicated by the value argument.] */
+		/* Tests_SRS_AMQPVALUE_01_110: [On success amqpvalue_get_timestamp shall return 0.] */
+		TEST_METHOD(amqpvalue_get_timestamp_0_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint64_t timestamp_value;
+			AMQP_VALUE value = amqpvalue_create_timestamp(0);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_timestamp(value, &timestamp_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(uint64_t, 0, timestamp_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_109: [amqpvalue_get_timestamp shall fill in the timestamp_value argument the timestamp value stored by the AMQP value indicated by the value argument.] */
+		/* Tests_SRS_AMQPVALUE_01_110: [On success amqpvalue_get_timestamp shall return 0.] */
+		TEST_METHOD(amqpvalue_get_timestamp_1311704463521_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint64_t timestamp_value;
+			AMQP_VALUE value = amqpvalue_create_timestamp(1311704463521);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_timestamp(value, &timestamp_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(uint64_t, (uint64_t)1311704463521, timestamp_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_111: [If any of the arguments is NULL then amqpvalue_get_timestamp shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_timestamp_with_a_NULL_amqpvalue_handle_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint64_t timestamp_value;
+
+			// act
+			int result = amqpvalue_get_timestamp(NULL, &timestamp_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_111: [If any of the arguments is NULL then amqpvalue_get_timestamp shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_timestamp_with_a_NULL_timestamp_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_timestamp(0);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_timestamp(value, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_112: [If the type of the value is not timestamp (was not created with amqpvalue_create_timestamp), then amqpvalue_get_timestamp shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_timestamp_with_an_amqpvalue_that_is_not_timestamp_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint64_t timestamp_value;
+			AMQP_VALUE value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_timestamp(value, &timestamp_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
 	};
 }

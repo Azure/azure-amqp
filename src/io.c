@@ -51,7 +51,11 @@ void io_destroy(IO_HANDLE handle)
 	if (handle != NULL)
 	{
 		IO_DATA* io_data = (IO_DATA*)handle;
+
+		/* Codes_SRS_IO_01_006: [io_destroy shall also call the concrete_io_destroy function that is member of the io_interface_description argument passed to io_create, while passing as argument to concrete_io_destroy the result of the underlying concrete_io_create handle that was called as part of the io_create call.] */
 		io_data->io_interface_description->concrete_io_destroy(io_data->concrete_io_handle);
+
+		/* Codes_SRS_IO_01_005: [io_destroy shall free all resources associated with the IO handle.] */
 		amqpalloc_free(io_data);
 	}
 }

@@ -2,7 +2,7 @@
 #include "micromock.h"
 #include "io.h"
 
-#define TEST_CONCRETE_IO_HANDLE (CONCRETE_IO_HANDLE)0x4242;
+#define TEST_CONCRETE_IO_HANDLE (CONCRETE_IO_HANDLE)0x4242
 
 TYPED_MOCK_CLASS(io_mocks, CGlobalMock)
 {
@@ -244,6 +244,38 @@ TEST_METHOD(when_allocating_memory_Fails_then_io_create_fails)
 
 	// assert
 	ASSERT_IS_NULL(result);
+}
+
+/* io_destroy */
+
+/* Tests_SRS_IO_01_005: [io_destroy shall free all resources associated with the IO handle.] */
+/* Tests_SRS_IO_01_006: [io_destroy shall also call the concrete_io_destroy function that is member of the io_interface_description argument passed to io_create, while passing as argument to concrete_io_destroy the result of the underlying concrete_io_create handle that was called as part of the io_create call.] */
+TEST_METHOD(io_destroy_calls_concrete_io_destroy_and_frees_memory)
+{
+	// arrange
+	io_mocks mocks;
+	IO_HANDLE handle = io_create(&TestIODescription, NULL, NULL, NULL, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_io_destroy(TEST_CONCRETE_IO_HANDLE));
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	io_destroy(handle);
+
+	// assert
+}
+
+/* Tests_SRS_IO_01_007: [If handle is NULL, io_destroy shall do nothing.] */
+TEST_METHOD(io_destroy_with_null_handle_does_nothing)
+{
+	// arrange
+	io_mocks mocks;
+
+	// act
+	io_destroy(NULL);
+
+	// assert
 }
 
 END_TEST_SUITE(io_unittests)

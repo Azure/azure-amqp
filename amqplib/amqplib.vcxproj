@@ -14,6 +14,7 @@
     <ClInclude Include="..\inc\amqplib.h" />
     <ClInclude Include="..\inc\amqpvalue.h" />
     <ClInclude Include="..\inc\amqpalloc.h" />
+    <ClInclude Include="..\inc\amqp_frame_codec.h" />
     <ClInclude Include="..\inc\amqp_protocol_types.h" />
     <ClInclude Include="..\inc\amqp_types.h" />
     <ClInclude Include="..\inc\connection.h" />
@@ -34,6 +35,7 @@
     <ClCompile Include="..\src\amqplib.c" />
     <ClCompile Include="..\src\amqpvalue.c" />
     <ClCompile Include="..\src\amqpalloc.c" />
+    <ClCompile Include="..\src\amqp_frame_codec.c" />
     <ClCompile Include="..\src\connection.c" />
     <ClCompile Include="..\src\consolelogger.c" />
     <ClCompile Include="..\src\decoder.c" />

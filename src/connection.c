@@ -5,6 +5,7 @@
 #include "frame_codec.h"
 #include "socketio.h"
 #include "amqpalloc.h"
+#include "amqp_frame_codec.h"
 
 static unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 #define FRAME_HEADER_SIZE 8
@@ -49,43 +50,6 @@ static int connection_frame_write_bytes(void* context, const void* bytes, size_t
 	return io_send(io_handle, bytes, length);
 }
 
-static int send_open(CONNECTION_DATA* connection, const char* container_id)
-{
-	int result;
-
-	AMQP_VALUE open_frame_list;
-	if ((open_frame_list = amqpvalue_create_list(1)) == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		AMQP_VALUE container_id_value = amqpvalue_create_string(container_id);
-		if (container_id_value == NULL)
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			if ((amqpvalue_set_list_item(open_frame_list, 0, container_id_value) != 0) ||
-				(frame_codec_encode(connection->frame_codec, 0x10, &open_frame_list, 1) != 0))
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				result = 0;
-			}
-
-			amqpvalue_destroy(container_id_value);
-		}
-
-		amqpvalue_destroy(open_frame_list);
-	}
-
-	return result;
-}
-
 static void connection_byte_received(CONNECTION_DATA* connection, unsigned char b)
 {
 	switch (connection->connection_state)
@@ -108,7 +72,7 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 				connection->connection_state = CONNECTION_STATE_HDR_EXCH;
 
 				/* handshake done, send open frame */
-				if (send_open(connection, "1") != 0)
+				if (amqp_frame_codec_encode_open(connection->frame_codec, "1") != 0)
 				{
 					io_destroy(connection->used_io);
 					connection->connection_state = CONNECTION_STATE_END;
@@ -180,12 +144,17 @@ static void connection_frame_received(void* context, uint64_t performative, AMQP
 	}
 }
 
+/* Codes_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
 CONNECTION_HANDLE connection_create(const char* host, int port)
 {
 	CONNECTION_DATA* result = amqpalloc_malloc(sizeof(CONNECTION_DATA));
 	if (result != NULL)
 	{
+		/* Codes_SRS_CONNECTION_01_069: [The socket_io parameters shall be filled in with the host and port information passed to connection_create.] */
 		SOCKETIO_CONFIG socket_io_config = { host, port };
+
+		/* Codes_SRS_CONNECTION_01_067: [connection_create shall call io_create to create its TCP IO interface.] */
+		/* Codes_SRS_CONNECTION_01_068: [connection_create shall pass to io_create the interface obtained by a call to socketio_get_interface_description.] */
 		result->socket_io = io_create(socketio_get_interface_description(), &socket_io_config, connection_receive_callback, result, consolelogger_log);
 		if (result->socket_io == NULL)
 		{
@@ -194,6 +163,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 		}
 		else
 		{
+			/* Codes_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
 			result->frame_codec = frame_codec_create(result->socket_io, connection_frame_received, result, consolelogger_log);
 			if (result->frame_codec == NULL)
 			{
@@ -249,7 +219,7 @@ int connection_dowork(CONNECTION_HANDLE handle)
 		break;
 
 	case CONNECTION_STATE_HDR_EXCH:
-		result = send_open(connection, "1");
+		result = amqp_frame_codec_encode_open(connection->frame_codec, "1");
 		break;
 
 	case CONNECTION_STATE_OPEN_RCVD:

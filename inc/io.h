@@ -4,7 +4,10 @@
 #include "logger.h"
 
 #ifdef __cplusplus
+#include <cstddef>
 extern "C" {
+#else
+#include <stddef.h>
 #endif /* __cplusplus */
 
 	typedef void* IO_HANDLE;

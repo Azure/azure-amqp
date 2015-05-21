@@ -8,12 +8,15 @@ bool fail_alloc_calls;
 TYPED_MOCK_CLASS(list_mocks, CGlobalMock)
 {
 public:
+	/* amqpalloc mocks */
 	MOCK_STATIC_METHOD_1(, void*, amqpalloc_malloc, size_t, size)
 	MOCK_METHOD_END(void*, malloc(size));
 	MOCK_STATIC_METHOD_1(, void, amqpalloc_free, void*, ptr)
 		free(ptr);
 	MOCK_VOID_METHOD_END();
-    MOCK_STATIC_METHOD_2(, bool, test_match_function, LIST_ITEM_HANDLE, list_item, const void*, match_context)
+
+	/* test match function mock */
+	MOCK_STATIC_METHOD_2(, bool, test_match_function, LIST_ITEM_HANDLE, list_item, const void*, match_context)
 	MOCK_METHOD_END(bool, true);
 };
 
@@ -21,6 +24,7 @@ extern "C"
 {
 	DECLARE_GLOBAL_MOCK_METHOD_1(list_mocks, , void*, amqpalloc_malloc, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(list_mocks, , void, amqpalloc_free, void*, ptr);
+
 	DECLARE_GLOBAL_MOCK_METHOD_2(list_mocks, , bool, test_match_function, LIST_ITEM_HANDLE, list_item, const void*, match_context);
 }
 

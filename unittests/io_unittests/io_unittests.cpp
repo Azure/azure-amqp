@@ -7,11 +7,14 @@
 TYPED_MOCK_CLASS(io_mocks, CGlobalMock)
 {
 public:
+	/* amqpalloc mocks */
 	MOCK_STATIC_METHOD_1(, void*, amqpalloc_malloc, size_t, size)
 	MOCK_METHOD_END(void*, malloc(size));
 	MOCK_STATIC_METHOD_1(, void, amqpalloc_free, void*, ptr)
 		free(ptr);
 	MOCK_VOID_METHOD_END();
+
+	/* io interface mocks */
 	MOCK_STATIC_METHOD_4(, CONCRETE_IO_HANDLE, test_io_create, void*, io_create_parameters, IO_RECEIVE_CALLBACK, receive_callback, void*, receive_callback_context, LOGGER_LOG, logger_log)
 	MOCK_METHOD_END(CONCRETE_IO_HANDLE, TEST_CONCRETE_IO_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, test_io_destroy, CONCRETE_IO_HANDLE, handle)
@@ -26,6 +29,7 @@ extern "C"
 {
 	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , void*, amqpalloc_malloc, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , void, amqpalloc_free, void*, ptr);
+
 	DECLARE_GLOBAL_MOCK_METHOD_4(io_mocks, , CONCRETE_IO_HANDLE, test_io_create, void*, io_create_parameters, IO_RECEIVE_CALLBACK, receive_callback, void*, receive_callback_context, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , void, test_io_destroy, CONCRETE_IO_HANDLE, handle);
 	DECLARE_GLOBAL_MOCK_METHOD_3(io_mocks, , int, test_io_send, CONCRETE_IO_HANDLE, handle, const void*, buffer, size_t, size);

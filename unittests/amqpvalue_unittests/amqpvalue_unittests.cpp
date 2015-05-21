@@ -7,6 +7,7 @@ bool fail_alloc_calls;
 TYPED_MOCK_CLASS(amqpvalue_mocks, CGlobalMock)
 {
 public:
+	/* amqpalloc mocks */
 	MOCK_STATIC_METHOD_1(, void*, amqpalloc_malloc, size_t, size)
 	MOCK_METHOD_END(void*, malloc(size));
 	MOCK_STATIC_METHOD_1(, void, amqpalloc_free, void*, ptr)

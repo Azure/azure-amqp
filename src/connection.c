@@ -147,38 +147,63 @@ static void connection_frame_received(void* context, uint64_t performative, AMQP
 /* Codes_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
 CONNECTION_HANDLE connection_create(const char* host, int port)
 {
-	CONNECTION_DATA* result = amqpalloc_malloc(sizeof(CONNECTION_DATA));
-	if (result != NULL)
+	CONNECTION_DATA* result;
+	/* Codes_SRS_CONNECTION_01_071: [If host is NULL, connection_create shall return NULL.] */
+	if (host == NULL)
 	{
-		/* Codes_SRS_CONNECTION_01_069: [The socket_io parameters shall be filled in with the host and port information passed to connection_create.] */
-		SOCKETIO_CONFIG socket_io_config = { host, port };
+		result = NULL;
+	}
+	else
+	{
+		result = (CONNECTION_DATA*)amqpalloc_malloc(sizeof(CONNECTION_DATA));
+		/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
+		if (result != NULL)
+		{
+			/* Codes_SRS_CONNECTION_01_069: [The socket_io parameters shall be filled in with the host and port information passed to connection_create.] */
+			SOCKETIO_CONFIG socket_io_config = { host, port };
+			const IO_INTERFACE_DESCRIPTION* io_interface_description;
 
-		/* Codes_SRS_CONNECTION_01_067: [connection_create shall call io_create to create its TCP IO interface.] */
-		/* Codes_SRS_CONNECTION_01_068: [connection_create shall pass to io_create the interface obtained by a call to socketio_get_interface_description.] */
-		result->socket_io = io_create(socketio_get_interface_description(), &socket_io_config, connection_receive_callback, result, consolelogger_log);
-		if (result->socket_io == NULL)
-		{
-			amqpalloc_free(result);
-			result = NULL;
-		}
-		else
-		{
-			/* Codes_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
-			result->frame_codec = frame_codec_create(result->socket_io, connection_frame_received, result, consolelogger_log);
-			if (result->frame_codec == NULL)
+			/* Codes_SRS_CONNECTION_01_068: [connection_create shall pass to io_create the interface obtained by a call to socketio_get_interface_description.] */
+			io_interface_description = socketio_get_interface_description();
+			if (io_interface_description == NULL)
 			{
-				io_destroy(result->socket_io);
+				/* Codes_SRS_CONNECTION_01_080: [If socketio_get_interface_description fails, connection_create shall return NULL.] */
 				amqpalloc_free(result);
 				result = NULL;
 			}
 			else
 			{
-				result->frame_received_callback = NULL;
-				result->connection_state = CONNECTION_STATE_START;
-				result->header_bytes_received = 0;
+				/* Codes_SRS_CONNECTION_01_067: [connection_create shall call io_create to create its TCP IO interface.] */
+				result->socket_io = io_create(io_interface_description, &socket_io_config, connection_receive_callback, result, consolelogger_log);
+				if (result->socket_io == NULL)
+				{
+					/* Codes_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
+					amqpalloc_free(result);
+					result = NULL;
+				}
+				else
+				{
+					/* Codes_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
+					result->frame_codec = frame_codec_create(result->socket_io, connection_frame_received, result, consolelogger_log);
+					if (result->frame_codec == NULL)
+					{
+						/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
+						io_destroy(result->socket_io);
+						amqpalloc_free(result);
+						result = NULL;
+					}
+					else
+					{
+						result->frame_received_callback = NULL;
 
-				/* For now directly talk to the socket IO. By doing this there is no SASL, no SSL, pure AMQP only */
-				result->used_io = result->socket_io;
+						/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
+						result->connection_state = CONNECTION_STATE_START;
+						result->header_bytes_received = 0;
+
+						/* For now directly talk to the socket IO. By doing this there is no SASL, no SSL, pure AMQP only */
+						result->used_io = result->socket_io;
+					}
+				}
 			}
 		}
 	}

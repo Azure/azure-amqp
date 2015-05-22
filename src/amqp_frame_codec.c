@@ -37,3 +37,8 @@ int amqp_frame_codec_encode_open(FRAME_CODEC_HANDLE frame_codec, const char* con
 
 	return result;
 }
+
+int amqp_frame_codec_encode_close(FRAME_CODEC_HANDLE frame_codec)
+{
+	return 0;
+}

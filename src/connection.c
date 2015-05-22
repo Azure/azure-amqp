@@ -123,8 +123,30 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 	/* Codes_SRS_CONNECTION_01_040: [HDR RCVD In this state the connection header has been received from the peer but a connection header has not been sent.] */
 	/* receiving in HDR_RCVD could be because pipelined open, so the best we can do is to let the bytes flow */
 	case CONNECTION_STATE_HDR_RCVD:
+
+	/* Codes_SRS_CONNECTION_01_042: [HDR EXCH In this state the connection header has been sent to the peer and a connection header has been received from the peer.] */
+	/* we should not really get into this state, but just in case, we would treat that in the same way as HDR_RCVD */
+	case CONNECTION_STATE_HDR_EXCH:
+
+	/* Codes_SRS_CONNECTION_01_045: [OPEN RCVD In this state the connection headers have been exchanged. An open frame has been received from the peer but an open frame has not been sent.] */
+	case CONNECTION_STATE_OPEN_RCVD:
+		/* receiving in OPEN_RCVD is not good, as we did not send out an OPEN frame */
+		/* normally this would never happen, but in case it does, we should close the connection */
+		if (amqp_frame_codec_encode_close(connection->frame_codec) != 0)
+		{
+			io_destroy(connection->used_io);
+			connection->connection_state = CONNECTION_STATE_END;
+		}
+		else
+		{
+			/* Codes_SRS_CONNECTION_01_055: [DISCARDING The DISCARDING state is a variant of the CLOSE SENT state where the close is triggered by an error.] */
+			connection->connection_state = CONNECTION_STATE_DISCARDING;
+		}
+		break;
+
 	/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
 	case CONNECTION_STATE_OPEN_SENT:
+
 	/* Codes_SRS_CONNECTION_01_048: [OPENED In this state the connection header and the open frame have been both sent and received.] */
 	case CONNECTION_STATE_OPENED:
 		(void)frame_codec_receive_bytes(connection->frame_codec, &b, 1);

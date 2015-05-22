@@ -47,6 +47,8 @@ public:
 	/* amqp_frame_codec */
 	MOCK_STATIC_METHOD_2(, int, amqp_frame_codec_encode_open, FRAME_CODEC_HANDLE, frame_codec, const char*, container_id)
 	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_1(, int, amqp_frame_codec_encode_close, FRAME_CODEC_HANDLE, frame_codec)
+	MOCK_METHOD_END(int, 0);
 
 	/* frame_codec */
 	MOCK_STATIC_METHOD_4(, FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, FRAME_RECEIVED_CALLBACK, frame_received_callback, void*, context, LOGGER_LOG, logger_log)
@@ -70,6 +72,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, amqpalloc_free, void*, ptr);
 
 	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , int, amqp_frame_codec_encode_open, FRAME_CODEC_HANDLE, frame_codec, const char*, container_id);
+	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , int, amqp_frame_codec_encode_close, FRAME_CODEC_HANDLE, frame_codec);
 
 	DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, FRAME_RECEIVED_CALLBACK, frame_received_callback, void*, context, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, frame_codec_destroy, FRAME_CODEC_HANDLE, handle);
@@ -555,5 +558,8 @@ TEST_METHOD(when_only_one_byte_is_received_and_do_work_is_called_state_is_set_to
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_HDR_SENT, connection_state);
 }
+
+/* Tests_SRS_CONNECTION_01_045: [OPEN RCVD In this state the connection headers have been exchanged. An open frame has been received from the peer but an open frame has not been sent.] */
+
 
 END_TEST_SUITE(amqpvalue_unittests)

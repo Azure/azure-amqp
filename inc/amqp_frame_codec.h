@@ -13,6 +13,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 extern int amqp_frame_codec_encode_open(FRAME_CODEC_HANDLE frame_codec, const char* container_id);
+extern int amqp_frame_codec_encode_close(FRAME_CODEC_HANDLE frame_codec);
 
 #ifdef __cplusplus
 }

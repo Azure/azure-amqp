@@ -35,10 +35,18 @@ static int send_header(CONNECTION_DATA* connection)
 	/* Codes_SRS_CONNECTION_01_104: [Sending the protocol header shall be done by using io_send.] */
 	if (io_send(connection->used_io, amqp_header, sizeof(amqp_header)) != 0)
 	{
+		/* Codes_SRS_CONNECTION_01_106: [When sending the protocol header fails, the connection shall be immediately closed.] */
+		io_destroy(connection->used_io);
+
+		/* Codes_SRS_CONNECTION_01_057: [END In this state it is illegal for either endpoint to write anything more onto the connection. The connection can be safely closed and discarded.] */
+		connection->connection_state = CONNECTION_STATE_END;
+
+		/* Codes_SRS_CONNECTION_01_105: [When io_send fails, connection_dowork shall return a non-zero value.] */
 		result = __LINE__;
 	}
 	else
 	{
+		/* Codes_SRS_CONNECTION_01_041: [HDR SENT In this state the connection header has been sent to the peer but no connection header has been received.] */
 		connection->connection_state = CONNECTION_STATE_HDR_SENT;
 		result = 0;
 	}

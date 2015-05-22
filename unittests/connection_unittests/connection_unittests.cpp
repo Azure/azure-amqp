@@ -129,6 +129,9 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 
 	// assert
 	ASSERT_IS_NOT_NULL(connection);
+	CONNECTION_STATE connection_state;
+	(void)connection_get_state(connection, &connection_state);
+	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_START, connection_state);
 }
 
 /* Tests_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
@@ -269,6 +272,7 @@ TEST_METHOD(connection_destroy_with_NULL_handle_does_nothing)
 /* Tests_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection) MUST immediately send its outgoing protocol header on establishment of the TCP connection.] */
 /* Tests_SRS_CONNECTION_01_093: [_ When the client opens a new socket connection to a server, it MUST send a protocol header with the client’s preferred protocol version.] */
 /* Tests_SRS_CONNECTION_01_104: [Sending the protocol header shall be done by using io_send.] */
+/* Tests_SRS_CONNECTION_01_041: [HDR SENT In this state the connection header has been sent to the peer but no connection header has been received.] */
 TEST_METHOD(connection_dowork_when_state_is_start_sends_the_AMQP_header_and_triggers_io_dowork)
 {
 	// arrange
@@ -286,6 +290,9 @@ TEST_METHOD(connection_dowork_when_state_is_start_sends_the_AMQP_header_and_trig
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	CONNECTION_STATE connection_state;
+	(void)connection_get_state(connection, &connection_state);
+	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_HDR_SENT, connection_state);
 }
 
 /* Tests_SRS_CONNECTION_01_077: [If io_dowork fails, connection_dowork shall return a non-zero value.] */
@@ -320,6 +327,32 @@ TEST_METHOD(connection_dowork_with_NULL_handle_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_CONNECTION_01_057: [END In this state it is illegal for either endpoint to write anything more onto the connection. The connection can be safely closed and discarded.] */
+/* Tests_SRS_CONNECTION_01_106: [When sending the protocol header fails, the connection shall be immediately closed.] */
+/* Tests_SRS_CONNECTION_01_105: [When io_send fails, connection_dowork shall return a non-zero value.] */
+TEST_METHOD(when_sending_the_header_fails_connection_dowork_fails_and_io_is_destroyed)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, amqp_header, sizeof(amqp_header)))
+		.ValidateArgumentBuffer(2, amqp_header, sizeof(amqp_header))
+		.SetReturn(1);
+	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
+
+	// act
+	int result = connection_dowork(connection);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	CONNECTION_STATE connection_state;
+	(void)connection_get_state(connection, &connection_state);
+	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_END, connection_state);
 }
 
 END_TEST_SUITE(amqpvalue_unittests)

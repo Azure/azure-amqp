@@ -64,6 +64,10 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 	default:
 		break;
 
+	/* Codes_SRS_CONNECTION_01_039: [START In this state a connection exists, but nothing has been sent or received. This is the state an implementation would be in immediately after performing a socket connect or socket accept.] */
+	case CONNECTION_STATE_START:
+
+	/* Codes_SRS_CONNECTION_01_041: [HDR SENT In this state the connection header has been sent to the peer but no connection header has been received.] */
 	case CONNECTION_STATE_HDR_SENT:
 		if (b != amqp_header[connection->header_bytes_received])
 		{
@@ -76,23 +80,52 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 			connection->header_bytes_received++;
 			if (connection->header_bytes_received == sizeof(amqp_header))
 			{
-				connection->connection_state = CONNECTION_STATE_HDR_EXCH;
-
-				/* handshake done, send open frame */
-				if (amqp_frame_codec_encode_open(connection->frame_codec, "1") != 0)
+				if (connection->connection_state == CONNECTION_STATE_START)
 				{
-					io_destroy(connection->used_io);
-					connection->connection_state = CONNECTION_STATE_END;
+					if (send_header(connection) != 0)
+					{
+						io_destroy(connection->used_io);
+						connection->connection_state = CONNECTION_STATE_END;
+					}
+					else
+					{
+						/* handshake done, send open frame */
+						if (amqp_frame_codec_encode_open(connection->frame_codec, "1") != 0)
+						{
+							io_destroy(connection->used_io);
+							connection->connection_state = CONNECTION_STATE_END;
+						}
+						else
+						{
+							/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
+							connection->connection_state = CONNECTION_STATE_OPEN_SENT;
+						}
+					}
 				}
 				else
 				{
-					connection->connection_state = CONNECTION_STATE_OPEN_SENT;
+					/* handshake done, send open frame */
+					if (amqp_frame_codec_encode_open(connection->frame_codec, "1") != 0)
+					{
+						io_destroy(connection->used_io);
+						connection->connection_state = CONNECTION_STATE_END;
+					}
+					else
+					{
+						/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
+						connection->connection_state = CONNECTION_STATE_OPEN_SENT;
+					}
 				}
 			}
 		}
 		break;
 
+	/* Codes_SRS_CONNECTION_01_040: [HDR RCVD In this state the connection header has been received from the peer but a connection header has not been sent.] */
+	/* receiving in HDR_RCVD could be because pipelined open, so the best we can do is to let the bytes flow */
+	case CONNECTION_STATE_HDR_RCVD:
+	/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
 	case CONNECTION_STATE_OPEN_SENT:
+	/* Codes_SRS_CONNECTION_01_048: [OPENED In this state the connection header and the open frame have been both sent and received.] */
 	case CONNECTION_STATE_OPENED:
 		(void)frame_codec_receive_bytes(connection->frame_codec, &b, 1);
 		break;

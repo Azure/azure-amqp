@@ -7,8 +7,8 @@
 #include "amqpalloc.h"
 #include "amqp_frame_codec.h"
 
+/* Codes_SRS_CONNECTION_01_087: [The protocol header consists of the upper case ASCII letters “AMQP” followed by a protocol id of zero, followed by three unsigned bytes representing the major, minor, and revision of the protocol version (currently 1 (MAJOR), 0 (MINOR), 0 (REVISION)). In total this is an 8-octet sequence] */
 static unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
-#define FRAME_HEADER_SIZE 8
 
 typedef enum RECEIVE_FRAME_STATE_TAG
 {
@@ -27,10 +27,12 @@ typedef struct CONNECTION_DATA_TAG
 	void* frame_received_callback_context;
 } CONNECTION_DATA;
 
-static int connection_sendheader(CONNECTION_DATA* connection)
+static int send_header(CONNECTION_DATA* connection)
 {
 	int result;
 
+	/* Codes_SRS_CONNECTION_01_093: [_ When the client opens a new socket connection to a server, it MUST send a protocol header with the client’s preferred protocol version.] */
+	/* Codes_SRS_CONNECTION_01_104: [Sending the protocol header shall be done by using io_send.] */
 	if (io_send(connection->used_io, amqp_header, sizeof(amqp_header)) != 0)
 	{
 		result = __LINE__;
@@ -213,10 +215,14 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 
 void connection_destroy(CONNECTION_HANDLE handle)
 {
+	/* Codes_SRS_CONNECTION_01_079: [If handle is NULL, connection_destroy shall do nothing.] */
 	if (handle != NULL)
 	{
+		/* Codes_SRS_CONNECTION_01_073: [connection_destroy shall free all resources associated with a connection.] */
 		CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;
 		frame_codec_destroy(connection->frame_codec);
+
+		/* Codes_SRS_CONNECTION_01_074: [connection_destroy shall close the socket connection.] */
 		io_destroy(connection->socket_io);
 		amqpalloc_free(handle);
 	}
@@ -226,36 +232,55 @@ int connection_dowork(CONNECTION_HANDLE handle)
 {
 	int result;
 	CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;
-
-	switch (connection->connection_state)
+	if (connection == NULL)
 	{
-	default:
 		result = __LINE__;
-		break;
-
-	case CONNECTION_STATE_START:
-		result = connection_sendheader(connection);
-		break;
-
-	case CONNECTION_STATE_HDR_SENT:
-	case CONNECTION_STATE_OPEN_SENT:
-	case CONNECTION_STATE_OPENED:
-		result = 0;
-		break;
-
-	case CONNECTION_STATE_HDR_EXCH:
-		result = amqp_frame_codec_encode_open(connection->frame_codec, "1");
-		break;
-
-	case CONNECTION_STATE_OPEN_RCVD:
-		/* peer wants to open, let's panic */
-		result = __LINE__;
-		break;
 	}
-
-	if (result == 0)
+	else
 	{
-		result = io_dowork(connection->socket_io);
+		/* Codes_SRS_CONNECTION_01_084: [The connection state machine implementing the protocol requirements shall be run as part of connection_dowork.] */
+		switch (connection->connection_state)
+		{
+		default:
+			result = __LINE__;
+			break;
+
+		case CONNECTION_STATE_START:
+			/* Codes_SRS_CONNECTION_01_086: [Prior to sending any frames on a connection, each peer MUST start by sending a protocol header that indicates the protocol version used on the connection.] */
+			/* Codes_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection) MUST immediately send its outgoing protocol header on establishment of the TCP connection.] */
+			result = send_header(connection);
+			break;
+
+		case CONNECTION_STATE_HDR_SENT:
+		case CONNECTION_STATE_OPEN_SENT:
+		case CONNECTION_STATE_OPENED:
+			result = 0;
+			break;
+
+		case CONNECTION_STATE_HDR_EXCH:
+			result = amqp_frame_codec_encode_open(connection->frame_codec, "1");
+			break;
+
+		case CONNECTION_STATE_OPEN_RCVD:
+			/* peer wants to open, let's panic */
+			result = __LINE__;
+			break;
+		}
+
+		if (result == 0)
+		{
+			/* Codes_SRS_CONNECTION_01_076: [connection_dowork shall schedule the underlying IO interface to do its work by calling io_dowork.] */
+			if (io_dowork(connection->socket_io) != 0)
+			{
+				/* Codes_SRS_CONNECTION_01_077: [If io_dowork fails, connection_dowork shall return a non-zero value.] */
+				result = __LINE__;
+			}
+			else
+			{
+				/* Codes_SRS_CONNECTION_01_085: [On success, connection_dowork shall return 0.] */
+				result = 0;
+			}
+		}
 	}
 
 	return result;

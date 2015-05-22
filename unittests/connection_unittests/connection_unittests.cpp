@@ -225,4 +225,101 @@ TEST_METHOD(when_allocating_memory_fails_connection_create_fails)
 	ASSERT_IS_NULL(connection);
 }
 
+/* connection_destroy */
+
+/* Tests_SRS_CONNECTION_01_073: [connection_destroy shall free all resources associated with a connection.] */
+TEST_METHOD(connection_destroy_frees_resources)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, frame_codec_destroy(TEST_FRAME_CODEC_HANDLE));
+	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	connection_destroy(connection);
+
+	// assert
+	// uMock checks the calls
+}
+
+/* Tests_SRS_CONNECTION_01_079: [If handle is NULL, connection_destroy shall do nothing.] */
+TEST_METHOD(connection_destroy_with_NULL_handle_does_nothing)
+{
+	// arrange
+	connection_mocks mocks;
+
+	// act
+	connection_destroy(NULL);
+
+	// assert
+	// uMock checks the calls
+}
+
+/* connection_dowork */
+
+/* Tests_SRS_CONNECTION_01_076: [connection_dowork shall schedule the underlying IO interface to do its work by calling io_dowork.] */
+/* Tests_SRS_CONNECTION_01_085: [On success, connection_dowork shall return 0.] */
+/* Tests_SRS_CONNECTION_01_084: [The connection state machine implementing the protocol requirements shall be run as part of connection_dowork.] */
+/* Tests_SRS_CONNECTION_01_086: [Prior to sending any frames on a connection, each peer MUST start by sending a protocol header that indicates the protocol version used on the connection.] */
+/* Tests_SRS_CONNECTION_01_087: [The protocol header consists of the upper case ASCII letters “AMQP” followed by a protocol id of zero, followed by three unsigned bytes representing the major, minor, and revision of the protocol version (currently 1 (MAJOR), 0 (MINOR), 0 (REVISION)). In total this is an 8-octet sequence] */
+/* Tests_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection) MUST immediately send its outgoing protocol header on establishment of the TCP connection.] */
+/* Tests_SRS_CONNECTION_01_093: [_ When the client opens a new socket connection to a server, it MUST send a protocol header with the client’s preferred protocol version.] */
+/* Tests_SRS_CONNECTION_01_104: [Sending the protocol header shall be done by using io_send.] */
+TEST_METHOD(connection_dowork_when_state_is_start_sends_the_AMQP_header_and_triggers_io_dowork)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, amqp_header, sizeof(amqp_header)))
+		.ValidateArgumentBuffer(2, amqp_header, sizeof(amqp_header));
+	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
+
+	// act
+	int result = connection_dowork(connection);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_CONNECTION_01_077: [If io_dowork fails, connection_dowork shall return a non-zero value.] */
+TEST_METHOD(when_io_dowork_fails_then_connection_dowork_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, amqp_header, sizeof(amqp_header)))
+		.ValidateArgumentBuffer(2, amqp_header, sizeof(amqp_header));
+	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE))
+		.SetReturn(1);
+
+	// act
+	int result = connection_dowork(connection);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_CONNECTION_01_078: [If handle is NULL, connection_dowork shall return a non-zero value.] */
+TEST_METHOD(connection_dowork_with_NULL_handle_fails)
+{
+	// arrange
+	connection_mocks mocks;
+
+	// act
+	int result = connection_dowork(NULL);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
 END_TEST_SUITE(amqpvalue_unittests)

@@ -530,4 +530,30 @@ TEST_METHOD(when_only_one_byte_is_received_before_sending_protocol_header_state_
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_START, connection_state);
 }
 
+/* Tests_SRS_CONNECTION_01_041: [HDR SENT In this state the connection header has been sent to the peer but no connection header has been received.]  */
+TEST_METHOD(when_only_one_byte_is_received_and_do_work_is_called_state_is_set_to_HDR_SENT)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	const unsigned char recv_amqp_header[] = { 'A' };
+	const unsigned char sent_amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	io_receive_callback(io_receive_callback_context, recv_amqp_header, sizeof(recv_amqp_header));
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, sent_amqp_header, sizeof(sent_amqp_header)))
+		.ValidateArgumentBuffer(2, sent_amqp_header, sizeof(sent_amqp_header));
+	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
+
+	// act
+	int result = connection_dowork(connection);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	CONNECTION_STATE connection_state;
+	(void)connection_get_state(connection, &connection_state);
+	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_HDR_SENT, connection_state);
+}
+
 END_TEST_SUITE(amqpvalue_unittests)

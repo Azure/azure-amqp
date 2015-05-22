@@ -7,16 +7,24 @@
 #include "amqp_frame_codec.h"
 #include "frame_codec.h"
 
+/* Requirements implictly tested */
+/* Tests_SRS_CONNECTION_01_088: [Any data appearing beyond the protocol header MUST match the version indicated by the protocol header.] */
+
 #define TEST_IO_HANDLE			(IO_HANDLE)0x4242
 #define TEST_FRAME_CODEC_HANDLE	(FRAME_CODEC_HANDLE)0x4243
 
 const IO_INTERFACE_DESCRIPTION test_io_interface_description = { 0 };
 
+static IO_RECEIVE_CALLBACK io_receive_callback;
+static void* io_receive_callback_context;
+
 TYPED_MOCK_CLASS(connection_mocks, CGlobalMock)
 {
 public:
 	/* io mocks */
-	MOCK_STATIC_METHOD_5(, IO_HANDLE, io_create, const IO_INTERFACE_DESCRIPTION*, io_interface_description, void*, io_create_parameters, IO_RECEIVE_CALLBACK, receive_callback, void*, context, LOGGER_LOG, logger_log)
+	MOCK_STATIC_METHOD_5(, IO_HANDLE, io_create, const IO_INTERFACE_DESCRIPTION*, io_interface_description, void*, io_create_parameters, IO_RECEIVE_CALLBACK, receive_callback, void*, receive_callback_context, LOGGER_LOG, logger_log)
+		io_receive_callback = receive_callback;
+		io_receive_callback_context = receive_callback_context;
 	MOCK_METHOD_END(IO_HANDLE, TEST_IO_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, io_destroy, IO_HANDLE, handle)
 	MOCK_VOID_METHOD_END();
@@ -353,6 +361,88 @@ TEST_METHOD(when_sending_the_header_fails_connection_dowork_fails_and_io_is_dest
 	CONNECTION_STATE connection_state;
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_END, connection_state);
+}
+
+/* Tests_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
+TEST_METHOD(when_protocol_headers_do_not_match_connection_gets_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	connection_dowork(connection);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'Q', 0, 1, 0, 0 };
+
+	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
+
+	// act
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+
+	// assert
+	CONNECTION_STATE connection_state;
+	(void)connection_get_state(connection, &connection_state);
+	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_END, connection_state);
+}
+
+/* Tests_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
+TEST_METHOD(when_protocol_header_first_byte_does_not_match_connection_gets_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	connection_dowork(connection);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'B' };
+
+	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
+
+	// act
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+
+	// assert
+	CONNECTION_STATE connection_state;
+	(void)connection_get_state(connection, &connection_state);
+	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_END, connection_state);
+}
+
+/* Tests_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
+TEST_METHOD(when_protocol_header_last_byte_does_not_match_connection_gets_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	connection_dowork(connection);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'Q', 0, 1, 0, 1 };
+
+	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
+
+	// act
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+
+	// assert
+	CONNECTION_STATE connection_state;
+	(void)connection_get_state(connection, &connection_state);
+	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_END, connection_state);
+}
+
+/* Tests_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
+TEST_METHOD(when_protocol_header_first_byte_matches_but_only_1st_byte_received_no_io_destroy_is_done)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	connection_dowork(connection);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A' };
+
+	// act
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+
+	// assert
+	CONNECTION_STATE connection_state;
+	(void)connection_get_state(connection, &connection_state);
+	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_HDR_SENT, connection_state);
 }
 
 END_TEST_SUITE(amqpvalue_unittests)

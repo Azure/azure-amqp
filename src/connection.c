@@ -7,6 +7,9 @@
 #include "amqpalloc.h"
 #include "amqp_frame_codec.h"
 
+/* Requirements satisfied by the virtue of implementing the ISO:*/
+/* Codes_SRS_CONNECTION_01_088: [Any data appearing beyond the protocol header MUST match the version indicated by the protocol header.] */
+
 /* Codes_SRS_CONNECTION_01_087: [The protocol header consists of the upper case ASCII letters “AMQP” followed by a protocol id of zero, followed by three unsigned bytes representing the major, minor, and revision of the protocol version (currently 1 (MAJOR), 0 (MINOR), 0 (REVISION)). In total this is an 8-octet sequence] */
 static unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 
@@ -54,12 +57,6 @@ static int send_header(CONNECTION_DATA* connection)
 	return result;
 }
 
-static int connection_frame_write_bytes(void* context, const void* bytes, size_t length)
-{
-	IO_HANDLE io_handle = (IO_HANDLE)context;
-	return io_send(io_handle, bytes, length);
-}
-
 static void connection_byte_received(CONNECTION_DATA* connection, unsigned char b)
 {
 	switch (connection->connection_state)
@@ -70,7 +67,7 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 	case CONNECTION_STATE_HDR_SENT:
 		if (b != amqp_header[connection->header_bytes_received])
 		{
-			/* close connection */
+			/* Codes_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
 			io_destroy(connection->used_io);
 			connection->connection_state = CONNECTION_STATE_END;
 		}

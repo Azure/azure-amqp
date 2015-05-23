@@ -122,6 +122,7 @@ TEST_METHOD_CLEANUP(method_cleanup)
 /* Tests_SRS_CONNECTION_01_068: [connection_create shall pass to io_create the interface obtained by a call to socketio_get_interface_description.] */
 /* Tests_SRS_CONNECTION_01_069: [The socket_io parameters shall be filled in with the host and port information passed to connection_create.] */
 /* Tests_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
+/* Tests_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
 TEST_METHOD(connection_create_with_valid_args_succeeds)
 {
 	// arrange
@@ -568,6 +569,6 @@ TEST_METHOD(when_only_one_byte_is_received_and_do_work_is_called_state_is_set_to
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_HDR_SENT, connection_state);
 }
 
-
+/* Tests_SRS_CONNECTION_01_006: [The open frame can only be sent on channel 0.] */
 
 END_TEST_SUITE(amqpvalue_unittests)

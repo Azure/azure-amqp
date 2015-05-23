@@ -21,6 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "requirement_docs", "require
 	ProjectSection(SolutionItems) = preProject
 		doc\amqpvalue_requirements.docm = doc\amqpvalue_requirements.docm
 		doc\connection_requirements.docm = doc\connection_requirements.docm
+		doc\frame_codec_requirements.docm = doc\frame_codec_requirements.docm
 		doc\io_requirements.docm = doc\io_requirements.docm
 		doc\list_requirements.docm = doc\list_requirements.docm
 	EndProjectSection

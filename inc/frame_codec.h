@@ -8,8 +8,10 @@
 #ifdef __cplusplus
 extern "C" {
 #include <cstdint>
+#include <cstddef>
 #else
 #include <stdint.h>
+#include <stddef.h>
 #endif /* __cplusplus */
 
 	typedef void* FRAME_CODEC_HANDLE;

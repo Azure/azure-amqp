@@ -450,6 +450,9 @@ TEST_METHOD(when_protocol_header_first_byte_matches_but_only_1st_byte_received_n
 
 /* Tests_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
 /* Tests_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
+/* Tests_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.]  */
+/* Tests_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+/* Tests_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
 TEST_METHOD(when_protocol_header_matches_open_is_sent_and_connection_state_is_OPEN_SENT)
 {
 	// arrange
@@ -471,6 +474,9 @@ TEST_METHOD(when_protocol_header_matches_open_is_sent_and_connection_state_is_OP
 }
 
 /* Tests_SRS_CONNECTION_01_040: [HDR RCVD In this state the connection header has been received from the peer but a connection header has not been sent.] */
+/* Tests_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.]  */
+/* Tests_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+/* Tests_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
 TEST_METHOD(when_protocol_header_is_received_before_it_is_sent_sends_the_protocol_header_and_open_frame)
 {
 	// arrange
@@ -493,6 +499,9 @@ TEST_METHOD(when_protocol_header_is_received_before_it_is_sent_sends_the_protoco
 }
 
 /* Tests_SRS_CONNECTION_01_040: [HDR RCVD In this state the connection header has been received from the peer but a connection header has not been sent.] */
+/* Tests_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.]  */
+/* Tests_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+/* Tests_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
 TEST_METHOD(when_protocol_header_is_received_in_2_calls_before_it_is_sent_sends_the_protocol_header_and_open_frame)
 {
 	// arrange
@@ -559,7 +568,6 @@ TEST_METHOD(when_only_one_byte_is_received_and_do_work_is_called_state_is_set_to
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_HDR_SENT, connection_state);
 }
 
-/* Tests_SRS_CONNECTION_01_045: [OPEN RCVD In this state the connection headers have been exchanged. An open frame has been received from the peer but an open frame has not been sent.] */
 
 
 END_TEST_SUITE(amqpvalue_unittests)

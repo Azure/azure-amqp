@@ -188,11 +188,6 @@ void trace_free(void* ptr)
 		prev = curr;
 		curr = (ALLOCATION*)curr->next;
 	}
-
-	if ((curr == NULL) && (ptr != NULL))
-	{
-		/* could not find the allocation */
-	}
 }
 
 void* amqpalloc_malloc(size_t size)

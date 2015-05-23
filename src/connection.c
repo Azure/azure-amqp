@@ -90,6 +90,9 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 					else
 					{
 						/* handshake done, send open frame */
+						/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
+						/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+						/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
 						if (amqp_frame_codec_encode_open(connection->frame_codec, "1") != 0)
 						{
 							io_destroy(connection->used_io);
@@ -105,6 +108,9 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 				else
 				{
 					/* handshake done, send open frame */
+					/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
+					/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+					/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
 					if (amqp_frame_codec_encode_open(connection->frame_codec, "1") != 0)
 					{
 						io_destroy(connection->used_io);
@@ -318,11 +324,22 @@ int connection_dowork(CONNECTION_HANDLE handle)
 			break;
 
 		case CONNECTION_STATE_HDR_EXCH:
-			result = amqp_frame_codec_encode_open(connection->frame_codec, "1");
+			/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
+			/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+			/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
+			if (amqp_frame_codec_encode_open(connection->frame_codec, "1") != 0)
+			{
+				io_destroy(connection->used_io);
+				connection->connection_state = CONNECTION_STATE_END;
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
 			break;
 
 		case CONNECTION_STATE_OPEN_RCVD:
-			/* peer wants to open, let's panic */
 			result = __LINE__;
 			break;
 		}

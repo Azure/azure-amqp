@@ -7,9 +7,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#include <cstdint>
-#else
-#include <stdint.h>
 #endif /* __cplusplus */
 
 extern int amqp_frame_codec_encode_open(FRAME_CODEC_HANDLE frame_codec, const char* container_id);

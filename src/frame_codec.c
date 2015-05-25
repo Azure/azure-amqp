@@ -300,121 +300,6 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE handle, const void* buffer, siz
 	return result;
 }
 
-int frame_codec_encode(FRAME_CODEC_HANDLE handle, uint64_t performative, const AMQP_VALUE* frame_content_chunks, size_t frame_content_chunk_count)
-{
-	int result;
-	ENCODER_HANDLE encoder_handle = encoder_create(NULL, NULL);
-	uint32_t frame_size;
-	uint8_t doff = 2;
-	uint8_t type = 0;
-	uint16_t channel = 0;
-	FRAME_CODEC_DATA* frame_codec = (FRAME_CODEC_DATA*)handle;
-
-	if ((encoder_handle == NULL) ||
-		(frame_content_chunks == NULL) ||
-		frame_content_chunk_count == 0)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		if (frame_codec->logger_log != NULL)
-		{
-			frame_codec->logger_log("\r\n-> [%s]\r\n", performative_name(performative));
-		}
-
-		if ((encoder_encode_descriptor_header(encoder_handle) != 0) ||
-			(encoder_encode_ulong(encoder_handle, performative) != 0))
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			size_t i;
-
-			for (i = 0; i < frame_content_chunk_count; i++)
-			{
-				if (encoder_encode_amqp_value(encoder_handle, frame_content_chunks[i]) != 0)
-				{
-					break;
-				}
-			}
-
-			if ((i < frame_content_chunk_count) ||
-				(encoder_get_encoded_size(encoder_handle, &frame_size) != 0))
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				frame_size += FRAME_HEADER_SIZE;
-				result = 0;
-			}
-		}
-
-		encoder_destroy(encoder_handle);
-	}
-
-	if (result == 0)
-	{
-		encoder_handle = encoder_create(frame_codec_encode_bytes, frame_codec->io);
-		if (encoder_handle == NULL)
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			unsigned char b;
-
-			b = (frame_size >> 24) & 0xFF;
-			(void)io_send(frame_codec->io, &b, 1);
-			b = (frame_size >> 16) & 0xFF;
-			(void)io_send(frame_codec->io, &b, 1);
-			b = (frame_size >> 8) & 0xFF;
-			(void)io_send(frame_codec->io, &b, 1);
-			b = (frame_size)& 0xFF;
-			(void)io_send(frame_codec->io, &b, 1);
-			(void)io_send(frame_codec->io, &doff, sizeof(doff));
-			(void)io_send(frame_codec->io, &type, sizeof(type));
-			b = (channel >> 8) & 0xFF;
-			(void)io_send(frame_codec->io, &b, 1);
-			b = (channel)& 0xFF;
-			(void)io_send(frame_codec->io, &b, 1);
-
-			if ((encoder_encode_descriptor_header(encoder_handle) != 0) ||
-				(encoder_encode_ulong(encoder_handle, performative) != 0))
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				size_t i;
-
-				for (i = 0; i < frame_content_chunk_count; i++)
-				{
-					if (encoder_encode_amqp_value(encoder_handle, frame_content_chunks[i]) != 0)
-					{
-						break;
-					}
-				}
-
-				if (i < frame_content_chunk_count)
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					result = 0;
-				}
-			}
-
-			encoder_destroy(encoder_handle);
-		}
-	}
-
-	return result;
-}
-
 int frame_codec_encode_frame(FRAME_CODEC_HANDLE frame_codec_handle, size_t frame_payload_size)
 {
 	int result;
@@ -425,7 +310,7 @@ int frame_codec_encode_frame(FRAME_CODEC_HANDLE frame_codec_handle, size_t frame
 	uint8_t type = 0;
 	uint16_t channel = 0;
 
-	encoder_handle = encoder_create(frame_codec_write_bytes, frame_codec_handle);
+	encoder_handle = encoder_create(frame_codec_encode_bytes, frame_codec->io);
 	if (encoder_handle == NULL)
 	{
 		result = __LINE__;

@@ -40,3 +40,15 @@
 /doc/~$nnection_requirements.docm
 /doc/~$qp_frame_codec_requirements.docm
 /doc/~$ame_codec_requirements.docm
+*.codeanalysis
+*.codeanalysisast
+/Win32/Debug/micromock/micromockcharstararenullterminatedstrings.nativecodeanalysis.xml
+/Win32/Debug/micromock/micromockexception.nativecodeanalysis.xml
+/Win32/Debug/micromock/micromocktestmutex.nativecodeanalysis.xml
+/Win32/Debug/micromock/mockcallrecorder.nativecodeanalysis.xml
+/Win32/Debug/micromock/mockmethodcallbase.nativecodeanalysis.xml
+/Win32/Debug/micromock/mockvaluebase.nativecodeanalysis.xml
+/Win32/Debug/micromock/stdafx.nativecodeanalysis.xml
+/Win32/Debug/micromock/timediscretemicromock.nativecodeanalysis.xml
+/Win32/Debug/micromock/vc.nativecodeanalysis.all.xml
+*.lastcodeanalysissucceeded

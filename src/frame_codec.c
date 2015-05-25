@@ -21,7 +21,7 @@ typedef struct FRAME_CODEC_DATA_TAG
 	IO_HANDLE io;
 	LOGGER_LOG logger_log;
 	FRAME_RECEIVED_CALLBACK frame_received_callback;
-	void* context;
+	void* frame_received_callback_context;
 	RECEIVE_FRAME_STATE receive_frame_state;
 	size_t receive_frame_bytes;
 	size_t receive_frame_consumed_bytes;
@@ -121,7 +121,7 @@ static int decode_received_amqp_frame(FRAME_CODEC_DATA* frame_codec)
 			/* notify of received frame */
 			if (frame_codec->frame_received_callback != NULL)
 			{
-				frame_codec->frame_received_callback(frame_codec->context, descriptor_ulong_value, frame_list_value);
+				frame_codec->frame_received_callback(frame_codec->frame_received_callback_context, descriptor_ulong_value, frame_list_value);
 			}
 
 			result = 0;
@@ -220,7 +220,7 @@ static int receive_frame_byte(FRAME_CODEC_DATA* frame_codec, unsigned char b)
 	return result;
 }
 
-FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, FRAME_RECEIVED_CALLBACK frame_received_callback, void* context, LOGGER_LOG logger_log)
+FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, FRAME_RECEIVED_CALLBACK frame_received_callback, void* frame_received_callback_context, LOGGER_LOG logger_log)
 {
 	FRAME_CODEC_DATA* result;
 	result = amqpalloc_malloc(sizeof(FRAME_CODEC_DATA));
@@ -229,7 +229,7 @@ FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, FRAME_RECEIVED_CALLBACK fram
 		result->io = io;
 		result->logger_log = logger_log;
 		result->frame_received_callback = frame_received_callback;
-		result->context = context;
+		result->frame_received_callback_context = frame_received_callback_context;
 		result->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
 		result->receive_frame_bytes = 0;
 		result->receive_frame_consumed_bytes = 0;

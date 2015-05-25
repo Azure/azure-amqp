@@ -198,17 +198,27 @@ static int receive_frame_byte(FRAME_CODEC_DATA* frame_codec, unsigned char b)
 FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log)
 {
 	FRAME_CODEC_DATA* result;
-	result = amqpalloc_malloc(sizeof(FRAME_CODEC_DATA));
-	if (result != NULL)
+
+	/* Codes_SRS_FRAME_CODEC_01_020: [If the io argument is NULL, frame_codec_create shall return NULL.] */
+	if (io == NULL)
 	{
-		/* Codes_SRS_FRAME_CODEC_01_021: [frame_codec_create shall create a new instance of frame_codec and return a non-NULL handle to it on success.] */
-		result->io = io;
-		result->logger_log = logger_log;
-		result->frame_received_callback = NULL;
-		result->frame_received_callback_context = NULL;
-		result->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
-		result->receive_frame_bytes = 0;
-		result->receive_frame_consumed_bytes = 0;
+		result = NULL;
+	}
+	else
+	{
+		result = amqpalloc_malloc(sizeof(FRAME_CODEC_DATA));
+		/* Codes_SRS_FRAME_CODEC_01_022: [If allocating memory for the frame_codec instance fails, frame_codec_create shall return NULL.] */
+		if (result != NULL)
+		{
+			/* Codes_SRS_FRAME_CODEC_01_021: [frame_codec_create shall create a new instance of frame_codec and return a non-NULL handle to it on success.] */
+			result->io = io;
+			result->logger_log = logger_log;
+			result->frame_received_callback = NULL;
+			result->frame_received_callback_context = NULL;
+			result->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
+			result->receive_frame_bytes = 0;
+			result->receive_frame_consumed_bytes = 0;
+		}
 	}
 
 	return result;

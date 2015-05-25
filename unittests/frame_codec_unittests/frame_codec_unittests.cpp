@@ -138,4 +138,33 @@ TEST_METHOD(frame_codec_create_with_valid_args_succeeds)
 	ASSERT_IS_NOT_NULL(frame_codec);
 }
 
+/* Tests_SRS_FRAME_CODEC_01_020: [If the io argument is NULL, frame_codec_create shall return NULL.] */
+TEST_METHOD(when_io_is_NULL_frame_codec_create_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+
+	// act
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(NULL, consolelogger_log);
+
+	// assert
+	ASSERT_IS_NULL(frame_codec);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_022: [If allocating memory for the frame_codec instance fails, frame_codec_create shall return NULL.] */
+TEST_METHOD(when_allocating_emory_for_the_frame_codec_fails_frame_code_create_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+		.SetReturn((void*)NULL);
+
+	// act
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+
+	// assert
+	ASSERT_IS_NULL(frame_codec);
+}
+
 END_TEST_SUITE(frame_codec_unittests)

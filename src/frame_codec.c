@@ -29,18 +29,18 @@ typedef struct FRAME_CODEC_DATA_TAG
 	unsigned char receive_frame_buffer[512];
 } FRAME_CODEC_DATA;
 
-int frame_codec_encode_frame_bytes(FRAME_CODEC_HANDLE frame_codec_handle, const void* bytes, size_t length)
+int frame_codec_encode_frame_bytes(FRAME_CODEC_HANDLE frame_codec, const void* bytes, size_t length)
 {
 	int result;
-	FRAME_CODEC_DATA* frame_codec = (FRAME_CODEC_DATA*)frame_codec_handle;
+	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
 
-	if (frame_codec->io == NULL)
+	if (frame_codec_data->io == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		if (io_send(frame_codec->io, bytes, length) != 0)
+		if (io_send(frame_codec_data->io, bytes, length) != 0)
 		{
 			result = __LINE__;
 		}
@@ -218,11 +218,11 @@ void frame_codec_destroy(FRAME_CODEC_HANDLE handle)
 	amqpalloc_free(handle);
 }
 
-int frame_codec_receive_bytes(FRAME_CODEC_HANDLE handle, const void* buffer, size_t size)
+int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const void* buffer, size_t size)
 {
 	int result;
 	size_t i;
-	FRAME_CODEC_DATA* frame_codec = (FRAME_CODEC_DATA*)handle;
+	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
 
 	if (frame_codec == NULL)
 	{
@@ -232,7 +232,7 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE handle, const void* buffer, siz
 	{
 		for (i = 0; i < size; i++)
 		{
-			if (receive_frame_byte(frame_codec, ((unsigned char*)buffer)[i]) != 0)
+			if (receive_frame_byte(frame_codec_data, ((unsigned char*)buffer)[i]) != 0)
 			{
 				break;
 			}
@@ -251,17 +251,17 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE handle, const void* buffer, siz
 	return result;
 }
 
-int frame_codec_start_encode_frame(FRAME_CODEC_HANDLE frame_codec_handle, size_t frame_payload_size)
+int frame_codec_start_encode_frame(FRAME_CODEC_HANDLE frame_codec, size_t frame_payload_size)
 {
 	int result;
 	ENCODER_HANDLE encoder_handle;
 	size_t frame_size = frame_payload_size + FRAME_HEADER_SIZE;
-	FRAME_CODEC_DATA* frame_codec = (FRAME_CODEC_DATA*)frame_codec_handle;
+	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
 	uint8_t doff = 2;
 	uint8_t type = 0;
 	uint16_t channel = 0;
 
-	encoder_handle = encoder_create(frame_codec_encode_bytes, frame_codec->io);
+	encoder_handle = encoder_create(frame_codec_encode_bytes, frame_codec_data->io);
 	if (encoder_handle == NULL)
 	{
 		result = __LINE__;
@@ -271,19 +271,19 @@ int frame_codec_start_encode_frame(FRAME_CODEC_HANDLE frame_codec_handle, size_t
 		unsigned char b;
 
 		b = (frame_size >> 24) & 0xFF;
-		(void)io_send(frame_codec->io, &b, 1);
+		(void)io_send(frame_codec_data->io, &b, 1);
 		b = (frame_size >> 16) & 0xFF;
-		(void)io_send(frame_codec->io, &b, 1);
+		(void)io_send(frame_codec_data->io, &b, 1);
 		b = (frame_size >> 8) & 0xFF;
-		(void)io_send(frame_codec->io, &b, 1);
+		(void)io_send(frame_codec_data->io, &b, 1);
 		b = (frame_size)& 0xFF;
-		(void)io_send(frame_codec->io, &b, 1);
-		(void)io_send(frame_codec->io, &doff, sizeof(doff));
-		(void)io_send(frame_codec->io, &type, sizeof(type));
+		(void)io_send(frame_codec_data->io, &b, 1);
+		(void)io_send(frame_codec_data->io, &doff, sizeof(doff));
+		(void)io_send(frame_codec_data->io, &type, sizeof(type));
 		b = (channel >> 8) & 0xFF;
-		(void)io_send(frame_codec->io, &b, 1);
+		(void)io_send(frame_codec_data->io, &b, 1);
 		b = (channel)& 0xFF;
-		(void)io_send(frame_codec->io, &b, 1);
+		(void)io_send(frame_codec_data->io, &b, 1);
 
 		result = 0;
 	}
@@ -291,18 +291,18 @@ int frame_codec_start_encode_frame(FRAME_CODEC_HANDLE frame_codec_handle, size_t
 	return result;
 }
 
-int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec_handle, uint8_t type, FRAME_RECEIVED_CALLBACK frame_received_callback, void* frame_received_callback_context)
+int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_RECEIVED_CALLBACK frame_received_callback, void* frame_received_callback_context)
 {
-	FRAME_CODEC_DATA* frame_codec = (FRAME_CODEC_DATA*)frame_codec_handle;
-	frame_codec->frame_received_callback = frame_received_callback;
-	frame_codec->frame_received_callback_context = frame_received_callback_context;
+	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
+	frame_codec_data->frame_received_callback = frame_received_callback;
+	frame_codec_data->frame_received_callback_context = frame_received_callback_context;
 	return 0;
 }
 
-int frame_codec_unsubscribe(FRAME_CODEC_HANDLE frame_codec_handle, uint8_t type)
+int frame_codec_unsubscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type)
 {
-	FRAME_CODEC_DATA* frame_codec = (FRAME_CODEC_DATA*)frame_codec_handle;
-	frame_codec->frame_received_callback = NULL;
-	frame_codec->frame_received_callback_context = NULL;
+	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
+	frame_codec_data->frame_received_callback = NULL;
+	frame_codec_data->frame_received_callback_context = NULL;
 	return 0;
 }

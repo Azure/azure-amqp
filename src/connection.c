@@ -5,7 +5,8 @@
 #include "frame_codec.h"
 #include "socketio.h"
 #include "amqpalloc.h"
-#include "amqp_frame_codec.h"
+#include "open_frame.h"
+#include "close_frame.h"
 
 /* Requirements satisfied by the virtue of implementing the ISO:*/
 /* Codes_SRS_CONNECTION_01_088: [Any data appearing beyond the protocol header MUST match the version indicated by the protocol header.] */
@@ -93,7 +94,7 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 						/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
 						/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
 						/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-						if (amqp_frame_codec_encode_open(connection->frame_codec, "1") != 0)
+						if (open_frame_encode(connection->frame_codec, "1") != 0)
 						{
 							io_destroy(connection->used_io);
 							connection->connection_state = CONNECTION_STATE_END;
@@ -111,7 +112,7 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 					/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
 					/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
 					/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-					if (amqp_frame_codec_encode_open(connection->frame_codec, "1") != 0)
+					if (open_frame_encode(connection->frame_codec, "1") != 0)
 					{
 						io_destroy(connection->used_io);
 						connection->connection_state = CONNECTION_STATE_END;
@@ -138,7 +139,7 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 	case CONNECTION_STATE_OPEN_RCVD:
 		/* receiving in OPEN_RCVD is not good, as we did not send out an OPEN frame */
 		/* normally this would never happen, but in case it does, we should close the connection */
-		if (amqp_frame_codec_encode_close(connection->frame_codec) != 0)
+		if (close_frame_encode(connection->frame_codec) != 0)
 		{
 			io_destroy(connection->used_io);
 			connection->connection_state = CONNECTION_STATE_END;
@@ -327,7 +328,7 @@ int connection_dowork(CONNECTION_HANDLE handle)
 			/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
 			/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
 			/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-			if (amqp_frame_codec_encode_open(connection->frame_codec, "1") != 0)
+			if (open_frame_encode(connection->frame_codec, "1") != 0)
 			{
 				io_destroy(connection->used_io);
 				connection->connection_state = CONNECTION_STATE_END;

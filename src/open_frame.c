@@ -1,7 +1,8 @@
-#include "amqp_frame_codec.h"
+#include "open_frame.h"
+#include "frame_codec.h"
 #include "amqpvalue.h"
 
-int amqp_frame_codec_encode_open(FRAME_CODEC_HANDLE frame_codec, const char* container_id)
+int open_frame_encode(FRAME_CODEC_HANDLE frame_codec, const char* container_id)
 {
 	int result;
 
@@ -36,9 +37,4 @@ int amqp_frame_codec_encode_open(FRAME_CODEC_HANDLE frame_codec, const char* con
 	}
 
 	return result;
-}
-
-int amqp_frame_codec_encode_close(FRAME_CODEC_HANDLE frame_codec)
-{
-	return 0;
 }

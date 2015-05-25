@@ -4,7 +4,8 @@
 #include "connection.h"
 #include "io.h"
 #include "socketio.h"
-#include "amqp_frame_codec.h"
+#include "open_frame.h"
+#include "close_frame.h"
 #include "frame_codec.h"
 
 /* Requirements implictly tested */
@@ -45,9 +46,9 @@ public:
 	MOCK_VOID_METHOD_END();
 
 	/* amqp_frame_codec */
-	MOCK_STATIC_METHOD_2(, int, amqp_frame_codec_encode_open, FRAME_CODEC_HANDLE, frame_codec, const char*, container_id)
+	MOCK_STATIC_METHOD_2(, int, open_frame_encode, FRAME_CODEC_HANDLE, frame_codec, const char*, container_id)
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_1(, int, amqp_frame_codec_encode_close, FRAME_CODEC_HANDLE, frame_codec)
+	MOCK_STATIC_METHOD_1(, int, close_frame_encode, FRAME_CODEC_HANDLE, frame_codec)
 	MOCK_METHOD_END(int, 0);
 
 	/* frame_codec */
@@ -71,8 +72,8 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void*, amqpalloc_malloc, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, amqpalloc_free, void*, ptr);
 
-	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , int, amqp_frame_codec_encode_open, FRAME_CODEC_HANDLE, frame_codec, const char*, container_id);
-	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , int, amqp_frame_codec_encode_close, FRAME_CODEC_HANDLE, frame_codec);
+	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , int, open_frame_encode, FRAME_CODEC_HANDLE, frame_codec, const char*, container_id);
+	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , int, close_frame_encode, FRAME_CODEC_HANDLE, frame_codec);
 
 	DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, FRAME_RECEIVED_CALLBACK, frame_received_callback, void*, context, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, frame_codec_destroy, FRAME_CODEC_HANDLE, handle);
@@ -463,7 +464,7 @@ TEST_METHOD(when_protocol_header_matches_open_is_sent_and_connection_state_is_OP
 	mocks.ResetAllCalls();
 	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 
-	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_encode_open(TEST_FRAME_CODEC_HANDLE, "1"));
+	STRICT_EXPECTED_CALL(mocks, open_frame_encode(TEST_FRAME_CODEC_HANDLE, "1"));
 
 	// act
 	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
@@ -488,7 +489,7 @@ TEST_METHOD(when_protocol_header_is_received_before_it_is_sent_sends_the_protoco
 
 	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, amqp_header, sizeof(amqp_header)))
 		.ValidateArgumentBuffer(2, amqp_header, sizeof(amqp_header));
-	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_encode_open(TEST_FRAME_CODEC_HANDLE, "1"));
+	STRICT_EXPECTED_CALL(mocks, open_frame_encode(TEST_FRAME_CODEC_HANDLE, "1"));
 
 	// act
 	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
@@ -513,7 +514,7 @@ TEST_METHOD(when_protocol_header_is_received_in_2_calls_before_it_is_sent_sends_
 
 	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, amqp_header, sizeof(amqp_header)))
 		.ValidateArgumentBuffer(2, amqp_header, sizeof(amqp_header));
-	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_encode_open(TEST_FRAME_CODEC_HANDLE, "1"));
+	STRICT_EXPECTED_CALL(mocks, open_frame_encode(TEST_FRAME_CODEC_HANDLE, "1"));
 
 	// act
 	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header) - 1);

@@ -14,9 +14,9 @@
     <ClInclude Include="..\inc\amqplib.h" />
     <ClInclude Include="..\inc\amqpvalue.h" />
     <ClInclude Include="..\inc\amqpalloc.h" />
-    <ClInclude Include="..\inc\amqp_frame_codec.h" />
     <ClInclude Include="..\inc\amqp_protocol_types.h" />
     <ClInclude Include="..\inc\amqp_types.h" />
+    <ClInclude Include="..\inc\close_frame.h" />
     <ClInclude Include="..\inc\connection.h" />
     <ClInclude Include="..\inc\consolelogger.h" />
     <ClInclude Include="..\inc\decoder.h" />
@@ -27,6 +27,7 @@
     <ClInclude Include="..\inc\list.h" />
     <ClInclude Include="..\inc\message.h" />
     <ClInclude Include="..\inc\messaging.h" />
+    <ClInclude Include="..\inc\open_frame.h" />
     <ClInclude Include="..\inc\platform.h" />
     <ClInclude Include="..\inc\session.h" />
     <ClInclude Include="..\inc\socketio.h" />
@@ -35,7 +36,7 @@
     <ClCompile Include="..\src\amqplib.c" />
     <ClCompile Include="..\src\amqpvalue.c" />
     <ClCompile Include="..\src\amqpalloc.c" />
-    <ClCompile Include="..\src\amqp_frame_codec.c" />
+    <ClCompile Include="..\src\close_frame.c" />
     <ClCompile Include="..\src\connection.c" />
     <ClCompile Include="..\src\consolelogger.c" />
     <ClCompile Include="..\src\decoder.c" />
@@ -46,6 +47,7 @@
     <ClCompile Include="..\src\list.c" />
     <ClCompile Include="..\src\message.c" />
     <ClCompile Include="..\src\messaging.c" />
+    <ClCompile Include="..\src\open_frame.c" />
     <ClCompile Include="..\src\platform_win32.c" />
     <ClCompile Include="..\src\session.c" />
     <ClCompile Include="..\src\socketio_win32.c" />

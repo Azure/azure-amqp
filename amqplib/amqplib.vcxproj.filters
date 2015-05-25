@@ -69,7 +69,10 @@
     <ClInclude Include="..\inc\amqpalloc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\inc\amqp_frame_codec.h">
+    <ClInclude Include="..\inc\open_frame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\close_frame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -122,7 +125,10 @@
     <ClCompile Include="..\src\amqpalloc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\amqp_frame_codec.c">
+    <ClCompile Include="..\src\open_frame.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\close_frame.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

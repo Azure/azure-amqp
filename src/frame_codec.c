@@ -59,55 +59,6 @@ int frame_codec_encode_bytes(void* context, const void* bytes, size_t length)
 	return io_send(io_handle, bytes, length);
 }
 
-static const char* performative_name(uint64_t performative)
-{
-	const char* result;
-	switch (performative)
-	{
-	default:
-		result = "Unknown";
-		break;
-
-	case 0x10:
-		result = "open";
-		break;
-
-	case 0x11:
-		result = "begin";
-		break;
-
-	case 0x12:
-		result = "attach";
-		break;
-
-	case 0x13:
-		result = "flow";
-		break;
-
-	case 0x14:
-		result = "transfer";
-		break;
-
-	case 0x15:
-		result = "disposition";
-		break;
-
-	case 0x16:
-		result = "detach";
-		break;
-
-	case 0x17:
-		result = "end";
-		break;
-
-	case 0x18:
-		result = "close";
-		break;
-	}
-
-	return result;
-}
-
 static int decode_received_amqp_frame(FRAME_CODEC_DATA* frame_codec)
 {
 	uint16_t channel;

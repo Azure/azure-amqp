@@ -7,12 +7,14 @@
 #include "open_frame.h"
 #include "close_frame.h"
 #include "frame_codec.h"
+#include "amqp_frame_codec.h"
 
 /* Requirements implictly tested */
 /* Tests_SRS_CONNECTION_01_088: [Any data appearing beyond the protocol header MUST match the version indicated by the protocol header.] */
 
-#define TEST_IO_HANDLE			(IO_HANDLE)0x4242
-#define TEST_FRAME_CODEC_HANDLE	(FRAME_CODEC_HANDLE)0x4243
+#define TEST_IO_HANDLE					(IO_HANDLE)0x4242
+#define TEST_FRAME_CODEC_HANDLE			(FRAME_CODEC_HANDLE)0x4243
+#define TEST_AMQP_FRAME_CODEC_HANDLE	(AMQP_FRAME_CODEC_HANDLE)0x4244
 
 const IO_INTERFACE_DESCRIPTION test_io_interface_description = { 0 };
 
@@ -58,6 +60,12 @@ public:
 	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_3(, int, frame_codec_receive_bytes, FRAME_CODEC_HANDLE, handle, const void*, buffer, size_t, size)
 	MOCK_METHOD_END(int, 0);
+
+	/* amqp_frame_codec */
+	MOCK_STATIC_METHOD_1(, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_create, FRAME_CODEC_HANDLE, frame_codec_handle)
+	MOCK_METHOD_END(AMQP_FRAME_CODEC_HANDLE, TEST_AMQP_FRAME_CODEC_HANDLE);
+	MOCK_STATIC_METHOD_1(, void, amqp_frame_codec_destroy, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_handle)
+	MOCK_VOID_METHOD_END();
 };
 
 extern "C"
@@ -78,6 +86,9 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, FRAME_RECEIVED_CALLBACK, frame_received_callback, void*, context, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, frame_codec_destroy, FRAME_CODEC_HANDLE, handle);
 	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , int, frame_codec_receive_bytes, FRAME_CODEC_HANDLE, handle, const void*, buffer, size_t, size);
+
+	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_create, FRAME_CODEC_HANDLE, frame_codec_handle);
+	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, amqp_frame_codec_destroy, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_handle);
 
 	extern void consolelogger_log(char* format, ...)
 	{

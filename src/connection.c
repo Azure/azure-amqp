@@ -3,6 +3,7 @@
 #include "decoder.h"
 #include "consolelogger.h"
 #include "frame_codec.h"
+#include "amqp_frame_codec.h"
 #include "socketio.h"
 #include "amqpalloc.h"
 #include "open_frame.h"
@@ -27,6 +28,7 @@ typedef struct CONNECTION_DATA_TAG
 	size_t header_bytes_received;
 	CONNECTION_STATE connection_state;
 	FRAME_CODEC_HANDLE frame_codec;
+	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
 	FRAME_RECEIVED_CALLBACK frame_received_callback;
 	void* frame_received_callback_context;
 } CONNECTION_DATA;
@@ -263,14 +265,24 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 					}
 					else
 					{
-						result->frame_received_callback = NULL;
+						result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec);
+						if (result->amqp_frame_codec == NULL)
+						{
+							io_destroy(result->socket_io);
+							amqpalloc_free(result);
+							result = NULL;
+						}
+						else
+						{
+							result->frame_received_callback = NULL;
 
-						/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
-						result->connection_state = CONNECTION_STATE_START;
-						result->header_bytes_received = 0;
+							/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
+							result->connection_state = CONNECTION_STATE_START;
+							result->header_bytes_received = 0;
 
-						/* For now directly talk to the socket IO. By doing this there is no SASL, no SSL, pure AMQP only */
-						result->used_io = result->socket_io;
+							/* For now directly talk to the socket IO. By doing this there is no SASL, no SSL, pure AMQP only */
+							result->used_io = result->socket_io;
+						}
 					}
 				}
 			}
@@ -287,6 +299,7 @@ void connection_destroy(CONNECTION_HANDLE handle)
 	{
 		/* Codes_SRS_CONNECTION_01_073: [connection_destroy shall free all resources associated with a connection.] */
 		CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;
+		amqp_frame_codec_destroy(connection->amqp_frame_codec);
 		frame_codec_destroy(connection->frame_codec);
 
 		/* Codes_SRS_CONNECTION_01_074: [connection_destroy shall close the socket connection.] */

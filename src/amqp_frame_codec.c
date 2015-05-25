@@ -1,8 +1,33 @@
 #include <stdint.h>
+#include <stdlib.h>
 #include <stddef.h>
 #include "amqp_frame_codec.h"
 #include "frame_codec.h"
 #include "encoder.h"
+
+typedef struct AMQP_FRAME_CODEC_DATA_TAG
+{
+	FRAME_CODEC_HANDLE frame_codec_handle;
+} AMQP_FRAME_CODEC_DATA;
+
+AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec_handle)
+{
+	AMQP_FRAME_CODEC_DATA* result = (AMQP_FRAME_CODEC_DATA*)malloc(sizeof(AMQP_FRAME_CODEC_DATA));
+	if (result != NULL)
+	{
+		result->frame_codec_handle = frame_codec_handle;
+	}
+
+	return result;
+}
+
+void amqp_frame_codec_destroy(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_handle)
+{
+	if (amqp_frame_codec_handle != NULL)
+	{
+		free(amqp_frame_codec_handle);
+	}
+}
 
 int amqp_frame_codec_encode(FRAME_CODEC_HANDLE frame_codec_handle, uint64_t performative, const AMQP_VALUE* frame_content_chunks, size_t frame_content_chunk_count)
 {

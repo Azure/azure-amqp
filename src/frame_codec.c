@@ -29,7 +29,7 @@ typedef struct FRAME_CODEC_DATA_TAG
 	unsigned char receive_frame_buffer[512];
 } FRAME_CODEC_DATA;
 
-int frame_codec_write_bytes(FRAME_CODEC_HANDLE frame_codec_handle, const void* bytes, size_t length)
+int frame_codec_encode_frame_bytes(FRAME_CODEC_HANDLE frame_codec_handle, const void* bytes, size_t length)
 {
 	int result;
 	FRAME_CODEC_DATA* frame_codec = (FRAME_CODEC_DATA*)frame_codec_handle;
@@ -300,7 +300,7 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE handle, const void* buffer, siz
 	return result;
 }
 
-int frame_codec_encode_frame(FRAME_CODEC_HANDLE frame_codec_handle, size_t frame_payload_size)
+int frame_codec_start_encode_frame(FRAME_CODEC_HANDLE frame_codec_handle, size_t frame_payload_size)
 {
 	int result;
 	ENCODER_HANDLE encoder_handle;

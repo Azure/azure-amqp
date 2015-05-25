@@ -29,7 +29,31 @@ typedef struct FRAME_CODEC_DATA_TAG
 	unsigned char receive_frame_buffer[512];
 } FRAME_CODEC_DATA;
 
-static int frame_codec_write_bytes(void* context, const void* bytes, size_t length)
+int frame_codec_write_bytes(FRAME_CODEC_HANDLE frame_codec_handle, const void* bytes, size_t length)
+{
+	int result;
+	FRAME_CODEC_DATA* frame_codec = (FRAME_CODEC_DATA*)frame_codec_handle;
+
+	if (frame_codec->io == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		if (io_send(frame_codec->io, bytes, length) != 0)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+int frame_codec_encode_bytes(void* context, const void* bytes, size_t length)
 {
 	IO_HANDLE io_handle = (IO_HANDLE)context;
 	return io_send(io_handle, bytes, length);
@@ -333,7 +357,7 @@ int frame_codec_encode(FRAME_CODEC_HANDLE handle, uint64_t performative, const A
 
 	if (result == 0)
 	{
-		encoder_handle = encoder_create(frame_codec_write_bytes, frame_codec->io);
+		encoder_handle = encoder_create(frame_codec_encode_bytes, frame_codec->io);
 		if (encoder_handle == NULL)
 		{
 			result = __LINE__;
@@ -386,6 +410,44 @@ int frame_codec_encode(FRAME_CODEC_HANDLE handle, uint64_t performative, const A
 
 			encoder_destroy(encoder_handle);
 		}
+	}
+
+	return result;
+}
+
+int frame_codec_encode_frame(FRAME_CODEC_HANDLE frame_codec_handle, size_t frame_payload_size)
+{
+	int result;
+	ENCODER_HANDLE encoder_handle;
+	size_t frame_size = frame_payload_size + FRAME_HEADER_SIZE;
+	FRAME_CODEC_DATA* frame_codec = (FRAME_CODEC_DATA*)frame_codec_handle;
+	uint8_t doff = 2;
+	uint8_t type = 0;
+	uint16_t channel = 0;
+
+	encoder_handle = encoder_create(frame_codec_write_bytes, frame_codec_handle);
+	if (encoder_handle == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		unsigned char b;
+
+		b = (frame_size >> 24) & 0xFF;
+		(void)io_send(frame_codec->io, &b, 1);
+		b = (frame_size >> 16) & 0xFF;
+		(void)io_send(frame_codec->io, &b, 1);
+		b = (frame_size >> 8) & 0xFF;
+		(void)io_send(frame_codec->io, &b, 1);
+		b = (frame_size)& 0xFF;
+		(void)io_send(frame_codec->io, &b, 1);
+		(void)io_send(frame_codec->io, &doff, sizeof(doff));
+		(void)io_send(frame_codec->io, &type, sizeof(type));
+		b = (channel >> 8) & 0xFF;
+		(void)io_send(frame_codec->io, &b, 1);
+		b = (channel)& 0xFF;
+		(void)io_send(frame_codec->io, &b, 1);
 	}
 
 	return result;

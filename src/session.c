@@ -6,6 +6,7 @@
 #include "amqp_protocol_types.h"
 #include "consolelogger.h"
 #include "amqpalloc.h"
+#include "amqp_frame_codec.h"
 
 typedef struct SESSION_DATA_TAG
 {
@@ -46,7 +47,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 		{
 			FRAME_CODEC_HANDLE frame_codec;
 			if (((frame_codec = connection_get_frame_codec(session_data->connection)) == NULL) ||
-				(frame_codec_encode(frame_codec, 0x11, &begin_frame_list, 1) != 0))
+				(amqp_frame_codec_encode(frame_codec, 0x11, &begin_frame_list, 1) != 0))
 			{
 				result = __LINE__;
 			}

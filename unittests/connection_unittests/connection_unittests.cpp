@@ -586,4 +586,4 @@ TEST_METHOD(when_only_one_byte_is_received_and_do_work_is_called_state_is_set_to
 
 /* Tests_SRS_CONNECTION_01_006: [The open frame can only be sent on channel 0.] */
 
-END_TEST_SUITE(amqpvalue_unittests)
+END_TEST_SUITE(connection_unittests)

@@ -201,6 +201,7 @@ FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log)
 	result = amqpalloc_malloc(sizeof(FRAME_CODEC_DATA));
 	if (result != NULL)
 	{
+		/* Codes_SRS_FRAME_CODEC_01_021: [frame_codec_create shall create a new instance of frame_codec and return a non-NULL handle to it on success.] */
 		result->io = io;
 		result->logger_log = logger_log;
 		result->frame_received_callback = NULL;

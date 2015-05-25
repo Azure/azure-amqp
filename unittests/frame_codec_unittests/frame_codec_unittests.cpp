@@ -123,6 +123,7 @@ TEST_METHOD_CLEANUP(method_cleanup)
 
 /* frame_codec_create */
 
+/* Tests_SRS_FRAME_CODEC_01_021: [frame_codec_create shall create a new instance of frame_codec and return a non-NULL handle to it on success.] */
 TEST_METHOD(frame_codec_create_with_valid_args_succeeds)
 {
 	// arrange

@@ -167,4 +167,36 @@ TEST_METHOD(when_allocating_emory_for_the_frame_codec_fails_frame_code_create_fa
 	ASSERT_IS_NULL(frame_codec);
 }
 
+/* frame_codec_destroy */
+
+/* Tests_SRS_FRAME_CODEC_01_023: [frame_codec_destroy shall free all resources associated with a frame_codec instance.] */
+TEST_METHOD(frame_codec_destroy_frees_the_memory_for_frame_codec)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	frame_codec_destroy(frame_codec);
+
+	// assert
+	// uMock checks the calls
+}
+
+/* Tests_SRS_FRAME_CODEC_01_024: [If frame_codec is NULL, frame_codec_destroy shall do nothing.] */
+TEST_METHOD(when_frame_codec_is_NULL_frame_codec_destroy_does_nothing)
+{
+	// arrange
+	frame_codec_mocks mocks;
+
+	// act
+	frame_codec_destroy(NULL);
+
+	// assert
+	// uMock checks the calls
+}
+
 END_TEST_SUITE(frame_codec_unittests)

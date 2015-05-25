@@ -224,9 +224,14 @@ FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log)
 	return result;
 }
 
-void frame_codec_destroy(FRAME_CODEC_HANDLE handle)
+void frame_codec_destroy(FRAME_CODEC_HANDLE frame_codec)
 {
-	amqpalloc_free(handle);
+	/* Codes_SRS_FRAME_CODEC_01_024: [If frame_codec is NULL, frame_codec_destroy shall do nothing.] */
+	if (frame_codec != NULL)
+	{
+		/* Codes_SRS_FRAME_CODEC_01_023: [frame_codec_destroy shall free all resources associated with a frame_codec instance.] */
+		amqpalloc_free(frame_codec);
+	}
 }
 
 int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const void* buffer, size_t size)

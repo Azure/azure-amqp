@@ -195,7 +195,7 @@ static int receive_frame_byte(FRAME_CODEC_DATA* frame_codec, unsigned char b)
 	return result;
 }
 
-FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, FRAME_RECEIVED_CALLBACK frame_received_callback, void* frame_received_callback_context, LOGGER_LOG logger_log)
+FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log)
 {
 	FRAME_CODEC_DATA* result;
 	result = amqpalloc_malloc(sizeof(FRAME_CODEC_DATA));
@@ -203,8 +203,8 @@ FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, FRAME_RECEIVED_CALLBACK fram
 	{
 		result->io = io;
 		result->logger_log = logger_log;
-		result->frame_received_callback = frame_received_callback;
-		result->frame_received_callback_context = frame_received_callback_context;
+		result->frame_received_callback = NULL;
+		result->frame_received_callback_context = NULL;
 		result->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
 		result->receive_frame_bytes = 0;
 		result->receive_frame_consumed_bytes = 0;
@@ -289,4 +289,20 @@ int frame_codec_start_encode_frame(FRAME_CODEC_HANDLE frame_codec_handle, size_t
 	}
 
 	return result;
+}
+
+int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec_handle, uint8_t type, FRAME_RECEIVED_CALLBACK frame_received_callback, void* frame_received_callback_context)
+{
+	FRAME_CODEC_DATA* frame_codec = (FRAME_CODEC_DATA*)frame_codec_handle;
+	frame_codec->frame_received_callback = frame_received_callback;
+	frame_codec->frame_received_callback_context = frame_received_callback_context;
+	return 0;
+}
+
+int frame_codec_unsubscribe(FRAME_CODEC_HANDLE frame_codec_handle, uint8_t type)
+{
+	FRAME_CODEC_DATA* frame_codec = (FRAME_CODEC_DATA*)frame_codec_handle;
+	frame_codec->frame_received_callback = NULL;
+	frame_codec->frame_received_callback_context = NULL;
+	return 0;
 }

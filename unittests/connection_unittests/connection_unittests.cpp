@@ -54,7 +54,7 @@ public:
 	MOCK_METHOD_END(int, 0);
 
 	/* frame_codec */
-	MOCK_STATIC_METHOD_4(, FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, FRAME_RECEIVED_CALLBACK, frame_received_callback, void*, context, LOGGER_LOG, logger_log)
+	MOCK_STATIC_METHOD_2(, FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, LOGGER_LOG, logger_log)
 	MOCK_METHOD_END(FRAME_CODEC_HANDLE, TEST_FRAME_CODEC_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, frame_codec_destroy, FRAME_CODEC_HANDLE, handle)
 	MOCK_VOID_METHOD_END();
@@ -62,7 +62,7 @@ public:
 	MOCK_METHOD_END(int, 0);
 
 	/* amqp_frame_codec */
-	MOCK_STATIC_METHOD_1(, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_create, FRAME_CODEC_HANDLE, frame_codec_handle)
+	MOCK_STATIC_METHOD_3(, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_create, FRAME_CODEC_HANDLE, frame_codec_handle, AMQP_FRAME_RECEIVED_CALLBACK, frame_receive_callback, void*, frame_receive_callback_context)
 	MOCK_METHOD_END(AMQP_FRAME_CODEC_HANDLE, TEST_AMQP_FRAME_CODEC_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, amqp_frame_codec_destroy, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_handle)
 	MOCK_VOID_METHOD_END();
@@ -83,11 +83,11 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , int, open_frame_encode, FRAME_CODEC_HANDLE, frame_codec, const char*, container_id);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , int, close_frame_encode, FRAME_CODEC_HANDLE, frame_codec);
 
-	DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, FRAME_RECEIVED_CALLBACK, frame_received_callback, void*, context, LOGGER_LOG, logger_log);
+	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, frame_codec_destroy, FRAME_CODEC_HANDLE, handle);
 	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , int, frame_codec_receive_bytes, FRAME_CODEC_HANDLE, handle, const void*, buffer, size_t, size);
 
-	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_create, FRAME_CODEC_HANDLE, frame_codec_handle);
+	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_create, FRAME_CODEC_HANDLE, frame_codec_handle, AMQP_FRAME_RECEIVED_CALLBACK, frame_receive_callback, void*, frame_receive_callback_context);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, amqp_frame_codec_destroy, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_handle);
 
 	extern void consolelogger_log(char* format, ...)
@@ -145,7 +145,7 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
 	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 
 	// act
@@ -190,7 +190,7 @@ TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
 	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
 		.ValidateArgument(1)
 		.SetReturn((FRAME_CODEC_HANDLE)NULL);
 	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));

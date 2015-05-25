@@ -8,14 +8,26 @@
 typedef struct AMQP_FRAME_CODEC_DATA_TAG
 {
 	FRAME_CODEC_HANDLE frame_codec_handle;
+	AMQP_FRAME_RECEIVED_CALLBACK frame_receive_callback;
+	void* frame_receive_callback_context;
 } AMQP_FRAME_CODEC_DATA;
 
-AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec_handle)
+static void frame_received(void* context, uint64_t performative, AMQP_VALUE frame_list_value)
+{
+	AMQP_FRAME_CODEC_DATA* amqp_frame_codec = (AMQP_FRAME_CODEC_DATA*)context;
+	amqp_frame_codec->frame_receive_callback(amqp_frame_codec->frame_receive_callback_context, performative, frame_list_value);
+}
+
+AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec_handle, AMQP_FRAME_RECEIVED_CALLBACK frame_receive_callback, void* frame_receive_callback_context)
 {
 	AMQP_FRAME_CODEC_DATA* result = (AMQP_FRAME_CODEC_DATA*)malloc(sizeof(AMQP_FRAME_CODEC_DATA));
 	if (result != NULL)
 	{
 		result->frame_codec_handle = frame_codec_handle;
+		result->frame_receive_callback = frame_receive_callback;
+		result->frame_receive_callback_context = frame_receive_callback_context;
+
+		frame_codec_subscribe(frame_codec_handle, 0, frame_received, result);
 	}
 
 	return result;

@@ -255,7 +255,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 				else
 				{
 					/* Codes_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
-					result->frame_codec = frame_codec_create(result->socket_io, connection_frame_received, result, consolelogger_log);
+					result->frame_codec = frame_codec_create(result->socket_io, consolelogger_log);
 					if (result->frame_codec == NULL)
 					{
 						/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
@@ -265,7 +265,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 					}
 					else
 					{
-						result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec);
+						result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, result);
 						if (result->amqp_frame_codec == NULL)
 						{
 							io_destroy(result->socket_io);

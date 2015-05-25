@@ -147,6 +147,8 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
 
 	// act
 	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
@@ -263,6 +265,7 @@ TEST_METHOD(connection_destroy_frees_resources)
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_destroy(TEST_FRAME_CODEC_HANDLE));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_destroy(TEST_AMQP_FRAME_CODEC_HANDLE));
 	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 

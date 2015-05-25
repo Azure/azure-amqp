@@ -448,6 +448,8 @@ int frame_codec_encode_frame(FRAME_CODEC_HANDLE frame_codec_handle, size_t frame
 		(void)io_send(frame_codec->io, &b, 1);
 		b = (channel)& 0xFF;
 		(void)io_send(frame_codec->io, &b, 1);
+
+		result = 0;
 	}
 
 	return result;

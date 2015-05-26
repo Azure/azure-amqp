@@ -241,4 +241,21 @@ TEST_METHOD(frame_codec_receive_bytes_decodes_one_empty_frame)
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
+/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it returns zero.] */
+TEST_METHOD(frame_codec_receive_bytes_with_not_enough_bytes_for_a_frame_does_not_trigger_callback)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	mocks.ResetAllCalls();
+	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00 };
+
+	// act
+	int result = frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
 END_TEST_SUITE(frame_codec_unittests)

@@ -65,6 +65,11 @@ static int decode_received_sasl_frame(FRAME_CODEC_DATA* frame_codec)
 	return __LINE__;
 }
 
+/* Codes_SRS_FRAME_CODEC_01_001: [Frames are divided into three distinct areas: a fixed width frame header, a variable width extended header, and a variable width frame body.] */
+/* Codes_SRS_FRAME_CODEC_01_002: [frame header The frame header is a fixed size (8 byte) structure that precedes each frame.] */
+/* Codes_SRS_FRAME_CODEC_01_003: [The frame header includes mandatory information necessary to parse the rest of the frame including size and type information.] */
+/* Codes_SRS_FRAME_CODEC_01_004: [extended header The extended header is a variable width area preceding the frame body.] */
+/* Codes_SRS_FRAME_CODEC_01_007: [frame body The frame body is a variable width sequence of bytes the format of which depends on the frame type.] */
 static int receive_frame_byte(FRAME_CODEC_DATA* frame_codec, unsigned char b)
 {
 	int result;
@@ -77,9 +82,11 @@ static int receive_frame_byte(FRAME_CODEC_DATA* frame_codec, unsigned char b)
 	default:
 		result = __LINE__;
 
+	/* Codes_SRS_FRAME_CODEC_01_008: [SIZE Bytes 0-3 of the frame header contain the frame size.] */
 	case RECEIVE_FRAME_STATE_FRAME_SIZE:
 		if (frame_codec->receive_frame_bytes - frame_codec->receive_frame_consumed_bytes >= 4)
 		{
+			/* Codes_SRS_FRAME_CODEC_01_009: [This is an unsigned 32-bit integer that MUST contain the total frame size of the frame header, extended header, and frame body.] */
 			frame_codec->receive_frame_size = frame_codec->receive_frame_buffer[frame_codec->receive_frame_consumed_bytes++] << 24;
 			frame_codec->receive_frame_size += frame_codec->receive_frame_buffer[frame_codec->receive_frame_consumed_bytes++] << 16;
 			frame_codec->receive_frame_size += frame_codec->receive_frame_buffer[frame_codec->receive_frame_consumed_bytes++] << 8;
@@ -93,12 +100,17 @@ static int receive_frame_byte(FRAME_CODEC_DATA* frame_codec, unsigned char b)
 	case RECEIVE_FRAME_STATE_FRAME_DATA:
 		if (frame_codec->receive_frame_bytes - frame_codec->receive_frame_consumed_bytes == frame_codec->receive_frame_size - 4)
 		{
+			/* Codes_SRS_FRAME_CODEC_01_011: [DOFF Byte 4 of the frame header is the data offset.] */
+			/* Codes_SRS_FRAME_CODEC_01_013: [The value of the data offset is an unsigned, 8-bit integer specifying a count of 4-byte words.] */
 			uint8_t doff = frame_codec->receive_frame_buffer[4];
+			/* Codes_SRS_FRAME_CODEC_01_012: [This gives the position of the body within the frame.] */
 			uint32_t frame_body_offset = (doff * 4);
+			/* Codes_SRS_FRAME_CODEC_01_015: [TYPE Byte 5 of the frame header is a type code.] */
+			uint8_t frame_type = frame_codec->receive_frame_buffer[5];
 			
 			/* Codes_SRS_FRAME_CODEC_01_031: [When a frame is successfully decoded it shall be indicated to the upper layer by invoking the receive callback passed to frame_codec_create.] */
 			/* Codes_SRS_FRAME_CODEC_01_032: [Besides passing the frame information, the frame_received_callback_context value passed to frame_codec_create shall be passed to the frame_received_callback function.] */
-			frame_codec->frame_received_callback(frame_codec->frame_received_callback_context, frame_codec->receive_frame_buffer[5],
+			frame_codec->frame_received_callback(frame_codec->frame_received_callback_context, frame_type,
 				&frame_codec->receive_frame_buffer[frame_body_offset], frame_codec->receive_frame_bytes - frame_body_offset,
 				&frame_codec->receive_frame_buffer[6], frame_body_offset - 6);
 

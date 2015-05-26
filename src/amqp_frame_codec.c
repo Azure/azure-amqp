@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 #include "amqp_frame_codec.h"
 #include "frame_codec.h"
 #include "encoder.h"
@@ -11,12 +12,24 @@ typedef struct AMQP_FRAME_CODEC_DATA_TAG
 	FRAME_CODEC_HANDLE frame_codec_handle;
 	AMQP_FRAME_RECEIVED_CALLBACK frame_receive_callback;
 	void* frame_receive_callback_context;
+	unsigned char frame_body[512];
+	uint32_t frame_body_size;
+	uint32_t frame_body_pos;
+	uint8_t channel;
 } AMQP_FRAME_CODEC_DATA;
 
-static void frame_received(void* context, uint8_t type, const unsigned char* frame_body, uint32_t frame_body_size, const unsigned char* type_specific, uint32_t type_specific_size)
+static void frame_begin(void* context, const unsigned char* type_specific, uint32_t type_specific_size, uint32_t frame_body_size)
 {
 	AMQP_FRAME_CODEC_DATA* amqp_frame_codec = (AMQP_FRAME_CODEC_DATA*)context;
-	uint16_t channel;
+	amqp_frame_codec->frame_body_size = frame_body_size;
+	amqp_frame_codec->frame_body_pos = 0;
+	amqp_frame_codec->channel = type_specific[0] << 8;
+	amqp_frame_codec->channel += type_specific[1];
+}
+
+static void frame_body_bytes_received(void* context, const unsigned char* frame_body_bytes, uint32_t frame_body_bytes_size)
+{
+	AMQP_FRAME_CODEC_DATA* amqp_frame_codec = (AMQP_FRAME_CODEC_DATA*)context;
 	DECODER_HANDLE decoder_handle;
 	AMQP_VALUE descriptor = NULL;
 	AMQP_VALUE frame_list_value = NULL;
@@ -24,39 +37,41 @@ static void frame_received(void* context, uint8_t type, const unsigned char* fra
 	bool more;
 	uint64_t descriptor_ulong_value;
 
-	channel = type_specific[0] << 8;
-	channel += type_specific[1];
-
-	decoder_handle = decoder_create(frame_body, frame_body_size);
-	if (decoder_handle == NULL)
+	memcpy(&amqp_frame_codec->frame_body[amqp_frame_codec->frame_body_pos], frame_body_bytes, frame_body_bytes_size);
+	amqp_frame_codec->frame_body_pos += frame_body_bytes_size;
+	if (amqp_frame_codec->frame_body_pos == amqp_frame_codec->frame_body_size)
 	{
-		result = __LINE__;
-	}
-	else
-	{
-		if ((decoder_decode(decoder_handle, &descriptor, &more) != 0) ||
-			(!more) ||
-			(decoder_decode(decoder_handle, &frame_list_value, &more) != 0) ||
-			(amqpvalue_get_ulong(amqpvalue_get_descriptor(descriptor), &descriptor_ulong_value) != 0))
+		decoder_handle = decoder_create(amqp_frame_codec->frame_body, amqp_frame_codec->frame_body_size);
+		if (decoder_handle == NULL)
 		{
 			result = __LINE__;
 		}
 		else
 		{
-
-			/* notify of received frame */
-			if (amqp_frame_codec->frame_receive_callback != NULL)
+			if ((decoder_decode(decoder_handle, &descriptor, &more) != 0) ||
+				(!more) ||
+				(decoder_decode(decoder_handle, &frame_list_value, &more) != 0) ||
+				(amqpvalue_get_ulong(amqpvalue_get_descriptor(descriptor), &descriptor_ulong_value) != 0))
 			{
-				amqp_frame_codec->frame_receive_callback(amqp_frame_codec->frame_receive_callback_context, descriptor_ulong_value, frame_list_value);
+				result = __LINE__;
+			}
+			else
+			{
+
+				/* notify of received frame */
+				if (amqp_frame_codec->frame_receive_callback != NULL)
+				{
+					amqp_frame_codec->frame_receive_callback(amqp_frame_codec->frame_receive_callback_context, descriptor_ulong_value, frame_list_value);
+				}
+
+				result = 0;
 			}
 
-			result = 0;
+			amqpvalue_destroy(descriptor);
+			amqpvalue_destroy(frame_list_value);
+
+			decoder_destroy(decoder_handle);
 		}
-
-		amqpvalue_destroy(descriptor);
-		amqpvalue_destroy(frame_list_value);
-
-		decoder_destroy(decoder_handle);
 	}
 }
 
@@ -69,7 +84,7 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec_h
 		result->frame_receive_callback = frame_receive_callback;
 		result->frame_receive_callback_context = frame_receive_callback_context;
 
-		frame_codec_subscribe(frame_codec_handle, 0, frame_received, result);
+		frame_codec_subscribe(frame_codec_handle, 0, frame_begin, frame_body_bytes_received, result);
 	}
 
 	return result;

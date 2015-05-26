@@ -63,7 +63,9 @@ public:
 	MOCK_METHOD_END(int, 0);
 
 	/* frame received callback */
-	MOCK_STATIC_METHOD_6(, void, frame_received_callback, void*, context, uint8_t, type, const unsigned char*, frame_body, uint32_t, frame_body_size, const unsigned char*, type_specific, uint32_t, type_specific_size)
+	MOCK_STATIC_METHOD_4(, void, frame_begin_callback, void*, context, uint32_t, frame_body_size, const unsigned char*, type_specific, uint32_t, type_specific_size)
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_3(, void, frame_body_bytes_received_callback, void*, context, const unsigned char*, frame_body_bytes, uint32_t, frame_body_bytes_size)
 	MOCK_VOID_METHOD_END();
 };
 
@@ -88,7 +90,8 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, decoder_destroy, DECODER_HANDLE, handle);
 	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , int, decoder_decode, DECODER_HANDLE, handle, AMQP_VALUE*, amqp_value, bool*, more);
 
-	DECLARE_GLOBAL_MOCK_METHOD_6(frame_codec_mocks, , void, frame_received_callback, void*, context, uint8_t, type, const unsigned char*, frame_body, uint32_t, frame_body_size, const unsigned char*, type_specific, uint32_t, type_specific_size)
+	DECLARE_GLOBAL_MOCK_METHOD_4(frame_codec_mocks, , void, frame_begin_callback, void*, context, uint32_t, frame_body_size, const unsigned char*, type_specific, uint32_t, type_specific_size);
+	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , void, frame_body_bytes_received_callback, void*, context, const unsigned char*, frame_body_bytes, uint32_t, frame_body_bytes_size);
 
 	extern void consolelogger_log(char* format, ...)
 	{
@@ -244,13 +247,14 @@ TEST_METHOD(frame_codec_receive_bytes_decodes_one_empty_frame)
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00 };
 
-	STRICT_EXPECTED_CALL(mocks, frame_received_callback(frame_codec, 0, IGNORED_PTR_ARG, 0, IGNORED_PTR_ARG, 2))
-		.IgnoreArgument(3)
-		.ValidateArgumentBuffer(5, &frame[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 0, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback(frame_codec, IGNORED_PTR_ARG, 0))
+		.IgnoreArgument(2);
 
 	// act
 	int result = frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));
@@ -265,7 +269,7 @@ TEST_METHOD(frame_codec_receive_bytes_with_not_enough_bytes_for_a_frame_does_not
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00 };
 
@@ -296,7 +300,7 @@ TEST_METHOD(frame_codec_receive_bytes_with_NULL_buffer_fails)
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 
 	// act
@@ -313,7 +317,7 @@ TEST_METHOD(frame_codec_receive_bytes_with_zero_size_fails)
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00 };
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 
 	// act
@@ -329,13 +333,14 @@ TEST_METHOD(when_frame_codec_receive_1_byte_in_one_call_and_the_rest_of_the_fram
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00 };
 
-	STRICT_EXPECTED_CALL(mocks, frame_received_callback(frame_codec, 0, IGNORED_PTR_ARG, 0, IGNORED_PTR_ARG, 2))
-		.IgnoreArgument(3)
-		.ValidateArgumentBuffer(5, &frame[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 0, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback(frame_codec, IGNORED_PTR_ARG, 0))
+		.IgnoreArgument(2);
 
 	(void)frame_codec_receive_bytes(frame_codec, frame, 1);
 
@@ -352,14 +357,15 @@ TEST_METHOD(when_frame_codec_receive_the_frame_bytes_in_1_byte_per_call_a_succes
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00 };
 	size_t i;
 
-	STRICT_EXPECTED_CALL(mocks, frame_received_callback(frame_codec, 0, IGNORED_PTR_ARG, 0, IGNORED_PTR_ARG, 2))
-		.IgnoreArgument(3)
-		.ValidateArgumentBuffer(5, &frame[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 0, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback(frame_codec, IGNORED_PTR_ARG, 0))
+		.IgnoreArgument(2);
 
 	for (i = 0; i < sizeof(frame) - 1; i++)
 	{
@@ -379,13 +385,14 @@ TEST_METHOD(a_frame_codec_receive_bytes_call_with_bad_args_before_any_real_frame
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00 };
 
-	STRICT_EXPECTED_CALL(mocks, frame_received_callback(frame_codec, 0, IGNORED_PTR_ARG, 0, IGNORED_PTR_ARG, 2))
-		.IgnoreArgument(3)
-		.ValidateArgumentBuffer(5, &frame[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 0, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback(frame_codec, IGNORED_PTR_ARG, 0))
+		.IgnoreArgument(2);
 
 	(void)frame_codec_receive_bytes(frame_codec, NULL, 1);
 
@@ -402,13 +409,14 @@ TEST_METHOD(a_frame_codec_receive_bytes_call_with_bad_args_in_the_middle_of_the_
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00 };
 
-	STRICT_EXPECTED_CALL(mocks, frame_received_callback(frame_codec, 0, IGNORED_PTR_ARG, 0, IGNORED_PTR_ARG, 2))
-		.IgnoreArgument(3)
-		.ValidateArgumentBuffer(5, &frame[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 0, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback(frame_codec, IGNORED_PTR_ARG, 0))
+		.IgnoreArgument(2);
 
 	(void)frame_codec_receive_bytes(frame_codec, frame, 1);
 	(void)frame_codec_receive_bytes(frame_codec, NULL, 1);
@@ -426,17 +434,19 @@ TEST_METHOD(frame_codec_receive_bytes_decodes_2_empty_frames)
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame1[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x01, 0x02 };
 	unsigned char frame2[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x03, 0x04 };
 
-	STRICT_EXPECTED_CALL(mocks, frame_received_callback(frame_codec, 0, IGNORED_PTR_ARG, 0, IGNORED_PTR_ARG, 2))
-		.IgnoreArgument(3)
-		.ValidateArgumentBuffer(5, &frame1[6], 2);
-	STRICT_EXPECTED_CALL(mocks, frame_received_callback(frame_codec, 0, IGNORED_PTR_ARG, 0, IGNORED_PTR_ARG, 2))
-		.IgnoreArgument(3)
-		.ValidateArgumentBuffer(5, &frame2[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 0, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame1[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback(frame_codec, IGNORED_PTR_ARG, 0))
+		.IgnoreArgument(2);
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 0, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame2[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback(frame_codec, IGNORED_PTR_ARG, 0))
+		.IgnoreArgument(2);
 
 	(void)frame_codec_receive_bytes(frame_codec, frame1, sizeof(frame1));
 
@@ -453,17 +463,19 @@ TEST_METHOD(a_call_to_frame_codec_receive_bytes_with_bad_args_between_2_frames_d
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame1[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x01, 0x02 };
 	unsigned char frame2[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x03, 0x04 };
 
-	STRICT_EXPECTED_CALL(mocks, frame_received_callback(frame_codec, 0, IGNORED_PTR_ARG, 0, IGNORED_PTR_ARG, 2))
-		.IgnoreArgument(3)
-		.ValidateArgumentBuffer(5, &frame1[6], 2);
-	STRICT_EXPECTED_CALL(mocks, frame_received_callback(frame_codec, 0, IGNORED_PTR_ARG, 0, IGNORED_PTR_ARG, 2))
-		.IgnoreArgument(3)
-		.ValidateArgumentBuffer(5, &frame2[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 0, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame1[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback(frame_codec, IGNORED_PTR_ARG, 0))
+		.IgnoreArgument(2);
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 0, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame2[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback(frame_codec, IGNORED_PTR_ARG, 0))
+		.IgnoreArgument(2);
 
 	(void)frame_codec_receive_bytes(frame_codec, frame1, sizeof(frame1));
 	(void)frame_codec_receive_bytes(frame_codec, NULL, 1);
@@ -481,7 +493,7 @@ TEST_METHOD(when_frame_size_is_bad_frame_codec_receive_bytes_fails)
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x07, 0x02, 0x00, 0x01, 0x02 };
 
@@ -498,7 +510,7 @@ TEST_METHOD(when_frame_size_has_a_bad_doff_frame_codec_receive_bytes_fails)
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x01, 0x00, 0x01, 0x02 };
 
@@ -515,7 +527,7 @@ TEST_METHOD(after_a_frame_decode_error_occurs_due_to_frame_size_a_subsequent_dec
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char bad_frame[] = { 0x00, 0x00, 0x00, 0x07, 0x02, 0x00, 0x01, 0x02 };
 	unsigned char good_frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x01, 0x02 };
@@ -535,7 +547,7 @@ TEST_METHOD(after_a_frame_decode_error_occurs_due_to_bad_doff_size_a_subsequent_
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char bad_frame[] = { 0x00, 0x00, 0x00, 0x08, 0x01, 0x00, 0x01, 0x02 };
 	unsigned char good_frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x01, 0x02 };
@@ -555,13 +567,14 @@ TEST_METHOD(receiving_a_frame_with_1_byte_frame_body_succeeds)
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_received_callback, frame_codec);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x09, 0x02, 0x00, 0x01, 0x02, 0x42 };
 
-	STRICT_EXPECTED_CALL(mocks, frame_received_callback(frame_codec, 0, IGNORED_PTR_ARG, 1, IGNORED_PTR_ARG, 2))
-		.ValidateArgumentBuffer(3, &frame[8], 1)
-		.ValidateArgumentBuffer(5, &frame[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 1, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame[6], 2);
+	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback(frame_codec, IGNORED_PTR_ARG, 1))
+		.ValidateArgumentBuffer(2, &frame[8], 1);
 
 	// act
 	int result = frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));

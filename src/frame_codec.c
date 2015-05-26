@@ -27,7 +27,8 @@ typedef struct FRAME_CODEC_DATA_TAG
 	size_t receive_frame_bytes;
 	size_t receive_frame_consumed_bytes;
 	uint32_t receive_frame_size;
-	unsigned char receive_frame_buffer[512];
+	unsigned char* receive_frame_buffer;
+	uint32_t max_frame_size;
 } FRAME_CODEC_DATA;
 
 int frame_codec_encode_frame_bytes(FRAME_CODEC_HANDLE frame_codec, const void* bytes, size_t length)
@@ -197,6 +198,12 @@ void frame_codec_destroy(FRAME_CODEC_HANDLE frame_codec)
 		/* Codes_SRS_FRAME_CODEC_01_023: [frame_codec_destroy shall free all resources associated with a frame_codec instance.] */
 		amqpalloc_free(frame_codec);
 	}
+}
+
+int frame_codec_set_max_frame_size(FRAME_CODEC_HANDLE frame_codec, uint32_t max_frame_size)
+{
+	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
+	frame_codec_data->max_frame_size = max_frame_size;
 }
 
 int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const void* buffer, size_t size)

@@ -205,6 +205,23 @@ TEST_METHOD(when_frame_codec_is_NULL_frame_codec_destroy_does_nothing)
 	// uMock checks the calls
 }
 
+/* frame_codec_set_max_frame_size */
+
+/* Tests_SRS_FRAME_CODEC_01_075: [frame_codec_set_max_frame_size shall set the maximum frame size for a frame_codec.] */
+TEST_METHOD(frame_codec_set_max_frame_size_with_8_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_set_max_frame_size(frame_codec, 8);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
 /* frame_codec_receive_bytes */
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it returns zero.] */

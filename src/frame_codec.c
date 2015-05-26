@@ -96,6 +96,8 @@ static int receive_frame_byte(FRAME_CODEC_DATA* frame_codec, unsigned char b)
 			uint8_t doff = frame_codec->receive_frame_buffer[4];
 			uint32_t frame_body_offset = (doff * 4);
 			
+			/* Codes_SRS_FRAME_CODEC_01_031: [When a frame is successfully decoded it shall be indicated to the upper layer by invoking the receive callback passed to frame_codec_create.] */
+			/* Codes_SRS_FRAME_CODEC_01_032: [Besides passing the frame information, the frame_received_callback_context value passed to frame_codec_create shall be passed to the frame_received_callback function.] */
 			frame_codec->frame_received_callback(frame_codec->frame_received_callback_context, frame_codec->receive_frame_buffer[5],
 				&frame_codec->receive_frame_buffer[frame_body_offset], frame_codec->receive_frame_bytes - frame_body_offset,
 				&frame_codec->receive_frame_buffer[6], frame_body_offset - 6);

@@ -29,7 +29,7 @@ typedef struct CONNECTION_DATA_TAG
 	CONNECTION_STATE connection_state;
 	FRAME_CODEC_HANDLE frame_codec;
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
-	FRAME_RECEIVED_CALLBACK frame_received_callback;
+	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
 	void* frame_received_callback_context;
 } CONNECTION_DATA;
 
@@ -412,7 +412,7 @@ FRAME_CODEC_HANDLE connection_get_frame_codec(CONNECTION_HANDLE handle)
 	return result;
 }
 
-int connection_set_session_frame_receive_callback(CONNECTION_HANDLE handle, FRAME_RECEIVED_CALLBACK callback, void* context)
+int connection_set_session_frame_receive_callback(CONNECTION_HANDLE handle, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context)
 {
 	int result;
 	CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;

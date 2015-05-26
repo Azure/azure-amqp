@@ -15,7 +15,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 	typedef void* FRAME_CODEC_HANDLE;
-	typedef void(*FRAME_RECEIVED_CALLBACK)(void* context, uint64_t performative, AMQP_VALUE frame_list_value);
+	typedef void(*FRAME_RECEIVED_CALLBACK)(void* context, uint8_t type, const unsigned char* frame_body, uint32_t frame_body_size, const unsigned char* type_specific, uint32_t type_specific_size);
 
 	extern FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log);
 	extern void frame_codec_destroy(FRAME_CODEC_HANDLE frame_codec);

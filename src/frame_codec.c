@@ -59,88 +59,10 @@ int frame_codec_encode_bytes(void* context, const void* bytes, size_t length)
 	return io_send(io_handle, bytes, length);
 }
 
-static int decode_received_amqp_frame(FRAME_CODEC_DATA* frame_codec)
-{
-	uint16_t channel;
-	uint8_t doff = frame_codec->receive_frame_buffer[4];
-	unsigned char* frame_body;
-	uint32_t frame_body_size = frame_codec->receive_frame_size - doff * 4;
-	DECODER_HANDLE decoder_handle;
-	AMQP_VALUE descriptor = NULL;
-	AMQP_VALUE frame_list_value = NULL;
-	int result;
-	bool more;
-	uint64_t descriptor_ulong_value;
-
-	channel = frame_codec->receive_frame_buffer[6] << 8;
-	channel += frame_codec->receive_frame_buffer[7];
-
-	frame_body = &frame_codec->receive_frame_buffer[4 * doff];
-	decoder_handle = decoder_create(frame_body, frame_body_size);
-	if (decoder_handle == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		if ((decoder_decode(decoder_handle, &descriptor, &more) != 0) ||
-			(!more) ||
-			(decoder_decode(decoder_handle, &frame_list_value, &more) != 0) ||
-			(amqpvalue_get_ulong(amqpvalue_get_descriptor(descriptor), &descriptor_ulong_value) != 0))
-		{
-			result = __LINE__;
-		}
-		else
-		{
-
-			/* notify of received frame */
-			if (frame_codec->frame_received_callback != NULL)
-			{
-				frame_codec->frame_received_callback(frame_codec->frame_received_callback_context, descriptor_ulong_value, frame_list_value);
-			}
-
-			result = 0;
-		}
-
-		amqpvalue_destroy(descriptor);
-		amqpvalue_destroy(frame_list_value);
-
-		decoder_destroy(decoder_handle);
-	}
-
-	return result;
-}
-
 static int decode_received_sasl_frame(FRAME_CODEC_DATA* frame_codec)
 {
 	/* not implemented */
 	return __LINE__;
-}
-
-static int decode_received_frame(FRAME_CODEC_DATA* frame_codec)
-{
-	int result;
-
-	/* decode type */
-	uint8_t type = frame_codec->receive_frame_buffer[5];
-
-	switch (type)
-	{
-	default:
-		frame_codec->logger_log("Unknown frame.\r\n");
-		result = __LINE__;
-		break;
-
-	case 0:
-		result = decode_received_amqp_frame(frame_codec);
-		break;
-
-	case 1:
-		result = decode_received_sasl_frame(frame_codec);
-		break;
-	}
-
-	return result;
 }
 
 static int receive_frame_byte(FRAME_CODEC_DATA* frame_codec, unsigned char b)
@@ -171,15 +93,14 @@ static int receive_frame_byte(FRAME_CODEC_DATA* frame_codec, unsigned char b)
 	case RECEIVE_FRAME_STATE_FRAME_DATA:
 		if (frame_codec->receive_frame_bytes - frame_codec->receive_frame_consumed_bytes == frame_codec->receive_frame_size - 4)
 		{
-			/* done receiving */
-			if (decode_received_frame(frame_codec) != 0)
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				result = 0;
-			}
+			uint8_t doff = frame_codec->receive_frame_buffer[4];
+			uint32_t frame_body_offset = (doff * 4);
+			
+			frame_codec->frame_received_callback(frame_codec->frame_received_callback_context, frame_codec->receive_frame_buffer[5],
+				&frame_codec->receive_frame_buffer[frame_body_offset], frame_codec->receive_frame_bytes - frame_body_offset,
+				&frame_codec->receive_frame_buffer[6], frame_body_offset - 6);
+
+			result = 0;
 
 			frame_codec->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
 			frame_codec->receive_frame_bytes = 0;
@@ -260,6 +181,7 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const void* buffer
 		}
 		else
 		{
+			/* Codes_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it returns zero.] */
 			result = 0;
 		}
 	}

@@ -4,6 +4,7 @@
 #include "amqp_frame_codec.h"
 #include "frame_codec.h"
 #include "encoder.h"
+#include "decoder.h"
 
 typedef struct AMQP_FRAME_CODEC_DATA_TAG
 {
@@ -12,10 +13,51 @@ typedef struct AMQP_FRAME_CODEC_DATA_TAG
 	void* frame_receive_callback_context;
 } AMQP_FRAME_CODEC_DATA;
 
-static void frame_received(void* context, uint64_t performative, AMQP_VALUE frame_list_value)
+static void frame_received(void* context, uint8_t type, const unsigned char* frame_body, uint32_t frame_body_size, const unsigned char* type_specific, uint32_t type_specific_size)
 {
 	AMQP_FRAME_CODEC_DATA* amqp_frame_codec = (AMQP_FRAME_CODEC_DATA*)context;
-	amqp_frame_codec->frame_receive_callback(amqp_frame_codec->frame_receive_callback_context, performative, frame_list_value);
+	uint16_t channel;
+	DECODER_HANDLE decoder_handle;
+	AMQP_VALUE descriptor = NULL;
+	AMQP_VALUE frame_list_value = NULL;
+	int result;
+	bool more;
+	uint64_t descriptor_ulong_value;
+
+	channel = type_specific[0] << 8;
+	channel += type_specific[1];
+
+	decoder_handle = decoder_create(frame_body, frame_body_size);
+	if (decoder_handle == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		if ((decoder_decode(decoder_handle, &descriptor, &more) != 0) ||
+			(!more) ||
+			(decoder_decode(decoder_handle, &frame_list_value, &more) != 0) ||
+			(amqpvalue_get_ulong(amqpvalue_get_descriptor(descriptor), &descriptor_ulong_value) != 0))
+		{
+			result = __LINE__;
+		}
+		else
+		{
+
+			/* notify of received frame */
+			if (amqp_frame_codec->frame_receive_callback != NULL)
+			{
+				amqp_frame_codec->frame_receive_callback(amqp_frame_codec->frame_receive_callback_context, descriptor_ulong_value, frame_list_value);
+			}
+
+			result = 0;
+		}
+
+		amqpvalue_destroy(descriptor);
+		amqpvalue_destroy(frame_list_value);
+
+		decoder_destroy(decoder_handle);
+	}
 }
 
 AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec_handle, AMQP_FRAME_RECEIVED_CALLBACK frame_receive_callback, void* frame_receive_callback_context)

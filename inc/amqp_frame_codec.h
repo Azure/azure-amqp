@@ -17,6 +17,7 @@ typedef void(*AMQP_FRAME_RECEIVED_CALLBACK)(void* context, uint64_t performative
 extern AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec_handle, AMQP_FRAME_RECEIVED_CALLBACK frame_receive_callback, void* frame_receive_callback_context);
 extern void amqp_frame_codec_destroy(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_handle);
 extern int amqp_frame_codec_encode(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_handle, uint64_t performative, const AMQP_VALUE* frame_content_chunks, size_t frame_content_chunk_count);
+extern int amqp_frame_codec_decode_received_frame(void* context, uint8_t type, void* frame_body, uint32_t frame_body_size);
 
 #ifdef __cplusplus
 }

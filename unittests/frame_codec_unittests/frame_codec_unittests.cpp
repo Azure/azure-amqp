@@ -727,4 +727,64 @@ TEST_METHOD(a_frame_with_2_bytes_received_together_with_the_header_passes_the_by
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
+/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it returns zero.]  */
+TEST_METHOD(two_empty_frames_received_in_the_same_call_yields_2_callbacks)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	mocks.ResetAllCalls();
+	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x01, 0x02,
+		0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x03, 0x04 };
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 0, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame[6], 2);
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 0, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame[14], 2);
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	int result = frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it returns zero.]  */
+TEST_METHOD(two_frames_with_1_byte_each_received_in_the_same_call_yields_2_callbacks)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	mocks.ResetAllCalls();
+	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x09, 0x02, 0x00, 0x01, 0x02, 0x42,
+		0x00, 0x00, 0x00, 0x09, 0x02, 0x00, 0x03, 0x04, 0x43 };
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 1, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame[6], 2);
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback(frame_codec, IGNORED_PTR_ARG, 1))
+		.ValidateArgumentBuffer(2, &frame[8], 1);
+	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback(frame_codec, 1, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame[15], 2);
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback(frame_codec, IGNORED_PTR_ARG, 1))
+		.ValidateArgumentBuffer(2, &frame[17], 1);
+
+	// act
+	int result = frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
 END_TEST_SUITE(frame_codec_unittests)

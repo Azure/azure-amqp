@@ -60,7 +60,7 @@ typedef enum DECODE_LIST_STEP_TAG
 	DECODE_LIST_STEP_ITEMS
 } DECODE_LIST_STEP;
 
-typedef union DECODE_LIST_VALUE_STATE_TAG
+typedef struct DECODE_LIST_VALUE_STATE_TAG
 {
 	DECODE_LIST_STEP list_value_state;
 	uint32_t item;
@@ -1327,8 +1327,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 				{
 					/* null */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_NULL;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, &internal_decoder_data->decode_to_value);
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
 					result = 0;
 					break;
 				}
@@ -1337,8 +1337,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					/* true */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_BOOL;
 					internal_decoder_data->decode_to_value->value.bool_value = true;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, &internal_decoder_data->decode_to_value);
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
 					result = 0;
 					break;
 				}
@@ -1347,8 +1347,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					/* false */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_BOOL;
 					internal_decoder_data->decode_to_value->value.bool_value = false;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, &internal_decoder_data->decode_to_value);
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
 					result = 0;
 					break;
 				}
@@ -1357,8 +1357,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					/* uint0 */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_UINT;
 					internal_decoder_data->decode_to_value->value.uint_value = 0;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, &internal_decoder_data->decode_to_value);
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
 					result = 0;
 					break;
 				}
@@ -1367,8 +1367,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					/* ulong0 */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_ULONG;
 					internal_decoder_data->decode_to_value->value.ulong_value = 0;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, &internal_decoder_data->decode_to_value);
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
 					result = 0;
 					break;
 				}
@@ -1377,6 +1377,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_UBYTE;
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.ubyte_value = 0;
+					result = 0;
 					break;
 				}
 				case 0x53: /* smallulong */
@@ -1385,6 +1386,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.ulong_value = 0;
 					internal_decoder_data->bytes_decoded = 0;
+					result = 0;
 					break;
 				}
 				case 0x60: /* ushort */
@@ -1393,6 +1395,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.ushort_value = 0;
 					internal_decoder_data->bytes_decoded = 0;
+					result = 0;
 					break;
 				}
 				case 0x52: /* smalluint */
@@ -1402,6 +1405,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.uint_value = 0;
 					internal_decoder_data->bytes_decoded = 0;
+					result = 0;
 					break;
 				}
 				case 0x80: /* ulong */
@@ -1410,6 +1414,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.ulong_value = 0;
 					internal_decoder_data->bytes_decoded = 0;
+					result = 0;
 					break;
 				}
 				case 0xA0: /* vbin8 */
@@ -1419,6 +1424,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.binary_value.length = 0;
 					internal_decoder_data->bytes_decoded = 0;
+					result = 0;
 					break;
 				}
 				case 0xA1: /* str8-utf8 */
@@ -1428,17 +1434,19 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.string_value.length = 0;
 					internal_decoder_data->bytes_decoded = 0;
+					result = 0;
 					break;
 				}
-				}
-				break;
 				case 0xD0: /* list32 */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_LIST;
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.list_value.count = 0;
 					internal_decoder_data->bytes_decoded = 0;
 					internal_decoder_data->decode_value_state.list_value_state.list_value_state = DECODE_LIST_STEP_SIZE;
+					result = 0;
 					break;
+				}
+				break;
 			}
 
 			case DECODER_STATE_TYPE_DATA:
@@ -1446,7 +1454,9 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 				switch (internal_decoder_data->constructor_byte)
 				{
 				default:
+					result = __LINE__;
 					break;
+
 				case 0x00: /* descriptor */
 				{
 					size_t used_bytes;
@@ -1465,8 +1475,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							internal_decoder_destroy(inner_decoder);
 							internal_decoder_data->inner_decoder = NULL;
 
-							internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, &internal_decoder_data->decode_to_value);
 							internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+							internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
 						}
 
 						result = 0;
@@ -1479,8 +1489,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decode_to_value->value.ubyte_value = buffer[0];
 					buffer++;
 					size--;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, &internal_decoder_data->decode_to_value);
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
 					result = 0;
 					break;
 				}
@@ -1490,8 +1500,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decode_to_value->value.uint_value = buffer[0];
 					buffer++;
 					size--;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, &internal_decoder_data->decode_to_value);
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
 					result = 0;
 					break;
 				}
@@ -1501,8 +1511,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decode_to_value->value.ulong_value = buffer[0];
 					buffer++;
 					size--;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, &internal_decoder_data->decode_to_value);
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
 					result = 0;
 					break;
 				}
@@ -1515,9 +1525,9 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					size--;
 					if (internal_decoder_data->bytes_decoded == 2)
 					{
+						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
 						internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
 					}
-					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
 					result = 0;
 					break;
 				}
@@ -1530,9 +1540,9 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					size--;
 					if (internal_decoder_data->bytes_decoded == 4)
 					{
+						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
 						internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
 					}
-					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
 					result = 0;
 					break;
 				}
@@ -1545,9 +1555,9 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					size--;
 					if (internal_decoder_data->bytes_decoded == 8)
 					{
+						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
 						internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
 					}
-					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
 					result = 0;
 					break;
 				}
@@ -1593,8 +1603,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.binary_value.length + 1)
 							{
-								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
 							}
 
 							result = 0;
@@ -1643,13 +1653,14 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.string_value.length + 1)
 							{
-								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
 							}
 
 							result = 0;
 						}
 					}
+					break;
 				}
 				case 0xB0:
 				{
@@ -1693,8 +1704,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.binary_value.length + 4)
 							{
-								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
 							}
 
 							result = 0;
@@ -1743,13 +1754,14 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.string_value.length + 4)
 							{
-								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
 							}
 
 							result = 0;
 						}
 					}
+					break;
 				}
 				case 0xD0: /* list32 */
 				{
@@ -1802,6 +1814,10 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 								result = 0;
 							}
 						}
+						else
+						{
+							result = 0;
+						}
 						break;
 
 					case DECODE_LIST_STEP_ITEMS:
@@ -1844,6 +1860,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 						else
 						{
 							INTERNAL_DECODER_DATA* inner_decoder = (INTERNAL_DECODER_DATA*)internal_decoder_data->inner_decoder;
+							internal_decoder_data->bytes_decoded += used_bytes;
 							buffer += used_bytes;
 							size -= used_bytes;
 
@@ -1851,12 +1868,13 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							{
 								internal_decoder_destroy(inner_decoder);
 								internal_decoder_data->inner_decoder = NULL;
+								internal_decoder_data->bytes_decoded = 0;
 
 								internal_decoder_data->decode_value_state.list_value_state.item++;
 								if (internal_decoder_data->decode_value_state.list_value_state.item == internal_decoder_data->decode_to_value->value.list_value.count)
 								{
-									internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, &internal_decoder_data->decode_to_value);
 									internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+									internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
 								}
 							}
 
@@ -1866,8 +1884,6 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 						break;
 					}
 					}
-
-					internal_decoder_data->decode_to_value->type = AMQP_TYPE_DESCRIPTOR;
 
 					break;
 				}
@@ -1915,7 +1931,16 @@ int decoder_decode_bytes(DECODER_HANDLE handle, const unsigned char* buffer, siz
 	}
 	else
 	{
-		result = 0;
+		size_t used_bytes;
+		result = internal_decoder_decode_bytes(decoder_data->internal_decoder, buffer, size, &used_bytes);
+		if (used_bytes < size)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
 	}
 
 	return result;

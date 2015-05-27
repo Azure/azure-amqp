@@ -20,7 +20,6 @@ typedef struct AMQP_FRAME_CODEC_DATA_TAG
 	FRAME_CODEC_HANDLE frame_codec_handle;
 	AMQP_FRAME_RECEIVED_CALLBACK frame_receive_callback;
 	void* frame_receive_callback_context;
-	unsigned char frame_body[256];
 	uint32_t frame_body_size;
 	uint32_t frame_body_pos;
 	uint8_t channel;
@@ -51,6 +50,7 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 		if (amqp_frame_codec->frame_receive_callback != NULL)
 		{
 			amqp_frame_codec->frame_receive_callback(amqp_frame_codec->frame_receive_callback_context, amqp_frame_codec->performative, decoded_value);
+			amqp_frame_codec->decode_state = AMQP_FRAME_DECODE_DESCRIPTOR;
 		}
 		break;
 	}

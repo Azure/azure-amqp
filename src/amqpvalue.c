@@ -788,6 +788,11 @@ AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length)
 			{
 				result->value.binary_value.bytes = amqpalloc_malloc(length);
 			}
+			else
+			{
+				result->value.binary_value.bytes = NULL;
+			}
+
 			result->value.binary_value.length = length;
 
 			if ((result->value.binary_value.bytes == NULL) && (length > 0))
@@ -798,7 +803,7 @@ AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length)
 			}
 			else
 			{
-				if (memcpy(result->value.binary_value.bytes, value, length) == NULL)
+				if ((length > 0) && (memcpy(result->value.binary_value.bytes, value, length) == NULL))
 				{
 					/* Codes_SRS_AMQPVALUE_01_130: [If any other error occurs, amqpvalue_create_binary shall return NULL.] */
 					amqpalloc_free(result->value.binary_value.bytes);
@@ -996,47 +1001,53 @@ int amqpvalue_set_list_item(AMQP_VALUE value, size_t index, AMQP_VALUE list_item
 	return result;
 }
 
+static void amqpvalue_clear(AMQP_VALUE_DATA* value_data)
+{
+	switch (value_data->type)
+	{
+	default:
+		break;
+	case AMQP_TYPE_LIST:
+	{
+		size_t i;
+		for (i = 0; i < value_data->value.list_value.count; i++)
+		{
+			amqpvalue_destroy(value_data->value.list_value.items[i]);
+		}
+
+		amqpalloc_free(value_data->value.list_value.items);
+		break;
+	}
+	case AMQP_TYPE_BINARY:
+		if (value_data->value.binary_value.bytes != NULL)
+		{
+			amqpalloc_free(value_data->value.binary_value.bytes);
+		}
+		break;
+	case AMQP_TYPE_STRING:
+		if (value_data->value.string_value.chars != NULL)
+		{
+			amqpalloc_free(value_data->value.string_value.chars);
+		}
+		break;
+	case AMQP_TYPE_COMPOSITE:
+		amqpvalue_destroy(value_data->value.composite_value.descriptor);
+		amqpvalue_destroy(value_data->value.composite_value.list);
+		break;
+	case AMQP_TYPE_DESCRIPTOR:
+		amqpvalue_destroy(value_data->value.descriptor);
+		break;
+	}
+
+	value_data->type = AMQP_TYPE_UNKNOWN;
+}
+
 void amqpvalue_destroy(AMQP_VALUE value)
 {
 	if (value != NULL)
 	{
 		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		switch (value_data->type)
-		{
-		default:
-			break;
-		case AMQP_TYPE_LIST:
-		{
-			size_t i;
-			for (i = 0; i < value_data->value.list_value.count; i++)
-			{
-				amqpvalue_destroy(value_data->value.list_value.items[i]);
-			}
-
-			amqpalloc_free(value_data->value.list_value.items);
-			break;
-		}
-		case AMQP_TYPE_BINARY:
-			if (value_data->value.binary_value.bytes != NULL)
-			{
-				amqpalloc_free(value_data->value.binary_value.bytes);
-			}
-			break;
-		case AMQP_TYPE_STRING:
-			if (value_data->value.string_value.chars != NULL)
-			{
-				amqpalloc_free(value_data->value.string_value.chars);
-			}
-			break;
-		case AMQP_TYPE_COMPOSITE:
-			amqpvalue_destroy(value_data->value.composite_value.descriptor);
-			amqpvalue_destroy(value_data->value.composite_value.list);
-			break;
-		case AMQP_TYPE_DESCRIPTOR:
-			amqpvalue_destroy(value_data->value.descriptor);
-			break;
-		}
-
+		amqpvalue_clear(value_data);
 		amqpalloc_free(value);
 	}
 }
@@ -1298,6 +1309,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 				break;
 			case DECODER_STATE_CONSTRUCTOR:
 			{
+				amqpvalue_clear(internal_decoder_data->decode_to_value);
 				internal_decoder_data->constructor_byte = buffer[0];
 				buffer++;
 				size--;

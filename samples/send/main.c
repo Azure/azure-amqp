@@ -43,7 +43,10 @@ int main(int argc, char** argv)
 		while (!sent)
 		{
 			size_t current_memory_used;
-			messaging_dowork(messaging);
+			if (messaging_dowork(messaging) != 0)
+			{
+				break;
+			}
 
 			current_memory_used = amqpalloc_get_current_memory_used();
 			

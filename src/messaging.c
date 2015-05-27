@@ -274,8 +274,6 @@ int messaging_dowork(MESSAGING_HANDLE handle)
 				}
 			}
 		}
-
-		result = 0;
 	}
 
 	return result;

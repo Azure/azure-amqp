@@ -100,7 +100,7 @@ typedef struct INTERNAL_DECODER_DATA_TAG
 typedef struct DECODER_DATA_TAG
 {
 	INTERNAL_DECODER_DATA* internal_decoder;
-	AMQP_VALUE_DATA decode_to_value;
+	AMQP_VALUE_DATA* decode_to_value;
 } DECODER_DATA;
 
 /* Codes_SRS_AMQPVALUE_01_003: [1.6.1 null Indicates an empty value.] */
@@ -1259,7 +1259,11 @@ static INTERNAL_DECODER_DATA* internal_decoder_create(VALUE_DECODED_CALLBACK val
 
 static void internal_decoder_destroy(INTERNAL_DECODER_DATA* internal_decoder)
 {
-	amqpalloc_free(internal_decoder);
+	if (internal_decoder != NULL)
+	{
+		internal_decoder_destroy(internal_decoder->inner_decoder);
+		amqpalloc_free(internal_decoder);
+	}
 }
 
 static void inner_decoder_callback(void* context, AMQP_VALUE decoded_value)
@@ -1826,17 +1830,17 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 						if (internal_decoder_data->bytes_decoded == 0)
 						{
-							AMQP_VALUE_DATA* descriptor = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
-							if (descriptor == NULL)
+							AMQP_VALUE_DATA* list_item = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+							if (list_item == NULL)
 							{
 								internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
 								result = __LINE__;
 							}
 							else
 							{
-								descriptor->type = AMQP_TYPE_UNKNOWN;
-								internal_decoder_data->decode_to_value->value.descriptor = descriptor;
-								internal_decoder_data->inner_decoder = internal_decoder_create(inner_decoder_callback, internal_decoder_data, descriptor);
+								list_item->type = AMQP_TYPE_UNKNOWN;
+								internal_decoder_data->decode_to_value->value.list_value.items[internal_decoder_data->decode_value_state.list_value_state.item] = list_item;
+								internal_decoder_data->inner_decoder = internal_decoder_create(inner_decoder_callback, internal_decoder_data, list_item);
 								if (internal_decoder_data->inner_decoder == NULL)
 								{
 									internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
@@ -1904,7 +1908,17 @@ DECODER_HANDLE decoder_create(VALUE_DECODED_CALLBACK value_decoded_callback, voi
 	DECODER_DATA* decoder_data = (DECODER_DATA*)amqpalloc_malloc(sizeof(DECODER_DATA));
 	if (decoder_data != NULL)
 	{
-		decoder_data->internal_decoder = internal_decoder_create(value_decoded_callback, value_decoded_callback_context, &decoder_data->decode_to_value);
+		decoder_data->decode_to_value = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+		if (decoder_data->decode_to_value == NULL)
+		{
+			free(decoder_data);
+			decoder_data = NULL;
+		}
+		else
+		{
+			decoder_data->decode_to_value->type = AMQP_TYPE_UNKNOWN;
+			decoder_data->internal_decoder = internal_decoder_create(value_decoded_callback, value_decoded_callback_context, decoder_data->decode_to_value);
+		}
 	}
 
 	return decoder_data;
@@ -1915,6 +1929,7 @@ void decoder_destroy(DECODER_HANDLE handle)
 	DECODER_DATA* decoder_data = (DECODER_DATA*)handle;
 	if (decoder_data != NULL)
 	{
+		amqpvalue_destroy(decoder_data->decode_to_value);
 		internal_decoder_destroy(decoder_data->internal_decoder);
 		amqpalloc_free(handle);
 	}

@@ -53,6 +53,24 @@ typedef union AMQP_VALUE_UNION_TAG
 	AMQP_COMPOSITE_VALUE composite_value;
 } AMQP_VALUE_UNION;
 
+typedef enum DECODE_LIST_STEP_TAG
+{
+	DECODE_LIST_STEP_SIZE,
+	DECODE_LIST_STEP_COUNT,
+	DECODE_LIST_STEP_ITEMS
+} DECODE_LIST_STEP;
+
+typedef union DECODE_LIST_VALUE_STATE_TAG
+{
+	DECODE_LIST_STEP list_value_state;
+	uint32_t item;
+} DECODE_LIST_VALUE_STATE;
+
+typedef union DECODE_VALUE_STATE_UNION_TAG
+{
+	DECODE_LIST_VALUE_STATE list_value_state;
+} DECODE_VALUE_STATE_UNION;
+
 typedef struct AMQP_VALUE_DATA_TAG
 {
 	AMQP_TYPE type;
@@ -76,6 +94,7 @@ typedef struct INTERNAL_DECODER_DATA_TAG
 	uint8_t constructor_byte;
 	AMQP_VALUE_DATA* decode_to_value;
 	void* inner_decoder;
+	DECODE_VALUE_STATE_UNION decode_value_state;
 } INTERNAL_DECODER_DATA;
 
 typedef struct DECODER_DATA_TAG
@@ -1413,6 +1432,13 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 				}
 				}
 				break;
+				case 0xD0: /* list32 */
+					internal_decoder_data->decode_to_value->type = AMQP_TYPE_LIST;
+					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
+					internal_decoder_data->decode_to_value->value.list_value.count = 0;
+					internal_decoder_data->bytes_decoded = 0;
+					internal_decoder_data->decode_value_state.list_value_state.list_value_state = DECODE_LIST_STEP_SIZE;
+					break;
 			}
 
 			case DECODER_STATE_TYPE_DATA:
@@ -1725,80 +1751,136 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 						}
 					}
 				}
+				case 0xD0: /* list32 */
+				{
+					DECODE_LIST_STEP step = internal_decoder_data->decode_value_state.list_value_state.list_value_state;
+					switch (step)
+					{
+					default:
+						result = __LINE__;
+						break;
+
+					case DECODE_LIST_STEP_SIZE:
+						internal_decoder_data->bytes_decoded++;
+						buffer++;
+						size--;
+
+						if (internal_decoder_data->bytes_decoded == 4)
+						{
+							internal_decoder_data->decode_value_state.list_value_state.list_value_state = DECODE_LIST_STEP_COUNT;
+							internal_decoder_data->bytes_decoded = 0;
+							internal_decoder_data->decode_to_value->value.list_value.count = 0;
+						}
+						result = 0;
+
+						break;
+
+					case DECODE_LIST_STEP_COUNT:
+						internal_decoder_data->decode_to_value->value.list_value.count += buffer[0] << ((3 - internal_decoder_data->bytes_decoded) * 8);
+						internal_decoder_data->bytes_decoded++;
+						buffer++;
+						size--;
+
+						if (internal_decoder_data->bytes_decoded == 4)
+						{
+							uint32_t i;
+							internal_decoder_data->decode_to_value->value.list_value.items = (AMQP_VALUE*)amqpalloc_malloc(sizeof(AMQP_VALUE) * internal_decoder_data->decode_to_value->value.list_value.count);
+							if (internal_decoder_data->decode_to_value->value.list_value.items == NULL)
+							{
+								result = __LINE__;
+							}
+							else
+							{
+								for (i = 0; i < internal_decoder_data->decode_to_value->value.list_value.count; i++)
+								{
+									internal_decoder_data->decode_to_value->value.list_value.items[i] = NULL;
+								}
+								internal_decoder_data->decode_value_state.list_value_state.list_value_state = DECODE_LIST_STEP_ITEMS;
+								internal_decoder_data->bytes_decoded = 0;
+								internal_decoder_data->inner_decoder = NULL;
+								internal_decoder_data->decode_value_state.list_value_state.item = 0;
+								result = 0;
+							}
+						}
+						break;
+
+					case DECODE_LIST_STEP_ITEMS:
+					{
+						size_t used_bytes;
+
+						if (internal_decoder_data->bytes_decoded == 0)
+						{
+							AMQP_VALUE_DATA* descriptor = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+							if (descriptor == NULL)
+							{
+								internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+								result = __LINE__;
+							}
+							else
+							{
+								descriptor->type = AMQP_TYPE_UNKNOWN;
+								internal_decoder_data->decode_to_value->value.descriptor = descriptor;
+								internal_decoder_data->inner_decoder = internal_decoder_create(inner_decoder_callback, internal_decoder_data, descriptor);
+								if (internal_decoder_data->inner_decoder == NULL)
+								{
+									internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+									result = __LINE__;
+								}
+								else
+								{
+									result = 0;
+								}
+							}
+						}
+
+						if (internal_decoder_data->inner_decoder == NULL)
+						{
+							result = __LINE__;
+						}
+						else if (internal_decoder_decode_bytes(internal_decoder_data->inner_decoder, buffer, size, &used_bytes) != 0)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							INTERNAL_DECODER_DATA* inner_decoder = (INTERNAL_DECODER_DATA*)internal_decoder_data->inner_decoder;
+							buffer += used_bytes;
+							size -= used_bytes;
+
+							if (inner_decoder->decoder_state == DECODER_STATE_DONE)
+							{
+								internal_decoder_destroy(inner_decoder);
+								internal_decoder_data->inner_decoder = NULL;
+
+								internal_decoder_data->decode_value_state.list_value_state.item++;
+								if (internal_decoder_data->decode_value_state.list_value_state.item == internal_decoder_data->decode_to_value->value.list_value.count)
+								{
+									internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, &internal_decoder_data->decode_to_value);
+									internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+								}
+							}
+
+							result = 0;
+						}
+
+						break;
+					}
+					}
+
+					internal_decoder_data->decode_to_value->type = AMQP_TYPE_DESCRIPTOR;
+
+					break;
+				}
 				}
 				break;
 			}
 			}
 		}
 	}
-#if 0
-	if (internal_decoder_data->pos < internal_decoder_data->size)
-	{
-		unsigned char first_constructor_byte = internal_decoder_data->buffer[internal_decoder_data->pos++];
-		switch (first_constructor_byte)
-		{
-		case 0xD0:
-			/* list32 */
-			if (internal_decoder_data->size - internal_decoder_data->pos < 8)
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				uint32_t i;
-				uint32_t size = (uint32_t)internal_decoder_data->buffer[internal_decoder_data->pos++] << 24;
-				size += (uint32_t)internal_decoder_data->buffer[internal_decoder_data->pos++] << 16;
-				size += (uint32_t)internal_decoder_data->buffer[internal_decoder_data->pos++] << 8;
-				size += (uint32_t)internal_decoder_data->buffer[internal_decoder_data->pos++];
 
-				uint32_t count = (uint32_t)internal_decoder_data->buffer[internal_decoder_data->pos++] << 24;
-				count += (uint32_t)internal_decoder_data->buffer[internal_decoder_data->pos++] << 16;
-				count += (uint32_t)internal_decoder_data->buffer[internal_decoder_data->pos++] << 8;
-				count += (uint32_t)internal_decoder_data->buffer[internal_decoder_data->pos++];
+	*used_bytes = initial_size - size;
 
-				*amqp_value = amqpvalue_create_list(count);
-				if (*amqp_value == NULL)
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					for (i = 0; i < count; i++)
-					{
-						AMQP_VALUE child_amqp_value;
-						if (decoder_decode(handle, &child_amqp_value, NULL) != 0)
-						{
-							break;
-						}
-						else if (amqpvalue_set_list_item(*amqp_value, i, child_amqp_value) != 0)
-						{
-							break;
-						}
-					}
-
-					if (i < count)
-					{
-						result = __LINE__;
-					}
-					else
-					{
-						result = 0;
-					}
-				}
-
-			}
-			break;
-		}
-	}
-	else
-	{
-		result = __LINE__;
-	}
-}
-#endif
-*used_bytes = initial_size - size;
-
-return result;
+	return result;
 }
 
 DECODER_HANDLE decoder_create(VALUE_DECODED_CALLBACK value_decoded_callback, void* value_decoded_callback_context)

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include "frame_codec.h"
 #include "amqpvalue.h"
 #include "encoder.h"
@@ -36,7 +37,7 @@ typedef struct FRAME_CODEC_DATA_TAG
 	unsigned char* receive_frame_type_specific;
 } FRAME_CODEC_DATA;
 
-int frame_codec_encode_frame_bytes(FRAME_CODEC_HANDLE frame_codec, const void* bytes, size_t length)
+int frame_codec_encode_frame_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned char* bytes, size_t length)
 {
 	int result;
 	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
@@ -83,127 +84,6 @@ static int receive_frame_byte(FRAME_CODEC_DATA* frame_codec, unsigned char b)
 {
 	int result;
 
-	switch (frame_codec->receive_frame_state)
-	{
-	default:
-	/* Codes_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_receive_bytes shall fail.] */
-	case RECEIVE_FRAME_STATE_ERROR:
-		result = __LINE__;
-		break;
-
-	/* Codes_SRS_FRAME_CODEC_01_008: [SIZE Bytes 0-3 of the frame header contain the frame size.] */
-	case RECEIVE_FRAME_STATE_FRAME_SIZE:
-		/* Codes_SRS_FRAME_CODEC_01_009: [This is an unsigned 32-bit integer that MUST contain the total frame size of the frame header, extended header, and frame body.] */
-		frame_codec->receive_frame_size += b << (24 - frame_codec->receive_frame_pos * 8);
-		frame_codec->receive_frame_pos++;
-
-		if (frame_codec->receive_frame_pos == 4)
-		{
-			/* Codes_SRS_FRAME_CODEC_01_010: [The frame is malformed if the size is less than the size of the frame header (8 bytes).] */
-			if (frame_codec->receive_frame_size < FRAME_HEADER_SIZE)
-			{
-				/* Codes_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_receive_bytes shall fail.] */
-				frame_codec->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
-				result = __LINE__;
-			}
-			else
-			{
-				frame_codec->receive_frame_state = RECEIVE_FRAME_STATE_DOFF;
-				result = 0;
-			}
-		}
-		else
-		{
-			result = 0;
-		}
-
-		break;
-
-	case RECEIVE_FRAME_STATE_DOFF:
-		/* Codes_SRS_FRAME_CODEC_01_011: [DOFF Byte 4 of the frame header is the data offset.] */
-		/* Codes_SRS_FRAME_CODEC_01_013: [The value of the data offset is an unsigned, 8-bit integer specifying a count of 4-byte words.] */
-		/* Codes_SRS_FRAME_CODEC_01_012: [This gives the position of the body within the frame.] */
-		frame_codec->receive_frame_doff = b;
-		/* Codes_SRS_FRAME_CODEC_01_014: [Due to the mandatory 8-byte frame header, the frame is malformed if the value is less than 2.] */
-		if (frame_codec->receive_frame_doff < 2)
-		{
-			/* Codes_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_receive_bytes shall fail.] */
-			frame_codec->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
-			result = __LINE__;
-		}
-		else
-		{
-			frame_codec->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_TYPE;
-			result = 0;
-		}
-
-		break;
-
-	case RECEIVE_FRAME_STATE_FRAME_TYPE:
-	{
-		uint32_t type_specific_size = (frame_codec->receive_frame_doff * 4) - 6;
-
-		/* Codes_SRS_FRAME_CODEC_01_015: [TYPE Byte 5 of the frame header is a type code.] */
-		frame_codec->receive_frame_type = b;
-		frame_codec->receive_frame_pos = 0;
-		frame_codec->receive_frame_type_specific = (unsigned char*)amqpalloc_malloc(type_specific_size);
-		if (frame_codec->receive_frame_type_specific == NULL)
-		{
-			frame_codec->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
-			result = __LINE__;
-			break;
-		}
-		else
-		{
-			frame_codec->receive_frame_state = RECEIVE_FRAME_STATE_TYPE_SPECIFIC;
-			result = 0;
-			break;
-		}
-	}
-
-	case RECEIVE_FRAME_STATE_TYPE_SPECIFIC:
-	{
-		uint32_t type_specific_size = (frame_codec->receive_frame_doff * 4) - 6;
-
-		frame_codec->receive_frame_type_specific[frame_codec->receive_frame_pos++] = b;
-		if (frame_codec->receive_frame_pos == type_specific_size)
-		{
-			/* Codes_SRS_FRAME_CODEC_01_031: [When a frame is successfully decoded it shall be indicated to the upper layer by invoking the receive callback passed to frame_codec_create.] */
-			/* Codes_SRS_FRAME_CODEC_01_032: [Besides passing the frame information, the frame_received_callback_context value passed to frame_codec_create shall be passed to the frame_received_callback function.] */
-			frame_codec->frame_begin_callback(frame_codec->callback_context, frame_codec->receive_frame_size - frame_codec->receive_frame_doff * 4, frame_codec->receive_frame_type_specific, type_specific_size);
-			amqpalloc_free(frame_codec->receive_frame_type_specific);
-			frame_codec->receive_frame_type_specific = NULL;
-
-			frame_codec->receive_frame_pos = 0;
-			if (frame_codec->receive_frame_size == FRAME_HEADER_SIZE)
-			{
-				frame_codec->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
-				frame_codec->receive_frame_size = 0;
-			}
-			else
-			{
-				frame_codec->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_BODY;
-			}
-		}
-
-		result = 0;
-		break;
-	}
-
-	case RECEIVE_FRAME_STATE_FRAME_BODY:
-		frame_codec->frame_body_bytes_received_callback(frame_codec->callback_context, &b, 1);
-		frame_codec->receive_frame_pos++;
-
-		if (frame_codec->receive_frame_pos == frame_codec->receive_frame_size)
-		{
-			frame_codec->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
-			frame_codec->receive_frame_pos = 0;
-			frame_codec->receive_frame_size = 0;
-		}
-		result = 0;
-
-		break;
-	}
 
 	return result;
 }
@@ -262,10 +142,9 @@ int frame_codec_set_max_frame_size(FRAME_CODEC_HANDLE frame_codec, uint32_t max_
 	return 0;
 }
 
-int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const void* buffer, size_t size)
+int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned char* buffer, size_t size)
 {
 	int result;
-	size_t i;
 	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
 
 	/* Codes_SRS_FRAME_CODEC_01_026: [If frame_codec or buffer are NULL, frame_codec_receive_bytes shall return a non-zero value.] */
@@ -278,22 +157,174 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const void* buffer
 	}
 	else
 	{
-		for (i = 0; i < size; i++)
+		while (size > 0)
 		{
-			if (receive_frame_byte(frame_codec_data, ((unsigned char*)buffer)[i]) != 0)
+			switch (frame_codec_data->receive_frame_state)
 			{
+			default:
+			case RECEIVE_FRAME_STATE_ERROR:
+				/* Codes_SRS_frame_codec_data_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
+				result = __LINE__;
+				size = 0;
+				break;
+
+				/* Codes_SRS_frame_codec_data_01_008: [SIZE Bytes 0-3 of the frame header contain the frame size.] */
+			case RECEIVE_FRAME_STATE_FRAME_SIZE:
+				/* Codes_SRS_frame_codec_data_01_009: [This is an unsigned 32-bit integer that MUST contain the total frame size of the frame header, extended header, and frame body.] */
+				frame_codec_data->receive_frame_size += buffer[0] << (24 - frame_codec_data->receive_frame_pos * 8);
+				buffer++;
+				size--;
+				frame_codec_data->receive_frame_pos++;
+
+				if (frame_codec_data->receive_frame_pos == 4)
+				{
+					/* Codes_SRS_frame_codec_data_01_010: [The frame is malformed if the size is less than the size of the frame header (8 bytes).] */
+					if (frame_codec_data->receive_frame_size < FRAME_HEADER_SIZE)
+					{
+						/* Codes_SRS_frame_codec_data_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
+						frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
+						result = __LINE__;
+					}
+					else
+					{
+						frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_DOFF;
+						result = 0;
+					}
+				}
+				else
+				{
+					result = 0;
+				}
+
+				break;
+
+			case RECEIVE_FRAME_STATE_DOFF:
+				/* Codes_SRS_frame_codec_data_01_011: [DOFF Byte 4 of the frame header is the data offset.] */
+				/* Codes_SRS_frame_codec_data_01_013: [The value of the data offset is an unsigned, 8-bit integer specifying a count of 4-byte words.] */
+				/* Codes_SRS_frame_codec_data_01_012: [This gives the position of the body within the frame.] */
+				frame_codec_data->receive_frame_doff = buffer[0];
+				buffer++;
+				size--;
+
+				/* Codes_SRS_frame_codec_data_01_014: [Due to the mandatory 8-byte frame header, the frame is malformed if the value is less than 2.] */
+				if (frame_codec_data->receive_frame_doff < 2)
+				{
+					/* Codes_SRS_frame_codec_data_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
+					frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
+					result = __LINE__;
+				}
+				else
+				{
+					frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_TYPE;
+					result = 0;
+				}
+
+				break;
+
+			case RECEIVE_FRAME_STATE_FRAME_TYPE:
+			{
+				uint32_t type_specific_size = (frame_codec_data->receive_frame_doff * 4) - 6;
+
+				/* Codes_SRS_frame_codec_data_01_015: [TYPE Byte 5 of the frame header is a type code.] */
+				frame_codec_data->receive_frame_type = buffer[0];
+				buffer++;
+				size--;
+
+				frame_codec_data->receive_frame_pos = 0;
+				frame_codec_data->receive_frame_type_specific = (unsigned char*)amqpalloc_malloc(type_specific_size);
+				/* Codes_SRS_frame_codec_data_01_030: [If a decoding error occurs, frame_codec_data_receive_bytes shall return a non-zero value.] */
+				if (frame_codec_data->receive_frame_type_specific == NULL)
+				{
+					/* Codes_SRS_frame_codec_data_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
+					frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
+					result = __LINE__;
+					break;
+				}
+				else
+				{
+					frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_TYPE_SPECIFIC;
+					result = 0;
+					break;
+				}
+			}
+
+			case RECEIVE_FRAME_STATE_TYPE_SPECIFIC:
+			{
+				uint32_t type_specific_size = (frame_codec_data->receive_frame_doff * 4) - 6;
+				uint32_t to_copy = type_specific_size - frame_codec_data->receive_frame_pos;
+				if (to_copy > size)
+				{
+					to_copy = size;
+				}
+
+				if (memcpy(&frame_codec_data->receive_frame_type_specific[frame_codec_data->receive_frame_pos], buffer, to_copy) == NULL)
+				{
+					/* Codes_SRS_frame_codec_data_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
+					frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
+					result = __LINE__;
+					break;
+				}
+				else
+				{
+					frame_codec_data->receive_frame_pos += to_copy;
+					buffer += to_copy;
+					size -= to_copy;
+					if (frame_codec_data->receive_frame_pos == type_specific_size)
+					{
+						/* Codes_SRS_frame_codec_data_01_031: [When a frame header is successfully decoded it shall be indicated to the upper layer by invoking the frame_begin_callback passed to frame_codec_data_subscribe.] */
+						/* Codes_SRS_frame_codec_data_01_032: [Besides passing the frame information, the callback_context value passed to frame_codec_data_subscribe shall be passed to the frame_begin_callback function.] */
+						frame_codec_data->frame_begin_callback(frame_codec_data->callback_context, frame_codec_data->receive_frame_size - frame_codec_data->receive_frame_doff * 4, frame_codec_data->receive_frame_type_specific, type_specific_size);
+						amqpalloc_free(frame_codec_data->receive_frame_type_specific);
+						frame_codec_data->receive_frame_type_specific = NULL;
+
+						frame_codec_data->receive_frame_pos = 0;
+
+						/* Codes_SRS_frame_codec_data_01_085: [If the frame body is empty, no call to frame_body_bytes_received_callback shall be made.] */
+						if (frame_codec_data->receive_frame_size == FRAME_HEADER_SIZE)
+						{
+							frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
+							frame_codec_data->receive_frame_size = 0;
+						}
+						else
+						{
+							frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_BODY;
+						}
+					}
+
+					result = 0;
+				}
+
 				break;
 			}
-		}
 
-		if (i < size)
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			/* Codes_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it returns zero.] */
-			result = 0;
+			case RECEIVE_FRAME_STATE_FRAME_BODY:
+			{
+				uint32_t frame_body_size = frame_codec_data->receive_frame_size - (frame_codec_data->receive_frame_doff * 4);
+				uint32_t to_notify = frame_body_size;
+				if (to_notify > size)
+				{
+					to_notify = size;
+				}
+
+				/* Codes_SRS_frame_codec_data_01_083: [The frame body bytes shall be passed to the frame_body_bytes_received_callback function that was given to frame_codec_data_subscribe.] */
+				/* Codes_SRS_frame_codec_data_01_084: [The bytes shall be passed to frame_body_bytes_received_callback as they arrive, not waiting for all frame body bytes to be received.] */
+				/* Codes_SRS_frame_codec_data_01_086: [Besides passing the frame information, the callback_context value passed to frame_codec_data_subscribe shall be passed to the frame_body_bytes_received_callback function.] */
+				frame_codec_data->frame_body_bytes_received_callback(frame_codec_data->callback_context, buffer, to_notify);
+				buffer += to_notify;
+				size -= to_notify;
+				frame_codec_data->receive_frame_pos += to_notify;
+
+				if (frame_codec_data->receive_frame_pos == frame_body_size)
+				{
+					frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
+					frame_codec_data->receive_frame_pos = 0;
+					frame_codec_data->receive_frame_size = 0;
+				}
+				result = 0;
+
+				break;
+			}
+			}
 		}
 	}
 

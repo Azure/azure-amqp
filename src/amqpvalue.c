@@ -1017,10 +1017,16 @@ void amqpvalue_destroy(AMQP_VALUE value)
 			break;
 		}
 		case AMQP_TYPE_BINARY:
-			amqpalloc_free(value_data->value.binary_value.bytes);
+			if (value_data->value.binary_value.bytes != NULL)
+			{
+				amqpalloc_free(value_data->value.binary_value.bytes);
+			}
 			break;
 		case AMQP_TYPE_STRING:
-			amqpalloc_free(value_data->value.string_value.chars);
+			if (value_data->value.string_value.chars != NULL)
+			{
+				amqpalloc_free(value_data->value.string_value.chars);
+			}
 			break;
 		case AMQP_TYPE_COMPOSITE:
 			amqpvalue_destroy(value_data->value.composite_value.descriptor);

@@ -30,8 +30,6 @@ int open_frame_encode(FRAME_CODEC_HANDLE frame_codec, const char* container_id)
 			{
 				result = 0;
 			}
-
-			amqpvalue_destroy(container_id_value);
 		}
 
 		amqpvalue_destroy(open_frame_list);

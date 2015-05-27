@@ -23,6 +23,8 @@ static ALLOCATION* head = NULL;
 static size_t total_size = 0;
 static size_t max_size = 0;
 
+#ifndef DISABLE_MEMORY_TRACE
+
 void* trace_malloc(size_t size)
 {
 	void* result;
@@ -248,6 +250,8 @@ void* amqpalloc_realloc(void* ptr, size_t size)
 
 	return result;
 }
+
+#endif
 
 size_t amqpalloc_get_maximum_memory_used(void)
 {

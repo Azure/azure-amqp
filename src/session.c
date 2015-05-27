@@ -57,10 +57,6 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 			}
 		}
 
-		amqpvalue_destroy(remote_channel_value);
-		amqpvalue_destroy(next_outgoing_id_value);
-		amqpvalue_destroy(incoming_window_value);
-		amqpvalue_destroy(outgoing_window_value);
 		amqpvalue_destroy(begin_frame_list);
 	}
 

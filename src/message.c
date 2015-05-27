@@ -105,6 +105,7 @@ AMQP_VALUE message_get_body(MESSAGE_HANDLE handle)
 	else
 	{
 		result = message->body;
+		message->body = NULL;
 	}
 
 	return result;

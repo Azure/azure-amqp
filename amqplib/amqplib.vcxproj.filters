@@ -33,9 +33,6 @@
     <ClInclude Include="..\inc\encoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\inc\decoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\inc\amqp_types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -96,9 +93,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\encoder.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\decoder.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\amqpvalue.c">

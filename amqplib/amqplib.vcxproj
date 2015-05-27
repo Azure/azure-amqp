@@ -20,7 +20,6 @@
     <ClInclude Include="..\inc\close_frame.h" />
     <ClInclude Include="..\inc\connection.h" />
     <ClInclude Include="..\inc\consolelogger.h" />
-    <ClInclude Include="..\inc\decoder.h" />
     <ClInclude Include="..\inc\encoder.h" />
     <ClInclude Include="..\inc\frame_codec.h" />
     <ClInclude Include="..\inc\io.h" />
@@ -41,7 +40,6 @@
     <ClCompile Include="..\src\close_frame.c" />
     <ClCompile Include="..\src\connection.c" />
     <ClCompile Include="..\src\consolelogger.c" />
-    <ClCompile Include="..\src\decoder.c" />
     <ClCompile Include="..\src\encoder.c" />
     <ClCompile Include="..\src\frame_codec.c" />
     <ClCompile Include="..\src\io.c" />

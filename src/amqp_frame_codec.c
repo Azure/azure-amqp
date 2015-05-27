@@ -5,8 +5,8 @@
 #include "amqp_frame_codec.h"
 #include "frame_codec.h"
 #include "encoder.h"
-#include "decoder.h"
 #include "amqpalloc.h"
+#include "amqpvalue.h"
 
 typedef enum AMQP_FRAME_DECODE_STATE_TAG
 {

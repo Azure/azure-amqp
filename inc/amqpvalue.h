@@ -49,6 +49,13 @@ extern "C" {
 	extern AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length);
 	extern const void* amqpvalue_get_binary(AMQP_VALUE value, uint32_t* length);
 
+	typedef void* DECODER_HANDLE;
+	typedef void(*VALUE_DECODED_CALLBACK)(void* context, AMQP_VALUE decoded_value);
+
+	extern DECODER_HANDLE decoder_create(VALUE_DECODED_CALLBACK value_decoded_callback, void* value_decoded_callback_context);
+	extern void decoder_destroy(DECODER_HANDLE handle);
+	extern int decoder_decode_bytes(DECODER_HANDLE handle, const unsigned char* buffer, size_t size);
+
 	extern AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_create_string(const char* value);
 	extern AMQP_VALUE amqpvalue_create_string_with_length(const char* value, uint32_t length);

@@ -6,7 +6,6 @@
 #include "frame_codec.h"
 #include "io.h"
 #include "encoder.h"
-#include "decoder.h"
 
 #define TEST_IO_HANDLE					(IO_HANDLE)0x4242
 #define TEST_DESCRIPTION_AMQP_VALUE		(AMQP_VALUE)0x4243

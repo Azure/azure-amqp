@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include "connection.h"
-#include "decoder.h"
 #include "consolelogger.h"
 #include "frame_codec.h"
 #include "amqp_frame_codec.h"

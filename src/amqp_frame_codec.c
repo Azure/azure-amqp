@@ -12,13 +12,13 @@ typedef struct AMQP_FRAME_CODEC_DATA_TAG
 	FRAME_CODEC_HANDLE frame_codec_handle;
 	AMQP_FRAME_RECEIVED_CALLBACK frame_receive_callback;
 	void* frame_receive_callback_context;
-	unsigned char frame_body[512];
+	unsigned char frame_body[256];
 	uint32_t frame_body_size;
 	uint32_t frame_body_pos;
 	uint8_t channel;
 } AMQP_FRAME_CODEC_DATA;
 
-static void frame_begin(void* context, const unsigned char* type_specific, uint32_t type_specific_size, uint32_t frame_body_size)
+static void frame_begin(void* context, uint32_t frame_body_size, const unsigned char* type_specific, uint32_t type_specific_size)
 {
 	AMQP_FRAME_CODEC_DATA* amqp_frame_codec = (AMQP_FRAME_CODEC_DATA*)context;
 	amqp_frame_codec->frame_body_size = frame_body_size;
@@ -77,7 +77,7 @@ static void frame_body_bytes_received(void* context, const unsigned char* frame_
 
 AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec_handle, AMQP_FRAME_RECEIVED_CALLBACK frame_receive_callback, void* frame_receive_callback_context)
 {
-	AMQP_FRAME_CODEC_DATA* result = (AMQP_FRAME_CODEC_DATA*)malloc(sizeof(AMQP_FRAME_CODEC_DATA));
+	AMQP_FRAME_CODEC_DATA* result = (AMQP_FRAME_CODEC_DATA*)amqpalloc_malloc(sizeof(AMQP_FRAME_CODEC_DATA));
 	if (result != NULL)
 	{
 		result->frame_codec_handle = frame_codec_handle;
@@ -94,7 +94,7 @@ void amqp_frame_codec_destroy(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_handle)
 {
 	if (amqp_frame_codec_handle != NULL)
 	{
-		free(amqp_frame_codec_handle);
+		amqpalloc_free(amqp_frame_codec_handle);
 	}
 }
 

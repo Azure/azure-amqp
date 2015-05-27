@@ -55,7 +55,7 @@ public:
 	MOCK_VOID_METHOD_END();
 
 	/* decoder mocks */
-	MOCK_STATIC_METHOD_2(, DECODER_HANDLE, decoder_create, const void*, buffer, size_t, length)
+	MOCK_STATIC_METHOD_2(, DECODER_HANDLE, decoder_create, VALUE_DECODED_CALLBACK, value_decoded_callback, void*, value_decoded_callback_context)
 	MOCK_METHOD_END(DECODER_HANDLE, TEST_DECODER_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, decoder_destroy, DECODER_HANDLE, handle)
 	MOCK_VOID_METHOD_END();
@@ -86,7 +86,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_2(frame_codec_mocks, , ENCODER_HANDLE, encoder_create, ENCODER_OUTPUT, encoder_output, void*, context);
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, encoder_destroy, ENCODER_HANDLE, handle);
 
-	DECLARE_GLOBAL_MOCK_METHOD_2(frame_codec_mocks, , DECODER_HANDLE, decoder_create, const void*, buffer, size_t, length);
+	DECLARE_GLOBAL_MOCK_METHOD_2(frame_codec_mocks, , DECODER_HANDLE, decoder_create, VALUE_DECODED_CALLBACK, value_decoded_callback, void*, value_decoded_callback_context);
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, decoder_destroy, DECODER_HANDLE, handle);
 	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , int, decoder_decode, DECODER_HANDLE, handle, AMQP_VALUE*, amqp_value, bool*, more);
 

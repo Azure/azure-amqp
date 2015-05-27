@@ -11,10 +11,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 	typedef void* DECODER_HANDLE;
+	typedef void(*VALUE_DECODED_CALLBACK)(void* context, AMQP_VALUE decoded_value);
 
-	extern DECODER_HANDLE decoder_create(const void* buffer, size_t length);
+	extern DECODER_HANDLE decoder_create(VALUE_DECODED_CALLBACK value_decoded_callback, void* value_decoded_callback_context);
 	extern void decoder_destroy(DECODER_HANDLE handle);
-	extern int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more);
+	extern int decoder_decode_bytes(DECODER_HANDLE handle, const unsigned char* buffer, size_t size);
 
 #ifdef __cplusplus
 }

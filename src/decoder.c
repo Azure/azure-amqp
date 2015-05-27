@@ -2,21 +2,32 @@
 #include "decoder.h"
 #include "amqpalloc.h"
 
+typedef enum DECODER_STATE_TAG
+{
+	DECODER_STATE_CONSTRUCTOR,
+	DECODER_STATE_TYPE_DATA,
+	DECODER_STATE_ERROR
+} DECODER_STATE;
+
 typedef struct DECODER_DATA_TAG
 {
-	unsigned char* buffer;
-	size_t size;
-	size_t pos;
+	VALUE_DECODED_CALLBACK value_decoded_callback;
+	void* value_decoded_callback_context;
+	void* inner_decoder;
+	size_t bytes_received;
+	DECODER_STATE decoder_state;
+	uint8_t constructor_byte;
 } DECODER_DATA;
 
-DECODER_HANDLE decoder_create(void* buffer, size_t size)
+DECODER_HANDLE decoder_create(VALUE_DECODED_CALLBACK value_decoded_callback, void* value_decoded_callback_context)
 {
 	DECODER_DATA* decoderData = (DECODER_DATA*)amqpalloc_malloc(sizeof(DECODER_DATA));
 	if (decoderData != NULL)
 	{
-		decoderData->buffer = buffer;
-		decoderData->size = size;
-		decoderData->pos = 0;
+		decoderData->value_decoded_callback = value_decoded_callback;
+		decoderData->value_decoded_callback_context = value_decoded_callback_context;
+		decoderData->inner_decoder = NULL;
+		decoderData->decoder_state = DECODER_STATE_CONSTRUCTOR;
 	}
 
 	return decoderData;
@@ -27,7 +38,7 @@ void decoder_destroy(DECODER_HANDLE handle)
 	amqpalloc_free(handle);
 }
 
-int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
+int decoder_decode_bytes(DECODER_HANDLE handle, const unsigned char* buffer, size_t size)
 {
 	int result;
 
@@ -38,15 +49,179 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 	else
 	{
 		DECODER_DATA* decoderData = (DECODER_DATA*)handle;
+		switch (decoderData->decoder_state)
+		{
+			default:
+				break;
+			case DECODER_STATE_CONSTRUCTOR:
+			{
+				decoderData->constructor_byte = buffer[0];
+				buffer++;
+				size--;
+				switch (decoderData->constructor_byte)
+				{
+					default:
+						result = __LINE__;
+						break;
+					case 0x40:
+					{
+						/* null */
+						AMQP_VALUE amqp_value = amqpvalue_create_null();
+						if (amqp_value == NULL)
+						{
+							decoderData->decoder_state = DECODER_STATE_ERROR;
+							result = __LINE__;
+						}
+						else
+						{
+							decoderData->value_decoded_callback(decoderData->value_decoded_callback_context, amqp_value);
+							amqpvalue_destroy(amqp_value);
+							decoderData->decoder_state = DECODER_STATE_CONSTRUCTOR;
+							result = 0;
+						}
+
+						break;
+					}
+					case 0x41:
+					{
+						/* true */
+						AMQP_VALUE amqp_value = amqpvalue_create_boolean(true);
+						if (amqp_value == NULL)
+						{
+							decoderData->decoder_state = DECODER_STATE_ERROR;
+							result = __LINE__;
+						}
+						else
+						{
+							decoderData->value_decoded_callback(decoderData->value_decoded_callback_context, amqp_value);
+							amqpvalue_destroy(amqp_value);
+							decoderData->decoder_state = DECODER_STATE_CONSTRUCTOR;
+							result = 0;
+						}
+						break;
+					}
+					case 0x42:
+					{
+						/* false */
+						AMQP_VALUE amqp_value = amqpvalue_create_boolean(false);
+						if (amqp_value == NULL)
+						{
+							decoderData->decoder_state = DECODER_STATE_ERROR;
+							result = __LINE__;
+						}
+						else
+						{
+							decoderData->value_decoded_callback(decoderData->value_decoded_callback_context, amqp_value);
+							amqpvalue_destroy(amqp_value);
+							decoderData->decoder_state = DECODER_STATE_CONSTRUCTOR;
+							result = 0;
+						}
+						break;
+					}
+					case 0x43:
+					{
+						/* uint0 */
+						AMQP_VALUE amqp_value = amqpvalue_create_uint(0);
+						if (amqp_value == NULL)
+						{
+							decoderData->decoder_state = DECODER_STATE_ERROR;
+							result = __LINE__;
+						}
+						else
+						{
+							decoderData->value_decoded_callback(decoderData->value_decoded_callback_context, amqp_value);
+							amqpvalue_destroy(amqp_value);
+							decoderData->decoder_state = DECODER_STATE_CONSTRUCTOR;
+							result = 0;
+						}
+						break;
+					}
+					case 0x44:
+					{
+						/* ulong0 */
+						AMQP_VALUE amqp_value = amqpvalue_create_ulong(0);
+						if (amqp_value == NULL)
+						{
+							decoderData->decoder_state = DECODER_STATE_ERROR;
+							result = __LINE__;
+						}
+						else
+						{
+							decoderData->value_decoded_callback(decoderData->value_decoded_callback_context, amqp_value);
+							amqpvalue_destroy(amqp_value);
+							decoderData->decoder_state = DECODER_STATE_CONSTRUCTOR;
+							result = 0;
+						}
+						break;
+					}
+					case 0x50: /* ubyte */
+					case 0x53: /* smallulong */
+					{
+						decoderData->decoder_state = DECODER_STATE_TYPE_DATA;
+						break;
+					}
+				}
+				decoderData->decoder_state = DECODER_STATE_TYPE_DATA;
+				break;
+			}
+
+			case DECODER_STATE_TYPE_DATA:
+			{
+				switch (decoderData->constructor_byte)
+				{
+					default:
+						break;
+					case 0x50:
+					{
+						/* ubyte */
+						AMQP_VALUE amqp_value = amqpvalue_create_ubyte(buffer[0]);
+						buffer++;
+						size--;
+						if (amqp_value == NULL)
+						{
+							decoderData->decoder_state = DECODER_STATE_ERROR;
+							result = __LINE__;
+						}
+						else
+						{
+							decoderData->value_decoded_callback(decoderData->value_decoded_callback_context, amqp_value);
+							amqpvalue_destroy(amqp_value);
+							decoderData->decoder_state = DECODER_STATE_CONSTRUCTOR;
+							result = 0;
+						}
+						break;
+					}
+					case 0x53:
+					{
+						/* smallulong */
+						AMQP_VALUE amqp_value = amqpvalue_create_ulong(buffer[0]);
+						buffer++;
+						size--;
+						if (amqp_value == NULL)
+						{
+							decoderData->decoder_state = DECODER_STATE_ERROR;
+							result = __LINE__;
+						}
+						else
+						{
+							decoderData->value_decoded_callback(decoderData->value_decoded_callback_context, amqp_value);
+							amqpvalue_destroy(amqp_value);
+							decoderData->decoder_state = DECODER_STATE_CONSTRUCTOR;
+							result = 0;
+						}
+						break;
+					}
+				}
+				break;
+			}
+		}
+	}
+#if 0
 		if (decoderData->pos < decoderData->size)
 		{
 			unsigned char first_constructor_byte = decoderData->buffer[decoderData->pos++];
 			switch (first_constructor_byte)
 			{
-            default:
-                result = __LINE__;
-                break;
-
 			case 0x00:
 			{
 				/* descriptor */
@@ -71,72 +246,6 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 				break;
 			}
 
-			case 0x40:
-			{
-				/* null */
-				*amqp_value = amqpvalue_create_null();
-				if (*amqp_value == NULL)
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					result = 0;
-				}
-				break;
-			}
-
-			case 0x41:
-			{
-				/* true */
-				*amqp_value = amqpvalue_create_boolean(true);
-				if (*amqp_value == NULL)
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					result = 0;
-				}
-				break;
-			}
-
-			case 0x42:
-			{
-				/* false */
-				*amqp_value = amqpvalue_create_boolean(false);
-				if (*amqp_value == NULL)
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					result = 0;
-				}
-				break;
-			}
-
-			case 0x50:
-				/* ubyte */
-				if (decoderData->size - decoderData->pos < 1)
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					unsigned char ubyte_value = decoderData->buffer[decoderData->pos++];
-					*amqp_value = amqpvalue_create_ubyte(ubyte_value);
-					if (*amqp_value == NULL)
-					{
-						result = __LINE__;
-					}
-					else
-					{
-						result = 0;
-					}
-				}
-				break;
-
 			case 0x60:
 				/* ushort */
 				if (decoderData->size - decoderData->pos < 2)
@@ -148,39 +257,6 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 					uint16_t ushort_value = decoderData->buffer[decoderData->pos++] << 8;
 					ushort_value += decoderData->buffer[decoderData->pos++];
 					*amqp_value = amqpvalue_create_ushort(ushort_value);
-					if (*amqp_value == NULL)
-					{
-						result = __LINE__;
-					}
-					else
-					{
-						result = 0;
-					}
-				}
-				break;
-
-			case 0x44:
-				/* ulong0 */
-				*amqp_value = amqpvalue_create_ulong(0);
-				if (*amqp_value == NULL)
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					result = 0;
-				}
-				break;
-
-			case 0x53:
-				/* smallulong */
-				if (decoderData->pos >= decoderData->size)
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					*amqp_value = amqpvalue_create_ulong(decoderData->buffer[decoderData->pos++]);
 					if (*amqp_value == NULL)
 					{
 						result = __LINE__;
@@ -217,19 +293,6 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 					{
 						result = 0;
 					}
-				}
-				break;
-
-			case 0x43:
-				/* uint0 */
-				*amqp_value = amqpvalue_create_uint(0);
-				if (*amqp_value == NULL)
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					result = 0;
 				}
 				break;
 
@@ -460,12 +523,8 @@ int decoder_decode(DECODER_HANDLE handle, AMQP_VALUE* amqp_value, bool* more)
 		{
 			result = __LINE__;
 		}
-
-		if (more != NULL)
-		{
-			*more = (decoderData->pos < decoderData->size);
-		}
 	}
+#endif
 
 	return result;
 }

@@ -214,7 +214,7 @@ TEST_METHOD(frame_codec_destroy_while_receiving_type_specific_data_frees_the_typ
 	frame_codec_mocks mocks;
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00 };
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));
 	mocks.ResetAllCalls();
 
@@ -268,7 +268,7 @@ TEST_METHOD(frame_codec_receive_bytes_decodes_one_empty_frame)
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00 };
 
@@ -290,7 +290,7 @@ TEST_METHOD(frame_codec_receive_bytes_with_not_enough_bytes_for_a_frame_does_not
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00 };
 
@@ -323,7 +323,7 @@ TEST_METHOD(frame_codec_receive_bytes_with_NULL_buffer_fails)
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 
 	// act
@@ -340,7 +340,7 @@ TEST_METHOD(frame_codec_receive_bytes_with_zero_size_fails)
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00 };
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 
 	// act
@@ -356,7 +356,7 @@ TEST_METHOD(when_frame_codec_receive_1_byte_in_one_call_and_the_rest_of_the_fram
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00 };
 
@@ -380,7 +380,7 @@ TEST_METHOD(when_frame_codec_receive_the_frame_bytes_in_1_byte_per_call_a_succes
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00 };
 	size_t i;
@@ -408,7 +408,7 @@ TEST_METHOD(a_frame_codec_receive_bytes_call_with_bad_args_before_any_real_frame
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00 };
 
@@ -432,7 +432,7 @@ TEST_METHOD(a_frame_codec_receive_bytes_call_with_bad_args_in_the_middle_of_the_
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00 };
 
@@ -457,7 +457,7 @@ TEST_METHOD(frame_codec_receive_bytes_decodes_2_empty_frames)
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame1[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x01, 0x02 };
 	unsigned char frame2[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x03, 0x04 };
@@ -486,7 +486,7 @@ TEST_METHOD(a_call_to_frame_codec_receive_bytes_with_bad_args_between_2_frames_d
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame1[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x01, 0x02 };
 	unsigned char frame2[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x03, 0x04 };
@@ -516,7 +516,7 @@ TEST_METHOD(when_frame_size_is_bad_frame_codec_receive_bytes_fails)
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x07, 0x02, 0x00, 0x01, 0x02 };
 
@@ -533,7 +533,7 @@ TEST_METHOD(when_frame_size_has_a_bad_doff_frame_codec_receive_bytes_fails)
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x01, 0x00, 0x01, 0x02 };
 
@@ -550,7 +550,7 @@ TEST_METHOD(after_a_frame_decode_error_occurs_due_to_frame_size_a_subsequent_dec
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char bad_frame[] = { 0x00, 0x00, 0x00, 0x07, 0x02, 0x00, 0x01, 0x02 };
 	unsigned char good_frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x01, 0x02 };
@@ -570,7 +570,7 @@ TEST_METHOD(after_a_frame_decode_error_occurs_due_to_bad_doff_size_a_subsequent_
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char bad_frame[] = { 0x00, 0x00, 0x00, 0x08, 0x01, 0x00, 0x01, 0x02 };
 	unsigned char good_frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x01, 0x02 };
@@ -592,7 +592,7 @@ TEST_METHOD(receiving_a_frame_with_1_byte_frame_body_succeeds)
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x09, 0x02, 0x00, 0x01, 0x02, 0x42 };
 
@@ -616,7 +616,7 @@ TEST_METHOD(when_allocating_type_specific_data_fails_frame_codec_receive_bytes_f
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x09, 0x02, 0x00, 0x01, 0x02, 0x42 };
 
@@ -659,7 +659,7 @@ TEST_METHOD(a_frame_with_2_bytes_received_in_2_frame_codec_receive_bytes_calls_p
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x0A, 0x02, 0x00, 0x01, 0x02, 0x42, 0x43 };
 	frame_codec_receive_bytes(frame_codec, frame, sizeof(frame) - 2);
@@ -685,7 +685,7 @@ TEST_METHOD(a_frame_with_2_bytes_received_in_1_frame_codec_receive_bytes_call_pa
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x0A, 0x02, 0x00, 0x01, 0x02, 0x42, 0x43 };
 	frame_codec_receive_bytes(frame_codec, frame, sizeof(frame) - 2);
@@ -732,8 +732,7 @@ TEST_METHOD(two_empty_frames_received_in_the_same_call_yields_2_callbacks)
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
-	mocks.ResetAllCalls();
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x01, 0x02,
 		0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x03, 0x04 };
 	mocks.ResetAllCalls();
@@ -760,8 +759,7 @@ TEST_METHOD(two_frames_with_1_byte_each_received_in_the_same_call_yields_2_callb
 	// arrange
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
-	mocks.ResetAllCalls();
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x09, 0x02, 0x00, 0x01, 0x02, 0x42,
 		0x00, 0x00, 0x00, 0x09, 0x02, 0x00, 0x03, 0x04, 0x43 };
 	mocks.ResetAllCalls();
@@ -784,6 +782,67 @@ TEST_METHOD(two_frames_with_1_byte_each_received_in_the_same_call_yields_2_callb
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* frame_codec_subscribe */
+
+/* Tests_SRS_FRAME_CODEC_01_033: [frame_codec_subscribe subscribes for a certain type of frame received by the frame_codec instance identified by frame_codec.] */
+/* Tests_SRS_FRAME_CODEC_01_087: [On success, frame_codec_subscribe shall return zero.] */
+TEST_METHOD(frame_codec_subscribe_with_valid_args_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_subscribe(frame_codec, 0, frame_begin_callback, frame_body_bytes_received_callback, frame_codec);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback or frame_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
+TEST_METHOD(when_frame_codec_is_NULL_frame_codec_subscribe_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+
+	// act
+	int result = frame_codec_subscribe(NULL, 0, frame_begin_callback, frame_body_bytes_received_callback, (void*)0x01);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback or frame_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
+TEST_METHOD(when_frame_begin_callback_is_NULL_frame_codec_subscribe_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_subscribe(frame_codec, 0, NULL, frame_body_bytes_received_callback, frame_codec);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback or frame_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
+TEST_METHOD(when_frame_body_bytes_received_callback_is_NULL_frame_codec_subscribe_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_subscribe(frame_codec, 0, frame_begin_callback, NULL, frame_codec);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
 END_TEST_SUITE(frame_codec_unittests)

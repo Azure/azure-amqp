@@ -370,13 +370,30 @@ int frame_codec_start_encode_frame(FRAME_CODEC_HANDLE frame_codec, size_t frame_
 	return result;
 }
 
+/* Codes_SRS_FRAME_CODEC_01_033: [frame_codec_subscribe subscribes for a certain type of frame received by the frame_codec instance identified by frame_codec.] */
 int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_BEGIN_CALLBACK frame_begin_callback, FRAME_BODY_BYTES_RECEIVED_CALLBACK frame_body_bytes_received_callback, void* callback_context)
 {
-	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
-	frame_codec_data->frame_begin_callback = frame_begin_callback;
-	frame_codec_data->frame_body_bytes_received_callback = frame_body_bytes_received_callback;
-	frame_codec_data->callback_context = callback_context;
-	return 0;
+	int result;
+
+	/* Codes_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback or frame_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
+	if ((frame_codec == NULL) ||
+		(frame_begin_callback == NULL) ||
+		(frame_body_bytes_received_callback == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
+		frame_codec_data->frame_begin_callback = frame_begin_callback;
+		frame_codec_data->frame_body_bytes_received_callback = frame_body_bytes_received_callback;
+		frame_codec_data->callback_context = callback_context;
+
+		/* Codes_SRS_FRAME_CODEC_01_087: [On success, frame_codec_subscribe shall return zero.] */
+		result = 0;
+	}
+
+	return result;
 }
 
 int frame_codec_unsubscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type)

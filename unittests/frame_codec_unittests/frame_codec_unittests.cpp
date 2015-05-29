@@ -342,7 +342,7 @@ TEST_METHOD(frame_codec_set_max_frame_size_with_8_succeeds)
 
 /* frame_codec_receive_bytes */
 
-/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it returns zero.] */
+/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
 /* Tests_SRS_FRAME_CODEC_01_031: [When a frame header is successfully decoded it shall be indicated to the upper layer by invoking the frame_begin_callback_1 passed to frame_codec_subscribe.] */
 /* Tests_SRS_FRAME_CODEC_01_032: [Besides passing the frame information, the callback_context value passed to frame_codec_subscribe shall be passed to the frame_begin_callback_1 function.] */
 /* Tests_SRS_FRAME_CODEC_01_001: [Frames are divided into three distinct areas: a fixed width frame header, a variable width extended header, and a variable width frame body.] */
@@ -383,7 +383,7 @@ TEST_METHOD(frame_codec_receive_bytes_decodes_one_empty_frame)
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it returns zero.] */
+/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
 TEST_METHOD(frame_codec_receive_bytes_with_not_enough_bytes_for_a_frame_does_not_trigger_callback)
 {
 	// arrange
@@ -565,7 +565,7 @@ TEST_METHOD(a_frame_codec_receive_bytes_call_with_bad_args_in_the_middle_of_the_
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it returns zero.] */
+/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
 TEST_METHOD(frame_codec_receive_bytes_decodes_2_empty_frames)
 {
 	// arrange
@@ -600,7 +600,7 @@ TEST_METHOD(frame_codec_receive_bytes_decodes_2_empty_frames)
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it returns zero.] */
+/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
 TEST_METHOD(a_call_to_frame_codec_receive_bytes_with_bad_args_between_2_frames_does_not_affect_decoding)
 {
 	// arrange
@@ -710,7 +710,7 @@ TEST_METHOD(after_a_frame_decode_error_occurs_due_to_bad_doff_size_a_subsequent_
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it returns zero.] */
+/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
 /* Tests_SRS_FRAME_CODEC_01_083: [The frame body bytes shall be passed to the frame_body_bytes_received_callback_1 function that was given to frame_codec_subscribe.] */
 /* Tests_SRS_FRAME_CODEC_01_086: [Besides passing the frame information, the callback_context value passed to frame_codec_subscribe shall be passed to the frame_body_bytes_received_callback_1 function.] */
 TEST_METHOD(receiving_a_frame_with_1_byte_frame_body_succeeds)
@@ -860,7 +860,7 @@ TEST_METHOD(a_frame_with_2_bytes_received_together_with_the_header_passes_the_by
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it returns zero.]  */
+/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.]  */
 TEST_METHOD(two_empty_frames_received_in_the_same_call_yields_2_callbacks)
 {
 	// arrange
@@ -893,7 +893,7 @@ TEST_METHOD(two_empty_frames_received_in_the_same_call_yields_2_callbacks)
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it returns zero.]  */
+/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.]  */
 TEST_METHOD(two_frames_with_1_byte_each_received_in_the_same_call_yields_2_callbacks)
 {
 	// arrange
@@ -1442,8 +1442,8 @@ TEST_METHOD(frame_type_sasl_is_one)
 
 /* frame_codec_begin_encode_frame */
 
-/* Tests_SRS_FRAME_CODEC_01_042: [frame_codec_begin_encode_frame encodes the header and type specific bytes of a frame that has frame_payload_size bytes.] SRS_FRAME_CODEC_01_043: [On success it returns 0.] */
-/* Tests_SRS_FRAME_CODEC_01_043: [On success it returns 0.] */
+/* Tests_SRS_FRAME_CODEC_01_042: [frame_codec_begin_encode_frame encodes the header and type specific bytes of a frame that has frame_payload_size bytes.] */
+/* Tests_SRS_FRAME_CODEC_01_043: [On success it shall return 0.] */
 /* Tests_SRS_FRAME_CODEC_01_088: [Encoding the bytes shall happen by passing the bytes to the underlying IO interface.] */
 TEST_METHOD(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeeds)
 {
@@ -1453,9 +1453,8 @@ TEST_METHOD(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeed
 	mocks.ResetAllCalls();
 
 	EXPECTED_CALL(mocks, encoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
 	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
-		.IgnoreAllCalls();
+		.ExpectedAtLeastTimes(1);
 
 	// act
 	int result = frame_codec_begin_encode_frame(frame_codec, 0, NULL, 0);
@@ -1490,6 +1489,25 @@ TEST_METHOD(when_type_specific_size_is_positive_and_type_speific_bytes_is_NULL_f
 
 	// act
 	int result = frame_codec_begin_encode_frame(frame_codec, 0, NULL, 1);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_045: [If encoding the header fails (cannot be sent through the IO interface), frame_codec_begin_encode_frame shall return a non-zero value.] */
+TEST_METHOD(when_io_send_fails_then_frame_codec_begin_encode_frame_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, encoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.SetReturn(1);
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0, NULL, 0);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);

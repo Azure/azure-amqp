@@ -1442,7 +1442,7 @@ TEST_METHOD(frame_type_sasl_is_one)
 
 /* frame_codec_begin_encode_frame */
 
-/* Tests_SRS_FRAME_CODEC_01_042: [frame_codec_begin_encode_frame encodes the header of a frame that has frame_payload_size bytes.] */
+/* Tests_SRS_FRAME_CODEC_01_042: [frame_codec_begin_encode_frame encodes the header and type specific bytes of a frame that has frame_payload_size bytes.] SRS_FRAME_CODEC_01_043: [On success it returns 0.] */
 /* Tests_SRS_FRAME_CODEC_01_043: [On success it returns 0.] */
 /* Tests_SRS_FRAME_CODEC_01_088: [Encoding the bytes shall happen by passing the bytes to the underlying IO interface.] */
 TEST_METHOD(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeeds)
@@ -1458,13 +1458,41 @@ TEST_METHOD(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeed
 		.IgnoreAllCalls();
 
 	// act
-	int result = frame_codec_begin_encode_frame(frame_codec, 0);
+	int result = frame_codec_begin_encode_frame(frame_codec, 0, NULL, 0);
 
 	// assert
 	char stringified_io[512];
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, stringified_io);
 	ASSERT_ARE_NOT_EQUAL(char_ptr, "[0x00,0x00,0x00,0x0A,0x02,0x00,0x00,0x00]", stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_044: [If the argument frame_codec is NULL, frame_codec_begin_encode_frame shall return a non-zero value.] */
+TEST_METHOD(when_frame_codec_is_NULL_frame_codec_begin_encode_frame_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+
+	// act
+	int result = frame_codec_begin_encode_frame(NULL, 0, NULL, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_091: [If the argument type_specific_size is greater than 0 and type_specific_bytes is NULL, frame_codec_begin_encode_frame shall return a non-zero value.] */
+TEST_METHOD(when_type_specific_size_is_positive_and_type_speific_bytes_is_NULL_frame_codec_begin_encode_frame_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0, NULL, 1);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
 END_TEST_SUITE(frame_codec_unittests)

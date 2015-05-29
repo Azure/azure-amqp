@@ -374,48 +374,6 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 	return result;
 }
 
-int frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint32_t frame_body_size)
-{
-	int result;
-	ENCODER_HANDLE encoder_handle;
-	size_t frame_size = frame_body_size + FRAME_HEADER_SIZE;
-	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
-	uint8_t doff = 2;
-	uint8_t type = 0;
-	uint16_t channel = 0;
-
-	/* Codes_SRS_FRAME_CODEC_01_042: [frame_codec_begin_encode_frame encodes the header of a frame that has frame_payload_size bytes.] */
-	encoder_handle = encoder_create(frame_codec_encode_bytes, frame_codec_data->io);
-	if (encoder_handle == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		unsigned char b;
-
-		b = (frame_size >> 24) & 0xFF;
-		(void)io_send(frame_codec_data->io, &b, 1);
-		b = (frame_size >> 16) & 0xFF;
-		(void)io_send(frame_codec_data->io, &b, 1);
-		b = (frame_size >> 8) & 0xFF;
-		(void)io_send(frame_codec_data->io, &b, 1);
-		b = (frame_size)& 0xFF;
-		(void)io_send(frame_codec_data->io, &b, 1);
-		(void)io_send(frame_codec_data->io, &doff, sizeof(doff));
-		(void)io_send(frame_codec_data->io, &type, sizeof(type));
-		b = (channel >> 8) & 0xFF;
-		(void)io_send(frame_codec_data->io, &b, 1);
-		b = (channel)& 0xFF;
-		(void)io_send(frame_codec_data->io, &b, 1);
-
-		/* Codes_SRS_FRAME_CODEC_01_043: [On success it returns 0.] */
-		result = 0;
-	}
-
-	return result;
-}
-
 /* Codes_SRS_FRAME_CODEC_01_033: [frame_codec_subscribe subscribes for a certain type of frame received by the frame_codec instance identified by frame_codec.] */
 int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_BEGIN_CALLBACK frame_begin_callback, FRAME_BODY_BYTES_RECEIVED_CALLBACK frame_body_bytes_received_callback, void* callback_context)
 {
@@ -501,6 +459,58 @@ int frame_codec_unsubscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type)
 		}
 		else
 		{
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+int frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint32_t frame_body_size, const unsigned char* type_specific_bytes, uint32_t type_specific_size)
+{
+	int result;
+	ENCODER_HANDLE encoder_handle;
+	size_t frame_size = frame_body_size + FRAME_HEADER_SIZE;
+	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
+	uint8_t doff = 2;
+	uint8_t type = 0;
+	uint16_t channel = 0;
+
+	/* Codes_SRS_FRAME_CODEC_01_044: [If the argument frame_codec is NULL, frame_codec_begin_encode_frame shall return a non-zero value.] */
+	if ((frame_codec == NULL) ||
+		/* Tests_SRS_FRAME_CODEC_01_091: [If the argument type_specific_size is greater than 0 and type_specific_bytes is NULL, frame_codec_begin_encode_frame shall return a non-zero value.] */
+		((type_specific_size > 0) && (type_specific_bytes == NULL)))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		/* Codes_SRS_FRAME_CODEC_01_042: [frame_codec_begin_encode_frame encodes the header and type specific bytes of a frame that has frame_payload_size bytes.] SRS_FRAME_CODEC_01_043: [On success it returns 0.] */
+		encoder_handle = encoder_create(frame_codec_encode_bytes, frame_codec_data->io);
+		if (encoder_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			unsigned char b;
+
+			b = (frame_size >> 24) & 0xFF;
+			(void)io_send(frame_codec_data->io, &b, 1);
+			b = (frame_size >> 16) & 0xFF;
+			(void)io_send(frame_codec_data->io, &b, 1);
+			b = (frame_size >> 8) & 0xFF;
+			(void)io_send(frame_codec_data->io, &b, 1);
+			b = (frame_size)& 0xFF;
+			(void)io_send(frame_codec_data->io, &b, 1);
+			(void)io_send(frame_codec_data->io, &doff, sizeof(doff));
+			(void)io_send(frame_codec_data->io, &type, sizeof(type));
+			b = (channel >> 8) & 0xFF;
+			(void)io_send(frame_codec_data->io, &b, 1);
+			b = (channel)& 0xFF;
+			(void)io_send(frame_codec_data->io, &b, 1);
+
+			/* Codes_SRS_FRAME_CODEC_01_043: [On success it returns 0.] */
 			result = 0;
 		}
 	}

@@ -22,6 +22,8 @@ static const void** list_items = NULL;
 static size_t list_item_count = 0;
 static unsigned char* sent_io_bytes;
 static size_t sent_io_byte_count;
+static char expected_stringified_io[8192];
+static char actual_stringified_io[8192];
 
 void stringify_bytes(const unsigned char* bytes, size_t byte_count, char* output_string)
 {
@@ -285,9 +287,8 @@ TEST_METHOD(a_frame_of_exactly_max_frame_size_immediately_after_create_can_be_se
 	int result = frame_codec_begin_encode_frame(frame_codec, 0, 504, NULL, 0);
 
 	// assert
-	char stringified_io[512];
-	stringify_bytes(sent_io_bytes, sent_io_byte_count, stringified_io);
-	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x02,0x00,0x02,0x00,0x00,0x00]", stringified_io);
+	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
+	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x02,0x00,0x02,0x00,0x00,0x00]", actual_stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
@@ -445,9 +446,8 @@ TEST_METHOD(a_frame_of_exactly_max_frame_size_can_be_sent)
 	int result = frame_codec_begin_encode_frame(frame_codec, 0, 1016, NULL, 0);
 
 	// assert
-	char stringified_io[512];
-	stringify_bytes(sent_io_bytes, sent_io_byte_count, stringified_io);
-	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x04,0x00,0x02,0x00,0x00,0x00]", stringified_io);
+	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
+	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x04,0x00,0x02,0x00,0x00,0x00]", actual_stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
@@ -1759,9 +1759,8 @@ TEST_METHOD(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeed
 	int result = frame_codec_begin_encode_frame(frame_codec, 0, 0, NULL, 0);
 
 	// assert
-	char stringified_io[512];
-	stringify_bytes(sent_io_bytes, sent_io_byte_count, stringified_io);
-	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x00,0x08,0x02,0x00,0x00,0x00]", stringified_io);
+	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
+	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x00,0x08,0x02,0x00,0x00,0x00]", actual_stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
@@ -1857,8 +1856,6 @@ TEST_METHOD(when_type_specific_size_is_max_allowed_then_frame_codec_begin_encode
 	int result = frame_codec_begin_encode_frame(frame_codec, 0, 0, &expected_frame[6], 1014);
 
 	// assert
-	char expected_stringified_io[8192];
-	char actual_stringified_io[8192];
 	memset(expected_frame + 6, 0, 1020 - 6);
 	stringify_bytes(expected_frame, sizeof(expected_frame), expected_stringified_io);
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
@@ -1888,8 +1885,6 @@ TEST_METHOD(one_byte_of_pading_is_added_to_type_specific_data_to_make_the_frame_
 	int result = frame_codec_begin_encode_frame(frame_codec, 0, 0, &expected_frame[6], 1);
 
 	// assert
-	char expected_stringified_io[8192];
-	char actual_stringified_io[8192];
 	stringify_bytes(expected_frame, sizeof(expected_frame), expected_stringified_io);
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
 	ASSERT_ARE_EQUAL(char_ptr, expected_stringified_io, actual_stringified_io);
@@ -1913,7 +1908,6 @@ TEST_METHOD(the_type_is_placed_in_the_underlying_frame)
 	int result = frame_codec_begin_encode_frame(frame_codec, 0x42, 0, NULL, 0);
 
 	// assert
-	char actual_stringified_io[8192];
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
 	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x00,0x08,0x02,0x42,0x00,0x00]", actual_stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
@@ -2263,7 +2257,6 @@ TEST_METHOD(after_a_frame_is_completed_another_one_can_be_started)
 	int result = frame_codec_begin_encode_frame(frame_codec, 0x42, 0, NULL, 0);
 
 	// assert
-	char actual_stringified_io[8192];
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
 	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x00,0x09,0x02,0x42,0x00,0x00,0x42,0x00,0x00,0x00,0x08,0x02,0x42,0x00,0x00]", actual_stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);

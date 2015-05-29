@@ -374,7 +374,7 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 	return result;
 }
 
-int frame_codec_start_encode_frame(FRAME_CODEC_HANDLE frame_codec, size_t frame_payload_size)
+int frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, size_t frame_payload_size)
 {
 	int result;
 	ENCODER_HANDLE encoder_handle;
@@ -384,6 +384,7 @@ int frame_codec_start_encode_frame(FRAME_CODEC_HANDLE frame_codec, size_t frame_
 	uint8_t type = 0;
 	uint16_t channel = 0;
 
+	/* Codes_SRS_FRAME_CODEC_01_042: [frame_codec_begin_encode_frame encodes the header of a frame that has frame_payload_size bytes.] */
 	encoder_handle = encoder_create(frame_codec_encode_bytes, frame_codec_data->io);
 	if (encoder_handle == NULL)
 	{

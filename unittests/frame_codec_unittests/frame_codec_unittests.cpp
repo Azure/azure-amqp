@@ -1411,4 +1411,8 @@ TEST_METHOD(frame_type_sasl_is_one)
 	ASSERT_ARE_EQUAL(uint8_t, 1, FRAME_TYPE_SASL);
 }
 
+/* frame_codec_begin_encode_frame */
+
+/* Tests_SRS_FRAME_CODEC_01_042: [frame_codec_begin_encode_frame encodes the header of a frame that has frame_payload_size bytes.] */
+
 END_TEST_SUITE(frame_codec_unittests)

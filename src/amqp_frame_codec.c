@@ -145,7 +145,7 @@ int amqp_frame_codec_encode(FRAME_CODEC_HANDLE frame_codec_handle, uint64_t perf
 
 	if (result == 0)
 	{
-		if (frame_codec_start_encode_frame(frame_codec_handle, amqp_frame_payload_size) != 0)
+		if (frame_codec_begin_encode_frame(frame_codec_handle, amqp_frame_payload_size) != 0)
 		{
 			result = __LINE__;
 		}

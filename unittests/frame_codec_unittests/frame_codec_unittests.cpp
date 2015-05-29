@@ -103,17 +103,18 @@ public:
 	MOCK_METHOD_END(LIST_ITEM_HANDLE, (LIST_ITEM_HANDLE)found_item);
 	MOCK_STATIC_METHOD_3(, int, list_remove_matching_item, LIST_HANDLE, handle, LIST_MATCH_FUNCTION, match_function, const void*, match_context)
 		size_t i;
-	const void* found_item = NULL;
-	for (i = 0; i < list_item_count; i++)
-	{
-		if (match_function((LIST_ITEM_HANDLE)list_items[i], match_context))
+		int res = __LINE__;
+		for (i = 0; i < list_item_count; i++)
 		{
-			(void)memcpy(&list_items[i], &list_items[i + 1], (list_item_count - i - 1) * sizeof(const void*));
-			list_item_count--;
-			break;
+			if (match_function((LIST_ITEM_HANDLE)list_items[i], match_context))
+			{
+				(void)memcpy(&list_items[i], &list_items[i + 1], (list_item_count - i - 1) * sizeof(const void*));
+				list_item_count--;
+				res = 0;
+				break;
+			}
 		}
-	}
-	MOCK_METHOD_END(int, 0);
+	MOCK_METHOD_END(int, res);
 };
 
 extern "C"
@@ -1231,6 +1232,151 @@ TEST_METHOD(removing_an_existing_subscription_does_not_trigger_callback_when_a_f
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_039: [If frame_codec is NULL, frame_codec_unsubscribe shall return a non-zero value.] */
+TEST_METHOD(frame_codec_unsubscribe_with_NULL_frame_codec_handle_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+
+	// act
+	int result = frame_codec_unsubscribe(NULL, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_040: [If no subscription for the type frame type exists, frame_codec_unsubscribe shall return a non-zero value.] */
+TEST_METHOD(frame_codec_unsubscribe_with_no_subscribe_call_has_been_made_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	uint8_t frame_type = 0;
+	STRICT_EXPECTED_CALL(mocks, list_remove_matching_item(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame_type, 1);
+
+	// act
+	int result = frame_codec_unsubscribe(frame_codec, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_041: [If any failure occurs while performing the unsubscribe operation, frame_codec_unsubscribe shall return a non-zero value.] */
+TEST_METHOD(when_list_remove_matching_item_fails_then_frame_codec_unsubscribe_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	uint8_t frame_type = 0;
+	STRICT_EXPECTED_CALL(mocks, list_remove_matching_item(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame_type, 1)
+		.SetReturn(1);
+
+	// act
+	int result = frame_codec_unsubscribe(frame_codec, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
+TEST_METHOD(unsubscribe_one_of_2_subscriptions_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 1, frame_begin_callback_2, frame_body_bytes_received_callback_2, frame_codec);
+	mocks.ResetAllCalls();
+
+	uint8_t frame_type = 0;
+	STRICT_EXPECTED_CALL(mocks, list_remove_matching_item(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame_type, 1);
+
+	// act
+	int result = frame_codec_unsubscribe(frame_codec, 0);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
+TEST_METHOD(unsubscribe_2nd_out_of_2_subscriptions_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 1, frame_begin_callback_2, frame_body_bytes_received_callback_2, frame_codec);
+	mocks.ResetAllCalls();
+
+	uint8_t frame_type = 1;
+	STRICT_EXPECTED_CALL(mocks, list_remove_matching_item(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame_type, 1);
+
+	// act
+	int result = frame_codec_unsubscribe(frame_codec, 1);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
+TEST_METHOD(subscribe_unsubscribe_subscribe_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
+	(void)frame_codec_unsubscribe(frame_codec, 0);
+	mocks.ResetAllCalls();
+
+	uint8_t frame_type = 0;
+	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame_type, 1);
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	STRICT_EXPECTED_CALL(mocks, list_add(TEST_LIST_HANDLE, IGNORED_PTR_ARG))
+		.IgnoreArgument(2);
+
+	// act
+	int result = frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
+TEST_METHOD(subscribe_unsubscribe_unsubscribe_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
+	(void)frame_codec_unsubscribe(frame_codec, 0);
+	mocks.ResetAllCalls();
+
+	uint8_t frame_type = 0;
+	STRICT_EXPECTED_CALL(mocks, list_remove_matching_item(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame_type, 1);
+
+	// act
+	int result = frame_codec_unsubscribe(frame_codec, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
 END_TEST_SUITE(frame_codec_unittests)

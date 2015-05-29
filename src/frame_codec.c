@@ -480,15 +480,27 @@ int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_BE
 int frame_codec_unsubscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type)
 {
 	int result;
-	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
 
-	if (list_remove_matching_item(frame_codec_data->subscription_list, find_subscription_by_frame_type, &type) != 0)
+	/* Codes_SRS_FRAME_CODEC_01_039: [If frame_codec is NULL, frame_codec_unsubscribe shall return a non-zero value.] */
+	if (frame_codec == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		result = 0;
+		FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
+
+		/* Codes_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
+		if (list_remove_matching_item(frame_codec_data->subscription_list, find_subscription_by_frame_type, &type) != 0)
+		{
+			/* Codes_SRS_FRAME_CODEC_01_040: [If no subscription for the type frame type exists, frame_codec_unsubscribe shall return a non-zero value.] */
+			/* Codes_SRS_FRAME_CODEC_01_041: [If any failure occurs while performing the unsubscribe operation, frame_codec_unsubscribe shall return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
 	}
 
 	return result;

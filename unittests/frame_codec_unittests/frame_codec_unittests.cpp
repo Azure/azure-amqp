@@ -79,14 +79,6 @@ public:
 	MOCK_STATIC_METHOD_1(, void, amqpvalue_destroy, AMQP_VALUE, value)
 	MOCK_VOID_METHOD_END();
 
-	/* decoder mocks */
-	MOCK_STATIC_METHOD_2(, DECODER_HANDLE, decoder_create, VALUE_DECODED_CALLBACK, value_decoded_callback, void*, value_decoded_callback_context)
-	MOCK_METHOD_END(DECODER_HANDLE, TEST_DECODER_HANDLE);
-	MOCK_STATIC_METHOD_1(, void, decoder_destroy, DECODER_HANDLE, handle)
-	MOCK_VOID_METHOD_END();
-	MOCK_STATIC_METHOD_3(, int, decoder_decode, DECODER_HANDLE, handle, AMQP_VALUE*, amqp_value, bool*, more)
-	MOCK_METHOD_END(int, 0);
-
 	/* frame received callback */
 	MOCK_STATIC_METHOD_4(, void, frame_begin_callback_1, void*, context, uint32_t, frame_body_size, const unsigned char*, type_specific, uint32_t, type_specific_size)
 	MOCK_VOID_METHOD_END();
@@ -151,10 +143,6 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_2(frame_codec_mocks, , int, amqpvalue_get_ulong, AMQP_VALUE, value, uint64_t*, ulong_value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , AMQP_VALUE, amqpvalue_get_descriptor, AMQP_VALUE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, amqpvalue_destroy, AMQP_VALUE, value);
-
-	DECLARE_GLOBAL_MOCK_METHOD_2(frame_codec_mocks, , DECODER_HANDLE, decoder_create, VALUE_DECODED_CALLBACK, value_decoded_callback, void*, value_decoded_callback_context);
-	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, decoder_destroy, DECODER_HANDLE, handle);
-	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , int, decoder_decode, DECODER_HANDLE, handle, AMQP_VALUE*, amqp_value, bool*, more);
 
 	DECLARE_GLOBAL_MOCK_METHOD_4(frame_codec_mocks, , void, frame_begin_callback_1, void*, context, uint32_t, frame_body_size, const unsigned char*, type_specific, uint32_t, type_specific_size);
 	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , void, frame_body_bytes_received_callback_1, void*, context, const unsigned char*, frame_body_bytes, uint32_t, frame_body_bytes_size);

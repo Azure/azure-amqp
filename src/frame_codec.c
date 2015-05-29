@@ -122,9 +122,32 @@ void frame_codec_destroy(FRAME_CODEC_HANDLE frame_codec)
 
 int frame_codec_set_max_frame_size(FRAME_CODEC_HANDLE frame_codec, uint32_t max_frame_size)
 {
+	int result;
 	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
-	frame_codec_data->max_frame_size = max_frame_size;
-	return 0;
+
+	/* Codes_SRS_FRAME_CODEC_01_077: [If frame_codec is NULL, frame_codec_set_max_frame_size shall return a non-zero value.] */
+	if ((frame_codec == NULL) ||
+		/* Codes_SRS_FRAME_CODEC_01_078: [If max_frame_size is invalid according to the AMQP standard, frame_codec_set_max_frame_size shall return a non-zero value.] */
+		(max_frame_size < FRAME_HEADER_SIZE) ||
+		/* Codes_SRS_FRAME_CODEC_01_081: [If a frame being decoded already has a size bigger than the max_frame_size argument then frame_codec_set_max_frame_size shall return a non-zero value and the previous frame size shall be kept.] */
+		((max_frame_size < frame_codec_data->receive_frame_size) && (frame_codec_data->receive_frame_state != RECEIVE_FRAME_STATE_FRAME_SIZE)) ||
+		/* Codes_SRS_FRAME_CODEC_01_097: [Setting a frame size on a frame_codec that had a decode error shall fail.] */
+		(frame_codec_data->receive_frame_state == RECEIVE_FRAME_STATE_ERROR) ||
+		/* Codes_SRS_FRAME_CODEC_01_098: [Setting a frame size on a frame_codec that had an encode error shall fail.] */
+		(frame_codec_data->encode_frame_state == ENCODE_FRAME_STATE_ERROR))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		/* Codes_SRS_FRAME_CODEC_01_075: [frame_codec_set_max_frame_size shall set the maximum frame size for a frame_codec.] */
+		/* Codes_SRS_FRAME_CODEC_01_079: [The new frame size shall take effect immediately, even for a frame that is being decoded at the time of the call.] */
+		frame_codec_data->max_frame_size = max_frame_size;
+
+		/* Codes_SRS_FRAME_CODEC_01_076: [On success, frame_codec_set_max_frame_size shall return 0.] */
+		result = 0;
+	}
+	return result;
 }
 
 /* Codes_SRS_FRAME_CODEC_01_001: [Frames are divided into three distinct areas: a fixed width frame header, a variable width extended header, and a variable width frame body.] */

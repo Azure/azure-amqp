@@ -396,6 +396,7 @@ TEST_METHOD(frame_codec_destroy_while_receiving_type_specific_data_frees_the_typ
 /* frame_codec_set_max_frame_size */
 
 /* Tests_SRS_FRAME_CODEC_01_075: [frame_codec_set_max_frame_size shall set the maximum frame size for a frame_codec.] */
+/* Tests_SRS_FRAME_CODEC_01_076: [On success, frame_codec_set_max_frame_size shall return 0.] */
 TEST_METHOD(frame_codec_set_max_frame_size_with_8_succeeds)
 {
 	// arrange
@@ -495,6 +496,135 @@ TEST_METHOD(receiving_a_frame_with_exactly_max_frame_size_bytes_of_total_frame_s
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_077: [If frame_codec is NULL, frame_codec_set_max_frame_size shall return a non-zero value.] */
+TEST_METHOD(when_frame_codec_is_NULL_frame_codec_set_max_frame_size_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+
+	// act
+	int result = frame_codec_set_max_frame_size(NULL, 1024);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_078: [If max_frame_size is invalid according to the AMQP standard, frame_codec_set_max_frame_size shall return a non-zero value.] */
+/* Tests_SRS_FRAME_CODEC_01_010: [The frame is malformed if the size is less than the size of the frame header (8 bytes).] */
+TEST_METHOD(when_frame_codec_is_too_small_then_frame_codec_set_max_frame_size_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_set_max_frame_size(frame_codec, 7);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_081: [If a frame being decoded already has a size bigger than the max_frame_size argument then frame_codec_set_max_frame_size shall return a non-zero value and the previous frame size shall be kept.] */
+TEST_METHOD(attempting_to_set_a_max_frame_size_lower_than_the_size_of_the_currently_being_received_frame_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_set_max_frame_size(frame_codec, 1024);
+	unsigned char frame[1024] = { 0x00, 0x00, 0x04, 0x00, 0x02, 0x00 };
+	(void)memset(frame + 6, 0, 1016);
+
+	(void)frame_codec_receive_bytes(frame_codec, frame, 4);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_set_max_frame_size(frame_codec, 8);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+TEST_METHOD(attempting_to_set_a_max_frame_size_when_the_decoder_is_in_error_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_set_max_frame_size(frame_codec, 1024);
+	unsigned char frame[1024] = { 0x00, 0x00, 0x04, 0x00, 0x02, 0x00 };
+	(void)memset(frame + 6, 0, 1016);
+
+	(void)frame_codec_receive_bytes(frame_codec, frame, 4);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_set_max_frame_size(frame_codec, 8);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_097: [Setting a frame size on a frame_codec that had a decode error shall fail.] */
+TEST_METHOD(setting_the_max_frame_size_on_a_codec_with_a_decode_error_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x07 };
+
+	(void)frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_set_max_frame_size(frame_codec, 1024);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_097: [Setting a frame size on a frame_codec that had a decode error shall fail.] */
+TEST_METHOD(setting_the_max_frame_size_on_a_codec_with_an_encode_error_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	unsigned char bytes[] = { 0x42, 0x43 };
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, sizeof(bytes), NULL, 0);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, sizeof(bytes)))
+		.ValidateArgumentBuffer(2, &bytes, sizeof(bytes))
+		.SetReturn(1);
+
+	(void)frame_codec_encode_frame_bytes(frame_codec, bytes, sizeof(bytes));
+
+	// act
+	int result = frame_codec_set_max_frame_size(frame_codec, 1024);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_079: [The new frame size shall take effect immediately, even for a frame that is being decoded at the time of the call.] */
+TEST_METHOD(setting_a_new_max_frame_while_the_frame_size_is_being_received_makes_the_new_frame_size_be_in_effect)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x09, 0x02, 0x00, 0x00, 0x00, 0x00 };
+
+	(void)frame_codec_receive_bytes(frame_codec, frame, 3);
+	mocks.ResetAllCalls();
+
+	(void)frame_codec_set_max_frame_size(frame_codec, 8);
+
+	// act
+	int result = frame_codec_receive_bytes(frame_codec, frame + 3, sizeof(frame) - 3);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
 /* frame_codec_receive_bytes */

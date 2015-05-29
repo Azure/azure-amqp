@@ -1415,6 +1415,7 @@ TEST_METHOD(frame_type_sasl_is_one)
 
 /* Tests_SRS_FRAME_CODEC_01_042: [frame_codec_begin_encode_frame encodes the header of a frame that has frame_payload_size bytes.] */
 /* Tests_SRS_FRAME_CODEC_01_043: [On success it returns 0.] */
+/* Tests_SRS_FRAME_CODEC_01_088: [Encoding the bytes shall happen by passing the bytes to the underlying IO interface.] */
 TEST_METHOD(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeeds)
 {
 	// arrange

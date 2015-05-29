@@ -21,6 +21,25 @@ static IO_RECEIVE_CALLBACK io_receive_callback;
 static void* io_receive_callback_context;
 static const void** list_items = NULL;
 static size_t list_item_count = 0;
+static unsigned char* sent_io_bytes;
+static size_t sent_io_byte_count;
+
+void stringify_bytes(const unsigned char* bytes, size_t byte_count, char* output_string)
+{
+	size_t i;
+	size_t pos = 0;
+
+	output_string[pos] = '[';
+	for (i = 0; i < byte_count; i++)
+	{
+		(void)sprintf(&output_string[pos], "%02X", bytes[i]);
+		if (i < byte_count - 1)
+		{
+			strcat(output_string, ",");
+			pos = strlen(output_string);
+		}
+	}
+}
 
 TYPED_MOCK_CLASS(frame_codec_mocks, CGlobalMock)
 {
@@ -33,6 +52,13 @@ public:
 	MOCK_STATIC_METHOD_1(, void, io_destroy, IO_HANDLE, handle)
 	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_3(, int, io_send, IO_HANDLE, handle, const void*, buffer, size_t, size)
+		unsigned char* new_bytes = (unsigned char*)realloc(sent_io_bytes, sent_io_byte_count + size);
+		if (new_bytes != NULL)
+		{
+			sent_io_bytes = new_bytes;
+			(void)memcpy(sent_io_bytes + sent_io_byte_count, buffer, size);
+			sent_io_byte_count += size;
+		}
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_1(, int, io_dowork, IO_HANDLE, handle)
 	MOCK_METHOD_END(int, 0);
@@ -185,6 +211,9 @@ TEST_METHOD_CLEANUP(method_cleanup)
 		list_item_count = 0;
 		free(list_items);
 		list_items = NULL;
+		free(sent_io_bytes);
+		sent_io_bytes = NULL;
+		sent_io_byte_count = 0;
 	}
 	if (!MicroMockReleaseMutex(test_serialize_mutex))
 	{
@@ -1423,11 +1452,19 @@ TEST_METHOD(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeed
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	mocks.ResetAllCalls();
 
+	EXPECTED_CALL(mocks, encoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.IgnoreAllCalls();
+
 	// act
 	int result = frame_codec_begin_encode_frame(frame_codec, 0);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	char stringified_io[512];
+	stringify_bytes(sent_io_bytes, sent_io_byte_count, stringified_io);
+	ASSERT_ARE_NOT_EQUAL(char_ptr, "[0x00,0x00,0x00,0x0A,0x02,0x00,0x00,0x00]", stringified_io);
+	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
 END_TEST_SUITE(frame_codec_unittests)

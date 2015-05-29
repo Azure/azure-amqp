@@ -171,6 +171,7 @@ public:
         }
 
         m_ExpectedTimes = expectedTimes;
+		m_ExactExpectedTimes = false;
         return *this;
     }
 };

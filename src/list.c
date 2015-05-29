@@ -185,3 +185,53 @@ LIST_ITEM_HANDLE list_find(LIST_HANDLE handle, LIST_MATCH_FUNCTION match_functio
 
 	return result;
 }
+
+int list_remove_matching_item(LIST_HANDLE handle, LIST_MATCH_FUNCTION match_function, const void* match_context)
+{
+	int result;
+
+	if ((handle == NULL) ||
+		(match_function == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		LIST_DATA* list = (LIST_DATA*)handle;
+		LIST_ITEM* current = list->head;
+		LIST_ITEM* previous = NULL;
+
+		while (current != NULL)
+		{
+			if (match_function((LIST_ITEM_HANDLE)current, match_context) == true)
+			{
+				break;
+			}
+
+			current = current->next;
+		}
+
+		if (current == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			if (previous == NULL)
+			{
+				list->head = previous;
+			}
+			else
+			{
+				previous->next = current->next;
+			}
+
+			amqpalloc_free((void*)current->item);
+			amqpalloc_free(current);
+
+			result = 0;
+		}
+	}
+
+	return result;
+}

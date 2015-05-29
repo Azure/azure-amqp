@@ -479,6 +479,17 @@ int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_BE
 
 int frame_codec_unsubscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type)
 {
+	int result;
 	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
-	return 0;
+
+	if (list_remove_matching_item(frame_codec_data->subscription_list, find_subscription_by_frame_type, &type) != 0)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		result = 0;
+	}
+
+	return result;
 }

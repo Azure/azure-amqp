@@ -82,7 +82,7 @@ public:
 	MOCK_STATIC_METHOD_1(, void, list_destroy, LIST_HANDLE, list)
 	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_2(, int, list_add, LIST_HANDLE, handle, const void*, item)
-		const void** items = (const void**)realloc(list_items, (sizeof(list_item_count) + 1) * sizeof(item));
+		const void** items = (const void**)realloc(list_items, (list_item_count + 1) * sizeof(item));
 		if (items != NULL)
 		{
 			list_items = items;
@@ -101,6 +101,19 @@ public:
 			}
 		}
 	MOCK_METHOD_END(LIST_ITEM_HANDLE, (LIST_ITEM_HANDLE)found_item);
+	MOCK_STATIC_METHOD_3(, int, list_remove_matching_item, LIST_HANDLE, handle, LIST_MATCH_FUNCTION, match_function, const void*, match_context)
+		size_t i;
+	const void* found_item = NULL;
+	for (i = 0; i < list_item_count; i++)
+	{
+		if (match_function((LIST_ITEM_HANDLE)list_items[i], match_context))
+		{
+			(void)memcpy(&list_items[i], &list_items[i + 1], (list_item_count - i - 1) * sizeof(const void*));
+			list_item_count--;
+			break;
+		}
+	}
+	MOCK_METHOD_END(int, 0);
 };
 
 extern "C"
@@ -132,7 +145,8 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_0(frame_codec_mocks, , LIST_HANDLE, list_create);
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, list_destroy, LIST_HANDLE, list);
 	DECLARE_GLOBAL_MOCK_METHOD_2(frame_codec_mocks, , int, list_add, LIST_HANDLE, handle, const void*, item);
-	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , LIST_ITEM_HANDLE, list_find, LIST_HANDLE, handle, LIST_MATCH_FUNCTION, match_function, const void*, match_context)
+	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , LIST_ITEM_HANDLE, list_find, LIST_HANDLE, handle, LIST_MATCH_FUNCTION, match_function, const void*, match_context);
+	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , int, list_remove_matching_item, LIST_HANDLE, handle, LIST_MATCH_FUNCTION, match_function, const void*, match_context);
 
 	extern void consolelogger_log(char* format, ...)
 	{
@@ -1171,6 +1185,52 @@ TEST_METHOD(when_adding_the_subscription_fails_then_frame_codec_subscribe_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* frame_codec_unsubscribe */
+
+/* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
+TEST_METHOD(removing_an_existing_subscription_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
+	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x0A, 0x02, 0x00, 0x01, 0x02, 0x42, 0x43 };
+	mocks.ResetAllCalls();
+
+	uint8_t frame_type = 0;
+	STRICT_EXPECTED_CALL(mocks, list_remove_matching_item(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame_type, 1);
+
+	// act
+	int result = frame_codec_unsubscribe(frame_codec, 0);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
+TEST_METHOD(removing_an_existing_subscription_does_not_trigger_callback_when_a_frame_of_that_type_is_received)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
+	(void)frame_codec_unsubscribe(frame_codec, 0);
+	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x0A, 0x02, 0x00, 0x01, 0x02, 0x42, 0x43 };
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame[5], 1);
+
+	// act
+	int result = frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
 END_TEST_SUITE(frame_codec_unittests)

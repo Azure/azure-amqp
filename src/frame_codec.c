@@ -429,6 +429,7 @@ int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_BE
 				/* Codes_SRS_FRAME_CODEC_01_037: [If any failure occurs while performing the subscribe operation, frame_codec_subscribe shall return a non-zero value.] */
 				if (list_add(frame_codec_data->subscription_list, subscription) != 0)
 				{
+					amqpalloc_free(subscription);
 					result = __LINE__;
 				}
 				else

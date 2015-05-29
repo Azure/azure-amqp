@@ -1498,6 +1498,7 @@ TEST_METHOD(when_adding_the_subscription_fails_then_frame_codec_subscribe_fails)
 	STRICT_EXPECTED_CALL(mocks, list_add(TEST_LIST_HANDLE, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.SetReturn(1);
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORE));
 
 	// act
 	int result = frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);

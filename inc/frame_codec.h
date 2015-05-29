@@ -14,6 +14,18 @@ extern "C" {
 #include <stddef.h>
 #endif /* __cplusplus */
 
+/* Codes_SRS_FRAME_CODEC_01_016: [The type code indicates the format and purpose of the frame.] */
+/* Codes_SRS_FRAME_CODEC_01_017: [The subsequent bytes in the frame header MAY be interpreted differently depending on the type of the frame.] */
+/* Codes_SRS_FRAME_CODEC_01_070: [The type code indicates the format and purpose of the frame.] */
+/* Codes_SRS_FRAME_CODEC_01_071: [The subsequent bytes in the frame header MAY be interpreted differently depending on the type of the frame.] */
+/* Codes_SRS_FRAME_CODEC_01_018: [A type code of 0x00 indicates that the frame is an AMQP frame.] */
+/* Codes_SRS_FRAME_CODEC_01_072: [A type code of 0x00 indicates that the frame is an AMQP frame.] */
+#define FRAME_TYPE_AMQP	(uint8_t)0x00
+
+/* Codes_SRS_FRAME_CODEC_01_073: [A type code of 0x01 indicates that the frame is a SASL frame] */
+/* Codes_SRS_FRAME_CODEC_01_019: [A type code of 0x01 indicates that the frame is a SASL frame] */
+#define FRAME_TYPE_SASL	(uint8_t)0x01
+
 	typedef void* FRAME_CODEC_HANDLE;
 	typedef void(*FRAME_BEGIN_CALLBACK)(void* context, uint32_t frame_body_size, const unsigned char* type_specific, uint32_t type_specific_size);
 	typedef void(*FRAME_BODY_BYTES_RECEIVED_CALLBACK)(void* context, const unsigned char* frame_body_bytes, uint32_t frame_body_bytes_size);

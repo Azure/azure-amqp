@@ -1379,4 +1379,36 @@ TEST_METHOD(subscribe_unsubscribe_unsubscribe_fails)
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
+/* Tests_SRS_FRAME_CODEC_01_016: [The type code indicates the format and purpose of the frame.] */
+/* Tests_SRS_FRAME_CODEC_01_017: [The subsequent bytes in the frame header MAY be interpreted differently depending on the type of the frame.] */
+/* Tests_SRS_FRAME_CODEC_01_018: [A type code of 0x00 indicates that the frame is an AMQP frame.] */
+/* Tests_SRS_FRAME_CODEC_01_070: [The type code indicates the format and purpose of the frame.] */
+/* Tests_SRS_FRAME_CODEC_01_071: [The subsequent bytes in the frame header MAY be interpreted differently depending on the type of the frame.] */
+/* Tests_SRS_FRAME_CODEC_01_072: [A type code of 0x00 indicates that the frame is an AMQP frame.] */
+TEST_METHOD(frame_type_amqp_is_zero)
+{
+	// arrange
+
+	// act
+
+	// assert
+	ASSERT_ARE_EQUAL(uint8_t, 0, FRAME_TYPE_AMQP);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_016: [The type code indicates the format and purpose of the frame.] */
+/* Tests_SRS_FRAME_CODEC_01_017: [The subsequent bytes in the frame header MAY be interpreted differently depending on the type of the frame.] */
+/* Tests_SRS_FRAME_CODEC_01_019: [A type code of 0x01 indicates that the frame is a SASL frame] */
+/* Tests_SRS_FRAME_CODEC_01_070: [The type code indicates the format and purpose of the frame.] */
+/* Tests_SRS_FRAME_CODEC_01_071: [The subsequent bytes in the frame header MAY be interpreted differently depending on the type of the frame.] */
+/* Tests_SRS_FRAME_CODEC_01_073: [A type code of 0x01 indicates that the frame is a SASL frame] */
+TEST_METHOD(frame_type_sasl_is_one)
+{
+	// arrange
+
+	// act
+
+	// assert
+	ASSERT_ARE_EQUAL(uint8_t, 1, FRAME_TYPE_SASL);
+}
+
 END_TEST_SUITE(frame_codec_unittests)

@@ -1531,6 +1531,7 @@ TEST_METHOD(when_type_specific_size_is_too_big_then_frame_codec_begin_encode_fra
 /* Tests_SRS_FRAME_CODEC_01_065: [DOFF Byte 4 of the frame header is the data offset.] */
 /* Tests_SRS_FRAME_CODEC_01_066: [This gives the position of the body within the frame.] */
 /* Tests_SRS_FRAME_CODEC_01_067: [The value of the data offset is an unsigned, 8-bit integer specifying a count of 4-byte words.] */
+/* Tests_SRS_FRAME_CODEC_01_063: [This is an unsigned 32-bit integer that MUST contain the total frame size of the frame header, extended header, and frame body.] */
 TEST_METHOD(when_type_specific_size_is_max_allowed_then_frame_codec_begin_encode_frame_succeeds)
 {
 	// arrange

@@ -488,6 +488,8 @@ int frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint8_t type,
 	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
 
 	frame_body_offset = doff * 4;
+
+	/* Codes_SRS_FRAME_CODEC_01_063: [This is an unsigned 32-bit integer that MUST contain the total frame size of the frame header, extended header, and frame body.] */
 	frame_size = frame_body_size + frame_body_offset;
 
 	/* Codes_SRS_FRAME_CODEC_01_044: [If the argument frame_codec is NULL, frame_codec_begin_encode_frame shall return a non-zero value.] */

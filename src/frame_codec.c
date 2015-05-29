@@ -93,6 +93,9 @@ FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log)
 			result->receive_frame_size = 0;
 			result->receive_frame_type_specific = NULL;
 			result->subscription_list = list_create();
+
+			/* Codes_SRS_FRAME_CODEC_01_082: [The initial max_frame_size_shall be 512.] */
+			result->max_frame_size = 512;
 		}
 	}
 
@@ -168,7 +171,9 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 				if (frame_codec_data->receive_frame_pos == 4)
 				{
 					/* Codes_SRS_FRAME_CODEC_01_010: [The frame is malformed if the size is less than the size of the frame header (8 bytes).] */
-					if (frame_codec_data->receive_frame_size < FRAME_HEADER_SIZE)
+					if ((frame_codec_data->receive_frame_size < FRAME_HEADER_SIZE) ||
+						/* Codes_SRS_FRAME_CODEC_01_096: [If a frame bigger than the current max frame size is received, frame_codec_receive_bytes shall fail and return a non-zero value.] */
+						(frame_codec_data->receive_frame_size > frame_codec_data->max_frame_size))
 					{
 						/* Codes_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
 						frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
@@ -468,7 +473,9 @@ int frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint8_t type,
 		/* Codes_SRS_FRAME_CODEC_01_092: [If type_specific_size is too big to allow encoding the frame according to the AMQP ISO then frame_codec_begin_encode_frame shall return a non-zero value.] */
 		(type_specific_size > MAX_TYPE_SPECIFIC_SIZE) ||
 		/* Codes_SRS_FRAME_CODEC_01_046: [Once encoding succeeds, all subsequent frame_codec_begin_encode_frame calls shall fail, until all the bytes of the frame have been encoded by using frame_codec_encode_frame_bytes.] */
-		(frame_codec_data->encode_frame_state != ENCODE_FRAME_STATE_FRAME_HEADER))
+		(frame_codec_data->encode_frame_state != ENCODE_FRAME_STATE_FRAME_HEADER) ||
+		/* Codes_SRS_FRAME_CODEC_01_095: [If the frame_size needed for the frame is bigger than the maximum frame size, frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
+		(frame_size > frame_codec_data->max_frame_size))
 	{
 		result = __LINE__;
 	}

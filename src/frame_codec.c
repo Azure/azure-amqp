@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
 #include "frame_codec.h"
 #include "amqpvalue.h"
@@ -7,6 +8,7 @@
 #include "logger.h"
 #include "io.h"
 #include "amqpalloc.h"
+#include "list.h"
 
 #define FRAME_HEADER_SIZE 8
 
@@ -20,13 +22,19 @@ typedef enum RECEIVE_FRAME_STATE_TAG
 	RECEIVE_FRAME_STATE_ERROR
 } RECEIVE_FRAME_STATE;
 
+typedef struct SUBSCRIPTION_TAG
+{
+	uint8_t frame_type;
+	FRAME_BEGIN_CALLBACK frame_begin_callback;
+	FRAME_BODY_BYTES_RECEIVED_CALLBACK frame_body_bytes_received_callback;
+	void* callback_context;
+} SUBSCRIPTION;
+
 typedef struct FRAME_CODEC_DATA_TAG
 {
 	IO_HANDLE io;
 	LOGGER_LOG logger_log;
-	FRAME_BEGIN_CALLBACK frame_begin_callback;
-	FRAME_BODY_BYTES_RECEIVED_CALLBACK frame_body_bytes_received_callback;
-	void* callback_context;
+	LIST_HANDLE subscription_list;
 	RECEIVE_FRAME_STATE receive_frame_state;
 	size_t receive_frame_pos;
 	uint32_t receive_frame_size;
@@ -34,6 +42,7 @@ typedef struct FRAME_CODEC_DATA_TAG
 	uint8_t receive_frame_type;
 	uint32_t max_frame_size;
 	unsigned char* receive_frame_type_specific;
+	SUBSCRIPTION* receive_frame_subscription;
 } FRAME_CODEC_DATA;
 
 int frame_codec_encode_frame_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned char* bytes, size_t length)
@@ -83,8 +92,13 @@ static int receive_frame_byte(FRAME_CODEC_DATA* frame_codec, unsigned char b)
 {
 	int result;
 
-
 	return result;
+}
+
+static bool find_subscription_by_frame_type(LIST_ITEM_HANDLE list_item, const void* match_context)
+{
+	SUBSCRIPTION* subscription = (SUBSCRIPTION*)list_item;
+	return subscription->frame_type == *((uint8_t*)match_context) ? true : false;
 }
 
 FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log)
@@ -105,13 +119,11 @@ FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log)
 			/* Codes_SRS_FRAME_CODEC_01_021: [frame_codec_create shall create a new instance of frame_codec and return a non-NULL handle to it on success.] */
 			result->io = io;
 			result->logger_log = logger_log;
-			result->frame_begin_callback = NULL;
-			result->frame_body_bytes_received_callback = NULL;
-			result->callback_context = NULL;
 			result->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
 			result->receive_frame_pos = 0;
 			result->receive_frame_size = 0;
 			result->receive_frame_type_specific = NULL;
+			result->subscription_list = list_create();
 		}
 	}
 
@@ -124,6 +136,8 @@ void frame_codec_destroy(FRAME_CODEC_HANDLE frame_codec)
 	if (frame_codec != NULL)
 	{
 		FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
+
+		list_destroy(frame_codec_data->subscription_list);
 		if (frame_codec_data->receive_frame_type_specific != NULL)
 		{
 			amqpalloc_free(frame_codec_data->receive_frame_type_specific);
@@ -229,15 +243,26 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 				buffer++;
 				size--;
 
-				frame_codec_data->receive_frame_pos = 0;
-				frame_codec_data->receive_frame_type_specific = (unsigned char*)amqpalloc_malloc(type_specific_size);
-				/* Codes_SRS_frame_codec_data_01_030: [If a decoding error occurs, frame_codec_data_receive_bytes shall return a non-zero value.] */
-				if (frame_codec_data->receive_frame_type_specific == NULL)
+				frame_codec_data->receive_frame_subscription = (SUBSCRIPTION*)list_find(frame_codec_data->subscription_list, find_subscription_by_frame_type, &frame_codec_data->receive_frame_type);
+
+				if (frame_codec_data->receive_frame_subscription != NULL)
 				{
-					/* Codes_SRS_frame_codec_data_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
-					frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
-					result = __LINE__;
-					break;
+					frame_codec_data->receive_frame_pos = 0;
+					frame_codec_data->receive_frame_type_specific = (unsigned char*)amqpalloc_malloc(type_specific_size);
+					/* Codes_SRS_frame_codec_data_01_030: [If a decoding error occurs, frame_codec_data_receive_bytes shall return a non-zero value.] */
+					if (frame_codec_data->receive_frame_type_specific == NULL)
+					{
+						/* Codes_SRS_frame_codec_data_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
+						frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
+						result = __LINE__;
+						break;
+					}
+					else
+					{
+						frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_TYPE_SPECIFIC;
+						result = 0;
+						break;
+					}
 				}
 				else
 				{
@@ -256,43 +281,55 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 					to_copy = size;
 				}
 
-				if (memcpy(&frame_codec_data->receive_frame_type_specific[frame_codec_data->receive_frame_pos], buffer, to_copy) == NULL)
+				if (frame_codec_data->receive_frame_subscription != NULL)
 				{
-					/* Codes_SRS_frame_codec_data_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
-					frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
-					result = __LINE__;
-					break;
+					if (memcpy(&frame_codec_data->receive_frame_type_specific[frame_codec_data->receive_frame_pos], buffer, to_copy) == NULL)
+					{
+						/* Codes_SRS_frame_codec_data_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
+						frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
+						result = __LINE__;
+						break;
+					}
+					else
+					{
+						frame_codec_data->receive_frame_pos += to_copy;
+						buffer += to_copy;
+						size -= to_copy;
+					}
 				}
 				else
 				{
 					frame_codec_data->receive_frame_pos += to_copy;
 					buffer += to_copy;
 					size -= to_copy;
-					if (frame_codec_data->receive_frame_pos == type_specific_size)
+				}
+
+				if (frame_codec_data->receive_frame_pos == type_specific_size)
+				{
+					if (frame_codec_data->receive_frame_subscription != NULL)
 					{
 						/* Codes_SRS_frame_codec_data_01_031: [When a frame header is successfully decoded it shall be indicated to the upper layer by invoking the frame_begin_callback passed to frame_codec_data_subscribe.] */
 						/* Codes_SRS_frame_codec_data_01_032: [Besides passing the frame information, the callback_context value passed to frame_codec_data_subscribe shall be passed to the frame_begin_callback function.] */
-						frame_codec_data->frame_begin_callback(frame_codec_data->callback_context, frame_codec_data->receive_frame_size - frame_codec_data->receive_frame_doff * 4, frame_codec_data->receive_frame_type_specific, type_specific_size);
+						frame_codec_data->receive_frame_subscription->frame_begin_callback(frame_codec_data->receive_frame_subscription->callback_context, frame_codec_data->receive_frame_size - frame_codec_data->receive_frame_doff * 4, frame_codec_data->receive_frame_type_specific, type_specific_size);
 						amqpalloc_free(frame_codec_data->receive_frame_type_specific);
 						frame_codec_data->receive_frame_type_specific = NULL;
-
-						frame_codec_data->receive_frame_pos = 0;
-
-						/* Codes_SRS_frame_codec_data_01_085: [If the frame body is empty, no call to frame_body_bytes_received_callback shall be made.] */
-						if (frame_codec_data->receive_frame_size == FRAME_HEADER_SIZE)
-						{
-							frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
-							frame_codec_data->receive_frame_size = 0;
-						}
-						else
-						{
-							frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_BODY;
-						}
 					}
 
-					result = 0;
+					/* Codes_SRS_frame_codec_data_01_085: [If the frame body is empty, no call to frame_body_bytes_received_callback shall be made.] */
+					if (frame_codec_data->receive_frame_size == FRAME_HEADER_SIZE)
+					{
+						frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
+						frame_codec_data->receive_frame_size = 0;
+					}
+					else
+					{
+						frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_BODY;
+					}
+
+					frame_codec_data->receive_frame_pos = 0;
 				}
 
+				result = 0;
 				break;
 			}
 
@@ -300,15 +337,21 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 			{
 				uint32_t frame_body_size = frame_codec_data->receive_frame_size - (frame_codec_data->receive_frame_doff * 4);
 				uint32_t to_notify = frame_body_size;
+				FRAME_BODY_BYTES_RECEIVED_CALLBACK frame_body_bytes_received_callback = NULL;
+
 				if (to_notify > size)
 				{
 					to_notify = size;
 				}
 
-				/* Codes_SRS_frame_codec_data_01_083: [The frame body bytes shall be passed to the frame_body_bytes_received_callback function that was given to frame_codec_data_subscribe.] */
-				/* Codes_SRS_frame_codec_data_01_084: [The bytes shall be passed to frame_body_bytes_received_callback as they arrive, not waiting for all frame body bytes to be received.] */
-				/* Codes_SRS_frame_codec_data_01_086: [Besides passing the frame information, the callback_context value passed to frame_codec_data_subscribe shall be passed to the frame_body_bytes_received_callback function.] */
-				frame_codec_data->frame_body_bytes_received_callback(frame_codec_data->callback_context, buffer, to_notify);
+				if (frame_codec_data->receive_frame_subscription != NULL)
+				{
+					/* Codes_SRS_frame_codec_data_01_083: [The frame body bytes shall be passed to the frame_body_bytes_received_callback function that was given to frame_codec_data_subscribe.] */
+					/* Codes_SRS_frame_codec_data_01_084: [The bytes shall be passed to frame_body_bytes_received_callback as they arrive, not waiting for all frame body bytes to be received.] */
+					/* Codes_SRS_frame_codec_data_01_086: [Besides passing the frame information, the callback_context value passed to frame_codec_data_subscribe shall be passed to the frame_body_bytes_received_callback function.] */
+					frame_codec_data->receive_frame_subscription->frame_body_bytes_received_callback(frame_codec_data->receive_frame_subscription->callback_context, buffer, to_notify);
+				}
+
 				buffer += to_notify;
 				size -= to_notify;
 				frame_codec_data->receive_frame_pos += to_notify;
@@ -385,9 +428,13 @@ int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_BE
 	else
 	{
 		FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
-		frame_codec_data->frame_begin_callback = frame_begin_callback;
-		frame_codec_data->frame_body_bytes_received_callback = frame_body_bytes_received_callback;
-		frame_codec_data->callback_context = callback_context;
+		SUBSCRIPTION* subscription = amqpalloc_malloc(sizeof(SUBSCRIPTION));
+		subscription->frame_begin_callback = frame_begin_callback;
+		subscription->frame_body_bytes_received_callback = frame_body_bytes_received_callback;
+		subscription->callback_context = callback_context;
+		subscription->frame_type = type;
+
+		list_add(frame_codec_data->subscription_list, subscription);
 
 		/* Codes_SRS_FRAME_CODEC_01_087: [On success, frame_codec_subscribe shall return zero.] */
 		result = 0;
@@ -399,8 +446,5 @@ int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_BE
 int frame_codec_unsubscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type)
 {
 	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
-	frame_codec_data->frame_begin_callback = NULL;
-	frame_codec_data->frame_body_bytes_received_callback = NULL;
-	frame_codec_data->callback_context = NULL;
 	return 0;
 }

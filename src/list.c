@@ -38,7 +38,7 @@ void list_destroy(LIST_HANDLE handle)
 	}
 }
 
-int list_add(LIST_HANDLE handle, void* item)
+int list_add(LIST_HANDLE handle, const void* item)
 {
 	int result;
 

@@ -10,7 +10,7 @@ extern "C" {
 
 	typedef void* LIST_HANDLE;
 	typedef void* LIST_ITEM_HANDLE;
-	typedef bool LIST_MATCH_FUNCTION(LIST_ITEM_HANDLE list_item, const void* match_context);
+	typedef bool (*LIST_MATCH_FUNCTION)(LIST_ITEM_HANDLE list_item, const void* match_context);
 
 	extern LIST_HANDLE list_create(void);
 	extern void list_destroy(LIST_HANDLE handle);

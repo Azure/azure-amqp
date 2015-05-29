@@ -243,6 +243,7 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 				buffer++;
 				size--;
 
+				/* Codes_SRS_FRAME_CODEC_01_035: [After successfully registering a callback for a certain frame type, when subsequently that frame type is received the callbacks shall be invoked, passing to it the received frame and the callback_context value.] */
 				frame_codec_data->receive_frame_subscription = (SUBSCRIPTION*)list_find(frame_codec_data->subscription_list, find_subscription_by_frame_type, &frame_codec_data->receive_frame_type);
 
 				if (frame_codec_data->receive_frame_subscription != NULL)

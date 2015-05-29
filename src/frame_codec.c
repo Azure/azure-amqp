@@ -374,11 +374,11 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 	return result;
 }
 
-int frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, size_t frame_payload_size)
+int frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint32_t frame_body_size)
 {
 	int result;
 	ENCODER_HANDLE encoder_handle;
-	size_t frame_size = frame_payload_size + FRAME_HEADER_SIZE;
+	size_t frame_size = frame_body_size + FRAME_HEADER_SIZE;
 	FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
 	uint8_t doff = 2;
 	uint8_t type = 0;
@@ -409,6 +409,7 @@ int frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, size_t frame_
 		b = (channel)& 0xFF;
 		(void)io_send(frame_codec_data->io, &b, 1);
 
+		/* Codes_SRS_FRAME_CODEC_01_043: [On success it returns 0.] */
 		result = 0;
 	}
 

@@ -1414,5 +1414,19 @@ TEST_METHOD(frame_type_sasl_is_one)
 /* frame_codec_begin_encode_frame */
 
 /* Tests_SRS_FRAME_CODEC_01_042: [frame_codec_begin_encode_frame encodes the header of a frame that has frame_payload_size bytes.] */
+/* Tests_SRS_FRAME_CODEC_01_043: [On success it returns 0.] */
+TEST_METHOD(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
 
 END_TEST_SUITE(frame_codec_unittests)

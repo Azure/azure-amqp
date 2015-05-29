@@ -5,7 +5,6 @@
 #include "amqpvalue.h"
 #include "frame_codec.h"
 #include "io.h"
-#include "encoder.h"
 #include "list.h"
 
 #define TEST_IO_HANDLE					(IO_HANDLE)0x4242
@@ -29,16 +28,18 @@ void stringify_bytes(const unsigned char* bytes, size_t byte_count, char* output
 	size_t i;
 	size_t pos = 0;
 
-	output_string[pos] = '[';
+	output_string[pos++] = '[';
 	for (i = 0; i < byte_count; i++)
 	{
-		(void)sprintf(&output_string[pos], "%02X", bytes[i]);
+		(void)sprintf(&output_string[pos], "0x%02X", bytes[i]);
 		if (i < byte_count - 1)
 		{
 			strcat(output_string, ",");
-			pos = strlen(output_string);
 		}
+		pos = strlen(output_string);
 	}
+	output_string[pos++] = ']';
+	output_string[pos++] = '\0';
 }
 
 TYPED_MOCK_CLASS(frame_codec_mocks, CGlobalMock)
@@ -76,12 +77,6 @@ public:
 	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_get_descriptor, AMQP_VALUE, value)
 	MOCK_METHOD_END(AMQP_VALUE, TEST_DESCRIPTION_AMQP_VALUE);
 	MOCK_STATIC_METHOD_1(, void, amqpvalue_destroy, AMQP_VALUE, value)
-	MOCK_VOID_METHOD_END();
-
-	/* encoder mocks */
-	MOCK_STATIC_METHOD_2(, ENCODER_HANDLE, encoder_create, ENCODER_OUTPUT, encoder_output, void*, context)
-	MOCK_METHOD_END(ENCODER_HANDLE, TEST_ENCODER_HANDLE);
-	MOCK_STATIC_METHOD_1(, void, encoder_destroy, ENCODER_HANDLE, handle)
 	MOCK_VOID_METHOD_END();
 
 	/* decoder mocks */
@@ -157,9 +152,6 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , AMQP_VALUE, amqpvalue_get_descriptor, AMQP_VALUE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, amqpvalue_destroy, AMQP_VALUE, value);
 
-	DECLARE_GLOBAL_MOCK_METHOD_2(frame_codec_mocks, , ENCODER_HANDLE, encoder_create, ENCODER_OUTPUT, encoder_output, void*, context);
-	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, encoder_destroy, ENCODER_HANDLE, handle);
-
 	DECLARE_GLOBAL_MOCK_METHOD_2(frame_codec_mocks, , DECODER_HANDLE, decoder_create, VALUE_DECODED_CALLBACK, value_decoded_callback, void*, value_decoded_callback_context);
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, decoder_destroy, DECODER_HANDLE, handle);
 	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , int, decoder_decode, DECODER_HANDLE, handle, AMQP_VALUE*, amqp_value, bool*, more);
@@ -208,13 +200,16 @@ TEST_METHOD_CLEANUP(method_cleanup)
 {
 	if (list_items != NULL)
 	{
-		list_item_count = 0;
 		free(list_items);
 		list_items = NULL;
+	}
+	if (sent_io_bytes != NULL)
+	{
 		free(sent_io_bytes);
 		sent_io_bytes = NULL;
-		sent_io_byte_count = 0;
 	}
+	list_item_count = 0;
+	sent_io_byte_count = 0;
 	if (!MicroMockReleaseMutex(test_serialize_mutex))
 	{
 		ASSERT_FAIL("Could not release test serialization mutex.");
@@ -1445,6 +1440,15 @@ TEST_METHOD(frame_type_sasl_is_one)
 /* Tests_SRS_FRAME_CODEC_01_042: [frame_codec_begin_encode_frame encodes the header and type specific bytes of a frame that has frame_payload_size bytes.] */
 /* Tests_SRS_FRAME_CODEC_01_043: [On success it shall return 0.] */
 /* Tests_SRS_FRAME_CODEC_01_088: [Encoding the bytes shall happen by passing the bytes to the underlying IO interface.] */
+/* Tests_SRS_FRAME_CODEC_01_055: [Frames are divided into three distinct areas: a fixed width frame header, a variable width extended header, and a variable width frame body.] */
+/* Tests_SRS_FRAME_CODEC_01_056: [frame header The frame header is a fixed size (8 byte) structure that precedes each frame.] */
+/* Tests_SRS_FRAME_CODEC_01_057: [The frame header includes mandatory information necessary to parse the rest of the frame including size and type information.] */
+/* Tests_SRS_FRAME_CODEC_01_058: [extended header The extended header is a variable width area preceding the frame body.] */
+/* Tests_SRS_FRAME_CODEC_01_059: [This is an extension point defined for future expansion.] */
+/* Tests_SRS_FRAME_CODEC_01_060: [The treatment of this area depends on the frame type.] */
+/* Tests_SRS_FRAME_CODEC_01_062: [SIZE Bytes 0-3 of the frame header contain the frame size.] */
+/* Tests_SRS_FRAME_CODEC_01_063: [This is an unsigned 32-bit integer that MUST contain the total frame size of the frame header, extended header, and frame body.] */
+/* Tests_SRS_FRAME_CODEC_01_064: [The frame is malformed if the size is less than the size of the frame header (8 bytes).] */
 TEST_METHOD(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeeds)
 {
 	// arrange
@@ -1452,17 +1456,18 @@ TEST_METHOD(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeed
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, encoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
 		.ExpectedAtLeastTimes(1);
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.IgnoreAllCalls();
 
 	// act
-	int result = frame_codec_begin_encode_frame(frame_codec, 0, NULL, 0);
+	int result = frame_codec_begin_encode_frame(frame_codec, 0, 0, NULL, 0);
 
 	// assert
 	char stringified_io[512];
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, stringified_io);
-	ASSERT_ARE_NOT_EQUAL(char_ptr, "[0x00,0x00,0x00,0x0A,0x02,0x00,0x00,0x00]", stringified_io);
+	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x00,0x08,0x02,0x00,0x00,0x00]", stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
@@ -1473,7 +1478,7 @@ TEST_METHOD(when_frame_codec_is_NULL_frame_codec_begin_encode_frame_fails)
 	frame_codec_mocks mocks;
 
 	// act
-	int result = frame_codec_begin_encode_frame(NULL, 0, NULL, 0);
+	int result = frame_codec_begin_encode_frame(NULL, 0, 0, NULL, 0);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
@@ -1488,7 +1493,7 @@ TEST_METHOD(when_type_specific_size_is_positive_and_type_speific_bytes_is_NULL_f
 	mocks.ResetAllCalls();
 
 	// act
-	int result = frame_codec_begin_encode_frame(frame_codec, 0, NULL, 1);
+	int result = frame_codec_begin_encode_frame(frame_codec, 0, 0, NULL, 1);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
@@ -1502,12 +1507,240 @@ TEST_METHOD(when_io_send_fails_then_frame_codec_begin_encode_frame_fails)
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, encoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
 		.SetReturn(1);
 
 	// act
-	int result = frame_codec_begin_encode_frame(frame_codec, 0, NULL, 0);
+	int result = frame_codec_begin_encode_frame(frame_codec, 0, 0, NULL, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_092: [If type_specific_size is too big to allow encoding the frame according to the AMQP ISO then frame_codec_begin_encode_frame shall return a non-zero value.] */
+/* Tests_SRS_FRAME_CODEC_01_065: [DOFF Byte 4 of the frame header is the data offset.] */
+/* Tests_SRS_FRAME_CODEC_01_066: [This gives the position of the body within the frame.] */
+/* Tests_SRS_FRAME_CODEC_01_058: [extended header The extended header is a variable width area preceding the frame body.] */
+TEST_METHOD(when_type_specific_size_is_too_big_then_frame_codec_begin_encode_frame_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char expected_frame[1020] = { 0x00, 0x00, 0x00, 0x0A, 0xFF, 0x00, 0x00, 0x00 };
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0, 0, &expected_frame[6], 1015);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_092: [If type_specific_size is too big to allow encoding the frame according to the AMQP ISO then frame_codec_begin_encode_frame shall return a non-zero value.] */
+/* Tests_SRS_FRAME_CODEC_01_065: [DOFF Byte 4 of the frame header is the data offset.] */
+/* Tests_SRS_FRAME_CODEC_01_066: [This gives the position of the body within the frame.] */
+/* Tests_SRS_FRAME_CODEC_01_058: [extended header The extended header is a variable width area preceding the frame body.] */
+/* Tests_SRS_FRAME_CODEC_01_065: [DOFF Byte 4 of the frame header is the data offset.] */
+/* Tests_SRS_FRAME_CODEC_01_066: [This gives the position of the body within the frame.] */
+/* Tests_SRS_FRAME_CODEC_01_067: [The value of the data offset is an unsigned, 8-bit integer specifying a count of 4-byte words.] */
+TEST_METHOD(when_type_specific_size_is_max_allowed_then_frame_codec_begin_encode_frame_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char expected_frame[1020] = { 0x00, 0x00, 0x03, 0xFC, 0xFF, 0x00, 0x00, 0x00 };
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.ExpectedAtLeastTimes(1);
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.IgnoreAllCalls();
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0, 0, &expected_frame[6], 1014);
+
+	// assert
+	char expected_stringified_io[8192];
+	char actual_stringified_io[8192];
+	memset(expected_frame + 6, 0, 1020 - 6);
+	stringify_bytes(expected_frame, sizeof(expected_frame), expected_stringified_io);
+	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
+	ASSERT_ARE_EQUAL(char_ptr, expected_stringified_io, actual_stringified_io);
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_090: [If the type_specific_size – 2 does not divide by 4, frame_codec_begin_encode_frame shall pad the type_specific bytes with zeroes so that type specific data is according to the AMQP ISO.] */
+/* Tests_SRS_FRAME_CODEC_01_065: [DOFF Byte 4 of the frame header is the data offset.] */
+/* Tests_SRS_FRAME_CODEC_01_066: [This gives the position of the body within the frame.] */
+/* Tests_SRS_FRAME_CODEC_01_067: [The value of the data offset is an unsigned, 8-bit integer specifying a count of 4-byte words.] */
+/* Tests_SRS_FRAME_CODEC_01_068: [Due to the mandatory 8-byte frame header, the frame is malformed if the value is less than 2.] */
+TEST_METHOD(one_byte_of_pading_is_added_to_type_specific_data_to_make_the_frame_header)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char expected_frame[] = { 0x00, 0x00, 0x00, 0x8, 0x02, 0x00, 0x42, 0x00 };
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.ExpectedAtLeastTimes(1);
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.IgnoreAllCalls();
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0, 0, &expected_frame[6], 1);
+
+	// assert
+	char expected_stringified_io[8192];
+	char actual_stringified_io[8192];
+	stringify_bytes(expected_frame, sizeof(expected_frame), expected_stringified_io);
+	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
+	ASSERT_ARE_EQUAL(char_ptr, expected_stringified_io, actual_stringified_io);
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_069: [TYPE Byte 5 of the frame header is a type code.] */
+TEST_METHOD(the_type_is_placed_in_the_underlying_frame)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.ExpectedAtLeastTimes(1);
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.IgnoreAllCalls();
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0x42, 0, NULL, 0);
+
+	// assert
+	char actual_stringified_io[8192];
+	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
+	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x00,0x08,0x02,0x42,0x00,0x00]", actual_stringified_io);
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_089: [If any IO calls fail then frame_codec_begin_encode_frame shall return a non-zero value.] */
+TEST_METHOD(when_2nd_io_send_fails_frame_codec_begin_encode_frame_fails_too)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.SetReturn(1);
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0x42, 0, NULL, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_089: [If any IO calls fail then frame_codec_begin_encode_frame shall return a non-zero value.] */
+TEST_METHOD(when_3rd_io_send_fails_frame_codec_begin_encode_frame_fails_too)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	unsigned char expected_frame[] = { 0x00, 0x00, 0x00, 0x8, 0x02, 0x42, 0x42, 0x00 };
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.SetReturn(1);
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0x42, 0, &expected_frame[6], 1);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_046: [Once encoding succeeds, all subsequent frame_codec_begin_encode_frame calls shall fail, until all the bytes of the frame have been encoded by using frame_codec_encode_frame_bytes.] */
+TEST_METHOD(while_not_all_frame_body_bytes_were_encoded_frame_codec_begin_encode_frame_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, 1, NULL, 0);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0x42, 1, NULL, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_093: [Once encoding has failed due to IO issues, all subsequent calls to frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
+TEST_METHOD(after_an_io_failure_a_subsequent_call_to_frame_codec_begin_encode_frame_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.SetReturn(1);
+
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, 0, NULL, 0);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0x42, 0, NULL, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_093: [Once encoding has failed due to IO issues, all subsequent calls to frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
+TEST_METHOD(after_an_io_failure_with_2nd_io_send_call_a_subsequent_call_to_frame_codec_begin_encode_frame_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.SetReturn(1);
+
+	uint8_t byte = 0x42;
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, 0, &byte, 1);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0x42, 0, NULL, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_093: [Once encoding has failed due to IO issues, all subsequent calls to frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
+TEST_METHOD(after_an_io_failure_with_3rd_io_send_call_a_subsequent_call_to_frame_codec_begin_encode_frame_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.SetReturn(1);
+
+	uint8_t byte = 0x42;
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, 0, &byte, 1);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0x42, 0, NULL, 0);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);

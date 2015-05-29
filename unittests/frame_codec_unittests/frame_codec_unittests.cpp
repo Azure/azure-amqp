@@ -436,6 +436,8 @@ TEST_METHOD(frame_codec_receive_bytes_with_zero_size_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_029: [The sequence of bytes does not have to be a complete frame, frame_codec shall be responsible for maintaining decoding state between frame_codec_receive_bytes calls.] */
+/* Codes_SRS_FRAME_CODEC_01_005: [This is an extension point defined for future expansion.] */
+/* Codes_SRS_FRAME_CODEC_01_006: [The treatment of this area depends on the frame type.] */
 TEST_METHOD(when_frame_codec_receive_1_byte_in_one_call_and_the_rest_of_the_frame_in_another_call_yields_succesfull_decode)
 {
 	// arrange
@@ -1727,6 +1729,255 @@ TEST_METHOD(after_an_io_failure_with_3rd_io_send_call_a_subsequent_call_to_frame
 	uint8_t byte = 0x42;
 	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, 0, &byte, 1);
 	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0x42, 0, NULL, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* frame_codec_encode_frame_bytes */
+
+/* Tests_SRS_FRAME_CODEC_01_047: [frame_codec_encode_frame_bytes encodes the frame bytes for a frame encoding started with a frame_codec_start_encode_frame call.] */
+/* Tests_SRS_FRAME_CODEC_01_048: [If all bytes are successfully encoded, frame_codec_encode_frame_bytes shall return 0.] */
+/* Tests_SRS_FRAME_CODEC_01_061: [frame body The frame body is a variable width sequence of bytes the format of which depends on the frame type.] */
+TEST_METHOD(frame_codec_encode_frame_bytes_with_1_encoded_byte_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, 1, NULL, 0);
+	mocks.ResetAllCalls();
+	uint8_t byte = 0x42;
+
+	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, 1))
+		.ValidateArgumentBuffer(2, &byte, 1);
+
+	// act
+	int result = frame_codec_encode_frame_bytes(frame_codec, &byte, 1);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_047: [frame_codec_encode_frame_bytes encodes the frame bytes for a frame encoding started with a frame_codec_start_encode_frame call.] */
+/* Tests_SRS_FRAME_CODEC_01_048: [If all bytes are successfully encoded, frame_codec_encode_frame_bytes shall return 0.] */
+TEST_METHOD(frame_codec_encode_frame_bytes_with_2_bytes_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char bytes[] = { 0x42, 0x43 };
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, sizeof(bytes), NULL, 0);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, sizeof(bytes)))
+		.ValidateArgumentBuffer(2, &bytes, sizeof(bytes));
+
+	// act
+	int result = frame_codec_encode_frame_bytes(frame_codec, bytes, sizeof(bytes));
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_049: [If any of the frame_codec or bytes arguments is NULL, frame_codec_encode_frame_bytes shall return a non-zero value.] */
+TEST_METHOD(frame_codec_encode_frame_bytes_with_NULL_frame_codec_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char bytes[] = { 0x42, 0x43 };
+
+	// act
+	int result = frame_codec_encode_frame_bytes(NULL, bytes, sizeof(bytes));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_049: [If any of the frame_codec or bytes arguments is NULL, frame_codec_encode_frame_bytes shall return a non-zero value.] */
+TEST_METHOD(frame_codec_encode_frame_bytes_with_NULL_bytes_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, 1, NULL, 0);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_encode_frame_bytes(frame_codec, NULL, 1);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_050: [If the length argument is zero, frame_codec_encode_frame_bytes shall return a non-zero value.] */
+TEST_METHOD(frame_codec_encode_frame_bytes_with_zero_length_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char bytes[] = { 0x42, 0x43 };
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, sizeof(bytes), NULL, 0);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_encode_frame_bytes(frame_codec, bytes, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_053: [If length is bigger than the expected amount of bytes for the frame currently being encoded, then frame_codec_encode_frame_bytes shall return a non-zero value.] */
+TEST_METHOD(when_more_bytes_are_passed_than_expected_frame_codec_encode_frame_bytes_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char bytes[] = { 0x42, 0x43 };
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, sizeof(bytes), NULL, 0);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = frame_codec_encode_frame_bytes(frame_codec, bytes, 3);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_054: [If any encoding error (passing the data to the IO interface) occurs, frame_codec_encode_frame_bytes shall return a non-zero value.] */
+TEST_METHOD(when_io_send_fails_then_frame_codec_encode_frame_bytes_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char bytes[] = { 0x42, 0x43 };
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, sizeof(bytes), NULL, 0);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, sizeof(bytes)))
+		.ValidateArgumentBuffer(2, &bytes, sizeof(bytes))
+		.SetReturn(1);
+
+	// act
+	int result = frame_codec_encode_frame_bytes(frame_codec, bytes, sizeof(bytes));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_051: [The total number of bytes to be encoded for a frame can be passed in multiple frame_codec_encode_frame_bytes calls.] */
+/* Tests_SRS_FRAME_CODEC_01_052: [At each call, the frame_codec instance shall decrease the amount of bytes still needed to be encoded for the frame.] */
+TEST_METHOD(sending_only_1_byte_out_of_2_frame_body_bytes_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char bytes[] = { 0x42, 0x43 };
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, sizeof(bytes), NULL, 0);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, 1))
+		.ValidateArgumentBuffer(2, &bytes, 1);
+
+	// act
+	int result = frame_codec_encode_frame_bytes(frame_codec, bytes, 1);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_051: [The total number of bytes to be encoded for a frame can be passed in multiple frame_codec_encode_frame_bytes calls.] */
+/* Tests_SRS_FRAME_CODEC_01_052: [At each call, the frame_codec instance shall decrease the amount of bytes still needed to be encoded for the frame.] */
+TEST_METHOD(sending_2_bytes_1_by_1_via_frame_codec_encode_frame_bytes_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char bytes[] = { 0x42, 0x43 };
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, sizeof(bytes), NULL, 0);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, 1))
+		.ValidateArgumentBuffer(2, &bytes, 1);
+	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, 1))
+		.ValidateArgumentBuffer(2, &bytes[1], 1);
+
+	(void)frame_codec_encode_frame_bytes(frame_codec, bytes, 1);
+
+	// act
+	int result = frame_codec_encode_frame_bytes(frame_codec, bytes + 1, 1);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_051: [The total number of bytes to be encoded for a frame can be passed in multiple frame_codec_encode_frame_bytes calls.] */
+/* Tests_SRS_FRAME_CODEC_01_052: [At each call, the frame_codec instance shall decrease the amount of bytes still needed to be encoded for the frame.] */
+TEST_METHOD(sending_an_extra_byte_1_by_1_via_frame_codec_encode_frame_bytes_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char bytes[] = { 0x42, 0x43 };
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, 1, NULL, 0);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, 1))
+		.ValidateArgumentBuffer(2, &bytes, 1);
+
+	(void)frame_codec_encode_frame_bytes(frame_codec, bytes, 1);
+
+	// act
+	int result = frame_codec_encode_frame_bytes(frame_codec, bytes + 1, 1);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_051: [The total number of bytes to be encoded for a frame can be passed in multiple frame_codec_encode_frame_bytes calls.] */
+/* Tests_SRS_FRAME_CODEC_01_052: [At each call, the frame_codec instance shall decrease the amount of bytes still needed to be encoded for the frame.] */
+TEST_METHOD(after_a_frame_is_completed_another_one_can_be_started)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char bytes[] = { 0x42, 0x43 };
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, 1, NULL, 0);
+	frame_codec_encode_frame_bytes(frame_codec, bytes, 1);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.ExpectedAtLeastTimes(1);
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.IgnoreAllCalls();
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0x42, 0, NULL, 0);
+
+	// assert
+	char actual_stringified_io[8192];
+	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
+	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x00,0x09,0x02,0x42,0x00,0x00,0x42,0x00,0x00,0x00,0x08,0x02,0x42,0x00,0x00]", actual_stringified_io);
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_094: [Once encoding has failed due to IO issues, all subsequent encoding calls to shall fail and return a non-zero value.] */
+TEST_METHOD(when_encoding_frame_body_bytes_fails_subsequent_frame_encoding_attempts_fail)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char bytes[] = { 0x42, 0x43 };
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, 1, NULL, 0);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, 1))
+		.ValidateArgumentBuffer(2, &bytes, 1)
+		.SetReturn(1);
+
+	(void)frame_codec_encode_frame_bytes(frame_codec, bytes, 1);
 
 	// act
 	int result = frame_codec_begin_encode_frame(frame_codec, 0x42, 0, NULL, 0);

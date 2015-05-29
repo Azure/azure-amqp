@@ -419,7 +419,7 @@ int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_BE
 {
 	int result;
 
-	/* Codes_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback or frame_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
+	/* Codes_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback or frame_body_bytes_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
 	if ((frame_codec == NULL) ||
 		(frame_begin_callback == NULL) ||
 		(frame_body_bytes_received_callback == NULL))
@@ -429,16 +429,49 @@ int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_BE
 	else
 	{
 		FRAME_CODEC_DATA* frame_codec_data = (FRAME_CODEC_DATA*)frame_codec;
-		SUBSCRIPTION* subscription = amqpalloc_malloc(sizeof(SUBSCRIPTION));
-		subscription->frame_begin_callback = frame_begin_callback;
-		subscription->frame_body_bytes_received_callback = frame_body_bytes_received_callback;
-		subscription->callback_context = callback_context;
-		subscription->frame_type = type;
+		SUBSCRIPTION* subscription;
 
-		list_add(frame_codec_data->subscription_list, subscription);
+		/* Codes_SRS_FRAME_CODEC_01_036: [Only one callback pair shall be allowed to be registered for a given frame type.] */
+		/* find the subscription for this frame type */
+		subscription = list_find(frame_codec_data->subscription_list, find_subscription_by_frame_type, &type);
+		if (subscription != NULL)
+		{
+			/* a subscription was found */
+			subscription->frame_begin_callback = frame_begin_callback;
+			subscription->frame_body_bytes_received_callback = frame_body_bytes_received_callback;
+			subscription->callback_context = callback_context;
 
-		/* Codes_SRS_FRAME_CODEC_01_087: [On success, frame_codec_subscribe shall return zero.] */
-		result = 0;
+			/* Codes_SRS_FRAME_CODEC_01_087: [On success, frame_codec_subscribe shall return zero.] */
+			result = 0;
+		}
+		else
+		{
+			/* add a new subscription */
+			subscription = amqpalloc_malloc(sizeof(SUBSCRIPTION));
+			/* Codes_SRS_FRAME_CODEC_01_037: [If any failure occurs while performing the subscribe operation, frame_codec_subscribe shall return a non-zero value.] */
+			if (subscription == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				subscription->frame_begin_callback = frame_begin_callback;
+				subscription->frame_body_bytes_received_callback = frame_body_bytes_received_callback;
+				subscription->callback_context = callback_context;
+				subscription->frame_type = type;
+
+				/* Codes_SRS_FRAME_CODEC_01_037: [If any failure occurs while performing the subscribe operation, frame_codec_subscribe shall return a non-zero value.] */
+				if (list_add(frame_codec_data->subscription_list, subscription) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					/* Codes_SRS_FRAME_CODEC_01_087: [On success, frame_codec_subscribe shall return zero.] */
+					result = 0;
+				}
+			}
+		}
 	}
 
 	return result;

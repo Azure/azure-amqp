@@ -897,6 +897,10 @@ TEST_METHOD(frame_codec_subscribe_with_valid_args_succeeds)
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	mocks.ResetAllCalls();
 
+	uint8_t frame_type = 0;
+	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame_type, 1);
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, list_add(TEST_LIST_HANDLE, IGNORED_PTR_ARG))
 		.IgnoreArgument(2);
@@ -908,7 +912,32 @@ TEST_METHOD(frame_codec_subscribe_with_valid_args_succeeds)
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback_1 or frame_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
+/* Tests_SRS_FRAME_CODEC_01_033: [frame_codec_subscribe subscribes for a certain type of frame received by the frame_codec instance identified by frame_codec.] */
+/* Tests_SRS_FRAME_CODEC_01_087: [On success, frame_codec_subscribe shall return zero.] */
+TEST_METHOD(when_list_find_returns_NULL_a_new_subscription_is_created)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	uint8_t frame_type = 0;
+	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame_type, 1)
+		.SetReturn((LIST_ITEM_HANDLE)NULL);
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	STRICT_EXPECTED_CALL(mocks, list_add(TEST_LIST_HANDLE, IGNORED_PTR_ARG))
+		.IgnoreArgument(2);
+
+	// act
+	int result = frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback or frame_body_bytes_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
 TEST_METHOD(when_frame_codec_is_NULL_frame_codec_subscribe_fails)
 {
 	// arrange
@@ -921,7 +950,7 @@ TEST_METHOD(when_frame_codec_is_NULL_frame_codec_subscribe_fails)
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback_1 or frame_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
+/* Tests_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback or frame_body_bytes_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
 TEST_METHOD(when_frame_begin_callback_is_NULL_frame_codec_subscribe_fails)
 {
 	// arrange
@@ -1046,6 +1075,102 @@ TEST_METHOD(when_2_subscriptions_exist_and_second_one_matches_the_callback_is_in
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_036: [Only one callback pair shall be allowed to be registered for a given frame type.] */
+TEST_METHOD(when_frame_codec_subscribe_is_called_twice_for_the_same_frame_type_it_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
+	mocks.ResetAllCalls();
+
+	uint8_t frame_type = 0;
+	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame_type, 1);
+
+	// act
+	int result = frame_codec_subscribe(frame_codec, 0, frame_begin_callback_2, frame_body_bytes_received_callback_2, frame_codec);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_036: [Only one callback pair shall be allowed to be registered for a given frame type.] */
+TEST_METHOD(the_callbacks_for_the_2nd_frame_codec_subscribe_for_the_same_frame_type_remain_in_effect)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback_2, frame_body_bytes_received_callback_2, frame_codec);
+	mocks.ResetAllCalls();
+
+	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x0A, 0x02, 0x00, 0x01, 0x02, 0x42, 0x43 };
+
+	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame[5], 1);
+	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
+	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_2(frame_codec, 2, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(3, &frame[6], 2);
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback_2(frame_codec, IGNORED_PTR_ARG, 2))
+		.ValidateArgumentBuffer(2, &frame[sizeof(frame) - 2], 2);
+
+	// act
+	int result = frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_037: [If any failure occurs while performing the subscribe operation, frame_codec_subscribe shall return a non-zero value.] */
+TEST_METHOD(when_allocating_memory_for_the_subscription_fails_frame_codec_subscribe_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	uint8_t frame_type = 0;
+	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame_type, 1);
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+		.SetReturn((void*)NULL);
+
+	// act
+	int result = frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_037: [If any failure occurs while performing the subscribe operation, frame_codec_subscribe shall return a non-zero value.] */
+TEST_METHOD(when_adding_the_subscription_fails_then_frame_codec_subscribe_fails)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	uint8_t frame_type = 0;
+	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame_type, 1);
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	STRICT_EXPECTED_CALL(mocks, list_add(TEST_LIST_HANDLE, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.SetReturn(1);
+
+	// act
+	int result = frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
 END_TEST_SUITE(frame_codec_unittests)

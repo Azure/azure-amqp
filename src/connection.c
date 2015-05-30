@@ -175,7 +175,7 @@ static void connection_empty_frame_received(void* context, uint16_t channel)
 {
 }
 
-static void connection_frame_received(void* context, uint16_t channel, uint64_t performative, AMQP_VALUE frame_list_value)
+static void connection_frame_received(void* context, uint16_t channel, uint64_t performative, AMQP_VALUE performative_fields, uint32_t payload_size)
 {
 	CONNECTION_DATA* connection = (CONNECTION_DATA*)context;
 	switch (performative)
@@ -212,7 +212,7 @@ static void connection_frame_received(void* context, uint16_t channel, uint64_t 
 	case 0x17:
 		if (connection->frame_received_callback != NULL)
 		{
-			connection->frame_received_callback(connection->frame_received_callback_context, 0, performative, frame_list_value, NULL, 0);
+			connection->frame_received_callback(connection->frame_received_callback_context, 0, performative, performative_fields, 0);
 		}
 		break;
 	}
@@ -268,7 +268,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 					}
 					else
 					{
-						result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, result);
+						result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, NULL, result);
 						if (result->amqp_frame_codec == NULL)
 						{
 							io_destroy(result->socket_io);

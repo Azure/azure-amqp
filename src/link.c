@@ -70,7 +70,7 @@ static int send_attach(LINK_DATA* link, const char* name, handle handle, role ro
 		{
 			FRAME_CODEC_HANDLE frame_codec;
 			if (((frame_codec = session_get_frame_codec(link->session)) == NULL) ||
-				(amqp_frame_codec_encode(frame_codec, 0x12, &attach_frame_list, 1) != 0))
+				(amqp_frame_codec_begin_encode_frame(frame_codec, 0, 0x12, attach_frame_list, 0) != 0))
 			{
 				result = __LINE__;
 			}
@@ -127,8 +127,9 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 					chunks[i + 1] = payload_chunks[i];
 				}
 
+				/* here we should feed data to the transfer frame */
 				if (((frame_codec = session_get_frame_codec(link->session)) == NULL) ||
-					(amqp_frame_codec_encode(frame_codec, 0x14, chunks, payload_chunk_count + 1) != 0))
+					(amqp_frame_codec_begin_encode_frame(frame_codec, 0, 0x14, *payload_chunks, 0) != 0))
 				{
 					result = __LINE__;
 				}

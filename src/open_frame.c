@@ -22,7 +22,7 @@ int open_frame_encode(FRAME_CODEC_HANDLE frame_codec, const char* container_id)
 		else
 		{
 			if ((amqpvalue_set_list_item(open_frame_list, 0, container_id_value) != 0) ||
-				(amqp_frame_codec_encode(frame_codec, 0x10, &open_frame_list, 1) != 0))
+				(amqp_frame_codec_begin_encode_frame(frame_codec, 0, 0x10, open_frame_list, 0) != 0))
 			{
 				result = __LINE__;
 			}

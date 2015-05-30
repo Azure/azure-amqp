@@ -47,7 +47,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 		{
 			FRAME_CODEC_HANDLE frame_codec;
 			if (((frame_codec = connection_get_frame_codec(session_data->connection)) == NULL) ||
-				(amqp_frame_codec_encode(frame_codec, 0x11, &begin_frame_list, 1) != 0))
+				(amqp_frame_codec_begin_encode_frame(frame_codec, 0, 0x11, begin_frame_list, 0) != 0))
 			{
 				result = __LINE__;
 			}
@@ -63,7 +63,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 	return result;
 }
 
-static void frame_received(void* context, uint64_t performative, AMQP_VALUE frame_list_value)
+static void frame_received(void* context, uint16_t channel, uint64_t performative, AMQP_VALUE performative_fields, uint32_t frame_payload_size)
 {
 	SESSION_DATA* session = (SESSION_DATA*)context;
 	switch (performative)
@@ -93,7 +93,7 @@ static void frame_received(void* context, uint64_t performative, AMQP_VALUE fram
 	case 0x16:
 		if (session->frame_received_callback != NULL)
 		{
-			session->frame_received_callback(session->frame_received_callback_context, performative, frame_list_value);
+			session->frame_received_callback(session->frame_received_callback_context, performative, performative_fields);
 		}
 		break;
 	}

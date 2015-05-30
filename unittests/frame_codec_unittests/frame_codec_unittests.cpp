@@ -329,6 +329,7 @@ TEST_METHOD(receiving_a_frame_with_exactly_512_bytes_of_total_frame_size_immedia
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 504, IGNORED_PTR_ARG, 2))
 		.ValidateArgumentBuffer(3, &frame[6], 2);
@@ -488,6 +489,7 @@ TEST_METHOD(receiving_a_frame_with_exactly_max_frame_size_bytes_of_total_frame_s
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 1016, IGNORED_PTR_ARG, 2))
@@ -664,6 +666,7 @@ TEST_METHOD(frame_codec_receive_bytes_decodes_one_empty_frame)
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 0, IGNORED_PTR_ARG, 2))
 		.ValidateArgumentBuffer(3, &frame[6], 2);
@@ -689,6 +692,7 @@ TEST_METHOD(frame_codec_receive_bytes_with_not_enough_bytes_for_a_frame_does_not
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 
@@ -762,6 +766,7 @@ TEST_METHOD(when_frame_codec_receive_1_byte_in_one_call_and_the_rest_of_the_fram
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 0, IGNORED_PTR_ARG, 2))
 		.ValidateArgumentBuffer(3, &frame[6], 2);
@@ -790,6 +795,7 @@ TEST_METHOD(when_frame_codec_receive_the_frame_bytes_in_1_byte_per_call_a_succes
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 0, IGNORED_PTR_ARG, 2))
@@ -822,6 +828,7 @@ TEST_METHOD(a_frame_codec_receive_bytes_call_with_bad_args_before_any_real_frame
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 0, IGNORED_PTR_ARG, 2))
 		.ValidateArgumentBuffer(3, &frame[6], 2);
@@ -849,6 +856,7 @@ TEST_METHOD(a_frame_codec_receive_bytes_call_with_bad_args_in_the_middle_of_the_
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 0, IGNORED_PTR_ARG, 2))
@@ -880,6 +888,7 @@ TEST_METHOD(frame_codec_receive_bytes_decodes_2_empty_frames)
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame1[5], 1);
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 0, IGNORED_PTR_ARG, 2))
 		.ValidateArgumentBuffer(3, &frame1[6], 2);
@@ -887,6 +896,7 @@ TEST_METHOD(frame_codec_receive_bytes_decodes_2_empty_frames)
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame2[5], 1);
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 0, IGNORED_PTR_ARG, 2))
@@ -917,6 +927,7 @@ TEST_METHOD(a_call_to_frame_codec_receive_bytes_with_bad_args_between_2_frames_d
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame1[5], 1);
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 0, IGNORED_PTR_ARG, 2))
 		.ValidateArgumentBuffer(3, &frame1[6], 2);
@@ -924,6 +935,7 @@ TEST_METHOD(a_call_to_frame_codec_receive_bytes_with_bad_args_between_2_frames_d
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame2[5], 1);
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 0, IGNORED_PTR_ARG, 2))
@@ -935,6 +947,29 @@ TEST_METHOD(a_call_to_frame_codec_receive_bytes_with_bad_args_between_2_frames_d
 
 	// act
 	int result = frame_codec_receive_bytes(frame_codec, frame2, sizeof(frame2));
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
+TEST_METHOD(when_getting_the_list_item_value_fails_no_callback_is_invoked)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	(void)frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
+	mocks.ResetAllCalls();
+	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x01, 0x02 };
+
+	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.ValidateArgumentBuffer(3, &frame[5], 1);
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG))
+		.SetReturn((const void*)NULL);
+
+	// act
+	int result = frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
@@ -1030,6 +1065,7 @@ TEST_METHOD(receiving_a_frame_with_1_byte_frame_body_succeeds)
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 1, IGNORED_PTR_ARG, 2))
 		.ValidateArgumentBuffer(3, &frame[6], 2);
@@ -1057,6 +1093,7 @@ TEST_METHOD(when_allocating_type_specific_data_fails_frame_codec_receive_bytes_f
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2))
 		.SetReturn((void*)NULL);
@@ -1153,6 +1190,7 @@ TEST_METHOD(a_frame_with_2_bytes_received_together_with_the_header_passes_the_by
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 2, IGNORED_PTR_ARG, 2))
 		.ValidateArgumentBuffer(3, &frame[6], 2);
@@ -1182,6 +1220,7 @@ TEST_METHOD(two_empty_frames_received_in_the_same_call_yields_2_callbacks)
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 0, IGNORED_PTR_ARG, 2))
 		.ValidateArgumentBuffer(3, &frame[6], 2);
@@ -1189,6 +1228,7 @@ TEST_METHOD(two_empty_frames_received_in_the_same_call_yields_2_callbacks)
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 0, IGNORED_PTR_ARG, 2))
@@ -1217,6 +1257,7 @@ TEST_METHOD(two_frames_with_1_byte_each_received_in_the_same_call_yields_2_callb
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 1, IGNORED_PTR_ARG, 2))
 		.ValidateArgumentBuffer(3, &frame[6], 2);
@@ -1226,6 +1267,7 @@ TEST_METHOD(two_frames_with_1_byte_each_received_in_the_same_call_yields_2_callb
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 1, IGNORED_PTR_ARG, 2))
@@ -1392,6 +1434,7 @@ TEST_METHOD(when_2_subscriptions_exist_and_first_one_matches_the_callback_is_inv
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_1(frame_codec, 2, IGNORED_PTR_ARG, 2))
 		.ValidateArgumentBuffer(3, &frame[6], 2);
@@ -1420,6 +1463,7 @@ TEST_METHOD(when_2_subscriptions_exist_and_second_one_matches_the_callback_is_in
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
@@ -1473,6 +1517,7 @@ TEST_METHOD(the_callbacks_for_the_2nd_frame_codec_subscribe_for_the_same_frame_t
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame[5], 1);
+	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 	STRICT_EXPECTED_CALL(mocks, frame_begin_callback_2(frame_codec, 2, IGNORED_PTR_ARG, 2))

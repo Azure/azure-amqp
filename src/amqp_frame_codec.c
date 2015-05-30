@@ -18,8 +18,9 @@ typedef enum AMQP_FRAME_DECODE_STATE_TAG
 typedef struct AMQP_FRAME_CODEC_DATA_TAG
 {
 	FRAME_CODEC_HANDLE frame_codec_handle;
-	AMQP_FRAME_RECEIVED_CALLBACK frame_receive_callback;
-	void* frame_receive_callback_context;
+	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
+	AMQP_EMPTY_FRAME_RECEIVED_CALLBACK empty_frame_received_callback;
+	void* frame_received_callback_context;
 	uint32_t frame_body_size;
 	uint32_t frame_body_pos;
 	uint8_t channel;
@@ -47,9 +48,9 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 		}
 		break;
 	case AMQP_FRAME_DECODE_FRAME_LIST:
-		if (amqp_frame_codec->frame_receive_callback != NULL)
+		if (amqp_frame_codec->frame_received_callback != NULL)
 		{
-			amqp_frame_codec->frame_receive_callback(amqp_frame_codec->frame_receive_callback_context, amqp_frame_codec->performative, decoded_value);
+			amqp_frame_codec->frame_received_callback(amqp_frame_codec->frame_received_callback_context, 0, amqp_frame_codec->performative, decoded_value, NULL, 0);
 			amqp_frame_codec->decode_state = AMQP_FRAME_DECODE_DESCRIPTOR;
 		}
 		break;
@@ -71,14 +72,16 @@ static void frame_body_bytes_received(void* context, const unsigned char* frame_
 	decoder_decode_bytes(amqp_frame_codec->decoder, frame_body_bytes, frame_body_bytes_size);
 }
 
-AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec_handle, AMQP_FRAME_RECEIVED_CALLBACK frame_receive_callback, void* frame_receive_callback_context)
+AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec_handle, AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback,
+	AMQP_EMPTY_FRAME_RECEIVED_CALLBACK empty_frame_received_callback, void* frame_received_callback_context)
 {
 	AMQP_FRAME_CODEC_DATA* result = (AMQP_FRAME_CODEC_DATA*)amqpalloc_malloc(sizeof(AMQP_FRAME_CODEC_DATA));
 	if (result != NULL)
 	{
 		result->frame_codec_handle = frame_codec_handle;
-		result->frame_receive_callback = frame_receive_callback;
-		result->frame_receive_callback_context = frame_receive_callback_context;
+		result->frame_received_callback = frame_received_callback;
+		result->empty_frame_received_callback = empty_frame_received_callback;
+		result->frame_received_callback_context = frame_received_callback_context;
 		result->decoder = decoder_create(amqp_value_decoded, result);
 		result->decode_state = AMQP_FRAME_DECODE_DESCRIPTOR;
 

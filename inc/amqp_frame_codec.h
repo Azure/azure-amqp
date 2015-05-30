@@ -22,7 +22,6 @@ extern AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_
 extern void amqp_frame_codec_destroy(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec);
 extern int amqp_frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint16_t channel, uint64_t performative, const AMQP_VALUE performative_fields, uint32_t payload_size);
 extern int amqp_frame_codec_encode_payload_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned char* bytes, uint32_t count);
-extern int amqp_frame_codec_decode_received_frame(void* context, uint8_t type, void* frame_body, uint32_t frame_body_size);
 
 #ifdef __cplusplus
 }

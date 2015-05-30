@@ -65,7 +65,7 @@ typedef struct FRAME_CODEC_DATA_TAG
 
 static bool find_subscription_by_frame_type(LIST_ITEM_HANDLE list_item, const void* match_context)
 {
-	SUBSCRIPTION* subscription = (SUBSCRIPTION*)list_item;
+	SUBSCRIPTION* subscription = (SUBSCRIPTION*)list_item_get_value(list_item);
 	return subscription->frame_type == *((uint8_t*)match_context) ? true : false;
 }
 

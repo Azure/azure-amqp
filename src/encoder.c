@@ -64,7 +64,7 @@ static int output_bytes(ENCODER_DATA* encoder_data, const void* bytes, size_t le
 	return result;
 }
 
-int encoder_encode_string(ENCODER_HANDLE handle, const char* value)
+static int encode_string(ENCODER_HANDLE handle, const char* value)
 {
 	int result;
 	if ((handle == NULL) ||
@@ -99,7 +99,7 @@ int encoder_encode_string(ENCODER_HANDLE handle, const char* value)
 	return result;
 }
 
-int encoder_encode_binary(ENCODER_HANDLE handle, const unsigned char* value, uint32_t length)
+static int encode_binary(ENCODER_HANDLE handle, const unsigned char* value, uint32_t length)
 {
 	int result;
 	if ((handle == NULL) ||
@@ -156,7 +156,7 @@ int encoder_encode_null(ENCODER_HANDLE handle)
 	return result;
 }
 
-int encoder_encode_ulong(ENCODER_HANDLE handle, uint64_t value)
+static int encode_ulong(ENCODER_HANDLE handle, uint64_t value)
 {
 	int result;
 	if (handle == NULL)
@@ -197,7 +197,7 @@ int encoder_encode_ulong(ENCODER_HANDLE handle, uint64_t value)
 	return result;
 }
 
-int encoder_encode_bool(ENCODER_HANDLE handle, bool value)
+static int encode_bool(ENCODER_HANDLE handle, bool value)
 {
 	int result;
 	if (handle == NULL)
@@ -225,7 +225,7 @@ int encoder_encode_bool(ENCODER_HANDLE handle, bool value)
 	return result;
 }
 
-int encoder_encode_ubyte(ENCODER_HANDLE handle, unsigned char value)
+static int encode_ubyte(ENCODER_HANDLE handle, unsigned char value)
 {
 	int result;
 	if (handle == NULL)
@@ -246,7 +246,7 @@ int encoder_encode_ubyte(ENCODER_HANDLE handle, unsigned char value)
 	return result;
 }
 
-int encoder_encode_uint(ENCODER_HANDLE handle, uint32_t value)
+static int encode_uint(ENCODER_HANDLE handle, uint32_t value)
 {
 	int result;
 	if (handle == NULL)
@@ -300,7 +300,7 @@ int encoder_get_encoded_size(ENCODER_HANDLE handle, size_t* size)
 	return result;
 }
 
-int encoder_encode_descriptor_header(ENCODER_HANDLE handle)
+static int encode_descriptor_header(ENCODER_HANDLE handle)
 {
 	int result;
 	if (handle == NULL)
@@ -350,7 +350,7 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 		{
 			AMQP_VALUE descriptor_value = amqpvalue_get_descriptor(value);
 			if ((descriptor_value == NULL) ||
-				(encoder_encode_descriptor_header(handle) != 0) ||
+				(encode_descriptor_header(handle) != 0) ||
 				(encoder_encode_amqp_value(handle, descriptor_value) != 0))
 			{
 				result = __LINE__;
@@ -363,7 +363,7 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 		}
 
 		case AMQP_TYPE_STRING:
-			if (encoder_encode_string(handle, amqpvalue_get_string(value)) != 0)
+			if (encode_string(handle, amqpvalue_get_string(value)) != 0)
 			{
 				result = __LINE__;
 			}
@@ -379,7 +379,7 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 			const unsigned char* bytes = amqpvalue_get_binary(value, &length);
 
 			if ((bytes == NULL) ||
-				(encoder_encode_binary(handle, bytes, length) != 0))
+				(encode_binary(handle, bytes, length) != 0))
 			{
 				result = __LINE__;
 			}
@@ -395,7 +395,7 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 		{
 			bool bool_value;
 			if ((amqpvalue_get_boolean(value, &bool_value) != 0) ||
-				(encoder_encode_bool(handle, bool_value) != 0))
+				(encode_bool(handle, bool_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -410,7 +410,7 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 		{
 			unsigned char ubyte_value;
 			if ((amqpvalue_get_ubyte(value, &ubyte_value) != 0) ||
-				(encoder_encode_ubyte(handle, ubyte_value) != 0))
+				(encode_ubyte(handle, ubyte_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -425,7 +425,7 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 		{
 			uint32_t uint_value;
 			if ((amqpvalue_get_uint(value, &uint_value) != 0) ||
-				(encoder_encode_uint(handle, uint_value) != 0))
+				(encode_uint(handle, uint_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -440,7 +440,7 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 		{
 			uint64_t ulong_value;
 			if ((amqpvalue_get_ulong(value, &ulong_value) != 0) ||
-				(encoder_encode_ulong(handle, ulong_value) != 0))
+				(encode_ulong(handle, ulong_value) != 0))
 			{
 				result = __LINE__;
 			}

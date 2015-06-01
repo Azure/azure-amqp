@@ -19,6 +19,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "micromock", "testtools\micr
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "requirement_docs", "requirement_docs", "{CB86A156-5911-409B-83C6-7227794000CA}"
 	ProjectSection(SolutionItems) = preProject
+		doc\amqp_frame_codec_requirements.docm = doc\amqp_frame_codec_requirements.docm
 		doc\amqpvalue_requirements.docm = doc\amqpvalue_requirements.docm
 		doc\connection_requirements.docm = doc\connection_requirements.docm
 		doc\frame_codec_requirements.docm = doc\frame_codec_requirements.docm
@@ -31,6 +32,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "io_unittests", "unittests\io_unittests\io_unittests.vcxproj", "{9408DA4C-C34E-4161-9049-FEC3D9490800}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "frame_codec_unittests", "unittests\frame_codec_unittests\frame_codec_unittests.vcxproj", "{F1D87385-389B-42A0-B9D2-F0C06D817CF8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "amqp_frame_codec_unittests", "unittests\amqp_frame_codec_unittests\amqp_frame_codec_unittests.vcxproj", "{4DD54279-34F8-437A-91F2-FF84B529ABD5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -248,6 +251,30 @@ Global
 		{F1D87385-389B-42A0-B9D2-F0C06D817CF8}.ReleaseNoEnhInstr|Mixed Platforms.Build.0 = Release|Win32
 		{F1D87385-389B-42A0-B9D2-F0C06D817CF8}.ReleaseNoEnhInstr|Win32.ActiveCfg = Release|Win32
 		{F1D87385-389B-42A0-B9D2-F0C06D817CF8}.ReleaseNoEnhInstr|Win32.Build.0 = Release|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.Debug|ARM.ActiveCfg = Debug|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.Debug|Win32.Build.0 = Debug|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.DebugNoEnhInstr|Any CPU.ActiveCfg = Debug|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.DebugNoEnhInstr|ARM.ActiveCfg = Debug|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.DebugNoEnhInstr|Mixed Platforms.ActiveCfg = Debug|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.DebugNoEnhInstr|Mixed Platforms.Build.0 = Debug|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.DebugNoEnhInstr|Win32.ActiveCfg = Debug|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.DebugNoEnhInstr|Win32.Build.0 = Debug|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.Release|Any CPU.ActiveCfg = Release|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.Release|ARM.ActiveCfg = Release|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.Release|Win32.ActiveCfg = Release|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.Release|Win32.Build.0 = Release|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.ReleaseNoEnhInstr|Any CPU.ActiveCfg = Release|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.ReleaseNoEnhInstr|ARM.ActiveCfg = Release|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.ReleaseNoEnhInstr|Mixed Platforms.ActiveCfg = Release|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.ReleaseNoEnhInstr|Mixed Platforms.Build.0 = Release|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.ReleaseNoEnhInstr|Win32.ActiveCfg = Release|Win32
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.ReleaseNoEnhInstr|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -259,5 +286,6 @@ Global
 		{BF9147A2-5254-447B-80A2-2DB387E3CFB4} = {CBD46751-8170-4AD7-9D25-2C52EACFCAFA}
 		{9408DA4C-C34E-4161-9049-FEC3D9490800} = {CBD46751-8170-4AD7-9D25-2C52EACFCAFA}
 		{F1D87385-389B-42A0-B9D2-F0C06D817CF8} = {CBD46751-8170-4AD7-9D25-2C52EACFCAFA}
+		{4DD54279-34F8-437A-91F2-FF84B529ABD5} = {CBD46751-8170-4AD7-9D25-2C52EACFCAFA}
 	EndGlobalSection
 EndGlobal

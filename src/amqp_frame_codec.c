@@ -107,6 +107,8 @@ int amqp_frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint16_t
 	int result;
 	ENCODER_HANDLE encoder_handle = encoder_create(NULL, NULL);
 	uint32_t amqp_frame_payload_size;
+	AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(performative);
+	AMQP_VALUE descriptor = amqpvalue_create_descriptor(ulong_descriptor_value);
 
 	if (encoder_handle == NULL)
 	{
@@ -114,8 +116,7 @@ int amqp_frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint16_t
 	}
 	else
 	{
-		if ((encoder_encode_descriptor_header(encoder_handle) != 0) ||
-			(encoder_encode_ulong(encoder_handle, performative) != 0))
+		if (encoder_encode_amqp_value(encoder_handle, descriptor) != 0)
 		{
 			result = __LINE__;
 		}
@@ -151,8 +152,7 @@ int amqp_frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint16_t
 			}
 			else
 			{
-				if ((encoder_encode_descriptor_header(encoder_handle) != 0) ||
-					(encoder_encode_ulong(encoder_handle, performative) != 0))
+				if (encoder_encode_amqp_value(encoder_handle, descriptor) != 0)
 				{
 					result = __LINE__;
 				}

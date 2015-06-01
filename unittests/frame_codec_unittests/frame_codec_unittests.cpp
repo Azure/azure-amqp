@@ -9,8 +9,6 @@
 
 #define TEST_IO_HANDLE					(IO_HANDLE)0x4242
 #define TEST_DESCRIPTION_AMQP_VALUE		(AMQP_VALUE)0x4243
-#define TEST_ENCODER_HANDLE				(ENCODER_HANDLE)0x4244
-#define TEST_DECODER_HANDLE				(DECODER_HANDLE)0x4245
 #define TEST_LIST_HANDLE				(LIST_HANDLE)0x4246
 #define TEST_SUBSCRIPTION_ITEM			(void*)0x4247
 
@@ -71,14 +69,6 @@ public:
 	MOCK_METHOD_END(void*, malloc(size));
 	MOCK_STATIC_METHOD_1(, void, amqpalloc_free, void*, ptr)
 		free(ptr);
-	MOCK_VOID_METHOD_END();
-
-	/* amqpvalue mocks*/
-	MOCK_STATIC_METHOD_2(, int, amqpvalue_get_ulong, AMQP_VALUE, value, uint64_t*, ulong_value)
-	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_get_descriptor, AMQP_VALUE, value)
-	MOCK_METHOD_END(AMQP_VALUE, TEST_DESCRIPTION_AMQP_VALUE);
-	MOCK_STATIC_METHOD_1(, void, amqpvalue_destroy, AMQP_VALUE, value)
 	MOCK_VOID_METHOD_END();
 
 	/* frame received callback */
@@ -143,10 +133,6 @@ extern "C"
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void*, amqpalloc_malloc, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, amqpalloc_free, void*, ptr);
-
-	DECLARE_GLOBAL_MOCK_METHOD_2(frame_codec_mocks, , int, amqpvalue_get_ulong, AMQP_VALUE, value, uint64_t*, ulong_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , AMQP_VALUE, amqpvalue_get_descriptor, AMQP_VALUE, value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, amqpvalue_destroy, AMQP_VALUE, value);
 
 	DECLARE_GLOBAL_MOCK_METHOD_4(frame_codec_mocks, , void, frame_begin_callback_1, void*, context, uint32_t, frame_body_size, const unsigned char*, type_specific, uint32_t, type_specific_size);
 	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , void, frame_body_bytes_received_callback_1, void*, context, const unsigned char*, frame_body_bytes, uint32_t, frame_body_bytes_size);

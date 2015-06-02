@@ -77,17 +77,48 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 	AMQP_EMPTY_FRAME_RECEIVED_CALLBACK empty_frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK payload_bytes_received_callback,
 	void* frame_received_callback_context)
 {
-	AMQP_FRAME_CODEC_DATA* result = (AMQP_FRAME_CODEC_DATA*)amqpalloc_malloc(sizeof(AMQP_FRAME_CODEC_DATA));
-	if (result != NULL)
-	{
-		result->frame_codec_handle = frame_codec;
-		result->frame_received_callback = frame_received_callback;
-		result->empty_frame_received_callback = empty_frame_received_callback;
-		result->frame_received_callback_context = frame_received_callback_context;
-		result->decoder = decoder_create(amqp_value_decoded, result);
-		result->decode_state = AMQP_FRAME_DECODE_DESCRIPTOR;
+	AMQP_FRAME_CODEC_DATA* result;
 
-		frame_codec_subscribe(frame_codec, 0, frame_begin, frame_body_bytes_received, result);
+	/* Codes_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
+	if ((frame_codec == NULL) ||
+		(frame_received_callback == NULL) ||
+		(empty_frame_received_callback == NULL) ||
+		(payload_bytes_received_callback == NULL))
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = (AMQP_FRAME_CODEC_DATA*)amqpalloc_malloc(sizeof(AMQP_FRAME_CODEC_DATA));
+		/* Codes_SRS_AMQP_FRAME_CODEC_01_020: [If allocating memory for the new amqp_frame_codec fails, then amqp_frame_codec_create shall fail and return NULL.] */
+		if (result != NULL)
+		{
+			result->frame_codec_handle = frame_codec;
+			result->frame_received_callback = frame_received_callback;
+			result->empty_frame_received_callback = empty_frame_received_callback;
+			result->frame_received_callback_context = frame_received_callback_context;
+			result->decode_state = AMQP_FRAME_DECODE_DESCRIPTOR;
+
+			/* Codes_SRS_AMQP_FRAME_CODEC_01_018: [amqp_frame_codec_create shall create a decoder to be used for decoding AMQP values.] */
+			result->decoder = decoder_create(amqp_value_decoded, result);
+			if (result->decoder == NULL)
+			{
+				/* Codes_SRS_AMQP_FRAME_CODEC_01_019: [If creating the decoder fails, amqp_frame_codec_create shall fail and return NULL.] */
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				/* Codes_SRS_AMQP_FRAME_CODEC_01_013: [amqp_frame_codec_create shall subscribe for AMQP frames with the given frame_codec.] */
+				if (frame_codec_subscribe(frame_codec, 0, frame_begin, frame_body_bytes_received, result) != 0)
+				{
+					/* Codes_SRS_AMQP_FRAME_CODEC_01_014: [If subscribing for AMQP frames fails, amqp_frame_codec_create shall fail and return NULL.] */
+					decoder_destroy(result->decoder);
+					amqpalloc_free(result);
+					result = NULL;
+				}
+			}
+		}
 	}
 
 	return result;

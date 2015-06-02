@@ -159,7 +159,9 @@ TEST_METHOD_CLEANUP(method_cleanup)
 
 /* amqp_frame_codec_create */
 
-/* Tests_SRS_FRAME_CODEC_01_021: [frame_codec_create shall create a new instance of frame_codec and return a non-NULL handle to it on success.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_011: [amqp_frame_codec_create shall create an instance of an amqp_frame_codec and return a non-NULL handle to it.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_013: [amqp_frame_codec_create shall subscribe for AMQP frames with the given frame_codec.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_018: [amqp_frame_codec_create shall create a decoder to be used for decoding AMQP values.] */
 TEST_METHOD(amqp_frame_codec_create_with_valid_args_succeeds)
 {
 	// arrange
@@ -176,6 +178,138 @@ TEST_METHOD(amqp_frame_codec_create_with_valid_args_succeeds)
 
 	// assert
 	ASSERT_IS_NOT_NULL(frame_codec);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_011: [amqp_frame_codec_create shall create an instance of an amqp_frame_codec and return a non-NULL handle to it.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_013: [amqp_frame_codec_create shall subscribe for AMQP frames with the given frame_codec.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_018: [amqp_frame_codec_create shall create a decoder to be used for decoding AMQP values.] */
+TEST_METHOD(amqp_frame_codec_create_with_valid_args_and_NULL_context_succeeds)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+	EXPECTED_CALL(mocks, decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
+	STRICT_EXPECTED_CALL(mocks, frame_codec_subscribe(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5);
+
+	// act
+	FRAME_CODEC_HANDLE frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback, amqp_empty_frame_received_callback, amqp_frame_payload_bytes_received_callback, NULL);
+
+	// assert
+	ASSERT_IS_NOT_NULL(frame_codec);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
+TEST_METHOD(amqp_frame_codec_create_with_NULL_frame_codec_fails)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+
+	// act
+	FRAME_CODEC_HANDLE frame_codec = amqp_frame_codec_create(NULL, amqp_frame_received_callback, amqp_empty_frame_received_callback, amqp_frame_payload_bytes_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(frame_codec);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
+TEST_METHOD(amqp_frame_codec_create_with_NULL_frame_received_callback_fails)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+
+	// act
+	FRAME_CODEC_HANDLE frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, NULL, amqp_empty_frame_received_callback, amqp_frame_payload_bytes_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(frame_codec);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
+TEST_METHOD(amqp_frame_codec_create_with_NULL_empty_frame_received_callback_fails)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+
+	// act
+	FRAME_CODEC_HANDLE frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback, NULL, amqp_frame_payload_bytes_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(frame_codec);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
+TEST_METHOD(amqp_frame_codec_create_with_NULL_frame_payload_bytes_received_callback_fails)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+
+	// act
+	FRAME_CODEC_HANDLE frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback, amqp_empty_frame_received_callback, NULL, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(frame_codec);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_014: [If subscribing for AMQP frames fails, amqp_frame_codec_create shall fail and return NULL.] */
+TEST_METHOD(when_frame_codec_subscribe_fails_then_amqp_frame_codec_create_fails)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+	EXPECTED_CALL(mocks, decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
+	STRICT_EXPECTED_CALL(mocks, frame_codec_subscribe(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+		.SetReturn(1);
+
+	STRICT_EXPECTED_CALL(mocks, decoder_destroy(TEST_DECODER_HANDLE));
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	FRAME_CODEC_HANDLE frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback, amqp_empty_frame_received_callback, amqp_frame_payload_bytes_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(frame_codec);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_019: [If creating the decoder fails, amqp_frame_codec_create shall fail and return NULL.] */
+TEST_METHOD(when_creating_the_decoder_fails_then_amqp_frame_codec_create_fails)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+
+	EXPECTED_CALL(mocks, decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.SetReturn((DECODER_HANDLE)NULL);
+
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	FRAME_CODEC_HANDLE frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback, amqp_empty_frame_received_callback, amqp_frame_payload_bytes_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(frame_codec);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_020: [If allocating memory for the new amqp_frame_codec fails, then amqp_frame_codec_create shall fail and return NULL.] */
+TEST_METHOD(when_allocating_memory_for_amqp_frame_codec_fails_then_amqp_frame_codec_create_fails)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+		.SetReturn((void*)NULL);
+
+	// act
+	FRAME_CODEC_HANDLE frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback, amqp_empty_frame_received_callback, amqp_frame_payload_bytes_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(frame_codec);
 }
 
 END_TEST_SUITE(frame_codec_unittests)

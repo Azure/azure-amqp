@@ -12,6 +12,7 @@
 #define TEST_DECODER_HANDLE				(DECODER_HANDLE)0x4244
 #define TEST_ENCODER_HANDLE				(ENCODER_HANDLE)0x4245
 #define TEST_AMQP_VALUE					(AMQP_VALUE)0x4246
+#define TEST_CONTEXT					(void*)0x4247
 
 TYPED_MOCK_CLASS(amqp_frame_codec_mocks, CGlobalMock)
 {
@@ -74,6 +75,14 @@ public:
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_2(, int, encoder_encode_amqp_value, ENCODER_HANDLE, handle, AMQP_VALUE, value);
 	MOCK_METHOD_END(int, 0);
+
+	/* callbacks */
+	MOCK_STATIC_METHOD_2(, void, amqp_empty_frame_received_callback, void*, context, uint16_t, channel);
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_5(, void, amqp_frame_received_callback, void*, context, uint16_t, channel, uint64_t, performative, AMQP_VALUE, performative_fields, uint32_t, frame_payload_size);
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_3(, void, amqp_frame_payload_bytes_received_callback, void*, context, const unsigned char*, payload_bytes, uint32_t, byte_count);
+	MOCK_VOID_METHOD_END();
 };
 
 extern "C"
@@ -106,6 +115,10 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_frame_codec_mocks, , void, encoder_destroy, ENCODER_HANDLE, handle);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_frame_codec_mocks, , int, encoder_get_encoded_size, ENCODER_HANDLE, handle, size_t*, size);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_frame_codec_mocks, , int, encoder_encode_amqp_value, ENCODER_HANDLE, handle, AMQP_VALUE, value);
+
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_frame_codec_mocks, , void, amqp_empty_frame_received_callback, void*, context, uint16_t, channel);
+	DECLARE_GLOBAL_MOCK_METHOD_5(amqp_frame_codec_mocks, , void, amqp_frame_received_callback, void*, context, uint16_t, channel, uint64_t, performative, AMQP_VALUE, performative_fields, uint32_t, frame_payload_size);
+	DECLARE_GLOBAL_MOCK_METHOD_3(amqp_frame_codec_mocks, , void, amqp_frame_payload_bytes_received_callback, void*, context, const unsigned char*, payload_bytes, uint32_t, byte_count);
 
 	extern void consolelogger_log(char* format, ...)
 	{
@@ -154,8 +167,12 @@ TEST_METHOD(amqp_frame_codec_create_with_valid_args_succeeds)
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 
+	EXPECTED_CALL(mocks, decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
+	STRICT_EXPECTED_CALL(mocks, frame_codec_subscribe(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5);
+
 	// act
-	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_FRAME_CODEC_HANDLE, consolelogger_log);
+	FRAME_CODEC_HANDLE frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback, amqp_empty_frame_received_callback, amqp_frame_payload_bytes_received_callback, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NOT_NULL(frame_codec);

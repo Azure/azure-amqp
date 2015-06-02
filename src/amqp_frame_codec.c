@@ -17,7 +17,7 @@ typedef enum AMQP_FRAME_DECODE_STATE_TAG
 
 typedef struct AMQP_FRAME_CODEC_DATA_TAG
 {
-	FRAME_CODEC_HANDLE frame_codec_handle;
+	FRAME_CODEC_HANDLE frame_codec;
 	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
 	AMQP_EMPTY_FRAME_RECEIVED_CALLBACK empty_frame_received_callback;
 	void* frame_received_callback_context;
@@ -93,7 +93,7 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 		/* Codes_SRS_AMQP_FRAME_CODEC_01_020: [If allocating memory for the new amqp_frame_codec fails, then amqp_frame_codec_create shall fail and return NULL.] */
 		if (result != NULL)
 		{
-			result->frame_codec_handle = frame_codec;
+			result->frame_codec = frame_codec;
 			result->frame_received_callback = frame_received_callback;
 			result->empty_frame_received_callback = empty_frame_received_callback;
 			result->frame_received_callback_context = frame_received_callback_context;
@@ -129,7 +129,14 @@ void amqp_frame_codec_destroy(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec)
 	if (amqp_frame_codec != NULL)
 	{
 		AMQP_FRAME_CODEC_DATA* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_DATA*)amqp_frame_codec;
+
+		/* Codes_SRS_AMQP_FRAME_CODEC_01_017: [amqp_frame_codec_destroy shall unsubscribe from receiving AMQP frames from the frame_codec that was passed to amqp_frame_codec_create.] */
+		(void)frame_codec_unsubscribe(amqp_frame_codec_instance->frame_codec, FRAME_TYPE_AMQP);
+
+		/* Codes_SRS_AMQP_FRAME_CODEC_01_021: [The decoder created in amqp_frame_codec_create shall be destroyed by amqp_frame_codec_destroy.] */
 		decoder_destroy(amqp_frame_codec_instance->decoder);
+
+		/* Codes_SRS_AMQP_FRAME_CODEC_01_015: [amqp_frame_codec_destroy shall free all resources associated with the amqp_frame_codec instance.] */
 		amqpalloc_free(amqp_frame_codec_instance);
 	}
 }

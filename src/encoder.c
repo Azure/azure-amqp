@@ -346,12 +346,14 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 			}
 			break;
 
-		case AMQP_TYPE_DESCRIPTOR:
+		case AMQP_TYPE_DESCRIBED:
 		{
 			AMQP_VALUE descriptor_value = amqpvalue_get_descriptor(value);
+			AMQP_VALUE described_value = amqpvalue_get_described_value(value);
 			if ((descriptor_value == NULL) ||
 				(encode_descriptor_header(handle) != 0) ||
-				(encoder_encode_amqp_value(handle, descriptor_value) != 0))
+				(encoder_encode_amqp_value(handle, descriptor_value) != 0) ||
+				(encoder_encode_amqp_value(handle, described_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -448,23 +450,6 @@ int encoder_encode_amqp_value(ENCODER_HANDLE handle, AMQP_VALUE value)
 			{
 				result = 0;
 			}
-			break;
-		}
-
-		case AMQP_TYPE_COMPOSITE:
-		{
-			AMQP_VALUE descriptor_value = amqpvalue_get_composite_descriptor(value);
-			AMQP_VALUE list_value = amqpvalue_get_composite_list(value);
-			if ((encoder_encode_amqp_value(handle, descriptor_value) != 0) ||
-				(encoder_encode_amqp_value(handle, list_value) != 0))
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				result = 0;
-			}
-
 			break;
 		}
 

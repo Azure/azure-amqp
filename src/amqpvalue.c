@@ -12,12 +12,6 @@ typedef struct AMQP_LIST_VALUE_TAG
 	size_t count;
 } AMQP_LIST_VALUE;
 
-typedef struct AMQP_COMPOSITE_VALUE_TAG
-{
-	AMQP_VALUE descriptor;
-	AMQP_VALUE list;
-} AMQP_COMPOSITE_VALUE;
-
 typedef struct AMQP_STRING_VALUE_TAG
 {
 	char* chars;
@@ -30,9 +24,15 @@ typedef struct AMQP_BINARY_VALUE_TAG
 	uint32_t length;
 } AMQP_BINARY_VALUE;
 
-typedef union AMQP_VALUE_UNION_TAG
+typedef struct DESCRIBED_VALUE_TAG
 {
 	AMQP_VALUE descriptor;
+	AMQP_VALUE value;
+} DESCRIBED_VALUE;
+
+typedef union AMQP_VALUE_UNION_TAG
+{
+	DESCRIBED_VALUE described_value;
 	unsigned char ubyte_value;
 	uint16_t ushort_value;
 	uint32_t uint_value;
@@ -50,7 +50,6 @@ typedef union AMQP_VALUE_UNION_TAG
 	AMQP_STRING_VALUE string_value;
 	AMQP_BINARY_VALUE binary_value;
 	AMQP_LIST_VALUE list_value;
-	AMQP_COMPOSITE_VALUE composite_value;
 } AMQP_VALUE_UNION;
 
 typedef enum DECODE_LIST_STEP_TAG
@@ -59,6 +58,12 @@ typedef enum DECODE_LIST_STEP_TAG
 	DECODE_LIST_STEP_COUNT,
 	DECODE_LIST_STEP_ITEMS
 } DECODE_LIST_STEP;
+
+typedef enum DECODE_DESCRIBED_VALUE_STEP_TAG
+{
+	DECODE_DESCRIBED_VALUE_STEP_DESCRIPTOR,
+	DECODE_DESCRIBED_VALUE_STEP_VALUE
+} DECODE_DESCRIBED_VALUE_STEP;
 
 typedef struct DECODE_LIST_VALUE_STATE_TAG
 {
@@ -851,13 +856,14 @@ const void* amqpvalue_get_binary(AMQP_VALUE value, uint32_t* length)
 	return result;
 }
 
-AMQP_VALUE amqpvalue_create_descriptor(AMQP_VALUE value)
+AMQP_VALUE amqpvalue_create_described_value(AMQP_VALUE descriptor, AMQP_VALUE value)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
-		result->type = AMQP_TYPE_DESCRIPTOR;
-		result->value.descriptor = value;
+		result->type = AMQP_TYPE_DESCRIBED;
+		result->value.described_value.descriptor = descriptor;
+		result->value.described_value.value = value;
 	}
 	return result;
 }
@@ -946,9 +952,9 @@ AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor,
 		}
 		else
 		{
-			result->type = AMQP_TYPE_COMPOSITE;
-			result->value.composite_value.descriptor = amqpvalue_create_descriptor(descriptor_ulong_value);
-			if (result->value.composite_value.descriptor == NULL)
+			result->type = AMQP_TYPE_DESCRIBED;
+			result->value.described_value.descriptor = descriptor_ulong_value;
+			if (result->value.described_value.descriptor == NULL)
 			{
 				amqpalloc_free(descriptor_ulong_value);
 				amqpalloc_free(result);
@@ -956,8 +962,8 @@ AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor,
 			}
 			else
 			{
-				result->value.composite_value.list = amqpvalue_create_list(size);
-				if (result->value.composite_value.list == NULL)
+				result->value.described_value.value = amqpvalue_create_list(size);
+				if (result->value.described_value.value == NULL)
 				{
 					amqpalloc_free(result);
 					result = NULL;
@@ -992,7 +998,7 @@ int amqpvalue_set_list_item(AMQP_VALUE value, size_t index, AMQP_VALUE list_item
 			}
 			else
 			{
-				value_data->value.list_value.items[index] = list_item_value;
+				value_data->value.list_value.items[index] = amqpvalue_clone(list_item_value);
 				result = 0;
 			}
 		}
@@ -1030,12 +1036,9 @@ static void amqpvalue_clear(AMQP_VALUE_DATA* value_data)
 			amqpalloc_free(value_data->value.string_value.chars);
 		}
 		break;
-	case AMQP_TYPE_COMPOSITE:
-		amqpvalue_destroy(value_data->value.composite_value.descriptor);
-		amqpvalue_destroy(value_data->value.composite_value.list);
-		break;
-	case AMQP_TYPE_DESCRIPTOR:
-		amqpvalue_destroy(value_data->value.descriptor);
+	case AMQP_TYPE_DESCRIBED:
+		amqpvalue_destroy(value_data->value.described_value.descriptor);
+		amqpvalue_destroy(value_data->value.described_value.value);
 		break;
 	}
 
@@ -1156,20 +1159,20 @@ AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value)
 	else
 	{
 		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		if (value_data->type != AMQP_TYPE_DESCRIPTOR)
+		if (value_data->type != AMQP_TYPE_DESCRIBED)
 		{
 			result = NULL;
 		}
 		else
 		{
-			result = value_data->value.descriptor;
+			result = value_data->value.described_value.descriptor;
 		}
 	}
 
 	return result;
 }
 
-AMQP_VALUE amqpvalue_get_composite_descriptor(AMQP_VALUE value)
+AMQP_VALUE amqpvalue_get_described_value(AMQP_VALUE value)
 {
 	AMQP_VALUE result;
 
@@ -1180,37 +1183,13 @@ AMQP_VALUE amqpvalue_get_composite_descriptor(AMQP_VALUE value)
 	else
 	{
 		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		if (value_data->type != AMQP_TYPE_COMPOSITE)
+		if (value_data->type != AMQP_TYPE_DESCRIBED)
 		{
 			result = NULL;
 		}
 		else
 		{
-			result = value_data->value.composite_value.descriptor;
-		}
-	}
-
-	return result;
-}
-
-AMQP_VALUE amqpvalue_get_composite_list(AMQP_VALUE value)
-{
-	AMQP_VALUE result;
-
-	if (value == NULL)
-	{
-		result = NULL;
-	}
-	else
-	{
-		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		if (value_data->type != AMQP_TYPE_COMPOSITE)
-		{
-			result = NULL;
-		}
-		else
-		{
-			result = value_data->value.composite_value.list;
+			result = value_data->value.described_value.value;
 		}
 	}
 
@@ -1234,7 +1213,7 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 			result = NULL;
 			break;
 
-		case AMQP_TYPE_DESCRIPTOR:
+		case AMQP_TYPE_DESCRIBED:
 		case AMQP_TYPE_NULL:
 		case AMQP_TYPE_LIST:
 			result = NULL;
@@ -1320,7 +1299,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					result = __LINE__;
 					break;
 				case 0x00: /* descriptor */
-					internal_decoder_data->decode_to_value->type = AMQP_TYPE_DESCRIPTOR;
+					internal_decoder_data->decode_to_value->type = AMQP_TYPE_DESCRIBED;
 					AMQP_VALUE_DATA* descriptor = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 					if (descriptor == NULL)
 					{
@@ -1330,7 +1309,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					else
 					{
 						descriptor->type = AMQP_TYPE_UNKNOWN;
-						internal_decoder_data->decode_to_value->value.descriptor = descriptor;
+						internal_decoder_data->decode_to_value->value.described_value.descriptor = descriptor;
 						internal_decoder_data->inner_decoder = internal_decoder_create(inner_decoder_callback, internal_decoder_data, descriptor);
 						if (internal_decoder_data->inner_decoder == NULL)
 						{

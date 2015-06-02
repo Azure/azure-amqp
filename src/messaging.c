@@ -59,7 +59,7 @@ AMQP_VALUE messaging_create_source(AMQP_VALUE address)
 	AMQP_VALUE result = amqpvalue_create_composite_with_ulong_descriptor(0x28, 1);
 	if (result != NULL)
 	{
-		AMQP_VALUE list_value = amqpvalue_get_composite_list(result);
+		AMQP_VALUE list_value = amqpvalue_get_described_value(result);
 		if (list_value == NULL)
 		{
 			amqpvalue_destroy(result);
@@ -93,7 +93,7 @@ AMQP_VALUE messaging_create_target(AMQP_VALUE address)
 	AMQP_VALUE result = amqpvalue_create_composite_with_ulong_descriptor(0x29, 1);
 	if (result != NULL)
 	{
-		AMQP_VALUE list_value = amqpvalue_get_composite_list(result);
+		AMQP_VALUE list_value = amqpvalue_get_described_value(result);
 		if (list_value == NULL)
 		{
 			amqpvalue_destroy(result);

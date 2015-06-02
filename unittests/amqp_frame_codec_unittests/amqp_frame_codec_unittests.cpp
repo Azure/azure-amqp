@@ -373,4 +373,22 @@ TEST_METHOD(amqp_frame_codec_destroy_with_NULL_handle_does_nothing)
 	// uMock checks the calls
 }
 
+/* amqp_frame_codec_begin_encode_frame */
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_022: [amqp_frame_codec_begin_encode_frame shall encode the frame header and AMQP performative in an AMQP frame and on success it shall return 0.] */
+TEST_METHOD(when_encoding_frame_body_bytes_fails_subsequent_frame_encoding_attempts_fail)
+{
+	// arrange
+	// arrange
+	amqp_frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback, amqp_empty_frame_received_callback, amqp_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = amqp_frame_codec_begin_encode_frame(frame_codec, 0, TEST_AMQP_VALUE, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
 END_TEST_SUITE(frame_codec_unittests)

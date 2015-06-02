@@ -21,8 +21,11 @@ int open_frame_encode(FRAME_CODEC_HANDLE frame_codec, const char* container_id)
 		}
 		else
 		{
+			AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(0x10);
+			AMQP_VALUE performative = amqpvalue_create_described_value(ulong_descriptor_value, open_frame_list);
+
 			if ((amqpvalue_set_list_item(open_frame_list, 0, container_id_value) != 0) ||
-				(amqp_frame_codec_begin_encode_frame(frame_codec, 0, 0x10, open_frame_list, 0) != 0))
+				(amqp_frame_codec_begin_encode_frame(frame_codec, 0, performative, 0) != 0))
 			{
 				result = __LINE__;
 			}
@@ -30,8 +33,12 @@ int open_frame_encode(FRAME_CODEC_HANDLE frame_codec, const char* container_id)
 			{
 				result = 0;
 			}
+
+			amqpvalue_destroy(performative);
+			amqpvalue_destroy(ulong_descriptor_value);
 		}
 
+		amqpvalue_destroy(container_id_value);
 		amqpvalue_destroy(open_frame_list);
 	}
 

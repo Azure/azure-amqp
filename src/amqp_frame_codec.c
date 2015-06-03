@@ -140,36 +140,57 @@ void amqp_frame_codec_destroy(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec)
 	}
 }
 
-int amqp_frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint16_t channel, const AMQP_VALUE performative, uint32_t payload_size)
+int amqp_frame_codec_begin_encode_frame(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec, uint16_t channel, const AMQP_VALUE performative, uint32_t payload_size)
 {
 	int result;
 	uint32_t amqp_frame_payload_size;
 
-	if (amqpvalue_get_encoded_size(performative, &amqp_frame_payload_size) != 0)
+	/* Codes_SRS_AMQP_FRAME_CODEC_01_024: [If frame_codec or performative_fields is NULL, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
+	if ((amqp_frame_codec == NULL) ||
+		(performative == NULL))
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		result = 0;
-	}
-
-	if (result == 0)
-	{
-		amqp_frame_payload_size += payload_size;
-		if (frame_codec_begin_encode_frame(frame_codec, FRAME_TYPE_AMQP, amqp_frame_payload_size, NULL, amqp_frame_payload_size) != 0)
+		/* Codes_SRS_AMQP_FRAME_CODEC_01_027: [The encoded size of the performative and its fields shall be obtained by calling amqpvalue_get_encoded_size.] */
+		if (amqpvalue_get_encoded_size(performative, &amqp_frame_payload_size) != 0)
 		{
+			/* Codes_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
 			result = __LINE__;
 		}
 		else
 		{
-			if (amqpvalue_encode(performative, frame_codec_encode_frame_bytes, frame_codec) != 0)
+			AMQP_FRAME_CODEC_DATA* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_DATA*)amqp_frame_codec;
+			unsigned char channel_bytes[2] =
 			{
+				channel >> 8,
+				channel & 0xFF
+			};
+
+			/* Codes_SRS_AMQP_FRAME_CODEC_01_026: [The payload frame size shall be computed based on the encoded size of the performative and its fields plus the payload_size argument.] */
+			amqp_frame_payload_size += payload_size;
+
+			/* Codes_SRS_AMQP_FRAME_CODEC_01_025: [amqp_frame_codec_begin_encode_frame shall encode the frame header by using frame_codec_begin_encode_frame.] */
+			if (frame_codec_begin_encode_frame(amqp_frame_codec_instance->frame_codec, FRAME_TYPE_AMQP, amqp_frame_payload_size, channel_bytes, sizeof(channel_bytes)) != 0)
+			{
+				/* Codes_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
 				result = __LINE__;
 			}
 			else
 			{
-				result = 0;
+				/* Codes_SRS_AMQP_FRAME_CODEC_01_030: [Encoding of the AMQP performative and its fields shall be done by calling amqpvalue_encode.] */
+				/* Codes_SRS_AMQP_FRAME_CODEC_01_028: [The encode result for the performative and its fields shall be given to frame_codec by calling frame_codec_encode_frame_bytes.] */
+				if (amqpvalue_encode(performative, frame_codec_encode_frame_bytes, amqp_frame_codec_instance->frame_codec) != 0)
+				{
+					/* Codes_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
+					result = __LINE__;
+				}
+				else
+				{
+					/* Codes_SRS_AMQP_FRAME_CODEC_01_022: [amqp_frame_codec_begin_encode_frame shall encode the frame header and AMQP performative in an AMQP frame and on success it shall return 0.] */
+					result = 0;
+				}
 			}
 		}
 	}
@@ -177,7 +198,7 @@ int amqp_frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint16_t
 	return result;
 }
 
-extern int amqp_frame_codec_encode_payload_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned char* bytes, uint32_t count)
+extern int amqp_frame_codec_encode_payload_bytes(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec, const unsigned char* bytes, uint32_t count)
 {
 	return 0;
 }

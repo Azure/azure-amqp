@@ -377,6 +377,8 @@ TEST_METHOD(amqp_frame_codec_destroy_with_NULL_handle_does_nothing)
 /* Tests_SRS_AMQP_FRAME_CODEC_01_027: [The encoded size of the performative and its fields shall be obtained by calling amqpvalue_get_encoded_size.] */
 /* Tests_SRS_AMQP_FRAME_CODEC_01_030: [Encoding of the AMQP performative and its fields shall be done by calling amqpvalue_encode.] */
 /* Tests_SRS_AMQP_FRAME_CODEC_01_028: [The encode result for the performative and its fields shall be given to frame_codec by calling frame_codec_encode_frame_bytes.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_005: [Bytes 6 and 7 of an AMQP frame contain the channel number ] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_006: [The frame body is defined as a performative followed by an opaque payload.] */
 TEST_METHOD(encoding_the_beginning_of_a_frame_succeeds)
 {
 	// arrange
@@ -388,6 +390,34 @@ TEST_METHOD(encoding_the_beginning_of_a_frame_succeeds)
 	size_t performative_size = 2;
 	uint16_t channel = 0;
 	unsigned char channel_bytes[] = { 0, 0 };
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_encoded_size(TEST_AMQP_VALUE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &performative_size, sizeof(performative_size));
+	STRICT_EXPECTED_CALL(mocks, frame_codec_begin_encode_frame(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, performative_size, channel_bytes, sizeof(channel_bytes)))
+		.ValidateArgumentBuffer(4, &channel_bytes, sizeof(channel_bytes));
+	EXPECTED_CALL(mocks, amqpvalue_encode(TEST_AMQP_VALUE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	STRICT_EXPECTED_CALL(mocks, frame_codec_encode_frame_bytes(TEST_FRAME_CODEC_HANDLE, test_encoded_bytes, sizeof(test_encoded_bytes)))
+		.ValidateArgumentBuffer(2, &test_encoded_bytes, sizeof(test_encoded_bytes));
+
+	// act
+	int result = amqp_frame_codec_begin_encode_frame(frame_codec, channel, TEST_AMQP_VALUE, 0);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_005: [Bytes 6 and 7 of an AMQP frame contain the channel number ] */
+TEST_METHOD(using_channel_no_0x4243_passes_the_channel_number_as_type_specific_bytes)
+{
+	// arrange
+	// arrange
+	amqp_frame_codec_mocks mocks;
+	FRAME_CODEC_HANDLE frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback, amqp_empty_frame_received_callback, amqp_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+
+	size_t performative_size = 2;
+	uint16_t channel = 0x4243;
+	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_encoded_size(TEST_AMQP_VALUE, IGNORED_PTR_ARG))
 		.CopyOutArgumentBuffer(2, &performative_size, sizeof(performative_size));
 	STRICT_EXPECTED_CALL(mocks, frame_codec_begin_encode_frame(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, performative_size, channel_bytes, sizeof(channel_bytes)))

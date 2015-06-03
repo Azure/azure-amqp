@@ -4,7 +4,6 @@
 #include <string.h>
 #include "amqp_frame_codec.h"
 #include "frame_codec.h"
-#include "encoder.h"
 #include "amqpalloc.h"
 #include "amqpvalue.h"
 

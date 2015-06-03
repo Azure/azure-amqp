@@ -2315,70 +2315,56 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 
 		case AMQP_TYPE_LIST:
 		{
-			size_t item_count;
 			size_t i;
-			ENCODER_DATA* get_size_encoder_handle = encoder_create(NULL, NULL);
-			if (get_size_encoder_handle == NULL)
+			uint32_t size = 0;
+			AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+			size_t item_count = value_data->value.list_value.count;
+
+			output_byte(encoder_output, context, 0xD0);
+
+			for (i = 0; i < item_count; i++)
+			{
+				size_t item_size;
+				if (amqpvalue_get_encoded_size(value_data->value.list_value.items[i], &item_size) != 0)
+				{
+					break;
+				}
+
+				size += item_size;
+			}
+
+			if (i < item_count)
 			{
 				result = __LINE__;
 			}
 			else
 			{
-				if (amqpvalue_get_list_item_count(value, &item_count) != 0)
+				output_byte(encoder_output, context, (size >> 24) & 0xFF);
+				output_byte(encoder_output, context, (size >> 16) & 0xFF);
+				output_byte(encoder_output, context, (size >> 8) & 0xFF);
+				output_byte(encoder_output, context, size & 0xFF);
+
+				output_byte(encoder_output, context, (item_count >> 24) & 0xFF);
+				output_byte(encoder_output, context, (item_count >> 16) & 0xFF);
+				output_byte(encoder_output, context, (item_count >> 8) & 0xFF);
+				output_byte(encoder_output, context, item_count & 0xFF);
+
+				for (i = 0; i < item_count; i++)
+				{
+					if (amqpvalue_encode(amqpvalue_get_list_item(value, i), encoder_output, context) != 0)
+					{
+						break;
+					}
+				}
+
+				if (i < item_count)
 				{
 					result = __LINE__;
 				}
 				else
 				{
-					uint32_t size;
-
-					output_byte(encoder_output, context, 0xD0);
-
-					for (i = 0; i < item_count; i++)
-					{
-						if (encoder_encode_amqp_value(get_size_encoder_handle, amqpvalue_get_list_item(value, i)) != 0)
-						{
-							break;
-						}
-					}
-
-					if ((i < item_count) ||
-						(encoder_get_encoded_size(get_size_encoder_handle, &size) != 0))
-					{
-						result = __LINE__;
-					}
-					else
-					{
-						output_byte(encoder_output, context, (size >> 24) & 0xFF);
-						output_byte(encoder_output, context, (size >> 16) & 0xFF);
-						output_byte(encoder_output, context, (size >> 8) & 0xFF);
-						output_byte(encoder_output, context, size & 0xFF);
-
-						output_byte(encoder_output, context, (item_count >> 24) & 0xFF);
-						output_byte(encoder_output, context, (item_count >> 16) & 0xFF);
-						output_byte(encoder_output, context, (item_count >> 8) & 0xFF);
-						output_byte(encoder_output, context, item_count & 0xFF);
-
-						for (i = 0; i < item_count; i++)
-						{
-							if (amqpvalue_encode(amqpvalue_get_list_item(value, i), encoder_output, context) != 0)
-							{
-								break;
-							}
-						}
-
-						if (i < item_count)
-						{
-							result = __LINE__;
-						}
-						else
-						{
-							result = 0;
-						}
-					}
+					result = 0;
 				}
-
-				encoder_destroy(get_size_encoder_handle);
 			}
 
 			break;

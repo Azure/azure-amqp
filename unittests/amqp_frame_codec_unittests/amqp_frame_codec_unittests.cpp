@@ -5,7 +5,6 @@
 #include "amqpvalue.h"
 #include "amqp_frame_codec.h"
 #include "frame_codec.h"
-#include "encoder.h"
 
 #define TEST_FRAME_CODEC_HANDLE			(FRAME_CODEC_HANDLE)0x4242
 #define TEST_DESCRIPTOR_AMQP_VALUE		(AMQP_VALUE)0x4243
@@ -69,13 +68,9 @@ public:
 	MOCK_METHOD_END(int, 0);
 
 	/* encoder mocks */
-	MOCK_STATIC_METHOD_2(, ENCODER_HANDLE, encoder_create, ENCODER_OUTPUT, encoderOutput, void*, context);
-	MOCK_METHOD_END(ENCODER_HANDLE, TEST_ENCODER_HANDLE);
-	MOCK_STATIC_METHOD_1(, void, encoder_destroy, ENCODER_HANDLE, handle);
-	MOCK_VOID_METHOD_END();
-	MOCK_STATIC_METHOD_2(, int, encoder_get_encoded_size, ENCODER_HANDLE, handle, size_t*, size);
+	MOCK_STATIC_METHOD_2(, int, amqpvalue_get_encoded_size, AMQP_VALUE, value, size_t*, encoded_size);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, encoder_encode_amqp_value, ENCODER_HANDLE, handle, AMQP_VALUE, value);
+	MOCK_STATIC_METHOD_3(, int, amqpvalue_encode, AMQP_VALUE, value, ENCODER_OUTPUT, encoder_output, void*, context);
 	MOCK_METHOD_END(int, 0);
 
 	/* callbacks */
@@ -114,10 +109,8 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_frame_codec_mocks, , void, decoder_destroy, DECODER_HANDLE, handle);
 	DECLARE_GLOBAL_MOCK_METHOD_3(amqp_frame_codec_mocks, , int, decoder_decode_bytes, DECODER_HANDLE, handle, const unsigned char*, buffer, size_t, size);
 
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_frame_codec_mocks, , ENCODER_HANDLE, encoder_create, ENCODER_OUTPUT, encoderOutput, void*, context);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_frame_codec_mocks, , void, encoder_destroy, ENCODER_HANDLE, handle);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_frame_codec_mocks, , int, encoder_get_encoded_size, ENCODER_HANDLE, handle, size_t*, size);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_frame_codec_mocks, , int, encoder_encode_amqp_value, ENCODER_HANDLE, handle, AMQP_VALUE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_frame_codec_mocks, , int, amqpvalue_get_encoded_size, AMQP_VALUE, value, size_t*, encoded_size);
+	DECLARE_GLOBAL_MOCK_METHOD_3(amqp_frame_codec_mocks, , int, amqpvalue_encode, AMQP_VALUE, value, ENCODER_OUTPUT, encoder_output, void*, context);
 
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_frame_codec_mocks, , void, amqp_empty_frame_received_callback, void*, context, uint16_t, channel);
 	DECLARE_GLOBAL_MOCK_METHOD_5(amqp_frame_codec_mocks, , void, amqp_frame_received_callback, void*, context, uint16_t, channel, uint64_t, performative, AMQP_VALUE, performative_fields, uint32_t, frame_payload_size);

@@ -144,26 +144,15 @@ void amqp_frame_codec_destroy(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec)
 int amqp_frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint16_t channel, const AMQP_VALUE performative, uint32_t payload_size)
 {
 	int result;
-	ENCODER_HANDLE encoder_handle = encoder_create(NULL, NULL);
 	uint32_t amqp_frame_payload_size;
 
-	if (encoder_handle == NULL)
+	if (amqpvalue_get_encoded_size(performative, &amqp_frame_payload_size) != 0)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		if ((encoder_encode_amqp_value(encoder_handle, performative) != 0) ||
-			(encoder_get_encoded_size(encoder_handle, &amqp_frame_payload_size) != 0))
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			result = 0;
-		}
-
-		encoder_destroy(encoder_handle);
+		result = 0;
 	}
 
 	if (result == 0)
@@ -175,23 +164,13 @@ int amqp_frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint16_t
 		}
 		else
 		{
-			encoder_handle = encoder_create(frame_codec_encode_frame_bytes, frame_codec);
-			if (encoder_handle == NULL)
+			if (amqpvalue_encode(performative, frame_codec_encode_frame_bytes, frame_codec) != 0)
 			{
 				result = __LINE__;
 			}
 			else
 			{
-				if (encoder_encode_amqp_value(encoder_handle, performative) != 0)
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					result = 0;
-				}
-
-				encoder_destroy(encoder_handle);
+				result = 0;
 			}
 		}
 	}

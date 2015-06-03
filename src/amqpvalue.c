@@ -1957,3 +1957,434 @@ int decoder_decode_bytes(DECODER_HANDLE handle, const unsigned char* buffer, siz
 
 	return result;
 }
+
+int amqpvalue_get_encoded_size(AMQP_VALUE value, size_t* encoded_size)
+{
+	return 0;
+}
+
+static int output_byte(ENCODER_OUTPUT encoder_output, void* context, unsigned char b)
+{
+	int result;
+
+	if (encoder_output != NULL)
+	{
+		result = encoder_output(context, &b, 1);
+	}
+	else
+	{
+		result = 0;
+	}
+
+	return result;
+}
+
+static int output_bytes(ENCODER_OUTPUT encoder_output, void* context, const void* bytes, size_t length)
+{
+	int result;
+
+	if (encoder_output != NULL)
+	{
+		result = encoder_output(context, bytes, length);
+	}
+	else
+	{
+		result = 0;
+	}
+
+	return result;
+}
+
+static int encode_string(ENCODER_OUTPUT encoder_output, void* context, const char* value)
+{
+	int result;
+	if (value == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		size_t length = strlen(value);
+
+		if (length <= 255)
+		{
+			output_byte(encoder_output, context, (unsigned char)0xA1);
+			output_byte(encoder_output, context, (unsigned char)length);
+			output_bytes(encoder_output, context, value, length);
+		}
+		else
+		{
+			output_byte(encoder_output, context, 0xB1);
+			output_byte(encoder_output, context, (length >> 24) & 0xFF);
+			output_byte(encoder_output, context, (length >> 16) & 0xFF);
+			output_byte(encoder_output, context, (length >> 8) & 0xFF);
+			output_byte(encoder_output, context, length & 0xFF);
+			output_bytes(encoder_output, context, value, length);
+		}
+
+		result = 0;
+	}
+
+	return result;
+}
+
+static int encode_binary(ENCODER_OUTPUT encoder_output, void* context, const unsigned char* value, uint32_t length)
+{
+	int result;
+	if (value == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		if (length <= 255)
+		{
+			output_byte(encoder_output, context, 0xA0);
+			output_byte(encoder_output, context, (unsigned char)length);
+			output_bytes(encoder_output, context, value, length);
+		}
+		else
+		{
+			output_byte(encoder_output, context, 0xB0);
+			output_byte(encoder_output, context, (length >> 24) & 0xFF);
+			output_byte(encoder_output, context, (length >> 16) & 0xFF);
+			output_byte(encoder_output, context, (length >> 8) & 0xFF);
+			output_byte(encoder_output, context, length & 0xFF);
+			output_bytes(encoder_output, context, value, length);
+		}
+
+		result = 0;
+	}
+
+	return result;
+}
+
+int encoder_encode_null(ENCODER_OUTPUT encoder_output, void* context)
+{
+	int result;
+	if (output_byte(encoder_output, context, (unsigned char)0x40) != 0)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		result = 0;
+	}
+
+	return result;
+}
+
+static int encode_ulong(ENCODER_OUTPUT encoder_output, void* context, uint64_t value)
+{
+	int result;
+	if (value == 0)
+	{
+		/* ulong0 */
+		output_byte(encoder_output, context, 0x44);
+	}
+	else if (value <= 255)
+	{
+		/* smallulong */
+		output_byte(encoder_output, context, 0x53);
+		output_byte(encoder_output, context, value & 0xFF);
+	}
+	else
+	{
+		output_byte(encoder_output, context, 0x70);
+		output_byte(encoder_output, context, (value >> 56) & 0xFF);
+		output_byte(encoder_output, context, (value >> 48) & 0xFF);
+		output_byte(encoder_output, context, (value >> 40) & 0xFF);
+		output_byte(encoder_output, context, (value >> 32) & 0xFF);
+		output_byte(encoder_output, context, (value >> 24) & 0xFF);
+		output_byte(encoder_output, context, (value >> 16) & 0xFF);
+		output_byte(encoder_output, context, (value >> 8) & 0xFF);
+		output_byte(encoder_output, context, value & 0xFF);
+	}
+
+	result = 0;
+
+	return result;
+}
+
+static int encode_bool(ENCODER_OUTPUT encoder_output, void* context, bool value)
+{
+	int result;
+
+	if (value == false)
+	{
+		/* false */
+		output_byte(encoder_output, context, 0x42);
+	}
+	else
+	{
+		/* true */
+		output_byte(encoder_output, context, 0x41);
+	}
+
+	result = 0;
+
+	return result;
+}
+
+static int encode_ubyte(ENCODER_OUTPUT encoder_output, void* context, unsigned char value)
+{
+	int result;
+
+	/* ubyte */
+	output_byte(encoder_output, context, 0x50);
+	output_byte(encoder_output, context, value);
+
+	result = 0;
+
+	return result;
+}
+
+static int encode_uint(ENCODER_OUTPUT encoder_output, void* context, uint32_t value)
+{
+	int result;
+
+	if (value == 0)
+	{
+		/* uint0 */
+		output_byte(encoder_output, context, 0x43);
+	}
+	else if (value <= 255)
+	{
+		/* smalluint */
+		output_byte(encoder_output, context, 0x52);
+		output_byte(encoder_output, context, value & 0xFF);
+	}
+	else
+	{
+		output_byte(encoder_output, context, 0x70);
+		output_byte(encoder_output, context, (value >> 24) & 0xFF);
+		output_byte(encoder_output, context, (value >> 16) & 0xFF);
+		output_byte(encoder_output, context, (value >> 8) & 0xFF);
+		output_byte(encoder_output, context, value & 0xFF);
+	}
+
+	result = 0;
+
+	return result;
+}
+
+static int encode_descriptor_header(ENCODER_OUTPUT encoder_output, void* context)
+{
+	int result;
+
+	output_byte(encoder_output, context, 0x00);
+	result = 0;
+
+	return result;
+}
+
+int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* context)
+{
+	int result;
+	AMQP_TYPE amqp_type;
+
+	if (amqpvalue_get_type(value, &amqp_type) != 0)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		switch (amqp_type)
+		{
+		default:
+			result = __LINE__;
+			break;
+
+		case AMQP_TYPE_NULL:
+			if (encoder_encode_null(encoder_output, context) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+			break;
+
+		case AMQP_TYPE_DESCRIBED:
+		{
+			AMQP_VALUE descriptor_value = amqpvalue_get_descriptor(value);
+			AMQP_VALUE described_value = amqpvalue_get_described_value(value);
+			if ((descriptor_value == NULL) ||
+				(encode_descriptor_header(encoder_output, context) != 0) ||
+				(amqpvalue_encode(descriptor_value, encoder_output, context) != 0) ||
+				(amqpvalue_encode(described_value, encoder_output, context) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+			break;
+		}
+
+		case AMQP_TYPE_STRING:
+			if (encode_string(encoder_output, context, amqpvalue_get_string(value)) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+			break;
+
+		case AMQP_TYPE_BINARY:
+		{
+			uint32_t length;
+			const unsigned char* bytes = amqpvalue_get_binary(value, &length);
+
+			if ((bytes == NULL) ||
+				(encode_binary(encoder_output, context, bytes, length) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+
+			break;
+		}
+
+		case AMQP_TYPE_BOOL:
+		{
+			bool bool_value;
+			if ((amqpvalue_get_boolean(value, &bool_value) != 0) ||
+				(encode_bool(encoder_output, context, bool_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+			break;
+		}
+
+		case AMQP_TYPE_UBYTE:
+		{
+			unsigned char ubyte_value;
+			if ((amqpvalue_get_ubyte(value, &ubyte_value) != 0) ||
+				(encode_ubyte(encoder_output, context, ubyte_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+			break;
+		}
+
+		case AMQP_TYPE_UINT:
+		{
+			uint32_t uint_value;
+			if ((amqpvalue_get_uint(value, &uint_value) != 0) ||
+				(encode_uint(encoder_output, context, uint_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+			break;
+		}
+
+		case AMQP_TYPE_ULONG:
+		{
+			uint64_t ulong_value;
+			if ((amqpvalue_get_ulong(value, &ulong_value) != 0) ||
+				(encode_ulong(encoder_output, context, ulong_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+			break;
+		}
+
+		case AMQP_TYPE_LIST:
+		{
+			size_t item_count;
+			size_t i;
+			ENCODER_DATA* get_size_encoder_handle = encoder_create(NULL, NULL);
+			if (get_size_encoder_handle == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (amqpvalue_get_list_item_count(value, &item_count) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					uint32_t size;
+
+					output_byte(encoder_output, context, 0xD0);
+
+					for (i = 0; i < item_count; i++)
+					{
+						if (encoder_encode_amqp_value(get_size_encoder_handle, amqpvalue_get_list_item(value, i)) != 0)
+						{
+							break;
+						}
+					}
+
+					if ((i < item_count) ||
+						(encoder_get_encoded_size(get_size_encoder_handle, &size) != 0))
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						output_byte(encoder_output, context, (size >> 24) & 0xFF);
+						output_byte(encoder_output, context, (size >> 16) & 0xFF);
+						output_byte(encoder_output, context, (size >> 8) & 0xFF);
+						output_byte(encoder_output, context, size & 0xFF);
+
+						output_byte(encoder_output, context, (item_count >> 24) & 0xFF);
+						output_byte(encoder_output, context, (item_count >> 16) & 0xFF);
+						output_byte(encoder_output, context, (item_count >> 8) & 0xFF);
+						output_byte(encoder_output, context, item_count & 0xFF);
+
+						for (i = 0; i < item_count; i++)
+						{
+							if (amqpvalue_encode(amqpvalue_get_list_item(value, i), encoder_output, context) != 0)
+							{
+								break;
+							}
+						}
+
+						if (i < item_count)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							result = 0;
+						}
+					}
+				}
+
+				encoder_destroy(get_size_encoder_handle);
+			}
+
+			break;
+		}
+		}
+	}
+
+	return result;
+}

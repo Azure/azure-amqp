@@ -376,7 +376,7 @@ TEST_METHOD(amqp_frame_codec_destroy_with_NULL_handle_does_nothing)
 /* amqp_frame_codec_begin_encode_frame */
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_022: [amqp_frame_codec_begin_encode_frame shall encode the frame header and AMQP performative in an AMQP frame and on success it shall return 0.] */
-TEST_METHOD(when_encoding_frame_body_bytes_fails_subsequent_frame_encoding_attempts_fail)
+TEST_METHOD(encoding_the_beginning_of_a_frame_succeeds)
 {
 	// arrange
 	// arrange

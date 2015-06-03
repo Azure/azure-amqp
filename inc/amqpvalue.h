@@ -56,6 +56,10 @@ extern "C" {
 	extern void decoder_destroy(DECODER_HANDLE handle);
 	extern int decoder_decode_bytes(DECODER_HANDLE handle, const unsigned char* buffer, size_t size);
 
+	typedef int(*ENCODER_OUTPUT)(void* context, const void* bytes, size_t length);
+	extern int amqpvalue_get_encoded_size(AMQP_VALUE value, size_t* encoded_size);
+	extern int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* context);
+
 	extern AMQP_VALUE amqpvalue_create_described_value(AMQP_VALUE descriptor, AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_create_string(const char* value);
 	extern AMQP_VALUE amqpvalue_create_string_with_length(const char* value, uint32_t length);

@@ -204,12 +204,14 @@ int amqp_frame_codec_begin_encode_frame(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec
 				}
 				else
 				{
+					/* Codes_SRS_AMQP_FRAME_CODEC_01_009: [The remaining bytes in the frame body form the payload for that frame.] */
 					if (payload_size == 0)
 					{
 						amqp_frame_codec_instance->encode_state = AMQP_FRAME_ENCODE_FRAME_HEADER;
 					}
 					else
 					{
+						/* Codes_SRS_AMQP_FRAME_CODEC_01_023: [amqp_frame_codec_begin_encode_frame shall not encode the frame payload bytes, but switch to a state where it expects the bytes to be passed by using amqp_frame_codec_encode_payload_bytes.] */
 						amqp_frame_codec_instance->encode_state = AMQP_FRAME_ENCODE_FRAME_PAYLOAD;
 						amqp_frame_codec_instance->encode_payload_bytes_left = payload_size;
 					}
@@ -265,6 +267,42 @@ extern int amqp_frame_codec_encode_payload_bytes(AMQP_FRAME_CODEC_HANDLE amqp_fr
 			}
 
 			/* Codes_SRS_AMQP_FRAME_CODEC_01_032: [On success amqp_frame_codec_encode_payload_bytes shall return 0.] */
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+/* Codes_SRS_AMQP_FRAME_CODEC_01_042: [amqp_frame_codec_encode_empty_frame shall encode a frame with no payload.] */
+/* Codes_SRS_AMQP_FRAME_CODEC_01_010: [An AMQP frame with no body MAY be used to generate artificial traffic as needed to satisfy any negotiated idle timeout interval ] */
+int amqp_frame_codec_encode_empty_frame(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec, uint16_t channel)
+{
+	int result;
+	AMQP_FRAME_CODEC_DATA* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_DATA*)amqp_frame_codec;
+
+	/* Codes_SRS_AMQP_FRAME_CODEC_01_045: [If amqp_frame_codec is NULL, amqp_frame_codec_encode_empty_frame shall fail and return a non-zero value.] */
+	if (amqp_frame_codec == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		unsigned char channel_bytes[2] =
+		{
+			channel >> 8,
+			channel & 0xFF
+		};
+
+		/* Codes_SRS_AMQP_FRAME_CODEC_01_044: [amqp_frame_codec_encode_empty_frame shall use frame_codec_begin_encode_frame to send the frame.] */
+		if (frame_codec_begin_encode_frame(amqp_frame_codec_instance->frame_codec, FRAME_TYPE_AMQP, 0, channel_bytes, sizeof(channel_bytes)) != 0)
+		{
+			/* Codes_SRS_AMQP_FRAME_CODEC_01_046: [If encoding fails in any way, amqp_frame_codec_encode_empty_frame shall fail and return a non-zero value.]  */
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQP_FRAME_CODEC_01_043: [On success, amqp_frame_codec_encode_empty_frame shall return 0.] */
 			result = 0;
 		}
 	}

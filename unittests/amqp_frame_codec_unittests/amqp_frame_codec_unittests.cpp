@@ -568,6 +568,8 @@ TEST_METHOD(when_amqpvalue_encode_fails_then_amqp_frame_codec_begin_encode_frame
 /* Tests_SRS_AMQP_FRAME_CODEC_01_031: [amqp_frame_codec_encode_payload_bytes shall encode the bytes for a frame that was begun with amqp_frame_codec_begin_encode_frame.] */
 /* Tests_SRS_AMQP_FRAME_CODEC_01_032: [On success amqp_frame_codec_encode_payload_bytes shall return 0.] */
 /* Tests_SRS_AMQP_FRAME_CODEC_01_037: [The bytes shall be passed to frame codec by a call to frame_codec_encode_frame_bytes.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_023: [amqp_frame_codec_begin_encode_frame shall not encode the frame payload bytes, but switch to a state where it expects the bytes to be passed by using amqp_frame_codec_encode_payload_bytes.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_009: [The remaining bytes in the frame body form the payload for that frame.] */
 TEST_METHOD(amqp_frame_codec_encode_payload_bytes_encodes_the_bytes)
 {
 	// arrange
@@ -847,6 +849,70 @@ TEST_METHOD(when_beginning_the_frame_fails_encoding_payload_bytes_fails)
 
 	// act
 	int result = amqp_frame_codec_encode_payload_bytes(amqp_frame_codec, payload_bytes, 2);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* amqp_frame_codec_encode_empty_frame */
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_042: [amqp_frame_codec_encode_empty_frame shall encode a frame with no payload.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_043: [On success, amqp_frame_codec_encode_empty_frame shall return 0.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_044: [amqp_frame_codec_encode_empty_frame shall use frame_codec_begin_encode_frame to send the frame.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_010: [An AMQP frame with no body MAY be used to generate artificial traffic as needed to satisfy any negotiated idle timeout interval ] */
+TEST_METHOD(encoding_of_an_empty_frame_succeeds)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+	unsigned char payload_bytes[] = { 0x42, 0x43 };
+	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback, amqp_empty_frame_received_callback, amqp_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+
+	uint16_t channel = 0;
+	unsigned char channel_bytes[] = { 0, 0 };
+	STRICT_EXPECTED_CALL(mocks, frame_codec_begin_encode_frame(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, 0, channel_bytes, sizeof(channel_bytes)))
+		.ValidateArgumentBuffer(4, &channel_bytes, sizeof(channel_bytes));
+
+	// act
+	int result = amqp_frame_codec_encode_empty_frame(amqp_frame_codec, 0);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_045: [If amqp_frame_codec is NULL, amqp_frame_codec_encode_empty_frame shall fail and return a non-zero value.] */
+TEST_METHOD(amqp_frame_codec_encode_empty_frame_with_NULL_amqp_frame_codec_fails)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+	unsigned char payload_bytes[] = { 0x42, 0x43 };
+	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback, amqp_empty_frame_received_callback, amqp_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = amqp_frame_codec_encode_empty_frame(NULL, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_046: [If encoding fails in any way, amqp_frame_codec_encode_empty_frame shall fail and return a non-zero value.]  */
+TEST_METHOD(when_frame_codec_begin_frame_fails_then_amqp_frame_codec_encode_empty_frame_fails)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+	unsigned char payload_bytes[] = { 0x42, 0x43 };
+	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback, amqp_empty_frame_received_callback, amqp_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+
+	uint16_t channel = 0;
+	unsigned char channel_bytes[] = { 0, 0 };
+	STRICT_EXPECTED_CALL(mocks, frame_codec_begin_encode_frame(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, 0, channel_bytes, sizeof(channel_bytes)))
+		.ValidateArgumentBuffer(4, &channel_bytes, sizeof(channel_bytes))
+		.SetReturn(1);
+
+	// act
+	int result = amqp_frame_codec_encode_empty_frame(amqp_frame_codec, 0);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);

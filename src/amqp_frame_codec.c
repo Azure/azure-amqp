@@ -14,6 +14,13 @@ typedef enum AMQP_FRAME_DECODE_STATE_TAG
 	AMQP_FRAME_DECODE_ERROR
 } AMQP_FRAME_DECODE_STATE;
 
+typedef enum AMQP_FRAME_ENCODE_STATE_TAG
+{
+	AMQP_FRAME_ENCODE_FRAME_HEADER,
+	AMQP_FRAME_ENCODE_FRAME_PAYLOAD,
+	AMQP_FRAME_ENCODE_ERROR
+} AMQP_FRAME_ENCODE_STATE;
+
 typedef struct AMQP_FRAME_CODEC_DATA_TAG
 {
 	FRAME_CODEC_HANDLE frame_codec;
@@ -26,6 +33,10 @@ typedef struct AMQP_FRAME_CODEC_DATA_TAG
 	DECODER_HANDLE decoder;
 	AMQP_FRAME_DECODE_STATE decode_state;
 	uint64_t performative;
+
+	/* encode */
+	AMQP_FRAME_ENCODE_STATE encode_state;
+	uint32_t encode_payload_bytes_left;
 } AMQP_FRAME_CODEC_DATA;
 
 static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
@@ -97,6 +108,7 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			result->empty_frame_received_callback = empty_frame_received_callback;
 			result->frame_received_callback_context = frame_received_callback_context;
 			result->decode_state = AMQP_FRAME_DECODE_DESCRIPTOR;
+			result->encode_state = AMQP_FRAME_ENCODE_FRAME_HEADER;
 
 			/* Codes_SRS_AMQP_FRAME_CODEC_01_018: [amqp_frame_codec_create shall create a decoder to be used for decoding AMQP values.] */
 			result->decoder = decoder_create(amqp_value_decoded, result);
@@ -144,10 +156,13 @@ int amqp_frame_codec_begin_encode_frame(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec
 {
 	int result;
 	uint32_t amqp_frame_payload_size;
+	AMQP_FRAME_CODEC_DATA* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_DATA*)amqp_frame_codec;
 
 	/* Codes_SRS_AMQP_FRAME_CODEC_01_024: [If frame_codec or performative_fields is NULL, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
 	if ((amqp_frame_codec == NULL) ||
-		(performative == NULL))
+		(performative == NULL) ||
+		/* Codes_SRS_AMQP_FRAME_CODEC_01_040: [In case encoding fails due to inability to give the data to the frame_codec, any subsequent attempt to begin encoding a frame shall fail.]  */
+		(amqp_frame_codec_instance->encode_state != AMQP_FRAME_ENCODE_FRAME_HEADER))
 	{
 		result = __LINE__;
 	}
@@ -161,7 +176,6 @@ int amqp_frame_codec_begin_encode_frame(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec
 		}
 		else
 		{
-			AMQP_FRAME_CODEC_DATA* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_DATA*)amqp_frame_codec;
 			unsigned char channel_bytes[2] =
 			{
 				channel >> 8,
@@ -190,6 +204,16 @@ int amqp_frame_codec_begin_encode_frame(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec
 				}
 				else
 				{
+					if (payload_size == 0)
+					{
+						amqp_frame_codec_instance->encode_state = AMQP_FRAME_ENCODE_FRAME_HEADER;
+					}
+					else
+					{
+						amqp_frame_codec_instance->encode_state = AMQP_FRAME_ENCODE_FRAME_PAYLOAD;
+						amqp_frame_codec_instance->encode_payload_bytes_left = payload_size;
+					}
+
 					/* Codes_SRS_AMQP_FRAME_CODEC_01_022: [amqp_frame_codec_begin_encode_frame shall encode the frame header and AMQP performative in an AMQP frame and on success it shall return 0.] */
 					result = 0;
 				}
@@ -200,7 +224,50 @@ int amqp_frame_codec_begin_encode_frame(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec
 	return result;
 }
 
+/* Codes_SRS_AMQP_FRAME_CODEC_01_031: [amqp_frame_codec_encode_payload_bytes shall encode the bytes for a frame that was begun with amqp_frame_codec_begin_encode_frame.] */
 extern int amqp_frame_codec_encode_payload_bytes(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec, const unsigned char* bytes, uint32_t count)
 {
-	return 0;
+	int result;
+	AMQP_FRAME_CODEC_DATA* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_DATA*)amqp_frame_codec;
+
+	/* Codes_SRS_AMQP_FRAME_CODEC_01_033: [If amqp_frame_codec or bytes is NULL, amqp_frame_codec_encode_payload_bytes shall fail and return a non-zero value.] */
+	if ((amqp_frame_codec == NULL) ||
+		(bytes == NULL) ||
+		/* Codes_SRS_AMQP_FRAME_CODEC_01_034: [If count is 0, amqp_frame_codec_encode_payload_bytes shall fail and return a non-zero value.] */
+		(count == 0) ||
+		/* Codes_SRS_AMQP_FRAME_CODEC_01_047: [If amqp_frame_codec_encode_payload_bytes is called without starting a frame encode, amqp_frame_codec_encode_payload_bytes shall fail and return a non-zero value.] */
+		(amqp_frame_codec_instance->encode_state != AMQP_FRAME_ENCODE_FRAME_PAYLOAD) ||
+		/* Codes_.] SRS_AMQP_FRAME_CODEC_01_036: [If count is greater than the number of bytes still left to be encoded, amqp_frame_codec_encode_payload_bytes shall fail and return a non-zero value.] */
+		(amqp_frame_codec_instance->encode_payload_bytes_left < count))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		/* Codes_SRS_AMQP_FRAME_CODEC_01_037: [The bytes shall be passed to frame codec by a call to frame_codec_encode_frame_bytes.] */
+		if (frame_codec_encode_frame_bytes(amqp_frame_codec_instance->frame_codec, bytes, count) != 0)
+		{
+			/* Codes_SRS_AMQP_FRAME_CODEC_01_040: [In case encoding fails due to inability to give the data to the frame_codec, any subsequent attempt to begin encoding a frame shall fail.] */
+			amqp_frame_codec_instance->encode_state = AMQP_FRAME_ENCODE_ERROR;
+
+			/* Codes_SRS_AMQP_FRAME_CODEC_01_038: [If encoding fails in any way not specified here, amqp_frame_codec_encode_payload_bytes shall return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQP_FRAME_CODEC_01_041: [If all bytes for the frame payload were given and amqp_frame_codec_encode_payload_bytes is called again, it shall return a non-zero value, but subsequent encoding attempts shall succeed.] */
+			/* Codes_SRS_AMQP_FRAME_CODEC_01_035: [amqp_frame_codec shall maintain the number of bytes needed to be sent as the payload for the frame started with amqp_frame_codec_begin_encode_frame.] */
+			/* Codes_SRS_AMQP_FRAME_CODEC_01_039: [The frame payload bytes for one frame shall be allowed to be given by multiple calls to amqp_frame_codec_encode_payload_bytes.] */
+			amqp_frame_codec_instance->encode_payload_bytes_left -= count;
+			if (amqp_frame_codec_instance->encode_payload_bytes_left == 0)
+			{
+				amqp_frame_codec_instance->encode_state = AMQP_FRAME_ENCODE_FRAME_HEADER;
+			}
+
+			/* Codes_SRS_AMQP_FRAME_CODEC_01_032: [On success amqp_frame_codec_encode_payload_bytes shall return 0.] */
+			result = 0;
+		}
+	}
+
+	return result;
 }

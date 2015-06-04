@@ -72,39 +72,47 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 	return result;
 }
 
-static void frame_received(void* context, uint16_t channel, uint64_t performative, AMQP_VALUE performative_fields, uint32_t frame_payload_size)
+static void frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t frame_payload_size)
 {
 	SESSION_DATA* session = (SESSION_DATA*)context;
-	switch (performative)
-	{
-	default:
-		consolelogger_log("Bad performative: %llu", (unsigned long long)performative);
-		break;
+	uint64_t performative_descriptor;
 
-	case 0x11:
+	if (amqpvalue_get_ulong(amqpvalue_get_descriptor(performative), &performative_descriptor) != 0)
 	{
-		switch (session->session_state)
+	}
+	else
+	{
+		switch (performative_descriptor)
 		{
 		default:
+			consolelogger_log("Bad performative: %llu", (unsigned long long)performative);
 			break;
 
-		case SESSION_STATE_BEGIN_SENT:
-			session->session_state = SESSION_STATE_MAPPED;
-			break;
-		}
-		break;
-	}
-
-	case 0x12:
-	case 0x13:
-	case 0x14:
-	case 0x15:
-	case 0x16:
-		if (session->frame_received_callback != NULL)
+		case 0x11:
 		{
-			session->frame_received_callback(session->frame_received_callback_context, performative, performative_fields);
+			switch (session->session_state)
+			{
+			default:
+				break;
+
+			case SESSION_STATE_BEGIN_SENT:
+				session->session_state = SESSION_STATE_MAPPED;
+				break;
+			}
+			break;
 		}
-		break;
+
+		case 0x12:
+		case 0x13:
+		case 0x14:
+		case 0x15:
+		case 0x16:
+			if (session->frame_received_callback != NULL)
+			{
+				session->frame_received_callback(session->frame_received_callback_context, performative_descriptor, amqpvalue_get_described_value(performative));
+			}
+			break;
+		}
 	}
 }
 

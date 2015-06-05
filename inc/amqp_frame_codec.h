@@ -11,6 +11,16 @@ extern "C" {
 #endif /* __cplusplus */
 #include "frame_codec.h"
 
+#define AMQP_OPEN			(uint64_t)0x10
+#define AMQP_BEGIN			(uint64_t)0x11
+#define AMQP_ATTACH			(uint64_t)0x12
+#define AMQP_FLOW			(uint64_t)0x13
+#define AMQP_TRANSFER		(uint64_t)0x14
+#define AMQP_DISPOSITION	(uint64_t)0x15
+#define AMQP_DETACH			(uint64_t)0x16
+#define AMQP_END			(uint64_t)0x17
+#define AMQP_CLOSE			(uint64_t)0x18
+
 typedef void* AMQP_FRAME_CODEC_HANDLE;
 typedef void(*AMQP_EMPTY_FRAME_RECEIVED_CALLBACK)(void* context, uint16_t channel);
 typedef void(*AMQP_FRAME_RECEIVED_CALLBACK)(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t frame_payload_size);

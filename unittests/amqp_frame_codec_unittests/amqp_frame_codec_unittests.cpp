@@ -1175,7 +1175,7 @@ TEST_METHOD(when_an_empty_frame_with_only_1_byte_of_type_specific_data_is_receiv
 	amqp_frame_codec_mocks mocks;
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, 0, channel_bytes, 1);
+	(void)saved_frame_begin_callback(saved_callback_context, 0, channel_bytes, 1);
 	mocks.ResetAllCalls();
 
 	// act
@@ -1208,7 +1208,7 @@ TEST_METHOD(when_1_of_all_performative_bytes_is_received_no_callback_is_triggere
 	amqp_frame_codec_mocks mocks;
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, test_performative, 1))
@@ -1230,7 +1230,7 @@ TEST_METHOD(when_all_performative_bytes_are_received_and_AMQP_frame_payload_is_0
 	amqp_frame_codec_mocks mocks;
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
 	mocks.ResetAllCalls();
 
 	uint64_t descriptor_ulong = 0;
@@ -1262,7 +1262,7 @@ TEST_METHOD(the_amqp_frame_payload_size_is_computed_based_on_the_performative_si
 	amqp_frame_codec_mocks mocks;
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + 2, channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + 2, channel_bytes, sizeof(channel_bytes));
 	mocks.ResetAllCalls();
 
 	uint64_t descriptor_ulong = 0;
@@ -1292,8 +1292,8 @@ TEST_METHOD(when_more_bytes_than_expected_are_received_decoding_fails)
 	amqp_frame_codec_mocks mocks;
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) - 1, channel_bytes, sizeof(channel_bytes));
-	saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) - 1, channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
 	mocks.ResetAllCalls();
 
 	// act
@@ -1310,8 +1310,8 @@ TEST_METHOD(when_another_frame_decoding_is_started_before_one_is_finished_decode
 	amqp_frame_codec_mocks mocks;
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
 	mocks.ResetAllCalls();
 
 	// act
@@ -1328,8 +1328,8 @@ TEST_METHOD(amqp_frame_with_1_payload_bytes_are_reported_via_the_amqp_frame_payl
 	amqp_frame_codec_mocks mocks;
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + 1, channel_bytes, sizeof(channel_bytes));
-	saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + 1, channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_payload_bytes_received_callback_1(TEST_CONTEXT, test_frame_payload_bytes, 1))
@@ -1349,8 +1349,8 @@ TEST_METHOD(amqp_frame_with_2_payload_bytes_are_reported_via_the_amqp_frame_payl
 	amqp_frame_codec_mocks mocks;
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + sizeof(test_frame_payload_bytes), channel_bytes, sizeof(channel_bytes));
-	saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + sizeof(test_frame_payload_bytes), channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_payload_bytes_received_callback_1(TEST_CONTEXT, test_frame_payload_bytes, sizeof(test_frame_payload_bytes)))
@@ -1374,7 +1374,7 @@ TEST_METHOD(when_performative_and_payload_are_received_in_one_chunk_decoding_suc
 	(void)memcpy(all_bytes, test_performative, sizeof(test_performative));
 	(void)memcpy(all_bytes + sizeof(test_performative), test_frame_payload_bytes, sizeof(test_frame_payload_bytes));
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, sizeof(all_bytes), channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(all_bytes), channel_bytes, sizeof(channel_bytes));
 	mocks.ResetAllCalls();
 
 	uint64_t descriptor_ulong = 0;
@@ -1404,10 +1404,10 @@ TEST_METHOD(after_decoding_succesfully_a_complete_frame_a_new_one_can_be_started
 	amqp_frame_codec_mocks mocks;
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + sizeof(test_frame_payload_bytes), channel_bytes, sizeof(channel_bytes));
-	saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
-	saved_frame_body_bytes_received_callback(saved_callback_context, test_frame_payload_bytes, sizeof(test_frame_payload_bytes));
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + sizeof(test_frame_payload_bytes), channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + sizeof(test_frame_payload_bytes), channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
+	(void)saved_frame_body_bytes_received_callback(saved_callback_context, test_frame_payload_bytes, sizeof(test_frame_payload_bytes));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + sizeof(test_frame_payload_bytes), channel_bytes, sizeof(channel_bytes));
 	mocks.ResetAllCalls();
 
 	uint64_t descriptor_ulong = 0;
@@ -1439,7 +1439,7 @@ TEST_METHOD(valid_performative_codes_trigger_callbacks)
 
 	for (i = 0; i < 2/*sizeof(valid_performatives) / sizeof(valid_performatives[0])*/; i++)
 	{
-		saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
+		(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
 		mocks.ResetAllCalls();
 
 		performative_ulong = valid_performatives[i];
@@ -1468,7 +1468,7 @@ TEST_METHOD(performative_0x09_can_not_be_decoded)
 	amqp_frame_codec_mocks mocks;
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
 	mocks.ResetAllCalls();
 
 	performative_ulong = 0x09;
@@ -1494,7 +1494,7 @@ TEST_METHOD(performative_0x19_can_not_be_decoded)
 	amqp_frame_codec_mocks mocks;
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
 	mocks.ResetAllCalls();
 
 	performative_ulong = 0x19;
@@ -1520,7 +1520,7 @@ TEST_METHOD(when_getting_the_descriptor_fails_decoder_fails)
 	amqp_frame_codec_mocks mocks;
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
 	mocks.ResetAllCalls();
 
 	performative_ulong = 0x19;
@@ -1530,7 +1530,7 @@ TEST_METHOD(when_getting_the_descriptor_fails_decoder_fails)
 		.ValidateArgument(1).IgnoreAllCalls();
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE))
 		.SetReturn((AMQP_VALUE)NULL);
-	saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
+	(void)saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
 
 	// act
 	int result = saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + sizeof(test_frame_payload_bytes), channel_bytes, sizeof(channel_bytes));
@@ -1546,7 +1546,7 @@ TEST_METHOD(when_getting_the_ulong_value_of_the_descriptor_fails_decoder_fails)
 	amqp_frame_codec_mocks mocks;
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
 	mocks.ResetAllCalls();
 
 	performative_ulong = 0x19;
@@ -1558,10 +1558,180 @@ TEST_METHOD(when_getting_the_ulong_value_of_the_descriptor_fails_decoder_fails)
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
 		.CopyOutArgumentBuffer(2, &performative_ulong, sizeof(performative_ulong))
 		.SetReturn(1);
-	saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
+	(void)saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
 
 	// act
 	int result = saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + sizeof(test_frame_payload_bytes), channel_bytes, sizeof(channel_bytes));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_061: [When the callback frame_received_callback fails, the decoder shall fail and return a non-zero value to frame_codec.] */
+TEST_METHOD(when_frame_received_callback_fails_then_the_error_is_returned_to_the_caller)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+	unsigned char channel_bytes[] = { 0x42, 0x43 };
+	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + sizeof(test_frame_payload_bytes), channel_bytes, sizeof(channel_bytes));
+	mocks.ResetAllCalls();
+
+	uint64_t descriptor_ulong = 0;
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.ValidateArgument(1).IgnoreAllCalls();
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &descriptor_ulong, sizeof(descriptor_ulong));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(TEST_CONTEXT, 0x4243, TEST_AMQP_VALUE, 2))
+		.SetReturn(1);
+
+	// act
+	int result = saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_064: [Decoding a new frame after an error has been reported by frame_received_callback shall be possible.] */
+TEST_METHOD(decoding_a_frame_after_amqp_frame_received_callback_fails_is_possible)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+	unsigned char channel_bytes[] = { 0x42, 0x43 };
+	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_performative), channel_bytes, sizeof(channel_bytes));
+	mocks.ResetAllCalls();
+
+	uint64_t descriptor_ulong = 0;
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.ValidateArgument(1).IgnoreAllCalls();
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &descriptor_ulong, sizeof(descriptor_ulong));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(TEST_CONTEXT, 0x4243, TEST_AMQP_VALUE, 0))
+		.SetReturn(1);
+
+	(void)saved_frame_body_bytes_received_callback(saved_callback_context, test_performative, sizeof(test_performative));
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, sizeof(test_performative) + sizeof(test_frame_payload_bytes), channel_bytes, sizeof(channel_bytes));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_062: [When the callback empty_frame_received_callback fails, the decoder shall fail and return a non-zero value to frame_codec.] */
+TEST_METHOD(when_empty_frame_received_callback_fails_then_the_error_is_returned_to_the_caller)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+	unsigned char channel_bytes[] = { 0x42, 0x43 };
+	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqp_empty_frame_received_callback_1(TEST_CONTEXT, 0x4243))
+		.SetReturn(1);
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, 0, channel_bytes, sizeof(channel_bytes));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_062: [When the callback empty_frame_received_callback fails, the decoder shall fail and return a non-zero value to frame_codec.] */
+TEST_METHOD(after_empty_frame_received_callback_fails_decoding_fails)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+	unsigned char channel_bytes[] = { 0x42, 0x43 };
+	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqp_empty_frame_received_callback_1(TEST_CONTEXT, 0x4243))
+		.SetReturn(1);
+	(void)saved_frame_begin_callback(saved_callback_context, 0, channel_bytes, sizeof(channel_bytes));
+	mocks.ResetAllCalls();
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, 0, channel_bytes, sizeof(channel_bytes));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_063: [When the callback payload_bytes_received_callback fails, the decoder shall fail and return a non-zero value to frame_codec.] */
+TEST_METHOD(when_amqp_frame_payload_bytes_received_callback_fails_error_is_reported_to_caller)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+	unsigned char channel_bytes[] = { 0x42, 0x43 };
+	unsigned char all_bytes[sizeof(test_performative) + sizeof(test_frame_payload_bytes)];
+	(void)memcpy(all_bytes, test_performative, sizeof(test_performative));
+	(void)memcpy(all_bytes + sizeof(test_performative), test_frame_payload_bytes, sizeof(test_frame_payload_bytes));
+	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(all_bytes), channel_bytes, sizeof(channel_bytes));
+	mocks.ResetAllCalls();
+
+	uint64_t descriptor_ulong = 0;
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.ValidateArgument(1).IgnoreAllCalls();
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &descriptor_ulong, sizeof(descriptor_ulong));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(TEST_CONTEXT, 0x4243, TEST_AMQP_VALUE, 2));
+
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_payload_bytes_received_callback_1(TEST_CONTEXT, test_frame_payload_bytes, sizeof(test_frame_payload_bytes)))
+		.ValidateArgumentBuffer(2, test_frame_payload_bytes, sizeof(test_frame_payload_bytes))
+		.SetReturn(1);
+
+	// act
+	int result = saved_frame_body_bytes_received_callback(saved_callback_context, all_bytes, sizeof(all_bytes));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_AMQP_FRAME_CODEC_01_063: [When the callback payload_bytes_received_callback fails, the decoder shall fail and return a non-zero value to frame_codec.] */
+TEST_METHOD(after_amqp_frame_payload_bytes_received_callback_fails_error_is_reported_to_caller)
+{
+	// arrange
+	amqp_frame_codec_mocks mocks;
+	unsigned char channel_bytes[] = { 0x42, 0x43 };
+	unsigned char all_bytes[sizeof(test_performative) + sizeof(test_frame_payload_bytes)];
+	(void)memcpy(all_bytes, test_performative, sizeof(test_performative));
+	(void)memcpy(all_bytes + sizeof(test_performative), test_frame_payload_bytes, sizeof(test_frame_payload_bytes));
+	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	(void)saved_frame_begin_callback(saved_callback_context, sizeof(all_bytes), channel_bytes, sizeof(channel_bytes));
+	mocks.ResetAllCalls();
+
+	uint64_t descriptor_ulong = 0;
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		.ValidateArgument(1).IgnoreAllCalls();
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &descriptor_ulong, sizeof(descriptor_ulong));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(TEST_CONTEXT, 0x4243, TEST_AMQP_VALUE, 2));
+
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_payload_bytes_received_callback_1(TEST_CONTEXT, test_frame_payload_bytes, sizeof(test_frame_payload_bytes)))
+		.ValidateArgumentBuffer(2, test_frame_payload_bytes, sizeof(test_frame_payload_bytes))
+		.SetReturn(1);
+
+	(void)saved_frame_body_bytes_received_callback(saved_callback_context, all_bytes, sizeof(all_bytes));
+
+	mocks.ResetAllCalls();
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, 0, channel_bytes, sizeof(channel_bytes));
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);

@@ -15,11 +15,13 @@
 #define TEST_IO_HANDLE					(IO_HANDLE)0x4242
 #define TEST_FRAME_CODEC_HANDLE			(FRAME_CODEC_HANDLE)0x4243
 #define TEST_AMQP_FRAME_CODEC_HANDLE	(AMQP_FRAME_CODEC_HANDLE)0x4244
+#define TEST_DESCRIPTOR_AMQP_VALUE		(AMQP_VALUE)0x4245
 
 const IO_INTERFACE_DESCRIPTION test_io_interface_description = { 0 };
 
 static IO_RECEIVE_CALLBACK io_receive_callback;
 static void* io_receive_callback_context;
+static uint64_t performative_ulong;
 
 TYPED_MOCK_CLASS(connection_mocks, CGlobalMock)
 {
@@ -66,6 +68,13 @@ public:
 	MOCK_METHOD_END(AMQP_FRAME_CODEC_HANDLE, TEST_AMQP_FRAME_CODEC_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, amqp_frame_codec_destroy, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec)
 	MOCK_VOID_METHOD_END();
+
+	/* amqpvalue mocks */
+	MOCK_STATIC_METHOD_2(, int, amqpvalue_get_ulong, AMQP_VALUE, value, uint64_t*, ulong_value)
+		*ulong_value = performative_ulong;
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_get_descriptor, AMQP_VALUE, value)
+	MOCK_METHOD_END(AMQP_VALUE, TEST_DESCRIPTOR_AMQP_VALUE);
 };
 
 extern "C"
@@ -89,6 +98,9 @@ extern "C"
 
 	DECLARE_GLOBAL_MOCK_METHOD_5(connection_mocks, , AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_create, FRAME_CODEC_HANDLE, frame_codec, AMQP_FRAME_RECEIVED_CALLBACK, frame_received_callback, AMQP_EMPTY_FRAME_RECEIVED_CALLBACK, empty_frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK, payload_bytes_received_callback, void*, frame_received_callback_context);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, amqp_frame_codec_destroy, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec);
+
+	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , int, amqpvalue_get_ulong, AMQP_VALUE, value, uint64_t*, ulong_value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , AMQP_VALUE, amqpvalue_get_descriptor, AMQP_VALUE, value);
 
 	extern void consolelogger_log(char* format, ...)
 	{
@@ -117,6 +129,7 @@ TEST_METHOD_INITIALIZE(method_init)
 	{
 		ASSERT_FAIL("Could not acquire test serialization mutex.");
 	}
+	performative_ulong = 0x10;
 }
 
 TEST_METHOD_CLEANUP(method_cleanup)

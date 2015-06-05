@@ -27,8 +27,8 @@ extern "C" {
 #define FRAME_TYPE_SASL	(uint8_t)0x01
 
 	typedef void* FRAME_CODEC_HANDLE;
-	typedef void(*FRAME_BEGIN_CALLBACK)(void* context, uint32_t frame_body_size, const unsigned char* type_specific, uint32_t type_specific_size);
-	typedef void(*FRAME_BODY_BYTES_RECEIVED_CALLBACK)(void* context, const unsigned char* frame_body_bytes, uint32_t frame_body_bytes_size);
+	typedef int(*FRAME_BEGIN_CALLBACK)(void* context, uint32_t frame_body_size, const unsigned char* type_specific, uint32_t type_specific_size);
+	typedef int(*FRAME_BODY_BYTES_RECEIVED_CALLBACK)(void* context, const unsigned char* frame_body_bytes, uint32_t frame_body_bytes_size);
 
 	extern FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log);
 	extern void frame_codec_destroy(FRAME_CODEC_HANDLE frame_codec);

@@ -1262,11 +1262,12 @@ static void internal_decoder_destroy(INTERNAL_DECODER_DATA* internal_decoder)
 	}
 }
 
-static void inner_decoder_callback(void* context, AMQP_VALUE decoded_value)
+static int inner_decoder_callback(void* context, AMQP_VALUE decoded_value)
 {
 	INTERNAL_DECODER_DATA* internal_decoder_data = (INTERNAL_DECODER_DATA*)context;
 	INTERNAL_DECODER_DATA* inner_decoder = (INTERNAL_DECODER_DATA*)internal_decoder_data->inner_decoder;
 	inner_decoder->decoder_state = DECODER_STATE_DONE;
+	return 0;
 }
 
 int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, const unsigned char* buffer, size_t size, size_t* used_bytes)
@@ -1329,8 +1330,14 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					/* null */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_NULL;
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
-					result = 0;
+					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
 					break;
 				}
 				case 0x41:
@@ -1339,8 +1346,14 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_BOOL;
 					internal_decoder_data->decode_to_value->value.bool_value = true;
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
-					result = 0;
+					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
 					break;
 				}
 				case 0x42:
@@ -1349,8 +1362,14 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_BOOL;
 					internal_decoder_data->decode_to_value->value.bool_value = false;
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
-					result = 0;
+					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
 					break;
 				}
 				case 0x43:
@@ -1359,8 +1378,14 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_UINT;
 					internal_decoder_data->decode_to_value->value.uint_value = 0;
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
-					result = 0;
+					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
 					break;
 				}
 				case 0x44:
@@ -1369,8 +1394,14 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_ULONG;
 					internal_decoder_data->decode_to_value->value.ulong_value = 0;
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
-					result = 0;
+					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
 					break;
 				}
 				case 0x50: /* ubyte */
@@ -1477,10 +1508,19 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							internal_decoder_data->inner_decoder = NULL;
 
 							internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-							internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
+							if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+							{
+								result = __LINE__;
+							}
+							else
+							{
+								result = 0;
+							}
 						}
-
-						result = 0;
+						else
+						{
+							result = 0;
+						}
 					}
 					break;
 				}
@@ -1491,8 +1531,14 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					buffer++;
 					size--;
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
-					result = 0;
+					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
 					break;
 				}
 				case 0x52:
@@ -1502,8 +1548,14 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					buffer++;
 					size--;
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
-					result = 0;
+					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
 					break;
 				}
 				case 0x53:
@@ -1513,8 +1565,14 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					buffer++;
 					size--;
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-					internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
-					result = 0;
+					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
 					break;
 				}
 				case 0x60:
@@ -1527,9 +1585,19 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					if (internal_decoder_data->bytes_decoded == 2)
 					{
 						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-						internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
+						if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							result = 0;
+						}
 					}
-					result = 0;
+					else
+					{
+						result = 0;
+					}
 					break;
 				}
 				case 0x70:
@@ -1542,9 +1610,19 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					if (internal_decoder_data->bytes_decoded == 4)
 					{
 						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-						internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
+						if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							result = 0;
+						}
 					}
-					result = 0;
+					else
+					{
+						result = 0;
+					}
 					break;
 				}
 				case 0x80:
@@ -1557,9 +1635,19 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					if (internal_decoder_data->bytes_decoded == 8)
 					{
 						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-						internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
+						if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							result = 0;
+						}
 					}
-					result = 0;
+					else
+					{
+						result = 0;
+					}
 					break;
 				}
 				case 0xA0:
@@ -1605,10 +1693,19 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.binary_value.length + 1)
 							{
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
+								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+								{
+									result = __LINE__;
+								}
+								else
+								{
+									result = 0;
+								}
 							}
-
-							result = 0;
+							else
+							{
+								result = 0;
+							}
 						}
 					}
 				}
@@ -1655,10 +1752,19 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.string_value.length + 1)
 							{
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
+								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+								{
+									result = __LINE__;
+								}
+								else
+								{
+									result = 0;
+								}
 							}
-
-							result = 0;
+							else
+							{
+								result = 0;
+							}
 						}
 					}
 					break;
@@ -1706,10 +1812,19 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.binary_value.length + 4)
 							{
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
+								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+								{
+									result = __LINE__;
+								}
+								else
+								{
+									result = 0;
+								}
 							}
-
-							result = 0;
+							else
+							{
+								result = 0;
+							}
 						}
 					}
 				}
@@ -1756,10 +1871,19 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.string_value.length + 4)
 							{
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, (AMQP_VALUE)&internal_decoder_data->decode_to_value);
+								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+								{
+									result = __LINE__;
+								}
+								else
+								{
+									result = 0;
+								}
 							}
-
-							result = 0;
+							else
+							{
+								result = 0;
+							}
 						}
 					}
 					break;
@@ -1875,11 +1999,24 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 								if (internal_decoder_data->decode_value_state.list_value_state.item == internal_decoder_data->decode_to_value->value.list_value.count)
 								{
 									internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-									internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
+									if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+									{
+										result = __LINE__;
+									}
+									else
+									{
+										result = 0;
+									}
+								}
+								else
+								{
+									result = 0;
 								}
 							}
-
-							result = 0;
+							else
+							{
+								result = 0;
+							}
 						}
 
 						break;

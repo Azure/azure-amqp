@@ -171,14 +171,18 @@ static void connection_receive_callback(void* context, const void* buffer, size_
 	}
 }
 
-static void connection_empty_frame_received(void* context, uint16_t channel)
+static int connection_empty_frame_received(void* context, uint16_t channel)
 {
+	return 0;
 }
 
-static void connection_frame_received(void* context, uint16_t channel, uint64_t performative, AMQP_VALUE performative_fields, uint32_t payload_size)
+static int connection_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t payload_size)
 {
 	CONNECTION_DATA* connection = (CONNECTION_DATA*)context;
-	switch (performative)
+	AMQP_VALUE descriptor = amqpvalue_get_descriptor(performative);
+	uint64_t performative_ulong;
+	amqpvalue_get_ulong(descriptor, &performative_ulong);
+	switch (performative_ulong)
 	{
 	default:
 		consolelogger_log("Bad performative: %02x", performative);
@@ -212,10 +216,12 @@ static void connection_frame_received(void* context, uint16_t channel, uint64_t 
 	case 0x17:
 		if (connection->frame_received_callback != NULL)
 		{
-			connection->frame_received_callback(connection->frame_received_callback_context, 0, performative, performative_fields, 0);
+			connection->frame_received_callback(connection->frame_received_callback_context, 0, performative, 0);
 		}
 		break;
 	}
+
+	return 0;
 }
 
 /* Codes_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */

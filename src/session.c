@@ -72,7 +72,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 	return result;
 }
 
-static void frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t frame_payload_size)
+static int frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t frame_payload_size)
 {
 	SESSION_DATA* session = (SESSION_DATA*)context;
 	uint64_t performative_descriptor;
@@ -114,6 +114,8 @@ static void frame_received(void* context, uint16_t channel, AMQP_VALUE performat
 			break;
 		}
 	}
+
+	return 0;
 }
 
 SESSION_HANDLE session_create(CONNECTION_HANDLE connection)

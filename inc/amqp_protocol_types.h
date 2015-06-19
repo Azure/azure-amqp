@@ -9,6 +9,7 @@ typedef uint32_t sequence_no;
 typedef sequence_no transfer_number;
 typedef sequence_no delivery_number;
 typedef uint32_t handle;
+typedef uint32_t milliseconds;
 
 typedef enum role_tag
 {
@@ -32,6 +33,7 @@ typedef enum receiver_settle_mode_tag
 #define amqpvalue_create_sequence_no amqpvalue_create_uint
 #define amqpvalue_create_transfer_number amqpvalue_create_sequence_no
 #define amqpvalue_create_handle amqpvalue_create_uint
+#define amqpvalue_create_milliseconds amqpvalue_create_uint
 #define amqpvalue_create_delivery_number amqpvalue_create_sequence_no
 #define amqpvalue_create_role amqpvalue_create_boolean
 #define amqpvalue_create_sender_settle_mode amqpvalue_create_ubyte

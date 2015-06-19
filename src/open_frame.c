@@ -57,3 +57,33 @@ int open_frame_encode(AMQP_OPEN_FRAME_HANDLE amqp_open_frame, AMQP_FRAME_CODEC_H
 
 	return result;
 }
+
+int open_set_max_frame_size(AMQP_OPEN_FRAME_HANDLE amqp_open_frame, uint32_t max_frame_size)
+{
+	return 0;
+}
+
+int open_get_max_frame_size(AMQP_OPEN_FRAME_HANDLE amqp_open_frame, uint32_t* max_frame_size)
+{
+	return 0;
+}
+
+int open_set_channel_max(AMQP_OPEN_FRAME_HANDLE amqp_open_frame, uint16_t channel_max)
+{
+	return 0;
+}
+
+int open_get_channel_max(AMQP_OPEN_FRAME_HANDLE amqp_open_frame, uint16_t* channel_max)
+{
+	return 0;
+}
+
+int open_set_idle_timeout(AMQP_OPEN_FRAME_HANDLE amqp_open_frame, milliseconds channel_max)
+{
+	return 0;
+}
+
+int open_get_idle_timeout(AMQP_OPEN_FRAME_HANDLE amqp_open_frame, uint16_t* channel_max)
+{
+	return 0;
+}

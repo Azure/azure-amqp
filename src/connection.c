@@ -25,6 +25,7 @@ typedef struct CONNECTION_DATA_TAG
 {
 	IO_HANDLE socket_io;
 	IO_HANDLE used_io;
+	AMQP_OPEN_FRAME_HANDLE amqp_open_frame;
 	size_t header_bytes_received;
 	CONNECTION_STATE connection_state;
 	FRAME_CODEC_HANDLE frame_codec;
@@ -344,8 +345,10 @@ void connection_destroy(CONNECTION_HANDLE connection)
 	}
 }
 
-int connection_set_container_id(const char* container_id)
+int connection_set_container_id(CONNECTION_HANDLE connection, const char* container_id)
 {
+	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+	open_frame_set_container_id(connection_instance->amqp_open_frame, container_id);
 	return 0;
 }
 

@@ -12,7 +12,7 @@ namespace amqplib_generator
         {
             amqp_definitions_h amqp_definitions_h = new amqp_definitions_h();
             string text = amqp_definitions_h.TransformText();
-            System.IO.File.WriteAllText("../../inc/amqp_definitions.h", text);
+            System.IO.File.WriteAllText("../../../inc/amqp_definitions.h", text);
         }
     }
 }

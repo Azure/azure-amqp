@@ -3,3 +3,9 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
+
+#ifndef AMQP_DEFINITIONS_H
+#define AMQP_DEFINITIONS_H
+
+
+#endif /* AMQP_DEFINITIONS_H */

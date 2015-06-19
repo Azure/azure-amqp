@@ -35,7 +35,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "frame_codec_unittests", "un
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "amqp_frame_codec_unittests", "unittests\amqp_frame_codec_unittests\amqp_frame_codec_unittests.vcxproj", "{4DD54279-34F8-437A-91F2-FF84B529ABD5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "amqplib_generator", "amqplib_generator\amqplib_generator\amqplib_generator.csproj", "{53D12D47-7F69-47C5-A45B-5DF5424955D7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "amqplib_generator", "amqplib_generator\amqplib_generator.csproj", "{53D12D47-7F69-47C5-A45B-5DF5424955D7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

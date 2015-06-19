@@ -30,9 +30,9 @@ typedef struct CONNECTION_DATA_TAG
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
 	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
 	void* frame_received_callback_context;
-} CONNECTION_DATA;
+} CONNECTION_INSTANCE;
 
-static int send_header(CONNECTION_DATA* connection)
+static int send_header(CONNECTION_INSTANCE* connection)
 {
 	int result;
 
@@ -59,7 +59,7 @@ static int send_header(CONNECTION_DATA* connection)
 	return result;
 }
 
-static void send_open_frame(CONNECTION_DATA* connection)
+static void send_open_frame(CONNECTION_INSTANCE* connection)
 {
 	AMQP_OPEN_FRAME_HANDLE amqp_open_frame = open_frame_create("1");
 
@@ -81,7 +81,7 @@ static void send_open_frame(CONNECTION_DATA* connection)
 	open_frame_destroy(amqp_open_frame);
 }
 
-static void connection_byte_received(CONNECTION_DATA* connection, unsigned char b)
+static void connection_byte_received(CONNECTION_INSTANCE* connection, unsigned char b)
 {
 	switch (connection->connection_state)
 	{
@@ -163,7 +163,7 @@ static void connection_receive_callback(void* context, const void* buffer, size_
 	size_t i;
 	for (i = 0; i < size; i++)
 	{
-		connection_byte_received((CONNECTION_DATA*)context, ((unsigned char*)buffer)[i]);
+		connection_byte_received((CONNECTION_INSTANCE*)context, ((unsigned char*)buffer)[i]);
 	}
 }
 
@@ -174,9 +174,10 @@ static int connection_empty_frame_received(void* context, uint16_t channel)
 
 static int connection_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t payload_size)
 {
-	CONNECTION_DATA* connection = (CONNECTION_DATA*)context;
+	CONNECTION_INSTANCE* connection = (CONNECTION_INSTANCE*)context;
 	AMQP_VALUE descriptor = amqpvalue_get_descriptor(performative);
 	uint64_t performative_ulong;
+
 	amqpvalue_get_ulong(descriptor, &performative_ulong);
 	switch (performative_ulong)
 	{
@@ -223,7 +224,8 @@ static int connection_frame_received(void* context, uint16_t channel, AMQP_VALUE
 /* Codes_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
 CONNECTION_HANDLE connection_create(const char* host, int port)
 {
-	CONNECTION_DATA* result;
+	CONNECTION_INSTANCE* result;
+
 	/* Codes_SRS_CONNECTION_01_071: [If host is NULL, connection_create shall return NULL.] */
 	if (host == NULL)
 	{
@@ -231,7 +233,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 	}
 	else
 	{
-		result = (CONNECTION_DATA*)amqpalloc_malloc(sizeof(CONNECTION_DATA));
+		result = (CONNECTION_INSTANCE*)amqpalloc_malloc(sizeof(CONNECTION_INSTANCE));
 		/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
 		if (result != NULL)
 		{
@@ -297,43 +299,43 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 	return result;
 }
 
-void connection_destroy(CONNECTION_HANDLE handle)
+void connection_destroy(CONNECTION_HANDLE connection)
 {
 	/* Codes_SRS_CONNECTION_01_079: [If handle is NULL, connection_destroy shall do nothing.] */
-	if (handle != NULL)
+	if (connection != NULL)
 	{
 		/* Codes_SRS_CONNECTION_01_073: [connection_destroy shall free all resources associated with a connection.] */
-		CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;
-		amqp_frame_codec_destroy(connection->amqp_frame_codec);
-		frame_codec_destroy(connection->frame_codec);
+		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+		amqp_frame_codec_destroy(connection_instance->amqp_frame_codec);
+		frame_codec_destroy(connection_instance->frame_codec);
 
 		/* Codes_SRS_CONNECTION_01_074: [connection_destroy shall close the socket connection.] */
-		io_destroy(connection->socket_io);
-		amqpalloc_free(handle);
+		io_destroy(connection_instance->socket_io);
+		amqpalloc_free(connection_instance);
 	}
 }
 
-int connection_dowork(CONNECTION_HANDLE handle)
+int connection_dowork(CONNECTION_HANDLE connection)
 {
 	int result;
-	CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;
-	if (connection == NULL)
+	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+	if (connection_instance == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		/* Codes_SRS_CONNECTION_01_084: [The connection state machine implementing the protocol requirements shall be run as part of connection_dowork.] */
-		switch (connection->connection_state)
+		/* Codes_SRS_CONNECTION_01_084: [The connection_instance state machine implementing the protocol requirements shall be run as part of connection_dowork.] */
+		switch (connection_instance->connection_state)
 		{
 		default:
 			result = __LINE__;
 			break;
 
 		case CONNECTION_STATE_START:
-			/* Codes_SRS_CONNECTION_01_086: [Prior to sending any frames on a connection, each peer MUST start by sending a protocol header that indicates the protocol version used on the connection.] */
-			/* Codes_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection) MUST immediately send its outgoing protocol header on establishment of the TCP connection.] */
-			result = send_header(connection);
+			/* Codes_SRS_CONNECTION_01_086: [Prior to sending any frames on a connection_instance, each peer MUST start by sending a protocol header that indicates the protocol version used on the connection_instance.] */
+			/* Codes_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection_instance) MUST immediately send its outgoing protocol header on establishment of the TCP connection_instance.] */
+			result = send_header(connection_instance);
 			break;
 
 		case CONNECTION_STATE_HDR_SENT:
@@ -343,13 +345,13 @@ int connection_dowork(CONNECTION_HANDLE handle)
 			break;
 
 		case CONNECTION_STATE_HDR_EXCH:
-			/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
-			/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+			/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection_instance begins with an exchange of capabilities and limitations, including the maximum frame size.] */
+			/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection_instance and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
 			/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-			if (open_frame_encode(connection->frame_codec, "1") != 0)
+			if (open_frame_encode(connection_instance->frame_codec, "1") != 0)
 			{
-				io_destroy(connection->used_io);
-				connection->connection_state = CONNECTION_STATE_END;
+				io_destroy(connection_instance->used_io);
+				connection_instance->connection_state = CONNECTION_STATE_END;
 				result = __LINE__;
 			}
 			else
@@ -366,7 +368,7 @@ int connection_dowork(CONNECTION_HANDLE handle)
 		if (result == 0)
 		{
 			/* Codes_SRS_CONNECTION_01_076: [connection_dowork shall schedule the underlying IO interface to do its work by calling io_dowork.] */
-			if (io_dowork(connection->socket_io) != 0)
+			if (io_dowork(connection_instance->socket_io) != 0)
 			{
 				/* Codes_SRS_CONNECTION_01_077: [If io_dowork fails, connection_dowork shall return a non-zero value.] */
 				result = __LINE__;
@@ -382,53 +384,53 @@ int connection_dowork(CONNECTION_HANDLE handle)
 	return result;
 }
 
-int connection_get_state(CONNECTION_HANDLE handle, CONNECTION_STATE* connection_state)
+int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connection_state)
 {
 	int result;
-	CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;
+	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
 
-	if (connection == NULL)
+	if (connection_instance == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		*connection_state = connection->connection_state;
+		*connection_state = connection_instance->connection_state;
 		result = 0;
 	}
 
 	return result;
 }
 
-FRAME_CODEC_HANDLE connection_get_frame_codec(CONNECTION_HANDLE handle)
+FRAME_CODEC_HANDLE connection_get_frame_codec(CONNECTION_HANDLE connection)
 {
 	FRAME_CODEC_HANDLE result;
-	CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;
+	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
 
-	if (connection == NULL)
+	if (connection_instance == NULL)
 	{
 		result = NULL;
 	}
 	else
 	{
-		result = connection->frame_codec;
+		result = connection_instance->frame_codec;
 	}
 
 	return result;
 }
 
-int connection_set_session_frame_receive_callback(CONNECTION_HANDLE handle, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context)
+int connection_set_session_frame_receive_callback(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context)
 {
 	int result;
-	CONNECTION_DATA* connection = (CONNECTION_DATA*)handle;
-	if (connection == NULL)
+	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+	if (connection_instance == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		connection->frame_received_callback = callback;
-		connection->frame_received_callback_context = context;
+		connection_instance->frame_received_callback = callback;
+		connection_instance->frame_received_callback_context = context;
 		result = 0;
 	}
 

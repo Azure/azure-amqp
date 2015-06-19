@@ -7,6 +7,7 @@
 #include "amqpalloc.h"
 #include "open_frame.h"
 #include "close_frame.h"
+#include "amqp_protocol_types.h"
 
 /* Requirements satisfied by the virtue of implementing the ISO:*/
 /* Codes_SRS_CONNECTION_01_088: [Any data appearing beyond the protocol header MUST match the version indicated by the protocol header.] */
@@ -320,17 +321,17 @@ int connection_set_container_id(const char* container_id)
 	return 0;
 }
 
-int connection_set_max_frame_size(CONNECTION_HANDLE connection, size_t max_frame_size)
+int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_frame_size)
 {
 	return 0;
 }
 
-int connection_set_channel_max(CONNECTION_HANDLE connection, size_t channel_max)
+int connection_set_channel_max(CONNECTION_HANDLE connection, uint16_t channel_max)
 {
 	return 0;
 }
 
-int connection_set_idle_timeout(CONNECTION_HANDLE connection, size_t idle_timeout)
+int connection_set_idle_timeout(CONNECTION_HANDLE connection, milliseconds idle_timeout)
 {
 	return 0;
 }

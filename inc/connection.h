@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "amqp_frame_codec.h"
-#include "connection.h"
+#include "amqp_protocol_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,9 +59,9 @@ extern "C" {
 
 	extern CONNECTION_HANDLE connection_create(const char* host, int port);
 	extern int connection_set_container_id(const char* container_id);
-	extern int connection_set_max_frame_size(CONNECTION_HANDLE connection, size_t max_frame_size);
-	extern int connection_set_channel_max(CONNECTION_HANDLE connection, size_t channel_max);
-	extern int connection_set_idle_timeout(CONNECTION_HANDLE connection, size_t idle_timeout);
+	extern int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_frame_size);
+	extern int connection_set_channel_max(CONNECTION_HANDLE connection, uint16_t channel_max);
+	extern int connection_set_idle_timeout(CONNECTION_HANDLE connection, milliseconds idle_timeout);
 	extern int connection_connect(void);
 	extern void connection_destroy(CONNECTION_HANDLE handle);
 	extern int connection_dowork(CONNECTION_HANDLE handle);

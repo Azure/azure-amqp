@@ -234,13 +234,16 @@ static int connection_frame_received(void* context, uint16_t channel, AMQP_VALUE
 		}
 		break;
 
-	case 0x11:
-	case 0x12:
-	case 0x13:
-	case 0x14:
-	case 0x15:
-	case 0x16:
-	case 0x17:
+	case AMQP_CLOSE:
+		break;
+
+	case AMQP_BEGIN:
+	case AMQP_ATTACH:
+	case AMQP_FLOW:
+	case AMQP_TRANSFER:
+	case AMQP_DISPOSITION:
+	case AMQP_DETACH:
+	case AMQP_END:
 		if (connection->frame_received_callback != NULL)
 		{
 			connection->frame_received_callback(connection->frame_received_callback_context, 0, performative, 0);
@@ -482,10 +485,22 @@ FRAME_CODEC_HANDLE connection_get_frame_codec(CONNECTION_HANDLE connection)
 	return result;
 }
 
+int connection_register_session(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context, uint16_t* channel_no)
+{
+
+	return 0;
+}
+
+int connection_unregister_session(CONNECTION_HANDLE connection, uint16_t channel_no)
+{
+	return 0;
+}
+
 int connection_set_session_frame_receive_callback(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context)
 {
 	int result;
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+
 	if (connection_instance == NULL)
 	{
 		result = __LINE__;

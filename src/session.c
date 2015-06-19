@@ -12,6 +12,7 @@ typedef struct SESSION_DATA_TAG
 {
 	CONNECTION_HANDLE connection;
 	SESSION_STATE session_state;
+	uint16_t channel_no;
 	SESSION_FRAME_RECEIVED_CALLBACK frame_received_callback;
 	void* frame_received_callback_context;
 } SESSION_DATA;
@@ -123,13 +124,16 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 	SESSION_DATA* result = amqpalloc_malloc(sizeof(SESSION_DATA));
 	if (result != NULL)
 	{
-		if (connection_set_session_frame_receive_callback(connection, frame_received, result) != 0)
+		uint16_t channel_no;
+
+		if (connection_register_session(connection, frame_received, result, &channel_no) != 0)
 		{
 			amqpalloc_free(result);
 			result = NULL;
 		}
 		else
 		{
+			result->channel_no = channel_no;
 			result->frame_received_callback = NULL;
 			result->session_state = SESSION_STATE_UNMAPPED;
 			result->connection = connection;

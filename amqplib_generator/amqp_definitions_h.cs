@@ -28,8 +28,15 @@ namespace amqplib_generator
         /// </summary>
         public virtual string TransformText()
         {
-            this.Write("\r\n#ifndef AMQP_DEFINITIONS_H\r\n#define AMQP_DEFINITIONS_H\r\n\r\n\r\n#endif /* AMQP_DEFI" +
-                    "NITIONS_H */\r\n");
+            this.Write("\r\n#ifndef AMQP_DEFINITIONS_H\r\n#define AMQP_DEFINITIONS_H\r\n\r\n ");
+            
+            #line 10 "D:\amqplib\amqplib_generator\amqp_definitions_h.tt"
+ for (int i = 1; i <= 10; i++)
+       { 
+            
+            #line default
+            #line hidden
+            this.Write("\r\n#endif /* AMQP_DEFINITIONS_H */\r\n");
             return this.GenerationEnvironment.ToString();
         }
     }

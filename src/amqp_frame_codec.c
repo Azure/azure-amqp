@@ -40,12 +40,12 @@ typedef struct AMQP_FRAME_CODEC_DATA_TAG
 	/* encode */
 	AMQP_FRAME_ENCODE_STATE encode_state;
 	uint32_t encode_payload_bytes_left;
-} AMQP_FRAME_CODEC_DATA;
+} AMQP_FRAME_CODEC_INSTANCE;
 
 static int amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 {
 	int result = 0;
-	AMQP_FRAME_CODEC_DATA* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_DATA*)context;
+	AMQP_FRAME_CODEC_INSTANCE* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_INSTANCE*)context;
 	uint64_t performative_descriptor_ulong;
 
 	switch (amqp_frame_codec_instance->decode_state)
@@ -104,7 +104,7 @@ static int amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 static int frame_begin(void* context, uint32_t decode_frame_body_size, const unsigned char* type_specific, uint32_t type_specific_size)
 {
 	int result;
-	AMQP_FRAME_CODEC_DATA* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_DATA*)context;
+	AMQP_FRAME_CODEC_INSTANCE* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_INSTANCE*)context;
 
 	switch (amqp_frame_codec_instance->decode_state)
 	{
@@ -164,7 +164,7 @@ static int frame_begin(void* context, uint32_t decode_frame_body_size, const uns
 static int frame_body_bytes_received(void* context, const unsigned char* frame_body_bytes, uint32_t frame_body_bytes_size)
 {
 	int result;
-	AMQP_FRAME_CODEC_DATA* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_DATA*)context;
+	AMQP_FRAME_CODEC_INSTANCE* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_INSTANCE*)context;
 
 	/* Codes_SRS_AMQP_FRAME_CODEC_01_058: [If more bytes than expected are indicated, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
 	if (amqp_frame_codec_instance->decode_frame_body_size - amqp_frame_codec_instance->decode_frame_body_pos < frame_body_bytes_size)
@@ -242,7 +242,7 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 	AMQP_EMPTY_FRAME_RECEIVED_CALLBACK empty_frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK payload_bytes_received_callback,
 	void* frame_received_callback_context)
 {
-	AMQP_FRAME_CODEC_DATA* result;
+	AMQP_FRAME_CODEC_INSTANCE* result;
 
 	/* Codes_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
 	if ((frame_codec == NULL) ||
@@ -254,7 +254,7 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 	}
 	else
 	{
-		result = (AMQP_FRAME_CODEC_DATA*)amqpalloc_malloc(sizeof(AMQP_FRAME_CODEC_DATA));
+		result = (AMQP_FRAME_CODEC_INSTANCE*)amqpalloc_malloc(sizeof(AMQP_FRAME_CODEC_INSTANCE));
 		/* Codes_SRS_AMQP_FRAME_CODEC_01_020: [If allocating memory for the new amqp_frame_codec fails, then amqp_frame_codec_create shall fail and return NULL.] */
 		if (result != NULL)
 		{
@@ -295,7 +295,7 @@ void amqp_frame_codec_destroy(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec)
 {
 	if (amqp_frame_codec != NULL)
 	{
-		AMQP_FRAME_CODEC_DATA* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_DATA*)amqp_frame_codec;
+		AMQP_FRAME_CODEC_INSTANCE* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_INSTANCE*)amqp_frame_codec;
 
 		/* Codes_SRS_AMQP_FRAME_CODEC_01_017: [amqp_frame_codec_destroy shall unsubscribe from receiving AMQP frames from the frame_codec that was passed to amqp_frame_codec_create.] */
 		(void)frame_codec_unsubscribe(amqp_frame_codec_instance->frame_codec, FRAME_TYPE_AMQP);
@@ -312,7 +312,7 @@ int amqp_frame_codec_begin_encode_frame(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec
 {
 	int result;
 	uint32_t amqp_frame_payload_size;
-	AMQP_FRAME_CODEC_DATA* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_DATA*)amqp_frame_codec;
+	AMQP_FRAME_CODEC_INSTANCE* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_INSTANCE*)amqp_frame_codec;
 
 	/* Codes_SRS_AMQP_FRAME_CODEC_01_024: [If frame_codec or performative_fields is NULL, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
 	if ((amqp_frame_codec == NULL) ||
@@ -398,7 +398,7 @@ int amqp_frame_codec_begin_encode_frame(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec
 extern int amqp_frame_codec_encode_payload_bytes(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec, const unsigned char* bytes, uint32_t count)
 {
 	int result;
-	AMQP_FRAME_CODEC_DATA* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_DATA*)amqp_frame_codec;
+	AMQP_FRAME_CODEC_INSTANCE* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_INSTANCE*)amqp_frame_codec;
 
 	/* Codes_SRS_AMQP_FRAME_CODEC_01_033: [If amqp_frame_codec or bytes is NULL, amqp_frame_codec_encode_payload_bytes shall fail and return a non-zero value.] */
 	if ((amqp_frame_codec == NULL) ||
@@ -447,7 +447,7 @@ extern int amqp_frame_codec_encode_payload_bytes(AMQP_FRAME_CODEC_HANDLE amqp_fr
 int amqp_frame_codec_encode_empty_frame(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec, uint16_t channel)
 {
 	int result;
-	AMQP_FRAME_CODEC_DATA* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_DATA*)amqp_frame_codec;
+	AMQP_FRAME_CODEC_INSTANCE* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_INSTANCE*)amqp_frame_codec;
 
 	/* Codes_SRS_AMQP_FRAME_CODEC_01_045: [If amqp_frame_codec is NULL, amqp_frame_codec_encode_empty_frame shall fail and return a non-zero value.] */
 	if (amqp_frame_codec == NULL)

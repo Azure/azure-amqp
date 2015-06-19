@@ -1,45 +1,58 @@
 #include "open_frame.h"
 #include "amqp_frame_codec.h"
-#include "frame_codec.h"
 #include "amqpvalue.h"
 
-int open_frame_encode(FRAME_CODEC_HANDLE frame_codec, const char* container_id)
+AMQP_OPEN_FRAME_HANDLE open_frame_create(const char* container_id)
+{
+	AMQP_OPEN_FRAME_HANDLE result;
+	AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(AMQP_OPEN);
+	AMQP_VALUE open_frame_list = amqpvalue_create_list(1);
+	AMQP_VALUE performative;
+
+	if ((ulong_descriptor_value == NULL) ||
+		(open_frame_list == NULL))
+	{
+		amqpvalue_destroy(ulong_descriptor_value);
+		amqpvalue_destroy(open_frame_list);
+		result = NULL;
+	}
+	else
+	{
+		performative = amqpvalue_create_described_value(ulong_descriptor_value, open_frame_list);
+		if (performative == NULL)
+		{
+			amqpvalue_destroy(ulong_descriptor_value);
+			amqpvalue_destroy(open_frame_list);
+			result = NULL;
+		}
+		else
+		{
+			result = (AMQP_OPEN_FRAME_HANDLE)performative;
+		}
+	}
+
+	return result;
+}
+
+void open_frame_destroy(AMQP_OPEN_FRAME_HANDLE amqp_open_frame)
+{
+	if (amqp_open_frame != NULL)
+	{
+		amqpvalue_destroy(amqp_open_frame);
+	}
+}
+
+int open_frame_encode(AMQP_OPEN_FRAME_HANDLE amqp_open_frame, AMQP_FRAME_CODEC_HANDLE frame_codec)
 {
 	int result;
 
-	AMQP_VALUE open_frame_list;
-	if ((open_frame_list = amqpvalue_create_list(1)) == NULL)
+	if (amqp_frame_codec_begin_encode_frame(frame_codec, 0, (AMQP_VALUE)amqp_open_frame, 0) != 0)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		AMQP_VALUE container_id_value = amqpvalue_create_string(container_id);
-		if (container_id_value == NULL)
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(0x10);
-			AMQP_VALUE performative = amqpvalue_create_described_value(ulong_descriptor_value, open_frame_list);
-
-			if ((amqpvalue_set_list_item(open_frame_list, 0, container_id_value) != 0) ||
-				(amqp_frame_codec_begin_encode_frame(frame_codec, 0, performative, 0) != 0))
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				result = 0;
-			}
-
-			amqpvalue_destroy(performative);
-			amqpvalue_destroy(ulong_descriptor_value);
-		}
-
-		amqpvalue_destroy(container_id_value);
-		amqpvalue_destroy(open_frame_list);
+		result = 0;
 	}
 
 	return result;

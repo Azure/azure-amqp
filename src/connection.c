@@ -59,6 +59,28 @@ static int send_header(CONNECTION_DATA* connection)
 	return result;
 }
 
+static void send_open_frame(CONNECTION_DATA* connection)
+{
+	AMQP_OPEN_FRAME_HANDLE amqp_open_frame = open_frame_create("1");
+
+	/* handshake done, send open frame */
+	/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
+	/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+	/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
+	if (open_frame_encode(amqp_open_frame, connection->amqp_frame_codec) != 0)
+	{
+		io_destroy(connection->used_io);
+		connection->connection_state = CONNECTION_STATE_END;
+	}
+	else
+	{
+		/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
+		connection->connection_state = CONNECTION_STATE_OPEN_SENT;
+	}
+
+	open_frame_destroy(amqp_open_frame);
+}
+
 static void connection_byte_received(CONNECTION_DATA* connection, unsigned char b)
 {
 	switch (connection->connection_state)
@@ -91,38 +113,12 @@ static void connection_byte_received(CONNECTION_DATA* connection, unsigned char 
 					}
 					else
 					{
-						/* handshake done, send open frame */
-						/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
-						/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
-						/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-						if (open_frame_encode(connection->frame_codec, "1") != 0)
-						{
-							io_destroy(connection->used_io);
-							connection->connection_state = CONNECTION_STATE_END;
-						}
-						else
-						{
-							/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
-							connection->connection_state = CONNECTION_STATE_OPEN_SENT;
-						}
+						(void)send_open_frame(connection);
 					}
 				}
 				else
 				{
-					/* handshake done, send open frame */
-					/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
-					/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
-					/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-					if (open_frame_encode(connection->frame_codec, "1") != 0)
-					{
-						io_destroy(connection->used_io);
-						connection->connection_state = CONNECTION_STATE_END;
-					}
-					else
-					{
-						/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
-						connection->connection_state = CONNECTION_STATE_OPEN_SENT;
-					}
+					(void)send_open_frame(connection);
 				}
 			}
 		}

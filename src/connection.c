@@ -159,13 +159,14 @@ static void connection_byte_received(CONNECTION_INSTANCE* connection, unsigned c
 	}
 }
 
-static void connection_receive_callback(void* context, const void* buffer, size_t size)
+static int connection_receive_callback(void* context, const void* buffer, size_t size)
 {
 	size_t i;
 	for (i = 0; i < size; i++)
 	{
 		connection_byte_received((CONNECTION_INSTANCE*)context, ((unsigned char*)buffer)[i]);
 	}
+	return 0;
 }
 
 static int connection_empty_frame_received(void* context, uint16_t channel)

@@ -35,11 +35,13 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_3(io_mocks, , int, test_io_send, CONCRETE_IO_HANDLE, handle, const void*, buffer, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , int, test_io_dowork, CONCRETE_IO_HANDLE, handle);
 
-	void test_receive_callback(void* context, const void* buffer, size_t size)
+	int test_receive_callback(void* context, const void* buffer, size_t size)
 	{
 		(void)context;
 		(void)buffer;
 		(void)size;
+
+		return 0;
 	}
 
 	void test_logger_log(char* format, ...)

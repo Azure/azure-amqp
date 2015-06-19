@@ -461,8 +461,3 @@ int connection_set_session_frame_receive_callback(CONNECTION_HANDLE connection, 
 
 	return result;
 }
-
-const char* connection_get_address(CONNECTION_HANDLE handle)
-{
-	return NULL;
-}

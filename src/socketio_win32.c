@@ -153,7 +153,8 @@ int socketio_dowork(IO_HANDLE handle)
 
 				if (socket_io_data->receive_callback != NULL)
 				{
-					socket_io_data->receive_callback(socket_io_data->context, &c, 1);
+					/* explictly ignoring here the result of the callback */
+					(void)socket_io_data->receive_callback(socket_io_data->context, &c, 1);
 				}
 			}
 		}

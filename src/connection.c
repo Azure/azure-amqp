@@ -185,7 +185,7 @@ static int connection_frame_received(void* context, uint16_t channel, AMQP_VALUE
 		consolelogger_log("Bad performative: %02x", performative);
 		break;
 
-	case 0x10:
+	case AMQP_OPEN:
 		switch (connection->connection_state)
 		{
 		default:
@@ -313,6 +313,31 @@ void connection_destroy(CONNECTION_HANDLE connection)
 		io_destroy(connection_instance->socket_io);
 		amqpalloc_free(connection_instance);
 	}
+}
+
+int connection_set_container_id(const char* container_id)
+{
+	return 0;
+}
+
+int connection_set_max_frame_size(CONNECTION_HANDLE connection, size_t max_frame_size)
+{
+	return 0;
+}
+
+int connection_set_channel_max(CONNECTION_HANDLE connection, size_t channel_max)
+{
+	return 0;
+}
+
+int connection_set_idle_timeout(CONNECTION_HANDLE connection, size_t idle_timeout)
+{
+	return 0;
+}
+
+int connection_connect(void)
+{
+	return 0;
 }
 
 int connection_dowork(CONNECTION_HANDLE connection)

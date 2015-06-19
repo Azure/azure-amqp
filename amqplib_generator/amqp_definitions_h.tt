@@ -3,11 +3,9 @@
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
 <#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="amqplib_generator" #>
 
 #ifndef AMQP_DEFINITIONS_H
 #define AMQP_DEFINITIONS_H
-
- <# for (int i = 1; i <= 10; i++)
-       {} #>
 
 #endif /* AMQP_DEFINITIONS_H */

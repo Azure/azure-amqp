@@ -12,13 +12,14 @@ namespace amqplib_generator
     using System.Linq;
     using System.Text;
     using System.Collections.Generic;
+    using amqplib_generator;
     using System;
     
     /// <summary>
     /// Class to produce the template output
     /// </summary>
     
-    #line 1 "D:\amqplib\amqplib_generator\amqp_definitions_h.tt"
+    #line 1 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.TextTemplating", "12.0.0.0")]
     public partial class amqp_definitions_h : amqp_definitions_hBase
     {
@@ -28,15 +29,8 @@ namespace amqplib_generator
         /// </summary>
         public virtual string TransformText()
         {
-            this.Write("\r\n#ifndef AMQP_DEFINITIONS_H\r\n#define AMQP_DEFINITIONS_H\r\n\r\n ");
-            
-            #line 10 "D:\amqplib\amqplib_generator\amqp_definitions_h.tt"
- for (int i = 1; i <= 10; i++)
-       {} 
-            
-            #line default
-            #line hidden
-            this.Write("\r\n#endif /* AMQP_DEFINITIONS_H */\r\n");
+            this.Write("\r\n#ifndef AMQP_DEFINITIONS_H\r\n#define AMQP_DEFINITIONS_H\r\n\r\n#endif /* AMQP_DEFINI" +
+                    "TIONS_H */\r\n");
             return this.GenerationEnvironment.ToString();
         }
     }

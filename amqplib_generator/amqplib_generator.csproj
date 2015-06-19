@@ -51,6 +51,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="amqp_definitions.xsd">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="App.config" />
     <None Include="amqp_definitions_h.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>
@@ -59,6 +62,9 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="amqp_definitions.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

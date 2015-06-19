@@ -1,7 +1,9 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<types>
-<type name="role" class="restricted" source="boolean">
-  <choice name="sender" value="false"/>
-  <choice name="receiver" value="true"/>
-</type>
-</types>
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<amqp xmlns="http://tempuri.org/amqp_definitions" name="root">
+  <section name="1">
+    <type name="role" class="restricted" source="boolean">
+      <choice name="sender" value="false"/>
+      <choice name="receiver" value="true"/>
+    </type>
+  </section>
+</amqp>

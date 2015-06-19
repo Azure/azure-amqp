@@ -35,6 +35,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "frame_codec_unittests", "un
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "amqp_frame_codec_unittests", "unittests\amqp_frame_codec_unittests\amqp_frame_codec_unittests.vcxproj", "{4DD54279-34F8-437A-91F2-FF84B529ABD5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "amqplib_generator", "amqplib_generator\amqplib_generator\amqplib_generator.csproj", "{53D12D47-7F69-47C5-A45B-5DF5424955D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -275,6 +277,30 @@ Global
 		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.ReleaseNoEnhInstr|Mixed Platforms.Build.0 = Release|Win32
 		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.ReleaseNoEnhInstr|Win32.ActiveCfg = Release|Win32
 		{4DD54279-34F8-437A-91F2-FF84B529ABD5}.ReleaseNoEnhInstr|Win32.Build.0 = Release|Win32
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.DebugNoEnhInstr|Any CPU.ActiveCfg = Debug|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.DebugNoEnhInstr|Any CPU.Build.0 = Debug|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.DebugNoEnhInstr|ARM.ActiveCfg = Debug|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.DebugNoEnhInstr|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.DebugNoEnhInstr|Mixed Platforms.Build.0 = Debug|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.DebugNoEnhInstr|Win32.ActiveCfg = Debug|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.Release|ARM.ActiveCfg = Release|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.Release|Win32.ActiveCfg = Release|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.ReleaseNoEnhInstr|Any CPU.ActiveCfg = Release|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.ReleaseNoEnhInstr|Any CPU.Build.0 = Release|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.ReleaseNoEnhInstr|ARM.ActiveCfg = Release|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.ReleaseNoEnhInstr|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.ReleaseNoEnhInstr|Mixed Platforms.Build.0 = Release|Any CPU
+		{53D12D47-7F69-47C5-A45B-5DF5424955D7}.ReleaseNoEnhInstr|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

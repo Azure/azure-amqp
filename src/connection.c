@@ -60,8 +60,9 @@ static int send_header(CONNECTION_INSTANCE* connection)
 	return result;
 }
 
-static void send_open_frame(CONNECTION_INSTANCE* connection)
+static int send_open_frame(CONNECTION_INSTANCE* connection)
 {
+	int result;
 	AMQP_OPEN_FRAME_HANDLE amqp_open_frame = open_frame_create("1");
 
 	/* handshake done, send open frame */
@@ -72,21 +73,28 @@ static void send_open_frame(CONNECTION_INSTANCE* connection)
 	{
 		io_destroy(connection->used_io);
 		connection->connection_state = CONNECTION_STATE_END;
+		result = __LINE__;
 	}
 	else
 	{
 		/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
 		connection->connection_state = CONNECTION_STATE_OPEN_SENT;
+		result = 0;
 	}
 
 	open_frame_destroy(amqp_open_frame);
+
+	return result;
 }
 
-static void connection_byte_received(CONNECTION_INSTANCE* connection, unsigned char b)
+static int connection_byte_received(CONNECTION_INSTANCE* connection, unsigned char b)
 {
+	int result;
+
 	switch (connection->connection_state)
 	{
 	default:
+		result = __LINE__;
 		break;
 
 	/* Codes_SRS_CONNECTION_01_039: [START In this state a connection exists, but nothing has been sent or received. This is the state an implementation would be in immediately after performing a socket connect or socket accept.] */
@@ -99,6 +107,7 @@ static void connection_byte_received(CONNECTION_INSTANCE* connection, unsigned c
 			/* Codes_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
 			io_destroy(connection->used_io);
 			connection->connection_state = CONNECTION_STATE_END;
+			result = __LINE__;
 		}
 		else
 		{
@@ -114,12 +123,12 @@ static void connection_byte_received(CONNECTION_INSTANCE* connection, unsigned c
 					}
 					else
 					{
-						(void)send_open_frame(connection);
+						result = send_open_frame(connection);
 					}
 				}
 				else
 				{
-					(void)send_open_frame(connection);
+					result = send_open_frame(connection);
 				}
 			}
 		}
@@ -147,6 +156,7 @@ static void connection_byte_received(CONNECTION_INSTANCE* connection, unsigned c
 			/* Codes_SRS_CONNECTION_01_055: [DISCARDING The DISCARDING state is a variant of the CLOSE SENT state where the close is triggered by an error.] */
 			connection->connection_state = CONNECTION_STATE_DISCARDING;
 		}
+		result = __LINE__;
 		break;
 
 	/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
@@ -154,19 +164,36 @@ static void connection_byte_received(CONNECTION_INSTANCE* connection, unsigned c
 
 	/* Codes_SRS_CONNECTION_01_048: [OPENED In this state the connection header and the open frame have been both sent and received.] */
 	case CONNECTION_STATE_OPENED:
-		(void)frame_codec_receive_bytes(connection->frame_codec, &b, 1);
+		result = frame_codec_receive_bytes(connection->frame_codec, &b, 1);
 		break;
 	}
+
+	return result;
 }
 
 static int connection_receive_callback(void* context, const void* buffer, size_t size)
 {
+	int result;
 	size_t i;
+
 	for (i = 0; i < size; i++)
 	{
-		connection_byte_received((CONNECTION_INSTANCE*)context, ((unsigned char*)buffer)[i]);
+		if (connection_byte_received((CONNECTION_INSTANCE*)context, ((unsigned char*)buffer)[i]) != 0)
+		{
+			break;
+		}
 	}
-	return 0;
+
+	if (i < size)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		result = 0;
+	}
+
+	return result;
 }
 
 static int connection_empty_frame_received(void* context, uint16_t channel)

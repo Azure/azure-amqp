@@ -32,7 +32,7 @@ namespace amqplib_generator
             
             #line 10 "D:\amqplib\amqplib_generator\amqp_definitions_h.tt"
  for (int i = 1; i <= 10; i++)
-       { 
+       {} 
             
             #line default
             #line hidden

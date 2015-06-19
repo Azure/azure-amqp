@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types>
+<type name="role" class="restricted" source="boolean">
+  <choice name="sender" value="false"/>
+  <choice name="receiver" value="true"/>
+</type>
+</types>

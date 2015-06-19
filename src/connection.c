@@ -354,16 +354,22 @@ int connection_set_container_id(CONNECTION_HANDLE connection, const char* contai
 
 int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_frame_size)
 {
+	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+	open_frame_set_max_frame_size(connection_instance->amqp_open_frame, max_frame_size);
 	return 0;
 }
 
 int connection_set_channel_max(CONNECTION_HANDLE connection, uint16_t channel_max)
 {
+	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+	open_frame_set_channel_max(connection_instance->amqp_open_frame, channel_max);
 	return 0;
 }
 
 int connection_set_idle_timeout(CONNECTION_HANDLE connection, milliseconds idle_timeout)
 {
+	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+	open_frame_set_idle_timeout(connection_instance->amqp_open_frame, idle_timeout);
 	return 0;
 }
 

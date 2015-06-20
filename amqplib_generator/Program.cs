@@ -11,12 +11,30 @@ namespace amqplib_generator
 {
     class Program
     {
-        public static void LoadAMQPTypes()
+        public static amqp LoadAMQPTypes()
         {
             XmlSerializer serializer = new XmlSerializer(typeof(amqp));
             StreamReader reader = new StreamReader("../../amqp_definitions.xml");
             amqp amqp = (amqp)serializer.Deserialize(reader);
             reader.Close();
+            return amqp;
+        }
+
+        public static string GetCType(string amqp_type)
+        {
+            string result;
+            switch (amqp_type)
+            {
+                default:
+                    result = "";
+                    break;
+
+                case "boolean":
+                    result = "bool";
+                    break;
+            }
+
+            return result;
         }
 
         static void Main(string[] args)

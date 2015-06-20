@@ -5,7 +5,57 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="amqplib_generator" #>
 
+<# amqp amqp = Program.LoadAMQPTypes(); #>
+
 #ifndef AMQP_DEFINITIONS_H
 #define AMQP_DEFINITIONS_H
+
+#ifdef __cplusplus
+#include <cstdint>
+#include <cstdbool>
+extern "C" {
+#else
+#include <stdint.h>
+#include <stdbool.h>
+#endif
+
+<#	foreach (section section in amqp.Items.Where(item => item is section)) #>
+<#	{ #>
+<#		foreach (type type in section.Items.Where(item => item is type)) #>
+<#		{ #>
+<#			string type_name = type.name.ToUpper(); #>
+/* <#=		type.name #> */
+
+<#			if (type.@class == typeClass.composite) #>
+<#			{ #>
+	typedef void* <#= type_name #>_HANDLE;
+
+	extern <#= type_name #>_HANDLE <#= type_name.ToLower() #>_create(void);
+	extern void <#= type_name.ToLower() #>_destroy(<#= type_name #>_HANDLE <#= type_name.ToLower() #>);
+
+<#				foreach (field field in type.Items.Where(item => item is field)) #>
+<#				{ #>
+	extern int <#= type_name.ToLower() #>_get_<#= field.name.ToLower() #>(<#= type_name #>_HANDLE <#= type_name.ToLower() #>, uint32_t* <#= field.name.ToLower() #>);
+	extern int <#= type_name.ToLower() #>_set_<#= field.name.ToLower() #>(<#= type_name #>_HANDLE <#= type_name.ToLower() #>, uint32_t <#= field.name.ToLower() #>);
+<#				} #>
+
+<#			} #>
+<#			else #>
+<#			if (type.@class == typeClass.restricted) #>
+<#			{ #>
+	typedef <#= Program.GetCType(type.source) #> <#= type_name.ToLower() #>;
+
+<#				foreach (choice choice in type.Items.Where(item => item is choice)) #>
+<#				{ #>
+	#define <#= choice.name #> <#= choice.value #>
+<#				} #>
+
+<#			} #>
+<#		} #>
+<#	} #>
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* AMQP_DEFINITIONS_H */

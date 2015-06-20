@@ -23,21 +23,21 @@ extern "C" {
 <#	{ #>
 <#		foreach (type type in section.Items.Where(item => item is type)) #>
 <#		{ #>
-<#			string type_name = type.name.ToUpper().Replace('-', '_'); #>
+<#			string type_name = type.name.ToLower().Replace('-', '_'); #>
 /* <#=		type.name #> */
 
 <#			if (type.@class == typeClass.composite) #>
 <#			{ #>
-	typedef void* <#= type_name #>_HANDLE;
+	typedef void* <#= type_name.ToUpper() #>_HANDLE;
 
-	extern <#= type_name #>_HANDLE <#= type_name.ToLower() #>_create(void);
-	extern void <#= type_name.ToLower() #>_destroy(<#= type_name #>_HANDLE <#= type_name.ToLower() #>);
+	extern <#= type_name.ToUpper() #>_HANDLE <#= type_name #>_create(void);
+	extern void <#= type_name #>_destroy(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>);
 
 <#				foreach (field field in type.Items.Where(item => item is field)) #>
 <#				{ #>
 <#					string field_name = field.name.ToLower().Replace('-', '_'); #>
-	extern int <#= type_name.ToLower() #>_get_<#= field_name #>(<#= type_name #>_HANDLE <#= type_name.ToLower() #>, uint32_t* <#= field_name #>);
-	extern int <#= type_name.ToLower() #>_set_<#= field_name #>(<#= type_name #>_HANDLE <#= type_name.ToLower() #>, uint32_t <#= field_name #>);
+	extern int <#= type_name #>_get_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, uint32_t* <#= field_name #>);
+	extern int <#= type_name #>_set_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, uint32_t <#= field_name #>);
 <#				} #>
 
 <#			} #>
@@ -50,7 +50,7 @@ extern "C" {
 <#              { #>
 <#					foreach (choice choice in type.Items.Where(item => item is choice)) #>
 <#					{ #>
-	#define <#= choice.name #> <#= choice.value #>
+	#define <#= type_name #>_<#= choice.name.Replace('-', '_').Replace(':', '_') #> <#= choice.value.Replace('-', '_').Replace(':', '_') #>
 <#					} #>
 <#				} #>
 

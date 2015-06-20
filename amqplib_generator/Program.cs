@@ -36,6 +36,9 @@ namespace amqplib_generator
                 case "uint":
                     result = "uint32_t";
                     break;
+                case "ubyte":
+                    result = "uint8_t";
+                    break;
             }
 
             return result;

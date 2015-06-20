@@ -65,7 +65,7 @@ namespace amqplib_generator
             #line hidden
             
             #line 26 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-			string type_name = type.name.ToUpper().Replace('-', '_'); 
+			string type_name = type.name.ToLower().Replace('-', '_'); 
             
             #line default
             #line hidden
@@ -92,42 +92,42 @@ namespace amqplib_generator
             this.Write("\ttypedef void* ");
             
             #line 31 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE;\r\n\r\n\textern ");
             
             #line 33 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE ");
             
             #line 33 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_create(void);\r\n\textern void ");
             
             #line 34 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_destroy(");
             
             #line 34 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE ");
             
             #line 34 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
@@ -153,7 +153,7 @@ namespace amqplib_generator
             this.Write("\textern int ");
             
             #line 39 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
@@ -167,14 +167,14 @@ namespace amqplib_generator
             this.Write("(");
             
             #line 39 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE ");
             
             #line 39 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
@@ -188,7 +188,7 @@ namespace amqplib_generator
             this.Write(");\r\n\textern int ");
             
             #line 40 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
@@ -202,14 +202,14 @@ namespace amqplib_generator
             this.Write("(");
             
             #line 40 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE ");
             
             #line 40 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
@@ -294,14 +294,21 @@ namespace amqplib_generator
             this.Write("\t#define ");
             
             #line 53 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(choice.name));
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            
+            #line default
+            #line hidden
+            this.Write("_");
+            
+            #line 53 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(choice.name.Replace('-', '_').Replace(':', '_')));
             
             #line default
             #line hidden
             this.Write(" ");
             
             #line 53 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(choice.value));
+            this.Write(this.ToStringHelper.ToStringWithCulture(choice.value.Replace('-', '_').Replace(':', '_')));
             
             #line default
             #line hidden

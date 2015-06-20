@@ -263,52 +263,70 @@ namespace amqplib_generator
             this.Write(";\r\n\r\n");
             
             #line 48 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-				foreach (choice choice in type.Items.Where(item => item is choice)) 
+				if (type.Items != null) 
             
             #line default
             #line hidden
             
             #line 49 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-				{ 
+              { 
+            
+            #line default
+            #line hidden
+            
+            #line 50 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
+					foreach (choice choice in type.Items.Where(item => item is choice)) 
+            
+            #line default
+            #line hidden
+            
+            #line 51 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
+					{ 
             
             #line default
             #line hidden
             this.Write("\t#define ");
             
-            #line 50 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
+            #line 52 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(choice.name));
             
             #line default
             #line hidden
             this.Write(" ");
             
-            #line 50 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
+            #line 52 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(choice.value));
             
             #line default
             #line hidden
             this.Write("\r\n");
             
-            #line 51 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
+            #line 53 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
+					} 
+            
+            #line default
+            #line hidden
+            
+            #line 54 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
 				} 
             
             #line default
             #line hidden
             this.Write("\r\n");
             
-            #line 53 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
+            #line 56 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
 			} 
             
             #line default
             #line hidden
             
-            #line 54 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
+            #line 57 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
 		} 
             
             #line default
             #line hidden
             
-            #line 55 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
+            #line 58 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
 	} 
             
             #line default

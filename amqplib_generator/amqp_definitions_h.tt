@@ -45,9 +45,12 @@ extern "C" {
 <#			{ #>
 	typedef <#= Program.GetCType(type.source) #> <#= type_name.ToLower() #>;
 
-<#				foreach (choice choice in type.Items.Where(item => item is choice)) #>
-<#				{ #>
+<#				if (type.Items != null) #>
+<#              { #>
+<#					foreach (choice choice in type.Items.Where(item => item is choice)) #>
+<#					{ #>
 	#define <#= choice.name #> <#= choice.value #>
+<#					} #>
 <#				} #>
 
 <#			} #>

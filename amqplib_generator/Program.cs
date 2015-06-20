@@ -26,11 +26,15 @@ namespace amqplib_generator
             switch (amqp_type)
             {
                 default:
-                    result = "";
+                    result = string.Empty;
                     break;
 
                 case "boolean":
                     result = "bool";
+                    break;
+
+                case "uint":
+                    result = "uint32_t";
                     break;
             }
 

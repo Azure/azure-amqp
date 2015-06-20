@@ -23,7 +23,7 @@ extern "C" {
 <#	{ #>
 <#		foreach (type type in section.Items.Where(item => item is type)) #>
 <#		{ #>
-<#			string type_name = type.name.ToUpper(); #>
+<#			string type_name = type.name.ToUpper().Replace('-', '_'); #>
 /* <#=		type.name #> */
 
 <#			if (type.@class == typeClass.composite) #>
@@ -35,8 +35,9 @@ extern "C" {
 
 <#				foreach (field field in type.Items.Where(item => item is field)) #>
 <#				{ #>
-	extern int <#= type_name.ToLower() #>_get_<#= field.name.ToLower() #>(<#= type_name #>_HANDLE <#= type_name.ToLower() #>, uint32_t* <#= field.name.ToLower() #>);
-	extern int <#= type_name.ToLower() #>_set_<#= field.name.ToLower() #>(<#= type_name #>_HANDLE <#= type_name.ToLower() #>, uint32_t <#= field.name.ToLower() #>);
+<#					string field_name = field.name.ToLower().Replace('-', '_'); #>
+	extern int <#= type_name.ToLower() #>_get_<#= field_name #>(<#= type_name #>_HANDLE <#= type_name.ToLower() #>, uint32_t* <#= field_name #>);
+	extern int <#= type_name.ToLower() #>_set_<#= field_name #>(<#= type_name #>_HANDLE <#= type_name.ToLower() #>, uint32_t <#= field_name #>);
 <#				} #>
 
 <#			} #>

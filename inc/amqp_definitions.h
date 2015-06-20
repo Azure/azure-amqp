@@ -21,7 +21,7 @@ extern "C" {
 
 /* sender-settle-mode */
 
-	typedef  sender-settle-mode;
+	typedef  sender_settle_mode;
 
 	#define unsettled 0
 	#define settled 1
@@ -29,7 +29,7 @@ extern "C" {
 
 /* receiver-settle-mode */
 
-	typedef  receiver-settle-mode;
+	typedef  receiver_settle_mode;
 
 	#define first 0
 	#define second 1
@@ -56,24 +56,24 @@ extern "C" {
 	extern OPEN_HANDLE open_create(void);
 	extern void open_destroy(OPEN_HANDLE open);
 
-	extern int open_get_container-id(OPEN_HANDLE open, uint32_t* container-id);
-	extern int open_set_container-id(OPEN_HANDLE open, uint32_t container-id);
+	extern int open_get_container_id(OPEN_HANDLE open, uint32_t* container_id);
+	extern int open_set_container_id(OPEN_HANDLE open, uint32_t container_id);
 	extern int open_get_hostname(OPEN_HANDLE open, uint32_t* hostname);
 	extern int open_set_hostname(OPEN_HANDLE open, uint32_t hostname);
-	extern int open_get_max-frame-size(OPEN_HANDLE open, uint32_t* max-frame-size);
-	extern int open_set_max-frame-size(OPEN_HANDLE open, uint32_t max-frame-size);
-	extern int open_get_channel-max(OPEN_HANDLE open, uint32_t* channel-max);
-	extern int open_set_channel-max(OPEN_HANDLE open, uint32_t channel-max);
-	extern int open_get_idle-time-out(OPEN_HANDLE open, uint32_t* idle-time-out);
-	extern int open_set_idle-time-out(OPEN_HANDLE open, uint32_t idle-time-out);
-	extern int open_get_outgoing-locales(OPEN_HANDLE open, uint32_t* outgoing-locales);
-	extern int open_set_outgoing-locales(OPEN_HANDLE open, uint32_t outgoing-locales);
-	extern int open_get_incoming-locales(OPEN_HANDLE open, uint32_t* incoming-locales);
-	extern int open_set_incoming-locales(OPEN_HANDLE open, uint32_t incoming-locales);
-	extern int open_get_offered-capabilities(OPEN_HANDLE open, uint32_t* offered-capabilities);
-	extern int open_set_offered-capabilities(OPEN_HANDLE open, uint32_t offered-capabilities);
-	extern int open_get_desired-capabilities(OPEN_HANDLE open, uint32_t* desired-capabilities);
-	extern int open_set_desired-capabilities(OPEN_HANDLE open, uint32_t desired-capabilities);
+	extern int open_get_max_frame_size(OPEN_HANDLE open, uint32_t* max_frame_size);
+	extern int open_set_max_frame_size(OPEN_HANDLE open, uint32_t max_frame_size);
+	extern int open_get_channel_max(OPEN_HANDLE open, uint32_t* channel_max);
+	extern int open_set_channel_max(OPEN_HANDLE open, uint32_t channel_max);
+	extern int open_get_idle_time_out(OPEN_HANDLE open, uint32_t* idle_time_out);
+	extern int open_set_idle_time_out(OPEN_HANDLE open, uint32_t idle_time_out);
+	extern int open_get_outgoing_locales(OPEN_HANDLE open, uint32_t* outgoing_locales);
+	extern int open_set_outgoing_locales(OPEN_HANDLE open, uint32_t outgoing_locales);
+	extern int open_get_incoming_locales(OPEN_HANDLE open, uint32_t* incoming_locales);
+	extern int open_set_incoming_locales(OPEN_HANDLE open, uint32_t incoming_locales);
+	extern int open_get_offered_capabilities(OPEN_HANDLE open, uint32_t* offered_capabilities);
+	extern int open_set_offered_capabilities(OPEN_HANDLE open, uint32_t offered_capabilities);
+	extern int open_get_desired_capabilities(OPEN_HANDLE open, uint32_t* desired_capabilities);
+	extern int open_set_desired_capabilities(OPEN_HANDLE open, uint32_t desired_capabilities);
 	extern int open_get_properties(OPEN_HANDLE open, uint32_t* properties);
 	extern int open_set_properties(OPEN_HANDLE open, uint32_t properties);
 

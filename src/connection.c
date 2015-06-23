@@ -121,6 +121,7 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection, unsigned ch
 					{
 						io_destroy(connection->used_io);
 						connection->connection_state = CONNECTION_STATE_END;
+						result = __LINE__;
 					}
 					else
 					{
@@ -131,6 +132,10 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection, unsigned ch
 				{
 					result = send_open_frame(connection);
 				}
+			}
+			else
+			{
+				result = 0;
 			}
 		}
 		break;

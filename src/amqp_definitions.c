@@ -6,7 +6,7 @@
 
 /* error */
 
-	ERROR_HANDLE error_create(symbol condition)
+	ERROR_HANDLE error_create(uint32_t condition)
 	{
 		return NULL;
 	}
@@ -24,6 +24,7 @@
 	{
 		return __LINE__;
 	}
+
 	int error_get_description(ERROR_HANDLE error, uint32_t* description)
 	{
 		return __LINE__;
@@ -33,6 +34,7 @@
 	{
 		return __LINE__;
 	}
+
 	int error_get_info(ERROR_HANDLE error, uint32_t* info)
 	{
 		return __LINE__;
@@ -42,6 +44,7 @@
 	{
 		return __LINE__;
 	}
+
 
 /* open */
 
@@ -63,6 +66,7 @@
 	{
 		return __LINE__;
 	}
+
 	int open_get_hostname(OPEN_HANDLE open, uint32_t* hostname)
 	{
 		return __LINE__;
@@ -72,6 +76,7 @@
 	{
 		return __LINE__;
 	}
+
 	int open_get_max_frame_size(OPEN_HANDLE open, uint32_t* max_frame_size)
 	{
 		return __LINE__;
@@ -81,6 +86,7 @@
 	{
 		return __LINE__;
 	}
+
 	int open_get_channel_max(OPEN_HANDLE open, uint32_t* channel_max)
 	{
 		return __LINE__;
@@ -90,6 +96,7 @@
 	{
 		return __LINE__;
 	}
+
 	int open_get_idle_time_out(OPEN_HANDLE open, uint32_t* idle_time_out)
 	{
 		return __LINE__;
@@ -99,6 +106,7 @@
 	{
 		return __LINE__;
 	}
+
 	int open_get_outgoing_locales(OPEN_HANDLE open, uint32_t* outgoing_locales)
 	{
 		return __LINE__;
@@ -108,6 +116,7 @@
 	{
 		return __LINE__;
 	}
+
 	int open_get_incoming_locales(OPEN_HANDLE open, uint32_t* incoming_locales)
 	{
 		return __LINE__;
@@ -117,6 +126,7 @@
 	{
 		return __LINE__;
 	}
+
 	int open_get_offered_capabilities(OPEN_HANDLE open, uint32_t* offered_capabilities)
 	{
 		return __LINE__;
@@ -126,6 +136,7 @@
 	{
 		return __LINE__;
 	}
+
 	int open_get_desired_capabilities(OPEN_HANDLE open, uint32_t* desired_capabilities)
 	{
 		return __LINE__;
@@ -135,6 +146,7 @@
 	{
 		return __LINE__;
 	}
+
 	int open_get_properties(OPEN_HANDLE open, uint32_t* properties)
 	{
 		return __LINE__;
@@ -144,6 +156,7 @@
 	{
 		return __LINE__;
 	}
+
 
 /* begin */
 
@@ -165,6 +178,7 @@
 	{
 		return __LINE__;
 	}
+
 	int begin_get_next_outgoing_id(BEGIN_HANDLE begin, uint32_t* next_outgoing_id)
 	{
 		return __LINE__;
@@ -174,6 +188,7 @@
 	{
 		return __LINE__;
 	}
+
 	int begin_get_incoming_window(BEGIN_HANDLE begin, uint32_t* incoming_window)
 	{
 		return __LINE__;
@@ -183,6 +198,7 @@
 	{
 		return __LINE__;
 	}
+
 	int begin_get_outgoing_window(BEGIN_HANDLE begin, uint32_t* outgoing_window)
 	{
 		return __LINE__;
@@ -192,6 +208,7 @@
 	{
 		return __LINE__;
 	}
+
 	int begin_get_handle_max(BEGIN_HANDLE begin, uint32_t* handle_max)
 	{
 		return __LINE__;
@@ -201,6 +218,7 @@
 	{
 		return __LINE__;
 	}
+
 	int begin_get_offered_capabilities(BEGIN_HANDLE begin, uint32_t* offered_capabilities)
 	{
 		return __LINE__;
@@ -210,6 +228,7 @@
 	{
 		return __LINE__;
 	}
+
 	int begin_get_desired_capabilities(BEGIN_HANDLE begin, uint32_t* desired_capabilities)
 	{
 		return __LINE__;
@@ -219,6 +238,7 @@
 	{
 		return __LINE__;
 	}
+
 	int begin_get_properties(BEGIN_HANDLE begin, uint32_t* properties)
 	{
 		return __LINE__;
@@ -228,6 +248,7 @@
 	{
 		return __LINE__;
 	}
+
 
 /* attach */
 
@@ -249,6 +270,7 @@
 	{
 		return __LINE__;
 	}
+
 	int attach_get_handle(ATTACH_HANDLE attach, uint32_t* handle)
 	{
 		return __LINE__;
@@ -258,6 +280,7 @@
 	{
 		return __LINE__;
 	}
+
 	int attach_get_role(ATTACH_HANDLE attach, uint32_t* role)
 	{
 		return __LINE__;
@@ -267,6 +290,7 @@
 	{
 		return __LINE__;
 	}
+
 	int attach_get_snd_settle_mode(ATTACH_HANDLE attach, uint32_t* snd_settle_mode)
 	{
 		return __LINE__;
@@ -276,6 +300,7 @@
 	{
 		return __LINE__;
 	}
+
 	int attach_get_rcv_settle_mode(ATTACH_HANDLE attach, uint32_t* rcv_settle_mode)
 	{
 		return __LINE__;
@@ -285,6 +310,7 @@
 	{
 		return __LINE__;
 	}
+
 	int attach_get_source(ATTACH_HANDLE attach, uint32_t* source)
 	{
 		return __LINE__;
@@ -294,6 +320,7 @@
 	{
 		return __LINE__;
 	}
+
 	int attach_get_target(ATTACH_HANDLE attach, uint32_t* target)
 	{
 		return __LINE__;
@@ -303,6 +330,7 @@
 	{
 		return __LINE__;
 	}
+
 	int attach_get_unsettled(ATTACH_HANDLE attach, uint32_t* unsettled)
 	{
 		return __LINE__;
@@ -312,6 +340,7 @@
 	{
 		return __LINE__;
 	}
+
 	int attach_get_incomplete_unsettled(ATTACH_HANDLE attach, uint32_t* incomplete_unsettled)
 	{
 		return __LINE__;
@@ -321,6 +350,7 @@
 	{
 		return __LINE__;
 	}
+
 	int attach_get_initial_delivery_count(ATTACH_HANDLE attach, uint32_t* initial_delivery_count)
 	{
 		return __LINE__;
@@ -330,6 +360,7 @@
 	{
 		return __LINE__;
 	}
+
 	int attach_get_max_message_size(ATTACH_HANDLE attach, uint32_t* max_message_size)
 	{
 		return __LINE__;
@@ -339,6 +370,7 @@
 	{
 		return __LINE__;
 	}
+
 	int attach_get_offered_capabilities(ATTACH_HANDLE attach, uint32_t* offered_capabilities)
 	{
 		return __LINE__;
@@ -348,6 +380,7 @@
 	{
 		return __LINE__;
 	}
+
 	int attach_get_desired_capabilities(ATTACH_HANDLE attach, uint32_t* desired_capabilities)
 	{
 		return __LINE__;
@@ -357,6 +390,7 @@
 	{
 		return __LINE__;
 	}
+
 	int attach_get_properties(ATTACH_HANDLE attach, uint32_t* properties)
 	{
 		return __LINE__;
@@ -366,6 +400,7 @@
 	{
 		return __LINE__;
 	}
+
 
 /* flow */
 
@@ -387,6 +422,7 @@
 	{
 		return __LINE__;
 	}
+
 	int flow_get_incoming_window(FLOW_HANDLE flow, uint32_t* incoming_window)
 	{
 		return __LINE__;
@@ -396,6 +432,7 @@
 	{
 		return __LINE__;
 	}
+
 	int flow_get_next_outgoing_id(FLOW_HANDLE flow, uint32_t* next_outgoing_id)
 	{
 		return __LINE__;
@@ -405,6 +442,7 @@
 	{
 		return __LINE__;
 	}
+
 	int flow_get_outgoing_window(FLOW_HANDLE flow, uint32_t* outgoing_window)
 	{
 		return __LINE__;
@@ -414,6 +452,7 @@
 	{
 		return __LINE__;
 	}
+
 	int flow_get_handle(FLOW_HANDLE flow, uint32_t* handle)
 	{
 		return __LINE__;
@@ -423,6 +462,7 @@
 	{
 		return __LINE__;
 	}
+
 	int flow_get_delivery_count(FLOW_HANDLE flow, uint32_t* delivery_count)
 	{
 		return __LINE__;
@@ -432,6 +472,7 @@
 	{
 		return __LINE__;
 	}
+
 	int flow_get_link_credit(FLOW_HANDLE flow, uint32_t* link_credit)
 	{
 		return __LINE__;
@@ -441,6 +482,7 @@
 	{
 		return __LINE__;
 	}
+
 	int flow_get_available(FLOW_HANDLE flow, uint32_t* available)
 	{
 		return __LINE__;
@@ -450,6 +492,7 @@
 	{
 		return __LINE__;
 	}
+
 	int flow_get_drain(FLOW_HANDLE flow, uint32_t* drain)
 	{
 		return __LINE__;
@@ -459,6 +502,7 @@
 	{
 		return __LINE__;
 	}
+
 	int flow_get_echo(FLOW_HANDLE flow, uint32_t* echo)
 	{
 		return __LINE__;
@@ -468,6 +512,7 @@
 	{
 		return __LINE__;
 	}
+
 	int flow_get_properties(FLOW_HANDLE flow, uint32_t* properties)
 	{
 		return __LINE__;
@@ -477,6 +522,7 @@
 	{
 		return __LINE__;
 	}
+
 
 /* transfer */
 
@@ -498,6 +544,7 @@
 	{
 		return __LINE__;
 	}
+
 	int transfer_get_delivery_id(TRANSFER_HANDLE transfer, uint32_t* delivery_id)
 	{
 		return __LINE__;
@@ -507,6 +554,7 @@
 	{
 		return __LINE__;
 	}
+
 	int transfer_get_delivery_tag(TRANSFER_HANDLE transfer, uint32_t* delivery_tag)
 	{
 		return __LINE__;
@@ -516,6 +564,7 @@
 	{
 		return __LINE__;
 	}
+
 	int transfer_get_message_format(TRANSFER_HANDLE transfer, uint32_t* message_format)
 	{
 		return __LINE__;
@@ -525,6 +574,7 @@
 	{
 		return __LINE__;
 	}
+
 	int transfer_get_settled(TRANSFER_HANDLE transfer, uint32_t* settled)
 	{
 		return __LINE__;
@@ -534,6 +584,7 @@
 	{
 		return __LINE__;
 	}
+
 	int transfer_get_more(TRANSFER_HANDLE transfer, uint32_t* more)
 	{
 		return __LINE__;
@@ -543,6 +594,7 @@
 	{
 		return __LINE__;
 	}
+
 	int transfer_get_rcv_settle_mode(TRANSFER_HANDLE transfer, uint32_t* rcv_settle_mode)
 	{
 		return __LINE__;
@@ -552,6 +604,7 @@
 	{
 		return __LINE__;
 	}
+
 	int transfer_get_state(TRANSFER_HANDLE transfer, uint32_t* state)
 	{
 		return __LINE__;
@@ -561,6 +614,7 @@
 	{
 		return __LINE__;
 	}
+
 	int transfer_get_resume(TRANSFER_HANDLE transfer, uint32_t* resume)
 	{
 		return __LINE__;
@@ -570,6 +624,7 @@
 	{
 		return __LINE__;
 	}
+
 	int transfer_get_aborted(TRANSFER_HANDLE transfer, uint32_t* aborted)
 	{
 		return __LINE__;
@@ -579,6 +634,7 @@
 	{
 		return __LINE__;
 	}
+
 	int transfer_get_batchable(TRANSFER_HANDLE transfer, uint32_t* batchable)
 	{
 		return __LINE__;
@@ -588,6 +644,7 @@
 	{
 		return __LINE__;
 	}
+
 
 /* disposition */
 
@@ -609,6 +666,7 @@
 	{
 		return __LINE__;
 	}
+
 	int disposition_get_first(DISPOSITION_HANDLE disposition, uint32_t* first)
 	{
 		return __LINE__;
@@ -618,6 +676,7 @@
 	{
 		return __LINE__;
 	}
+
 	int disposition_get_last(DISPOSITION_HANDLE disposition, uint32_t* last)
 	{
 		return __LINE__;
@@ -627,6 +686,7 @@
 	{
 		return __LINE__;
 	}
+
 	int disposition_get_settled(DISPOSITION_HANDLE disposition, uint32_t* settled)
 	{
 		return __LINE__;
@@ -636,6 +696,7 @@
 	{
 		return __LINE__;
 	}
+
 	int disposition_get_state(DISPOSITION_HANDLE disposition, uint32_t* state)
 	{
 		return __LINE__;
@@ -645,6 +706,7 @@
 	{
 		return __LINE__;
 	}
+
 	int disposition_get_batchable(DISPOSITION_HANDLE disposition, uint32_t* batchable)
 	{
 		return __LINE__;
@@ -654,6 +716,7 @@
 	{
 		return __LINE__;
 	}
+
 
 /* detach */
 
@@ -675,6 +738,7 @@
 	{
 		return __LINE__;
 	}
+
 	int detach_get_closed(DETACH_HANDLE detach, uint32_t* closed)
 	{
 		return __LINE__;
@@ -684,6 +748,7 @@
 	{
 		return __LINE__;
 	}
+
 	int detach_get_error(DETACH_HANDLE detach, uint32_t* error)
 	{
 		return __LINE__;
@@ -693,6 +758,7 @@
 	{
 		return __LINE__;
 	}
+
 
 /* end */
 
@@ -715,6 +781,7 @@
 		return __LINE__;
 	}
 
+
 /* close */
 
 	CLOSE_HANDLE close_create()
@@ -735,4 +802,5 @@
 	{
 		return __LINE__;
 	}
+
 

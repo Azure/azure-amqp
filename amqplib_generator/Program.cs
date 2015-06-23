@@ -48,6 +48,14 @@ namespace amqplib_generator
                 case "string":
                     result = "const char*";
                     break;
+
+                case "symbol":
+                    result = "uint32_t";
+                    break;
+
+                case "map":
+                    result = "AMQP_VALUE";
+                    break;
             }
 
             return result;

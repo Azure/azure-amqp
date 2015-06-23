@@ -224,28 +224,28 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write(")\r\n\t{\r\n\t\treturn __LINE__;\r\n\t}\r\n");
+            this.Write(")\r\n\t{\r\n\t\treturn __LINE__;\r\n\t}\r\n\r\n");
             
-            #line 45 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
+            #line 46 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
 				} 
             
             #line default
             #line hidden
             this.Write("\r\n");
             
-            #line 47 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
+            #line 48 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
 			} 
             
             #line default
             #line hidden
             
-            #line 48 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
+            #line 49 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
 		} 
             
             #line default
             #line hidden
             
-            #line 49 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
+            #line 50 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
 	} 
             
             #line default

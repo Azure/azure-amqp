@@ -78,12 +78,12 @@ extern "C" {
 
 /* ietf-language-tag */
 
-	typedef symbol ietf_language_tag;
+	typedef uint32_t ietf_language_tag;
 
 
 /* fields */
 
-	typedef map fields;
+	typedef AMQP_VALUE fields;
 
 
 /* error */
@@ -102,7 +102,7 @@ extern "C" {
 
 /* amqp-error */
 
-	typedef symbol amqp_error;
+	typedef uint32_t amqp_error;
 
 	#define amqp_error_internal_error amqp_internal_error
 	#define amqp_error_not_found amqp_not_found
@@ -120,7 +120,7 @@ extern "C" {
 
 /* connection-error */
 
-	typedef symbol connection_error;
+	typedef uint32_t connection_error;
 
 	#define connection_error_connection_forced amqp_connection_forced
 	#define connection_error_framing_error amqp_connection_framing_error
@@ -128,7 +128,7 @@ extern "C" {
 
 /* session-error */
 
-	typedef symbol session_error;
+	typedef uint32_t session_error;
 
 	#define session_error_window_violation amqp_session_window_violation
 	#define session_error_errant_link amqp_session_errant_link
@@ -137,7 +137,7 @@ extern "C" {
 
 /* link-error */
 
-	typedef symbol link_error;
+	typedef uint32_t link_error;
 
 	#define link_error_detach_forced amqp_link_detach_forced
 	#define link_error_transfer_limit_exceeded amqp_link_transfer_limit_exceeded

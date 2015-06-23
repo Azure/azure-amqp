@@ -26,7 +26,7 @@ namespace amqplib_generator
             switch (amqp_type)
             {
                 default:
-                    result = amqp_type;
+                    result = "AMQP_VALUE";
                     break;
 
                 case "binary":
@@ -45,6 +45,14 @@ namespace amqplib_generator
                     result = "uint8_t";
                     break;
 
+                case "ushort":
+                    result = "uint16_t";
+                    break;
+
+                case "ulong":
+                    result = "uint64_t";
+                    break;
+
                 case "string":
                     result = "const char*";
                     break;
@@ -54,6 +62,10 @@ namespace amqplib_generator
                     break;
 
                 case "map":
+                    result = "AMQP_VALUE";
+                    break;
+
+                case "*":
                     result = "AMQP_VALUE";
                     break;
             }

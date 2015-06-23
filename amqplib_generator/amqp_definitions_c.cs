@@ -182,7 +182,14 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write(", uint32_t* ");
+            this.Write(", ");
+            
+            #line 36 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Program.GetCType(field.type).Replace('-', '_').Replace(':', '_')));
+            
+            #line default
+            #line hidden
+            this.Write("* ");
             
             #line 36 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
@@ -217,7 +224,14 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write(", uint32_t ");
+            this.Write(", ");
+            
+            #line 41 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Program.GetCType(field.type).Replace('-', '_').Replace(':', '_')));
+            
+            #line default
+            #line hidden
+            this.Write(" ");
             
             #line 41 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));

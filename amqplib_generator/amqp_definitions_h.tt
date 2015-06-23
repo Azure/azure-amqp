@@ -32,14 +32,15 @@ extern "C" {
 <#			{ #>
 	typedef void* <#= type_name.ToUpper() #>_HANDLE;
 
-	extern <#= type_name.ToUpper() #>_HANDLE <#= type_name #>_create(void);
+<#				string arg_list = Program.GetMandatoryArgList(type); #>
+	extern <#= type_name.ToUpper() #>_HANDLE <#= type_name #>_create(<#= arg_list #>);
 	extern void <#= type_name #>_destroy(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>);
 
 <#				foreach (field field in type.Items.Where(item => item is field)) #>
 <#				{ #>
 <#					string field_name = field.name.ToLower().Replace('-', '_'); #>
-	extern int <#= type_name #>_get_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, uint32_t* <#= field_name #>);
-	extern int <#= type_name #>_set_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, uint32_t <#= field_name #>);
+	extern int <#= type_name #>_get_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, <#= Program.GetCType(field.type).Replace('-', '_').Replace(':', '_') #>* <#= field_name #>);
+	extern int <#= type_name #>_set_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, <#= Program.GetCType(field.type).Replace('-', '_').Replace(':', '_') #> <#= field_name #>);
 <#				} #>
 
 <#			} #>

@@ -15,11 +15,12 @@
 <#		foreach (type type in section.Items.Where(item => item is type)) #>
 <#		{ #>
 <#			string type_name = type.name.ToLower().Replace('-', '_'); #>
-/* <#=		type.name #> */
-
 <#			if (type.@class == typeClass.composite) #>
 <#			{ #>
-	<#= type_name.ToUpper() #>_HANDLE <#= type_name #>_create(void)
+/* <#=		type.name #> */
+
+<#				string arg_list = Program.GetMandatoryArgList(type); #>
+	<#= type_name.ToUpper() #>_HANDLE <#= type_name #>_create(<#= arg_list #>)
 	{
 		return NULL;
 	}

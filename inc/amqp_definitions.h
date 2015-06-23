@@ -51,17 +51,17 @@ extern "C" {
 
 /* delivery-tag */
 
-	typedef  delivery_tag;
+	typedef binary delivery_tag;
 
 
 /* delivery-number */
 
-	typedef  delivery_number;
+	typedef sequence_no delivery_number;
 
 
 /* transfer-number */
 
-	typedef  transfer_number;
+	typedef sequence_no transfer_number;
 
 
 /* sequence-no */
@@ -76,12 +76,12 @@ extern "C" {
 
 /* ietf-language-tag */
 
-	typedef  ietf_language_tag;
+	typedef symbol ietf_language_tag;
 
 
 /* fields */
 
-	typedef  fields;
+	typedef map fields;
 
 
 /* error */
@@ -100,7 +100,7 @@ extern "C" {
 
 /* amqp-error */
 
-	typedef  amqp_error;
+	typedef symbol amqp_error;
 
 	#define amqp_error_internal_error amqp_internal_error
 	#define amqp_error_not_found amqp_not_found
@@ -118,7 +118,7 @@ extern "C" {
 
 /* connection-error */
 
-	typedef  connection_error;
+	typedef symbol connection_error;
 
 	#define connection_error_connection_forced amqp_connection_forced
 	#define connection_error_framing_error amqp_connection_framing_error
@@ -126,7 +126,7 @@ extern "C" {
 
 /* session-error */
 
-	typedef  session_error;
+	typedef symbol session_error;
 
 	#define session_error_window_violation amqp_session_window_violation
 	#define session_error_errant_link amqp_session_errant_link
@@ -135,7 +135,7 @@ extern "C" {
 
 /* link-error */
 
-	typedef  link_error;
+	typedef symbol link_error;
 
 	#define link_error_detach_forced amqp_link_detach_forced
 	#define link_error_transfer_limit_exceeded amqp_link_transfer_limit_exceeded

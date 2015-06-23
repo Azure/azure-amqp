@@ -3,35 +3,9 @@
 #include "amqp_definitions.h"
 #include <stdlib.h>
 
-/* role */
-
-/* sender-settle-mode */
-
-/* receiver-settle-mode */
-
-/* handle */
-
-/* seconds */
-
-/* milliseconds */
-
-/* delivery-tag */
-
-/* delivery-number */
-
-/* transfer-number */
-
-/* sequence-no */
-
-/* message-format */
-
-/* ietf-language-tag */
-
-/* fields */
-
 /* error */
 
-	ERROR_HANDLE error_create(void)
+	ERROR_HANDLE error_create(symbol condition)
 	{
 		return NULL;
 	}
@@ -68,17 +42,9 @@
 		return __LINE__;
 	}
 
-/* amqp-error */
-
-/* connection-error */
-
-/* session-error */
-
-/* link-error */
-
 /* open */
 
-	OPEN_HANDLE open_create(void)
+	OPEN_HANDLE open_create(const char* container_id)
 	{
 		return NULL;
 	}
@@ -180,7 +146,7 @@
 
 /* begin */
 
-	BEGIN_HANDLE begin_create(void)
+	BEGIN_HANDLE begin_create(transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
 	{
 		return NULL;
 	}
@@ -264,7 +230,7 @@
 
 /* attach */
 
-	ATTACH_HANDLE attach_create(void)
+	ATTACH_HANDLE attach_create(const char* name, handle handle, role role)
 	{
 		return NULL;
 	}
@@ -402,7 +368,7 @@
 
 /* flow */
 
-	FLOW_HANDLE flow_create(void)
+	FLOW_HANDLE flow_create(uint32_t incoming_window, transfer_number next_outgoing_id, uint32_t outgoing_window)
 	{
 		return NULL;
 	}
@@ -513,7 +479,7 @@
 
 /* transfer */
 
-	TRANSFER_HANDLE transfer_create(void)
+	TRANSFER_HANDLE transfer_create(handle handle)
 	{
 		return NULL;
 	}
@@ -624,7 +590,7 @@
 
 /* disposition */
 
-	DISPOSITION_HANDLE disposition_create(void)
+	DISPOSITION_HANDLE disposition_create(role role, delivery_number first)
 	{
 		return NULL;
 	}
@@ -690,7 +656,7 @@
 
 /* detach */
 
-	DETACH_HANDLE detach_create(void)
+	DETACH_HANDLE detach_create(handle handle)
 	{
 		return NULL;
 	}
@@ -729,7 +695,7 @@
 
 /* end */
 
-	END_HANDLE end_create(void)
+	END_HANDLE end_create()
 	{
 		return NULL;
 	}
@@ -750,7 +716,7 @@
 
 /* close */
 
-	CLOSE_HANDLE close_create(void)
+	CLOSE_HANDLE close_create()
 	{
 		return NULL;
 	}

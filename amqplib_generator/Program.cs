@@ -26,7 +26,7 @@ namespace amqplib_generator
             switch (amqp_type)
             {
                 default:
-                    result = string.Empty;
+                    result = amqp_type;
                     break;
 
                 case "boolean":
@@ -36,9 +36,31 @@ namespace amqplib_generator
                 case "uint":
                     result = "uint32_t";
                     break;
+
                 case "ubyte":
                     result = "uint8_t";
                     break;
+
+                case "string":
+                    result = "const char*";
+                    break;
+            }
+
+            return result;
+        }
+
+        public static string GetMandatoryArgList(type type)
+        {
+            string result = string.Empty;
+
+            foreach(field field in type.Items.Where(item => (item is field) && ((item as field).mandatory == "true")))
+            {
+                if (result.Length > 0)
+                {
+                    result += ", ";
+                }
+
+                result += GetCType(field.type).Replace('-', '_').Replace(':', '_') + " " + field.name.Replace('-', '_').Replace(':', '_');
             }
 
             return result;

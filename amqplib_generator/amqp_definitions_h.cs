@@ -255,7 +255,7 @@ namespace amqplib_generator
             this.Write("\ttypedef ");
             
             #line 47 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(Program.GetCType(type.source)));
+            this.Write(this.ToStringHelper.ToStringWithCulture(Program.GetCType(type.source).Replace('-', '_').Replace(':', '_')));
             
             #line default
             #line hidden

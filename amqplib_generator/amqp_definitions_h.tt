@@ -44,7 +44,7 @@ extern "C" {
 <#			else #>
 <#			if (type.@class == typeClass.restricted) #>
 <#			{ #>
-	typedef <#= Program.GetCType(type.source) #> <#= type_name.ToLower() #>;
+	typedef <#= Program.GetCType(type.source).Replace('-', '_').Replace(':', '_') #> <#= type_name.ToLower() #>;
 
 <#				if (type.Items != null) #>
 <#              { #>

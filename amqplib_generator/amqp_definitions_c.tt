@@ -1,0 +1,47 @@
+﻿<#@ template language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="amqplib_generator" #>
+
+<# amqp amqp = Program.LoadAMQPTypes(); #>
+
+#include "amqp_definitions.h"
+#include <stdlib.h>
+
+<#	foreach (section section in amqp.Items.Where(item => item is section)) #>
+<#	{ #>
+<#		foreach (type type in section.Items.Where(item => item is type)) #>
+<#		{ #>
+<#			string type_name = type.name.ToLower().Replace('-', '_'); #>
+/* <#=		type.name #> */
+
+<#			if (type.@class == typeClass.composite) #>
+<#			{ #>
+	<#= type_name.ToUpper() #>_HANDLE <#= type_name #>_create(void)
+	{
+		return NULL;
+	}
+
+	void <#= type_name #>_destroy(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>)
+	{
+	}
+
+<#				foreach (field field in type.Items.Where(item => item is field)) #>
+<#				{ #>
+<#					string field_name = field.name.ToLower().Replace('-', '_'); #>
+	int <#= type_name #>_get_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, uint32_t* <#= field_name #>)
+	{
+		return __LINE__;
+	}
+
+	int <#= type_name #>_set_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, uint32_t <#= field_name #>)
+	{
+		return __LINE__;
+	}
+<#				} #>
+
+<#			} #>
+<#		} #>
+<#	} #>

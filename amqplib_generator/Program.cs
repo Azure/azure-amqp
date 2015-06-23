@@ -48,8 +48,9 @@ namespace amqplib_generator
         {
             LoadAMQPTypes();
             amqp_definitions_h amqp_definitions_h = new amqp_definitions_h();
-            string text = amqp_definitions_h.TransformText();
-            System.IO.File.WriteAllText("../../../inc/amqp_definitions.h", text);
+            System.IO.File.WriteAllText("../../../inc/amqp_definitions.h", amqp_definitions_h.TransformText());
+            amqp_definitions_c amqp_definitions_c = new amqp_definitions_c();
+            System.IO.File.WriteAllText("../../../src/amqp_definitions.c", amqp_definitions_c.TransformText());
         }
     }
 }

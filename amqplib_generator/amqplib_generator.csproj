@@ -42,6 +42,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="amqp_definitions.cs" />
+    <Compile Include="amqp_definitions_c.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>amqp_definitions_c.tt</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="amqp_definitions_h.cs">
@@ -53,6 +58,10 @@
   <ItemGroup>
     <None Include="amqp_definitions.xsd">
       <SubType>Designer</SubType>
+    </None>
+    <None Include="amqp_definitions_c.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>amqp_definitions_c.cs</LastGenOutput>
     </None>
     <None Include="App.config" />
     <None Include="amqp_definitions_h.tt">

@@ -1,5 +1,6 @@
 
 
+#include "amqpvalue.h"
 #include "amqp_definitions.h"
 #include <stdlib.h>
 

@@ -19,6 +19,8 @@ extern "C" {
 #include <stdbool.h>
 #endif
 
+#include "amqpvalue.h"
+
 <#	foreach (section section in amqp.Items.Where(item => item is section)) #>
 <#	{ #>
 <#		foreach (type type in section.Items.Where(item => item is type)) #>

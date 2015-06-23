@@ -18,9 +18,9 @@
     <type name="seconds" class="restricted" source="uint"/>
     <type name="milliseconds" class="restricted" source="uint"/>
     <type name="delivery-tag" class="restricted" source="binary"/>
+    <type name="sequence-no" class="restricted" source="uint"/>
     <type name="delivery-number" class="restricted" source="sequence-no"/>
     <type name="transfer-number" class="restricted" source="sequence-no"/>
-    <type name="sequence-no" class="restricted" source="uint"/>
     <type name="message-format" class="restricted" source="uint"/>
     <type name="ietf-language-tag" class="restricted" source="symbol"/>
     <type name="fields" class="restricted" source="map"/>

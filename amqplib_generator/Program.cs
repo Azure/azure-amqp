@@ -29,6 +29,10 @@ namespace amqplib_generator
                     result = amqp_type;
                     break;
 
+                case "binary":
+                    result = "amqp_binary";
+                    break;
+
                 case "boolean":
                     result = "bool";
                     break;

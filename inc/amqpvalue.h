@@ -16,6 +16,11 @@ extern "C" {
 
 	typedef void* AMQP_VALUE;
 	typedef unsigned char amqp_uuid[16];
+	typedef struct amqp_binary_TAG
+	{
+		uint32_t length;
+		unsigned char* data;
+	} amqp_binary;
 
 	extern AMQP_VALUE amqpvalue_create_null(void);
 	extern AMQP_VALUE amqpvalue_create_boolean(bool value);

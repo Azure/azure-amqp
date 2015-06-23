@@ -12,6 +12,8 @@ extern "C" {
 #include <stdbool.h>
 #endif
 
+#include "amqpvalue.h"
+
 /* role */
 
 	typedef bool role;
@@ -51,7 +53,12 @@ extern "C" {
 
 /* delivery-tag */
 
-	typedef binary delivery_tag;
+	typedef amqp_binary delivery_tag;
+
+
+/* sequence-no */
+
+	typedef uint32_t sequence_no;
 
 
 /* delivery-number */
@@ -62,11 +69,6 @@ extern "C" {
 /* transfer-number */
 
 	typedef sequence_no transfer_number;
-
-
-/* sequence-no */
-
-	typedef uint32_t sequence_no;
 
 
 /* message-format */

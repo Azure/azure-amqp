@@ -23,10 +23,11 @@ namespace amqplib_generator
         public static string GetCType(string amqp_type)
         {
             string result;
+
             switch (amqp_type)
             {
                 default:
-                    result = "AMQP_VALUE";
+                    result = amqp_type.ToLower().Replace('-', '_').Replace(':', '_');
                     break;
 
                 case "binary":
@@ -73,6 +74,23 @@ namespace amqplib_generator
             return result;
         }
 
+        public static type GetTypeByName(ICollection<type> types, string type_name)
+        {
+            type result;
+            IEnumerable<type> result_query = types.Where(t => t.name == type_name);
+
+            if (result_query.Count() != 1)
+            {
+                result = null;
+            }
+            else
+            {
+                result = result_query.First();
+            }
+
+            return result;
+        }
+
         public static string GetMandatoryArgList(type type)
         {
             string result = string.Empty;
@@ -87,7 +105,19 @@ namespace amqplib_generator
                 result += GetCType(field.type).Replace('-', '_').Replace(':', '_') + " " + field.name.Replace('-', '_').Replace(':', '_');
             }
 
+            if (string.IsNullOrEmpty(result))
+            {
+                result = "void";
+            }
+
             return result;
+        }
+
+        public static ICollection<field> GetMandatoryArgs(type type)
+        {
+            List<field> mandatory_args = new List<field>();
+            mandatory_args.AddRange(type.Items.Where(item => (item is field) && ((item as field).mandatory == "true")).Cast<field>());
+            return mandatory_args;
         }
 
         static void Main(string[] args)

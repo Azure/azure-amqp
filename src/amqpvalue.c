@@ -2511,3 +2511,13 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 
 	return result;
 }
+
+AMQP_VALUE amqpvalue_create_symbol(uint32_t value)
+{
+	return NULL;
+}
+
+int amqpvalue_get_symbol(AMQP_VALUE value, uint32_t* symbol_value)
+{
+	return __LINE__;
+}

@@ -21,8 +21,8 @@ public:
 	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_3(, int, test_io_send, CONCRETE_IO_HANDLE, handle, const void*, buffer, size_t, size)
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_1(, int, test_io_dowork, CONCRETE_IO_HANDLE, handle)
-	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_1(, void, test_io_dowork, CONCRETE_IO_HANDLE, handle)
+	MOCK_VOID_METHOD_END();
 };
 
 extern "C"
@@ -33,7 +33,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_4(io_mocks, , CONCRETE_IO_HANDLE, test_io_create, void*, io_create_parameters, IO_RECEIVE_CALLBACK, receive_callback, void*, receive_callback_context, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , void, test_io_destroy, CONCRETE_IO_HANDLE, handle);
 	DECLARE_GLOBAL_MOCK_METHOD_3(io_mocks, , int, test_io_send, CONCRETE_IO_HANDLE, handle, const void*, buffer, size_t, size);
-	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , int, test_io_dowork, CONCRETE_IO_HANDLE, handle);
+	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , void, test_io_dowork, CONCRETE_IO_HANDLE, handle);
 
 	int test_receive_callback(void* context, const void* buffer, size_t size)
 	{
@@ -394,7 +394,6 @@ TEST_METHOD(io_send_with_non_NULL_buffer_and_zero_length_passes_the_args_down_an
 /* io_dowork */
 
 /* Tests_SRS_IO_01_012: [io_dowork shall call the concrete IO implementation specified in io_create, by calling the concrete_io_dowork function.] */
-/* Tests_SRS_IO_01_013: [On success, io_send shall return 0.] */
 TEST_METHOD(io_dowork_calls_the_concrete_dowork_and_succeeds)
 {
 	// arrange
@@ -406,42 +405,23 @@ TEST_METHOD(io_dowork_calls_the_concrete_dowork_and_succeeds)
 	STRICT_EXPECTED_CALL(mocks, test_io_dowork(TEST_CONCRETE_IO_HANDLE));
 
 	// act
-	int result = io_dowork(handle);
+	io_dowork(handle);
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
-/* Tests_SRS_IO_01_014: [If the underlying concrete_io_dowork fails, io_dowork shall return a non-zero value.] */
-TEST_METHOD(when_concrete_dowork_fails_then_io_dowork_fails_too)
-{
-	// arrange
-	io_mocks mocks;
-	unsigned char send_data[] = { 0x42, 43 };
-	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL, NULL, NULL);
-	mocks.ResetAllCalls();
-
-	STRICT_EXPECTED_CALL(mocks, test_io_dowork(TEST_CONCRETE_IO_HANDLE))
-		.SetReturn(42);
-
-	// act
-	int result = io_dowork(handle);
-
-	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
-}
-
-/* Tests_SRS_IO_01_018: [When the handle argument is NULL, io_dowork shall return a non-zero value.] */
-TEST_METHOD(io_dowork_with_NULL_handle_fails)
+/* Tests_SRS_IO_01_018: [When the handle argument is NULL, io_dowork shall do nothing.] */
+TEST_METHOD(io_dowork_with_NULL_handle_does_nothing)
 {
 	// arrange
 	io_mocks mocks;
 
 	// act
-	int result = io_dowork(NULL);
+	io_dowork(NULL);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 END_TEST_SUITE(io_unittests)

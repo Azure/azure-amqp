@@ -18,7 +18,7 @@ extern "C" {
 	typedef CONCRETE_IO_HANDLE(*IO_CREATE)(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* receive_callback_context, LOGGER_LOG logger_log);
 	typedef void(*IO_DESTROY)(CONCRETE_IO_HANDLE handle);
 	typedef int(*IO_SEND)(CONCRETE_IO_HANDLE handle, const void* buffer, size_t size);
-	typedef int(*IO_DOWORK)(CONCRETE_IO_HANDLE handle);
+	typedef void(*IO_DOWORK)(CONCRETE_IO_HANDLE handle);
 
 	typedef struct IO_INTERFACE_DESCRIPTION_TAG
 	{
@@ -31,7 +31,7 @@ extern "C" {
 	extern IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* receive_callback_context, LOGGER_LOG logger_log);
 	extern void io_destroy(IO_HANDLE handle);
 	extern int io_send(IO_HANDLE handle, const void* buffer, size_t size);
-	extern int io_dowork(IO_HANDLE handle);
+	extern void io_dowork(IO_HANDLE handle);
 
 #ifdef __cplusplus
 }

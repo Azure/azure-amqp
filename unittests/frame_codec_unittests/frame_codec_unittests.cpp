@@ -61,8 +61,6 @@ public:
 			sent_io_byte_count += size;
 		}
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_1(, int, io_dowork, IO_HANDLE, handle)
-	MOCK_METHOD_END(int, 0);
 
 	/* amqpalloc mocks */
 	MOCK_STATIC_METHOD_1(, void*, amqpalloc_malloc, size_t, size)
@@ -129,7 +127,6 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_5(frame_codec_mocks, , IO_HANDLE, io_create, const IO_INTERFACE_DESCRIPTION*, io_interface_description, void*, io_create_parameters, IO_RECEIVE_CALLBACK, receive_callback, void*, context, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, io_destroy, IO_HANDLE, handle);
 	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , int, io_send, IO_HANDLE, handle, const void*, buffer, size_t, size);
-	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , int, io_dowork, IO_HANDLE, handle);
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void*, amqpalloc_malloc, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, amqpalloc_free, void*, ptr);

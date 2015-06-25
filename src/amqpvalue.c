@@ -2521,3 +2521,14 @@ int amqpvalue_get_symbol(AMQP_VALUE value, uint32_t* symbol_value)
 {
 	return __LINE__;
 }
+
+AMQP_VALUE amqpvalue_create_map(AMQP_VALUE map_value)
+{
+	return NULL;
+}
+
+int amqpvalue_get_map(AMQP_VALUE value, AMQP_VALUE* map_value)
+{
+	return __LINE__;
+}
+

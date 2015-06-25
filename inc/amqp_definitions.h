@@ -118,6 +118,7 @@ extern "C" {
 
 	extern ERROR_HANDLE error_create(uint32_t condition);
 	extern void error_destroy(ERROR_HANDLE error);
+	extern AMQP_VALUE amqpvalue_create_error(ERROR_HANDLE error);
 
 	extern int error_get_condition(ERROR_HANDLE error, uint32_t* condition);
 	extern int error_set_condition(ERROR_HANDLE error, uint32_t condition);
@@ -185,6 +186,7 @@ extern "C" {
 
 	extern OPEN_HANDLE open_create(const char* container_id);
 	extern void open_destroy(OPEN_HANDLE open);
+	extern AMQP_VALUE amqpvalue_create_open(OPEN_HANDLE open);
 
 	extern int open_get_container_id(OPEN_HANDLE open, const char** container_id);
 	extern int open_set_container_id(OPEN_HANDLE open, const char* container_id);
@@ -213,6 +215,7 @@ extern "C" {
 
 	extern BEGIN_HANDLE begin_create(transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window);
 	extern void begin_destroy(BEGIN_HANDLE begin);
+	extern AMQP_VALUE amqpvalue_create_begin(BEGIN_HANDLE begin);
 
 	extern int begin_get_remote_channel(BEGIN_HANDLE begin, uint16_t* remote_channel);
 	extern int begin_set_remote_channel(BEGIN_HANDLE begin, uint16_t remote_channel);
@@ -237,6 +240,7 @@ extern "C" {
 
 	extern ATTACH_HANDLE attach_create(const char* name, handle handle, role role);
 	extern void attach_destroy(ATTACH_HANDLE attach);
+	extern AMQP_VALUE amqpvalue_create_attach(ATTACH_HANDLE attach);
 
 	extern int attach_get_name(ATTACH_HANDLE attach, const char** name);
 	extern int attach_set_name(ATTACH_HANDLE attach, const char* name);
@@ -273,6 +277,7 @@ extern "C" {
 
 	extern FLOW_HANDLE flow_create(uint32_t incoming_window, transfer_number next_outgoing_id, uint32_t outgoing_window);
 	extern void flow_destroy(FLOW_HANDLE flow);
+	extern AMQP_VALUE amqpvalue_create_flow(FLOW_HANDLE flow);
 
 	extern int flow_get_next_incoming_id(FLOW_HANDLE flow, transfer_number* next_incoming_id);
 	extern int flow_set_next_incoming_id(FLOW_HANDLE flow, transfer_number next_incoming_id);
@@ -303,6 +308,7 @@ extern "C" {
 
 	extern TRANSFER_HANDLE transfer_create(handle handle);
 	extern void transfer_destroy(TRANSFER_HANDLE transfer);
+	extern AMQP_VALUE amqpvalue_create_transfer(TRANSFER_HANDLE transfer);
 
 	extern int transfer_get_handle(TRANSFER_HANDLE transfer, handle* handle);
 	extern int transfer_set_handle(TRANSFER_HANDLE transfer, handle handle);
@@ -333,6 +339,7 @@ extern "C" {
 
 	extern DISPOSITION_HANDLE disposition_create(role role, delivery_number first);
 	extern void disposition_destroy(DISPOSITION_HANDLE disposition);
+	extern AMQP_VALUE amqpvalue_create_disposition(DISPOSITION_HANDLE disposition);
 
 	extern int disposition_get_role(DISPOSITION_HANDLE disposition, role* role);
 	extern int disposition_set_role(DISPOSITION_HANDLE disposition, role role);
@@ -353,6 +360,7 @@ extern "C" {
 
 	extern DETACH_HANDLE detach_create(handle handle);
 	extern void detach_destroy(DETACH_HANDLE detach);
+	extern AMQP_VALUE amqpvalue_create_detach(DETACH_HANDLE detach);
 
 	extern int detach_get_handle(DETACH_HANDLE detach, handle* handle);
 	extern int detach_set_handle(DETACH_HANDLE detach, handle handle);
@@ -367,6 +375,7 @@ extern "C" {
 
 	extern END_HANDLE end_create(void);
 	extern void end_destroy(END_HANDLE end);
+	extern AMQP_VALUE amqpvalue_create_end(END_HANDLE end);
 
 	extern int end_get_error(END_HANDLE end, ERROR_HANDLE* error);
 	extern int end_set_error(END_HANDLE end, ERROR_HANDLE error);
@@ -377,6 +386,7 @@ extern "C" {
 
 	extern CLOSE_HANDLE close_create(void);
 	extern void close_destroy(CLOSE_HANDLE close);
+	extern AMQP_VALUE amqpvalue_create_close(CLOSE_HANDLE close);
 
 	extern int close_get_error(CLOSE_HANDLE close, ERROR_HANDLE* error);
 	extern int close_set_error(CLOSE_HANDLE close, ERROR_HANDLE error);

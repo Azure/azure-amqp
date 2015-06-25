@@ -56,6 +56,8 @@ extern "C" {
 
 	extern AMQP_VALUE amqpvalue_create_symbol(uint32_t value);
 	extern int amqpvalue_get_symbol(AMQP_VALUE value, uint32_t* symbol_value);
+	extern AMQP_VALUE amqpvalue_create_map(AMQP_VALUE map_value);
+	extern int amqpvalue_get_map(AMQP_VALUE value, AMQP_VALUE* map_value);
 
 	typedef void* DECODER_HANDLE;
 	typedef int(*VALUE_DECODED_CALLBACK)(void* context, AMQP_VALUE decoded_value);

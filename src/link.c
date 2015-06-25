@@ -199,35 +199,22 @@ void link_destroy(LINK_HANDLE handle)
 	}
 }
 
-int link_dowork(LINK_HANDLE handle)
+void link_dowork(LINK_HANDLE handle)
 {
-	int result;
 	LINK_DATA* link = (LINK_DATA*)handle;
 	SESSION_STATE session_state;
 
-	if (session_get_state(link->session, &session_state) != 0)
+	if (session_get_state(link->session, &session_state) == 0)
 	{
-		result = __LINE__;
-	}
-	else
-	{
-		result = 0;
-
 		if (session_state == SESSION_STATE_MAPPED)
 		{
 			if (link->link_state == LINK_STATE_DETACHED)
 			{
-				if (send_attach(link, "fake", 1, sender, unsettled, first, link->source, link->target) != 0)
-				{
-					result = __LINE__;
-				}
-
+				(void)send_attach(link, "fake", 1, sender, unsettled, first, link->source, link->target);
 				link->link_state = LINK_STATE_HALF_ATTACHED;
 			}
 		}
 	}
-
-	return result;
 }
 
 int link_get_state(LINK_HANDLE handle, LINK_STATE* link_state)

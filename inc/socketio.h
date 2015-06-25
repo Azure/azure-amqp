@@ -20,7 +20,7 @@ typedef struct SOCKETIO_CONFIG_TAG
 extern IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log);
 extern void socketio_destroy(IO_HANDLE handle);
 extern int socketio_send(IO_HANDLE handle, const void* buffer, size_t size);
-extern int socketio_dowork(IO_HANDLE handle);
+extern void socketio_dowork(IO_HANDLE handle);
 extern const IO_INTERFACE_DESCRIPTION* socketio_get_interface_description(void);
 
 #ifdef __cplusplus

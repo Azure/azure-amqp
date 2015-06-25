@@ -252,21 +252,8 @@ int messaging_dowork(MESSAGING_HANDLE handle)
 			}
 
 			connection_dowork(messaging->connection);
-			if (session_dowork(messaging->session) != 0)
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				if (link_dowork(messaging->link) != 0)
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					result = 0;
-				}
-			}
+			session_dowork(messaging->session);
+			link_dowork(messaging->link);
 		}
 	}
 

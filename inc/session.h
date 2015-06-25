@@ -30,7 +30,7 @@ extern "C" {
 
 	extern SESSION_HANDLE session_create(CONNECTION_HANDLE connection);
 	extern void session_destroy(SESSION_HANDLE handle);
-	extern int session_dowork(SESSION_HANDLE handle);
+	extern void session_dowork(SESSION_HANDLE handle);
 	extern int session_set_frame_received_callback(SESSION_HANDLE handle, SESSION_FRAME_RECEIVED_CALLBACK callback, void* context);
 	extern int session_get_state(SESSION_HANDLE handle, SESSION_STATE* session_state);
 	extern FRAME_CODEC_HANDLE session_get_frame_codec(SESSION_HANDLE handle);

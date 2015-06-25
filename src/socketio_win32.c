@@ -129,16 +129,9 @@ int socketio_send(IO_HANDLE handle, const void* buffer, size_t size)
 	return result;
 }
 
-int socketio_dowork(IO_HANDLE handle)
+void socketio_dowork(IO_HANDLE handle)
 {
-	int result;
-
-	if (handle == NULL)
-	{
-		/* Invalid arguments */
-		result = __LINE__;
-	}
-	else
+	if (handle != NULL)
 	{
 		SOCKET_IO_DATA* socket_io_data = (SOCKET_IO_DATA*)handle;
 		unsigned char c;
@@ -158,11 +151,7 @@ int socketio_dowork(IO_HANDLE handle)
 				}
 			}
 		}
-
-		result = 0;
 	}
-
-	return result;
 }
 
 const IO_INTERFACE_DESCRIPTION* socketio_get_interface_description(void)

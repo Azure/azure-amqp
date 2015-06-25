@@ -148,49 +148,35 @@ void session_destroy(SESSION_HANDLE handle)
 	amqpalloc_free(handle);
 }
 
-int session_dowork(SESSION_HANDLE handle)
+void session_dowork(SESSION_HANDLE handle)
 {
-	int result;
 	SESSION_DATA* session_data = (SESSION_DATA*)handle;
 
 	switch (session_data->session_state)
 	{
 		default:
-			result = __LINE__;
 			break;
 
 		case SESSION_STATE_BEGIN_SENT:
 		case SESSION_STATE_MAPPED:
-			result = 0;
 			break;
 
 		case SESSION_STATE_UNMAPPED:
 		{
 			CONNECTION_STATE connection_state;
-			if (connection_get_state(session_data->connection, &connection_state) != 0)
-			{
-				result = __LINE__;
-			}
-			else
+			if (connection_get_state(session_data->connection, &connection_state) == 0)
 			{
 				if (connection_state == CONNECTION_STATE_OPENED)
 				{
-					result = send_begin(session_data, 0, 1, 1);
-					if (result == 0)
+					if (send_begin(session_data, 0, 1, 1) == 0)
 					{
 						session_data->session_state = SESSION_STATE_BEGIN_SENT;
 					}
-				}
-				else
-				{
-					result = 0;
 				}
 			}
 			break;
 		}
 	}
-
-	return result;
 }
 
 int session_set_frame_received_callback(SESSION_HANDLE handle, SESSION_FRAME_RECEIVED_CALLBACK callback, void* context)

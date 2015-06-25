@@ -36,8 +36,8 @@ public:
 	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_3(, int, io_send, IO_HANDLE, handle, const void*, buffer, size_t, size)
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_1(, int, io_dowork, IO_HANDLE, handle)
-	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_1(, void, io_dowork, IO_HANDLE, handle)
+	MOCK_VOID_METHOD_END();
 
 	/* socketio mocks */
 	MOCK_STATIC_METHOD_0(, const IO_INTERFACE_DESCRIPTION*, socketio_get_interface_description)
@@ -87,7 +87,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_5(connection_mocks, , IO_HANDLE, io_create, const IO_INTERFACE_DESCRIPTION*, io_interface_description, void*, io_create_parameters, IO_RECEIVE_CALLBACK, receive_callback, void*, context, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, io_destroy, IO_HANDLE, handle);
 	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , int, io_send, IO_HANDLE, handle, const void*, buffer, size_t, size);
-	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , int, io_dowork, IO_HANDLE, handle);
+	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, io_dowork, IO_HANDLE, handle);
 
 	DECLARE_GLOBAL_MOCK_METHOD_0(connection_mocks, , const IO_INTERFACE_DESCRIPTION*, socketio_get_interface_description);
 

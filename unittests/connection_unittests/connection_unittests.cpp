@@ -312,7 +312,6 @@ TEST_METHOD(connection_destroy_with_NULL_handle_does_nothing)
 /* connection_dowork */
 
 /* Tests_SRS_CONNECTION_01_076: [connection_dowork shall schedule the underlying IO interface to do its work by calling io_dowork.] */
-/* Tests_SRS_CONNECTION_01_085: [On success, connection_dowork shall return 0.] */
 /* Tests_SRS_CONNECTION_01_084: [The connection state machine implementing the protocol requirements shall be run as part of connection_dowork.] */
 /* Tests_SRS_CONNECTION_01_086: [Prior to sending any frames on a connection, each peer MUST start by sending a protocol header that indicates the protocol version used on the connection.] */
 /* Tests_SRS_CONNECTION_01_087: [The protocol header consists of the upper case ASCII letters “AMQP” followed by a protocol id of zero, followed by three unsigned bytes representing the major, minor, and revision of the protocol version (currently 1 (MAJOR), 0 (MINOR), 0 (REVISION)). In total this is an 8-octet sequence] */
@@ -333,47 +332,25 @@ TEST_METHOD(connection_dowork_when_state_is_start_sends_the_AMQP_header_and_trig
 	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
 
 	// act
-	int result = connection_dowork(connection);
+	connection_dowork(connection);
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
 	CONNECTION_STATE connection_state;
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_HDR_SENT, connection_state);
 }
 
-/* Tests_SRS_CONNECTION_01_077: [If io_dowork fails, connection_dowork shall return a non-zero value.] */
-TEST_METHOD(when_io_dowork_fails_then_connection_dowork_fails)
-{
-	// arrange
-	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
-	mocks.ResetAllCalls();
-	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
-
-	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, amqp_header, sizeof(amqp_header)))
-		.ValidateArgumentBuffer(2, amqp_header, sizeof(amqp_header));
-	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE))
-		.SetReturn(1);
-
-	// act
-	int result = connection_dowork(connection);
-
-	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
-}
-
-/* Tests_SRS_CONNECTION_01_078: [If handle is NULL, connection_dowork shall return a non-zero value.] */
+/* Tests_SRS_CONNECTION_01_078: [If handle is NULL, connection_dowork shall do nothing.] */
 TEST_METHOD(connection_dowork_with_NULL_handle_fails)
 {
 	// arrange
 	connection_mocks mocks;
 
 	// act
-	int result = connection_dowork(NULL);
+	connection_dowork(NULL);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_CONNECTION_01_057: [END In this state it is illegal for either endpoint to write anything more onto the connection. The connection can be safely closed and discarded.] */
@@ -393,10 +370,9 @@ TEST_METHOD(when_sending_the_header_fails_connection_dowork_fails_and_io_is_dest
 	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
 
 	// act
-	int result = connection_dowork(connection);
+	connection_dowork(connection);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 	CONNECTION_STATE connection_state;
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_END, connection_state);
@@ -601,10 +577,9 @@ TEST_METHOD(when_only_one_byte_is_received_and_do_work_is_called_state_is_set_to
 	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
 
 	// act
-	int result = connection_dowork(connection);
+	connection_dowork(connection);
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
 	CONNECTION_STATE connection_state;
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_HDR_SENT, connection_state);

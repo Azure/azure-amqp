@@ -64,7 +64,7 @@ extern "C" {
 	extern int connection_set_idle_timeout(CONNECTION_HANDLE connection, milliseconds idle_timeout);
 	extern int connection_connect(void);
 	extern void connection_destroy(CONNECTION_HANDLE connection);
-	extern int connection_dowork(CONNECTION_HANDLE connection);
+	extern void connection_dowork(CONNECTION_HANDLE connection);
 	extern int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connection_state);
 	extern int connection_register_session(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context, uint16_t* channel_no);
 	extern int connection_unregister_session(CONNECTION_HANDLE connection, uint16_t channel_no);

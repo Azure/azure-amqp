@@ -251,26 +251,20 @@ int messaging_dowork(MESSAGING_HANDLE handle)
 				messaging->outgoing_message_count = 0;
 			}
 
-			if (connection_dowork(messaging->connection) != 0)
+			connection_dowork(messaging->connection);
+			if (session_dowork(messaging->session) != 0)
 			{
 				result = __LINE__;
 			}
 			else
 			{
-				if (session_dowork(messaging->session) != 0)
+				if (link_dowork(messaging->link) != 0)
 				{
 					result = __LINE__;
 				}
 				else
 				{
-					if (link_dowork(messaging->link) != 0)
-					{
-						result = __LINE__;
-					}
-					else
-					{
-						result = 0;
-					}
+					result = 0;
 				}
 			}
 		}

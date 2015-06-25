@@ -386,33 +386,30 @@ int connection_connect(void)
 	return 0;
 }
 
-int connection_dowork(CONNECTION_HANDLE connection)
+void connection_dowork(CONNECTION_HANDLE connection)
 {
-	int result;
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-	if (connection_instance == NULL)
-	{
-		result = __LINE__;
-	}
-	else
+	if (connection_instance != NULL)
 	{
 		/* Codes_SRS_CONNECTION_01_084: [The connection_instance state machine implementing the protocol requirements shall be run as part of connection_dowork.] */
 		switch (connection_instance->connection_state)
 		{
 		default:
-			result = __LINE__;
 			break;
 
 		case CONNECTION_STATE_START:
 			/* Codes_SRS_CONNECTION_01_086: [Prior to sending any frames on a connection_instance, each peer MUST start by sending a protocol header that indicates the protocol version used on the connection_instance.] */
 			/* Codes_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection_instance) MUST immediately send its outgoing protocol header on establishment of the TCP connection_instance.] */
-			result = send_header(connection_instance);
+			if (send_header(connection_instance))
+			{
+				io_destroy(connection_instance->used_io);
+				connection_instance->connection_state = CONNECTION_STATE_END;
+			}
 			break;
 
 		case CONNECTION_STATE_HDR_SENT:
 		case CONNECTION_STATE_OPEN_SENT:
 		case CONNECTION_STATE_OPENED:
-			result = 0;
 			break;
 
 		case CONNECTION_STATE_HDR_EXCH:
@@ -423,36 +420,16 @@ int connection_dowork(CONNECTION_HANDLE connection)
 			{
 				io_destroy(connection_instance->used_io);
 				connection_instance->connection_state = CONNECTION_STATE_END;
-				result = __LINE__;
-			}
-			else
-			{
-				result = 0;
 			}
 			break;
 
 		case CONNECTION_STATE_OPEN_RCVD:
-			result = __LINE__;
 			break;
 		}
 
-		if (result == 0)
-		{
-			/* Codes_SRS_CONNECTION_01_076: [connection_dowork shall schedule the underlying IO interface to do its work by calling io_dowork.] */
-			if (io_dowork(connection_instance->socket_io) != 0)
-			{
-				/* Codes_SRS_CONNECTION_01_077: [If io_dowork fails, connection_dowork shall return a non-zero value.] */
-				result = __LINE__;
-			}
-			else
-			{
-				/* Codes_SRS_CONNECTION_01_085: [On success, connection_dowork shall return 0.] */
-				result = 0;
-			}
-		}
+		/* Codes_SRS_CONNECTION_01_076: [connection_dowork shall schedule the underlying IO interface to do its work by calling io_dowork.] */
+		io_dowork(connection_instance->socket_io);
 	}
-
-	return result;
 }
 
 int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connection_state)

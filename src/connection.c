@@ -22,7 +22,6 @@ typedef enum RECEIVE_FRAME_STATE_TAG
 typedef struct CONNECTION_DATA_TAG
 {
 	IO_HANDLE socket_io;
-	IO_HANDLE used_io;
 	OPEN_HANDLE open_performative;
 	size_t header_bytes_received;
 	CONNECTION_STATE connection_state;
@@ -38,10 +37,10 @@ static int send_header(CONNECTION_INSTANCE* connection)
 
 	/* Codes_SRS_CONNECTION_01_093: [_ When the client opens a new socket connection to a server, it MUST send a protocol header with the client’s preferred protocol version.] */
 	/* Codes_SRS_CONNECTION_01_104: [Sending the protocol header shall be done by using io_send.] */
-	if (io_send(connection->used_io, amqp_header, sizeof(amqp_header)) != 0)
+	if (io_send(connection->socket_io, amqp_header, sizeof(amqp_header)) != 0)
 	{
 		/* Codes_SRS_CONNECTION_01_106: [When sending the protocol header fails, the connection shall be immediately closed.] */
-		io_destroy(connection->used_io);
+		io_destroy(connection->socket_io);
 
 		/* Codes_SRS_CONNECTION_01_057: [END In this state it is illegal for either endpoint to write anything more onto the connection. The connection can be safely closed and discarded.] */
 		connection->connection_state = CONNECTION_STATE_END;
@@ -82,7 +81,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection)
 			/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
 			if (amqp_frame_codec_begin_encode_frame(connection->amqp_frame_codec, 0, open_performative_value, 0) != 0)
 			{
-				io_destroy(connection->used_io);
+				io_destroy(connection->socket_io);
 				connection->connection_state = CONNECTION_STATE_END;
 				result = __LINE__;
 			}
@@ -120,7 +119,7 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection, unsigned ch
 		if (b != amqp_header[connection->header_bytes_received])
 		{
 			/* Codes_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
-			io_destroy(connection->used_io);
+			io_destroy(connection->socket_io);
 			connection->connection_state = CONNECTION_STATE_END;
 			result = __LINE__;
 		}
@@ -133,7 +132,7 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection, unsigned ch
 				{
 					if (send_header(connection) != 0)
 					{
-						io_destroy(connection->used_io);
+						io_destroy(connection->socket_io);
 						connection->connection_state = CONNECTION_STATE_END;
 						result = __LINE__;
 					}
@@ -171,7 +170,7 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection, unsigned ch
 		AMQP_VALUE close_performative_value = amqpvalue_create_close(close_performative);
 		if (amqp_frame_codec_begin_encode_frame(connection->amqp_frame_codec, 0, close_performative_value, 0) != 0)
 		{
-			io_destroy(connection->used_io);
+			io_destroy(connection->socket_io);
 			connection->connection_state = CONNECTION_STATE_END;
 		}
 		else
@@ -354,9 +353,6 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 								/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
 								result->connection_state = CONNECTION_STATE_START;
 								result->header_bytes_received = 0;
-
-								/* For now directly talk to the socket IO. By doing this there is no SASL, no SSL, pure AMQP only */
-								result->used_io = result->socket_io;
 							}
 						}
 					}
@@ -434,7 +430,7 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			/* Codes_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection_instance) MUST immediately send its outgoing protocol header on establishment of the TCP connection_instance.] */
 			if (send_header(connection_instance))
 			{
-				io_destroy(connection_instance->used_io);
+				io_destroy(connection_instance->socket_io);
 				connection_instance->connection_state = CONNECTION_STATE_END;
 			}
 			break;
@@ -450,7 +446,7 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
 			if (send_open_frame(connection) != 0)
 			{
-				io_destroy(connection_instance->used_io);
+				io_destroy(connection_instance->socket_io);
 				connection_instance->connection_state = CONNECTION_STATE_END;
 			}
 			break;

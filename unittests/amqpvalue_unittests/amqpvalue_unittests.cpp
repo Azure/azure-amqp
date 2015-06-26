@@ -2063,7 +2063,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			ASSERT_IS_NULL(result);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_129: [If value is NULL and length is positive then amqpvalue_create_binary shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_129: [If value.data is NULL and value.length is positive then amqpvalue_create_binary shall return NULL.] */
 		TEST_METHOD(when_length_is_positive_and_buffer_is_NULL_then_amqpvalue_create_binary_fails)
 		{
 			// arrange
@@ -2079,7 +2079,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 
 		/* amqpvalue_get_binary */
 
-		/* Tests_SRS_AMQPVALUE_01_131: [amqpvalue_get_binary shall return a pointer to the sequence of bytes held by the AMQP_VALUE and fill in the length argument the number of bytes copied.] */
+		/* Tests_SRS_AMQPVALUE_01_131: [amqpvalue_get_binary shall yield a pointer to the sequence of bytes held by the AMQP_VALUE in binary_value.data and fill in the binary_value.length argument the number of bytes held in the binary value.] */
 		TEST_METHOD(amqpvalue_get_binary_1_byte_succeeds)
 		{
 			// arrange
@@ -2099,7 +2099,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			ASSERT_ARE_EQUAL(int, 0, memcmp(binary_value.data, input, sizeof(input)));
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_134: [When amqpvalue_get_binary is called on a binary value with 0 bytes, amqpvalue_get_binary shall return a non-NULL value.] */
+		/* Tests_SRS_AMQPVALUE_01_131: [amqpvalue_get_binary shall yield a pointer to the sequence of bytes held by the AMQP_VALUE in binary_value.data and fill in the binary_value.length argument the number of bytes held in the binary value.] */
 		TEST_METHOD(amqpvalue_get_binary_0_byte_succeeds)
 		{
 			// arrange
@@ -2134,7 +2134,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_132: [If any of the arguments is NULL then amqpvalue_get_binary shall return NULL.] */
-		TEST_METHOD(when_the_length_argument_is_NULL_amqpvalue_get_binary_fails)
+		TEST_METHOD(when_the_binary_value_argument_is_NULL_amqpvalue_get_binary_fails)
 		{
 			// arrange
 			amqpvalue_mocks mocks;

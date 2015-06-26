@@ -778,7 +778,7 @@ AMQP_VALUE amqpvalue_create_binary(amqp_binary value)
 	if ((value.data == NULL) &&
 		(value.length > 0))
 	{
-		/* Codes_SRS_AMQPVALUE_01_129: [If value is NULL and length is positive then amqpvalue_create_binary shall return NULL.] */
+		/* Codes_SRS_AMQPVALUE_01_129: [If value.data is NULL and value.length is positive then amqpvalue_create_binary shall return NULL.] */
 		result = NULL;
 	}
 	else
@@ -841,7 +841,7 @@ int amqpvalue_get_binary(AMQP_VALUE value, amqp_binary* binary_value)
 		}
 		else
 		{
-			/* Codes_SRS_AMQPVALUE_01_131: [amqpvalue_get_binary shall return a pointer to the sequence of bytes held by the AMQP_VALUE and fill in the length argument the number of bytes held in the binary value.] */
+			/* Codes_SRS_AMQPVALUE_01_131: [amqpvalue_get_binary shall yield a pointer to the sequence of bytes held by the AMQP_VALUE in binary_value.data and fill in the binary_value.length argument the number of bytes held in the binary value.] */
 			binary_value->length = value_data->value.binary_value.length;
 			binary_value->data = value_data->value.binary_value.bytes;
 

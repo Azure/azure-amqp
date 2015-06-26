@@ -208,24 +208,14 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 	return result;
 }
 
-int messaging_dowork(MESSAGING_HANDLE handle)
+void messaging_dowork(MESSAGING_HANDLE handle)
 {
-	int result;
-
-	if (handle == NULL)
-	{
-		result = __LINE__;
-	}
-	else
+	if (handle != NULL)
 	{
 		MESSAGING_DATA* messaging = (MESSAGING_DATA*)handle;
 		LINK_STATE link_state;
 
-		if (link_get_state(messaging->link, &link_state) != 0)
-		{
-			result = __LINE__;
-		}
-		else
+		if (link_get_state(messaging->link, &link_state) == 0)
 		{
 			if (link_state == LINK_STATE_ATTACHED)
 			{
@@ -234,14 +224,9 @@ int messaging_dowork(MESSAGING_HANDLE handle)
 				for (i = 0; i < messaging->outgoing_message_count; i++)
 				{
 					AMQP_VALUE message_payload = message_get_body(messaging->outgoing_messages[i].message);
-					if (message_payload == NULL)
+					if (message_payload != NULL)
 					{
-						result = __LINE__;
-					}
-					else
-					{
-						result = link_transfer(messaging->link, &message_payload, 1);
-						if (result == 0)
+						if (link_transfer(messaging->link, &message_payload, 1) == 0)
 						{
 							messaging->outgoing_messages[i].callback(MESSAGING_OK, messaging->outgoing_messages[i].context);
 						}
@@ -256,6 +241,4 @@ int messaging_dowork(MESSAGING_HANDLE handle)
 			link_dowork(messaging->link);
 		}
 	}
-
-	return result;
 }

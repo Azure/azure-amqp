@@ -61,41 +61,31 @@ static int send_header(CONNECTION_INSTANCE* connection)
 static int send_open_frame(CONNECTION_INSTANCE* connection)
 {
 	int result;
-	OPEN_HANDLE open_performative = open_create("1");
-	if (open_performative == NULL)
+	AMQP_VALUE open_performative_value = amqpvalue_create_open(connection->open_performative);
+	if (open_performative_value == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		AMQP_VALUE open_performative_value = amqpvalue_create_open(open_performative);
-		if (open_performative_value == NULL)
+		/* handshake done, send open frame */
+		/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
+		/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+		/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
+		if (amqp_frame_codec_begin_encode_frame(connection->amqp_frame_codec, 0, open_performative_value, 0) != 0)
 		{
+			io_destroy(connection->socket_io);
+			connection->connection_state = CONNECTION_STATE_END;
 			result = __LINE__;
 		}
 		else
 		{
-			/* handshake done, send open frame */
-			/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
-			/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
-			/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-			if (amqp_frame_codec_begin_encode_frame(connection->amqp_frame_codec, 0, open_performative_value, 0) != 0)
-			{
-				io_destroy(connection->socket_io);
-				connection->connection_state = CONNECTION_STATE_END;
-				result = __LINE__;
-			}
-			else
-			{
-				/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
-				connection->connection_state = CONNECTION_STATE_OPEN_SENT;
-				result = 0;
-			}
-
-			amqpvalue_destroy(open_performative_value);
+			/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
+			connection->connection_state = CONNECTION_STATE_OPEN_SENT;
+			result = 0;
 		}
 
-		open_destroy(open_performative);
+		amqpvalue_destroy(open_performative_value);
 	}
 
 	return result;
@@ -224,6 +214,11 @@ static int connection_empty_frame_received(void* context, uint16_t channel)
 	return 0;
 }
 
+static int connection_payload_bytes_received(void* context, const unsigned char* payload_bytes, uint32_t byte_count)
+{
+	return 0;
+}
+
 static int connection_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t payload_size)
 {
 	CONNECTION_INSTANCE* connection = (CONNECTION_INSTANCE*)context;
@@ -327,7 +322,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 					}
 					else
 					{
-						result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, NULL, result);
+						result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, connection_payload_bytes_received, result);
 						if (result->amqp_frame_codec == NULL)
 						{
 							frame_codec_destroy(result->frame_codec);
@@ -502,6 +497,8 @@ int connection_register_session(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVE
 	if (connection == NULL)
 	{
 		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+		connection_instance->frame_received_callback = callback;
+		connection_instance->frame_received_callback_context = context;
 		result = __LINE__;
 	}
 	else

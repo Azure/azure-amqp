@@ -19,7 +19,7 @@ extern "C" {
 
 	extern MESSAGING_HANDLE messaging_create(void);
 	extern void messaging_destroy(MESSAGING_HANDLE handle);
-	extern int messaging_dowork(MESSAGING_HANDLE handle);
+	extern void messaging_dowork(MESSAGING_HANDLE handle);
 	extern int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND_COMPLETE_CALLBACK callback, const void* callback_context);
 	extern AMQP_VALUE messaging_create_source(AMQP_VALUE address);
 	extern AMQP_VALUE messaging_create_target(AMQP_VALUE address);

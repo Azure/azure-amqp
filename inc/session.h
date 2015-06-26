@@ -2,7 +2,7 @@
 #define SESSION_H
 
 #include "connection.h"
-#include "frame_codec.h"
+#include "amqp_frame_codec.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,7 +33,7 @@ extern "C" {
 	extern void session_dowork(SESSION_HANDLE handle);
 	extern int session_set_frame_received_callback(SESSION_HANDLE handle, SESSION_FRAME_RECEIVED_CALLBACK callback, void* context);
 	extern int session_get_state(SESSION_HANDLE handle, SESSION_STATE* session_state);
-	extern FRAME_CODEC_HANDLE session_get_frame_codec(SESSION_HANDLE handle);
+	extern AMQP_FRAME_CODEC_HANDLE session_get_amqp_frame_codec(SESSION_HANDLE handle);
 
 #ifdef __cplusplus
 }

@@ -63,6 +63,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 {
 	int result;
 	AMQP_VALUE open_performative_value = amqpvalue_create_open(connection_instance->open_performative);
+
 	if (open_performative_value == NULL)
 	{
 		result = __LINE__;
@@ -480,9 +481,9 @@ int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connect
 	return result;
 }
 
-FRAME_CODEC_HANDLE connection_get_frame_codec(CONNECTION_HANDLE connection)
+AMQP_FRAME_CODEC_HANDLE connection_get_amqp_frame_codec(CONNECTION_HANDLE connection)
 {
-	FRAME_CODEC_HANDLE result;
+	AMQP_FRAME_CODEC_HANDLE result;
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
 
 	if (connection_instance == NULL)
@@ -491,7 +492,7 @@ FRAME_CODEC_HANDLE connection_get_frame_codec(CONNECTION_HANDLE connection)
 	}
 	else
 	{
-		result = connection_instance->frame_codec;
+		result = connection_instance->amqp_frame_codec;
 	}
 
 	return result;

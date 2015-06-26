@@ -68,7 +68,7 @@ extern "C" {
 	extern int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connection_state);
 	extern int connection_register_session(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context, uint16_t* channel_no);
 	extern int connection_unregister_session(CONNECTION_HANDLE connection, uint16_t channel_no);
-	extern FRAME_CODEC_HANDLE connection_get_frame_codec(CONNECTION_HANDLE handle);
+	extern AMQP_FRAME_CODEC_HANDLE connection_get_amqp_frame_codec(CONNECTION_HANDLE handle);
 
 #ifdef __cplusplus
 }

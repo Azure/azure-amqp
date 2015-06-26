@@ -71,9 +71,9 @@ static int send_attach(LINK_DATA* link, const char* name, handle handle, role ro
 			AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(0x12);
 			AMQP_VALUE performative = amqpvalue_create_described(ulong_descriptor_value, attach_frame_list);
 
-			FRAME_CODEC_HANDLE frame_codec;
-			if (((frame_codec = session_get_frame_codec(link->session)) == NULL) ||
-				(amqp_frame_codec_begin_encode_frame(frame_codec, 0, performative, 0) != 0))
+			AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
+			if (((amqp_frame_codec = session_get_amqp_frame_codec(link->session)) == NULL) ||
+				(amqp_frame_codec_begin_encode_frame(amqp_frame_codec, 0, performative, 0) != 0))
 			{
 				result = __LINE__;
 			}
@@ -135,7 +135,7 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 				AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(0x14);
 				AMQP_VALUE performative = amqpvalue_create_described(ulong_descriptor_value, transfer_frame_list);
 
-				FRAME_CODEC_HANDLE frame_codec;
+				AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
 				size_t i;
 
 				chunks[0] = transfer_frame_list;
@@ -145,8 +145,8 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 				}
 
 				/* here we should feed data to the transfer frame */
-				if (((frame_codec = session_get_frame_codec(link->session)) == NULL) ||
-					(amqp_frame_codec_begin_encode_frame(frame_codec, 0, performative, 0) != 0))
+				if (((amqp_frame_codec = session_get_amqp_frame_codec(link->session)) == NULL) ||
+					(amqp_frame_codec_begin_encode_frame(amqp_frame_codec, 0, performative, 0) != 0))
 				{
 					result = __LINE__;
 				}

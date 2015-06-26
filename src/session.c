@@ -20,37 +20,26 @@ typedef struct SESSION_DATA_TAG
 static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
 {
 	int result;
-	AMQP_VALUE begin_frame_list = amqpvalue_create_list(4);
-	if (begin_frame_list == NULL)
+	BEGIN_HANDLE begin = begin_create(next_outgoing_id, incoming_window, outgoing_window);
+	if (begin == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		AMQP_VALUE remote_channel_value = amqpvalue_create_null();
-		AMQP_VALUE next_outgoing_id_value = amqpvalue_create_transfer_number(next_outgoing_id);
-		AMQP_VALUE incoming_window_value = amqpvalue_create_transfer_number(incoming_window);
-		AMQP_VALUE outgoing_window_value = amqpvalue_create_transfer_number(outgoing_window);
-		/* do not set remote_channel for now */
-
-		if ((remote_channel_value == NULL) ||
-			(next_outgoing_id_value == NULL) ||
-			(incoming_window_value == NULL) ||
-			(outgoing_window_value == NULL) ||
-			(amqpvalue_set_list_item(begin_frame_list, 0, remote_channel_value) != 0) ||
-			(amqpvalue_set_list_item(begin_frame_list, 1, next_outgoing_id_value) != 0) ||
-			(amqpvalue_set_list_item(begin_frame_list, 2, incoming_window_value) != 0) ||
-			(amqpvalue_set_list_item(begin_frame_list, 3, outgoing_window_value) != 0))
+		AMQP_VALUE begin_performative_value = amqpvalue_create_begin(begin);
+		if (begin_performative_value == NULL)
 		{
 			result = __LINE__;
 		}
 		else
 		{
-			AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(0x11);
-			AMQP_VALUE performative = amqpvalue_create_described(ulong_descriptor_value, begin_frame_list);
-			FRAME_CODEC_HANDLE frame_codec;
-			if (((frame_codec = connection_get_frame_codec(session_data->connection)) == NULL) ||
-				(amqp_frame_codec_begin_encode_frame(frame_codec, 0, performative, 0) != 0))
+			AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = connection_get_amqp_frame_codec(session_data->connection);
+			if (amqp_frame_codec == NULL)
+			{
+				result = __LINE__;
+			}
+			else if (amqp_frame_codec_begin_encode_frame(amqp_frame_codec, 0, begin_performative_value, 0) != 0)
 			{
 				result = __LINE__;
 			}
@@ -59,15 +48,8 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 				result = 0;
 			}
 
-			amqpvalue_destroy(performative);
-			amqpvalue_destroy(ulong_descriptor_value);
+			amqpvalue_destroy(begin_performative_value);
 		}
-
-		amqpvalue_destroy(remote_channel_value);
-		amqpvalue_destroy(next_outgoing_id_value);
-		amqpvalue_destroy(incoming_window_value);
-		amqpvalue_destroy(outgoing_window_value);
-		amqpvalue_destroy(begin_frame_list);
 	}
 
 	return result;
@@ -216,9 +198,9 @@ int session_get_state(SESSION_HANDLE handle, SESSION_STATE* session_state)
 	return result;
 }
 
-FRAME_CODEC_HANDLE session_get_frame_codec(SESSION_HANDLE handle)
+AMQP_FRAME_CODEC_HANDLE session_get_amqp_frame_codec(SESSION_HANDLE handle)
 {
-	FRAME_CODEC_HANDLE result;
+	AMQP_FRAME_CODEC_HANDLE result;
 
 	SESSION_DATA* session = (SESSION_DATA*)handle;
 	if (session == NULL)
@@ -227,7 +209,7 @@ FRAME_CODEC_HANDLE session_get_frame_codec(SESSION_HANDLE handle)
 	}
 	else
 	{
-		result = connection_get_frame_codec(session->connection);
+		result = connection_get_amqp_frame_codec(session->connection);
 	}
 
 	return result;

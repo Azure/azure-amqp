@@ -1212,8 +1212,42 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 		case AMQP_TYPE_DESCRIBED:
 		case AMQP_TYPE_NULL:
 		case AMQP_TYPE_LIST:
-			result = NULL;
+		{
+			uint32_t list_size;
+			if (amqpvalue_get_list_item_count(value, &list_size) != 0)
+			{
+				result = NULL;
+			}
+			else
+			{
+				uint32_t i;
+				result = amqpvalue_create_list(list_size);
+				for (i = 0; i < list_size; i++)
+				{
+					AMQP_VALUE cloned_item;
+					AMQP_VALUE clone_source_item = amqpvalue_get_list_item(value, i);
+					if (clone_source_item == NULL)
+					{
+						break;
+					}
+
+					cloned_item = amqpvalue_clone(clone_source_item);
+					if (cloned_item == NULL)
+					{
+						break;
+					}
+
+					amqpvalue_set_list_item(result, i, cloned_item);
+				}
+
+				if (i < list_size)
+				{
+					amqpvalue_destroy(result);
+					result = NULL;
+				}
+			}
 			break;
+		}
 
 		case AMQP_TYPE_STRING:
 			result = amqpvalue_create_string_with_length(value_data->value.string_value.chars, value_data->value.string_value.length);

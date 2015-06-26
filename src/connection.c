@@ -31,19 +31,20 @@ typedef struct CONNECTION_DATA_TAG
 	void* frame_received_callback_context;
 } CONNECTION_INSTANCE;
 
-static int send_header(CONNECTION_INSTANCE* connection)
+static int send_header(CONNECTION_INSTANCE* connection_instance)
 {
 	int result;
 
 	/* Codes_SRS_CONNECTION_01_093: [_ When the client opens a new socket connection to a server, it MUST send a protocol header with the client’s preferred protocol version.] */
 	/* Codes_SRS_CONNECTION_01_104: [Sending the protocol header shall be done by using io_send.] */
-	if (io_send(connection->socket_io, amqp_header, sizeof(amqp_header)) != 0)
+	if (io_send(connection_instance->socket_io, amqp_header, sizeof(amqp_header)) != 0)
 	{
 		/* Codes_SRS_CONNECTION_01_106: [When sending the protocol header fails, the connection shall be immediately closed.] */
-		io_destroy(connection->socket_io);
+		io_destroy(connection_instance->socket_io);
+		connection_instance->socket_io = NULL;
 
 		/* Codes_SRS_CONNECTION_01_057: [END In this state it is illegal for either endpoint to write anything more onto the connection. The connection can be safely closed and discarded.] */
-		connection->connection_state = CONNECTION_STATE_END;
+		connection_instance->connection_state = CONNECTION_STATE_END;
 
 		/* Codes_SRS_CONNECTION_01_105: [When io_send fails, connection_dowork shall return a non-zero value.] */
 		result = __LINE__;
@@ -51,17 +52,17 @@ static int send_header(CONNECTION_INSTANCE* connection)
 	else
 	{
 		/* Codes_SRS_CONNECTION_01_041: [HDR SENT In this state the connection header has been sent to the peer but no connection header has been received.] */
-		connection->connection_state = CONNECTION_STATE_HDR_SENT;
+		connection_instance->connection_state = CONNECTION_STATE_HDR_SENT;
 		result = 0;
 	}
 
 	return result;
 }
 
-static int send_open_frame(CONNECTION_INSTANCE* connection)
+static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 {
 	int result;
-	AMQP_VALUE open_performative_value = amqpvalue_create_open(connection->open_performative);
+	AMQP_VALUE open_performative_value = amqpvalue_create_open(connection_instance->open_performative);
 	if (open_performative_value == NULL)
 	{
 		result = __LINE__;
@@ -72,16 +73,17 @@ static int send_open_frame(CONNECTION_INSTANCE* connection)
 		/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
 		/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
 		/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-		if (amqp_frame_codec_begin_encode_frame(connection->amqp_frame_codec, 0, open_performative_value, 0) != 0)
+		if (amqp_frame_codec_begin_encode_frame(connection_instance->amqp_frame_codec, 0, open_performative_value, 0) != 0)
 		{
-			io_destroy(connection->socket_io);
-			connection->connection_state = CONNECTION_STATE_END;
+			io_destroy(connection_instance->socket_io);
+			connection_instance->socket_io = NULL;
+			connection_instance->connection_state = CONNECTION_STATE_END;
 			result = __LINE__;
 		}
 		else
 		{
 			/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
-			connection->connection_state = CONNECTION_STATE_OPEN_SENT;
+			connection_instance->connection_state = CONNECTION_STATE_OPEN_SENT;
 			result = 0;
 		}
 
@@ -91,11 +93,11 @@ static int send_open_frame(CONNECTION_INSTANCE* connection)
 	return result;
 }
 
-static int connection_byte_received(CONNECTION_INSTANCE* connection, unsigned char b)
+static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, unsigned char b)
 {
 	int result;
 
-	switch (connection->connection_state)
+	switch (connection_instance->connection_state)
 	{
 	default:
 		result = __LINE__;
@@ -106,34 +108,36 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection, unsigned ch
 
 	/* Codes_SRS_CONNECTION_01_041: [HDR SENT In this state the connection header has been sent to the peer but no connection header has been received.] */
 	case CONNECTION_STATE_HDR_SENT:
-		if (b != amqp_header[connection->header_bytes_received])
+		if (b != amqp_header[connection_instance->header_bytes_received])
 		{
 			/* Codes_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
-			io_destroy(connection->socket_io);
-			connection->connection_state = CONNECTION_STATE_END;
+			io_destroy(connection_instance->socket_io);
+			connection_instance->socket_io = NULL;
+			connection_instance->connection_state = CONNECTION_STATE_END;
 			result = __LINE__;
 		}
 		else
 		{
-			connection->header_bytes_received++;
-			if (connection->header_bytes_received == sizeof(amqp_header))
+			connection_instance->header_bytes_received++;
+			if (connection_instance->header_bytes_received == sizeof(amqp_header))
 			{
-				if (connection->connection_state == CONNECTION_STATE_START)
+				if (connection_instance->connection_state == CONNECTION_STATE_START)
 				{
-					if (send_header(connection) != 0)
+					if (send_header(connection_instance) != 0)
 					{
-						io_destroy(connection->socket_io);
-						connection->connection_state = CONNECTION_STATE_END;
+						io_destroy(connection_instance->socket_io);
+						connection_instance->socket_io = NULL;
+						connection_instance->connection_state = CONNECTION_STATE_END;
 						result = __LINE__;
 					}
 					else
 					{
-						result = send_open_frame(connection);
+						result = send_open_frame(connection_instance);
 					}
 				}
 				else
 				{
-					result = send_open_frame(connection);
+					result = send_open_frame(connection_instance);
 				}
 			}
 			else
@@ -158,15 +162,16 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection, unsigned ch
 		/* normally this would never happen, but in case it does, we should close the connection */
 		CLOSE_HANDLE close_performative = close_create();
 		AMQP_VALUE close_performative_value = amqpvalue_create_close(close_performative);
-		if (amqp_frame_codec_begin_encode_frame(connection->amqp_frame_codec, 0, close_performative_value, 0) != 0)
+		if (amqp_frame_codec_begin_encode_frame(connection_instance->amqp_frame_codec, 0, close_performative_value, 0) != 0)
 		{
-			io_destroy(connection->socket_io);
-			connection->connection_state = CONNECTION_STATE_END;
+			io_destroy(connection_instance->socket_io);
+			connection_instance->socket_io = NULL;
+			connection_instance->connection_state = CONNECTION_STATE_END;
 		}
 		else
 		{
 			/* Codes_SRS_CONNECTION_01_055: [DISCARDING The DISCARDING state is a variant of the CLOSE SENT state where the close is triggered by an error.] */
-			connection->connection_state = CONNECTION_STATE_DISCARDING;
+			connection_instance->connection_state = CONNECTION_STATE_DISCARDING;
 		}
 		result = __LINE__;
 		break;
@@ -177,7 +182,7 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection, unsigned ch
 
 	/* Codes_SRS_CONNECTION_01_048: [OPENED In this state the connection header and the open frame have been both sent and received.] */
 	case CONNECTION_STATE_OPENED:
-		result = frame_codec_receive_bytes(connection->frame_codec, &b, 1);
+		result = frame_codec_receive_bytes(connection_instance->frame_codec, &b, 1);
 		break;
 	}
 
@@ -426,6 +431,7 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			if (send_header(connection_instance))
 			{
 				io_destroy(connection_instance->socket_io);
+				connection_instance->socket_io = NULL;
 				connection_instance->connection_state = CONNECTION_STATE_END;
 			}
 			break;
@@ -442,6 +448,7 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			if (send_open_frame(connection) != 0)
 			{
 				io_destroy(connection_instance->socket_io);
+				connection_instance->socket_io = NULL;
 				connection_instance->connection_state = CONNECTION_STATE_END;
 			}
 			break;

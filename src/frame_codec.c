@@ -576,7 +576,8 @@ int frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint8_t type,
 			uint8_t padding_byte_count = frame_body_offset - type_specific_size - 6;
 
 			/* Codes_SRS_FRAME_CODEC_01_088: [Encoding the bytes shall happen by passing the bytes to the underlying IO interface.] */
-			if (io_send(frame_codec_data->io, padding_bytes, padding_byte_count) != 0)
+			/* BUG */
+			if ((padding_byte_count > 0) && (io_send(frame_codec_data->io, padding_bytes, padding_byte_count) != 0))
 			{
 				/* Codes_SRS_FRAME_CODEC_01_093: [Once encoding has failed due to IO issues, all subsequent calls to frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
 				frame_codec_data->encode_frame_state = ENCODE_FRAME_STATE_ERROR;

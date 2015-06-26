@@ -30,16 +30,9 @@ typedef struct DESCRIBED_VALUE_TAG
 	AMQP_VALUE value;
 } DESCRIBED_VALUE;
 
-typedef struct COMPOSITE_VALUE_TAG
-{
-	AMQP_VALUE descriptor;
-	AMQP_VALUE list;
-} COMPOSITE_VALUE;
-
 typedef union AMQP_VALUE_UNION_TAG
 {
 	DESCRIBED_VALUE described_value;
-	COMPOSITE_VALUE composite_value;
 	unsigned char ubyte_value;
 	uint16_t ushort_value;
 	uint32_t uint_value;
@@ -877,18 +870,18 @@ AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size)
 	if (result != NULL)
 	{
 		result->type = AMQP_TYPE_COMPOSITE;
-		result->value.composite_value.descriptor = amqpvalue_clone(descriptor);
-		if (result->value.composite_value.descriptor == NULL)
+		result->value.described_value.descriptor = amqpvalue_clone(descriptor);
+		if (result->value.described_value.descriptor == NULL)
 		{
 			free(result);
 			result = NULL;
 		}
 		else
 		{
-			result->value.composite_value.list = amqpvalue_create_list(list_size);
-			if (result->value.composite_value.list == NULL)
+			result->value.described_value.value = amqpvalue_create_list(list_size);
+			if (result->value.described_value.value == NULL)
 			{
-				amqpvalue_destroy(result->value.composite_value.descriptor);
+				amqpvalue_destroy(result->value.described_value.descriptor);
 				free(result);
 				result = NULL;
 			}
@@ -1189,7 +1182,8 @@ AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value)
 	else
 	{
 		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		if (value_data->type != AMQP_TYPE_DESCRIBED)
+		if ((value_data->type != AMQP_TYPE_DESCRIBED) &&
+			(value_data->type != AMQP_TYPE_COMPOSITE))
 		{
 			result = NULL;
 		}
@@ -1257,12 +1251,12 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 			{
 				result = NULL;
 			}
-			else if ((cloned_descriptor = amqpvalue_clone(value_data->value.composite_value.descriptor)) == NULL)
+			else if ((cloned_descriptor = amqpvalue_clone(value_data->value.described_value.descriptor)) == NULL)
 			{
 				free(result_data);
 				result = NULL;
 			}
-			else if ((cloned_list = amqpvalue_clone(value_data->value.composite_value.list)) == NULL)
+			else if ((cloned_list = amqpvalue_clone(value_data->value.described_value.value)) == NULL)
 			{
 				amqpvalue_destroy(cloned_descriptor);
 				free(result_data);
@@ -1270,8 +1264,9 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 			}
 			else
 			{
-				result_data->value.composite_value.descriptor = cloned_descriptor;
-				result_data->value.composite_value.list = cloned_list;
+				result_data->value.described_value.descriptor = cloned_descriptor;
+				result_data->value.described_value.value = cloned_list;
+				result_data->type = AMQP_TYPE_COMPOSITE;
 
 				result = (AMQP_VALUE)result_data;
 			}
@@ -2210,11 +2205,6 @@ int decoder_decode_bytes(DECODER_HANDLE handle, const unsigned char* buffer, siz
 	return result;
 }
 
-int amqpvalue_get_encoded_size(AMQP_VALUE value, size_t* encoded_size)
-{
-	return 0;
-}
-
 static int output_byte(ENCODER_OUTPUT encoder_output, void* context, unsigned char b)
 {
 	int result;
@@ -2441,6 +2431,8 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 	}
 	else
 	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+
 		switch (amqp_type)
 		{
 		default:
@@ -2458,14 +2450,12 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 			}
 			break;
 
+		case AMQP_TYPE_COMPOSITE:
 		case AMQP_TYPE_DESCRIBED:
 		{
-			AMQP_VALUE descriptor_value = amqpvalue_get_descriptor(value);
-			AMQP_VALUE described_value = amqpvalue_get_described_value(value);
-			if ((descriptor_value == NULL) ||
-				(encode_descriptor_header(encoder_output, context) != 0) ||
-				(amqpvalue_encode(descriptor_value, encoder_output, context) != 0) ||
-				(amqpvalue_encode(described_value, encoder_output, context) != 0))
+			if ((encode_descriptor_header(encoder_output, context) != 0) ||
+				(amqpvalue_encode(value_data->value.described_value.descriptor, encoder_output, context) != 0) ||
+				(amqpvalue_encode(value_data->value.described_value.value, encoder_output, context) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2663,7 +2653,7 @@ int amqpvalue_set_composite_item(AMQP_VALUE value, size_t index, AMQP_VALUE item
 		}
 		else
 		{
-			if (amqpvalue_set_list_item(value_data->value.composite_value.list, index, item_value) != 0)
+			if (amqpvalue_set_list_item(value_data->value.described_value.value, index, item_value) != 0)
 			{
 				result = __LINE__;
 			}
@@ -2672,6 +2662,31 @@ int amqpvalue_set_composite_item(AMQP_VALUE value, size_t index, AMQP_VALUE item
 				result = 0;
 			}
 		}
+	}
+
+	return result;
+}
+
+int count_bytes(void* context, const void* bytes, size_t length)
+{
+	size_t* byte_count = (uint32_t*)context;
+	*byte_count += length;
+	return 0;
+}
+
+int amqpvalue_get_encoded_size(AMQP_VALUE value, size_t* encoded_size)
+{
+	int result;
+
+	if ((value == NULL) ||
+		(encoded_size == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		*encoded_size = 0;
+		result = amqpvalue_encode(value, count_bytes, encoded_size);
 	}
 
 	return result;

@@ -504,13 +504,15 @@ int connection_register_session(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVE
 
 	if (connection == NULL)
 	{
-		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-		connection_instance->frame_received_callback = callback;
-		connection_instance->frame_received_callback_context = context;
 		result = __LINE__;
 	}
 	else
 	{
+		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+
+		connection_instance->frame_received_callback = callback;
+		connection_instance->frame_received_callback_context = context;
+
 		result = 0;
 	}
 

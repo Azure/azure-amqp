@@ -62,7 +62,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_null();
@@ -77,7 +77,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -96,7 +96,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_boolean(true);
@@ -112,7 +112,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_boolean(false);
@@ -127,7 +127,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -229,7 +229,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_ubyte(0);
@@ -245,7 +245,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_ubyte(255);
@@ -260,7 +260,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -362,7 +362,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_ushort(0);
@@ -378,7 +378,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_ushort(65535);
@@ -393,7 +393,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -495,7 +495,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_uint(0);
@@ -511,7 +511,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_uint(0xFFFFFFFF);
@@ -526,7 +526,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -628,7 +628,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_ulong(0);
@@ -644,7 +644,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_ulong(0xFFFFFFFFFFFFFFFF);
@@ -659,7 +659,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -761,7 +761,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_byte(-128);
@@ -777,7 +777,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_byte(127);
@@ -792,7 +792,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -894,7 +894,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_short(-32768);
@@ -910,7 +910,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_short(32767);
@@ -925,7 +925,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -1027,7 +1027,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_int(-2147483647 - 1);
@@ -1043,7 +1043,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_int(2147483647);
@@ -1058,7 +1058,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -1160,7 +1160,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_long(-9223372036854775807i64 - 1);
@@ -1176,7 +1176,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_long(9223372036854775807);
@@ -1191,7 +1191,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -1293,7 +1293,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_float(-1.0);
@@ -1309,7 +1309,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_float(42.0);
@@ -1324,7 +1324,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -1426,7 +1426,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_double(-1.0);
@@ -1442,7 +1442,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_double(42.0);
@@ -1457,7 +1457,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -1559,7 +1559,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_char(0x00);
@@ -1575,7 +1575,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_char(0x10FFFF);
@@ -1603,7 +1603,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -1705,7 +1705,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_timestamp(0);
@@ -1721,7 +1721,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_timestamp(1311704463521);
@@ -1736,7 +1736,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -1839,7 +1839,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_mocks mocks;
 			amqp_uuid uuid = { 0x0 };
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_uuid(uuid);
@@ -1856,7 +1856,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_mocks mocks;
 			amqp_uuid uuid = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			AMQP_VALUE result = amqpvalue_create_uuid(uuid);
@@ -1872,7 +1872,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_mocks mocks;
 			amqp_uuid uuid = { 0x0 };
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -1978,7 +1978,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_mocks mocks;
 			unsigned char input[] = { 0x0 };
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 			STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(1));
 
 			// act
@@ -1996,7 +1996,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			amqp_binary binary_input = { NULL, 0 };
@@ -2014,7 +2014,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_mocks mocks;
 			unsigned char input[] = { 0x0, 0x42 };
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 			STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 
 			// act
@@ -2032,7 +2032,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_mocks mocks;
 			unsigned char input[] = { 0x0, 0x42 };
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -2050,7 +2050,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_mocks mocks;
 			unsigned char input[] = { 0x0, 0x42 };
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 			STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2))
 				.SetReturn((void*)NULL);
 			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));

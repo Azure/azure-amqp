@@ -70,7 +70,7 @@ BEGIN_TEST_SUITE(list_unittests)
 			// arrange
 			list_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			LIST_HANDLE result = list_create();
@@ -85,7 +85,7 @@ BEGIN_TEST_SUITE(list_unittests)
 			// arrange
 			list_mocks mocks;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
@@ -168,7 +168,7 @@ BEGIN_TEST_SUITE(list_unittests)
 			mocks.ResetAllCalls();
 			int x = 42;
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			int result = list_add(handle, &x);
@@ -194,7 +194,7 @@ BEGIN_TEST_SUITE(list_unittests)
 			list_add(handle, &x1);
 			mocks.ResetAllCalls();
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
 			int result = list_add(handle, &x2);
@@ -219,7 +219,7 @@ BEGIN_TEST_SUITE(list_unittests)
 			int x = 42;
 			mocks.ResetAllCalls();
 
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act

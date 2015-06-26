@@ -200,7 +200,7 @@ TEST_METHOD(frame_codec_create_with_valid_args_succeeds)
 	// arrange
 	frame_codec_mocks mocks;
 
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 	STRICT_EXPECTED_CALL(mocks, list_create());
 
 	// act
@@ -229,7 +229,7 @@ TEST_METHOD(when_allocating_memory_for_the_frame_codec_fails_frame_code_create_f
 	// arrange
 	frame_codec_mocks mocks;
 
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 		.SetReturn((void*)NULL);
 
 	// act
@@ -264,9 +264,9 @@ TEST_METHOD(a_frame_of_exactly_max_frame_size_immediately_after_create_can_be_se
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ExpectedAtLeastTimes(1);
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.IgnoreAllCalls();
 
 	// act
@@ -425,9 +425,9 @@ TEST_METHOD(a_frame_of_exactly_max_frame_size_can_be_sent)
 	(void)frame_codec_set_max_frame_size(frame_codec, 1024);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ExpectedAtLeastTimes(1);
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.IgnoreAllCalls();
 
 	// act
@@ -1281,7 +1281,7 @@ TEST_METHOD(frame_codec_subscribe_with_valid_args_succeeds)
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame_type, 1);
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 	STRICT_EXPECTED_CALL(mocks, list_add(TEST_LIST_HANDLE, IGNORED_PTR_ARG))
 		.IgnoreArgument(2);
 
@@ -1306,7 +1306,7 @@ TEST_METHOD(when_list_find_returns_NULL_a_new_subscription_is_created)
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame_type, 1)
 		.SetReturn((LIST_ITEM_HANDLE)NULL);
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 	STRICT_EXPECTED_CALL(mocks, list_add(TEST_LIST_HANDLE, IGNORED_PTR_ARG))
 		.IgnoreArgument(2);
 
@@ -1528,7 +1528,7 @@ TEST_METHOD(when_allocating_memory_for_the_subscription_fails_frame_codec_subscr
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame_type, 1);
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 		.SetReturn((void*)NULL);
 
 	// act
@@ -1550,11 +1550,11 @@ TEST_METHOD(when_adding_the_subscription_fails_then_frame_codec_subscribe_fails)
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame_type, 1);
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 	STRICT_EXPECTED_CALL(mocks, list_add(TEST_LIST_HANDLE, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.SetReturn(1);
-	EXPECTED_CALL(mocks, amqpalloc_free(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_NUM_ARG));
 
 	// act
 	int result = frame_codec_subscribe(frame_codec, 0, frame_begin_callback_1, frame_body_bytes_received_callback_1, frame_codec);
@@ -1725,7 +1725,7 @@ TEST_METHOD(subscribe_unsubscribe_subscribe_succeeds)
 	STRICT_EXPECTED_CALL(mocks, list_find(TEST_LIST_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.IgnoreArgument(2)
 		.ValidateArgumentBuffer(3, &frame_type, 1);
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 	STRICT_EXPECTED_CALL(mocks, list_add(TEST_LIST_HANDLE, IGNORED_PTR_ARG))
 		.IgnoreArgument(2);
 
@@ -1811,9 +1811,9 @@ TEST_METHOD(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeed
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ExpectedAtLeastTimes(1);
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.IgnoreAllCalls();
 
 	// act
@@ -1861,7 +1861,7 @@ TEST_METHOD(when_io_send_fails_then_frame_codec_begin_encode_frame_fails)
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.SetReturn(1);
 
 	// act
@@ -1908,9 +1908,9 @@ TEST_METHOD(when_type_specific_size_is_max_allowed_then_frame_codec_begin_encode
 	(void)frame_codec_set_max_frame_size(frame_codec, 4096);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ExpectedAtLeastTimes(1);
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.IgnoreAllCalls();
 
 	// act
@@ -1929,7 +1929,7 @@ TEST_METHOD(when_type_specific_size_is_max_allowed_then_frame_codec_begin_encode
 /* Tests_SRS_FRAME_CODEC_01_066: [This gives the position of the body within the frame.] */
 /* Tests_SRS_FRAME_CODEC_01_067: [The value of the data offset is an unsigned, 8-bit integer specifying a count of 4-byte words.] */
 /* Tests_SRS_FRAME_CODEC_01_068: [Due to the mandatory 8-byte frame header, the frame is malformed if the value is less than 2.] */
-TEST_METHOD(one_byte_of_pading_is_added_to_type_specific_data_to_make_the_frame_header)
+TEST_METHOD(one_byte_of_padding_is_added_to_type_specific_data_to_make_the_frame_header)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1937,13 +1937,43 @@ TEST_METHOD(one_byte_of_pading_is_added_to_type_specific_data_to_make_the_frame_
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ExpectedAtLeastTimes(1);
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.IgnoreAllCalls();
 
 	// act
 	int result = frame_codec_begin_encode_frame(frame_codec, 0, 0, &expected_frame[6], 1);
+
+	// assert
+	stringify_bytes(expected_frame, sizeof(expected_frame), expected_stringified_io);
+	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
+	ASSERT_ARE_EQUAL(char_ptr, expected_stringified_io, actual_stringified_io);
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_090: [If the type_specific_size – 2 does not divide by 4, frame_codec_begin_encode_frame shall pad the type_specific bytes with zeroes so that type specific data is according to the AMQP ISO.] */
+/* Tests_SRS_FRAME_CODEC_01_065: [DOFF Byte 4 of the frame header is the data offset.] */
+/* Tests_SRS_FRAME_CODEC_01_066: [This gives the position of the body within the frame.] */
+/* Tests_SRS_FRAME_CODEC_01_067: [The value of the data offset is an unsigned, 8-bit integer specifying a count of 4-byte words.] */
+/* Tests_SRS_FRAME_CODEC_01_068: [Due to the mandatory 8-byte frame header, the frame is malformed if the value is less than 2.] */
+TEST_METHOD(no_bytes_of_padding_are_added_to_type_specific_data_when_enough_bytes_are_there)
+{
+	// arrange
+	frame_codec_mocks mocks;
+	unsigned char expected_frame[] = { 0x00, 0x00, 0x00, 0x8, 0x02, 0x00, 0x42, 0x00 };
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ExpectedAtLeastTimes(1);
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, 0))
+		.ValidateArgument(3).NeverInvoked();
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.IgnoreAllCalls();
+
+	// act
+	int result = frame_codec_begin_encode_frame(frame_codec, 0, 0, &expected_frame[6], 2);
 
 	// assert
 	stringify_bytes(expected_frame, sizeof(expected_frame), expected_stringified_io);
@@ -1960,9 +1990,9 @@ TEST_METHOD(the_type_is_placed_in_the_underlying_frame)
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ExpectedAtLeastTimes(1);
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.IgnoreAllCalls();
 
 	// act
@@ -1982,8 +2012,8 @@ TEST_METHOD(when_2nd_io_send_fails_frame_codec_begin_encode_frame_fails_too)
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.SetReturn(1);
 
 	// act
@@ -2002,9 +2032,9 @@ TEST_METHOD(when_3rd_io_send_fails_frame_codec_begin_encode_frame_fails_too)
 	unsigned char expected_frame[] = { 0x00, 0x00, 0x00, 0x8, 0x02, 0x42, 0x42, 0x00 };
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.SetReturn(1);
 
 	// act
@@ -2038,7 +2068,7 @@ TEST_METHOD(after_an_io_failure_a_subsequent_call_to_frame_codec_begin_encode_fr
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.SetReturn(1);
 
 	(void)frame_codec_begin_encode_frame(frame_codec, 0x42, 0, NULL, 0);
@@ -2059,8 +2089,8 @@ TEST_METHOD(after_an_io_failure_with_2nd_io_send_call_a_subsequent_call_to_frame
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.SetReturn(1);
 
 	uint8_t byte = 0x42;
@@ -2082,9 +2112,9 @@ TEST_METHOD(after_an_io_failure_with_3rd_io_send_call_a_subsequent_call_to_frame
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE));
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.SetReturn(1);
 
 	uint8_t byte = 0x42;
@@ -2309,9 +2339,9 @@ TEST_METHOD(after_a_frame_is_completed_another_one_can_be_started)
 	frame_codec_encode_frame_bytes(frame_codec, bytes, 1);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ExpectedAtLeastTimes(1);
-	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.IgnoreAllCalls();
 
 	// act

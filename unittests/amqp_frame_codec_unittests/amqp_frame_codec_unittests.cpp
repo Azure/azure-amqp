@@ -215,7 +215,7 @@ TEST_METHOD(amqp_frame_codec_create_with_valid_args_succeeds)
 	// arrange
 	amqp_frame_codec_mocks mocks;
 
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 	EXPECTED_CALL(mocks, decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, frame_codec_subscribe(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
@@ -236,7 +236,7 @@ TEST_METHOD(amqp_frame_codec_create_with_valid_args_and_NULL_context_succeeds)
 	// arrange
 	amqp_frame_codec_mocks mocks;
 
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 	EXPECTED_CALL(mocks, decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, frame_codec_subscribe(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
@@ -307,7 +307,7 @@ TEST_METHOD(when_frame_codec_subscribe_fails_then_amqp_frame_codec_create_fails)
 	// arrange
 	amqp_frame_codec_mocks mocks;
 
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 	EXPECTED_CALL(mocks, decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, frame_codec_subscribe(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
@@ -330,7 +330,7 @@ TEST_METHOD(when_creating_the_decoder_fails_then_amqp_frame_codec_create_fails)
 	// arrange
 	amqp_frame_codec_mocks mocks;
 
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 	EXPECTED_CALL(mocks, decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.SetReturn((DECODER_HANDLE)NULL);
@@ -350,7 +350,7 @@ TEST_METHOD(when_allocating_memory_for_amqp_frame_codec_fails_then_amqp_frame_co
 	// arrange
 	amqp_frame_codec_mocks mocks;
 
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 		.SetReturn((void*)NULL);
 
 	// act
@@ -1234,9 +1234,9 @@ TEST_METHOD(when_all_performative_bytes_are_received_and_AMQP_frame_payload_is_0
 	mocks.ResetAllCalls();
 
 	uint64_t descriptor_ulong = 0;
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1).IgnoreAllCalls();
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
@@ -1266,9 +1266,9 @@ TEST_METHOD(the_amqp_frame_payload_size_is_computed_based_on_the_performative_si
 	mocks.ResetAllCalls();
 
 	uint64_t descriptor_ulong = 0;
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1).IgnoreAllCalls();
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
@@ -1378,9 +1378,9 @@ TEST_METHOD(when_performative_and_payload_are_received_in_one_chunk_decoding_suc
 	mocks.ResetAllCalls();
 
 	uint64_t descriptor_ulong = 0;
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1).IgnoreAllCalls();
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
@@ -1411,9 +1411,9 @@ TEST_METHOD(after_decoding_succesfully_a_complete_frame_a_new_one_can_be_started
 	mocks.ResetAllCalls();
 
 	uint64_t descriptor_ulong = 0;
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1).IgnoreAllCalls();
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
@@ -1443,9 +1443,9 @@ TEST_METHOD(valid_performative_codes_trigger_callbacks)
 		mocks.ResetAllCalls();
 
 		performative_ulong = valid_performatives[i];
-		EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 			.ValidateArgument(1);
-		EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+		EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 			.ValidateArgument(1).IgnoreAllCalls();
 		STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
 		STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
@@ -1472,9 +1472,9 @@ TEST_METHOD(performative_0x09_can_not_be_decoded)
 	mocks.ResetAllCalls();
 
 	performative_ulong = 0x09;
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1).IgnoreAllCalls();
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
@@ -1498,9 +1498,9 @@ TEST_METHOD(performative_0x19_can_not_be_decoded)
 	mocks.ResetAllCalls();
 
 	performative_ulong = 0x19;
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1).IgnoreAllCalls();
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
@@ -1524,9 +1524,9 @@ TEST_METHOD(when_getting_the_descriptor_fails_decoder_fails)
 	mocks.ResetAllCalls();
 
 	performative_ulong = 0x19;
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1).IgnoreAllCalls();
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE))
 		.SetReturn((AMQP_VALUE)NULL);
@@ -1550,9 +1550,9 @@ TEST_METHOD(when_getting_the_ulong_value_of_the_descriptor_fails_decoder_fails)
 	mocks.ResetAllCalls();
 
 	performative_ulong = 0x19;
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1).IgnoreAllCalls();
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
@@ -1578,9 +1578,9 @@ TEST_METHOD(when_frame_received_callback_fails_then_the_error_is_returned_to_the
 	mocks.ResetAllCalls();
 
 	uint64_t descriptor_ulong = 0;
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1).IgnoreAllCalls();
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
@@ -1606,9 +1606,9 @@ TEST_METHOD(decoding_a_frame_after_amqp_frame_received_callback_fails_is_possibl
 	mocks.ResetAllCalls();
 
 	uint64_t descriptor_ulong = 0;
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1).IgnoreAllCalls();
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
@@ -1679,9 +1679,9 @@ TEST_METHOD(when_amqp_frame_payload_bytes_received_callback_fails_error_is_repor
 	mocks.ResetAllCalls();
 
 	uint64_t descriptor_ulong = 0;
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1).IgnoreAllCalls();
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
@@ -1713,9 +1713,9 @@ TEST_METHOD(after_amqp_frame_payload_bytes_received_callback_fails_error_is_repo
 	mocks.ResetAllCalls();
 
 	uint64_t descriptor_ulong = 0;
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1);
-	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORE))
+	EXPECTED_CALL(mocks, decoder_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1).IgnoreAllCalls();
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))

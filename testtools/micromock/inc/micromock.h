@@ -46,8 +46,9 @@ IN THE SOFTWARE.
 
 // Defines for ignored arguments
 #define IGNORED_PTR_ARG (NULL)
+#define IGNORED_NUM_ARG (0)
 #ifndef _MSC_VER
-#define IGNORE (0)
+#define IGNORED_NUM_ARG (0)
 #endif
 
 #define TYPED_MOCK_CLASS(className, mockType)       \

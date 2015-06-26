@@ -98,7 +98,7 @@ TEST_METHOD(io_create_with_all_args_except_interface_description_NULL_succeeds)
 	// arrange
 	io_mocks mocks;
 
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 	STRICT_EXPECTED_CALL(mocks, test_io_create(NULL, NULL, NULL, NULL));
 
 	// act
@@ -114,7 +114,7 @@ TEST_METHOD(io_create_passes_the_args_to_the_concrete_io_implementation)
 	// arrange
 	io_mocks mocks;
 
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 	STRICT_EXPECTED_CALL(mocks, test_io_create((void*)0x4243, test_receive_callback, (void*)0x4245, test_logger_log));
 
 	// act
@@ -130,7 +130,7 @@ TEST_METHOD(when_concrete_io_create_fails_then_io_create_fails)
 	// arrange
 	io_mocks mocks;
 
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 	STRICT_EXPECTED_CALL(mocks, test_io_create(NULL, NULL, NULL, NULL))
 		.SetReturn((CONCRETE_IO_HANDLE)NULL);
 
@@ -242,7 +242,7 @@ TEST_METHOD(when_allocating_memory_Fails_then_io_create_fails)
 	// arrange
 	io_mocks mocks;
 
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 		.SetReturn((void*)NULL);
 
 	// act

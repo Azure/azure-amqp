@@ -30,9 +30,16 @@ typedef struct DESCRIBED_VALUE_TAG
 	AMQP_VALUE value;
 } DESCRIBED_VALUE;
 
+typedef struct COMPOSITE_VALUE_TAG
+{
+	AMQP_VALUE descriptor;
+	AMQP_VALUE list;
+} COMPOSITE_VALUE;
+
 typedef union AMQP_VALUE_UNION_TAG
 {
 	DESCRIBED_VALUE described_value;
+	COMPOSITE_VALUE composite_value;
 	unsigned char ubyte_value;
 	uint16_t ushort_value;
 	uint32_t uint_value;
@@ -48,7 +55,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	uint64_t timestamp_value;
 	amqp_uuid uuid_value;
 	AMQP_STRING_VALUE string_value;
-	AMQP_BINARY_VALUE binary_value;
+	amqp_binary binary_value;
 	AMQP_LIST_VALUE list_value;
 } AMQP_VALUE_UNION;
 
@@ -775,7 +782,7 @@ int amqpvalue_get_uuid(AMQP_VALUE value, amqp_uuid* uuid_value)
 AMQP_VALUE amqpvalue_create_binary(amqp_binary value)
 {
 	AMQP_VALUE_DATA* result;
-	if ((value.data == NULL) &&
+	if ((value.bytes == NULL) &&
 		(value.length > 0))
 	{
 		/* Codes_SRS_AMQPVALUE_01_129: [If value.data is NULL and value.length is positive then amqpvalue_create_binary shall return NULL.] */
@@ -808,7 +815,7 @@ AMQP_VALUE amqpvalue_create_binary(amqp_binary value)
 			}
 			else
 			{
-				if ((value.length > 0) && (memcpy(result->value.binary_value.bytes, value.data, value.length) == NULL))
+				if ((value.length > 0) && (memcpy(result->value.binary_value.bytes, value.bytes, value.length) == NULL))
 				{
 					/* Codes_SRS_AMQPVALUE_01_130: [If any other error occurs, amqpvalue_create_binary shall return NULL.] */
 					amqpalloc_free(result->value.binary_value.bytes);
@@ -843,7 +850,7 @@ int amqpvalue_get_binary(AMQP_VALUE value, amqp_binary* binary_value)
 		{
 			/* Codes_SRS_AMQPVALUE_01_131: [amqpvalue_get_binary shall yield a pointer to the sequence of bytes held by the AMQP_VALUE in binary_value.data and fill in the binary_value.length argument the number of bytes held in the binary value.] */
 			binary_value->length = value_data->value.binary_value.length;
-			binary_value->data = value_data->value.binary_value.bytes;
+			binary_value->bytes = value_data->value.binary_value.bytes;
 
 			result = 0;
 		}
@@ -852,7 +859,7 @@ int amqpvalue_get_binary(AMQP_VALUE value, amqp_binary* binary_value)
 	return result;
 }
 
-AMQP_VALUE amqpvalue_create_described_value(AMQP_VALUE descriptor, AMQP_VALUE value)
+AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
@@ -861,6 +868,33 @@ AMQP_VALUE amqpvalue_create_described_value(AMQP_VALUE descriptor, AMQP_VALUE va
 		result->value.described_value.descriptor = descriptor;
 		result->value.described_value.value = value;
 	}
+	return result;
+}
+
+AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
+	{
+		result->type = AMQP_TYPE_COMPOSITE;
+		result->value.composite_value.descriptor = amqpvalue_clone(descriptor);
+		if (result->value.composite_value.descriptor == NULL)
+		{
+			free(result);
+			result = NULL;
+		}
+		else
+		{
+			result->value.composite_value.list = amqpvalue_create_list(list_size);
+			if (result->value.composite_value.list == NULL)
+			{
+				amqpvalue_destroy(result->value.composite_value.descriptor);
+				free(result);
+				result = NULL;
+			}
+		}
+	}
+
 	return result;
 }
 
@@ -948,7 +982,7 @@ AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor,
 		}
 		else
 		{
-			result->type = AMQP_TYPE_DESCRIBED;
+			result->type = AMQP_TYPE_COMPOSITE;
 			result->value.described_value.descriptor = descriptor_ulong_value;
 			if (result->value.described_value.descriptor == NULL)
 			{
@@ -1210,7 +1244,44 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 			break;
 
 		case AMQP_TYPE_DESCRIBED:
+			result = amqpvalue_create_described(value_data->value.described_value.descriptor, value_data->value.described_value.value);
+			break;
+
+		case AMQP_TYPE_COMPOSITE:
+		{
+			AMQP_VALUE_DATA* result_data = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+			AMQP_VALUE cloned_descriptor;
+			AMQP_VALUE cloned_list;
+
+			if (result_data == NULL)
+			{
+				result = NULL;
+			}
+			else if ((cloned_descriptor = amqpvalue_clone(value_data->value.composite_value.descriptor)) == NULL)
+			{
+				free(result_data);
+				result = NULL;
+			}
+			else if ((cloned_list = amqpvalue_clone(value_data->value.composite_value.list)) == NULL)
+			{
+				amqpvalue_destroy(cloned_descriptor);
+				free(result_data);
+				result = NULL;
+			}
+			else
+			{
+				result_data->value.composite_value.descriptor = cloned_descriptor;
+				result_data->value.composite_value.list = cloned_list;
+
+				result = (AMQP_VALUE)result_data;
+			}
+			break;
+		}
+
 		case AMQP_TYPE_NULL:
+			result = amqpvalue_create_null();
+			break;
+
 		case AMQP_TYPE_LIST:
 		{
 			uint32_t list_size;
@@ -1254,13 +1325,27 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 			break;
 
 		case AMQP_TYPE_ULONG:
+			result = amqpvalue_create_ulong(value_data->value.ulong_value);
+			break;
+
 		case AMQP_TYPE_UINT:
+			result = amqpvalue_create_uint(value_data->value.uint_value);
+			break;
+
 		case AMQP_TYPE_USHORT:
+			result = amqpvalue_create_ushort(value_data->value.ushort_value);
+			break;
+
 		case AMQP_TYPE_BOOL:
+			result = amqpvalue_create_boolean(value_data->value.bool_value);
+			break;
+
 		case AMQP_TYPE_UBYTE:
-		case AMQP_TYPE_COMPOSITE:
+			result = amqpvalue_create_ubyte(value_data->value.ubyte_value);
+			break;
+
 		case AMQP_TYPE_BINARY:
-			result = NULL;
+			result = amqpvalue_create_binary(value_data->value.binary_value);
 			break;
 		}
 	}
@@ -1709,7 +1794,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							to_copy = size;
 						}
 
-						if (memcpy(internal_decoder_data->decode_to_value->value.binary_value.bytes + (internal_decoder_data->bytes_decoded - 1), buffer, to_copy) == NULL)
+						if (memcpy((unsigned char*)(internal_decoder_data->decode_to_value->value.binary_value.bytes) + (internal_decoder_data->bytes_decoded - 1), buffer, to_copy) == NULL)
 						{
 							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
 							result = __LINE__;
@@ -1828,7 +1913,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							to_copy = size;
 						}
 
-						if (memcpy(internal_decoder_data->decode_to_value->value.binary_value.bytes + (internal_decoder_data->bytes_decoded - 4), buffer, to_copy) == NULL)
+						if (memcpy((unsigned char*)(internal_decoder_data->decode_to_value->value.binary_value.bytes) + (internal_decoder_data->bytes_decoded - 4), buffer, to_copy) == NULL)
 						{
 							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
 							result = __LINE__;
@@ -2407,7 +2492,7 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 			amqp_binary binary_value;
 
 			if ((amqpvalue_get_binary(value, &binary_value) != 0) ||
-				(encode_binary(encoder_output, context, binary_value.data, binary_value.length) != 0))
+				(encode_binary(encoder_output, context, binary_value.bytes, binary_value.length) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2561,3 +2646,33 @@ int amqpvalue_get_map(AMQP_VALUE value, AMQP_VALUE* map_value)
 	return __LINE__;
 }
 
+int amqpvalue_set_composite_item(AMQP_VALUE value, size_t index, AMQP_VALUE item_value)
+{
+	int result;
+
+	if (value == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_COMPOSITE)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			if (amqpvalue_set_list_item(value_data->value.composite_value.list, index, item_value) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+	}
+
+	return result;
+}

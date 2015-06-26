@@ -105,7 +105,7 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write("_INSTANCE_TAG\r\n\t{\r\n\t\tAMQP_VALUE list;\r\n\t} ");
+            this.Write("_INSTANCE_TAG\r\n\t{\r\n\t\tAMQP_VALUE composite_value;\r\n\t} ");
             
             #line 28 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
@@ -188,7 +188,14 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write("_instance->list = amqpvalue_create_list(");
+            this.Write("_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(");
+            
+            #line 37 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(Program.GetDescriptorCode(Program.GetDescriptor(type))));
+            
+            #line default
+            #line hidden
+            this.Write(", ");
             
             #line 37 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(mandatory_args.Count()));
@@ -202,7 +209,7 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write("_instance->list == NULL)\r\n\t\t\t{\r\n\t\t\t\tfree(");
+            this.Write("_instance->composite_value == NULL)\r\n\t\t\t{\r\n\t\t\t\tfree(");
             
             #line 40 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
@@ -308,14 +315,14 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write(");\r\n\t\t\t\tif ((result == 0) && (amqpvalue_set_list_item(");
+            this.Write(");\r\n\t\t\t\tif ((result == 0) && (amqpvalue_set_composite_item(");
             
             #line 59 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
-            this.Write("_instance->list, ");
+            this.Write("_instance->composite_value, ");
             
             #line 59 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(i));
@@ -446,7 +453,7 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write("_instance->list);\r\n\t\t}\r\n\t}\r\n\r\n\tAMQP_VALUE amqpvalue_create_");
+            this.Write("_instance->composite_value);\r\n\t\t}\r\n\t}\r\n\r\n\tAMQP_VALUE amqpvalue_create_");
             
             #line 86 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
@@ -509,7 +516,7 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write("_instance->list);\r\n\t\t}\r\n\r\n\t\treturn result;\r\n\t}\r\n\r\n");
+            this.Write("_instance->composite_value);\r\n\t\t}\r\n\r\n\t\treturn result;\r\n\t}\r\n\r\n");
             
             #line 103 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
 				int j = 0; 
@@ -787,14 +794,14 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write("_value == NULL) ||\r\n\t\t\t\t(amqpvalue_set_list_item(");
+            this.Write("_value == NULL) ||\r\n\t\t\t\t(amqpvalue_set_composite_item(");
             
             #line 147 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
-            this.Write("_instance->list, ");
+            this.Write("_instance->composite_value, ");
             
             #line 147 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(j));

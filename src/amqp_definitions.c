@@ -8,7 +8,7 @@
 
 	typedef struct ERROR_INSTANCE_TAG
 	{
-		AMQP_VALUE list;
+		AMQP_VALUE composite_value;
 	} ERROR_INSTANCE;
 
 	ERROR_HANDLE error_create(uint32_t condition)
@@ -16,8 +16,8 @@
 		ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)malloc(sizeof(ERROR_INSTANCE));
 		if (error_instance != NULL)
 		{
-			error_instance->list = amqpvalue_create_list(1);
-			if (error_instance->list == NULL)
+			error_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(29, 1);
+			if (error_instance->composite_value == NULL)
 			{
 				free(error_instance);
 				error_instance = NULL;
@@ -28,7 +28,7 @@
 				int result = 0;
 
 				condition_value = amqpvalue_create_symbol(condition);
-				if ((result == 0) && (amqpvalue_set_list_item(error_instance->list, 0, condition_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(error_instance->composite_value, 0, condition_value) != 0))
 				{
 					result = __LINE__;
 				}
@@ -45,7 +45,7 @@
 		if (error != NULL)
 		{
 			ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)error;
-			amqpvalue_destroy(error_instance->list);
+			amqpvalue_destroy(error_instance->composite_value);
 		}
 	}
 
@@ -60,7 +60,7 @@
 		else
 		{
 			ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)error;
-			result = amqpvalue_clone(error_instance->list);
+			result = amqpvalue_clone(error_instance->composite_value);
 		}
 
 		return result;
@@ -96,7 +96,7 @@
 			ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)error;
 			AMQP_VALUE condition_value = amqpvalue_create_symbol(condition);
 			if ((condition_value == NULL) ||
-				(amqpvalue_set_list_item(error_instance->list, 0, condition_value) != 0))
+				(amqpvalue_set_composite_item(error_instance->composite_value, 0, condition_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -139,7 +139,7 @@
 			ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)error;
 			AMQP_VALUE description_value = amqpvalue_create_string(description);
 			if ((description_value == NULL) ||
-				(amqpvalue_set_list_item(error_instance->list, 1, description_value) != 0))
+				(amqpvalue_set_composite_item(error_instance->composite_value, 1, description_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -182,7 +182,7 @@
 			ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)error;
 			AMQP_VALUE info_value = amqpvalue_create_fields(info);
 			if ((info_value == NULL) ||
-				(amqpvalue_set_list_item(error_instance->list, 2, info_value) != 0))
+				(amqpvalue_set_composite_item(error_instance->composite_value, 2, info_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -200,7 +200,7 @@
 
 	typedef struct OPEN_INSTANCE_TAG
 	{
-		AMQP_VALUE list;
+		AMQP_VALUE composite_value;
 	} OPEN_INSTANCE;
 
 	OPEN_HANDLE open_create(const char* container_id)
@@ -208,8 +208,8 @@
 		OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)malloc(sizeof(OPEN_INSTANCE));
 		if (open_instance != NULL)
 		{
-			open_instance->list = amqpvalue_create_list(1);
-			if (open_instance->list == NULL)
+			open_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(16, 1);
+			if (open_instance->composite_value == NULL)
 			{
 				free(open_instance);
 				open_instance = NULL;
@@ -220,7 +220,7 @@
 				int result = 0;
 
 				container_id_value = amqpvalue_create_string(container_id);
-				if ((result == 0) && (amqpvalue_set_list_item(open_instance->list, 0, container_id_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(open_instance->composite_value, 0, container_id_value) != 0))
 				{
 					result = __LINE__;
 				}
@@ -237,7 +237,7 @@
 		if (open != NULL)
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
-			amqpvalue_destroy(open_instance->list);
+			amqpvalue_destroy(open_instance->composite_value);
 		}
 	}
 
@@ -252,7 +252,7 @@
 		else
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
-			result = amqpvalue_clone(open_instance->list);
+			result = amqpvalue_clone(open_instance->composite_value);
 		}
 
 		return result;
@@ -288,7 +288,7 @@
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
 			AMQP_VALUE container_id_value = amqpvalue_create_string(container_id);
 			if ((container_id_value == NULL) ||
-				(amqpvalue_set_list_item(open_instance->list, 0, container_id_value) != 0))
+				(amqpvalue_set_composite_item(open_instance->composite_value, 0, container_id_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -331,7 +331,7 @@
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
 			AMQP_VALUE hostname_value = amqpvalue_create_string(hostname);
 			if ((hostname_value == NULL) ||
-				(amqpvalue_set_list_item(open_instance->list, 1, hostname_value) != 0))
+				(amqpvalue_set_composite_item(open_instance->composite_value, 1, hostname_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -374,7 +374,7 @@
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
 			AMQP_VALUE max_frame_size_value = amqpvalue_create_uint(max_frame_size);
 			if ((max_frame_size_value == NULL) ||
-				(amqpvalue_set_list_item(open_instance->list, 2, max_frame_size_value) != 0))
+				(amqpvalue_set_composite_item(open_instance->composite_value, 2, max_frame_size_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -417,7 +417,7 @@
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
 			AMQP_VALUE channel_max_value = amqpvalue_create_ushort(channel_max);
 			if ((channel_max_value == NULL) ||
-				(amqpvalue_set_list_item(open_instance->list, 3, channel_max_value) != 0))
+				(amqpvalue_set_composite_item(open_instance->composite_value, 3, channel_max_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -460,7 +460,7 @@
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
 			AMQP_VALUE idle_time_out_value = amqpvalue_create_milliseconds(idle_time_out);
 			if ((idle_time_out_value == NULL) ||
-				(amqpvalue_set_list_item(open_instance->list, 4, idle_time_out_value) != 0))
+				(amqpvalue_set_composite_item(open_instance->composite_value, 4, idle_time_out_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -503,7 +503,7 @@
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
 			AMQP_VALUE outgoing_locales_value = amqpvalue_create_ietf_language_tag(outgoing_locales);
 			if ((outgoing_locales_value == NULL) ||
-				(amqpvalue_set_list_item(open_instance->list, 5, outgoing_locales_value) != 0))
+				(amqpvalue_set_composite_item(open_instance->composite_value, 5, outgoing_locales_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -546,7 +546,7 @@
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
 			AMQP_VALUE incoming_locales_value = amqpvalue_create_ietf_language_tag(incoming_locales);
 			if ((incoming_locales_value == NULL) ||
-				(amqpvalue_set_list_item(open_instance->list, 6, incoming_locales_value) != 0))
+				(amqpvalue_set_composite_item(open_instance->composite_value, 6, incoming_locales_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -589,7 +589,7 @@
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
 			AMQP_VALUE offered_capabilities_value = amqpvalue_create_symbol(offered_capabilities);
 			if ((offered_capabilities_value == NULL) ||
-				(amqpvalue_set_list_item(open_instance->list, 7, offered_capabilities_value) != 0))
+				(amqpvalue_set_composite_item(open_instance->composite_value, 7, offered_capabilities_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -632,7 +632,7 @@
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
 			AMQP_VALUE desired_capabilities_value = amqpvalue_create_symbol(desired_capabilities);
 			if ((desired_capabilities_value == NULL) ||
-				(amqpvalue_set_list_item(open_instance->list, 8, desired_capabilities_value) != 0))
+				(amqpvalue_set_composite_item(open_instance->composite_value, 8, desired_capabilities_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -675,7 +675,7 @@
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
 			AMQP_VALUE properties_value = amqpvalue_create_fields(properties);
 			if ((properties_value == NULL) ||
-				(amqpvalue_set_list_item(open_instance->list, 9, properties_value) != 0))
+				(amqpvalue_set_composite_item(open_instance->composite_value, 9, properties_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -693,7 +693,7 @@
 
 	typedef struct BEGIN_INSTANCE_TAG
 	{
-		AMQP_VALUE list;
+		AMQP_VALUE composite_value;
 	} BEGIN_INSTANCE;
 
 	BEGIN_HANDLE begin_create(transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
@@ -701,8 +701,8 @@
 		BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)malloc(sizeof(BEGIN_INSTANCE));
 		if (begin_instance != NULL)
 		{
-			begin_instance->list = amqpvalue_create_list(3);
-			if (begin_instance->list == NULL)
+			begin_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(17, 3);
+			if (begin_instance->composite_value == NULL)
 			{
 				free(begin_instance);
 				begin_instance = NULL;
@@ -715,17 +715,17 @@
 				int result = 0;
 
 				next_outgoing_id_value = amqpvalue_create_transfer_number(next_outgoing_id);
-				if ((result == 0) && (amqpvalue_set_list_item(begin_instance->list, 0, next_outgoing_id_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(begin_instance->composite_value, 0, next_outgoing_id_value) != 0))
 				{
 					result = __LINE__;
 				}
 				incoming_window_value = amqpvalue_create_uint(incoming_window);
-				if ((result == 0) && (amqpvalue_set_list_item(begin_instance->list, 1, incoming_window_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(begin_instance->composite_value, 1, incoming_window_value) != 0))
 				{
 					result = __LINE__;
 				}
 				outgoing_window_value = amqpvalue_create_uint(outgoing_window);
-				if ((result == 0) && (amqpvalue_set_list_item(begin_instance->list, 2, outgoing_window_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(begin_instance->composite_value, 2, outgoing_window_value) != 0))
 				{
 					result = __LINE__;
 				}
@@ -744,7 +744,7 @@
 		if (begin != NULL)
 		{
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
-			amqpvalue_destroy(begin_instance->list);
+			amqpvalue_destroy(begin_instance->composite_value);
 		}
 	}
 
@@ -759,7 +759,7 @@
 		else
 		{
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
-			result = amqpvalue_clone(begin_instance->list);
+			result = amqpvalue_clone(begin_instance->composite_value);
 		}
 
 		return result;
@@ -795,7 +795,7 @@
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
 			AMQP_VALUE remote_channel_value = amqpvalue_create_ushort(remote_channel);
 			if ((remote_channel_value == NULL) ||
-				(amqpvalue_set_list_item(begin_instance->list, 0, remote_channel_value) != 0))
+				(amqpvalue_set_composite_item(begin_instance->composite_value, 0, remote_channel_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -838,7 +838,7 @@
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
 			AMQP_VALUE next_outgoing_id_value = amqpvalue_create_transfer_number(next_outgoing_id);
 			if ((next_outgoing_id_value == NULL) ||
-				(amqpvalue_set_list_item(begin_instance->list, 1, next_outgoing_id_value) != 0))
+				(amqpvalue_set_composite_item(begin_instance->composite_value, 1, next_outgoing_id_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -881,7 +881,7 @@
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
 			AMQP_VALUE incoming_window_value = amqpvalue_create_uint(incoming_window);
 			if ((incoming_window_value == NULL) ||
-				(amqpvalue_set_list_item(begin_instance->list, 2, incoming_window_value) != 0))
+				(amqpvalue_set_composite_item(begin_instance->composite_value, 2, incoming_window_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -924,7 +924,7 @@
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
 			AMQP_VALUE outgoing_window_value = amqpvalue_create_uint(outgoing_window);
 			if ((outgoing_window_value == NULL) ||
-				(amqpvalue_set_list_item(begin_instance->list, 3, outgoing_window_value) != 0))
+				(amqpvalue_set_composite_item(begin_instance->composite_value, 3, outgoing_window_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -967,7 +967,7 @@
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
 			AMQP_VALUE handle_max_value = amqpvalue_create_handle(handle_max);
 			if ((handle_max_value == NULL) ||
-				(amqpvalue_set_list_item(begin_instance->list, 4, handle_max_value) != 0))
+				(amqpvalue_set_composite_item(begin_instance->composite_value, 4, handle_max_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1010,7 +1010,7 @@
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
 			AMQP_VALUE offered_capabilities_value = amqpvalue_create_symbol(offered_capabilities);
 			if ((offered_capabilities_value == NULL) ||
-				(amqpvalue_set_list_item(begin_instance->list, 5, offered_capabilities_value) != 0))
+				(amqpvalue_set_composite_item(begin_instance->composite_value, 5, offered_capabilities_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1053,7 +1053,7 @@
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
 			AMQP_VALUE desired_capabilities_value = amqpvalue_create_symbol(desired_capabilities);
 			if ((desired_capabilities_value == NULL) ||
-				(amqpvalue_set_list_item(begin_instance->list, 6, desired_capabilities_value) != 0))
+				(amqpvalue_set_composite_item(begin_instance->composite_value, 6, desired_capabilities_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1096,7 +1096,7 @@
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
 			AMQP_VALUE properties_value = amqpvalue_create_fields(properties);
 			if ((properties_value == NULL) ||
-				(amqpvalue_set_list_item(begin_instance->list, 7, properties_value) != 0))
+				(amqpvalue_set_composite_item(begin_instance->composite_value, 7, properties_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1114,7 +1114,7 @@
 
 	typedef struct ATTACH_INSTANCE_TAG
 	{
-		AMQP_VALUE list;
+		AMQP_VALUE composite_value;
 	} ATTACH_INSTANCE;
 
 	ATTACH_HANDLE attach_create(const char* name, handle handle, role role)
@@ -1122,8 +1122,8 @@
 		ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)malloc(sizeof(ATTACH_INSTANCE));
 		if (attach_instance != NULL)
 		{
-			attach_instance->list = amqpvalue_create_list(3);
-			if (attach_instance->list == NULL)
+			attach_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(18, 3);
+			if (attach_instance->composite_value == NULL)
 			{
 				free(attach_instance);
 				attach_instance = NULL;
@@ -1136,17 +1136,17 @@
 				int result = 0;
 
 				name_value = amqpvalue_create_string(name);
-				if ((result == 0) && (amqpvalue_set_list_item(attach_instance->list, 0, name_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(attach_instance->composite_value, 0, name_value) != 0))
 				{
 					result = __LINE__;
 				}
 				handle_value = amqpvalue_create_handle(handle);
-				if ((result == 0) && (amqpvalue_set_list_item(attach_instance->list, 1, handle_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(attach_instance->composite_value, 1, handle_value) != 0))
 				{
 					result = __LINE__;
 				}
 				role_value = amqpvalue_create_role(role);
-				if ((result == 0) && (amqpvalue_set_list_item(attach_instance->list, 2, role_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(attach_instance->composite_value, 2, role_value) != 0))
 				{
 					result = __LINE__;
 				}
@@ -1165,7 +1165,7 @@
 		if (attach != NULL)
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			amqpvalue_destroy(attach_instance->list);
+			amqpvalue_destroy(attach_instance->composite_value);
 		}
 	}
 
@@ -1180,7 +1180,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			result = amqpvalue_clone(attach_instance->list);
+			result = amqpvalue_clone(attach_instance->composite_value);
 		}
 
 		return result;
@@ -1216,7 +1216,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE name_value = amqpvalue_create_string(name);
 			if ((name_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 0, name_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 0, name_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1259,7 +1259,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE handle_value = amqpvalue_create_handle(handle);
 			if ((handle_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 1, handle_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 1, handle_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1302,7 +1302,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE role_value = amqpvalue_create_role(role);
 			if ((role_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 2, role_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 2, role_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1345,7 +1345,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE snd_settle_mode_value = amqpvalue_create_sender_settle_mode(snd_settle_mode);
 			if ((snd_settle_mode_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 3, snd_settle_mode_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 3, snd_settle_mode_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1388,7 +1388,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE rcv_settle_mode_value = amqpvalue_create_receiver_settle_mode(rcv_settle_mode);
 			if ((rcv_settle_mode_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 4, rcv_settle_mode_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 4, rcv_settle_mode_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1431,7 +1431,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE source_value = amqpvalue_clone(source);
 			if ((source_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 5, source_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 5, source_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1474,7 +1474,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE target_value = amqpvalue_clone(target);
 			if ((target_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 6, target_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 6, target_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1517,7 +1517,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE unsettled_value = amqpvalue_clone(unsettled);
 			if ((unsettled_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 7, unsettled_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 7, unsettled_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1560,7 +1560,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE incomplete_unsettled_value = amqpvalue_create_boolean(incomplete_unsettled);
 			if ((incomplete_unsettled_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 8, incomplete_unsettled_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 8, incomplete_unsettled_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1603,7 +1603,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE initial_delivery_count_value = amqpvalue_create_sequence_no(initial_delivery_count);
 			if ((initial_delivery_count_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 9, initial_delivery_count_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 9, initial_delivery_count_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1646,7 +1646,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE max_message_size_value = amqpvalue_create_ulong(max_message_size);
 			if ((max_message_size_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 10, max_message_size_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 10, max_message_size_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1689,7 +1689,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE offered_capabilities_value = amqpvalue_create_symbol(offered_capabilities);
 			if ((offered_capabilities_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 11, offered_capabilities_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 11, offered_capabilities_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1732,7 +1732,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE desired_capabilities_value = amqpvalue_create_symbol(desired_capabilities);
 			if ((desired_capabilities_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 12, desired_capabilities_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 12, desired_capabilities_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1775,7 +1775,7 @@
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			AMQP_VALUE properties_value = amqpvalue_create_fields(properties);
 			if ((properties_value == NULL) ||
-				(amqpvalue_set_list_item(attach_instance->list, 13, properties_value) != 0))
+				(amqpvalue_set_composite_item(attach_instance->composite_value, 13, properties_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1793,7 +1793,7 @@
 
 	typedef struct FLOW_INSTANCE_TAG
 	{
-		AMQP_VALUE list;
+		AMQP_VALUE composite_value;
 	} FLOW_INSTANCE;
 
 	FLOW_HANDLE flow_create(uint32_t incoming_window, transfer_number next_outgoing_id, uint32_t outgoing_window)
@@ -1801,8 +1801,8 @@
 		FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)malloc(sizeof(FLOW_INSTANCE));
 		if (flow_instance != NULL)
 		{
-			flow_instance->list = amqpvalue_create_list(3);
-			if (flow_instance->list == NULL)
+			flow_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(19, 3);
+			if (flow_instance->composite_value == NULL)
 			{
 				free(flow_instance);
 				flow_instance = NULL;
@@ -1815,17 +1815,17 @@
 				int result = 0;
 
 				incoming_window_value = amqpvalue_create_uint(incoming_window);
-				if ((result == 0) && (amqpvalue_set_list_item(flow_instance->list, 0, incoming_window_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(flow_instance->composite_value, 0, incoming_window_value) != 0))
 				{
 					result = __LINE__;
 				}
 				next_outgoing_id_value = amqpvalue_create_transfer_number(next_outgoing_id);
-				if ((result == 0) && (amqpvalue_set_list_item(flow_instance->list, 1, next_outgoing_id_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(flow_instance->composite_value, 1, next_outgoing_id_value) != 0))
 				{
 					result = __LINE__;
 				}
 				outgoing_window_value = amqpvalue_create_uint(outgoing_window);
-				if ((result == 0) && (amqpvalue_set_list_item(flow_instance->list, 2, outgoing_window_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(flow_instance->composite_value, 2, outgoing_window_value) != 0))
 				{
 					result = __LINE__;
 				}
@@ -1844,7 +1844,7 @@
 		if (flow != NULL)
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
-			amqpvalue_destroy(flow_instance->list);
+			amqpvalue_destroy(flow_instance->composite_value);
 		}
 	}
 
@@ -1859,7 +1859,7 @@
 		else
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
-			result = amqpvalue_clone(flow_instance->list);
+			result = amqpvalue_clone(flow_instance->composite_value);
 		}
 
 		return result;
@@ -1895,7 +1895,7 @@
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
 			AMQP_VALUE next_incoming_id_value = amqpvalue_create_transfer_number(next_incoming_id);
 			if ((next_incoming_id_value == NULL) ||
-				(amqpvalue_set_list_item(flow_instance->list, 0, next_incoming_id_value) != 0))
+				(amqpvalue_set_composite_item(flow_instance->composite_value, 0, next_incoming_id_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1938,7 +1938,7 @@
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
 			AMQP_VALUE incoming_window_value = amqpvalue_create_uint(incoming_window);
 			if ((incoming_window_value == NULL) ||
-				(amqpvalue_set_list_item(flow_instance->list, 1, incoming_window_value) != 0))
+				(amqpvalue_set_composite_item(flow_instance->composite_value, 1, incoming_window_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -1981,7 +1981,7 @@
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
 			AMQP_VALUE next_outgoing_id_value = amqpvalue_create_transfer_number(next_outgoing_id);
 			if ((next_outgoing_id_value == NULL) ||
-				(amqpvalue_set_list_item(flow_instance->list, 2, next_outgoing_id_value) != 0))
+				(amqpvalue_set_composite_item(flow_instance->composite_value, 2, next_outgoing_id_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2024,7 +2024,7 @@
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
 			AMQP_VALUE outgoing_window_value = amqpvalue_create_uint(outgoing_window);
 			if ((outgoing_window_value == NULL) ||
-				(amqpvalue_set_list_item(flow_instance->list, 3, outgoing_window_value) != 0))
+				(amqpvalue_set_composite_item(flow_instance->composite_value, 3, outgoing_window_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2067,7 +2067,7 @@
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
 			AMQP_VALUE handle_value = amqpvalue_create_handle(handle);
 			if ((handle_value == NULL) ||
-				(amqpvalue_set_list_item(flow_instance->list, 4, handle_value) != 0))
+				(amqpvalue_set_composite_item(flow_instance->composite_value, 4, handle_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2110,7 +2110,7 @@
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
 			AMQP_VALUE delivery_count_value = amqpvalue_create_sequence_no(delivery_count);
 			if ((delivery_count_value == NULL) ||
-				(amqpvalue_set_list_item(flow_instance->list, 5, delivery_count_value) != 0))
+				(amqpvalue_set_composite_item(flow_instance->composite_value, 5, delivery_count_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2153,7 +2153,7 @@
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
 			AMQP_VALUE link_credit_value = amqpvalue_create_uint(link_credit);
 			if ((link_credit_value == NULL) ||
-				(amqpvalue_set_list_item(flow_instance->list, 6, link_credit_value) != 0))
+				(amqpvalue_set_composite_item(flow_instance->composite_value, 6, link_credit_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2196,7 +2196,7 @@
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
 			AMQP_VALUE available_value = amqpvalue_create_uint(available);
 			if ((available_value == NULL) ||
-				(amqpvalue_set_list_item(flow_instance->list, 7, available_value) != 0))
+				(amqpvalue_set_composite_item(flow_instance->composite_value, 7, available_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2239,7 +2239,7 @@
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
 			AMQP_VALUE drain_value = amqpvalue_create_boolean(drain);
 			if ((drain_value == NULL) ||
-				(amqpvalue_set_list_item(flow_instance->list, 8, drain_value) != 0))
+				(amqpvalue_set_composite_item(flow_instance->composite_value, 8, drain_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2282,7 +2282,7 @@
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
 			AMQP_VALUE echo_value = amqpvalue_create_boolean(echo);
 			if ((echo_value == NULL) ||
-				(amqpvalue_set_list_item(flow_instance->list, 9, echo_value) != 0))
+				(amqpvalue_set_composite_item(flow_instance->composite_value, 9, echo_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2325,7 +2325,7 @@
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
 			AMQP_VALUE properties_value = amqpvalue_create_fields(properties);
 			if ((properties_value == NULL) ||
-				(amqpvalue_set_list_item(flow_instance->list, 10, properties_value) != 0))
+				(amqpvalue_set_composite_item(flow_instance->composite_value, 10, properties_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2343,7 +2343,7 @@
 
 	typedef struct TRANSFER_INSTANCE_TAG
 	{
-		AMQP_VALUE list;
+		AMQP_VALUE composite_value;
 	} TRANSFER_INSTANCE;
 
 	TRANSFER_HANDLE transfer_create(handle handle)
@@ -2351,8 +2351,8 @@
 		TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)malloc(sizeof(TRANSFER_INSTANCE));
 		if (transfer_instance != NULL)
 		{
-			transfer_instance->list = amqpvalue_create_list(1);
-			if (transfer_instance->list == NULL)
+			transfer_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(20, 1);
+			if (transfer_instance->composite_value == NULL)
 			{
 				free(transfer_instance);
 				transfer_instance = NULL;
@@ -2363,7 +2363,7 @@
 				int result = 0;
 
 				handle_value = amqpvalue_create_handle(handle);
-				if ((result == 0) && (amqpvalue_set_list_item(transfer_instance->list, 0, handle_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(transfer_instance->composite_value, 0, handle_value) != 0))
 				{
 					result = __LINE__;
 				}
@@ -2380,7 +2380,7 @@
 		if (transfer != NULL)
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
-			amqpvalue_destroy(transfer_instance->list);
+			amqpvalue_destroy(transfer_instance->composite_value);
 		}
 	}
 
@@ -2395,7 +2395,7 @@
 		else
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
-			result = amqpvalue_clone(transfer_instance->list);
+			result = amqpvalue_clone(transfer_instance->composite_value);
 		}
 
 		return result;
@@ -2431,7 +2431,7 @@
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
 			AMQP_VALUE handle_value = amqpvalue_create_handle(handle);
 			if ((handle_value == NULL) ||
-				(amqpvalue_set_list_item(transfer_instance->list, 0, handle_value) != 0))
+				(amqpvalue_set_composite_item(transfer_instance->composite_value, 0, handle_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2474,7 +2474,7 @@
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
 			AMQP_VALUE delivery_id_value = amqpvalue_create_delivery_number(delivery_id);
 			if ((delivery_id_value == NULL) ||
-				(amqpvalue_set_list_item(transfer_instance->list, 1, delivery_id_value) != 0))
+				(amqpvalue_set_composite_item(transfer_instance->composite_value, 1, delivery_id_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2517,7 +2517,7 @@
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
 			AMQP_VALUE delivery_tag_value = amqpvalue_create_delivery_tag(delivery_tag);
 			if ((delivery_tag_value == NULL) ||
-				(amqpvalue_set_list_item(transfer_instance->list, 2, delivery_tag_value) != 0))
+				(amqpvalue_set_composite_item(transfer_instance->composite_value, 2, delivery_tag_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2560,7 +2560,7 @@
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
 			AMQP_VALUE message_format_value = amqpvalue_create_message_format(message_format);
 			if ((message_format_value == NULL) ||
-				(amqpvalue_set_list_item(transfer_instance->list, 3, message_format_value) != 0))
+				(amqpvalue_set_composite_item(transfer_instance->composite_value, 3, message_format_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2603,7 +2603,7 @@
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
 			AMQP_VALUE settled_value = amqpvalue_create_boolean(settled);
 			if ((settled_value == NULL) ||
-				(amqpvalue_set_list_item(transfer_instance->list, 4, settled_value) != 0))
+				(amqpvalue_set_composite_item(transfer_instance->composite_value, 4, settled_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2646,7 +2646,7 @@
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
 			AMQP_VALUE more_value = amqpvalue_create_boolean(more);
 			if ((more_value == NULL) ||
-				(amqpvalue_set_list_item(transfer_instance->list, 5, more_value) != 0))
+				(amqpvalue_set_composite_item(transfer_instance->composite_value, 5, more_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2689,7 +2689,7 @@
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
 			AMQP_VALUE rcv_settle_mode_value = amqpvalue_create_receiver_settle_mode(rcv_settle_mode);
 			if ((rcv_settle_mode_value == NULL) ||
-				(amqpvalue_set_list_item(transfer_instance->list, 6, rcv_settle_mode_value) != 0))
+				(amqpvalue_set_composite_item(transfer_instance->composite_value, 6, rcv_settle_mode_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2732,7 +2732,7 @@
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
 			AMQP_VALUE state_value = amqpvalue_clone(state);
 			if ((state_value == NULL) ||
-				(amqpvalue_set_list_item(transfer_instance->list, 7, state_value) != 0))
+				(amqpvalue_set_composite_item(transfer_instance->composite_value, 7, state_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2775,7 +2775,7 @@
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
 			AMQP_VALUE resume_value = amqpvalue_create_boolean(resume);
 			if ((resume_value == NULL) ||
-				(amqpvalue_set_list_item(transfer_instance->list, 8, resume_value) != 0))
+				(amqpvalue_set_composite_item(transfer_instance->composite_value, 8, resume_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2818,7 +2818,7 @@
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
 			AMQP_VALUE aborted_value = amqpvalue_create_boolean(aborted);
 			if ((aborted_value == NULL) ||
-				(amqpvalue_set_list_item(transfer_instance->list, 9, aborted_value) != 0))
+				(amqpvalue_set_composite_item(transfer_instance->composite_value, 9, aborted_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2861,7 +2861,7 @@
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
 			AMQP_VALUE batchable_value = amqpvalue_create_boolean(batchable);
 			if ((batchable_value == NULL) ||
-				(amqpvalue_set_list_item(transfer_instance->list, 10, batchable_value) != 0))
+				(amqpvalue_set_composite_item(transfer_instance->composite_value, 10, batchable_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -2879,7 +2879,7 @@
 
 	typedef struct DISPOSITION_INSTANCE_TAG
 	{
-		AMQP_VALUE list;
+		AMQP_VALUE composite_value;
 	} DISPOSITION_INSTANCE;
 
 	DISPOSITION_HANDLE disposition_create(role role, delivery_number first)
@@ -2887,8 +2887,8 @@
 		DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)malloc(sizeof(DISPOSITION_INSTANCE));
 		if (disposition_instance != NULL)
 		{
-			disposition_instance->list = amqpvalue_create_list(2);
-			if (disposition_instance->list == NULL)
+			disposition_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(21, 2);
+			if (disposition_instance->composite_value == NULL)
 			{
 				free(disposition_instance);
 				disposition_instance = NULL;
@@ -2900,12 +2900,12 @@
 				int result = 0;
 
 				role_value = amqpvalue_create_role(role);
-				if ((result == 0) && (amqpvalue_set_list_item(disposition_instance->list, 0, role_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(disposition_instance->composite_value, 0, role_value) != 0))
 				{
 					result = __LINE__;
 				}
 				first_value = amqpvalue_create_delivery_number(first);
-				if ((result == 0) && (amqpvalue_set_list_item(disposition_instance->list, 1, first_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(disposition_instance->composite_value, 1, first_value) != 0))
 				{
 					result = __LINE__;
 				}
@@ -2923,7 +2923,7 @@
 		if (disposition != NULL)
 		{
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
-			amqpvalue_destroy(disposition_instance->list);
+			amqpvalue_destroy(disposition_instance->composite_value);
 		}
 	}
 
@@ -2938,7 +2938,7 @@
 		else
 		{
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
-			result = amqpvalue_clone(disposition_instance->list);
+			result = amqpvalue_clone(disposition_instance->composite_value);
 		}
 
 		return result;
@@ -2974,7 +2974,7 @@
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
 			AMQP_VALUE role_value = amqpvalue_create_role(role);
 			if ((role_value == NULL) ||
-				(amqpvalue_set_list_item(disposition_instance->list, 0, role_value) != 0))
+				(amqpvalue_set_composite_item(disposition_instance->composite_value, 0, role_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -3017,7 +3017,7 @@
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
 			AMQP_VALUE first_value = amqpvalue_create_delivery_number(first);
 			if ((first_value == NULL) ||
-				(amqpvalue_set_list_item(disposition_instance->list, 1, first_value) != 0))
+				(amqpvalue_set_composite_item(disposition_instance->composite_value, 1, first_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -3060,7 +3060,7 @@
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
 			AMQP_VALUE last_value = amqpvalue_create_delivery_number(last);
 			if ((last_value == NULL) ||
-				(amqpvalue_set_list_item(disposition_instance->list, 2, last_value) != 0))
+				(amqpvalue_set_composite_item(disposition_instance->composite_value, 2, last_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -3103,7 +3103,7 @@
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
 			AMQP_VALUE settled_value = amqpvalue_create_boolean(settled);
 			if ((settled_value == NULL) ||
-				(amqpvalue_set_list_item(disposition_instance->list, 3, settled_value) != 0))
+				(amqpvalue_set_composite_item(disposition_instance->composite_value, 3, settled_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -3146,7 +3146,7 @@
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
 			AMQP_VALUE state_value = amqpvalue_clone(state);
 			if ((state_value == NULL) ||
-				(amqpvalue_set_list_item(disposition_instance->list, 4, state_value) != 0))
+				(amqpvalue_set_composite_item(disposition_instance->composite_value, 4, state_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -3189,7 +3189,7 @@
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
 			AMQP_VALUE batchable_value = amqpvalue_create_boolean(batchable);
 			if ((batchable_value == NULL) ||
-				(amqpvalue_set_list_item(disposition_instance->list, 5, batchable_value) != 0))
+				(amqpvalue_set_composite_item(disposition_instance->composite_value, 5, batchable_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -3207,7 +3207,7 @@
 
 	typedef struct DETACH_INSTANCE_TAG
 	{
-		AMQP_VALUE list;
+		AMQP_VALUE composite_value;
 	} DETACH_INSTANCE;
 
 	DETACH_HANDLE detach_create(handle handle)
@@ -3215,8 +3215,8 @@
 		DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)malloc(sizeof(DETACH_INSTANCE));
 		if (detach_instance != NULL)
 		{
-			detach_instance->list = amqpvalue_create_list(1);
-			if (detach_instance->list == NULL)
+			detach_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(22, 1);
+			if (detach_instance->composite_value == NULL)
 			{
 				free(detach_instance);
 				detach_instance = NULL;
@@ -3227,7 +3227,7 @@
 				int result = 0;
 
 				handle_value = amqpvalue_create_handle(handle);
-				if ((result == 0) && (amqpvalue_set_list_item(detach_instance->list, 0, handle_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(detach_instance->composite_value, 0, handle_value) != 0))
 				{
 					result = __LINE__;
 				}
@@ -3244,7 +3244,7 @@
 		if (detach != NULL)
 		{
 			DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)detach;
-			amqpvalue_destroy(detach_instance->list);
+			amqpvalue_destroy(detach_instance->composite_value);
 		}
 	}
 
@@ -3259,7 +3259,7 @@
 		else
 		{
 			DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)detach;
-			result = amqpvalue_clone(detach_instance->list);
+			result = amqpvalue_clone(detach_instance->composite_value);
 		}
 
 		return result;
@@ -3295,7 +3295,7 @@
 			DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)detach;
 			AMQP_VALUE handle_value = amqpvalue_create_handle(handle);
 			if ((handle_value == NULL) ||
-				(amqpvalue_set_list_item(detach_instance->list, 0, handle_value) != 0))
+				(amqpvalue_set_composite_item(detach_instance->composite_value, 0, handle_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -3338,7 +3338,7 @@
 			DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)detach;
 			AMQP_VALUE closed_value = amqpvalue_create_boolean(closed);
 			if ((closed_value == NULL) ||
-				(amqpvalue_set_list_item(detach_instance->list, 1, closed_value) != 0))
+				(amqpvalue_set_composite_item(detach_instance->composite_value, 1, closed_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -3381,7 +3381,7 @@
 			DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)detach;
 			AMQP_VALUE error_value = amqpvalue_create_error(error);
 			if ((error_value == NULL) ||
-				(amqpvalue_set_list_item(detach_instance->list, 2, error_value) != 0))
+				(amqpvalue_set_composite_item(detach_instance->composite_value, 2, error_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -3399,7 +3399,7 @@
 
 	typedef struct END_INSTANCE_TAG
 	{
-		AMQP_VALUE list;
+		AMQP_VALUE composite_value;
 	} END_INSTANCE;
 
 	END_HANDLE end_create(void)
@@ -3407,8 +3407,8 @@
 		END_INSTANCE* end_instance = (END_INSTANCE*)malloc(sizeof(END_INSTANCE));
 		if (end_instance != NULL)
 		{
-			end_instance->list = amqpvalue_create_list(0);
-			if (end_instance->list == NULL)
+			end_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(23, 0);
+			if (end_instance->composite_value == NULL)
 			{
 				free(end_instance);
 				end_instance = NULL;
@@ -3423,7 +3423,7 @@
 		if (end != NULL)
 		{
 			END_INSTANCE* end_instance = (END_INSTANCE*)end;
-			amqpvalue_destroy(end_instance->list);
+			amqpvalue_destroy(end_instance->composite_value);
 		}
 	}
 
@@ -3438,7 +3438,7 @@
 		else
 		{
 			END_INSTANCE* end_instance = (END_INSTANCE*)end;
-			result = amqpvalue_clone(end_instance->list);
+			result = amqpvalue_clone(end_instance->composite_value);
 		}
 
 		return result;
@@ -3474,7 +3474,7 @@
 			END_INSTANCE* end_instance = (END_INSTANCE*)end;
 			AMQP_VALUE error_value = amqpvalue_create_error(error);
 			if ((error_value == NULL) ||
-				(amqpvalue_set_list_item(end_instance->list, 0, error_value) != 0))
+				(amqpvalue_set_composite_item(end_instance->composite_value, 0, error_value) != 0))
 			{
 				result = __LINE__;
 			}
@@ -3492,7 +3492,7 @@
 
 	typedef struct CLOSE_INSTANCE_TAG
 	{
-		AMQP_VALUE list;
+		AMQP_VALUE composite_value;
 	} CLOSE_INSTANCE;
 
 	CLOSE_HANDLE close_create(void)
@@ -3500,8 +3500,8 @@
 		CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)malloc(sizeof(CLOSE_INSTANCE));
 		if (close_instance != NULL)
 		{
-			close_instance->list = amqpvalue_create_list(0);
-			if (close_instance->list == NULL)
+			close_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(24, 0);
+			if (close_instance->composite_value == NULL)
 			{
 				free(close_instance);
 				close_instance = NULL;
@@ -3516,7 +3516,7 @@
 		if (close != NULL)
 		{
 			CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)close;
-			amqpvalue_destroy(close_instance->list);
+			amqpvalue_destroy(close_instance->composite_value);
 		}
 	}
 
@@ -3531,7 +3531,7 @@
 		else
 		{
 			CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)close;
-			result = amqpvalue_clone(close_instance->list);
+			result = amqpvalue_clone(close_instance->composite_value);
 		}
 
 		return result;
@@ -3567,7 +3567,7 @@
 			CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)close;
 			AMQP_VALUE error_value = amqpvalue_create_error(error);
 			if ((error_value == NULL) ||
-				(amqpvalue_set_list_item(close_instance->list, 0, error_value) != 0))
+				(amqpvalue_set_composite_item(close_instance->composite_value, 0, error_value) != 0))
 			{
 				result = __LINE__;
 			}

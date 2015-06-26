@@ -2096,7 +2096,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
 			ASSERT_ARE_EQUAL(uint32_t, 1, binary_value.length);
-			ASSERT_ARE_EQUAL(int, 0, memcmp(binary_value.data, input, sizeof(input)));
+			ASSERT_ARE_EQUAL(int, 0, memcmp(binary_value.bytes, input, sizeof(input)));
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_131: [amqpvalue_get_binary shall yield a pointer to the sequence of bytes held by the AMQP_VALUE in binary_value.data and fill in the binary_value.length argument the number of bytes held in the binary value.] */

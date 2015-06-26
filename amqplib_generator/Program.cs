@@ -91,6 +91,30 @@ namespace amqplib_generator
             return result;
         }
 
+        public static descriptor GetDescriptor(type type)
+        {
+            descriptor result;
+            IEnumerable<descriptor> result_query = type.Items.Where(t => t is descriptor).Cast<descriptor>();
+            if (result_query.Count() != 1)
+            {
+                result = null;
+            }
+            else
+            {
+                result = result_query.First();
+            }
+
+            return result;
+        }
+
+        public static UInt64 GetDescriptorCode(descriptor descriptor)
+        {
+            UInt64 result;
+            string[] strings = descriptor.code.Split(new char[] { ':' });
+            result = (Convert.ToUInt64(strings[0], 16) << 32) + Convert.ToUInt64(strings[1], 16);
+            return result;
+        }
+
         public static string GetMandatoryArgList(type type)
         {
             string result = string.Empty;

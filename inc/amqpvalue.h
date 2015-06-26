@@ -18,7 +18,7 @@ extern "C" {
 	typedef unsigned char amqp_uuid[16];
 	typedef struct amqp_binary_TAG
 	{
-		const void* data;
+		void* bytes;
 		uint32_t length;
 	} amqp_binary;
 
@@ -58,6 +58,8 @@ extern "C" {
 	extern int amqpvalue_get_symbol(AMQP_VALUE value, uint32_t* symbol_value);
 	extern AMQP_VALUE amqpvalue_create_map(AMQP_VALUE map_value);
 	extern int amqpvalue_get_map(AMQP_VALUE value, AMQP_VALUE* map_value);
+	extern AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size);
+	extern int amqpvalue_set_composite_item(AMQP_VALUE value, size_t index, AMQP_VALUE item_value);
 
 	typedef void* DECODER_HANDLE;
 	typedef int(*VALUE_DECODED_CALLBACK)(void* context, AMQP_VALUE decoded_value);
@@ -70,7 +72,7 @@ extern "C" {
 	extern int amqpvalue_get_encoded_size(AMQP_VALUE value, size_t* encoded_size);
 	extern int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* context);
 
-	extern AMQP_VALUE amqpvalue_create_described_value(AMQP_VALUE descriptor, AMQP_VALUE value);
+	extern AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_create_string(const char* value);
 	extern AMQP_VALUE amqpvalue_create_string_with_length(const char* value, uint32_t length);
 	extern AMQP_VALUE amqpvalue_create_list(size_t size);

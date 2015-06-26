@@ -69,7 +69,7 @@ static int send_attach(LINK_DATA* link, const char* name, handle handle, role ro
 		else
 		{
 			AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(0x12);
-			AMQP_VALUE performative = amqpvalue_create_described_value(ulong_descriptor_value, attach_frame_list);
+			AMQP_VALUE performative = amqpvalue_create_described(ulong_descriptor_value, attach_frame_list);
 
 			FRAME_CODEC_HANDLE frame_codec;
 			if (((frame_codec = session_get_frame_codec(link->session)) == NULL) ||
@@ -133,7 +133,7 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 			else
 			{
 				AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(0x14);
-				AMQP_VALUE performative = amqpvalue_create_described_value(ulong_descriptor_value, transfer_frame_list);
+				AMQP_VALUE performative = amqpvalue_create_described(ulong_descriptor_value, transfer_frame_list);
 
 				FRAME_CODEC_HANDLE frame_codec;
 				size_t i;

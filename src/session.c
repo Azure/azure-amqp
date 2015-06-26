@@ -47,7 +47,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 		else
 		{
 			AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(0x11);
-			AMQP_VALUE performative = amqpvalue_create_described_value(ulong_descriptor_value, begin_frame_list);
+			AMQP_VALUE performative = amqpvalue_create_described(ulong_descriptor_value, begin_frame_list);
 			FRAME_CODEC_HANDLE frame_codec;
 			if (((frame_codec = connection_get_frame_codec(session_data->connection)) == NULL) ||
 				(amqp_frame_codec_begin_encode_frame(frame_codec, 0, performative, 0) != 0))

@@ -3,10 +3,9 @@
 #include "consolelogger.h"
 #include "frame_codec.h"
 #include "amqp_frame_codec.h"
+#include "amqp_definitions.h"
 #include "socketio.h"
 #include "amqpalloc.h"
-#include "open_frame.h"
-#include "close_frame.h"
 
 /* Requirements satisfied by the virtue of implementing the ISO:*/
 /* Codes_SRS_CONNECTION_01_088: [Any data appearing beyond the protocol header MUST match the version indicated by the protocol header.] */
@@ -24,7 +23,7 @@ typedef struct CONNECTION_DATA_TAG
 {
 	IO_HANDLE socket_io;
 	IO_HANDLE used_io;
-	AMQP_OPEN_FRAME_HANDLE amqp_open_frame;
+	OPEN_HANDLE open_performative;
 	size_t header_bytes_received;
 	CONNECTION_STATE connection_state;
 	FRAME_CODEC_HANDLE frame_codec;
@@ -63,26 +62,42 @@ static int send_header(CONNECTION_INSTANCE* connection)
 static int send_open_frame(CONNECTION_INSTANCE* connection)
 {
 	int result;
-	AMQP_OPEN_FRAME_HANDLE amqp_open_frame = open_frame_create("1");
-
-	/* handshake done, send open frame */
-	/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
-	/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
-	/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-	if (open_frame_encode(amqp_open_frame, connection->amqp_frame_codec) != 0)
+	OPEN_HANDLE open_performative = open_create("1");
+	if (open_performative == NULL)
 	{
-		io_destroy(connection->used_io);
-		connection->connection_state = CONNECTION_STATE_END;
 		result = __LINE__;
 	}
 	else
 	{
-		/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
-		connection->connection_state = CONNECTION_STATE_OPEN_SENT;
-		result = 0;
-	}
+		AMQP_VALUE open_performative_value = amqpvalue_create_open(open_performative);
+		if (open_performative_value == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* handshake done, send open frame */
+			/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
+			/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+			/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
+			if (amqp_frame_codec_begin_encode_frame(connection->amqp_frame_codec, 0, open_performative_value, 0) != 0)
+			{
+				io_destroy(connection->used_io);
+				connection->connection_state = CONNECTION_STATE_END;
+				result = __LINE__;
+			}
+			else
+			{
+				/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
+				connection->connection_state = CONNECTION_STATE_OPEN_SENT;
+				result = 0;
+			}
 
-	open_frame_destroy(amqp_open_frame);
+			amqpvalue_destroy(open_performative_value);
+		}
+
+		open_destroy(open_performative);
+	}
 
 	return result;
 }
@@ -149,9 +164,12 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection, unsigned ch
 
 	/* Codes_SRS_CONNECTION_01_045: [OPEN RCVD In this state the connection headers have been exchanged. An open frame has been received from the peer but an open frame has not been sent.] */
 	case CONNECTION_STATE_OPEN_RCVD:
+	{
 		/* receiving in OPEN_RCVD is not good, as we did not send out an OPEN frame */
 		/* normally this would never happen, but in case it does, we should close the connection */
-		if (close_frame_encode(connection->frame_codec) != 0)
+		CLOSE_HANDLE close_performative = close_create();
+		AMQP_VALUE close_performative_value = amqpvalue_create_close(close_performative);
+		if (amqp_frame_codec_begin_encode_frame(connection->amqp_frame_codec, 0, close_performative_value, 0) != 0)
 		{
 			io_destroy(connection->used_io);
 			connection->connection_state = CONNECTION_STATE_END;
@@ -163,6 +181,7 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection, unsigned ch
 		}
 		result = __LINE__;
 		break;
+	}
 
 	/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
 	case CONNECTION_STATE_OPEN_SENT:
@@ -312,20 +331,33 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 						result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, NULL, result);
 						if (result->amqp_frame_codec == NULL)
 						{
+							frame_codec_destroy(result->frame_codec);
 							io_destroy(result->socket_io);
 							amqpalloc_free(result);
 							result = NULL;
 						}
 						else
 						{
-							result->frame_received_callback = NULL;
+							result->open_performative = open_create("1");
+							if (result->open_performative == NULL)
+							{
+								amqp_frame_codec_destroy(result->amqp_frame_codec);
+								frame_codec_destroy(result->frame_codec);
+								io_destroy(result->socket_io);
+								amqpalloc_free(result);
+								result = NULL;
+							}
+							else
+							{
+								result->frame_received_callback = NULL;
 
-							/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
-							result->connection_state = CONNECTION_STATE_START;
-							result->header_bytes_received = 0;
+								/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
+								result->connection_state = CONNECTION_STATE_START;
+								result->header_bytes_received = 0;
 
-							/* For now directly talk to the socket IO. By doing this there is no SASL, no SSL, pure AMQP only */
-							result->used_io = result->socket_io;
+								/* For now directly talk to the socket IO. By doing this there is no SASL, no SSL, pure AMQP only */
+								result->used_io = result->socket_io;
+							}
 						}
 					}
 				}
@@ -345,6 +377,7 @@ void connection_destroy(CONNECTION_HANDLE connection)
 		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
 		amqp_frame_codec_destroy(connection_instance->amqp_frame_codec);
 		frame_codec_destroy(connection_instance->frame_codec);
+		open_destroy(connection_instance->open_performative);
 
 		/* Codes_SRS_CONNECTION_01_074: [connection_destroy shall close the socket connection.] */
 		io_destroy(connection_instance->socket_io);
@@ -355,28 +388,28 @@ void connection_destroy(CONNECTION_HANDLE connection)
 int connection_set_container_id(CONNECTION_HANDLE connection, const char* container_id)
 {
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-	open_frame_set_container_id(connection_instance->amqp_open_frame, container_id);
+	open_set_container_id(connection_instance->open_performative, container_id);
 	return 0;
 }
 
 int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_frame_size)
 {
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-	open_frame_set_max_frame_size(connection_instance->amqp_open_frame, max_frame_size);
+	open_set_max_frame_size(connection_instance->open_performative, max_frame_size);
 	return 0;
 }
 
 int connection_set_channel_max(CONNECTION_HANDLE connection, uint16_t channel_max)
 {
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-	open_frame_set_channel_max(connection_instance->amqp_open_frame, channel_max);
+	open_set_channel_max(connection_instance->open_performative, channel_max);
 	return 0;
 }
 
 int connection_set_idle_timeout(CONNECTION_HANDLE connection, milliseconds idle_timeout)
 {
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-	open_frame_set_idle_timeout(connection_instance->amqp_open_frame, idle_timeout);
+	open_set_idle_time_out(connection_instance->open_performative, idle_timeout);
 	return 0;
 }
 
@@ -415,7 +448,7 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection_instance begins with an exchange of capabilities and limitations, including the maximum frame size.] */
 			/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection_instance and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
 			/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-			if (open_frame_encode(connection_instance->frame_codec, "1") != 0)
+			if (send_open_frame(connection) != 0)
 			{
 				io_destroy(connection_instance->used_io);
 				connection_instance->connection_state = CONNECTION_STATE_END;

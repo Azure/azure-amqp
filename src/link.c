@@ -4,7 +4,7 @@
 #include "link.h"
 #include "session.h"
 #include "amqpvalue.h"
-#include "amqp_protocol_types.h"
+#include "amqp_definitions.h"
 #include "amqpalloc.h"
 #include "amqp_frame_codec.h"
 
@@ -109,9 +109,10 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 	}
 	else
 	{
+		delivery_tag delivery_tag = { &link->delivery_id, sizeof(link->delivery_id) };
 		AMQP_VALUE handle_value = amqpvalue_create_handle(link->handle);
 		AMQP_VALUE delivery_id_value = amqpvalue_create_delivery_number(link->delivery_id++);
-		AMQP_VALUE delivery_tag_value = amqpvalue_create_delivery_tag(&link->delivery_id, sizeof(link->delivery_id));
+		AMQP_VALUE delivery_tag_value = amqpvalue_create_delivery_tag(delivery_tag);
 
 		if ((handle_value == NULL) ||
 			(delivery_id_value == NULL) ||
@@ -210,7 +211,7 @@ void link_dowork(LINK_HANDLE handle)
 		{
 			if (link->link_state == LINK_STATE_DETACHED)
 			{
-				(void)send_attach(link, "fake", 1, sender, unsettled, first, link->source, link->target);
+				(void)send_attach(link, "fake", 1, role_sender, sender_settle_mode_unsettled, receiver_settle_mode_first, link->source, link->target);
 				link->link_state = LINK_STATE_HALF_ATTACHED;
 			}
 		}

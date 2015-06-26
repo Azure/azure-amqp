@@ -4,8 +4,8 @@
 #include "io.h"
 #include "logger.h"
 #include "amqp_frame_codec.h"
+#include "amqp_definitions.h"
 #include "amqpvalue.h"
-#include "amqp_protocol_types.h"
 
 #ifdef __cplusplus
 extern "C" {

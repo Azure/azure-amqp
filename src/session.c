@@ -3,7 +3,7 @@
 #include "session.h"
 #include "connection.h"
 #include "amqpvalue.h"
-#include "amqp_protocol_types.h"
+#include "amqp_definitions.h"
 #include "consolelogger.h"
 #include "amqpalloc.h"
 #include "amqp_frame_codec.h"

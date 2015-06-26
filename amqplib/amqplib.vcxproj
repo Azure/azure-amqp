@@ -16,7 +16,6 @@
     <ClInclude Include="..\inc\amqpalloc.h" />
     <ClInclude Include="..\inc\amqp_definitions.h" />
     <ClInclude Include="..\inc\amqp_frame_codec.h" />
-    <ClInclude Include="..\inc\amqp_protocol_types.h" />
     <ClInclude Include="..\inc\amqp_types.h" />
     <ClInclude Include="..\inc\close_frame.h" />
     <ClInclude Include="..\inc\connection.h" />

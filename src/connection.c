@@ -7,7 +7,6 @@
 #include "amqpalloc.h"
 #include "open_frame.h"
 #include "close_frame.h"
-#include "amqp_protocol_types.h"
 
 /* Requirements satisfied by the virtue of implementing the ISO:*/
 /* Codes_SRS_CONNECTION_01_088: [Any data appearing beyond the protocol header MUST match the version indicated by the protocol header.] */
@@ -469,6 +468,17 @@ FRAME_CODEC_HANDLE connection_get_frame_codec(CONNECTION_HANDLE connection)
 
 int connection_register_session(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context, uint16_t* channel_no)
 {
+	int result;
+
+	if (connection == NULL)
+	{
+		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+		result = __LINE__;
+	}
+	else
+	{
+		result = 0;
+	}
 
 	return 0;
 }
@@ -476,23 +486,4 @@ int connection_register_session(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVE
 int connection_unregister_session(CONNECTION_HANDLE connection, uint16_t channel_no)
 {
 	return 0;
-}
-
-int connection_set_session_frame_receive_callback(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context)
-{
-	int result;
-	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-
-	if (connection_instance == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		connection_instance->frame_received_callback = callback;
-		connection_instance->frame_received_callback_context = context;
-		result = 0;
-	}
-
-	return result;
 }

@@ -18,8 +18,8 @@ extern "C" {
 	typedef unsigned char amqp_uuid[16];
 	typedef struct amqp_binary_TAG
 	{
+		const void* data;
 		uint32_t length;
-		unsigned char* data;
 	} amqp_binary;
 
 	extern AMQP_VALUE amqpvalue_create_null(void);
@@ -51,8 +51,8 @@ extern "C" {
 	extern int amqpvalue_get_timestamp(AMQP_VALUE value, uint64_t* timestamp_value);
 	extern AMQP_VALUE amqpvalue_create_uuid(amqp_uuid value);
 	extern int amqpvalue_get_uuid(AMQP_VALUE value, amqp_uuid* uuid_value);
-	extern AMQP_VALUE amqpvalue_create_binary(const void* value, uint32_t length);
-	extern const void* amqpvalue_get_binary(AMQP_VALUE value, uint32_t* length);
+	extern AMQP_VALUE amqpvalue_create_binary(amqp_binary value);
+	extern int amqpvalue_get_binary(AMQP_VALUE value, amqp_binary* binary_value);
 
 	extern AMQP_VALUE amqpvalue_create_symbol(uint32_t value);
 	extern int amqpvalue_get_symbol(AMQP_VALUE value, uint32_t* symbol_value);

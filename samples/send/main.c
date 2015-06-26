@@ -33,11 +33,12 @@ int main(int argc, char** argv)
 		MESSAGING_HANDLE messaging;
 		MESSAGE_HANDLE message;
 		size_t last_memory_used = 0;
+		amqp_binary body = { NULL, 0 };
 
 		messaging = messaging_create();
 		message = message_create();
 		message_set_to(message, "127.0.0.1");
-		message_set_body(message, amqpvalue_create_binary(NULL, 0));
+		message_set_body(message, amqpvalue_create_binary(body));
 		(void)messaging_send(messaging, message, message_send_callback, NULL);
 
 		while (!sent)

@@ -1982,7 +1982,8 @@ BEGIN_TEST_SUITE(connection_unittests)
 			STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(1));
 
 			// act
-			AMQP_VALUE result = amqpvalue_create_binary(input, sizeof(input));
+			amqp_binary binary_input = { input, sizeof(input) };
+			AMQP_VALUE result = amqpvalue_create_binary(binary_input);
 
 			// assert
 			ASSERT_IS_NOT_NULL(result);
@@ -1998,7 +1999,8 @@ BEGIN_TEST_SUITE(connection_unittests)
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 
 			// act
-			AMQP_VALUE result = amqpvalue_create_binary(NULL, 0);
+			amqp_binary binary_input = { NULL, 0 };
+			AMQP_VALUE result = amqpvalue_create_binary(binary_input);
 
 			// assert
 			ASSERT_IS_NOT_NULL(result);
@@ -2016,7 +2018,8 @@ BEGIN_TEST_SUITE(connection_unittests)
 			STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
 
 			// act
-			AMQP_VALUE result = amqpvalue_create_binary(input, sizeof(input));
+			amqp_binary binary_input = { input, sizeof(input) };
+			AMQP_VALUE result = amqpvalue_create_binary(binary_input);
 
 			// assert
 			ASSERT_IS_NOT_NULL(result);
@@ -2033,7 +2036,8 @@ BEGIN_TEST_SUITE(connection_unittests)
 				.SetReturn((void*)NULL);
 
 			// act
-			AMQP_VALUE result = amqpvalue_create_binary(input, sizeof(input));
+			amqp_binary binary_input = { input, sizeof(input) };
+			AMQP_VALUE result = amqpvalue_create_binary(binary_input);
 
 			// assert
 			ASSERT_IS_NULL(result);
@@ -2052,7 +2056,8 @@ BEGIN_TEST_SUITE(connection_unittests)
 			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 			// act
-			AMQP_VALUE result = amqpvalue_create_binary(input, sizeof(input));
+			amqp_binary binary_input = { input, sizeof(input) };
+			AMQP_VALUE result = amqpvalue_create_binary(binary_input);
 
 			// assert
 			ASSERT_IS_NULL(result);
@@ -2065,7 +2070,8 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_mocks mocks;
 
 			// act
-			AMQP_VALUE result = amqpvalue_create_binary(NULL, 1);
+			amqp_binary binary_input = { NULL, 1 };
+			AMQP_VALUE result = amqpvalue_create_binary(binary_input);
 
 			// assert
 			ASSERT_IS_NULL(result);
@@ -2079,16 +2085,18 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 			unsigned char input[] = { 0x42 };
-			uint32_t length;
-			AMQP_VALUE value = amqpvalue_create_binary(input, 1);
+			amqp_binary binary_input = { input, sizeof(input) };
+			AMQP_VALUE value = amqpvalue_create_binary(binary_input);
 			mocks.ResetAllCalls();
 
 			// act
-			const void* result = amqpvalue_get_binary(value, &length);
+			amqp_binary binary_value;
+			int result = amqpvalue_get_binary(value, &binary_value);
 
 			// assert
-			ASSERT_ARE_EQUAL(uint32_t, 1, length);
-			ASSERT_ARE_EQUAL(int, 0, memcmp(result, input, sizeof(input)));
+			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_ARE_EQUAL(uint32_t, 1, binary_value.length);
+			ASSERT_ARE_EQUAL(int, 0, memcmp(binary_value.data, input, sizeof(input)));
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_134: [When amqpvalue_get_binary is called on a binary value with 0 bytes, amqpvalue_get_binary shall return a non-NULL value.] */
@@ -2097,16 +2105,17 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 			unsigned char input[] = { 0x42 };
-			uint32_t length;
-			AMQP_VALUE value = amqpvalue_create_binary(NULL, 0);
+			amqp_binary binary_input = { NULL, 0 };
+			AMQP_VALUE value = amqpvalue_create_binary(binary_input);
 			mocks.ResetAllCalls();
 
 			// act
-			const void* result = amqpvalue_get_binary(value, &length);
+			amqp_binary binary_value;
+			int result = amqpvalue_get_binary(value, &binary_value);
 
 			// assert
-			ASSERT_ARE_EQUAL(uint32_t, 0, length);
-			ASSERT_IS_NOT_NULL(result);
+			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_ARE_EQUAL(uint32_t, 0, binary_value.length);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_132: [If any of the arguments is NULL then amqpvalue_get_binary shall return NULL.] */
@@ -2114,14 +2123,14 @@ BEGIN_TEST_SUITE(connection_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			uint32_t length;
 			mocks.ResetAllCalls();
 
 			// act
-			const void* result = amqpvalue_get_binary(NULL, &length);
+			amqp_binary binary_value;
+			int result = amqpvalue_get_binary(NULL, &binary_value);
 
 			// assert
-			ASSERT_IS_NULL(result);
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_132: [If any of the arguments is NULL then amqpvalue_get_binary shall return NULL.] */
@@ -2130,14 +2139,15 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 			unsigned char input[] = { 0x42 };
-			AMQP_VALUE value = amqpvalue_create_binary(NULL, 0);
+			amqp_binary binary_input = { NULL, 0 };
+			AMQP_VALUE value = amqpvalue_create_binary(binary_input);
 			mocks.ResetAllCalls();
 
 			// act
-			const void* result = amqpvalue_get_binary(value, NULL);
+			int result = amqpvalue_get_binary(value, NULL);
 
 			// assert
-			ASSERT_IS_NULL(result);
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_133: [If the type of the value is not binary (was not created with amqpvalue_create_binary), then amqpvalue_get_binary shall return NULL.] */
@@ -2145,15 +2155,15 @@ BEGIN_TEST_SUITE(connection_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			uint32_t length;
 			AMQP_VALUE value = amqpvalue_create_null();
 			mocks.ResetAllCalls();
 
 			// act
-			const void* result = amqpvalue_get_binary(value, &length);
+			amqp_binary binary_value;
+			int result = amqpvalue_get_binary(value, &binary_value);
 
 			// assert
-			ASSERT_IS_NULL(result);
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
 
 END_TEST_SUITE(connection_unittests)

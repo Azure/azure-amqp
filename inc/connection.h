@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "amqp_frame_codec.h"
-#include "amqp_protocol_types.h"
+#include "amqp_definitions.h"
 
 #ifdef __cplusplus
 extern "C" {

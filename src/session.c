@@ -21,6 +21,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 {
 	int result;
 	BEGIN_HANDLE begin = begin_create(next_outgoing_id, incoming_window, outgoing_window);
+
 	if (begin == NULL)
 	{
 		result = __LINE__;

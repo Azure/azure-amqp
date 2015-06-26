@@ -35,45 +35,32 @@ static void link_frame_received(void* context, uint64_t performative, AMQP_VALUE
 static int send_attach(LINK_DATA* link, const char* name, handle handle, role role, sender_settle_mode snd_settle_mode, receiver_settle_mode rcv_settle_mode, AMQP_VALUE source, AMQP_VALUE target)
 {
 	int result;
-	AMQP_VALUE attach_frame_list = amqpvalue_create_list(7);
-	if (attach_frame_list == NULL)
+	ATTACH_HANDLE attach = attach_create(name, handle, role);
+
+	if (attach == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		AMQP_VALUE name_value = amqpvalue_create_string(name);
-		AMQP_VALUE handle_value = amqpvalue_create_handle(handle);
-		AMQP_VALUE role_value = amqpvalue_create_role(role);
-		AMQP_VALUE snd_settle_mode_value = amqpvalue_create_sender_settle_mode(snd_settle_mode);
-		AMQP_VALUE rcv_settle_mode_value = amqpvalue_create_receiver_settle_mode(rcv_settle_mode);
-		AMQP_VALUE source_value = amqpvalue_clone(source);
-		AMQP_VALUE target_value = amqpvalue_clone(target);
-		/* do not set remote_channel for now */
+		attach_set_snd_settle_mode(attach, snd_settle_mode);
+		attach_set_rcv_settle_mode(attach, rcv_settle_mode);
+		attach_set_source(attach, source);
+		attach_set_target(attach, target);
 
-		if ((name_value == NULL) ||
-			(handle_value == NULL) ||
-			(role_value == NULL) ||
-			(snd_settle_mode_value == NULL) ||
-			(rcv_settle_mode_value == NULL) ||
-			(amqpvalue_set_list_item(attach_frame_list, 0, name_value) != 0) ||
-			(amqpvalue_set_list_item(attach_frame_list, 1, handle_value) != 0) ||
-			(amqpvalue_set_list_item(attach_frame_list, 2, role_value) != 0) ||
-			(amqpvalue_set_list_item(attach_frame_list, 3, snd_settle_mode_value) != 0) ||
-			(amqpvalue_set_list_item(attach_frame_list, 4, rcv_settle_mode_value) != 0) ||
-			(amqpvalue_set_list_item(attach_frame_list, 5, source_value) != 0) ||
-			(amqpvalue_set_list_item(attach_frame_list, 6, target_value) != 0))
+		AMQP_VALUE attach_performative_value = amqpvalue_create_attach(attach);
+		if (attach_performative_value == NULL)
 		{
 			result = __LINE__;
 		}
 		else
 		{
-			AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(0x12);
-			AMQP_VALUE performative = amqpvalue_create_described(ulong_descriptor_value, attach_frame_list);
-
-			AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
-			if (((amqp_frame_codec = session_get_amqp_frame_codec(link->session)) == NULL) ||
-				(amqp_frame_codec_begin_encode_frame(amqp_frame_codec, 0, performative, 0) != 0))
+			AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = session_get_amqp_frame_codec(link->session);
+			if (amqp_frame_codec == NULL)
+			{
+				result = __LINE__;
+			}
+			else if (amqp_frame_codec_begin_encode_frame(amqp_frame_codec, 0, attach_performative_value, 0) != 0)
 			{
 				result = __LINE__;
 			}
@@ -82,18 +69,8 @@ static int send_attach(LINK_DATA* link, const char* name, handle handle, role ro
 				result = 0;
 			}
 
-			amqpvalue_destroy(performative);
-			amqpvalue_destroy(ulong_descriptor_value);
+			amqpvalue_destroy(attach_performative_value);
 		}
-
-		amqpvalue_destroy(name_value);
-		amqpvalue_destroy(handle_value);
-		amqpvalue_destroy(role_value);
-		amqpvalue_destroy(snd_settle_mode_value);
-		amqpvalue_destroy(rcv_settle_mode_value);
-		amqpvalue_destroy(source_value);
-		amqpvalue_destroy(target_value);
-		amqpvalue_destroy(attach_frame_list);
 	}
 
 	return result;

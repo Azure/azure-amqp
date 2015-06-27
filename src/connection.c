@@ -278,7 +278,7 @@ static int connection_frame_received(void* context, uint16_t channel, AMQP_VALUE
 }
 
 /* Codes_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
-CONNECTION_HANDLE connection_create(const char* host, int port)
+CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIONS* options)
 {
 	CONNECTION_INSTANCE* result;
 
@@ -351,6 +351,19 @@ CONNECTION_HANDLE connection_create(const char* host, int port)
 							{
 								result->frame_received_callback = NULL;
 
+								if (options->use_options & CONNECTION_OPTION_MAX_FRAME_SIZE)
+								{
+									open_set_max_frame_size(result->open_performative, options->max_frame_size);
+								}
+								if (options->use_options & CONNECTION_OPTION_CHANNEL_MAX)
+								{
+									open_set_max_frame_size(result->open_performative, options->channel_max);
+								}
+								if (options->use_options & CONNECTION_OPTION_IDLE_TIMEOUT)
+								{
+									open_set_max_frame_size(result->open_performative, options->idle_timeout);
+								}
+
 								/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
 								result->connection_state = CONNECTION_STATE_START;
 								result->header_bytes_received = 0;
@@ -380,39 +393,6 @@ void connection_destroy(CONNECTION_HANDLE connection)
 		io_destroy(connection_instance->socket_io);
 		amqpalloc_free(connection_instance);
 	}
-}
-
-int connection_set_container_id(CONNECTION_HANDLE connection, const char* container_id)
-{
-	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-	open_set_container_id(connection_instance->open_performative, container_id);
-	return 0;
-}
-
-int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_frame_size)
-{
-	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-	open_set_max_frame_size(connection_instance->open_performative, max_frame_size);
-	return 0;
-}
-
-int connection_set_channel_max(CONNECTION_HANDLE connection, uint16_t channel_max)
-{
-	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-	open_set_channel_max(connection_instance->open_performative, channel_max);
-	return 0;
-}
-
-int connection_set_idle_timeout(CONNECTION_HANDLE connection, milliseconds idle_timeout)
-{
-	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-	open_set_idle_time_out(connection_instance->open_performative, idle_timeout);
-	return 0;
-}
-
-int connection_connect(void)
-{
-	return 0;
 }
 
 void connection_dowork(CONNECTION_HANDLE connection)

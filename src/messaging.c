@@ -139,7 +139,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 		if (true)
 		{
 			/* create connection */
-			connection = connection_create(to, 5672);
+			connection = connection_create(to, 5672, NULL);
 			messaging->connection = connection;
 		}
 

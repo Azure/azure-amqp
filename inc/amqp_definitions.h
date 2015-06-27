@@ -116,16 +116,16 @@ extern "C" {
 
 	typedef void* ERROR_HANDLE;
 
-	extern ERROR_HANDLE error_create(uint32_t condition);
+	extern ERROR_HANDLE error_create(uint32_t condition_value);
 	extern void error_destroy(ERROR_HANDLE error);
 	extern AMQP_VALUE amqpvalue_create_error(ERROR_HANDLE error);
 
-	extern int error_get_condition(ERROR_HANDLE error, uint32_t* condition);
-	extern int error_set_condition(ERROR_HANDLE error, uint32_t condition);
-	extern int error_get_description(ERROR_HANDLE error, const char** description);
-	extern int error_set_description(ERROR_HANDLE error, const char* description);
-	extern int error_get_info(ERROR_HANDLE error, fields* info);
-	extern int error_set_info(ERROR_HANDLE error, fields info);
+	extern int error_get_condition(ERROR_HANDLE error, uint32_t* condition_value);
+	extern int error_set_condition(ERROR_HANDLE error, uint32_t condition_value);
+	extern int error_get_description(ERROR_HANDLE error, const char** description_value);
+	extern int error_set_description(ERROR_HANDLE error, const char* description_value);
+	extern int error_get_info(ERROR_HANDLE error, fields* info_value);
+	extern int error_set_info(ERROR_HANDLE error, fields info_value);
 
 /* amqp-error */
 
@@ -184,190 +184,190 @@ extern "C" {
 
 	typedef void* OPEN_HANDLE;
 
-	extern OPEN_HANDLE open_create(const char* container_id);
+	extern OPEN_HANDLE open_create(const char* container_id_value);
 	extern void open_destroy(OPEN_HANDLE open);
 	extern AMQP_VALUE amqpvalue_create_open(OPEN_HANDLE open);
 
-	extern int open_get_container_id(OPEN_HANDLE open, const char** container_id);
-	extern int open_set_container_id(OPEN_HANDLE open, const char* container_id);
-	extern int open_get_hostname(OPEN_HANDLE open, const char** hostname);
-	extern int open_set_hostname(OPEN_HANDLE open, const char* hostname);
-	extern int open_get_max_frame_size(OPEN_HANDLE open, uint32_t* max_frame_size);
-	extern int open_set_max_frame_size(OPEN_HANDLE open, uint32_t max_frame_size);
-	extern int open_get_channel_max(OPEN_HANDLE open, uint16_t* channel_max);
-	extern int open_set_channel_max(OPEN_HANDLE open, uint16_t channel_max);
-	extern int open_get_idle_time_out(OPEN_HANDLE open, milliseconds* idle_time_out);
-	extern int open_set_idle_time_out(OPEN_HANDLE open, milliseconds idle_time_out);
-	extern int open_get_outgoing_locales(OPEN_HANDLE open, ietf_language_tag* outgoing_locales);
-	extern int open_set_outgoing_locales(OPEN_HANDLE open, ietf_language_tag outgoing_locales);
-	extern int open_get_incoming_locales(OPEN_HANDLE open, ietf_language_tag* incoming_locales);
-	extern int open_set_incoming_locales(OPEN_HANDLE open, ietf_language_tag incoming_locales);
-	extern int open_get_offered_capabilities(OPEN_HANDLE open, uint32_t* offered_capabilities);
-	extern int open_set_offered_capabilities(OPEN_HANDLE open, uint32_t offered_capabilities);
-	extern int open_get_desired_capabilities(OPEN_HANDLE open, uint32_t* desired_capabilities);
-	extern int open_set_desired_capabilities(OPEN_HANDLE open, uint32_t desired_capabilities);
-	extern int open_get_properties(OPEN_HANDLE open, fields* properties);
-	extern int open_set_properties(OPEN_HANDLE open, fields properties);
+	extern int open_get_container_id(OPEN_HANDLE open, const char** container_id_value);
+	extern int open_set_container_id(OPEN_HANDLE open, const char* container_id_value);
+	extern int open_get_hostname(OPEN_HANDLE open, const char** hostname_value);
+	extern int open_set_hostname(OPEN_HANDLE open, const char* hostname_value);
+	extern int open_get_max_frame_size(OPEN_HANDLE open, uint32_t* max_frame_size_value);
+	extern int open_set_max_frame_size(OPEN_HANDLE open, uint32_t max_frame_size_value);
+	extern int open_get_channel_max(OPEN_HANDLE open, uint16_t* channel_max_value);
+	extern int open_set_channel_max(OPEN_HANDLE open, uint16_t channel_max_value);
+	extern int open_get_idle_time_out(OPEN_HANDLE open, milliseconds* idle_time_out_value);
+	extern int open_set_idle_time_out(OPEN_HANDLE open, milliseconds idle_time_out_value);
+	extern int open_get_outgoing_locales(OPEN_HANDLE open, ietf_language_tag* outgoing_locales_value);
+	extern int open_set_outgoing_locales(OPEN_HANDLE open, ietf_language_tag outgoing_locales_value);
+	extern int open_get_incoming_locales(OPEN_HANDLE open, ietf_language_tag* incoming_locales_value);
+	extern int open_set_incoming_locales(OPEN_HANDLE open, ietf_language_tag incoming_locales_value);
+	extern int open_get_offered_capabilities(OPEN_HANDLE open, uint32_t* offered_capabilities_value);
+	extern int open_set_offered_capabilities(OPEN_HANDLE open, uint32_t offered_capabilities_value);
+	extern int open_get_desired_capabilities(OPEN_HANDLE open, uint32_t* desired_capabilities_value);
+	extern int open_set_desired_capabilities(OPEN_HANDLE open, uint32_t desired_capabilities_value);
+	extern int open_get_properties(OPEN_HANDLE open, fields* properties_value);
+	extern int open_set_properties(OPEN_HANDLE open, fields properties_value);
 
 /* begin */
 
 	typedef void* BEGIN_HANDLE;
 
-	extern BEGIN_HANDLE begin_create(transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window);
+	extern BEGIN_HANDLE begin_create(transfer_number next_outgoing_id_value, uint32_t incoming_window_value, uint32_t outgoing_window_value);
 	extern void begin_destroy(BEGIN_HANDLE begin);
 	extern AMQP_VALUE amqpvalue_create_begin(BEGIN_HANDLE begin);
 
-	extern int begin_get_remote_channel(BEGIN_HANDLE begin, uint16_t* remote_channel);
-	extern int begin_set_remote_channel(BEGIN_HANDLE begin, uint16_t remote_channel);
-	extern int begin_get_next_outgoing_id(BEGIN_HANDLE begin, transfer_number* next_outgoing_id);
-	extern int begin_set_next_outgoing_id(BEGIN_HANDLE begin, transfer_number next_outgoing_id);
-	extern int begin_get_incoming_window(BEGIN_HANDLE begin, uint32_t* incoming_window);
-	extern int begin_set_incoming_window(BEGIN_HANDLE begin, uint32_t incoming_window);
-	extern int begin_get_outgoing_window(BEGIN_HANDLE begin, uint32_t* outgoing_window);
-	extern int begin_set_outgoing_window(BEGIN_HANDLE begin, uint32_t outgoing_window);
-	extern int begin_get_handle_max(BEGIN_HANDLE begin, handle* handle_max);
-	extern int begin_set_handle_max(BEGIN_HANDLE begin, handle handle_max);
-	extern int begin_get_offered_capabilities(BEGIN_HANDLE begin, uint32_t* offered_capabilities);
-	extern int begin_set_offered_capabilities(BEGIN_HANDLE begin, uint32_t offered_capabilities);
-	extern int begin_get_desired_capabilities(BEGIN_HANDLE begin, uint32_t* desired_capabilities);
-	extern int begin_set_desired_capabilities(BEGIN_HANDLE begin, uint32_t desired_capabilities);
-	extern int begin_get_properties(BEGIN_HANDLE begin, fields* properties);
-	extern int begin_set_properties(BEGIN_HANDLE begin, fields properties);
+	extern int begin_get_remote_channel(BEGIN_HANDLE begin, uint16_t* remote_channel_value);
+	extern int begin_set_remote_channel(BEGIN_HANDLE begin, uint16_t remote_channel_value);
+	extern int begin_get_next_outgoing_id(BEGIN_HANDLE begin, transfer_number* next_outgoing_id_value);
+	extern int begin_set_next_outgoing_id(BEGIN_HANDLE begin, transfer_number next_outgoing_id_value);
+	extern int begin_get_incoming_window(BEGIN_HANDLE begin, uint32_t* incoming_window_value);
+	extern int begin_set_incoming_window(BEGIN_HANDLE begin, uint32_t incoming_window_value);
+	extern int begin_get_outgoing_window(BEGIN_HANDLE begin, uint32_t* outgoing_window_value);
+	extern int begin_set_outgoing_window(BEGIN_HANDLE begin, uint32_t outgoing_window_value);
+	extern int begin_get_handle_max(BEGIN_HANDLE begin, handle* handle_max_value);
+	extern int begin_set_handle_max(BEGIN_HANDLE begin, handle handle_max_value);
+	extern int begin_get_offered_capabilities(BEGIN_HANDLE begin, uint32_t* offered_capabilities_value);
+	extern int begin_set_offered_capabilities(BEGIN_HANDLE begin, uint32_t offered_capabilities_value);
+	extern int begin_get_desired_capabilities(BEGIN_HANDLE begin, uint32_t* desired_capabilities_value);
+	extern int begin_set_desired_capabilities(BEGIN_HANDLE begin, uint32_t desired_capabilities_value);
+	extern int begin_get_properties(BEGIN_HANDLE begin, fields* properties_value);
+	extern int begin_set_properties(BEGIN_HANDLE begin, fields properties_value);
 
 /* attach */
 
 	typedef void* ATTACH_HANDLE;
 
-	extern ATTACH_HANDLE attach_create(const char* name, handle handle, role role);
+	extern ATTACH_HANDLE attach_create(const char* name_value, handle handle_value, role role_value);
 	extern void attach_destroy(ATTACH_HANDLE attach);
 	extern AMQP_VALUE amqpvalue_create_attach(ATTACH_HANDLE attach);
 
-	extern int attach_get_name(ATTACH_HANDLE attach, const char** name);
-	extern int attach_set_name(ATTACH_HANDLE attach, const char* name);
-	extern int attach_get_handle(ATTACH_HANDLE attach, handle* handle);
-	extern int attach_set_handle(ATTACH_HANDLE attach, handle handle);
-	extern int attach_get_role(ATTACH_HANDLE attach, role* role);
-	extern int attach_set_role(ATTACH_HANDLE attach, role role);
-	extern int attach_get_snd_settle_mode(ATTACH_HANDLE attach, sender_settle_mode* snd_settle_mode);
-	extern int attach_set_snd_settle_mode(ATTACH_HANDLE attach, sender_settle_mode snd_settle_mode);
-	extern int attach_get_rcv_settle_mode(ATTACH_HANDLE attach, receiver_settle_mode* rcv_settle_mode);
-	extern int attach_set_rcv_settle_mode(ATTACH_HANDLE attach, receiver_settle_mode rcv_settle_mode);
-	extern int attach_get_source(ATTACH_HANDLE attach, AMQP_VALUE* source);
-	extern int attach_set_source(ATTACH_HANDLE attach, AMQP_VALUE source);
-	extern int attach_get_target(ATTACH_HANDLE attach, AMQP_VALUE* target);
-	extern int attach_set_target(ATTACH_HANDLE attach, AMQP_VALUE target);
-	extern int attach_get_unsettled(ATTACH_HANDLE attach, AMQP_VALUE* unsettled);
-	extern int attach_set_unsettled(ATTACH_HANDLE attach, AMQP_VALUE unsettled);
-	extern int attach_get_incomplete_unsettled(ATTACH_HANDLE attach, bool* incomplete_unsettled);
-	extern int attach_set_incomplete_unsettled(ATTACH_HANDLE attach, bool incomplete_unsettled);
-	extern int attach_get_initial_delivery_count(ATTACH_HANDLE attach, sequence_no* initial_delivery_count);
-	extern int attach_set_initial_delivery_count(ATTACH_HANDLE attach, sequence_no initial_delivery_count);
-	extern int attach_get_max_message_size(ATTACH_HANDLE attach, uint64_t* max_message_size);
-	extern int attach_set_max_message_size(ATTACH_HANDLE attach, uint64_t max_message_size);
-	extern int attach_get_offered_capabilities(ATTACH_HANDLE attach, uint32_t* offered_capabilities);
-	extern int attach_set_offered_capabilities(ATTACH_HANDLE attach, uint32_t offered_capabilities);
-	extern int attach_get_desired_capabilities(ATTACH_HANDLE attach, uint32_t* desired_capabilities);
-	extern int attach_set_desired_capabilities(ATTACH_HANDLE attach, uint32_t desired_capabilities);
-	extern int attach_get_properties(ATTACH_HANDLE attach, fields* properties);
-	extern int attach_set_properties(ATTACH_HANDLE attach, fields properties);
+	extern int attach_get_name(ATTACH_HANDLE attach, const char** name_value);
+	extern int attach_set_name(ATTACH_HANDLE attach, const char* name_value);
+	extern int attach_get_handle(ATTACH_HANDLE attach, handle* handle_value);
+	extern int attach_set_handle(ATTACH_HANDLE attach, handle handle_value);
+	extern int attach_get_role(ATTACH_HANDLE attach, role* role_value);
+	extern int attach_set_role(ATTACH_HANDLE attach, role role_value);
+	extern int attach_get_snd_settle_mode(ATTACH_HANDLE attach, sender_settle_mode* snd_settle_mode_value);
+	extern int attach_set_snd_settle_mode(ATTACH_HANDLE attach, sender_settle_mode snd_settle_mode_value);
+	extern int attach_get_rcv_settle_mode(ATTACH_HANDLE attach, receiver_settle_mode* rcv_settle_mode_value);
+	extern int attach_set_rcv_settle_mode(ATTACH_HANDLE attach, receiver_settle_mode rcv_settle_mode_value);
+	extern int attach_get_source(ATTACH_HANDLE attach, AMQP_VALUE* source_value);
+	extern int attach_set_source(ATTACH_HANDLE attach, AMQP_VALUE source_value);
+	extern int attach_get_target(ATTACH_HANDLE attach, AMQP_VALUE* target_value);
+	extern int attach_set_target(ATTACH_HANDLE attach, AMQP_VALUE target_value);
+	extern int attach_get_unsettled(ATTACH_HANDLE attach, AMQP_VALUE* unsettled_value);
+	extern int attach_set_unsettled(ATTACH_HANDLE attach, AMQP_VALUE unsettled_value);
+	extern int attach_get_incomplete_unsettled(ATTACH_HANDLE attach, bool* incomplete_unsettled_value);
+	extern int attach_set_incomplete_unsettled(ATTACH_HANDLE attach, bool incomplete_unsettled_value);
+	extern int attach_get_initial_delivery_count(ATTACH_HANDLE attach, sequence_no* initial_delivery_count_value);
+	extern int attach_set_initial_delivery_count(ATTACH_HANDLE attach, sequence_no initial_delivery_count_value);
+	extern int attach_get_max_message_size(ATTACH_HANDLE attach, uint64_t* max_message_size_value);
+	extern int attach_set_max_message_size(ATTACH_HANDLE attach, uint64_t max_message_size_value);
+	extern int attach_get_offered_capabilities(ATTACH_HANDLE attach, uint32_t* offered_capabilities_value);
+	extern int attach_set_offered_capabilities(ATTACH_HANDLE attach, uint32_t offered_capabilities_value);
+	extern int attach_get_desired_capabilities(ATTACH_HANDLE attach, uint32_t* desired_capabilities_value);
+	extern int attach_set_desired_capabilities(ATTACH_HANDLE attach, uint32_t desired_capabilities_value);
+	extern int attach_get_properties(ATTACH_HANDLE attach, fields* properties_value);
+	extern int attach_set_properties(ATTACH_HANDLE attach, fields properties_value);
 
 /* flow */
 
 	typedef void* FLOW_HANDLE;
 
-	extern FLOW_HANDLE flow_create(uint32_t incoming_window, transfer_number next_outgoing_id, uint32_t outgoing_window);
+	extern FLOW_HANDLE flow_create(uint32_t incoming_window_value, transfer_number next_outgoing_id_value, uint32_t outgoing_window_value);
 	extern void flow_destroy(FLOW_HANDLE flow);
 	extern AMQP_VALUE amqpvalue_create_flow(FLOW_HANDLE flow);
 
-	extern int flow_get_next_incoming_id(FLOW_HANDLE flow, transfer_number* next_incoming_id);
-	extern int flow_set_next_incoming_id(FLOW_HANDLE flow, transfer_number next_incoming_id);
-	extern int flow_get_incoming_window(FLOW_HANDLE flow, uint32_t* incoming_window);
-	extern int flow_set_incoming_window(FLOW_HANDLE flow, uint32_t incoming_window);
-	extern int flow_get_next_outgoing_id(FLOW_HANDLE flow, transfer_number* next_outgoing_id);
-	extern int flow_set_next_outgoing_id(FLOW_HANDLE flow, transfer_number next_outgoing_id);
-	extern int flow_get_outgoing_window(FLOW_HANDLE flow, uint32_t* outgoing_window);
-	extern int flow_set_outgoing_window(FLOW_HANDLE flow, uint32_t outgoing_window);
-	extern int flow_get_handle(FLOW_HANDLE flow, handle* handle);
-	extern int flow_set_handle(FLOW_HANDLE flow, handle handle);
-	extern int flow_get_delivery_count(FLOW_HANDLE flow, sequence_no* delivery_count);
-	extern int flow_set_delivery_count(FLOW_HANDLE flow, sequence_no delivery_count);
-	extern int flow_get_link_credit(FLOW_HANDLE flow, uint32_t* link_credit);
-	extern int flow_set_link_credit(FLOW_HANDLE flow, uint32_t link_credit);
-	extern int flow_get_available(FLOW_HANDLE flow, uint32_t* available);
-	extern int flow_set_available(FLOW_HANDLE flow, uint32_t available);
-	extern int flow_get_drain(FLOW_HANDLE flow, bool* drain);
-	extern int flow_set_drain(FLOW_HANDLE flow, bool drain);
-	extern int flow_get_echo(FLOW_HANDLE flow, bool* echo);
-	extern int flow_set_echo(FLOW_HANDLE flow, bool echo);
-	extern int flow_get_properties(FLOW_HANDLE flow, fields* properties);
-	extern int flow_set_properties(FLOW_HANDLE flow, fields properties);
+	extern int flow_get_next_incoming_id(FLOW_HANDLE flow, transfer_number* next_incoming_id_value);
+	extern int flow_set_next_incoming_id(FLOW_HANDLE flow, transfer_number next_incoming_id_value);
+	extern int flow_get_incoming_window(FLOW_HANDLE flow, uint32_t* incoming_window_value);
+	extern int flow_set_incoming_window(FLOW_HANDLE flow, uint32_t incoming_window_value);
+	extern int flow_get_next_outgoing_id(FLOW_HANDLE flow, transfer_number* next_outgoing_id_value);
+	extern int flow_set_next_outgoing_id(FLOW_HANDLE flow, transfer_number next_outgoing_id_value);
+	extern int flow_get_outgoing_window(FLOW_HANDLE flow, uint32_t* outgoing_window_value);
+	extern int flow_set_outgoing_window(FLOW_HANDLE flow, uint32_t outgoing_window_value);
+	extern int flow_get_handle(FLOW_HANDLE flow, handle* handle_value);
+	extern int flow_set_handle(FLOW_HANDLE flow, handle handle_value);
+	extern int flow_get_delivery_count(FLOW_HANDLE flow, sequence_no* delivery_count_value);
+	extern int flow_set_delivery_count(FLOW_HANDLE flow, sequence_no delivery_count_value);
+	extern int flow_get_link_credit(FLOW_HANDLE flow, uint32_t* link_credit_value);
+	extern int flow_set_link_credit(FLOW_HANDLE flow, uint32_t link_credit_value);
+	extern int flow_get_available(FLOW_HANDLE flow, uint32_t* available_value);
+	extern int flow_set_available(FLOW_HANDLE flow, uint32_t available_value);
+	extern int flow_get_drain(FLOW_HANDLE flow, bool* drain_value);
+	extern int flow_set_drain(FLOW_HANDLE flow, bool drain_value);
+	extern int flow_get_echo(FLOW_HANDLE flow, bool* echo_value);
+	extern int flow_set_echo(FLOW_HANDLE flow, bool echo_value);
+	extern int flow_get_properties(FLOW_HANDLE flow, fields* properties_value);
+	extern int flow_set_properties(FLOW_HANDLE flow, fields properties_value);
 
 /* transfer */
 
 	typedef void* TRANSFER_HANDLE;
 
-	extern TRANSFER_HANDLE transfer_create(handle handle);
+	extern TRANSFER_HANDLE transfer_create(handle handle_value);
 	extern void transfer_destroy(TRANSFER_HANDLE transfer);
 	extern AMQP_VALUE amqpvalue_create_transfer(TRANSFER_HANDLE transfer);
 
-	extern int transfer_get_handle(TRANSFER_HANDLE transfer, handle* handle);
-	extern int transfer_set_handle(TRANSFER_HANDLE transfer, handle handle);
-	extern int transfer_get_delivery_id(TRANSFER_HANDLE transfer, delivery_number* delivery_id);
-	extern int transfer_set_delivery_id(TRANSFER_HANDLE transfer, delivery_number delivery_id);
-	extern int transfer_get_delivery_tag(TRANSFER_HANDLE transfer, delivery_tag* delivery_tag);
-	extern int transfer_set_delivery_tag(TRANSFER_HANDLE transfer, delivery_tag delivery_tag);
-	extern int transfer_get_message_format(TRANSFER_HANDLE transfer, message_format* message_format);
-	extern int transfer_set_message_format(TRANSFER_HANDLE transfer, message_format message_format);
-	extern int transfer_get_settled(TRANSFER_HANDLE transfer, bool* settled);
-	extern int transfer_set_settled(TRANSFER_HANDLE transfer, bool settled);
-	extern int transfer_get_more(TRANSFER_HANDLE transfer, bool* more);
-	extern int transfer_set_more(TRANSFER_HANDLE transfer, bool more);
-	extern int transfer_get_rcv_settle_mode(TRANSFER_HANDLE transfer, receiver_settle_mode* rcv_settle_mode);
-	extern int transfer_set_rcv_settle_mode(TRANSFER_HANDLE transfer, receiver_settle_mode rcv_settle_mode);
-	extern int transfer_get_state(TRANSFER_HANDLE transfer, AMQP_VALUE* state);
-	extern int transfer_set_state(TRANSFER_HANDLE transfer, AMQP_VALUE state);
-	extern int transfer_get_resume(TRANSFER_HANDLE transfer, bool* resume);
-	extern int transfer_set_resume(TRANSFER_HANDLE transfer, bool resume);
-	extern int transfer_get_aborted(TRANSFER_HANDLE transfer, bool* aborted);
-	extern int transfer_set_aborted(TRANSFER_HANDLE transfer, bool aborted);
-	extern int transfer_get_batchable(TRANSFER_HANDLE transfer, bool* batchable);
-	extern int transfer_set_batchable(TRANSFER_HANDLE transfer, bool batchable);
+	extern int transfer_get_handle(TRANSFER_HANDLE transfer, handle* handle_value);
+	extern int transfer_set_handle(TRANSFER_HANDLE transfer, handle handle_value);
+	extern int transfer_get_delivery_id(TRANSFER_HANDLE transfer, delivery_number* delivery_id_value);
+	extern int transfer_set_delivery_id(TRANSFER_HANDLE transfer, delivery_number delivery_id_value);
+	extern int transfer_get_delivery_tag(TRANSFER_HANDLE transfer, delivery_tag* delivery_tag_value);
+	extern int transfer_set_delivery_tag(TRANSFER_HANDLE transfer, delivery_tag delivery_tag_value);
+	extern int transfer_get_message_format(TRANSFER_HANDLE transfer, message_format* message_format_value);
+	extern int transfer_set_message_format(TRANSFER_HANDLE transfer, message_format message_format_value);
+	extern int transfer_get_settled(TRANSFER_HANDLE transfer, bool* settled_value);
+	extern int transfer_set_settled(TRANSFER_HANDLE transfer, bool settled_value);
+	extern int transfer_get_more(TRANSFER_HANDLE transfer, bool* more_value);
+	extern int transfer_set_more(TRANSFER_HANDLE transfer, bool more_value);
+	extern int transfer_get_rcv_settle_mode(TRANSFER_HANDLE transfer, receiver_settle_mode* rcv_settle_mode_value);
+	extern int transfer_set_rcv_settle_mode(TRANSFER_HANDLE transfer, receiver_settle_mode rcv_settle_mode_value);
+	extern int transfer_get_state(TRANSFER_HANDLE transfer, AMQP_VALUE* state_value);
+	extern int transfer_set_state(TRANSFER_HANDLE transfer, AMQP_VALUE state_value);
+	extern int transfer_get_resume(TRANSFER_HANDLE transfer, bool* resume_value);
+	extern int transfer_set_resume(TRANSFER_HANDLE transfer, bool resume_value);
+	extern int transfer_get_aborted(TRANSFER_HANDLE transfer, bool* aborted_value);
+	extern int transfer_set_aborted(TRANSFER_HANDLE transfer, bool aborted_value);
+	extern int transfer_get_batchable(TRANSFER_HANDLE transfer, bool* batchable_value);
+	extern int transfer_set_batchable(TRANSFER_HANDLE transfer, bool batchable_value);
 
 /* disposition */
 
 	typedef void* DISPOSITION_HANDLE;
 
-	extern DISPOSITION_HANDLE disposition_create(role role, delivery_number first);
+	extern DISPOSITION_HANDLE disposition_create(role role_value, delivery_number first_value);
 	extern void disposition_destroy(DISPOSITION_HANDLE disposition);
 	extern AMQP_VALUE amqpvalue_create_disposition(DISPOSITION_HANDLE disposition);
 
-	extern int disposition_get_role(DISPOSITION_HANDLE disposition, role* role);
-	extern int disposition_set_role(DISPOSITION_HANDLE disposition, role role);
-	extern int disposition_get_first(DISPOSITION_HANDLE disposition, delivery_number* first);
-	extern int disposition_set_first(DISPOSITION_HANDLE disposition, delivery_number first);
-	extern int disposition_get_last(DISPOSITION_HANDLE disposition, delivery_number* last);
-	extern int disposition_set_last(DISPOSITION_HANDLE disposition, delivery_number last);
-	extern int disposition_get_settled(DISPOSITION_HANDLE disposition, bool* settled);
-	extern int disposition_set_settled(DISPOSITION_HANDLE disposition, bool settled);
-	extern int disposition_get_state(DISPOSITION_HANDLE disposition, AMQP_VALUE* state);
-	extern int disposition_set_state(DISPOSITION_HANDLE disposition, AMQP_VALUE state);
-	extern int disposition_get_batchable(DISPOSITION_HANDLE disposition, bool* batchable);
-	extern int disposition_set_batchable(DISPOSITION_HANDLE disposition, bool batchable);
+	extern int disposition_get_role(DISPOSITION_HANDLE disposition, role* role_value);
+	extern int disposition_set_role(DISPOSITION_HANDLE disposition, role role_value);
+	extern int disposition_get_first(DISPOSITION_HANDLE disposition, delivery_number* first_value);
+	extern int disposition_set_first(DISPOSITION_HANDLE disposition, delivery_number first_value);
+	extern int disposition_get_last(DISPOSITION_HANDLE disposition, delivery_number* last_value);
+	extern int disposition_set_last(DISPOSITION_HANDLE disposition, delivery_number last_value);
+	extern int disposition_get_settled(DISPOSITION_HANDLE disposition, bool* settled_value);
+	extern int disposition_set_settled(DISPOSITION_HANDLE disposition, bool settled_value);
+	extern int disposition_get_state(DISPOSITION_HANDLE disposition, AMQP_VALUE* state_value);
+	extern int disposition_set_state(DISPOSITION_HANDLE disposition, AMQP_VALUE state_value);
+	extern int disposition_get_batchable(DISPOSITION_HANDLE disposition, bool* batchable_value);
+	extern int disposition_set_batchable(DISPOSITION_HANDLE disposition, bool batchable_value);
 
 /* detach */
 
 	typedef void* DETACH_HANDLE;
 
-	extern DETACH_HANDLE detach_create(handle handle);
+	extern DETACH_HANDLE detach_create(handle handle_value);
 	extern void detach_destroy(DETACH_HANDLE detach);
 	extern AMQP_VALUE amqpvalue_create_detach(DETACH_HANDLE detach);
 
-	extern int detach_get_handle(DETACH_HANDLE detach, handle* handle);
-	extern int detach_set_handle(DETACH_HANDLE detach, handle handle);
-	extern int detach_get_closed(DETACH_HANDLE detach, bool* closed);
-	extern int detach_set_closed(DETACH_HANDLE detach, bool closed);
-	extern int detach_get_error(DETACH_HANDLE detach, ERROR_HANDLE* error);
-	extern int detach_set_error(DETACH_HANDLE detach, ERROR_HANDLE error);
+	extern int detach_get_handle(DETACH_HANDLE detach, handle* handle_value);
+	extern int detach_set_handle(DETACH_HANDLE detach, handle handle_value);
+	extern int detach_get_closed(DETACH_HANDLE detach, bool* closed_value);
+	extern int detach_set_closed(DETACH_HANDLE detach, bool closed_value);
+	extern int detach_get_error(DETACH_HANDLE detach, ERROR_HANDLE* error_value);
+	extern int detach_set_error(DETACH_HANDLE detach, ERROR_HANDLE error_value);
 
 /* end */
 
@@ -377,8 +377,8 @@ extern "C" {
 	extern void end_destroy(END_HANDLE end);
 	extern AMQP_VALUE amqpvalue_create_end(END_HANDLE end);
 
-	extern int end_get_error(END_HANDLE end, ERROR_HANDLE* error);
-	extern int end_set_error(END_HANDLE end, ERROR_HANDLE error);
+	extern int end_get_error(END_HANDLE end, ERROR_HANDLE* error_value);
+	extern int end_set_error(END_HANDLE end, ERROR_HANDLE error_value);
 
 /* close */
 
@@ -388,8 +388,8 @@ extern "C" {
 	extern void close_destroy(CLOSE_HANDLE close);
 	extern AMQP_VALUE amqpvalue_create_close(CLOSE_HANDLE close);
 
-	extern int close_get_error(CLOSE_HANDLE close, ERROR_HANDLE* error);
-	extern int close_set_error(CLOSE_HANDLE close, ERROR_HANDLE error);
+	extern int close_get_error(CLOSE_HANDLE close, ERROR_HANDLE* error_value);
+	extern int close_set_error(CLOSE_HANDLE close, ERROR_HANDLE error_value);
 
 
 #ifdef __cplusplus

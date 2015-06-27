@@ -257,7 +257,7 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write(");\r\n\textern int ");
+            this.Write("_value);\r\n\textern int ");
             
             #line 49 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
@@ -299,7 +299,7 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write(");\r\n");
+            this.Write("_value);\r\n");
             
             #line 50 "D:\AMQPLib\amqplib_generator\amqp_definitions_h.tt"
 				} 

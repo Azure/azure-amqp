@@ -126,12 +126,25 @@ namespace amqplib_generator
                     result += ", ";
                 }
 
-                result += GetCType(field.type).Replace('-', '_').Replace(':', '_') + " " + field.name.Replace('-', '_').Replace(':', '_');
+                result += GetCType(field.type).Replace('-', '_').Replace(':', '_') + " " + field.name.Replace('-', '_').Replace(':', '_') + "_value";
             }
 
             if (string.IsNullOrEmpty(result))
             {
                 result = "void";
+            }
+
+            return result;
+        }
+
+        public static string GetMandatoryArgListMock(type type)
+        {
+            string result = string.Empty;
+
+            foreach (field field in type.Items.Where(item => (item is field) && ((item as field).mandatory == "true")))
+            {
+                result += ", ";
+                result += GetCType(field.type).Replace('-', '_').Replace(':', '_') + ", " + field.name.Replace('-', '_').Replace(':', '_') + "_value";
             }
 
             return result;
@@ -151,6 +164,8 @@ namespace amqplib_generator
             System.IO.File.WriteAllText("../../../inc/amqp_definitions.h", amqp_definitions_h.TransformText());
             amqp_definitions_c amqp_definitions_c = new amqp_definitions_c();
             System.IO.File.WriteAllText("../../../src/amqp_definitions.c", amqp_definitions_c.TransformText());
+            amqp_definitions_mocks_h amqp_definitions_mocks_h = new amqp_definitions_mocks_h();
+            System.IO.File.WriteAllText("../../../unittests/amqp_definitions_mocks.h", amqp_definitions_mocks_h.TransformText());
         }
     }
 }

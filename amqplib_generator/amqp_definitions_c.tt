@@ -47,7 +47,7 @@
 <#					for (int i = 0; i < mandatory_args.Count(); i++) #>
 <#					{ #>
 <#						string mandatory_arg_name = mandatory_args[i].name.ToLower().Replace('-', '_').Replace(':', '_'); #>
-				AMQP_VALUE <#= mandatory_arg_name #>_value;
+				AMQP_VALUE <#= mandatory_arg_name #>_amqp_value;
 <#					} #>
 				int result = 0;
 
@@ -55,8 +55,8 @@
 <#					{ #>
 <#						string mandatory_arg_type = Program.GetCType(mandatory_args[i].type.ToLower()).Replace('-', '_').Replace(':', '_'); #>
 <#						string mandatory_arg_name = mandatory_args[i].name.ToLower().Replace('-', '_').Replace(':', '_'); #>
-				<#= mandatory_arg_name #>_value = amqpvalue_create_<#= mandatory_args[i].type.ToLower().Replace('-', '_').Replace(':', '_') #>(<#= mandatory_args[i].name.ToLower().Replace('-', '_').Replace(':', '_') #>);
-				if ((result == 0) && (amqpvalue_set_composite_item(<#= type_name #>_instance->composite_value, <#= i #>, <#= mandatory_arg_name #>_value) != 0))
+				<#= mandatory_arg_name #>_amqp_value = amqpvalue_create_<#= mandatory_args[i].type.ToLower().Replace('-', '_').Replace(':', '_') #>(<#= mandatory_args[i].name.ToLower().Replace('-', '_').Replace(':', '_') #>_value);
+				if ((result == 0) && (amqpvalue_set_composite_item(<#= type_name #>_instance->composite_value, <#= i #>, <#= mandatory_arg_name #>_amqp_value) != 0))
 				{
 					result = __LINE__;
 				}
@@ -65,7 +65,7 @@
 <#					for (int i = 0; i < mandatory_args.Count(); i++) #>
 <#					{ #>
 <#						string mandatory_arg_name = mandatory_args[i].name.ToLower().Replace('-', '_').Replace(':', '_'); #>
-				amqpvalue_destroy(<#= mandatory_arg_name #>_value);
+				amqpvalue_destroy(<#= mandatory_arg_name #>_amqp_value);
 <#					} #>
 			}
 <#				} #>
@@ -107,7 +107,7 @@
 <#					string c_type = Program.GetCType(field.type).Replace('-', '_').Replace(':', '_'); #>
 <#					type field_type = Program.GetTypeByName(types, field.type); #>
 <#					if ((field_type != null) && (field_type.@class == typeClass.composite)) c_type = field_type.name.ToUpper().Replace('-', '_').Replace(':', '_') + "_HANDLE"; #>
-	int <#= type_name #>_get_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, <#= c_type #>* <#= field_name #>)
+	int <#= type_name #>_get_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, <#= c_type #>* <#= field_name #>_value)
 	{
 		int result;
 
@@ -124,7 +124,7 @@
 		return result;
 	}
 
-	int <#= type_name #>_set_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, <#= c_type #> <#= field_name #>)
+	int <#= type_name #>_set_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, <#= c_type #> <#= field_name #>_value)
 	{
 		int result;
 
@@ -137,14 +137,14 @@
 			<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)<#= type_name #>;
 <# if (c_type != "AMQP_VALUE") #>
 <# { #>
-			AMQP_VALUE <#= field_name #>_value = amqpvalue_create_<#= field.type.ToLower().Replace('-', '_').Replace(':', '_') #>(<#= field_name #>);
+			AMQP_VALUE <#= field_name #>_amqp_value = amqpvalue_create_<#= field.type.ToLower().Replace('-', '_').Replace(':', '_') #>(<#= field_name #>_value);
 <# } #>
 <# else #>
 <# { #>
-			AMQP_VALUE <#= field_name #>_value = amqpvalue_clone(<#= field_name #>);
+			AMQP_VALUE <#= field_name #>_amqp_value = amqpvalue_clone(<#= field_name #>_value);
 <# } #>
-			if ((<#= field_name #>_value == NULL) ||
-				(amqpvalue_set_composite_item(<#= type_name #>_instance->composite_value, <#= j #>, <#= field_name #>_value) != 0))
+			if ((<#= field_name #>_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(<#= type_name #>_instance->composite_value, <#= j #>, <#= field_name #>_amqp_value) != 0))
 			{
 				result = __LINE__;
 			}

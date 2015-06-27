@@ -47,6 +47,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>amqp_definitions_c.tt</DependentUpon>
     </Compile>
+    <Compile Include="amqp_definitions_mocks_h.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>amqp_definitions_mocks_h.tt</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="amqp_definitions_h.cs">
@@ -62,6 +67,10 @@
     <None Include="amqp_definitions_c.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>
       <LastGenOutput>amqp_definitions_c.cs</LastGenOutput>
+    </None>
+    <None Include="amqp_definitions_mocks_h.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>amqp_definitions_mocks_h.cs</LastGenOutput>
     </None>
     <None Include="App.config" />
     <None Include="amqp_definitions_h.tt">

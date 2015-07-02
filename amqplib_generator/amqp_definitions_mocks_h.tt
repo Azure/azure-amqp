@@ -1,0 +1,107 @@
+﻿<#@ template language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="amqplib_generator" #>
+
+<# amqp amqp = Program.LoadAMQPTypes(); #>
+
+#ifndef AMQP_DEFINITIONS_MOCKS_H
+#define AMQP_DEFINITIONS_MOCKS_H
+
+#include "amqp_definitions.h"
+
+<#	int i = 0; #>
+<#	foreach (section section in amqp.Items.Where(item => item is section)) #>
+<#	{ #>
+<#		List<type> types = new List<type>(); #>
+<#		types.AddRange(section.Items.Where(item => item is type).Cast<type>()); #>
+<#		foreach (type type in types) #>
+<#		{ #>
+<#			string type_name = type.name.ToLower().Replace('-', '_'); #>
+/* <#=		type.name #> */
+
+<#			if (type.@class == typeClass.composite) #>
+<#			{ #>
+<#				string arg_list = Program.GetMandatoryArgListMock(type); #>
+<#				ICollection<field> args = Program.GetMandatoryArgs(type); #>
+static const <#= type_name.ToUpper() #>_HANDLE test_<#= type_name #>_handle = (<#= type_name.ToUpper() #>_HANDLE)<#= 0x4242 + i #>;
+static const AMQP_VALUE test_<#= type_name #>_amqp_value = (AMQP_VALUE)<#= 0x4243 + i #>;
+<#				i++; #>
+<#			} #>
+<#		} #>
+<#	} #>
+
+TYPED_MOCK_CLASS(amqp_definitions_mocks, CGlobalMock)
+{
+public:
+<#	foreach (section section in amqp.Items.Where(item => item is section)) #>
+<#	{ #>
+<#		List<type> types = new List<type>(); #>
+<#		types.AddRange(section.Items.Where(item => item is type).Cast<type>()); #>
+<#		foreach (type type in types) #>
+<#		{ #>
+<#			string type_name = type.name.ToLower().Replace('-', '_'); #>
+/* <#=		type.name #> */
+
+<#			if (type.@class == typeClass.composite) #>
+<#			{ #>
+<#				string arg_list = Program.GetMandatoryArgListMock(type); #>
+<#				ICollection<field> args = Program.GetMandatoryArgs(type); #>
+	MOCK_STATIC_METHOD_<#= args.Count() #>(,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_create<#= arg_list #>);
+	MOCK_METHOD_END(<#= type_name.ToUpper() #>_HANDLE, test_<#= type_name #>_handle);
+	MOCK_STATIC_METHOD_1(, void, <#= type_name #>_destroy, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_create_<#= type_name #>, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
+	MOCK_METHOD_END(AMQP_VALUE, test_<#= type_name #>_amqp_value);
+
+<#				foreach (field field in type.Items.Where(item => item is field)) #>
+<#				{ #>
+<#					string field_name = field.name.ToLower().Replace('-', '_'); #>
+<#					string c_type = Program.GetCType(field.type).Replace('-', '_').Replace(':', '_'); #>
+<#					type field_type = Program.GetTypeByName(types, field.type); #>
+<#					if ((field_type != null) && (field_type.@class == typeClass.composite)) c_type = field_type.name.ToUpper().Replace('-', '_').Replace(':', '_') + "_HANDLE"; #>
+	MOCK_STATIC_METHOD_2(, int, <#= type_name #>_get_<#= field_name #>, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>, <#= c_type #>*, <#= field_name #>_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, <#= type_name #>_set_<#= field_name #>, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>, <#= c_type #>, <#= field_name #>_value);
+	MOCK_METHOD_END(int, 0);
+<#				} #>
+
+<#			} #>
+<#		} #>
+<#	} #>
+};
+
+<#	foreach (section section in amqp.Items.Where(item => item is section)) #>
+<#	{ #>
+<#		List<type> types = new List<type>(); #>
+<#		types.AddRange(section.Items.Where(item => item is type).Cast<type>()); #>
+<#		foreach (type type in types) #>
+<#		{ #>
+<#			string type_name = type.name.ToLower().Replace('-', '_'); #>
+/* <#=		type.name #> */
+
+<#			if (type.@class == typeClass.composite) #>
+<#			{ #>
+<#				string arg_list = Program.GetMandatoryArgListMock(type); #>
+<#				ICollection<field> args = Program.GetMandatoryArgs(type); #>
+	DECLARE_GLOBAL_MOCK_METHOD_<#= args.Count() #>(amqp_definitions_mocks, ,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_create<#= arg_list #>);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, <#= type_name #>_destroy, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_<#= type_name #>, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
+
+<#				foreach (field field in type.Items.Where(item => item is field)) #>
+<#				{ #>
+<#					string field_name = field.name.ToLower().Replace('-', '_'); #>
+<#					string c_type = Program.GetCType(field.type).Replace('-', '_').Replace(':', '_'); #>
+<#					type field_type = Program.GetTypeByName(types, field.type); #>
+<#					if ((field_type != null) && (field_type.@class == typeClass.composite)) c_type = field_type.name.ToUpper().Replace('-', '_').Replace(':', '_') + "_HANDLE"; #>
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, <#= type_name #>_get_<#= field_name #>, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>, <#= c_type #>*, <#= field_name #>_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, <#= type_name #>_set_<#= field_name #>, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>, <#= c_type #>, <#= field_name #>_value);
+<#				} #>
+
+<#			} #>
+<#		} #>
+<#	} #>
+
+#endif /* AMQP_DEFINITIONS_MOCKS_H */

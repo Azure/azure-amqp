@@ -903,7 +903,8 @@ int amqpvalue_get_string(AMQP_VALUE value, const char** string_value)
 {
 	int result;
 
-	if (value == NULL)
+	if ((value == NULL) ||
+		(string_value == NULL))
 	{
 		result = __LINE__;
 	}
@@ -916,7 +917,10 @@ int amqpvalue_get_string(AMQP_VALUE value, const char** string_value)
 		}
 		else
 		{
+			/* Codes_SRS_AMQPVALUE_01_138: [amqpvalue_get_string shall yield a pointer to the sequence of bytes held by the AMQP_VALUE in string_value.] */
 			*string_value = value_data->value.string_value.chars;
+
+			/* Codes_SRS_AMQPVALUE_01_141: [On success, amqpvalue_get_string shall return 0.] */
 			result = 0;
 		}
 	}

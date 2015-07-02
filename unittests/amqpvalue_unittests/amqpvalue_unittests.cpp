@@ -2238,83 +2238,44 @@ BEGIN_TEST_SUITE(connection_unittests)
 			ASSERT_IS_NULL(result);
 		}
 
-#if 0
-		/* Tests_SRS_AMQPVALUE_01_128: [If allocating the AMQP_VALUE fails then amqpvalue_create_string shall return NULL.] */
-		TEST_METHOD(when_allocating_the_string_buffer_fails_then_amqpvalue_create_string_fails)
-		{
-			// arrange
-			amqpvalue_mocks mocks;
-			unsigned char input[] = { 0x0, 0x42 };
-
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-			STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2))
-				.SetReturn((void*)NULL);
-			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
-
-			// act
-			amqp_string string_input = { input, sizeof(input) };
-			AMQP_VALUE result = amqpvalue_create_string(string_input);
-
-			// assert
-			ASSERT_IS_NULL(result);
-		}
-
-		/* Tests_SRS_AMQPVALUE_01_129: [If value.data is NULL and value.length is positive then amqpvalue_create_string shall return NULL.] */
-		TEST_METHOD(when_length_is_positive_and_buffer_is_NULL_then_amqpvalue_create_string_fails)
-		{
-			// arrange
-			amqpvalue_mocks mocks;
-
-			// act
-			amqp_string string_input = { NULL, 1 };
-			AMQP_VALUE result = amqpvalue_create_string(string_input);
-
-			// assert
-			ASSERT_IS_NULL(result);
-		}
-
 		/* amqpvalue_get_string */
 
-		/* Tests_SRS_AMQPVALUE_01_131: [amqpvalue_get_string shall yield a pointer to the sequence of bytes held by the AMQP_VALUE in string_value.data and fill in the string_value.length argument the number of bytes held in the string value.] */
+		/* Tests_SRS_AMQPVALUE_01_138: [amqpvalue_get_string shall yield a pointer to the sequence of bytes held by the AMQP_VALUE in string_value.] */
+		/* Tests_SRS_AMQPVALUE_01_141: [On success, amqpvalue_get_string shall return 0.] */
 		TEST_METHOD(amqpvalue_get_string_1_byte_succeeds)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			unsigned char input[] = { 0x42 };
-			amqp_string string_input = { input, sizeof(input) };
-			AMQP_VALUE value = amqpvalue_create_string(string_input);
+			AMQP_VALUE value = amqpvalue_create_string("a");
 			mocks.ResetAllCalls();
 
 			// act
-			amqp_string string_value;
+			const char* string_value;
 			int result = amqpvalue_get_string(value, &string_value);
 
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
-			ASSERT_ARE_EQUAL(uint32_t, 1, string_value.length);
-			ASSERT_ARE_EQUAL(int, 0, memcmp(string_value.bytes, input, sizeof(input)));
+			ASSERT_ARE_EQUAL(char_ptr, "a", string_value);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_131: [amqpvalue_get_string shall yield a pointer to the sequence of bytes held by the AMQP_VALUE in string_value.data and fill in the string_value.length argument the number of bytes held in the string value.] */
-		TEST_METHOD(amqpvalue_get_string_0_byte_succeeds)
+		/* Tests_SRS_AMQPVALUE_01_138: [amqpvalue_get_string shall yield a pointer to the sequence of bytes held by the AMQP_VALUE in string_value.] */
+		TEST_METHOD(amqpvalue_get_string_0_length_succeeds)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			unsigned char input[] = { 0x42 };
-			amqp_string string_input = { NULL, 0 };
-			AMQP_VALUE value = amqpvalue_create_string(string_input);
+			AMQP_VALUE value = amqpvalue_create_string("");
 			mocks.ResetAllCalls();
 
 			// act
-			amqp_string string_value;
+			const char* string_value;
 			int result = amqpvalue_get_string(value, &string_value);
 
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
-			ASSERT_ARE_EQUAL(uint32_t, 0, string_value.length);
+			ASSERT_ARE_EQUAL(char_ptr, "", string_value);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_132: [If any of the arguments is NULL then amqpvalue_get_string shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_139: [If any of the arguments is NULL then amqpvalue_get_string shall return NULL.] */
 		TEST_METHOD(when_the_value_argument_is_NULL_amqpvalue_get_string_fails)
 		{
 			// arrange
@@ -2322,21 +2283,19 @@ BEGIN_TEST_SUITE(connection_unittests)
 			mocks.ResetAllCalls();
 
 			// act
-			amqp_string string_value;
+			const char* string_value;
 			int result = amqpvalue_get_string(NULL, &string_value);
 
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_132: [If any of the arguments is NULL then amqpvalue_get_string shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_139: [If any of the arguments is NULL then amqpvalue_get_string shall return NULL.] */
 		TEST_METHOD(when_the_string_value_argument_is_NULL_amqpvalue_get_string_fails)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			unsigned char input[] = { 0x42 };
-			amqp_string string_input = { NULL, 0 };
-			AMQP_VALUE value = amqpvalue_create_string(string_input);
+			AMQP_VALUE value = amqpvalue_create_string("a");
 			mocks.ResetAllCalls();
 
 			// act
@@ -2346,7 +2305,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_133: [If the type of the value is not string (was not created with amqpvalue_create_string), then amqpvalue_get_string shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_140: [If the type of the value is not string (was not created with amqpvalue_create_string), then amqpvalue_get_string shall return NULL.] */
 		TEST_METHOD(amqpvalue_get_string_on_a_null_amqp_value_fails)
 		{
 			// arrange
@@ -2355,12 +2314,11 @@ BEGIN_TEST_SUITE(connection_unittests)
 			mocks.ResetAllCalls();
 
 			// act
-			amqp_string string_value;
+			const char* string_value;
 			int result = amqpvalue_get_string(value, &string_value);
 
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
-#endif
 
 END_TEST_SUITE(connection_unittests)

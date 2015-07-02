@@ -69,7 +69,10 @@ const char* message_get_to(MESSAGE_HANDLE handle)
 	}
 	else
 	{
-		result = amqpvalue_get_string(message->to);
+		if (amqpvalue_get_string(message->to, &result) != 0)
+		{
+			result = NULL;
+		}
 	}
 
 	return result;

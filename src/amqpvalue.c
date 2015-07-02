@@ -870,6 +870,8 @@ AMQP_VALUE amqpvalue_create_string(const char* value)
 	else
 	{
 		size_t length = strlen(value);
+		
+		/* Codes_SRS_AMQPVALUE_01_136: [If allocating the AMQP_VALUE fails then amqpvalue_create_string shall return NULL.] */
 		result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 		if (result != NULL)
 		{
@@ -877,6 +879,7 @@ AMQP_VALUE amqpvalue_create_string(const char* value)
 			result->value.string_value.chars = amqpalloc_malloc(length + 1);
 			if (result->value.string_value.chars == NULL)
 			{
+				/* Codes_SRS_AMQPVALUE_01_136: [If allocating the AMQP_VALUE fails then amqpvalue_create_string shall return NULL.] */
 				amqpalloc_free(result);
 				result = NULL;
 			}
@@ -884,11 +887,37 @@ AMQP_VALUE amqpvalue_create_string(const char* value)
 			{
 				if (strcpy(result->value.string_value.chars, value) == NULL)
 				{
+					/* Codes_SRS_AMQPVALUE_01_137: [If any other error occurs, amqpvalue_create_string shall return NULL.] */
 					amqpalloc_free(result->value.string_value.chars);
 					amqpalloc_free(result);
 					result = NULL;
 				}
 			}
+		}
+	}
+
+	return result;
+}
+
+int amqpvalue_get_string(AMQP_VALUE value, const char** string_value)
+{
+	int result;
+
+	if (value == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_STRING)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			*string_value = value_data->value.string_value.chars;
+			result = 0;
 		}
 	}
 
@@ -1132,30 +1161,6 @@ AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index)
 		else
 		{
 			result = value_data->value.list_value.items[index];
-		}
-	}
-
-	return result;
-}
-
-const char* amqpvalue_get_string(AMQP_VALUE value)
-{
-	const char* result;
-
-	if (value == NULL)
-	{
-		result = NULL;
-	}
-	else
-	{
-		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		if (value_data->type != AMQP_TYPE_STRING)
-		{
-			result = NULL;
-		}
-		else
-		{
-			result = value_data->value.string_value.chars;
 		}
 	}
 
@@ -2518,7 +2523,7 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 		}
 
 		case AMQP_TYPE_STRING:
-			if (encode_string(encoder_output, context, amqpvalue_get_string(value)) != 0)
+			if (encode_string(encoder_output, context, value_data->value.string_value.chars) != 0)
 			{
 				result = __LINE__;
 			}

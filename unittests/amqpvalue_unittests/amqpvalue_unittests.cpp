@@ -2185,44 +2185,24 @@ BEGIN_TEST_SUITE(connection_unittests)
 			ASSERT_IS_NOT_NULL(result);
 		}
 
-#if 0
-		/* Tests_SRS_AMQPVALUE_01_127: [amqpvalue_create_string shall return a handle to an AMQP_VALUE that stores a sequence of bytes.] */
-		/* Tests_SRS_AMQPVALUE_01_027: [1.6.19 string A sequence of octets.] */
-		TEST_METHOD(amqpvalue_create_string_with_0_bytes_succeeds)
+		/* Tests_SRS_AMQPVALUE_01_135: [amqpvalue_create_string shall return a handle to an AMQP_VALUE that stores a sequence of Unicode characters.] */
+		/* Tests_SRS_AMQPVALUE_01_028: [1.6.20 string A sequence of Unicode characters.] */
+		TEST_METHOD(amqpvalue_create_string_with_0_length_succeeds)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
 
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(1));
 
 			// act
-			amqp_string string_input = { NULL, 0 };
-			AMQP_VALUE result = amqpvalue_create_string(string_input);
+			AMQP_VALUE result = amqpvalue_create_string("");
 
 			// assert
 			ASSERT_IS_NOT_NULL(result);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_127: [amqpvalue_create_string shall return a handle to an AMQP_VALUE that stores a sequence of bytes.] */
-		/* Tests_SRS_AMQPVALUE_01_027: [1.6.19 string A sequence of octets.] */
-		TEST_METHOD(amqpvalue_create_string_with_2_bytes_succeeds)
-		{
-			// arrange
-			amqpvalue_mocks mocks;
-			unsigned char input[] = { 0x0, 0x42 };
-
-			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-			STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
-
-			// act
-			amqp_string string_input = { input, sizeof(input) };
-			AMQP_VALUE result = amqpvalue_create_string(string_input);
-
-			// assert
-			ASSERT_IS_NOT_NULL(result);
-		}
-
-		/* Tests_SRS_AMQPVALUE_01_128: [If allocating the AMQP_VALUE fails then amqpvalue_create_string shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_136: [If allocating the AMQP_VALUE fails then amqpvalue_create_string shall return NULL.] */
 		TEST_METHOD(when_allocating_the_amqp_value_fails_then_amqpvalue_create_string_fails)
 		{
 			// arrange
@@ -2233,13 +2213,32 @@ BEGIN_TEST_SUITE(connection_unittests)
 				.SetReturn((void*)NULL);
 
 			// act
-			amqp_string string_input = { input, sizeof(input) };
-			AMQP_VALUE result = amqpvalue_create_string(string_input);
+			AMQP_VALUE result = amqpvalue_create_string("a");
 
 			// assert
 			ASSERT_IS_NULL(result);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_136: [If allocating the AMQP_VALUE fails then amqpvalue_create_string shall return NULL.] */
+		TEST_METHOD(when_allocating_the_string_in_the_amqp_value_fails_then_amqpvalue_create_string_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char input[] = { 0x0, 0x42 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_string("a");
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+#if 0
 		/* Tests_SRS_AMQPVALUE_01_128: [If allocating the AMQP_VALUE fails then amqpvalue_create_string shall return NULL.] */
 		TEST_METHOD(when_allocating_the_string_buffer_fails_then_amqpvalue_create_string_fails)
 		{

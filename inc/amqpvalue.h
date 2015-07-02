@@ -22,6 +22,7 @@ extern "C" {
 		uint32_t length;
 	} amqp_binary;
 
+	/* type handling */
 	extern AMQP_VALUE amqpvalue_create_null(void);
 	extern AMQP_VALUE amqpvalue_create_boolean(bool value);
 	extern int amqpvalue_get_boolean(AMQP_VALUE value, bool* bool_value);
@@ -62,7 +63,12 @@ extern "C" {
 	extern int amqpvalue_get_map(AMQP_VALUE value, AMQP_VALUE* map_value);
 	extern AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size);
 	extern int amqpvalue_set_composite_item(AMQP_VALUE value, size_t index, AMQP_VALUE item_value);
+	extern AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value);
+	extern AMQP_VALUE amqpvalue_create_list(size_t size);
+	extern AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor, size_t size);
+	extern AMQP_VALUE amqpvalue_clone(AMQP_VALUE value);
 
+	/* decoding */
 	typedef void* DECODER_HANDLE;
 	typedef int(*VALUE_DECODED_CALLBACK)(void* context, AMQP_VALUE decoded_value);
 
@@ -70,16 +76,12 @@ extern "C" {
 	extern void decoder_destroy(DECODER_HANDLE handle);
 	extern int decoder_decode_bytes(DECODER_HANDLE handle, const unsigned char* buffer, size_t size);
 
+	/* encoding */
 	typedef int(*ENCODER_OUTPUT)(void* context, const void* bytes, size_t length);
 	extern int amqpvalue_get_encoded_size(AMQP_VALUE value, size_t* encoded_size);
 	extern int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* context);
 
-	extern AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value);
-	extern AMQP_VALUE amqpvalue_create_list(size_t size);
-	extern AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor, size_t size);
-	extern AMQP_VALUE amqpvalue_clone(AMQP_VALUE value);
 	extern int amqpvalue_set_list_item(AMQP_VALUE value, size_t index, AMQP_VALUE list_item_value);
-	extern int amqpvalue_get_type(AMQP_VALUE value, AMQP_TYPE* type);
 	extern int amqpvalue_get_list_item_count(AMQP_VALUE value, size_t* count);
 	extern AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index);
 	extern AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value);

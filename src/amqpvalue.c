@@ -1107,25 +1107,6 @@ void amqpvalue_destroy(AMQP_VALUE value)
 	}
 }
 
-int amqpvalue_get_type(AMQP_VALUE value, AMQP_TYPE* type)
-{
-	int result;
-
-	if ((value == NULL) ||
-		(type == NULL))
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		*type = value_data->type;
-		result = 0;
-	}
-
-	return result;
-}
-
 int amqpvalue_get_list_item_count(AMQP_VALUE value, size_t* count)
 {
 	int result;
@@ -2498,9 +2479,8 @@ static int encode_descriptor_header(ENCODER_OUTPUT encoder_output, void* context
 int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* context)
 {
 	int result;
-	AMQP_TYPE amqp_type;
 
-	if (amqpvalue_get_type(value, &amqp_type) != 0)
+	if (value == NULL)
 	{
 		result = __LINE__;
 	}
@@ -2508,7 +2488,7 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 	{
 		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
 
-		switch (amqp_type)
+		switch (value_data->type)
 		{
 		default:
 			result = __LINE__;

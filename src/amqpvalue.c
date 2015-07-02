@@ -15,7 +15,6 @@ typedef struct AMQP_LIST_VALUE_TAG
 typedef struct AMQP_STRING_VALUE_TAG
 {
 	char* chars;
-	uint32_t length;
 } AMQP_STRING_VALUE;
 
 typedef struct AMQP_BINARY_VALUE_TAG
@@ -76,10 +75,16 @@ typedef struct DECODE_DESCRIBED_VALUE_STATE_TAG
 	DECODE_DESCRIBED_VALUE_STEP described_value_state;
 } DECODE_DESCRIBED_VALUE_STATE;
 
+typedef struct STRING_VALUE_STATE_TAG
+{
+	uint32_t length;
+} STRING_VALUE_STATE;
+
 typedef union DECODE_VALUE_STATE_UNION_TAG
 {
 	DECODE_LIST_VALUE_STATE list_value_state;
 	DECODE_DESCRIBED_VALUE_STATE described_value_state;
+	STRING_VALUE_STATE string_value_state;
 } DECODE_VALUE_STATE_UNION;
 
 typedef struct AMQP_VALUE_DATA_TAG
@@ -1575,9 +1580,18 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 				{
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_STRING;
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
-					internal_decoder_data->decode_to_value->value.string_value.length = 0;
-					internal_decoder_data->bytes_decoded = 0;
-					result = 0;
+					internal_decoder_data->decode_to_value->value.string_value.chars = malloc(1);
+					if (internal_decoder_data->decode_to_value->value.string_value.chars == NULL)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						internal_decoder_data->decode_to_value->value.string_value.chars[0] = '\0';
+						internal_decoder_data->bytes_decoded = 0;
+						result = 0;
+					}
+
 					break;
 				}
 				case 0xD0: /* list32 */
@@ -1884,12 +1898,13 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					/* str8-utf8 */
 					if (internal_decoder_data->bytes_decoded == 0)
 					{
-						internal_decoder_data->decode_to_value->value.string_value.length = buffer[0];
 						internal_decoder_data->bytes_decoded++;
 						buffer++;
 						size--;
 
-						internal_decoder_data->decode_to_value->value.string_value.chars = (char*)malloc(internal_decoder_data->decode_to_value->value.string_value.length + 1);
+						internal_decoder_data->decode_value_state.string_value_state.length = buffer[0];
+
+						internal_decoder_data->decode_to_value->value.string_value.chars = (char*)malloc(internal_decoder_data->decode_value_state.string_value_state.length + 1);
 						if (internal_decoder_data->decode_to_value->value.string_value.chars == NULL)
 						{
 							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
@@ -1902,7 +1917,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					}
 					else
 					{
-						uint32_t to_copy = internal_decoder_data->decode_to_value->value.string_value.length - (internal_decoder_data->bytes_decoded - 1);
+						uint32_t to_copy = internal_decoder_data->decode_value_state.string_value_state.length - (internal_decoder_data->bytes_decoded - 1);
 						if (to_copy > size)
 						{
 							to_copy = size;
@@ -1919,7 +1934,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							size -= to_copy;
 							internal_decoder_data->bytes_decoded += to_copy;
 
-							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.string_value.length + 1)
+							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_value_state.string_value_state.length + 1)
 							{
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
 								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
@@ -2003,12 +2018,12 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					/* str32-utf8 */
 					if (internal_decoder_data->bytes_decoded < 4)
 					{
-						internal_decoder_data->decode_to_value->value.string_value.length += buffer[0] << ((3 - internal_decoder_data->bytes_decoded) * 8);
+						internal_decoder_data->decode_value_state.string_value_state.length += buffer[0] << ((3 - internal_decoder_data->bytes_decoded) * 8);
 						internal_decoder_data->bytes_decoded++;
 						buffer++;
 						size--;
 
-						internal_decoder_data->decode_to_value->value.string_value.chars = (char*)malloc(internal_decoder_data->decode_to_value->value.string_value.length + 1);
+						internal_decoder_data->decode_to_value->value.string_value.chars = (char*)malloc(internal_decoder_data->decode_value_state.string_value_state.length + 1);
 						if (internal_decoder_data->decode_to_value->value.string_value.chars == NULL)
 						{
 							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
@@ -2021,7 +2036,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					}
 					else
 					{
-						uint32_t to_copy = internal_decoder_data->decode_to_value->value.string_value.length - (internal_decoder_data->bytes_decoded - 4);
+						uint32_t to_copy = internal_decoder_data->decode_value_state.string_value_state.length - (internal_decoder_data->bytes_decoded - 4);
 						if (to_copy > size)
 						{
 							to_copy = size;
@@ -2038,7 +2053,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							size -= to_copy;
 							internal_decoder_data->bytes_decoded += to_copy;
 
-							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.string_value.length + 4)
+							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_value_state.string_value_state.length + 4)
 							{
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
 								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)

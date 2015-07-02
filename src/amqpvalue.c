@@ -858,6 +858,43 @@ int amqpvalue_get_binary(AMQP_VALUE value, amqp_binary* binary_value)
 	return result;
 }
 
+/* Codes_SRS_AMQPVALUE_01_135: [amqpvalue_create_string shall return a handle to an AMQP_VALUE that stores a sequence of Unicode characters.] */
+/* Codes_SRS_AMQPVALUE_01_028: [1.6.20 string A sequence of Unicode characters.] */
+AMQP_VALUE amqpvalue_create_string(const char* value)
+{
+	AMQP_VALUE_DATA* result;
+	if (value == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		size_t length = strlen(value);
+		result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+		if (result != NULL)
+		{
+			result->type = AMQP_TYPE_STRING;
+			result->value.string_value.chars = amqpalloc_malloc(length + 1);
+			if (result->value.string_value.chars == NULL)
+			{
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				if (strcpy(result->value.string_value.chars, value) == NULL)
+				{
+					amqpalloc_free(result->value.string_value.chars);
+					amqpalloc_free(result);
+					result = NULL;
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
 AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
@@ -894,59 +931,6 @@ AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size)
 		}
 	}
 
-	return result;
-}
-
-AMQP_VALUE amqpvalue_create_string(const char* value)
-{
-	AMQP_VALUE_DATA* result;
-	if (value == NULL)
-	{
-		result = NULL;
-	}
-	else
-	{
-		size_t length = strlen(value);
-		result = amqpvalue_create_string_with_length(value, length);
-	}
-	return result;
-}
-
-AMQP_VALUE amqpvalue_create_string_with_length(const char* value, uint32_t length)
-{
-	AMQP_VALUE_DATA* result;
-	if (value == NULL)
-	{
-		result = NULL;
-	}
-	else
-	{
-		result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
-		if (result != NULL)
-		{
-			result->type = AMQP_TYPE_STRING;
-			result->value.string_value.chars = amqpalloc_malloc(length + 1);
-			result->value.string_value.length = length;
-			if (result->value.string_value.chars == NULL)
-			{
-				amqpalloc_free(result);
-				result = NULL;
-			}
-			else
-			{
-				if (memcpy(result->value.string_value.chars, value, length) == NULL)
-				{
-					amqpalloc_free(result->value.string_value.chars);
-					amqpalloc_free(result);
-					result = NULL;
-				}
-				else
-				{
-					result->value.string_value.chars[length] = 0;
-				}
-			}
-		}
-	}
 	return result;
 }
 
@@ -1323,7 +1307,7 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 		}
 
 		case AMQP_TYPE_STRING:
-			result = amqpvalue_create_string_with_length(value_data->value.string_value.chars, value_data->value.string_value.length);
+			result = amqpvalue_create_string(value_data->value.string_value.chars);
 			break;
 
 		case AMQP_TYPE_ULONG:

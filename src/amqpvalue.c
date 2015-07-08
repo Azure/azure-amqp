@@ -1265,6 +1265,7 @@ int amqpvalue_get_list_item_count(AMQP_VALUE value, size_t* size)
 {
 	int result;
 
+	/* Codes_SRS_AMQPVALUE_01_159: [If any of the arguments are NULL, amqpvalue_get_list_item_count shall return a non-zero value.] */
 	if ((value == NULL) ||
 		(size == NULL))
 	{
@@ -1273,13 +1274,18 @@ int amqpvalue_get_list_item_count(AMQP_VALUE value, size_t* size)
 	else
 	{
 		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+
+		/* Codes_SRS_AMQPVALUE_01_160: [If the AMQP_VALUE is not a list then amqpvalue_get_list_item_count shall return a non-zero value.] */
 		if (value_data->type != AMQP_TYPE_LIST)
 		{
 			result = __LINE__;
 		}
 		else
 		{
+			/* Codes_SRS_AMQPVALUE_01_157: [amqpvalue_get_list_item_count shall fill in the size argument the number of items held by the AMQP list.] */
 			*size = value_data->value.list_value.count;
+
+			/* Codes_SRS_AMQPVALUE_01_158: [On success amqpvalue_get_list_item_count shall return 0.] */
 			result = 0;
 		}
 	}

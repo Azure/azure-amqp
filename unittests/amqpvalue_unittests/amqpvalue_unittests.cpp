@@ -2710,9 +2710,9 @@ BEGIN_TEST_SUITE(connection_unittests)
 
 		/* amqpvalue_get_list_item_count */
 
-#if 0
 		/* Tests_SRS_AMQPVALUE_01_157: [amqpvalue_get_list_item_count shall fill in the size argument the number of items held by the AMQP list.] */
-		TEST_METHOD(amqpvalue_set_list_item_count_with_0_count_does_not_allocate_anything)
+		/* Tests_SRS_AMQPVALUE_01_158: [On success amqpvalue_get_list_item_count shall return 0.] */
+		TEST_METHOD(amqpvalue_get_list_item_count_yields_0_on_an_empty_list)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
@@ -2720,15 +2720,164 @@ BEGIN_TEST_SUITE(connection_unittests)
 			mocks.ResetAllCalls();
 
 			// act
-			int result = amqpvalue_set_list_item_count(list, 0);
+			uint32_t item_count;
+			int result = amqpvalue_get_list_item_count(list, &item_count);
 
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_ARE_EQUAL(uint32_t, 0, item_count);
 			mocks.AssertActualAndExpectedCalls();
 
 			// cleanup
 			amqpvalue_destroy(list);
 		}
-#endif
+
+		/* Tests_SRS_AMQPVALUE_01_157: [amqpvalue_get_list_item_count shall fill in the size argument the number of items held by the AMQP list.] */
+		/* Tests_SRS_AMQPVALUE_01_158: [On success amqpvalue_get_list_item_count shall return 0.] */
+		TEST_METHOD(amqpvalue_get_list_item_count_on_a_list_with_size_1_yields_1)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			(void)amqpvalue_set_list_item_count(list, 1);
+			mocks.ResetAllCalls();
+
+			// act
+			uint32_t item_count;
+			int result = amqpvalue_get_list_item_count(list, &item_count);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_ARE_EQUAL(uint32_t, 1, item_count);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_157: [amqpvalue_get_list_item_count shall fill in the size argument the number of items held by the AMQP list.] */
+		/* Tests_SRS_AMQPVALUE_01_158: [On success amqpvalue_get_list_item_count shall return 0.] */
+		TEST_METHOD(amqpvalue_get_list_item_count_on_a_list_with_size_2_yields_2)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			(void)amqpvalue_set_list_item_count(list, 1);
+			(void)amqpvalue_set_list_item_count(list, 2);
+			mocks.ResetAllCalls();
+
+			// act
+			uint32_t item_count;
+			int result = amqpvalue_get_list_item_count(list, &item_count);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_ARE_EQUAL(uint32_t, 2, item_count);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_157: [amqpvalue_get_list_item_count shall fill in the size argument the number of items held by the AMQP list.] */
+		/* Tests_SRS_AMQPVALUE_01_158: [On success amqpvalue_get_list_item_count shall return 0.] */
+		TEST_METHOD(amqpvalue_get_list_item_count_on_a_list_shrunk_to_1_item_yields_1)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			(void)amqpvalue_set_list_item_count(list, 2);
+			(void)amqpvalue_set_list_item_count(list, 1);
+			mocks.ResetAllCalls();
+
+			// act
+			uint32_t item_count;
+			int result = amqpvalue_get_list_item_count(list, &item_count);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_ARE_EQUAL(uint32_t, 1, item_count);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_157: [amqpvalue_get_list_item_count shall fill in the size argument the number of items held by the AMQP list.] */
+		/* Tests_SRS_AMQPVALUE_01_158: [On success amqpvalue_get_list_item_count shall return 0.] */
+		TEST_METHOD(amqpvalue_get_list_item_count_on_a_list_shrunk_to_empty_yields_0)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			(void)amqpvalue_set_list_item_count(list, 2);
+			(void)amqpvalue_set_list_item_count(list, 0);
+			mocks.ResetAllCalls();
+
+			// act
+			uint32_t item_count;
+			int result = amqpvalue_get_list_item_count(list, &item_count);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_ARE_EQUAL(uint32_t, 0, item_count);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_159: [If any of the arguments are NULL, amqpvalue_get_list_item_count shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_list_item_count_with_NULL_handle_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			// act
+			uint32_t item_count;
+			int result = amqpvalue_get_list_item_count(NULL, &item_count);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_159: [If any of the arguments are NULL, amqpvalue_get_list_item_count shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_list_item_count_with_NULL_item_count_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_list_item_count(list, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_160: [If the AMQP_VALUE is not a list then amqpvalue_get_list_item_count shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_list_item_count_on_a_non_list_type_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			uint32_t item_count;
+			int result = amqpvalue_get_list_item_count(null_value, &item_count);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(null_value);
+		}
 
 END_TEST_SUITE(connection_unittests)

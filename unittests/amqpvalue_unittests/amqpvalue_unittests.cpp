@@ -2455,4 +2455,38 @@ BEGIN_TEST_SUITE(connection_unittests)
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
 
+		/* amqpvalue_create_list */
+
+		/* Tests_SRS_AMQPVALUE_01_149: [amqpvalue_create_list shall return a handle to an AMQP_VALUE that stores a list.] */
+		/* Tests_SRS_AMQPVALUE_01_030: [1.6.22 list A sequence of polymorphic values.] */
+		TEST_METHOD(amqpvalue_create_list_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_list();
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_150: [If allocating the AMQP_VALUE fails then amqpvalue_create_list shall return NULL.] */
+		TEST_METHOD(when_allocating_memory_fails_then_amqpvalue_create_list_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_list();
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
 END_TEST_SUITE(connection_unittests)

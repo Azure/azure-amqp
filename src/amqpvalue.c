@@ -937,7 +937,6 @@ int amqpvalue_get_string(AMQP_VALUE value, const char** string_value)
 	return result;
 }
 
-/* Codes_SRS_AMQPVALUE_01_142: [amqpvalue_create_symbol shall return a handle to an AMQP_VALUE that stores a uint32_t value.] */
 /* Codes_SRS_AMQPVALUE_01_029: [1.6.21 symbol Symbolic values from a constrained domain.] */
 AMQP_VALUE amqpvalue_create_symbol(uint32_t value)
 {
@@ -945,6 +944,7 @@ AMQP_VALUE amqpvalue_create_symbol(uint32_t value)
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
+		/* Codes_SRS_AMQPVALUE_01_142: [amqpvalue_create_symbol shall return a handle to an AMQP_VALUE that stores a uint32_t value.] */
 		result->type = AMQP_TYPE_SYMBOL;
 		result->value.symbol_value = value;
 	}
@@ -979,6 +979,24 @@ int amqpvalue_get_symbol(AMQP_VALUE value, uint32_t* symbol_value)
 			/* Codes_SRS_AMQPVALUE_01_146: [On success, amqpvalue_get_symbol shall return 0.] */
 			result = 0;
 		}
+	}
+
+	return result;
+}
+
+/* Codes_SRS_AMQPVALUE_01_030: [1.6.22 list A sequence of polymorphic values.] */
+AMQP_VALUE amqpvalue_create_list(void)
+{
+	/* Codes_SRS_AMQPVALUE_01_150: [If allocating the AMQP_VALUE fails then amqpvalue_create_list shall return NULL.] */
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
+	{
+		/* Codes_SRS_AMQPVALUE_01_149: [amqpvalue_create_list shall return a handle to an AMQP_VALUE that stores a list.] */
+		result->type = AMQP_TYPE_LIST;
+
+		/* Codes_SRS_AMQPVALUE_01_151: [The list shall have an initial size of zero.] */
+		result->value.list_value.count = 0;
+		result->value.list_value.items = NULL;
 	}
 
 	return result;
@@ -1033,19 +1051,6 @@ AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size)
 				}
 			}
 		}
-	}
-
-	return result;
-}
-
-AMQP_VALUE amqpvalue_create_list(void)
-{
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
-	if (result != NULL)
-	{
-		result->type = AMQP_TYPE_LIST;
-		result->value.list_value.count = 0;
-		result->value.list_value.items = NULL;
 	}
 
 	return result;

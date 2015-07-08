@@ -1006,6 +1006,7 @@ int amqpvalue_set_list_item_count(AMQP_VALUE value, uint32_t list_size)
 {
 	int result;
 
+	/* Codes_SRS_AMQPVALUE_01_155: [If the value argument is NULL, amqpvalue_set_list_item_count shall return a non-zero value.] */
 	if (value == NULL)
 	{
 		result = __LINE__;
@@ -1095,6 +1096,126 @@ int amqpvalue_set_list_item_count(AMQP_VALUE value, uint32_t list_size)
 	return result;
 }
 
+int amqpvalue_get_list_item_count(AMQP_VALUE value, size_t* size)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_159: [If any of the arguments are NULL, amqpvalue_get_list_item_count shall return a non-zero value.] */
+	if ((value == NULL) ||
+		(size == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+
+		/* Codes_SRS_AMQPVALUE_01_160: [If the AMQP_VALUE is not a list then amqpvalue_get_list_item_count shall return a non-zero value.] */
+		if (value_data->type != AMQP_TYPE_LIST)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_157: [amqpvalue_get_list_item_count shall fill in the size argument the number of items held by the AMQP list.] */
+			*size = value_data->value.list_value.count;
+
+			/* Codes_SRS_AMQPVALUE_01_158: [On success amqpvalue_get_list_item_count shall return 0.] */
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+int amqpvalue_set_list_item(AMQP_VALUE value, uint32_t index, AMQP_VALUE list_item_value)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_165: [If value or list_item_value is NULL, amqpvalue_set_list_item shall fail and return a non-zero value.] */
+	if (value == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_LIST)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			AMQP_VALUE cloned_item = amqpvalue_clone(list_item_value);
+
+			if (cloned_item == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (index >= value_data->value.list_value.count)
+				{
+					AMQP_VALUE* new_list = (AMQP_VALUE*)amqpalloc_realloc(value_data->value.list_value.items, (index + 1) * sizeof(AMQP_VALUE));
+					if (new_list == NULL)
+					{
+						amqpvalue_destroy(cloned_item);
+						result = __LINE__;
+					}
+					else
+					{
+						uint32_t i;
+
+						value_data->value.list_value.items = new_list;
+
+						for (i = value_data->value.list_value.count; i < index; i++)
+						{
+							new_list[i] = amqpvalue_create_null();
+							if (new_list[i] == NULL)
+							{
+								break;
+							}
+						}
+
+						if (i < index)
+						{
+							/* Codes_SRS_AMQPVALUE_01_172: [If growing the list fails, then amqpvalue_set_list_item shall fail and return a non-zero value.] */
+							uint32_t j;
+							for (j = value_data->value.list_value.count; j < i; j++)
+							{
+								amqpvalue_destroy(new_list[j]);
+							}
+
+							amqpvalue_destroy(cloned_item);
+
+							result = __LINE__;
+						}
+						else
+						{
+							value_data->value.list_value.count = index + 1;
+							value_data->value.list_value.items[index] = cloned_item;
+
+							/* Codes_SRS_AMQPVALUE_01_164: [On success amqpvalue_set_list_item shall return 0.] */
+							result = 0;
+						}
+					}
+				}
+				else
+				{
+					/* Codes_SRS_AMQPVALUE_01_163: [amqpvalue_set_list_item shall replace the item at the 0 based index-th position in the list identified by the value argument with the AMQP_VALUE specified by list_item_value.] */
+					amqpvalue_destroy(value_data->value.list_value.items[index]);
+					value_data->value.list_value.items[index] = cloned_item;
+
+					/* Codes_SRS_AMQPVALUE_01_164: [On success amqpvalue_set_list_item shall return 0.] */
+					result = 0;
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
 AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
@@ -1180,38 +1301,6 @@ AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor)
 	return result;
 }
 
-int amqpvalue_set_list_item(AMQP_VALUE value, size_t index, AMQP_VALUE list_item_value)
-{
-	int result;
-
-	if (value == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		if (value_data->type != AMQP_TYPE_LIST)
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			if (index >= value_data->value.list_value.count)
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				value_data->value.list_value.items[index] = amqpvalue_clone(list_item_value);
-				result = 0;
-			}
-		}
-	}
-
-	return result;
-}
-
 static void amqpvalue_clear(AMQP_VALUE_DATA* value_data)
 {
 	switch (value_data->type)
@@ -1259,38 +1348,6 @@ void amqpvalue_destroy(AMQP_VALUE value)
 		amqpvalue_clear(value_data);
 		amqpalloc_free(value);
 	}
-}
-
-int amqpvalue_get_list_item_count(AMQP_VALUE value, size_t* size)
-{
-	int result;
-
-	/* Codes_SRS_AMQPVALUE_01_159: [If any of the arguments are NULL, amqpvalue_get_list_item_count shall return a non-zero value.] */
-	if ((value == NULL) ||
-		(size == NULL))
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-
-		/* Codes_SRS_AMQPVALUE_01_160: [If the AMQP_VALUE is not a list then amqpvalue_get_list_item_count shall return a non-zero value.] */
-		if (value_data->type != AMQP_TYPE_LIST)
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			/* Codes_SRS_AMQPVALUE_01_157: [amqpvalue_get_list_item_count shall fill in the size argument the number of items held by the AMQP list.] */
-			*size = value_data->value.list_value.count;
-
-			/* Codes_SRS_AMQPVALUE_01_158: [On success amqpvalue_get_list_item_count shall return 0.] */
-			result = 0;
-		}
-	}
-
-	return result;
 }
 
 AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index)

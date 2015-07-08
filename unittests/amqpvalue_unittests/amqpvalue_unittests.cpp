@@ -2275,7 +2275,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			ASSERT_ARE_EQUAL(char_ptr, "", string_value);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_139: [If any of the arguments is NULL then amqpvalue_get_string shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_139: [If any of the arguments is NULL then amqpvalue_get_string shall return a non-zero value.] */
 		TEST_METHOD(when_the_value_argument_is_NULL_amqpvalue_get_string_fails)
 		{
 			// arrange
@@ -2290,7 +2290,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_139: [If any of the arguments is NULL then amqpvalue_get_string shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_139: [If any of the arguments is NULL then amqpvalue_get_string shall return a non-zero value.] */
 		TEST_METHOD(when_the_string_value_argument_is_NULL_amqpvalue_get_string_fails)
 		{
 			// arrange
@@ -2305,7 +2305,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_140: [If the type of the value is not string (was not created with amqpvalue_create_string), then amqpvalue_get_string shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_140: [If the type of the value is not string (was not created with amqpvalue_create_string), then amqpvalue_get_string shall return a non-zero value.] */
 		TEST_METHOD(amqpvalue_get_string_on_a_null_amqp_value_fails)
 		{
 			// arrange
@@ -2316,6 +2316,140 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// act
 			const char* string_value;
 			int result = amqpvalue_get_string(value, &string_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* amqpvalue_create_symbol */
+
+		/* Tests_SRS_AMQPVALUE_01_142: [amqpvalue_create_symbol shall return a handle to an AMQP_VALUE that stores a uint32_t value.] */
+		/* Tests_SRS_AMQPVALUE_01_029: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		TEST_METHOD(amqpvalue_create_symbol_with_one_char_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_symbol(1);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_142: [amqpvalue_create_symbol shall return a handle to an AMQP_VALUE that stores a uint32_t value.] */
+		/* Tests_SRS_AMQPVALUE_01_029: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		TEST_METHOD(amqpvalue_create_symbol_value_0xFFFFFFFF_length_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_symbol(0xFFFFFFFF);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_143: [If allocating the AMQP_VALUE fails then amqpvalue_create_symbol shall return NULL.] */
+		TEST_METHOD(when_allocating_the_amqp_value_fails_then_amqpvalue_create_symbol_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char input[] = { 0x0, 0x42 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_symbol(42);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* amqpvalue_get_symbol */
+
+		/* Tests_SRS_AMQPVALUE_01_145: [amqpvalue_get_symbol shall fill in the symbol_value the uint32_t symbol value held by the AMQP_VALUE.] */
+		/* Tests_SRS_AMQPVALUE_01_146: [On success, amqpvalue_get_symbol shall return 0.] */
+		TEST_METHOD(amqpvalue_get_symbol_0_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint32_t symbol_value;
+			AMQP_VALUE value = amqpvalue_create_symbol(0);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_symbol(value, &symbol_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(uint32_t, 0, symbol_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_145: [amqpvalue_get_symbol shall fill in the symbol_value the uint32_t symbol value held by the AMQP_VALUE.] */
+		/* Tests_SRS_AMQPVALUE_01_146: [On success, amqpvalue_get_symbol shall return 0.] */
+		TEST_METHOD(amqpvalue_get_symbol_0xFFFFFFFF_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint32_t symbol_value;
+			AMQP_VALUE value = amqpvalue_create_symbol(0xFFFFFFFF);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_symbol(value, &symbol_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(uint32_t, (uint32_t)0xFFFFFFFF, symbol_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_147: [If any of the arguments is NULL then amqpvalue_get_symbol shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_symbol_with_a_NULL_amqpvalue_handle_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint32_t symbol_value;
+
+			// act
+			int result = amqpvalue_get_symbol(NULL, &symbol_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_147: [If any of the arguments is NULL then amqpvalue_get_symbol shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_symbol_with_a_NULL_symbol_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_symbol(0);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_symbol(value, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_148: [If the type of the value is not symbol (was not created with amqpvalue_create_symbol), then amqpvalue_get_string shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_symbol_with_an_amqpvalue_that_is_not_symbol_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			uint32_t symbol_value;
+			AMQP_VALUE value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_symbol(value, &symbol_value);
 
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);

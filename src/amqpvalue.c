@@ -49,6 +49,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	AMQP_STRING_VALUE string_value;
 	amqp_binary binary_value;
 	AMQP_LIST_VALUE list_value;
+	uint32_t symbol_value;
 } AMQP_VALUE_UNION;
 
 typedef enum DECODE_LIST_STEP_TAG
@@ -908,6 +909,7 @@ int amqpvalue_get_string(AMQP_VALUE value, const char** string_value)
 {
 	int result;
 
+	/* Codes_SRS_AMQPVALUE_01_139: [If any of the arguments is NULL then amqpvalue_get_string shall return a non-zero value.] */
 	if ((value == NULL) ||
 		(string_value == NULL))
 	{
@@ -916,6 +918,8 @@ int amqpvalue_get_string(AMQP_VALUE value, const char** string_value)
 	else
 	{
 		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+
+		/* Codes_SRS_AMQPVALUE_01_140: [If the type of the value is not string (was not created with amqpvalue_create_string), then amqpvalue_get_string shall return a non-zero value.] */
 		if (value_data->type != AMQP_TYPE_STRING)
 		{
 			result = __LINE__;
@@ -926,6 +930,53 @@ int amqpvalue_get_string(AMQP_VALUE value, const char** string_value)
 			*string_value = value_data->value.string_value.chars;
 
 			/* Codes_SRS_AMQPVALUE_01_141: [On success, amqpvalue_get_string shall return 0.] */
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+/* Codes_SRS_AMQPVALUE_01_142: [amqpvalue_create_symbol shall return a handle to an AMQP_VALUE that stores a uint32_t value.] */
+/* Codes_SRS_AMQPVALUE_01_029: [1.6.21 symbol Symbolic values from a constrained domain.] */
+AMQP_VALUE amqpvalue_create_symbol(uint32_t value)
+{
+	/* Codes_SRS_AMQPVALUE_01_143: [If allocating the AMQP_VALUE fails then amqpvalue_create_symbol shall return NULL.] */
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
+	{
+		result->type = AMQP_TYPE_SYMBOL;
+		result->value.symbol_value = value;
+	}
+
+	return result;
+}
+
+int amqpvalue_get_symbol(AMQP_VALUE value, uint32_t* symbol_value)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_147: [If any of the arguments is NULL then amqpvalue_get_symbol shall return a non-zero value.] */
+	if ((value == NULL) ||
+		(symbol_value == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+
+		/* Codes_SRS_AMQPVALUE_01_148: [If the type of the value is not symbol (was not created with amqpvalue_create_symbol), then amqpvalue_get_symbol shall return a non-zero value.] */
+		if (value_data->type != AMQP_TYPE_SYMBOL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_145: [amqpvalue_get_symbol shall fill in the symbol_value the uint32_t symbol value held by the AMQP_VALUE.] */
+			*symbol_value = value_data->value.symbol_value;
+
+			/* Codes_SRS_AMQPVALUE_01_146: [On success, amqpvalue_get_symbol shall return 0.] */
 			result = 0;
 		}
 	}
@@ -2669,16 +2720,6 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 	}
 
 	return result;
-}
-
-AMQP_VALUE amqpvalue_create_symbol(uint32_t value)
-{
-	return NULL;
-}
-
-int amqpvalue_get_symbol(AMQP_VALUE value, uint32_t* symbol_value)
-{
-	return __LINE__;
 }
 
 AMQP_VALUE amqpvalue_create_map(AMQP_VALUE map_value)

@@ -1004,7 +1004,51 @@ AMQP_VALUE amqpvalue_create_list(void)
 
 int amqpvalue_list_set_size(AMQP_VALUE value, uint32_t list_size)
 {
-	return 0;
+	int result;
+
+	if (value == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+
+		if (value_data->type != AMQP_TYPE_LIST)
+		{
+			/* Codes_SRS_AMQPVALUE_01_156: [If the value is not of type list, then amqpvalue_list_set_size shall return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			if (value_data->value.list_value.count != list_size)
+			{
+				AMQP_VALUE* new_list;
+
+				/* Codes_SRS_AMQPVALUE_01_152: [amqpvalue_list_set_size shall resize an AMQP list.] */
+				new_list = (AMQP_VALUE*)amqpalloc_realloc(value_data->value.list_value.items, list_size * sizeof(AMQP_VALUE));
+				if (new_list == NULL)
+				{
+					/* Codes_SRS_AMQPVALUE_01_154: [If allocating memory for the list according to the new size fails, then amqpvalue_list_set_size shall return a non-zero value, while preserving the existing list contents.] */
+					result = __LINE__;
+				}
+				else
+				{
+					value_data->value.list_value.items = new_list;
+
+					/* Codes_SRS_AMQPVALUE_01_153: [On success amqpvalue_list_set_size shall return 0.] */
+					result = 0;
+				}
+			}
+			else
+			{
+				/* Codes_SRS_AMQPVALUE_01_153: [On success amqpvalue_list_set_size shall return 0.] */
+				result = 0;
+			}
+		}
+	}
+	
+	return result;
 }
 
 AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value)

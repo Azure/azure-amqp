@@ -16,7 +16,7 @@
 		ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)malloc(sizeof(ERROR_INSTANCE));
 		if (error_instance != NULL)
 		{
-			error_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(29, 1);
+			error_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(29);
 			if (error_instance->composite_value == NULL)
 			{
 				free(error_instance);
@@ -208,7 +208,7 @@
 		OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)malloc(sizeof(OPEN_INSTANCE));
 		if (open_instance != NULL)
 		{
-			open_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(16, 1);
+			open_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(16);
 			if (open_instance->composite_value == NULL)
 			{
 				free(open_instance);
@@ -701,7 +701,7 @@
 		BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)malloc(sizeof(BEGIN_INSTANCE));
 		if (begin_instance != NULL)
 		{
-			begin_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(17, 3);
+			begin_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(17);
 			if (begin_instance->composite_value == NULL)
 			{
 				free(begin_instance);
@@ -1122,7 +1122,7 @@
 		ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)malloc(sizeof(ATTACH_INSTANCE));
 		if (attach_instance != NULL)
 		{
-			attach_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(18, 3);
+			attach_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(18);
 			if (attach_instance->composite_value == NULL)
 			{
 				free(attach_instance);
@@ -1801,7 +1801,7 @@
 		FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)malloc(sizeof(FLOW_INSTANCE));
 		if (flow_instance != NULL)
 		{
-			flow_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(19, 3);
+			flow_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(19);
 			if (flow_instance->composite_value == NULL)
 			{
 				free(flow_instance);
@@ -2351,7 +2351,7 @@
 		TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)malloc(sizeof(TRANSFER_INSTANCE));
 		if (transfer_instance != NULL)
 		{
-			transfer_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(20, 1);
+			transfer_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(20);
 			if (transfer_instance->composite_value == NULL)
 			{
 				free(transfer_instance);
@@ -2887,7 +2887,7 @@
 		DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)malloc(sizeof(DISPOSITION_INSTANCE));
 		if (disposition_instance != NULL)
 		{
-			disposition_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(21, 2);
+			disposition_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(21);
 			if (disposition_instance->composite_value == NULL)
 			{
 				free(disposition_instance);
@@ -3215,7 +3215,7 @@
 		DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)malloc(sizeof(DETACH_INSTANCE));
 		if (detach_instance != NULL)
 		{
-			detach_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(22, 1);
+			detach_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(22);
 			if (detach_instance->composite_value == NULL)
 			{
 				free(detach_instance);
@@ -3407,7 +3407,7 @@
 		END_INSTANCE* end_instance = (END_INSTANCE*)malloc(sizeof(END_INSTANCE));
 		if (end_instance != NULL)
 		{
-			end_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(23, 0);
+			end_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(23);
 			if (end_instance->composite_value == NULL)
 			{
 				free(end_instance);
@@ -3500,7 +3500,7 @@
 		CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)malloc(sizeof(CLOSE_INSTANCE));
 		if (close_instance != NULL)
 		{
-			close_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(24, 0);
+			close_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(24);
 			if (close_instance->composite_value == NULL)
 			{
 				free(close_instance);

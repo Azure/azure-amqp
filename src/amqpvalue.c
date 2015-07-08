@@ -984,6 +984,11 @@ int amqpvalue_get_symbol(AMQP_VALUE value, uint32_t* symbol_value)
 	return result;
 }
 
+int amqpvalue_list_set_size(AMQP_VALUE value, uint32_t list_size)
+{
+	return 0;
+}
+
 AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
@@ -1010,12 +1015,22 @@ AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size)
 		}
 		else
 		{
-			result->value.described_value.value = amqpvalue_create_list(list_size);
+			result->value.described_value.value = amqpvalue_create_list();
 			if (result->value.described_value.value == NULL)
 			{
 				amqpvalue_destroy(result->value.described_value.descriptor);
 				free(result);
 				result = NULL;
+			}
+			else
+			{
+				if (amqpvalue_list_set_size(result->value.described_value.value, list_size) != 0)
+				{
+					amqpvalue_destroy(result->value.described_value.descriptor);
+					amqpvalue_destroy(result->value.described_value.value);
+					free(result);
+					result = NULL;
+				}
 			}
 		}
 	}
@@ -1023,25 +1038,20 @@ AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size)
 	return result;
 }
 
-AMQP_VALUE amqpvalue_create_list(size_t size)
+AMQP_VALUE amqpvalue_create_list(void)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
 	{
 		result->type = AMQP_TYPE_LIST;
-		result->value.list_value.count = size;
-		result->value.list_value.items = (AMQP_VALUE*)amqpalloc_malloc(sizeof(AMQP_VALUE*) * size);
-		if (result->value.list_value.items == NULL)
-		{
-			amqpalloc_free(result);
-			result = NULL;
-		}
+		result->value.list_value.count = 0;
+		result->value.list_value.items = NULL;
 	}
 
 	return result;
 }
 
-AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor, size_t size)
+AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	if (result != NULL)
@@ -1064,7 +1074,7 @@ AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor,
 			}
 			else
 			{
-				result->value.described_value.value = amqpvalue_create_list(size);
+				result->value.described_value.value = amqpvalue_create_list();
 				if (result->value.described_value.value == NULL)
 				{
 					amqpalloc_free(result);
@@ -1158,12 +1168,12 @@ void amqpvalue_destroy(AMQP_VALUE value)
 	}
 }
 
-int amqpvalue_get_list_item_count(AMQP_VALUE value, size_t* count)
+int amqpvalue_get_list_size(AMQP_VALUE value, size_t* size)
 {
 	int result;
 
 	if ((value == NULL) ||
-		(count == NULL))
+		(size == NULL))
 	{
 		result = __LINE__;
 	}
@@ -1176,7 +1186,7 @@ int amqpvalue_get_list_item_count(AMQP_VALUE value, size_t* count)
 		}
 		else
 		{
-			*count = value_data->value.list_value.count;
+			*size = value_data->value.list_value.count;
 			result = 0;
 		}
 	}
@@ -1317,14 +1327,14 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 		case AMQP_TYPE_LIST:
 		{
 			uint32_t list_size;
-			if (amqpvalue_get_list_item_count(value, &list_size) != 0)
+			if (amqpvalue_get_list_size(value, &list_size) != 0)
 			{
 				result = NULL;
 			}
 			else
 			{
 				uint32_t i;
-				result = amqpvalue_create_list(list_size);
+				result = amqpvalue_create_list();
 				for (i = 0; i < list_size; i++)
 				{
 					AMQP_VALUE cloned_item;

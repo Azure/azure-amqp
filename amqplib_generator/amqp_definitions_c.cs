@@ -195,13 +195,6 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write(", ");
-            
-            #line 37 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(mandatory_args.Count()));
-            
-            #line default
-            #line hidden
             this.Write(");\r\n\t\t\tif (");
             
             #line 38 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"

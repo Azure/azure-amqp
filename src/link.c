@@ -79,7 +79,7 @@ static int send_attach(LINK_DATA* link, const char* name, handle handle, role ro
 static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_t payload_chunk_count)
 {
 	int result;
-	AMQP_VALUE transfer_frame_list = amqpvalue_create_list(3);
+	AMQP_VALUE transfer_frame_list = amqpvalue_create_list();
 	if (transfer_frame_list == NULL)
 	{
 		result = __LINE__;

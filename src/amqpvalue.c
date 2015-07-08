@@ -1002,7 +1002,7 @@ AMQP_VALUE amqpvalue_create_list(void)
 	return result;
 }
 
-int amqpvalue_list_set_size(AMQP_VALUE value, uint32_t list_size)
+int amqpvalue_set_list_item_count(AMQP_VALUE value, uint32_t list_size)
 {
 	int result;
 
@@ -1016,33 +1016,77 @@ int amqpvalue_list_set_size(AMQP_VALUE value, uint32_t list_size)
 
 		if (value_data->type != AMQP_TYPE_LIST)
 		{
-			/* Codes_SRS_AMQPVALUE_01_156: [If the value is not of type list, then amqpvalue_list_set_size shall return a non-zero value.] */
+			/* Codes_SRS_AMQPVALUE_01_156: [If the value is not of type list, then amqpvalue_set_list_item_count shall return a non-zero value.] */
 			result = __LINE__;
 		}
 		else
 		{
-			if (value_data->value.list_value.count != list_size)
+			if (value_data->value.list_value.count < list_size)
 			{
 				AMQP_VALUE* new_list;
 
-				/* Codes_SRS_AMQPVALUE_01_152: [amqpvalue_list_set_size shall resize an AMQP list.] */
+				/* Codes_SRS_AMQPVALUE_01_152: [amqpvalue_set_list_item_count shall resize an AMQP list.] */
 				new_list = (AMQP_VALUE*)amqpalloc_realloc(value_data->value.list_value.items, list_size * sizeof(AMQP_VALUE));
 				if (new_list == NULL)
 				{
-					/* Codes_SRS_AMQPVALUE_01_154: [If allocating memory for the list according to the new size fails, then amqpvalue_list_set_size shall return a non-zero value, while preserving the existing list contents.] */
+					/* Codes_SRS_AMQPVALUE_01_154: [If allocating memory for the list according to the new size fails, then amqpvalue_set_list_item_count shall return a non-zero value, while preserving the existing list contents.] */
 					result = __LINE__;
 				}
 				else
 				{
 					value_data->value.list_value.items = new_list;
 
-					/* Codes_SRS_AMQPVALUE_01_153: [On success amqpvalue_list_set_size shall return 0.] */
-					result = 0;
+					/* Codes_SRS_AMQPVALUE_01_162: [When a list is grown a null AMQP_VALUE shall be inserted as new list items to fill the list up to the new size.] */
+					uint32_t i;
+
+					/* Codes_SRS_AMQPVALUE_01_162: [When a list is grown a null AMQP_VALUE shall be inserted as new list items to fill the list up to the new size.] */
+					for (i = value_data->value.list_value.count; i < list_size; i++)
+					{
+						new_list[i] = amqpvalue_create_null();
+						if (new_list[i] == NULL)
+						{
+							break;
+						}
+					}
+
+					if (i < list_size)
+					{
+						/* Codes_SRS_AMQPVALUE_01_154: [If allocating memory for the list according to the new size fails, then amqpvalue_set_list_item_count shall return a non-zero value, while preserving the existing list contents.] */
+						uint32_t j;
+						for (j = value_data->value.list_value.count; j < i; j++)
+						{
+							amqpvalue_destroy(new_list[j]);
+						}
+
+						result = __LINE__;
+					}
+					else
+					{
+						value_data->value.list_value.count = list_size;
+
+						/* Codes_SRS_AMQPVALUE_01_153: [On success amqpvalue_set_list_item_count shall return 0.] */
+						result = 0;
+					}
 				}
+			}
+			else if (value_data->value.list_value.count > list_size)
+			{
+				uint32_t i;
+
+				/* Codes_SRS_AMQPVALUE_01_161: [When the list is shrunk, the extra items shall be freed by using amqp_value_destroy.] */
+				for (i = list_size; i < value_data->value.list_value.count; i++)
+				{
+					amqpvalue_destroy(value_data->value.list_value.items[i]);
+				}
+
+				value_data->value.list_value.count = list_size;
+
+				/* Codes_SRS_AMQPVALUE_01_153: [On success amqpvalue_set_list_item_count shall return 0.] */
+				result = 0;
 			}
 			else
 			{
-				/* Codes_SRS_AMQPVALUE_01_153: [On success amqpvalue_list_set_size shall return 0.] */
+				/* Codes_SRS_AMQPVALUE_01_153: [On success amqpvalue_set_list_item_count shall return 0.] */
 				result = 0;
 			}
 		}
@@ -1086,7 +1130,7 @@ AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size)
 			}
 			else
 			{
-				if (amqpvalue_list_set_size(result->value.described_value.value, list_size) != 0)
+				if (amqpvalue_set_list_item_count(result->value.described_value.value, list_size) != 0)
 				{
 					amqpvalue_destroy(result->value.described_value.descriptor);
 					amqpvalue_destroy(result->value.described_value.value);
@@ -1217,7 +1261,7 @@ void amqpvalue_destroy(AMQP_VALUE value)
 	}
 }
 
-int amqpvalue_get_list_size(AMQP_VALUE value, size_t* size)
+int amqpvalue_get_list_item_count(AMQP_VALUE value, size_t* size)
 {
 	int result;
 
@@ -1376,7 +1420,7 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 		case AMQP_TYPE_LIST:
 		{
 			uint32_t list_size;
-			if (amqpvalue_get_list_size(value, &list_size) != 0)
+			if (amqpvalue_get_list_item_count(value, &list_size) != 0)
 			{
 				result = NULL;
 			}

@@ -59,8 +59,8 @@ extern "C" {
 	extern AMQP_VALUE amqpvalue_create_symbol(uint32_t value);
 	extern int amqpvalue_get_symbol(AMQP_VALUE value, uint32_t* symbol_value);
 	extern AMQP_VALUE amqpvalue_create_list(void);
-	extern int amqpvalue_list_set_size(AMQP_VALUE value, uint32_t size);
-	extern int amqpvalue_get_list_size(AMQP_VALUE value, uint32_t* size);
+	extern int amqpvalue_set_list_item_count(AMQP_VALUE value, uint32_t count);
+	extern int amqpvalue_get_list_item_count(AMQP_VALUE value, uint32_t* count);
 	extern int amqpvalue_set_list_item(AMQP_VALUE value, size_t index, AMQP_VALUE list_item_value);
 	extern AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index);
 

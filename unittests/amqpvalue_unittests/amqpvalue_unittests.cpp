@@ -2512,11 +2512,11 @@ BEGIN_TEST_SUITE(connection_unittests)
 			ASSERT_IS_NULL(result);
 		}
 
-		/* amqpvalue_list_set_size */
+		/* amqpvalue_set_list_item_count */
 
-		/* Tests_SRS_AMQPVALUE_01_152: [amqpvalue_list_set_size shall resize an AMQP list.] */
-		/* Tests_SRS_AMQPVALUE_01_153: [On success amqpvalue_list_set_size shall return 0.] */
-		TEST_METHOD(amqpvalue_list_set_size_with_1_size_succeeds)
+		/* Tests_SRS_AMQPVALUE_01_152: [amqpvalue_set_list_item_count shall resize an AMQP list.] */
+		/* Tests_SRS_AMQPVALUE_01_153: [On success amqpvalue_set_list_item_count shall return 0.] */
+		TEST_METHOD(amqpvalue_set_list_item_count_with_1_count_succeeds)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
@@ -2524,9 +2524,10 @@ BEGIN_TEST_SUITE(connection_unittests)
 			mocks.ResetAllCalls();
 
 			EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
-			int result = amqpvalue_list_set_size(list, 1);
+			int result = amqpvalue_set_list_item_count(list, 1);
 
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
@@ -2536,21 +2537,21 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(list);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_155: [If the value argument is NULL, amqpvalue_list_set_size shall return a non-zero value.] */
-		TEST_METHOD(amqpvalue_list_set_size_with_NULL_handle_fails)
+		/* Tests_SRS_AMQPVALUE_01_155: [If the value argument is NULL, amqpvalue_set_list_item_count shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_set_list_item_count_with_NULL_handle_fails)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
 
 			// act
-			int result = amqpvalue_list_set_size(NULL, 1);
+			int result = amqpvalue_set_list_item_count(NULL, 1);
 
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_154: [If allocating memory for the list according to the new size fails, then amqpvalue_list_set_size shall return a non-zero value, while preserving the existing list contents.] */
-		TEST_METHOD(when_reallocating_fails_amqpvalue_list_set_size_fails)
+		/* Tests_SRS_AMQPVALUE_01_154: [If allocating memory for the list according to the new size fails, then amqpvalue_set_list_item_count shall return a non-zero value, while preserving the existing list contents.] */
+		TEST_METHOD(when_reallocating_fails_amqpvalue_set_list_item_count_fails)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
@@ -2561,7 +2562,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 				.SetReturn((void*)NULL);
 
 			// act
-			int result = amqpvalue_list_set_size(list, 1);
+			int result = amqpvalue_set_list_item_count(list, 1);
 			mocks.AssertActualAndExpectedCalls();
 
 			// assert
@@ -2572,8 +2573,8 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(list);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_156: [If the value is not of type list, then amqpvalue_list_set_size shall return a non-zero value.] */
-		TEST_METHOD(amqpvalue_list_set_size_with_a_non_list_type_fails)
+		/* Tests_SRS_AMQPVALUE_01_156: [If the value is not of type list, then amqpvalue_set_list_item_count shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_set_list_item_count_with_a_non_list_type_fails)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
@@ -2581,7 +2582,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			mocks.ResetAllCalls();
 
 			// act
-			int result = amqpvalue_list_set_size(null_value, 1);
+			int result = amqpvalue_set_list_item_count(null_value, 1);
 
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
@@ -2591,19 +2592,21 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(null_value);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_156: [If the value is not of type list, then amqpvalue_list_set_size shall return a non-zero value.] */
-		TEST_METHOD(amqpvalue_list_set_size_after_set_size_succeeds)
+		/* Tests_SRS_AMQPVALUE_01_156: [If the value is not of type list, then amqpvalue_set_list_item_count shall return a non-zero value.] */
+		/* Tests_SRS_AMQPVALUE_01_162: [When a list is grown a null AMQP_VALUE shall be inserted as new list items to fill the list up to the new size.] */
+		TEST_METHOD(amqpvalue_set_list_item_count_after_amqpvalue_set_list_item_count_succeeds)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
 			AMQP_VALUE list = amqpvalue_create_list();
-			(void)amqpvalue_list_set_size(list, 1);
+			(void)amqpvalue_set_list_item_count(list, 1);
 			mocks.ResetAllCalls();
 
 			EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
-			int result = amqpvalue_list_set_size(list, 2);
+			int result = amqpvalue_set_list_item_count(list, 2);
 
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
@@ -2613,8 +2616,58 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(list);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_156: [If the value is not of type list, then amqpvalue_list_set_size shall return a non-zero value.] */
-		TEST_METHOD(amqpvalue_list_set_size_with_0_size_does_not_allocate_anything)
+		/* Tests_SRS_AMQPVALUE_01_154: [If allocating memory for the list according to the new size fails, then amqpvalue_set_list_item_count shall return a non-zero value, while preserving the existing list contents.] */
+		TEST_METHOD(when_allocating_the_new_null_element_fails_amqpvalue_set_list_item_count_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			(void)amqpvalue_set_list_item_count(list, 1);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			int result = amqpvalue_set_list_item_count(list, 2);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_154: [If allocating memory for the list according to the new size fails, then amqpvalue_set_list_item_count shall return a non-zero value, while preserving the existing list contents.] */
+		TEST_METHOD(when_allocating_the_new_null_element_fails_other_newly_allocated_items_are_rolled_back)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			(void)amqpvalue_set_list_item_count(list, 1);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			int result = amqpvalue_set_list_item_count(list, 3);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_156: [If the value is not of type list, then amqpvalue_set_list_item_count shall return a non-zero value.] */
+		TEST_METHOD(amqpvalue_set_list_item_count_with_0_count_does_not_allocate_anything)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
@@ -2622,7 +2675,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			mocks.ResetAllCalls();
 
 			// act
-			int result = amqpvalue_list_set_size(list, 0);
+			int result = amqpvalue_set_list_item_count(list, 0);
 
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
@@ -2631,5 +2684,51 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// cleanup
 			amqpvalue_destroy(list);
 		}
+
+		/* Tests_SRS_AMQPVALUE_01_161: [When the list is shrunk, the extra items shall be freed by using amqp_value_destroy.] */
+		TEST_METHOD(shrinking_a_list_by_1_frees_the_extra_value_but_does_not_resize)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			(void)amqpvalue_set_list_item_count(list, 2);
+			AMQP_VALUE item_1 = amqpvalue_get_list_item(list, 1);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			int result = amqpvalue_set_list_item_count(list, 1);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+		}
+
+		/* amqpvalue_get_list_item_count */
+
+#if 0
+		/* Tests_SRS_AMQPVALUE_01_157: [amqpvalue_get_list_item_count shall fill in the size argument the number of items held by the AMQP list.] */
+		TEST_METHOD(amqpvalue_set_list_item_count_with_0_count_does_not_allocate_anything)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_set_list_item_count(list, 0);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+		}
+#endif
 
 END_TEST_SUITE(connection_unittests)

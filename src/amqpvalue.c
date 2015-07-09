@@ -9,8 +9,20 @@
 typedef struct AMQP_LIST_VALUE_TAG
 {
 	AMQP_VALUE* items;
-	size_t count;
+	uint32_t count;
 } AMQP_LIST_VALUE;
+
+typedef struct AMQP_MAP_KEY_VALUE_PAIR_TAG
+{
+	AMQP_VALUE key;
+	AMQP_VALUE value;
+} AMQP_MAP_KEY_VALUE_PAIR;
+
+typedef struct AMQP_MAP_VALUE_TAG
+{
+	AMQP_MAP_KEY_VALUE_PAIR* pairs;
+	uint32_t pair_count;
+} AMQP_MAP_VALUE;
 
 typedef struct AMQP_STRING_VALUE_TAG
 {
@@ -49,6 +61,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	AMQP_STRING_VALUE string_value;
 	amqp_binary binary_value;
 	AMQP_LIST_VALUE list_value;
+	AMQP_MAP_VALUE map_value;
 	uint32_t symbol_value;
 } AMQP_VALUE_UNION;
 
@@ -1253,6 +1266,31 @@ AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index)
 	}
 
 	return result;
+}
+
+/* Codes_SRS_AMQPVALUE_01_178: [amqpvalue_create_map shall create an AMQP value that holds a map and return a handle to it.] */
+/* Codes_SRS_AMQPVALUE_01_031: [1.6.23 map A polymorphic mapping from distinct keys to values.] */
+AMQP_VALUE amqpvalue_create_map(void)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+
+	/* Codes_SRS_AMQPVALUE_01_179: [If allocating memory for the map fails, then amqpvalue_create_map shall return NULL.] */
+	if (result != NULL)
+	{
+		result->type = AMQP_TYPE_MAP;
+
+		/* Codes_SRS_AMQPVALUE_01_180: [The number of key/value pairs in the newly created map shall be zero.] */
+		result->value.map_value.pair_count = 0;
+	}
+
+	return result;
+}
+
+int amqpvalue_get_map_pair_count(AMQP_VALUE map, uint32_t* pair_count)
+{
+	AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)map;
+	*pair_count = value_data->value.map_value.pair_count;
+	return 0;
 }
 
 AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value)
@@ -2888,11 +2926,6 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 	}
 
 	return result;
-}
-
-AMQP_VALUE amqpvalue_create_map(void)
-{
-	return NULL;
 }
 
 int amqpvalue_set_composite_item(AMQP_VALUE value, size_t index, AMQP_VALUE item_value)

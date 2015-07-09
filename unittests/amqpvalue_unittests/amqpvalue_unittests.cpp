@@ -3329,4 +3329,66 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(list);
 		}
 
+		/* amqpvalue_create_map */
+
+		/* Tests_SRS_AMQPVALUE_01_178: [amqpvalue_create_map shall create an AMQP value that holds a map and return a handle to it.] */
+		/* Tests_SRS_AMQPVALUE_01_031: [1.6.23 map A polymorphic mapping from distinct keys to values.] */
+		TEST_METHOD(when_underlying_calls_succeed_amqpvalue_create_map_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_map();
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_179: [If allocating memory for the map fails, then amqpvalue_create_map shall return NULL.] */
+		TEST_METHOD(when_allocating_memory_for_the_map_fails_amqpvalue_create_map_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_map();
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_180: [The number of key/value pairs in the newly created map shall be zero.] */
+		TEST_METHOD(amqpvalue_create_map_creates_a_map_with_no_pairs)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			mocks.ResetAllCalls();
+
+			// act
+			uint32_t pair_count;
+			(void)amqpvalue_get_map_pair_count(map, &pair_count);
+
+			// assert
+			ASSERT_ARE_EQUAL(uint32_t, 0, pair_count);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(map);
+		}
+
 END_TEST_SUITE(connection_unittests)

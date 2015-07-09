@@ -1224,6 +1224,37 @@ int amqpvalue_set_list_item(AMQP_VALUE value, uint32_t index, AMQP_VALUE list_it
 	return result;
 }
 
+AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index)
+{
+	AMQP_VALUE result;
+
+	if (value == NULL)
+	{
+		/* Codes_SRS_AMQPVALUE_01_174: [If the value argument is NULL, amqpvalue_get_list_item shall fail and return NULL.] */
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+
+		/* Codes_SRS_AMQPVALUE_01_177: [If value is not a list then amqpvalue_get_list_item shall fail and return NULL.] */
+		if ((value_data->type != AMQP_TYPE_LIST) ||
+			/* Codes_SRS_AMQPVALUE_01_175: [If index is greater or equal to the number of items in the list then amqpvalue_get_list_item shall fail and return NULL.] */
+			(value_data->value.list_value.count <= index))
+		{
+			result = NULL;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_173: [amqpvalue_get_list_item shall return a copy of the AMQP_VALUE stored at the 0 based position index in the list identified by value.] */
+			/* Codes_SRS_AMQPVALUE_01_176: [If cloning the item at position index fails, then amqpvalue_get_list_item shall fail and return NULL.] */
+			result = amqpvalue_clone(value_data->value.list_value.items[index]);
+		}
+	}
+
+	return result;
+}
+
 AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
@@ -1358,30 +1389,6 @@ void amqpvalue_destroy(AMQP_VALUE value)
 	}
 }
 
-AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index)
-{
-	AMQP_VALUE result;
-
-	if (value == NULL)
-	{
-		result = NULL;
-	}
-	else
-	{
-		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		if (value_data->type != AMQP_TYPE_LIST)
-		{
-			result = NULL;
-		}
-		else
-		{
-			result = value_data->value.list_value.items[index];
-		}
-	}
-
-	return result;
-}
-
 AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value)
 {
 	AMQP_VALUE result;
@@ -1501,20 +1508,7 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 				result = amqpvalue_create_list();
 				for (i = 0; i < list_size; i++)
 				{
-					AMQP_VALUE cloned_item;
-					AMQP_VALUE clone_source_item = amqpvalue_get_list_item(value, i);
-					if (clone_source_item == NULL)
-					{
-						break;
-					}
-
-					cloned_item = amqpvalue_clone(clone_source_item);
-					if (cloned_item == NULL)
-					{
-						break;
-					}
-
-					amqpvalue_set_list_item(result, i, cloned_item);
+					amqpvalue_set_list_item(result, i, value_data->value.list_value.items[i]);
 				}
 
 				if (i < list_size)
@@ -2872,7 +2866,7 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 
 				for (i = 0; i < item_count; i++)
 				{
-					if (amqpvalue_encode(amqpvalue_get_list_item(value, i), encoder_output, context) != 0)
+					if (amqpvalue_encode(value_data->value.list_value.items[i], encoder_output, context) != 0)
 					{
 						break;
 					}

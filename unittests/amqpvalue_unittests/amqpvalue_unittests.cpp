@@ -3170,4 +3170,163 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(null_value);
 		}
 
+		/* amqpvalue_get_list_item */
+
+		/* Tests_SRS_AMQPVALUE_01_173: [amqpvalue_get_list_item shall return a copy of the AMQP_VALUE stored at the 0 based position index in the list identified by value.] */
+		TEST_METHOD(amqpvalue_get_list_item_gets_the_first_item)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			AMQP_VALUE uint_value = amqpvalue_create_uint(42);
+			(void)amqpvalue_set_list_item(list, 0, uint_value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_get_list_item(list, 0);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+			uint32_t value = 0;
+			(void)amqpvalue_get_uint(result, &value);
+			ASSERT_ARE_EQUAL(uint32_t, 42, value);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+			amqpvalue_destroy(uint_value);
+			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_173: [amqpvalue_get_list_item shall return a copy of the AMQP_VALUE stored at the 0 based position index in the list identified by value.] */
+		TEST_METHOD(amqpvalue_get_list_item_gets_the_second_item)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			AMQP_VALUE uint_value = amqpvalue_create_uint(42);
+			AMQP_VALUE ulong_value = amqpvalue_create_ulong(43);
+			(void)amqpvalue_set_list_item(list, 0, uint_value);
+			(void)amqpvalue_set_list_item(list, 1, ulong_value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_get_list_item(list, 1);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+			uint64_t value = 0;
+			(void)amqpvalue_get_ulong(result, &value);
+			ASSERT_ARE_EQUAL(uint64_t, 43, value);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+			amqpvalue_destroy(uint_value);
+			amqpvalue_destroy(ulong_value);
+			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_174: [If the value argument is NULL, amqpvalue_get_list_item shall fail and return NULL.] */
+		TEST_METHOD(when_list_handle_is_null_amqpvalue_get_list_item_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			// act
+			AMQP_VALUE result = amqpvalue_get_list_item(NULL, 0);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_175: [If index is greater or equal to the number of items in the list then amqpvalue_get_list_item shall fail and return NULL.] */
+		TEST_METHOD(amqpvalue_get_list_item_with_index_too_high_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			AMQP_VALUE uint_value = amqpvalue_create_uint(42);
+			(void)amqpvalue_set_list_item(list, 0, uint_value);
+			mocks.ResetAllCalls();
+
+			// act
+			AMQP_VALUE result = amqpvalue_get_list_item(list, 1);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+			amqpvalue_destroy(uint_value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_175: [If index is greater or equal to the number of items in the list then amqpvalue_get_list_item shall fail and return NULL.] */
+		TEST_METHOD(amqpvalue_get_list_item_with_index_0_on_an_empty_list_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			mocks.ResetAllCalls();
+
+			// act
+			AMQP_VALUE result = amqpvalue_get_list_item(list, 0);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_176: [If cloning the item at position index fails, then amqpvalue_get_list_item shall fail and return NULL.] */
+		TEST_METHOD(when_cloning_the_item_fails_then_amqpvalue_get_list_item_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			AMQP_VALUE uint_value = amqpvalue_create_uint(42);
+			(void)amqpvalue_set_list_item(list, 0, uint_value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_get_list_item(list, 0);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+			amqpvalue_destroy(uint_value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_177: [If value is not a list then amqpvalue_get_list_item shall fail and return NULL.] */
+		TEST_METHOD(amqpvalue_get_list_item_called_with_a_non_list_handle_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			AMQP_VALUE result = amqpvalue_get_list_item(list, 0);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+		}
+
 END_TEST_SUITE(connection_unittests)

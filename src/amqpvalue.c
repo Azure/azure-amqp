@@ -1146,10 +1146,13 @@ int amqpvalue_set_list_item(AMQP_VALUE value, uint32_t index, AMQP_VALUE list_it
 		}
 		else
 		{
+			/* Codes_SRS_AMQPVALUE_01_168: [The item stored at the index-th position in the list shall be a clone of list_item_value.] */
 			AMQP_VALUE cloned_item = amqpvalue_clone(list_item_value);
 
 			if (cloned_item == NULL)
 			{
+				/* Codes_SRS_AMQPVALUE_01_170: [When amqpvalue_set_list_item fails due to not being able to clone the item or grow the list, the list shall not be altered.] */
+				/* Codes_SRS_AMQPVALUE_01_169: [If cloning the item fails, amqpvalue_set_list_item shall fail and return a non-zero value.] */
 				result = __LINE__;
 			}
 			else
@@ -1159,6 +1162,7 @@ int amqpvalue_set_list_item(AMQP_VALUE value, uint32_t index, AMQP_VALUE list_it
 					AMQP_VALUE* new_list = (AMQP_VALUE*)amqpalloc_realloc(value_data->value.list_value.items, (index + 1) * sizeof(AMQP_VALUE));
 					if (new_list == NULL)
 					{
+						/* Codes_SRS_AMQPVALUE_01_170: [When amqpvalue_set_list_item fails due to not being able to clone the item or grow the list, the list shall not be altered.] */
 						amqpvalue_destroy(cloned_item);
 						result = __LINE__;
 					}
@@ -1179,8 +1183,9 @@ int amqpvalue_set_list_item(AMQP_VALUE value, uint32_t index, AMQP_VALUE list_it
 
 						if (i < index)
 						{
-							/* Codes_SRS_AMQPVALUE_01_172: [If growing the list fails, then amqpvalue_set_list_item shall fail and return a non-zero value.] */
+							/* Codes_SRS_AMQPVALUE_01_170: [When amqpvalue_set_list_item fails due to not being able to clone the item or grow the list, the list shall not be altered.] */
 							uint32_t j;
+
 							for (j = value_data->value.list_value.count; j < i; j++)
 							{
 								amqpvalue_destroy(new_list[j]);
@@ -1188,6 +1193,7 @@ int amqpvalue_set_list_item(AMQP_VALUE value, uint32_t index, AMQP_VALUE list_it
 
 							amqpvalue_destroy(cloned_item);
 
+							/* Codes_SRS_AMQPVALUE_01_172: [If growing the list fails, then amqpvalue_set_list_item shall fail and return a non-zero value.] */
 							result = __LINE__;
 						}
 						else
@@ -1202,8 +1208,10 @@ int amqpvalue_set_list_item(AMQP_VALUE value, uint32_t index, AMQP_VALUE list_it
 				}
 				else
 				{
-					/* Codes_SRS_AMQPVALUE_01_163: [amqpvalue_set_list_item shall replace the item at the 0 based index-th position in the list identified by the value argument with the AMQP_VALUE specified by list_item_value.] */
+					/* Codes_SRS_AMQPVALUE_01_167: [Any previous value stored at the position index in the list shall be freed by using amqpvalue_destroy.] */
 					amqpvalue_destroy(value_data->value.list_value.items[index]);
+
+					/* Codes_SRS_AMQPVALUE_01_163: [amqpvalue_set_list_item shall replace the item at the 0 based index-th position in the list identified by the value argument with the AMQP_VALUE specified by list_item_value.] */
 					value_data->value.list_value.items[index] = cloned_item;
 
 					/* Codes_SRS_AMQPVALUE_01_164: [On success amqpvalue_set_list_item shall return 0.] */

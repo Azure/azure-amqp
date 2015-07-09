@@ -2885,6 +2885,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 		/* Tests_SRS_AMQPVALUE_01_163: [amqpvalue_set_list_item shall replace the item at the 0 based index-th position in the list identified by the value argument with the AMQP_VALUE specified by list_item_value.] */
 		/* Tests_SRS_AMQPVALUE_01_164: [On success amqpvalue_set_list_item shall return 0.] */
 		/* Tests_SRS_AMQPVALUE_01_166: [If index is greater than the current list item count, the list shall be grown to accommodate the new item.] */
+		/* Tests_SRS_AMQPVALUE_01_168: [The item stored at the index-th position in the list shall be a clone of list_item_value.] */
 		TEST_METHOD(amqpvalue_set_list_item_on_an_empty_list_succeeds)
 		{
 			// arrange
@@ -2893,8 +2894,8 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE null_value = amqpvalue_create_null();
 			mocks.ResetAllCalls();
 
-			EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
 
 			// act
 			int result = amqpvalue_set_list_item(list, 0, null_value);
@@ -2911,6 +2912,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 		/* Tests_SRS_AMQPVALUE_01_163: [amqpvalue_set_list_item shall replace the item at the 0 based index-th position in the list identified by the value argument with the AMQP_VALUE specified by list_item_value.] */
 		/* Tests_SRS_AMQPVALUE_01_164: [On success amqpvalue_set_list_item shall return 0.] */
 		/* Tests_SRS_AMQPVALUE_01_166: [If index is greater than the current list item count, the list shall be grown to accommodate the new item.] */
+		/* Tests_SRS_AMQPVALUE_01_168: [The item stored at the index-th position in the list shall be a clone of list_item_value.] */
 		TEST_METHOD(amqpvalue_set_list_item_on_the_2nd_position_in_an_empty_list_succeeds)
 		{
 			// arrange
@@ -2919,8 +2921,8 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE null_value = amqpvalue_create_null();
 			mocks.ResetAllCalls();
 
-			EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
@@ -2928,6 +2930,30 @@ BEGIN_TEST_SUITE(connection_unittests)
 
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+			amqpvalue_destroy(null_value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_169: [If cloning the item fails, amqpvalue_set_list_item shall fail and return a non-zero value.] */
+		TEST_METHOD(when_cloning_the_item_fails_amqpvalue_set_list_item_fails_too)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			int result = amqpvalue_set_list_item(list, 1, null_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
 			mocks.AssertActualAndExpectedCalls();
 
 			// cleanup
@@ -3024,6 +3050,8 @@ BEGIN_TEST_SUITE(connection_unittests)
 
 		/* Tests_SRS_AMQPVALUE_01_163: [amqpvalue_set_list_item shall replace the item at the 0 based index-th position in the list identified by the value argument with the AMQP_VALUE specified by list_item_value.] */
 		/* Tests_SRS_AMQPVALUE_01_164: [On success amqpvalue_set_list_item shall return 0.] */
+		/* Tests_SRS_AMQPVALUE_01_167: [Any previous value stored at the position index in the list shall be freed by using amqpvalue_destroy.] */
+		/* Tests_SRS_AMQPVALUE_01_168: [The item stored at the index-th position in the list shall be a clone of list_item_value.] */
 		TEST_METHOD(amqpvalue_set_list_item_without_resizing_the_list_frees_the_previous_item)
 		{
 			// arrange
@@ -3084,6 +3112,62 @@ BEGIN_TEST_SUITE(connection_unittests)
 
 			// cleanup
 			amqpvalue_destroy(list);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_170: [When amqpvalue_set_list_item fails due to not being able to clone the item or grow the list, the list shall not be altered.] */
+		TEST_METHOD(when_cloning_fails_amqpvalue_set_list_item_is_not_altered)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			int result = amqpvalue_set_list_item(list, 0, null_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			uint32_t item_count;
+			(void)amqpvalue_get_list_item_count(list, &item_count);
+			ASSERT_ARE_EQUAL(uint32_t, 0, item_count);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+			amqpvalue_destroy(null_value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_170: [When amqpvalue_set_list_item fails due to not being able to clone the item or grow the list, the list shall not be altered.] */
+		TEST_METHOD(when_growing_fails_amqpvalue_set_list_item_is_not_altered)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE list = amqpvalue_create_list();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			int result = amqpvalue_set_list_item(list, 0, null_value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			uint32_t item_count;
+			(void)amqpvalue_get_list_item_count(list, &item_count);
+			ASSERT_ARE_EQUAL(uint32_t, 0, item_count);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(list);
+			amqpvalue_destroy(null_value);
 		}
 
 END_TEST_SUITE(connection_unittests)

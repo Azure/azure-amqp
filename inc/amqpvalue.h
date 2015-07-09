@@ -63,8 +63,9 @@ extern "C" {
 	extern int amqpvalue_get_list_item_count(AMQP_VALUE value, uint32_t* count);
 	extern int amqpvalue_set_list_item(AMQP_VALUE value, uint32_t index, AMQP_VALUE list_item_value);
 	extern AMQP_VALUE amqpvalue_get_list_item(AMQP_VALUE value, size_t index);
-
 	extern AMQP_VALUE amqpvalue_create_map(void);
+	extern int amqpvalue_set_map_value(AMQP_VALUE map, AMQP_VALUE key, AMQP_VALUE value);
+	
 	extern int amqpvalue_get_map_pair_count(AMQP_VALUE map, uint32_t* pair_count);
 	extern AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size);
 	extern int amqpvalue_set_composite_item(AMQP_VALUE value, size_t index, AMQP_VALUE item_value);

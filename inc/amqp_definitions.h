@@ -109,7 +109,7 @@ extern "C" {
 
 	typedef AMQP_VALUE fields;
 
-	#define amqpvalue_create_fields amqpvalue_create_map
+	#define amqpvalue_create_fields amqpvalue_clone
 
 
 /* error */

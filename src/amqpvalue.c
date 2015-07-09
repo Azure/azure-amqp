@@ -2890,14 +2890,9 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 	return result;
 }
 
-AMQP_VALUE amqpvalue_create_map(AMQP_VALUE map_value)
+AMQP_VALUE amqpvalue_create_map(void)
 {
 	return NULL;
-}
-
-int amqpvalue_get_map(AMQP_VALUE value, AMQP_VALUE* map_value)
-{
-	return __LINE__;
 }
 
 int amqpvalue_set_composite_item(AMQP_VALUE value, size_t index, AMQP_VALUE item_value)

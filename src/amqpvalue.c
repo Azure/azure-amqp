@@ -1280,7 +1280,65 @@ AMQP_VALUE amqpvalue_create_map(void)
 		result->type = AMQP_TYPE_MAP;
 
 		/* Codes_SRS_AMQPVALUE_01_180: [The number of key/value pairs in the newly created map shall be zero.] */
+		result->value.map_value.pairs = NULL;
 		result->value.map_value.pair_count = 0;
+	}
+
+	return result;
+}
+
+int amqpvalue_set_map_value(AMQP_VALUE map, AMQP_VALUE key, AMQP_VALUE value)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_183: [If any of the arguments are NULL, amqpvalue_set_map_value shall fail and return a non-zero value.] */
+	if ((map == NULL) ||
+		(key == NULL) ||
+		(value == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)map;
+		AMQP_VALUE cloned_key;
+
+		cloned_key = amqpvalue_clone(key);
+		if (cloned_key == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			if (cloned_value == NULL)
+			{
+				amqpvalue_destroy(cloned_key);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_MAP_KEY_VALUE_PAIR* new_pairs = (AMQP_MAP_KEY_VALUE_PAIR*)amqpalloc_realloc(value_data->value.map_value.pairs, (value_data->value.map_value.pair_count + 1) * sizeof(AMQP_MAP_KEY_VALUE_PAIR));
+				if (new_pairs == NULL)
+				{
+					amqpvalue_destroy(cloned_key);
+					amqpvalue_destroy(cloned_value);
+					result = __LINE__;
+				}
+				else
+				{
+					value_data->value.map_value.pairs = new_pairs;
+
+					/* Codes_SRS_AMQPVALUE_01_181: [amqpvalue_set_map_value shall set the value in the map identified by the map argument for a key/value pair identified by the key argument.] */
+					value_data->value.map_value.pairs[value_data->value.map_value.pair_count].key = cloned_key;
+					value_data->value.map_value.pairs[value_data->value.map_value.pair_count].value = cloned_value;
+					value_data->value.map_value.pair_count++;
+
+					/* Codes_SRS_AMQPVALUE_01_182: [On success amqpvalue_set_map_value shall return 0.] */
+					result = 0;
+				}
+			}
+		}
 	}
 
 	return result;

@@ -663,6 +663,7 @@ AMQP_VALUE amqpvalue_create_char(uint32_t value)
 			result->value.char_value = value;
 		}
 	}
+
 	return result;
 }
 
@@ -1542,8 +1543,62 @@ bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 				/* Codes_SRS_AMQPVALUE_01_212: [- ubyte: compare the unsigned char content.] */
 				result = (value1_data->value.ubyte_value == value2_data->value.ubyte_value);
 				break;
+			case AMQP_TYPE_USHORT:
+				/* Codes_SRS_AMQPVALUE_01_213: [- ushort: compare the uint16_t content.] */
+				result = (value1_data->value.ushort_value == value2_data->value.ushort_value);
+				break;
 			case AMQP_TYPE_UINT:
+				/* Codes_SRS_AMQPVALUE_01_214: [- uint: compare the uint32_t content.] */
 				result = (value1_data->value.uint_value == value2_data->value.uint_value);
+				break;
+			case AMQP_TYPE_ULONG:
+				/* Codes_SRS_AMQPVALUE_01_215: [- ulong: compare the uint64_t content.] */
+				result = (value1_data->value.ulong_value == value2_data->value.ulong_value);
+				break;
+			case AMQP_TYPE_BYTE:
+				/* Codes_SRS_AMQPVALUE_01_216: [- byte: compare the char content.] */
+				result = (value1_data->value.byte_value == value2_data->value.byte_value);
+				break;
+			case AMQP_TYPE_SHORT:
+				/* Codes_SRS_AMQPVALUE_01_217: [- short: compare the int16_t content.] */
+				result = (value1_data->value.short_value == value2_data->value.short_value);
+				break;
+			case AMQP_TYPE_INT:
+				/* Codes_SRS_AMQPVALUE_01_218: [- int: compare the int32_t content.] */
+				result = (value1_data->value.int_value == value2_data->value.int_value);
+				break;
+			case AMQP_TYPE_LONG:
+				/* Codes_SRS_AMQPVALUE_01_219: [- long: compare the int64_t content.] */
+				result = (value1_data->value.long_value == value2_data->value.long_value);
+				break;
+			case AMQP_TYPE_FLOAT:
+				/* Codes_SRS_AMQPVALUE_01_224: [- float: compare the float content.] */
+				result = (value1_data->value.float_value == value2_data->value.float_value);
+				break;
+			case AMQP_TYPE_DOUBLE:
+				/* Codes_SRS_AMQPVALUE_01_225: [- double: compare the double content.] */
+				result = (value1_data->value.double_value == value2_data->value.double_value);
+				break;
+			case AMQP_TYPE_CHAR:
+				/* Codes_SRS_AMQPVALUE_01_226: [- char: compare the UNICODE character.] */
+				result = (value1_data->value.char_value == value2_data->value.char_value);
+				break;
+			case AMQP_TYPE_TIMESTAMP:
+				/* Codes_SRS_AMQPVALUE_01_227: [- timestamp: compare the underlying 64 bit integer.] */
+				result = (value1_data->value.timestamp_value == value2_data->value.timestamp_value);
+				break;
+			case AMQP_TYPE_UUID:
+				/* Codes_SRS_AMQPVALUE_01_228: [- uuid: compare all uuid bytes.] */
+				result = (memcmp(value1_data->value.uuid_value, value2_data->value.uuid_value, sizeof(value1_data->value.uuid_value)) == 0);
+				break;
+			case AMQP_TYPE_BINARY:
+				/* Codes_SRS_AMQPVALUE_01_229: [- binary: compare all binary bytes.] */
+				result = (value1_data->value.binary_value.length == value2_data->value.binary_value.length) &&
+					(memcmp(value1_data->value.binary_value.bytes, value2_data->value.binary_value.bytes, value1_data->value.binary_value.length) == 0);
+				break;
+			case AMQP_TYPE_STRING:
+				/* Codes_SRS_AMQPVALUE_01_230: [- string: compare all string characters.] */
+				result = (strcmp(value1_data->value.string_value.chars, value2_data->value.string_value.chars) == 0);
 				break;
 			}
 		}

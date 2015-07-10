@@ -1502,11 +1502,13 @@ bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 {
 	bool result;
 
+	/* Codes_SRS_AMQPVALUE_01_207: [If value1 and value2 are NULL, amqpvalue_are_equal shall return true.] */
 	if ((value1 == NULL) &&
 		(value2 == NULL))
 	{
 		result = true;
 	}
+	/* Codes_SRS_AMQPVALUE_01_208: [If one of the arguments is NULL and the other is not, amqpvalue_are_equal shall return false.] */
 	else if ((value1 != value2) && ((value1 == NULL) || (value2 == NULL)))
 	{
 		result = false;
@@ -1516,11 +1518,34 @@ bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 		AMQP_VALUE_DATA* value1_data = (AMQP_VALUE_DATA*)value1;
 		AMQP_VALUE_DATA* value2_data = (AMQP_VALUE_DATA*)value2;
 
-		switch (value1_data->type)
+		/* Codes_SRS_AMQPVALUE_01_209: [If the types for value1 and value2 are different amqpvalue_are_equal shall return false.] */
+		if (value1_data->type != value2_data->type)
 		{
-		case AMQP_TYPE_UINT:
-			result = (value1_data->value.uint_value == value2_data->value.uint_value);
-			break;
+			result = false;
+		}
+		else
+		{
+			switch (value1_data->type)
+			{
+			default:
+				result = false;
+				break;
+			case AMQP_TYPE_NULL:
+				/* Codes_SRS_AMQPVALUE_01_210: [- null: always equal.] */
+				result = true;
+				break;
+			case AMQP_TYPE_BOOL:
+				/* Codes_SRS_AMQPVALUE_01_211: [- boolean: compare the bool content.] */
+				result = (value1_data->value.bool_value == value2_data->value.bool_value);
+				break;
+			case AMQP_TYPE_UBYTE:
+				/* Codes_SRS_AMQPVALUE_01_212: [- ubyte: compare the unsigned char content.] */
+				result = (value1_data->value.ubyte_value == value2_data->value.ubyte_value);
+				break;
+			case AMQP_TYPE_UINT:
+				result = (value1_data->value.uint_value == value2_data->value.uint_value);
+				break;
+			}
 		}
 	}
 

@@ -4173,4 +4173,183 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(null_value);
 		}
 
+		/* amqpvalue_are_equal */
+
+		/* Tests_SRS_AMQPVALUE_01_207: [If value1 and value2 are NULL, amqpvalue_are_equal shall return true.] */
+		TEST_METHOD(amqpvalue_are_equal_with_NULL_values_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			// act
+			bool result = amqpvalue_are_equal(NULL, NULL);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_208: [If one of the arguments is NULL and the other is not, amqpvalue_are_equal shall return false.] */
+		TEST_METHOD(when_value2_is_NULL_and_value1_is_not_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, NULL);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_208: [If one of the arguments is NULL and the other is not, amqpvalue_are_equal shall return false.] */
+		TEST_METHOD(when_value1_is_NULL_and_value2_is_not_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value2 = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(NULL, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_209: [If the types for value1 and value2 are different amqpvalue_are_equal shall return false.] */
+		TEST_METHOD(when_value1_is_uint_and_value2_is_ulong_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_uint(42);
+			AMQP_VALUE value2 = amqpvalue_create_ulong(42);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_210: [- null: always equal.] */
+		TEST_METHOD(for_2_null_values_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_null();
+			AMQP_VALUE value2 = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_211: [- boolean: compare the bool content.] */
+		TEST_METHOD(for_2_equal_boolean_values_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_boolean(false);
+			AMQP_VALUE value2 = amqpvalue_create_boolean(false);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_211: [- boolean: compare the bool content.] */
+		TEST_METHOD(for_2_different_boolean_values_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_boolean(false);
+			AMQP_VALUE value2 = amqpvalue_create_boolean(true);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_212: [- ubyte: compare the unsigned char content.] */
+		TEST_METHOD(for_2_equal_ubyte_values_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_ubyte(42);
+			AMQP_VALUE value2 = amqpvalue_create_ubyte(42);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_212: [- ubyte: compare the unsigned char content.] */
+		TEST_METHOD(for_2_different_ubyte_values_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_ubyte(42);
+			AMQP_VALUE value2 = amqpvalue_create_ubyte(43);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+		}
+
 END_TEST_SUITE(connection_unittests)

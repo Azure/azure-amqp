@@ -1374,25 +1374,38 @@ int amqpvalue_set_map_value(AMQP_VALUE map, AMQP_VALUE key, AMQP_VALUE value)
 
 AMQP_VALUE amqpvalue_get_map_value(AMQP_VALUE map, AMQP_VALUE key)
 {
-	AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)map;
-	uint32_t i;
 	AMQP_VALUE result;
 
-	for (i = 0; i < value_data->value.map_value.pair_count; i++)
-	{
-		if (amqpvalue_are_equal(value_data->value.map_value.pairs[i].key, key))
-		{
-			break;
-		}
-	}
-
-	if (i == value_data->value.map_value.pair_count)
+	/* Codes_SRS_AMQPVALUE_01_190: [If any argument is NULL, amqpvalue_get_map_value shall return NULL.] */
+	if ((map == NULL) ||
+		(key == NULL))
 	{
 		result = NULL;
 	}
 	else
 	{
-		result = value_data->value.map_value.pairs[i].value;
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)map;
+		uint32_t i;
+
+		for (i = 0; i < value_data->value.map_value.pair_count; i++)
+		{
+			if (amqpvalue_are_equal(value_data->value.map_value.pairs[i].key, key))
+			{
+				break;
+			}
+		}
+
+		if (i == value_data->value.map_value.pair_count)
+		{
+			/* Codes_SRS_AMQPVALUE_01_191: [If the key cannot be found, amqpvalue_get_map_value shall return NULL.] */
+			result = NULL;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_189: [amqpvalue_get_map_value shall return the value whose key is identified by the key argument.] */
+			/* Codes_SRS_AMQPVALUE_01_192: [The returned value shall be a clone of the actual value stored in the map.] */
+			result = amqpvalue_clone(value_data->value.map_value.pairs[i].value);
+		}
 	}
 
 	return result;

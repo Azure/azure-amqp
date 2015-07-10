@@ -1427,7 +1427,7 @@ int amqpvalue_get_map_pair_count(AMQP_VALUE map, uint32_t* pair_count)
 
 		if (value_data->type != AMQP_TYPE_MAP)
 		{
-			/* Tests_SRS_AMQPVALUE_01_198: [If the map argument is not an AMQP value created with the amqpvalue_create_map function than amqpvalue_get_map_pair_count shall fail and return a non-zero value.] */
+			/* Tests_SRS_AMQPVALUE_01_198: [If the map argument is not an AMQP value created with the amqpvalue_create_map function then amqpvalue_get_map_pair_count shall fail and return a non-zero value.] */
 			result = __LINE__;
 		}
 		else
@@ -1443,9 +1443,65 @@ int amqpvalue_get_map_pair_count(AMQP_VALUE map, uint32_t* pair_count)
 	return result;
 }
 
+int amqpvalue_get_map_key_value_pair(AMQP_VALUE map, uint32_t index, AMQP_VALUE* key, AMQP_VALUE* value)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_201: [If any of the map, key or value arguments is NULL, amqpvalue_get_map_key_value_pair shall fail and return a non-zero value.] */
+	if ((map == NULL) ||
+		(key == NULL) ||
+		(value == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)map;
+
+		if (value_data->type != AMQP_TYPE_MAP)
+		{
+			/* Codes_SRS_AMQPVALUE_01_205: [If the map argument is not an AMQP value created with the amqpvalue_create_map function then amqpvalue_get_map_key_value_pair shall fail and return a non-zero value.] */
+			result = __LINE__;
+		}
+		else if (value_data->value.map_value.pair_count <= index)
+		{
+			/* Codes_SRS_AMQPVALUE_01_204: [If the index argument is greater or equal to the number of key/value pairs in the map then amqpvalue_get_map_key_value_pair shall fail and return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_199: [amqpvalue_get_map_key_value_pair shall fill in the key and value arguments copies of the key/value pair on the 0 based position index in a map.] */
+			*key = amqpvalue_clone(value_data->value.map_value.pairs[index].key);
+			if (*key == NULL)
+			{
+				/* Codes_SRS_AMQPVALUE_01_202: [If cloning the key fails, amqpvalue_get_map_key_value_pair shall fail and return a non-zero value.] */
+				result = __LINE__;
+			}
+			else
+			{
+				*value = amqpvalue_clone(value_data->value.map_value.pairs[index].value);
+				if (*value == NULL)
+				{
+					/* Codes_SRS_AMQPVALUE_01_203: [If cloning the value fails, amqpvalue_get_map_key_value_pair shall fail and return a non-zero value.] */
+					amqpvalue_destroy(*key);
+					result = __LINE__;
+				}
+				else
+				{
+					/* Codes_SRS_AMQPVALUE_01_200: [On success amqpvalue_get_map_key_value_pair shall return 0.] */
+					result = 0;
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
 bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 {
 	bool result;
+
 	if ((value1 == NULL) &&
 		(value2 == NULL))
 	{

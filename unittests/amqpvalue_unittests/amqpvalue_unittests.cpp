@@ -3861,7 +3861,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(map);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_198: [If the map argument is not an AMQP value created with the amqpvalue_create_map function than amqpvalue_get_map_pair_count shall fail and return a non-zero value.] */
+		/* Tests_SRS_AMQPVALUE_01_198: [If the map argument is not an AMQP value created with the amqpvalue_create_map function then amqpvalue_get_map_pair_count shall fail and return a non-zero value.] */
 		TEST_METHOD(amqpvalue_get_map_pair_count_on_a_non_map_value_fails)
 		{
 			// arrange
@@ -3872,6 +3872,298 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// act
 			uint32_t pair_count;
 			int result = amqpvalue_get_map_pair_count(null_value, &pair_count);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(null_value);
+		}
+
+		/* amqpvalue_get_map_key_value_pair */
+
+		/* Tests_SRS_AMQPVALUE_01_199: [amqpvalue_get_map_key_value_pair shall fill in the key and value arguments copies of the key/value pair on the 0 based position index in a map.] */
+		/* Tests_SRS_AMQPVALUE_01_200: [On success amqpvalue_get_map_key_value_pair shall return 0.] */
+		TEST_METHOD(amqpvalue_get_map_key_value_pair_with_1_element_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			AMQP_VALUE no1 = amqpvalue_create_uint(42);
+			(void)amqpvalue_set_map_value(map, no1, no1);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE key;
+			AMQP_VALUE value;
+			int result = amqpvalue_get_map_key_value_pair(map, 0, &key, &value);
+
+			// assert
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_IS_NOT_NULL(key);
+			ASSERT_IS_NOT_NULL(value);
+			ASSERT_IS_TRUE(amqpvalue_are_equal(key, no1));
+			ASSERT_IS_TRUE(amqpvalue_are_equal(value, no1));
+
+			// cleanup
+			amqpvalue_destroy(map);
+			amqpvalue_destroy(no1);
+			amqpvalue_destroy(key);
+			amqpvalue_destroy(value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_199: [amqpvalue_get_map_key_value_pair shall fill in the key and value arguments copies of the key/value pair on the 0 based position index in a map.] */
+		/* Tests_SRS_AMQPVALUE_01_200: [On success amqpvalue_get_map_key_value_pair shall return 0.] */
+		TEST_METHOD(amqpvalue_get_map_key_value_pair_with_1_element_different_key_and_value_data_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			AMQP_VALUE no1 = amqpvalue_create_uint(42);
+			AMQP_VALUE no2 = amqpvalue_create_uint(43);
+			(void)amqpvalue_set_map_value(map, no1, no2);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE key;
+			AMQP_VALUE value;
+			int result = amqpvalue_get_map_key_value_pair(map, 0, &key, &value);
+
+			// assert
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_IS_NOT_NULL(key);
+			ASSERT_IS_NOT_NULL(value);
+			ASSERT_IS_TRUE(amqpvalue_are_equal(key, no1));
+			ASSERT_IS_TRUE(amqpvalue_are_equal(value, no2));
+
+			// cleanup
+			amqpvalue_destroy(map);
+			amqpvalue_destroy(no1);
+			amqpvalue_destroy(no2);
+			amqpvalue_destroy(key);
+			amqpvalue_destroy(value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_199: [amqpvalue_get_map_key_value_pair shall fill in the key and value arguments copies of the key/value pair on the 0 based position index in a map.] */
+		/* Tests_SRS_AMQPVALUE_01_200: [On success amqpvalue_get_map_key_value_pair shall return 0.] */
+		TEST_METHOD(amqpvalue_get_map_key_value_pair_second_element_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			AMQP_VALUE no1 = amqpvalue_create_uint(42);
+			AMQP_VALUE no2 = amqpvalue_create_uint(43);
+			(void)amqpvalue_set_map_value(map, no1, no1);
+			(void)amqpvalue_set_map_value(map, no2, no2);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE key;
+			AMQP_VALUE value;
+			int result = amqpvalue_get_map_key_value_pair(map, 1, &key, &value);
+
+			// assert
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_IS_NOT_NULL(key);
+			ASSERT_IS_NOT_NULL(value);
+			ASSERT_IS_TRUE(amqpvalue_are_equal(key, no2));
+			ASSERT_IS_TRUE(amqpvalue_are_equal(value, no2));
+
+			// cleanup
+			amqpvalue_destroy(map);
+			amqpvalue_destroy(no1);
+			amqpvalue_destroy(no2);
+			amqpvalue_destroy(key);
+			amqpvalue_destroy(value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_201: [If any of the map, key or value arguments is NULL, amqpvalue_get_map_key_value_pair shall fail and return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_map_key_value_pair_with_NULL_map_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			// act
+			AMQP_VALUE key;
+			AMQP_VALUE value;
+			int result = amqpvalue_get_map_key_value_pair(NULL, 0, &key, &value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_201: [If any of the map, key or value arguments is NULL, amqpvalue_get_map_key_value_pair shall fail and return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_map_key_value_pair_with_NULL_key_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			AMQP_VALUE no1 = amqpvalue_create_uint(42);
+			(void)amqpvalue_set_map_value(map, no1, no1);
+			mocks.ResetAllCalls();
+
+			// act
+			AMQP_VALUE value;
+			int result = amqpvalue_get_map_key_value_pair(map, 0, NULL, &value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(map);
+			amqpvalue_destroy(no1);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_201: [If any of the map, key or value arguments is NULL, amqpvalue_get_map_key_value_pair shall fail and return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_map_key_value_pair_with_NULL_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			AMQP_VALUE no1 = amqpvalue_create_uint(42);
+			(void)amqpvalue_set_map_value(map, no1, no1);
+			mocks.ResetAllCalls();
+
+			// act
+			AMQP_VALUE key;
+			int result = amqpvalue_get_map_key_value_pair(map, 0, &key, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(map);
+			amqpvalue_destroy(no1);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_202: [If cloning the key fails, amqpvalue_get_map_key_value_pair shall fail and return a non-zero value.] */
+		TEST_METHOD(when_cloning_key_fails_then_amqpvalue_get_map_key_value_pair_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			AMQP_VALUE no1 = amqpvalue_create_uint(42);
+			(void)amqpvalue_set_map_value(map, no1, no1);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE key;
+			AMQP_VALUE value;
+			int result = amqpvalue_get_map_key_value_pair(map, 0, &key, &value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(map);
+			amqpvalue_destroy(no1);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_203: [If cloning the value fails, amqpvalue_get_map_key_value_pair shall fail and return a non-zero value.] */
+		TEST_METHOD(when_cloning_value_fails_then_amqpvalue_get_map_key_value_pair_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			AMQP_VALUE no1 = amqpvalue_create_uint(42);
+			(void)amqpvalue_set_map_value(map, no1, no1);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE key;
+			AMQP_VALUE value;
+			int result = amqpvalue_get_map_key_value_pair(map, 0, &key, &value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(map);
+			amqpvalue_destroy(no1);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_204: [If the index argument is greater or equal to the number of key/value pairs in the map then amqpvalue_get_map_key_value_pair shall fail and return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_map_key_value_pair_on_an_empty_map_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			mocks.ResetAllCalls();
+
+			// act
+			AMQP_VALUE key;
+			AMQP_VALUE value;
+			int result = amqpvalue_get_map_key_value_pair(map, 0, &key, &value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(map);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_204: [If the index argument is greater or equal to the number of key/value pairs in the map then amqpvalue_get_map_key_value_pair shall fail and return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_map_key_value_pair_with_index_equal_number_of_pairs_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			AMQP_VALUE no1 = amqpvalue_create_uint(42);
+			(void)amqpvalue_set_map_value(map, no1, no1);
+			mocks.ResetAllCalls();
+
+			// act
+			AMQP_VALUE key;
+			AMQP_VALUE value;
+			int result = amqpvalue_get_map_key_value_pair(map, 1, &key, &value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(map);
+			amqpvalue_destroy(no1);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_205: [If the map argument is not an AMQP value created with the amqpvalue_create_map function then amqpvalue_get_map_key_value_pair shall fail and return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_map_key_value_pair_on_a_non_map_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			AMQP_VALUE key;
+			AMQP_VALUE value;
+			int result = amqpvalue_get_map_key_value_pair(null_value, 0, &key, &value);
 
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);

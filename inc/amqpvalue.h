@@ -67,6 +67,7 @@ extern "C" {
 	extern int amqpvalue_set_map_value(AMQP_VALUE map, AMQP_VALUE key, AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_get_map_value(AMQP_VALUE map, AMQP_VALUE key);
 	extern int amqpvalue_get_map_pair_count(AMQP_VALUE map, uint32_t* pair_count);
+	extern int amqpvalue_get_map_key_value_pair(AMQP_VALUE map, uint32_t index, AMQP_VALUE* key, AMQP_VALUE* value);
 
 	extern bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2);
 	extern AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size);

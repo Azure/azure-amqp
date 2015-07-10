@@ -1600,6 +1600,31 @@ bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 				/* Codes_SRS_AMQPVALUE_01_230: [- string: compare all string characters.] */
 				result = (strcmp(value1_data->value.string_value.chars, value2_data->value.string_value.chars) == 0);
 				break;
+			case AMQP_TYPE_LIST:
+			{
+				/* Codes_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
+				if (value1_data->value.list_value.count != value2_data->value.list_value.count)
+				{
+					result = false;
+				}
+				else
+				{
+					uint32_t i;
+
+					for (i = 0; i < value1_data->value.list_value.count; i++)
+					{
+						/* Codes_SRS_AMQPVALUE_01_232: [Nesting shall be considered in comparison.] */
+						if (!amqpvalue_are_equal(value1_data->value.list_value.items[i], value2_data->value.list_value.items[i]))
+						{
+							break;
+						}
+					}
+
+					result = (i == value1_data->value.list_value.count);
+				}
+
+				break;
+			}
 			}
 		}
 	}
@@ -1894,6 +1919,10 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 
 		case AMQP_TYPE_UBYTE:
 			result = amqpvalue_create_ubyte(value_data->value.ubyte_value);
+			break;
+
+		case AMQP_TYPE_INT:
+			result = amqpvalue_create_int(value_data->value.int_value);
 			break;
 
 		case AMQP_TYPE_BINARY:

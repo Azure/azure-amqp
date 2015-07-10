@@ -4998,4 +4998,302 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
+		TEST_METHOD(for_2_empty_list_values_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_list();
+			AMQP_VALUE value2 = amqpvalue_create_list();
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
+		TEST_METHOD(for_2_lists_with_one_null_item_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_list();
+			AMQP_VALUE value2 = amqpvalue_create_list();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_list_item(value1, 0, null_value);
+			(void)amqpvalue_set_list_item(value2, 0, null_value);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(null_value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
+		TEST_METHOD(for_2_lists_with_different_number_of_null_values_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_list();
+			AMQP_VALUE value2 = amqpvalue_create_list();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_list_item(value1, 0, null_value);
+			(void)amqpvalue_set_list_item(value2, 0, null_value);
+			(void)amqpvalue_set_list_item(value2, 1, null_value);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(null_value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
+		TEST_METHOD(for_2_lists_one_empty_and_one_with_a_value_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_list();
+			AMQP_VALUE value2 = amqpvalue_create_list();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_list_item(value1, 0, null_value);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(null_value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
+		TEST_METHOD(for_2_lists_with_one_identical_int_value_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_list();
+			AMQP_VALUE value2 = amqpvalue_create_list();
+			AMQP_VALUE int_value = amqpvalue_create_int(42);
+			(void)amqpvalue_set_list_item(value1, 0, int_value);
+			(void)amqpvalue_set_list_item(value2, 0, int_value);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(int_value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
+		TEST_METHOD(for_2_lists_with_2_different_int_values_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_list();
+			AMQP_VALUE value2 = amqpvalue_create_list();
+			AMQP_VALUE int_value1 = amqpvalue_create_int(42);
+			AMQP_VALUE int_value2 = amqpvalue_create_int(43);
+			(void)amqpvalue_set_list_item(value1, 0, int_value1);
+			(void)amqpvalue_set_list_item(value2, 0, int_value2);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(int_value1);
+			amqpvalue_destroy(int_value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
+		TEST_METHOD(for_2_lists_with_different_int_values_at_index_1_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_list();
+			AMQP_VALUE value2 = amqpvalue_create_list();
+			AMQP_VALUE int_value1 = amqpvalue_create_int(42);
+			AMQP_VALUE int_value2 = amqpvalue_create_int(43);
+			(void)amqpvalue_set_list_item(value1, 0, int_value1);
+			(void)amqpvalue_set_list_item(value2, 0, int_value1);
+			(void)amqpvalue_set_list_item(value1, 0, int_value1);
+			(void)amqpvalue_set_list_item(value2, 0, int_value2);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(int_value1);
+			amqpvalue_destroy(int_value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_232: [Nesting shall be considered in comparison.] */
+		TEST_METHOD(for_2_lists_each_with_one_empty_list_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_list();
+			AMQP_VALUE value2 = amqpvalue_create_list();
+			AMQP_VALUE inner_list1 = amqpvalue_create_list();
+			AMQP_VALUE inner_list2 = amqpvalue_create_list();
+			(void)amqpvalue_set_list_item(value1, 0, inner_list1);
+			(void)amqpvalue_set_list_item(value2, 0, inner_list2);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(inner_list1);
+			amqpvalue_destroy(inner_list2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_232: [Nesting shall be considered in comparison.] */
+		TEST_METHOD(when_inner_lists_have_different_item_count_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_list();
+			AMQP_VALUE value2 = amqpvalue_create_list();
+			AMQP_VALUE inner_list1 = amqpvalue_create_list();
+			AMQP_VALUE inner_list2 = amqpvalue_create_list();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_list_item(inner_list1, 0, null_value);
+			(void)amqpvalue_set_list_item(value1, 0, inner_list1);
+			(void)amqpvalue_set_list_item(value2, 0, inner_list2);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(inner_list1);
+			amqpvalue_destroy(inner_list2);
+			amqpvalue_destroy(null_value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_232: [Nesting shall be considered in comparison.] */
+		TEST_METHOD(when_inner_lists_have_each_1_item_count_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_list();
+			AMQP_VALUE value2 = amqpvalue_create_list();
+			AMQP_VALUE inner_list1 = amqpvalue_create_list();
+			AMQP_VALUE inner_list2 = amqpvalue_create_list();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_list_item(inner_list1, 0, null_value);
+			(void)amqpvalue_set_list_item(inner_list2, 0, null_value);
+			(void)amqpvalue_set_list_item(value1, 0, inner_list1);
+			(void)amqpvalue_set_list_item(value2, 0, inner_list2);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(inner_list1);
+			amqpvalue_destroy(inner_list2);
+			amqpvalue_destroy(null_value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_232: [Nesting shall be considered in comparison.] */
+		TEST_METHOD(when_inner_lists_have_each_1_item_count_but_items_are_different_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_list();
+			AMQP_VALUE value2 = amqpvalue_create_list();
+			AMQP_VALUE inner_list1 = amqpvalue_create_list();
+			AMQP_VALUE inner_list2 = amqpvalue_create_list();
+			AMQP_VALUE inner_item1 = amqpvalue_create_uint(42);
+			AMQP_VALUE inner_item2 = amqpvalue_create_uint(43);
+			(void)amqpvalue_set_list_item(inner_list1, 0, inner_item1);
+			(void)amqpvalue_set_list_item(inner_list2, 0, inner_item2);
+			(void)amqpvalue_set_list_item(value1, 0, inner_list1);
+			(void)amqpvalue_set_list_item(value2, 0, inner_list2);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(inner_list1);
+			amqpvalue_destroy(inner_list2);
+			amqpvalue_destroy(inner_item1);
+			amqpvalue_destroy(inner_item2);
+		}
+
 END_TEST_SUITE(connection_unittests)

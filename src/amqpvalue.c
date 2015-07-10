@@ -905,6 +905,9 @@ AMQP_VALUE amqpvalue_create_string(const char* value)
 			}
 			else
 			{
+#if _MSC_VER
+#pragma warning(suppress: 6324) /* we use strcy intentionally */
+#endif
 				if (strcpy(result->value.string_value.chars, value) == NULL)
 				{
 					/* Codes_SRS_AMQPVALUE_01_137: [If any other error occurs, amqpvalue_create_string shall return NULL.] */
@@ -1521,6 +1524,9 @@ bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 		AMQP_VALUE_DATA* value2_data = (AMQP_VALUE_DATA*)value2;
 
 		/* Codes_SRS_AMQPVALUE_01_209: [If the types for value1 and value2 are different amqpvalue_are_equal shall return false.] */
+#if _MSC_VER
+#pragma warning(suppress: 28182) /* The compiler states that value2_data can be NULL, but it cannot. And there are tests for it. */
+#endif
 		if (value1_data->type != value2_data->type)
 		{
 			result = false;

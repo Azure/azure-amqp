@@ -3751,4 +3751,134 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* amqpvalue_get_map_pair_count */
+
+		/* Tests_SRS_AMQPVALUE_01_193: [amqpvalue_get_map_pair_count shall fill in the number of key/value pairs in the map in the pair_count argument.] */
+		/* Tests_SRS_AMQPVALUE_01_194: [On success amqpvalue_get_map_pair_count shall return 0.] */
+		TEST_METHOD(amqpvalue_get_map_pair_count_yields_0_on_an_empty_map)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			mocks.ResetAllCalls();
+
+			// act
+			uint32_t pair_count;
+			int result = amqpvalue_get_map_pair_count(map, &pair_count);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_ARE_EQUAL(uint32_t, 0, pair_count);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(map);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_193: [amqpvalue_get_map_pair_count shall fill in the number of key/value pairs in the map in the pair_count argument.] */
+		/* Tests_SRS_AMQPVALUE_01_194: [On success amqpvalue_get_map_pair_count shall return 0.] */
+		TEST_METHOD(amqpvalue_get_map_pair_count_yields_1_on_a_map_with_1_pair)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			AMQP_VALUE value = amqpvalue_create_uint(42);
+			(void)amqpvalue_set_map_value(map, value, value);
+			mocks.ResetAllCalls();
+
+			// act
+			uint32_t pair_count;
+			int result = amqpvalue_get_map_pair_count(map, &pair_count);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_ARE_EQUAL(uint32_t, 1, pair_count);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(map);
+			amqpvalue_destroy(value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_193: [amqpvalue_get_map_pair_count shall fill in the number of key/value pairs in the map in the pair_count argument.] */
+		/* Tests_SRS_AMQPVALUE_01_194: [On success amqpvalue_get_map_pair_count shall return 0.] */
+		TEST_METHOD(amqpvalue_get_map_pair_count_yields_2_on_a_map_with_2_pairs)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			AMQP_VALUE value1 = amqpvalue_create_uint(42);
+			AMQP_VALUE value2 = amqpvalue_create_uint(43);
+			(void)amqpvalue_set_map_value(map, value1, value1);
+			(void)amqpvalue_set_map_value(map, value2, value2);
+			mocks.ResetAllCalls();
+
+			// act
+			uint32_t pair_count;
+			int result = amqpvalue_get_map_pair_count(map, &pair_count);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_ARE_EQUAL(uint32_t, 2, pair_count);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(map);
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_195: [If any of the arguments is NULL, amqpvalue_get_map_pair_count shall fail and return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_map_pair_with_NULL_map_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			// act
+			uint32_t pair_count;
+			int result = amqpvalue_get_map_pair_count(NULL, &pair_count);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_195: [If any of the arguments is NULL, amqpvalue_get_map_pair_count shall fail and return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_map_pair_with_NULL_pair_count_argument_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE map = amqpvalue_create_map();
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_map_pair_count(map, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(map);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_198: [If the map argument is not an AMQP value created with the amqpvalue_create_map function than amqpvalue_get_map_pair_count shall fail and return a non-zero value.] */
+		TEST_METHOD(amqpvalue_get_map_pair_count_on_a_non_map_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			uint32_t pair_count;
+			int result = amqpvalue_get_map_pair_count(null_value, &pair_count);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(null_value);
+		}
+
 END_TEST_SUITE(connection_unittests)

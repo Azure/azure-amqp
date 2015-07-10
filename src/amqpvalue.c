@@ -1411,6 +1411,38 @@ AMQP_VALUE amqpvalue_get_map_value(AMQP_VALUE map, AMQP_VALUE key)
 	return result;
 }
 
+int amqpvalue_get_map_pair_count(AMQP_VALUE map, uint32_t* pair_count)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_195: [If any of the arguments is NULL, amqpvalue_get_map_pair_count shall fail and return a non-zero value.] */
+	if ((map == NULL) ||
+		(pair_count == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)map;
+
+		if (value_data->type != AMQP_TYPE_MAP)
+		{
+			/* Tests_SRS_AMQPVALUE_01_198: [If the map argument is not an AMQP value created with the amqpvalue_create_map function than amqpvalue_get_map_pair_count shall fail and return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_193: [amqpvalue_get_map_pair_count shall fill in the number of key/value pairs in the map in the pair_count argument.] */
+			*pair_count = value_data->value.map_value.pair_count;
+
+			/* Codes_SRS_AMQPVALUE_01_194: [On success amqpvalue_get_map_pair_count shall return 0.] */
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
 bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 {
 	bool result;
@@ -1437,13 +1469,6 @@ bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 	}
 
 	return result;
-}
-
-int amqpvalue_get_map_pair_count(AMQP_VALUE map, uint32_t* pair_count)
-{
-	AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)map;
-	*pair_count = value_data->value.map_value.pair_count;
-	return 0;
 }
 
 AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value)

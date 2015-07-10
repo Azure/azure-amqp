@@ -1301,43 +1301,125 @@ int amqpvalue_set_map_value(AMQP_VALUE map, AMQP_VALUE key, AMQP_VALUE value)
 	else
 	{
 		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)map;
-		AMQP_VALUE cloned_key;
+		AMQP_VALUE cloned_value;
 
-		cloned_key = amqpvalue_clone(key);
-		if (cloned_key == NULL)
+		/* Codes_SRS_AMQPVALUE_01_185: [When storing the key or value, their contents shall be cloned.] */
+		cloned_value = amqpvalue_clone(value);
+		if (cloned_value == NULL)
 		{
+			/* Codes_SRS_AMQPVALUE_01_188: [If cloning the value fails, amqpvalue_set_map_value shall fail and return a non-zero value.] */
 			result = __LINE__;
 		}
 		else
 		{
-			AMQP_VALUE cloned_value = amqpvalue_clone(value);
-			if (cloned_value == NULL)
+			uint32_t i;
+			AMQP_VALUE cloned_key;
+
+			for (i = 0; i < value_data->value.map_value.pair_count; i++)
 			{
-				amqpvalue_destroy(cloned_key);
-				result = __LINE__;
+				if (amqpvalue_are_equal(value_data->value.map_value.pairs[i].key, key))
+				{
+					break;
+				}
+			}
+
+			if (i < value_data->value.map_value.pair_count)
+			{
+				/* Codes_SRS_AMQPVALUE_01_184: [If the key already exists in the map, its value shall be replaced with the value provided by the value argument.] */
+				amqpvalue_destroy(value_data->value.map_value.pairs[i].value);
+				value_data->value.map_value.pairs[i].value = cloned_value;
+
+				/* Codes_SRS_AMQPVALUE_01_182: [On success amqpvalue_set_map_value shall return 0.] */
+				result = 0;
 			}
 			else
 			{
-				AMQP_MAP_KEY_VALUE_PAIR* new_pairs = (AMQP_MAP_KEY_VALUE_PAIR*)amqpalloc_realloc(value_data->value.map_value.pairs, (value_data->value.map_value.pair_count + 1) * sizeof(AMQP_MAP_KEY_VALUE_PAIR));
-				if (new_pairs == NULL)
+				/* Codes_SRS_AMQPVALUE_01_185: [When storing the key or value, their contents shall be cloned.] */
+				cloned_key = amqpvalue_clone(key);
+				if (cloned_key == NULL)
 				{
-					amqpvalue_destroy(cloned_key);
+					/* Codes_SRS_AMQPVALUE_01_187: [If cloning the key fails, amqpvalue_set_map_value shall fail and return a non-zero value.] */
 					amqpvalue_destroy(cloned_value);
 					result = __LINE__;
 				}
 				else
 				{
-					value_data->value.map_value.pairs = new_pairs;
+					AMQP_MAP_KEY_VALUE_PAIR* new_pairs = (AMQP_MAP_KEY_VALUE_PAIR*)amqpalloc_realloc(value_data->value.map_value.pairs, (value_data->value.map_value.pair_count + 1) * sizeof(AMQP_MAP_KEY_VALUE_PAIR));
+					if (new_pairs == NULL)
+					{
+						/* Codes_SRS_AMQPVALUE_01_186: [If allocating memory to hold a new key/value pair fails, amqpvalue_set_map_value shall fail and return a non-zero value.] */
+						amqpvalue_destroy(cloned_key);
+						amqpvalue_destroy(cloned_value);
+						result = __LINE__;
+					}
+					else
+					{
+						value_data->value.map_value.pairs = new_pairs;
 
-					/* Codes_SRS_AMQPVALUE_01_181: [amqpvalue_set_map_value shall set the value in the map identified by the map argument for a key/value pair identified by the key argument.] */
-					value_data->value.map_value.pairs[value_data->value.map_value.pair_count].key = cloned_key;
-					value_data->value.map_value.pairs[value_data->value.map_value.pair_count].value = cloned_value;
-					value_data->value.map_value.pair_count++;
+						/* Codes_SRS_AMQPVALUE_01_181: [amqpvalue_set_map_value shall set the value in the map identified by the map argument for a key/value pair identified by the key argument.] */
+						value_data->value.map_value.pairs[value_data->value.map_value.pair_count].key = cloned_key;
+						value_data->value.map_value.pairs[value_data->value.map_value.pair_count].value = cloned_value;
+						value_data->value.map_value.pair_count++;
 
-					/* Codes_SRS_AMQPVALUE_01_182: [On success amqpvalue_set_map_value shall return 0.] */
-					result = 0;
+						/* Codes_SRS_AMQPVALUE_01_182: [On success amqpvalue_set_map_value shall return 0.] */
+						result = 0;
+					}
 				}
 			}
+		}
+	}
+
+	return result;
+}
+
+AMQP_VALUE amqpvalue_get_map_value(AMQP_VALUE map, AMQP_VALUE key)
+{
+	AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)map;
+	uint32_t i;
+	AMQP_VALUE result;
+
+	for (i = 0; i < value_data->value.map_value.pair_count; i++)
+	{
+		if (amqpvalue_are_equal(value_data->value.map_value.pairs[i].key, key))
+		{
+			break;
+		}
+	}
+
+	if (i == value_data->value.map_value.pair_count)
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = value_data->value.map_value.pairs[i].value;
+	}
+
+	return result;
+}
+
+bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
+{
+	bool result;
+	if ((value1 == NULL) &&
+		(value2 == NULL))
+	{
+		result = true;
+	}
+	else if ((value1 != value2) && ((value1 == NULL) || (value2 == NULL)))
+	{
+		result = false;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value1_data = (AMQP_VALUE_DATA*)value1;
+		AMQP_VALUE_DATA* value2_data = (AMQP_VALUE_DATA*)value2;
+
+		switch (value1_data->type)
+		{
+		case AMQP_TYPE_UINT:
+			result = (value1_data->value.uint_value == value2_data->value.uint_value);
+			break;
 		}
 	}
 

@@ -4247,6 +4247,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_210: [- null: always equal.] */
 		TEST_METHOD(for_2_null_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4268,6 +4269,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_211: [- boolean: compare the bool content.] */
 		TEST_METHOD(for_2_equal_boolean_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4310,6 +4312,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_212: [- ubyte: compare the unsigned char content.] */
 		TEST_METHOD(for_2_equal_ubyte_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4352,6 +4355,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_213: [- ushort: compare the uint16_t content.] */
 		TEST_METHOD(for_2_equal_ushort_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4394,6 +4398,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_214: [- uint: compare the uint32_t content.] */
 		TEST_METHOD(for_2_equal_uint_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4436,6 +4441,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_215: [- ulong: compare the uint64_t content.] */
 		TEST_METHOD(for_2_equal_ulong_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4478,6 +4484,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_216: [- byte: compare the char content.] */
 		TEST_METHOD(for_2_equal_byte_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4520,6 +4527,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_217: [- short: compare the int16_t content.] */
 		TEST_METHOD(for_2_equal_short_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4562,6 +4570,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_218: [- int: compare the int32_t content.] */
 		TEST_METHOD(for_2_equal_int_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4604,6 +4613,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_219: [- long: compare the int64_t content.] */
 		TEST_METHOD(for_2_equal_long_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4646,6 +4656,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_224: [- float: compare the float content.] */
 		TEST_METHOD(for_2_equal_float_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4688,6 +4699,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_225: [- double: compare the double content.] */
 		TEST_METHOD(for_2_equal_double_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4730,6 +4742,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_226: [- char: compare the UNICODE character.] */
 		TEST_METHOD(for_2_equal_char_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4772,6 +4785,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_227: [- timestamp: compare the underlying 64 bit integer.] */
 		TEST_METHOD(for_2_equal_timestamp_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4814,6 +4828,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_228: [- uuid: compare all uuid bytes.] */
 		TEST_METHOD(for_2_equal_uuid_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4860,6 +4875,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_229: [- binary: compare all binary bytes.] */
 		TEST_METHOD(for_2_equal_binary_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4935,6 +4951,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_230: [- string: compare all string characters.] */
 		TEST_METHOD(for_2_equal_string_values_amqpvalue_are_equal_returns_true)
 		{
@@ -4998,6 +5015,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
 		TEST_METHOD(for_2_empty_list_values_amqpvalue_are_equal_returns_true)
 		{
@@ -5019,6 +5037,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
 		TEST_METHOD(for_2_lists_with_one_null_item_amqpvalue_are_equal_returns_true)
 		{
@@ -5094,6 +5113,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(null_value);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
 		TEST_METHOD(for_2_lists_with_one_identical_int_value_amqpvalue_are_equal_returns_true)
 		{
@@ -5175,6 +5195,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(int_value2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_232: [Nesting shall be considered in comparison.] */
 		TEST_METHOD(for_2_lists_each_with_one_empty_list_amqpvalue_are_equal_returns_true)
 		{
@@ -5232,6 +5253,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(null_value);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_232: [Nesting shall be considered in comparison.] */
 		TEST_METHOD(when_inner_lists_have_each_1_item_count_amqpvalue_are_equal_returns_true)
 		{

@@ -1499,6 +1499,7 @@ int amqpvalue_get_map_key_value_pair(AMQP_VALUE map, uint32_t index, AMQP_VALUE*
 	return result;
 }
 
+/* Codes_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 {
 	bool result;

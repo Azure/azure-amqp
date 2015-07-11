@@ -5750,6 +5750,29 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(result);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_238: [boolean] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_boolean_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_boolean(true);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
 		/* Tests_SRS_AMQPVALUE_01_239: [ubyte] */
 		TEST_METHOD(amqpvalue_clone_clones_a_ubyte_succesfully_value_42)
@@ -5796,6 +5819,29 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// cleanup
 			amqpvalue_destroy(source);
 			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_239: [ubyte] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_ubyte_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_ubyte(43);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
@@ -5846,6 +5892,29 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(result);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_240: [ushort] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_ushort_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_ushort(43);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
 		/* Tests_SRS_AMQPVALUE_01_241: [uint] */
 		TEST_METHOD(amqpvalue_clone_clones_a_uint_succesfully_value_42)
@@ -5892,6 +5961,29 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// cleanup
 			amqpvalue_destroy(source);
 			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_241: [uint] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_uint_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_uint(43);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
@@ -5942,6 +6034,29 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(result);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_242: [ulong] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_ulong_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_ulong(43);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
 		/* Tests_SRS_AMQPVALUE_01_243: [byte] */
 		TEST_METHOD(amqpvalue_clone_clones_a_byte_succesfully_value_42)
@@ -5988,6 +6103,29 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// cleanup
 			amqpvalue_destroy(source);
 			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_243: [byte] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_byte_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_byte(43);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
@@ -6038,6 +6176,29 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(result);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_244: [short] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_short_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_short(43);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
 		/* Tests_SRS_AMQPVALUE_01_245: [int] */
 		TEST_METHOD(amqpvalue_clone_clones_a_int_succesfully_value_42)
@@ -6084,6 +6245,29 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// cleanup
 			amqpvalue_destroy(source);
 			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_245: [int] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_int_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_int(43);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
@@ -6134,6 +6318,29 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(result);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_246: [long] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_long_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_long(43);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
 		/* Tests_SRS_AMQPVALUE_01_247: [float] */
 		TEST_METHOD(amqpvalue_clone_clones_a_float_succesfully_value_42)
@@ -6180,6 +6387,29 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// cleanup
 			amqpvalue_destroy(source);
 			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_247: [float] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_float_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_float(43);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
@@ -6230,6 +6460,29 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(result);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_248: [double] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_double_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_double(43);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
 		/* Tests_SRS_AMQPVALUE_01_252: [char] */
 		TEST_METHOD(amqpvalue_clone_clones_a_char_succesfully_value_42)
@@ -6276,6 +6529,29 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// cleanup
 			amqpvalue_destroy(source);
 			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_252: [char] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_char_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_char(43);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
@@ -6326,6 +6602,29 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(result);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_253: [timestamp] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_timestamp_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_timestamp(43);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
 		/* Tests_SRS_AMQPVALUE_01_254: [uuid] */
 		TEST_METHOD(amqpvalue_clone_clones_a_uuid_succesfully_first_byte_non_zero)
@@ -6374,6 +6673,30 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// cleanup
 			amqpvalue_destroy(source);
 			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_254: [uuid] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_uuid_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			amqp_uuid uuid_value = { 0x42, 0x43 };
+			AMQP_VALUE source = amqpvalue_create_uuid(uuid_value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
@@ -6430,6 +6753,58 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(result);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_255: [binary] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_binary_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char buffer[] = { 0x42, 0x43 };
+			amqp_binary binary_value = { buffer, sizeof(buffer) };
+			AMQP_VALUE source = amqpvalue_create_binary(binary_value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_255: [binary] */
+		TEST_METHOD(when_allocating_the_underlying_buffer_amqpvalue_clone_for_a_binary_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char buffer[] = { 0x42, 0x43 };
+			amqp_binary binary_value = { buffer, sizeof(buffer) };
+			AMQP_VALUE source = amqpvalue_create_binary(binary_value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(sizeof(buffer)))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
 		/* Tests_SRS_AMQPVALUE_01_256: [string] */
 		TEST_METHOD(amqpvalue_clone_clones_a_string_succesfully_a)
@@ -6478,6 +6853,54 @@ BEGIN_TEST_SUITE(connection_unittests)
 			// cleanup
 			amqpvalue_destroy(source);
 			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_255: [string] */
+		TEST_METHOD(when_allocating_the_cloned_value_amqpvalue_clone_for_a_string_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_string("abcd");
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_255: [string] */
+		TEST_METHOD(when_allocating_the_underlying_buffer_amqpvalue_clone_for_a_string_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_string("abcd");
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
@@ -6563,6 +6986,138 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(item1);
 			amqpvalue_destroy(item2);
 			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_258: [list] */
+		TEST_METHOD(when_allocating_the_cloned_value_amqpvalue_clone_for_a_list_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE item1 = amqpvalue_create_uint(42);
+			AMQP_VALUE item2 = amqpvalue_create_uint(43);
+			AMQP_VALUE source = amqpvalue_create_list();
+			(void)amqpvalue_set_list_item(source, 0, item1);
+			(void)amqpvalue_set_list_item(source, 1, item2);
+			mocks.ResetAllCalls();
+
+			/* 4 = 1 for source, 1 for the array of items + 2 items */
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+			amqpvalue_destroy(item1);
+			amqpvalue_destroy(item2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_258: [list] */
+		TEST_METHOD(when_allocating_the_underlying_list_amqpvalue_clone_for_a_list_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE item1 = amqpvalue_create_uint(42);
+			AMQP_VALUE item2 = amqpvalue_create_uint(43);
+			AMQP_VALUE source = amqpvalue_create_list();
+			(void)amqpvalue_set_list_item(source, 0, item1);
+			(void)amqpvalue_set_list_item(source, 1, item2);
+			mocks.ResetAllCalls();
+
+			/* 4 = 1 for source, 1 for the array of items + 2 items */
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+			amqpvalue_destroy(item1);
+			amqpvalue_destroy(item2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_258: [list] */
+		TEST_METHOD(when_allocating_the_first_cloned_value_amqpvalue_clone_for_a_list_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE item1 = amqpvalue_create_uint(42);
+			AMQP_VALUE item2 = amqpvalue_create_uint(43);
+			AMQP_VALUE source = amqpvalue_create_list();
+			(void)amqpvalue_set_list_item(source, 0, item1);
+			(void)amqpvalue_set_list_item(source, 1, item2);
+			mocks.ResetAllCalls();
+
+			/* 4 = 1 for source, 1 for the array of items + 2 items */
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+			amqpvalue_destroy(item1);
+			amqpvalue_destroy(item2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_258: [list] */
+		TEST_METHOD(when_allocating_the_second_cloned_value_amqpvalue_clone_for_a_list_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE item1 = amqpvalue_create_uint(42);
+			AMQP_VALUE item2 = amqpvalue_create_uint(43);
+			AMQP_VALUE source = amqpvalue_create_list();
+			(void)amqpvalue_set_list_item(source, 0, item1);
+			(void)amqpvalue_set_list_item(source, 1, item2);
+			mocks.ResetAllCalls();
+
+			/* 4 = 1 for source, 1 for the array of items + 2 items */
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+			amqpvalue_destroy(item1);
+			amqpvalue_destroy(item2);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
@@ -6662,6 +7217,234 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(key2);
 			amqpvalue_destroy(value2);
 			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_259: [map] */
+		TEST_METHOD(when_allocating_the_cloned_value_fails_amqpvalue_clone_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE key1 = amqpvalue_create_uint(42);
+			AMQP_VALUE value1 = amqpvalue_create_uint(43);
+			AMQP_VALUE key2 = amqpvalue_create_uint(44);
+			AMQP_VALUE value2 = amqpvalue_create_uint(45);
+			AMQP_VALUE source = amqpvalue_create_map();
+			(void)amqpvalue_set_map_value(source, key1, value1);
+			(void)amqpvalue_set_map_value(source, key2, value2);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(key2);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_259: [map] */
+		TEST_METHOD(when_allocating_the_underlying_map_array_fails_amqpvalue_clone_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE key1 = amqpvalue_create_uint(42);
+			AMQP_VALUE value1 = amqpvalue_create_uint(43);
+			AMQP_VALUE key2 = amqpvalue_create_uint(44);
+			AMQP_VALUE value2 = amqpvalue_create_uint(45);
+			AMQP_VALUE source = amqpvalue_create_map();
+			(void)amqpvalue_set_map_value(source, key1, value1);
+			(void)amqpvalue_set_map_value(source, key2, value2);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(key2);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_259: [map] */
+		TEST_METHOD(when_allocating_the_first_cloned_key_fails_amqpvalue_clone_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE key1 = amqpvalue_create_uint(42);
+			AMQP_VALUE value1 = amqpvalue_create_uint(43);
+			AMQP_VALUE key2 = amqpvalue_create_uint(44);
+			AMQP_VALUE value2 = amqpvalue_create_uint(45);
+			AMQP_VALUE source = amqpvalue_create_map();
+			(void)amqpvalue_set_map_value(source, key1, value1);
+			(void)amqpvalue_set_map_value(source, key2, value2);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(key2);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_259: [map] */
+		TEST_METHOD(when_allocating_the_first_cloned_value_fails_amqpvalue_clone_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE key1 = amqpvalue_create_uint(42);
+			AMQP_VALUE value1 = amqpvalue_create_uint(43);
+			AMQP_VALUE key2 = amqpvalue_create_uint(44);
+			AMQP_VALUE value2 = amqpvalue_create_uint(45);
+			AMQP_VALUE source = amqpvalue_create_map();
+			(void)amqpvalue_set_map_value(source, key1, value1);
+			(void)amqpvalue_set_map_value(source, key2, value2);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(key2);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_259: [map] */
+		TEST_METHOD(when_allocating_the_second_cloned_key_fails_amqpvalue_clone_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE key1 = amqpvalue_create_uint(42);
+			AMQP_VALUE value1 = amqpvalue_create_uint(43);
+			AMQP_VALUE key2 = amqpvalue_create_uint(44);
+			AMQP_VALUE value2 = amqpvalue_create_uint(45);
+			AMQP_VALUE source = amqpvalue_create_map();
+			(void)amqpvalue_set_map_value(source, key1, value1);
+			(void)amqpvalue_set_map_value(source, key2, value2);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(key2);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_259: [map] */
+		TEST_METHOD(when_allocating_the_second_cloned_value_fails_amqpvalue_clone_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE key1 = amqpvalue_create_uint(42);
+			AMQP_VALUE value1 = amqpvalue_create_uint(43);
+			AMQP_VALUE key2 = amqpvalue_create_uint(44);
+			AMQP_VALUE value2 = amqpvalue_create_uint(45);
+			AMQP_VALUE source = amqpvalue_create_map();
+			(void)amqpvalue_set_map_value(source, key1, value1);
+			(void)amqpvalue_set_map_value(source, key2, value2);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(key2);
+			amqpvalue_destroy(value2);
 		}
 
 END_TEST_SUITE(connection_unittests)

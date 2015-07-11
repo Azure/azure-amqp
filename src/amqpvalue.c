@@ -1809,44 +1809,62 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 			/* Codes_SRS_AMQPVALUE_01_258: [list] */
 			uint32_t i;
 			AMQP_VALUE_DATA* result_data = amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
-			result_data->type = AMQP_TYPE_LIST;
-			result_data->value.list_value.count = value_data->value.list_value.count;
-
-			if (value_data->value.list_value.count > 0)
+			if (result_data == NULL)
 			{
-				result_data->value.list_value.items = (AMQP_VALUE*)amqpalloc_malloc(value_data->value.list_value.count * sizeof(AMQP_VALUE));
-
-				for (i = 0; i < value_data->value.list_value.count; i++)
-				{
-					result_data->value.list_value.items[i] = amqpvalue_clone(value_data->value.list_value.items[i]);
-					if (result_data->value.list_value.items[i] == NULL)
-					{
-						break;
-					}
-				}
-
-				if (i < value_data->value.list_value.count)
-				{
-					uint32_t j;
-
-					/* destroy all the allocated values to return to theinitial state */
-					for (j = 0; j < i; j++)
-					{
-						amqpvalue_destroy(result_data->value.list_value.items[j]);
-					}
-
-					amqpalloc_free(result_data);
-					result = NULL;
-				}
-				else
-				{
-					result = result_data;
-				}
+				/* Codes_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+				result = NULL;
 			}
 			else
 			{
-				result_data->value.list_value.items = NULL;
-				result = result_data;
+				result_data->type = AMQP_TYPE_LIST;
+				result_data->value.list_value.count = value_data->value.list_value.count;
+
+				if (value_data->value.list_value.count > 0)
+				{
+					result_data->value.list_value.items = (AMQP_VALUE*)amqpalloc_malloc(value_data->value.list_value.count * sizeof(AMQP_VALUE));
+					if (result_data->value.list_value.items == NULL)
+					{
+						/* Codes_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+						amqpalloc_free(result_data);
+						result = NULL;
+					}
+					else
+					{
+						for (i = 0; i < value_data->value.list_value.count; i++)
+						{
+							result_data->value.list_value.items[i] = amqpvalue_clone(value_data->value.list_value.items[i]);
+							if (result_data->value.list_value.items[i] == NULL)
+							{
+								break;
+							}
+						}
+
+						if (i < value_data->value.list_value.count)
+						{
+							uint32_t j;
+
+							/* Codes_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+							/* destroy all the allocated values to return to the initial state */
+							for (j = 0; j < i; j++)
+							{
+								amqpvalue_destroy(result_data->value.list_value.items[j]);
+							}
+
+							amqpalloc_free(result_data->value.list_value.items);
+							amqpalloc_free(result_data);
+							result = NULL;
+						}
+						else
+						{
+							result = result_data;
+						}
+					}
+				}
+				else
+				{
+					result_data->value.list_value.items = NULL;
+					result = result_data;
+				}
 			}
 
 			break;
@@ -1856,53 +1874,71 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 			/* Codes_SRS_AMQPVALUE_01_259: [map] */
 			uint32_t i;
 			AMQP_VALUE_DATA* result_data = amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
-			result_data->type = AMQP_TYPE_MAP;
-			result_data->value.map_value.pair_count = value_data->value.map_value.pair_count;
-
-			if (result_data->value.map_value.pair_count > 0)
+			if (result_data == NULL)
 			{
-				result_data->value.map_value.pairs = (AMQP_MAP_KEY_VALUE_PAIR*)amqpalloc_malloc(value_data->value.map_value.pair_count * sizeof(AMQP_MAP_KEY_VALUE_PAIR));
-
-				for (i = 0; i < value_data->value.map_value.pair_count; i++)
-				{
-					result_data->value.map_value.pairs[i].key = amqpvalue_clone(value_data->value.map_value.pairs[i].key);
-					if (result_data->value.map_value.pairs[i].key == NULL)
-					{
-						break;
-					}
-
-					result_data->value.map_value.pairs[i].value = amqpvalue_clone(value_data->value.map_value.pairs[i].value);
-					if (result_data->value.map_value.pairs[i].value == NULL)
-					{
-						amqpvalue_destroy(result_data->value.map_value.pairs[i].key);
-						break;
-					}
-				}
-
-				if (i < value_data->value.map_value.pair_count)
-				{
-					uint32_t j;
-
-					for (j = 0; j < i; j++)
-					{
-						amqpvalue_destroy(result_data->value.map_value.pairs[j].key);
-						amqpvalue_destroy(result_data->value.map_value.pairs[j].value);
-					}
-
-					amqpalloc_free(result_data->value.map_value.pairs);
-					amqpalloc_free(result_data);
-					result = NULL;
-				}
-				else
-				{
-					result = (AMQP_VALUE)result_data;
-				}
+				/* Codes_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+				result = NULL;
 			}
 			else
 			{
-				result_data->value.map_value.pairs = NULL;
-				result = (AMQP_VALUE)result_data;
+				result_data->type = AMQP_TYPE_MAP;
+				result_data->value.map_value.pair_count = value_data->value.map_value.pair_count;
+
+				if (result_data->value.map_value.pair_count > 0)
+				{
+					result_data->value.map_value.pairs = (AMQP_MAP_KEY_VALUE_PAIR*)amqpalloc_malloc(value_data->value.map_value.pair_count * sizeof(AMQP_MAP_KEY_VALUE_PAIR));
+					if (result_data->value.map_value.pairs == NULL)
+					{
+						/* Codes_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+						amqpalloc_free(result_data->value.map_value.pairs);
+						result = NULL;
+					}
+					else
+					{
+						for (i = 0; i < value_data->value.map_value.pair_count; i++)
+						{
+							result_data->value.map_value.pairs[i].key = amqpvalue_clone(value_data->value.map_value.pairs[i].key);
+							if (result_data->value.map_value.pairs[i].key == NULL)
+							{
+								break;
+							}
+
+							result_data->value.map_value.pairs[i].value = amqpvalue_clone(value_data->value.map_value.pairs[i].value);
+							if (result_data->value.map_value.pairs[i].value == NULL)
+							{
+								amqpvalue_destroy(result_data->value.map_value.pairs[i].key);
+								break;
+							}
+						}
+
+						if (i < value_data->value.map_value.pair_count)
+						{
+							/* Codes_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+							uint32_t j;
+
+							for (j = 0; j < i; j++)
+							{
+								amqpvalue_destroy(result_data->value.map_value.pairs[j].key);
+								amqpvalue_destroy(result_data->value.map_value.pairs[j].value);
+							}
+
+							amqpalloc_free(result_data->value.map_value.pairs);
+							amqpalloc_free(result_data);
+							result = NULL;
+						}
+						else
+						{
+							result = (AMQP_VALUE)result_data;
+						}
+					}
+				}
+				else
+				{
+					result_data->value.map_value.pairs = NULL;
+					result = (AMQP_VALUE)result_data;
+				}
 			}
+
 			break;
 		}
 		case AMQP_TYPE_DESCRIBED:

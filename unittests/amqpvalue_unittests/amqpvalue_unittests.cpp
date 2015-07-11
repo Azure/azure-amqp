@@ -3630,6 +3630,27 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_196: [If the map argument is not an AMQP value created with the amqpvalue_create_map function than amqpvalue_set_map_value shall fail and return a non-zero value.] */
+		TEST_METHOD(amqpvalue_set_map_value_on_a_non_map_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			AMQP_VALUE value = amqpvalue_create_uint(42);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_set_map_value(null_value, value, value);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(null_value);
+			amqpvalue_destroy(value);
+		}
+
 		/* amqpvalue_get_map_value */
 
 		/* Tests_SRS_AMQPVALUE_01_189: [amqpvalue_get_map_value shall return the value whose key is identified by the key argument.] */
@@ -3749,6 +3770,27 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(map);
 			amqpvalue_destroy(value1);
 			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_197: [If the map argument is not an AMQP value created with the amqpvalue_create_map function than amqpvalue_get_map_value shall return NULL.] */
+		TEST_METHOD(amqpvalue_get_map_value_for_a_non_map_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			AMQP_VALUE key = amqpvalue_create_uint(42);
+			mocks.ResetAllCalls();
+
+			// act
+			AMQP_VALUE result = amqpvalue_get_map_value(null_value, key);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(null_value);
+			amqpvalue_destroy(key);
 		}
 
 		/* amqpvalue_get_map_pair_count */

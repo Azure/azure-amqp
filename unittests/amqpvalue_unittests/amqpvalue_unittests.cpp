@@ -3,6 +3,10 @@
 #include "micromock.h"
 #include "amqpvalue.h"
 
+/* Requirements satisfied by the current implementation without any code:
+Tests_SRS_AMQPVALUE_01_270: [<encoding code="0x56" category="fixed" width="1" label="boolean with the octet 0x00 being false and octet 0x01 being true"/>]
+*/
+
 static unsigned char* encoded_bytes;
 static size_t encoded_byte_count;
 static char actual_stringified_encoded[8192];
@@ -7547,6 +7551,28 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(source);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+		TEST_METHOD(when_encoder_output_fails_amqpvalue_encode_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.ValidateArgument(1).ExpectedAtLeastTimes(1).SetReturn(1);
+
+			// act
+			int result = amqpvalue_encode(source, test_encoder_output, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_269: [If value or encoder_output are NULL, amqpvalue_encode shall fail and return a non-zero value.] */
 		TEST_METHOD(amqpvalue_encode_with_NULL_value_fails)
 		{
@@ -7570,6 +7596,176 @@ BEGIN_TEST_SUITE(connection_unittests)
 
 			// act
 			int result = amqpvalue_encode(source, NULL, test_context);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_272: [<encoding name="true" code="0x41" category="fixed" width="0" label="the boolean value true"/>] */
+		TEST_METHOD(amqpvalue_encode_boolean_true_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_boolean(true);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.ValidateArgument(1);
+			WHEN_CALLED(mocks, test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+
+			// act
+			int result = amqpvalue_encode(source, test_encoder_output, NULL);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			stringify_bytes(encoded_bytes, encoded_byte_count, actual_stringified_encoded);
+			ASSERT_ARE_EQUAL(char_ptr, "[0x41]", actual_stringified_encoded);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_273: [<encoding name="false" code="0x42" category="fixed" width="0" label="the boolean value false"/>] */
+		TEST_METHOD(amqpvalue_encode_boolean_false_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_boolean(false);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.ValidateArgument(1);
+			WHEN_CALLED(mocks, test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+
+			// act
+			int result = amqpvalue_encode(source, test_encoder_output, NULL);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			stringify_bytes(encoded_bytes, encoded_byte_count, actual_stringified_encoded);
+			ASSERT_ARE_EQUAL(char_ptr, "[0x42]", actual_stringified_encoded);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_273: [<encoding name="false" code="0x42" category="fixed" width="0" label="the boolean value false"/>] */
+		TEST_METHOD(when_encoder_output_fails_amqpvalue_encode_boolean_false_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_boolean(false);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.ValidateArgument(1).SetReturn(1);
+
+			// act
+			int result = amqpvalue_encode(source, test_encoder_output, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_273: [<encoding name="false" code="0x42" category="fixed" width="0" label="the boolean value false"/>] */
+		TEST_METHOD(when_encoder_output_fails_amqpvalue_encode_boolean_true_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_boolean(true);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.ValidateArgument(1).SetReturn(1);
+
+			// act
+			int result = amqpvalue_encode(source, test_encoder_output, NULL);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_275: [<encoding code="0x50" category="fixed" width="1" label="8-bit unsigned integer"/>] */
+		TEST_METHOD(amqpvalue_encode_ubyte_0x00_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_ubyte(0x00);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.ValidateArgument(1);
+			WHEN_CALLED(mocks, test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+
+			// act
+			int result = amqpvalue_encode(source, test_encoder_output, NULL);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			stringify_bytes(encoded_bytes, encoded_byte_count, actual_stringified_encoded);
+			ASSERT_ARE_EQUAL(char_ptr, "[0x50,0x00]", actual_stringified_encoded);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_275: [<encoding code="0x50" category="fixed" width="1" label="8-bit unsigned integer"/>] */
+		TEST_METHOD(amqpvalue_encode_ubyte_0xFF_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_ubyte(0xFF);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.ValidateArgument(1);
+			WHEN_CALLED(mocks, test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+
+			// act
+			int result = amqpvalue_encode(source, test_encoder_output, NULL);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			stringify_bytes(encoded_bytes, encoded_byte_count, actual_stringified_encoded);
+			ASSERT_ARE_EQUAL(char_ptr, "[0x50,0xFF]", actual_stringified_encoded);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_275: [<encoding code="0x50" category="fixed" width="1" label="8-bit unsigned integer"/>] */
+		TEST_METHOD(when_encoder_output_fails_amqpvalue_encode_ubyte_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_ubyte(0xFF);
+			mocks.ResetAllCalls();
+
+			WHEN_CALLED(mocks, test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.IgnoreAllCalls().SetReturn(1);
+
+			// act
+			int result = amqpvalue_encode(source, test_encoder_output, NULL);
 
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);

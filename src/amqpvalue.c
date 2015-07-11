@@ -6,6 +6,10 @@
 #include "amqpvalue.h"
 #include "amqpalloc.h"
 
+/* Requirements satisfied by the current implementation without any code:
+Codes_SRS_AMQPVALUE_01_270: [<encoding code="0x56" category="fixed" width="1" label="boolean with the octet 0x00 being false and octet 0x01 being true"/>]
+*/
+
 typedef struct AMQP_LIST_VALUE_TAG
 {
 	AMQP_VALUE* items;
@@ -2007,7 +2011,62 @@ static int output_bytes(ENCODER_OUTPUT encoder_output, void* context, const void
 
 	if (encoder_output != NULL)
 	{
+		/* Codes_SRS_AMQPVALUE_01_267: [amqpvalue_encode shall pass the encoded bytes to the encoder_output function.] */
+		/* Codes_SRS_AMQPVALUE_01_268: [On each call to the encoder_output function, amqpvalue_encode shall also pass the context argument.] */
 		result = encoder_output(context, bytes, length);
+	}
+	else
+	{
+		result = 0;
+	}
+
+	return result;
+}
+
+static int encode_boolean(ENCODER_OUTPUT encoder_output, void* context, bool value)
+{
+	int result;
+
+	if (value == false)
+	{
+		/* Codes_SRS_AMQPVALUE_01_273: [<encoding name="false" code="0x42" category="fixed" width="0" label="the boolean value false"/>] */
+		if (output_byte(encoder_output, context, 0x42) != 0)
+		{
+			/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
+	}
+	else
+	{
+		/* Codes_SRS_AMQPVALUE_01_272: [<encoding name="true" code="0x41" category="fixed" width="0" label="the boolean value true"/>] */
+		if (output_byte(encoder_output, context, 0x41) != 0)
+		{
+			/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+static int encode_ubyte(ENCODER_OUTPUT encoder_output, void* context, unsigned char value)
+{
+	int result;
+
+	/* Codes_SRS_AMQPVALUE_01_275: [<encoding code="0x50" category="fixed" width="1" label="8-bit unsigned integer"/>] */
+	if ((output_byte(encoder_output, context, 0x50) != 0) ||
+		(output_byte(encoder_output, context, value) != 0))
+	{
+		/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+		result = __LINE__;
 	}
 	else
 	{
@@ -2113,39 +2172,6 @@ static int encode_ulong(ENCODER_OUTPUT encoder_output, void* context, uint64_t v
 	return result;
 }
 
-static int encode_bool(ENCODER_OUTPUT encoder_output, void* context, bool value)
-{
-	int result;
-
-	if (value == false)
-	{
-		/* false */
-		output_byte(encoder_output, context, 0x42);
-	}
-	else
-	{
-		/* true */
-		output_byte(encoder_output, context, 0x41);
-	}
-
-	result = 0;
-
-	return result;
-}
-
-static int encode_ubyte(ENCODER_OUTPUT encoder_output, void* context, unsigned char value)
-{
-	int result;
-
-	/* ubyte */
-	output_byte(encoder_output, context, 0x50);
-	output_byte(encoder_output, context, value);
-
-	result = 0;
-
-	return result;
-}
-
 static int encode_uint(ENCODER_OUTPUT encoder_output, void* context, uint32_t value)
 {
 	int result;
@@ -2203,6 +2229,7 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 		switch (value_data->type)
 		{
 		default:
+			/* Codes_SRS_AMQPVALUE_01_271: [If encoding fails due to any error not specifically mentioned here, it shall return a non-zero value.] */
 			result = __LINE__;
 			break;
 
@@ -2219,6 +2246,34 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 			}
 
 			break;
+
+		case AMQP_TYPE_BOOL:
+		{
+			if (encode_boolean(encoder_output, context, value_data->value.bool_value) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+
+			break;
+		}
+
+		case AMQP_TYPE_UBYTE:
+		{
+			if (encode_ubyte(encoder_output, context, value_data->value.ubyte_value) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+
+			break;
+		}
 
 		case AMQP_TYPE_COMPOSITE:
 		case AMQP_TYPE_DESCRIBED:
@@ -2261,36 +2316,6 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 				result = 0;
 			}
 
-			break;
-		}
-
-		case AMQP_TYPE_BOOL:
-		{
-			bool bool_value;
-			if ((amqpvalue_get_boolean(value, &bool_value) != 0) ||
-				(encode_bool(encoder_output, context, bool_value) != 0))
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				result = 0;
-			}
-			break;
-		}
-
-		case AMQP_TYPE_UBYTE:
-		{
-			unsigned char ubyte_value;
-			if ((amqpvalue_get_ubyte(value, &ubyte_value) != 0) ||
-				(encode_ubyte(encoder_output, context, ubyte_value) != 0))
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				result = 0;
-			}
 			break;
 		}
 

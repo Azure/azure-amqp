@@ -1632,6 +1632,33 @@ bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 
 				break;
 			}
+			case AMQP_TYPE_MAP:
+			{
+				/* Codes_SRS_AMQPVALUE_01_233: [- map: compare map pair count and each key/value pair.] */
+				if (value1_data->value.map_value.pair_count != value2_data->value.map_value.pair_count)
+				{
+					result = false;
+				}
+				else
+				{
+					uint32_t i;
+
+					/* Codes_SRS_AMQPVALUE_01_126: [Unless known to be otherwise, maps MUST be considered to be ordered, that is, the order of the key-value pairs is semantically important and two maps which are different only in the order in which their key-value pairs are encoded are not equal.] */
+					for (i = 0; i < value1_data->value.map_value.pair_count; i++)
+					{
+						/* Codes_SRS_AMQPVALUE_01_234: [Nesting shall be considered in comparison.] */
+						if ((!amqpvalue_are_equal(value1_data->value.map_value.pairs[i].key, value2_data->value.map_value.pairs[i].key)) ||
+							(!amqpvalue_are_equal(value1_data->value.map_value.pairs[i].value, value2_data->value.map_value.pairs[i].value)))
+						{
+							break;
+						}
+					}
+
+					result = (i == value1_data->value.map_value.pair_count);
+				}
+
+				break;
+			}
 			}
 		}
 	}
@@ -1730,17 +1757,6 @@ static void amqpvalue_clear(AMQP_VALUE_DATA* value_data)
 	{
 	default:
 		break;
-	case AMQP_TYPE_LIST:
-	{
-		size_t i;
-		for (i = 0; i < value_data->value.list_value.count; i++)
-		{
-			amqpvalue_destroy(value_data->value.list_value.items[i]);
-		}
-
-		amqpalloc_free(value_data->value.list_value.items);
-		break;
-	}
 	case AMQP_TYPE_BINARY:
 		if (value_data->value.binary_value.bytes != NULL)
 		{
@@ -1753,6 +1769,29 @@ static void amqpvalue_clear(AMQP_VALUE_DATA* value_data)
 			amqpalloc_free(value_data->value.string_value.chars);
 		}
 		break;
+	case AMQP_TYPE_LIST:
+	{
+		size_t i;
+		for (i = 0; i < value_data->value.list_value.count; i++)
+		{
+			amqpvalue_destroy(value_data->value.list_value.items[i]);
+		}
+
+		amqpalloc_free(value_data->value.list_value.items);
+		break;
+	}
+	case AMQP_TYPE_MAP:
+	{
+		size_t i;
+		for (i = 0; i < value_data->value.map_value.pair_count; i++)
+		{
+			amqpvalue_destroy(value_data->value.map_value.pairs[i].key);
+			amqpvalue_destroy(value_data->value.map_value.pairs[i].value);
+		}
+
+		amqpalloc_free(value_data->value.map_value.pairs);
+		break;
+	}
 	case AMQP_TYPE_COMPOSITE:
 	case AMQP_TYPE_DESCRIBED:
 		amqpvalue_destroy(value_data->value.described_value.descriptor);
@@ -1879,31 +1918,6 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 			result = amqpvalue_create_null();
 			break;
 
-		case AMQP_TYPE_LIST:
-		{
-			uint32_t list_size;
-			if (amqpvalue_get_list_item_count(value, &list_size) != 0)
-			{
-				result = NULL;
-			}
-			else
-			{
-				uint32_t i;
-				result = amqpvalue_create_list();
-				for (i = 0; i < list_size; i++)
-				{
-					amqpvalue_set_list_item(result, i, value_data->value.list_value.items[i]);
-				}
-
-				if (i < list_size)
-				{
-					amqpvalue_destroy(result);
-					result = NULL;
-				}
-			}
-			break;
-		}
-
 		case AMQP_TYPE_STRING:
 			result = amqpvalue_create_string(value_data->value.string_value.chars);
 			break;
@@ -1935,6 +1949,46 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 		case AMQP_TYPE_BINARY:
 			result = amqpvalue_create_binary(value_data->value.binary_value);
 			break;
+		case AMQP_TYPE_LIST:
+		{
+			uint32_t list_size;
+			if (amqpvalue_get_list_item_count(value, &list_size) != 0)
+			{
+				result = NULL;
+			}
+			else
+			{
+				uint32_t i;
+				result = amqpvalue_create_list();
+				for (i = 0; i < list_size; i++)
+				{
+					amqpvalue_set_list_item(result, i, value_data->value.list_value.items[i]);
+				}
+
+				if (i < list_size)
+				{
+					amqpvalue_destroy(result);
+					result = NULL;
+				}
+			}
+			break;
+		}
+		case AMQP_TYPE_MAP:
+		{
+			uint32_t i;
+			result = amqpvalue_create_map();
+			for (i = 0; i < value_data->value.map_value.pair_count; i++)
+			{
+				amqpvalue_set_map_value(result, value_data->value.map_value.pairs[i].key, value_data->value.map_value.pairs[i].value);
+			}
+
+			if (i < value_data->value.map_value.pair_count)
+			{
+				amqpvalue_destroy(result);
+				result = NULL;
+			}
+			break;
+		}
 		}
 	}
 

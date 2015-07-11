@@ -5318,4 +5318,297 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(inner_item2);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
+		/* Tests_SRS_AMQPVALUE_01_233: [- map: compare map pair count and each key/value pair.] */
+		TEST_METHOD(for_2_empty_map_values_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_map();
+			AMQP_VALUE value2 = amqpvalue_create_map();
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
+		/* Tests_SRS_AMQPVALUE_01_233: [- map: compare map pair count and each key/value pair.] */
+		TEST_METHOD(for_2_maps_with_one_null_key_and_null_value_item_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_map();
+			AMQP_VALUE value2 = amqpvalue_create_map();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_map_value(value1, null_value, null_value);
+			(void)amqpvalue_set_map_value(value2, null_value, null_value);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(null_value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
+		/* Tests_SRS_AMQPVALUE_01_233: [- map: compare map pair count and each key/value pair.] */
+		TEST_METHOD(for_2_maps_with_one_pair_each_where_key_is_different_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_map();
+			AMQP_VALUE value2 = amqpvalue_create_map();
+			AMQP_VALUE pair_value = amqpvalue_create_uint(42);
+			AMQP_VALUE key1 = amqpvalue_create_uint(42);
+			AMQP_VALUE key2 = amqpvalue_create_uint(43);
+			(void)amqpvalue_set_map_value(value1, key1, pair_value);
+			(void)amqpvalue_set_map_value(value2, key2, pair_value);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(pair_value);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(key2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
+		/* Tests_SRS_AMQPVALUE_01_233: [- map: compare map pair count and each key/value pair.] */
+		TEST_METHOD(for_2_maps_with_one_pair_each_where_value_is_different_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_map();
+			AMQP_VALUE value2 = amqpvalue_create_map();
+			AMQP_VALUE pair_value1 = amqpvalue_create_uint(42);
+			AMQP_VALUE pair_value2 = amqpvalue_create_uint(43);
+			AMQP_VALUE key = amqpvalue_create_uint(42);
+			(void)amqpvalue_set_map_value(value1, key, pair_value1);
+			(void)amqpvalue_set_map_value(value2, key, pair_value2);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(pair_value1);
+			amqpvalue_destroy(pair_value2);
+			amqpvalue_destroy(key);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
+		/* Tests_SRS_AMQPVALUE_01_233: [- map: compare map pair count and each key/value pair.] */
+		TEST_METHOD(for_2_maps_with_one_pair_each_where_key_and_value_are_equal_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_map();
+			AMQP_VALUE value2 = amqpvalue_create_map();
+			AMQP_VALUE pair_value = amqpvalue_create_uint(42);
+			AMQP_VALUE key = amqpvalue_create_uint(42);
+			(void)amqpvalue_set_map_value(value1, key, pair_value);
+			(void)amqpvalue_set_map_value(value2, key, pair_value);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(pair_value);
+			amqpvalue_destroy(key);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
+		/* Tests_SRS_AMQPVALUE_01_233: [- map: compare map pair count and each key/value pair.] */
+		TEST_METHOD(for_2_maps_with_different_pair_count_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_map();
+			AMQP_VALUE value2 = amqpvalue_create_map();
+			AMQP_VALUE pair_value = amqpvalue_create_uint(42);
+			AMQP_VALUE key1 = amqpvalue_create_uint(42);
+			AMQP_VALUE key2 = amqpvalue_create_uint(43);
+			(void)amqpvalue_set_map_value(value1, key1, pair_value);
+			(void)amqpvalue_set_map_value(value2, key1, pair_value);
+			(void)amqpvalue_set_map_value(value2, key2, pair_value);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(pair_value);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(key2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
+		/* Tests_SRS_AMQPVALUE_01_233: [- map: compare map pair count and each key/value pair.] */
+		TEST_METHOD(for_2_maps_with_2_equal_pairs_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_map();
+			AMQP_VALUE value2 = amqpvalue_create_map();
+			AMQP_VALUE pair_value = amqpvalue_create_uint(42);
+			AMQP_VALUE key1 = amqpvalue_create_uint(42);
+			AMQP_VALUE key2 = amqpvalue_create_uint(43);
+			(void)amqpvalue_set_map_value(value1, key1, pair_value);
+			(void)amqpvalue_set_map_value(value1, key2, pair_value);
+			(void)amqpvalue_set_map_value(value2, key1, pair_value);
+			(void)amqpvalue_set_map_value(value2, key2, pair_value);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(pair_value);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(key2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
+		/* Tests_SRS_AMQPVALUE_01_233: [- map: compare map pair count and each key/value pair.] */
+		/* Tests_SRS_AMQPVALUE_01_126: [Unless known to be otherwise, maps MUST be considered to be ordered, that is, the order of the key-value pairs is semantically important and two maps which are different only in the order in which their key-value pairs are encoded are not equal.] */
+		TEST_METHOD(for_2_maps_with_2_equal_pairs_out_of_order_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_map();
+			AMQP_VALUE value2 = amqpvalue_create_map();
+			AMQP_VALUE pair_value = amqpvalue_create_uint(42);
+			AMQP_VALUE key1 = amqpvalue_create_uint(42);
+			AMQP_VALUE key2 = amqpvalue_create_uint(43);
+			(void)amqpvalue_set_map_value(value1, key1, pair_value);
+			(void)amqpvalue_set_map_value(value1, key2, pair_value);
+			(void)amqpvalue_set_map_value(value2, key2, pair_value);
+			(void)amqpvalue_set_map_value(value2, key1, pair_value);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(pair_value);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(key2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_234: [Nesting shall be considered in comparison.] */
+		TEST_METHOD(when_inner_maps_are_equal_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_map();
+			AMQP_VALUE value2 = amqpvalue_create_map();
+			AMQP_VALUE key = amqpvalue_create_uint(42);
+			AMQP_VALUE inner_map1 = amqpvalue_create_map();
+			AMQP_VALUE inner_map2 = amqpvalue_create_map();
+			(void)amqpvalue_set_map_value(value1, key, inner_map1);
+			(void)amqpvalue_set_map_value(value2, key, inner_map2);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(key);
+			amqpvalue_destroy(inner_map1);
+			amqpvalue_destroy(inner_map2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_234: [Nesting shall be considered in comparison.] */
+		TEST_METHOD(when_inner_maps_are_equal_not_are_not_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_map();
+			AMQP_VALUE value2 = amqpvalue_create_map();
+			AMQP_VALUE key = amqpvalue_create_uint(42);
+			AMQP_VALUE pair_value = amqpvalue_create_uint(43);
+			AMQP_VALUE inner_map1 = amqpvalue_create_map();
+			AMQP_VALUE inner_map2 = amqpvalue_create_map();
+			(void)amqpvalue_set_map_value(inner_map1, key, pair_value);
+			(void)amqpvalue_set_map_value(value1, key, inner_map1);
+			(void)amqpvalue_set_map_value(value2, key, inner_map2);
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+			amqpvalue_destroy(key);
+			amqpvalue_destroy(pair_value);
+			amqpvalue_destroy(inner_map1);
+			amqpvalue_destroy(inner_map2);
+		}
+
 END_TEST_SUITE(connection_unittests)

@@ -1,8 +1,30 @@
+#include <stdio.h>
 #include "testrunnerswitcher.h"
 #include "micromock.h"
 #include "amqpvalue.h"
 
-bool fail_alloc_calls;
+static unsigned char* encoded_bytes;
+static size_t encoded_byte_count;
+static char actual_stringified_encoded[8192];
+
+void stringify_bytes(const unsigned char* bytes, size_t byte_count, char* output_string)
+{
+	size_t i;
+	size_t pos = 0;
+
+	output_string[pos++] = '[';
+	for (i = 0; i < byte_count; i++)
+	{
+		(void)sprintf(&output_string[pos], "0x%02X", bytes[i]);
+		if (i < byte_count - 1)
+		{
+			strcat(output_string, ",");
+		}
+		pos = strlen(output_string);
+	}
+	output_string[pos++] = ']';
+	output_string[pos++] = '\0';
+}
 
 TYPED_MOCK_CLASS(amqpvalue_mocks, CGlobalMock)
 {
@@ -15,6 +37,16 @@ public:
 	MOCK_STATIC_METHOD_1(, void, amqpalloc_free, void*, ptr)
 		free(ptr);
 	MOCK_VOID_METHOD_END();
+
+	MOCK_STATIC_METHOD_3(, int, test_encoder_output, void*, context, const void*, bytes, size_t, length)
+		unsigned char* new_bytes = (unsigned char*)realloc(encoded_bytes, encoded_byte_count + length);
+		if (new_bytes != NULL)
+		{
+			encoded_bytes = new_bytes;
+			(void)memcpy(encoded_bytes + encoded_byte_count, bytes, length);
+			encoded_byte_count += length;
+		}
+	MOCK_METHOD_END(int, 0);
 };
 
 extern "C"
@@ -22,7 +54,11 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqpvalue_mocks, , void*, amqpalloc_malloc, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqpvalue_mocks, , void*, amqpalloc_realloc, void*, ptr, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqpvalue_mocks, , void, amqpalloc_free, void*, ptr);
+
+	DECLARE_GLOBAL_MOCK_METHOD_3(amqpvalue_mocks, , int, test_encoder_output, void*, context, const void*, bytes, size_t, length);
 }
+
+static void* test_context = (void*)0x4243;
 
 MICROMOCK_MUTEX_HANDLE test_serialize_mutex;
 
@@ -45,11 +81,17 @@ BEGIN_TEST_SUITE(connection_unittests)
 			{
 				ASSERT_FAIL("Could not acquire test serialization mutex.");
 			}
-			fail_alloc_calls = false;
 		}
 
 		TEST_METHOD_CLEANUP(method_cleanup)
 		{
+			if (encoded_bytes != NULL)
+			{
+				free(encoded_bytes);
+				encoded_bytes = NULL;
+			}
+			encoded_byte_count = 0;
+
 			if (!MicroMockReleaseMutex(test_serialize_mutex))
 			{
 				ASSERT_FAIL("Could not release test serialization mutex.");
@@ -7445,6 +7487,96 @@ BEGIN_TEST_SUITE(connection_unittests)
 			amqpvalue_destroy(value1);
 			amqpvalue_destroy(key2);
 			amqpvalue_destroy(value2);
+		}
+
+		/* amqpvalue_encode */
+
+		/* Tests_SRS_AMQPVALUE_01_265: [amqpvalue_encode shall encode the value per the ISO.] */
+		/* Tests_SRS_AMQPVALUE_01_266: [On success amqpvalue_encode shall return 0.] */
+		/* Tests_SRS_AMQPVALUE_01_267: [amqpvalue_encode shall pass the encoded bytes to the encoder_output function.] */
+		/* Tests_SRS_AMQPVALUE_01_268: [On each call to the encoder_output function, amqpvalue_encode shall also pass the context argument.] */
+		/* Tests_SRS_AMQPVALUE_01_264: [<encoding code="0x40" category="fixed" width="0" label="the null value"/>] */
+		TEST_METHOD(amqpvalue_encode_for_a_null_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, test_encoder_output(test_context, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.ValidateArgument(1).ExpectedAtLeastTimes(1);
+
+			// act
+			int result = amqpvalue_encode(source, test_encoder_output, test_context);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			stringify_bytes(encoded_bytes, encoded_byte_count, actual_stringified_encoded);
+			ASSERT_ARE_EQUAL(char_ptr, "[0x40]", actual_stringified_encoded);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_265: [amqpvalue_encode shall encode the value per the ISO.] */
+		/* Tests_SRS_AMQPVALUE_01_266: [On success amqpvalue_encode shall return 0.] */
+		/* Tests_SRS_AMQPVALUE_01_267: [amqpvalue_encode shall pass the encoded bytes to the encoder_output function.] */
+		/* Tests_SRS_AMQPVALUE_01_268: [On each call to the encoder_output function, amqpvalue_encode shall also pass the context argument.] */
+		/* Tests_SRS_AMQPVALUE_01_264: [<encoding code="0x40" category="fixed" width="0" label="the null value"/>] */
+		TEST_METHOD(amqpvalue_encode_with_NULL_context_is_allowed)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.ValidateArgument(1).ExpectedAtLeastTimes(1);
+
+			// act
+			int result = amqpvalue_encode(source, test_encoder_output, NULL);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			stringify_bytes(encoded_bytes, encoded_byte_count, actual_stringified_encoded);
+			ASSERT_ARE_EQUAL(char_ptr, "[0x40]", actual_stringified_encoded);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_269: [If value or encoder_output are NULL, amqpvalue_encode shall fail and return a non-zero value.] */
+		TEST_METHOD(amqpvalue_encode_with_NULL_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			// act
+			int result = amqpvalue_encode(NULL, test_encoder_output, test_context);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_269: [If value or encoder_output are NULL, amqpvalue_encode shall fail and return a non-zero value.] */
+		TEST_METHOD(amqpvalue_encode_with_NULL_encoder_output_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_encode(source, NULL, test_context);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
 		}
 
 END_TEST_SUITE(connection_unittests)

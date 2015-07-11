@@ -1556,75 +1556,93 @@ bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 			default:
 				result = false;
 				break;
+
 			case AMQP_TYPE_NULL:
 				/* Codes_SRS_AMQPVALUE_01_210: [- null: always equal.] */
 				result = true;
 				break;
+
 			case AMQP_TYPE_BOOL:
 				/* Codes_SRS_AMQPVALUE_01_211: [- boolean: compare the bool content.] */
 				result = (value1_data->value.bool_value == value2_data->value.bool_value);
 				break;
+
 			case AMQP_TYPE_UBYTE:
 				/* Codes_SRS_AMQPVALUE_01_212: [- ubyte: compare the unsigned char content.] */
 				result = (value1_data->value.ubyte_value == value2_data->value.ubyte_value);
 				break;
+
 			case AMQP_TYPE_USHORT:
 				/* Codes_SRS_AMQPVALUE_01_213: [- ushort: compare the uint16_t content.] */
 				result = (value1_data->value.ushort_value == value2_data->value.ushort_value);
 				break;
+
 			case AMQP_TYPE_UINT:
 				/* Codes_SRS_AMQPVALUE_01_214: [- uint: compare the uint32_t content.] */
 				result = (value1_data->value.uint_value == value2_data->value.uint_value);
 				break;
+
 			case AMQP_TYPE_ULONG:
 				/* Codes_SRS_AMQPVALUE_01_215: [- ulong: compare the uint64_t content.] */
 				result = (value1_data->value.ulong_value == value2_data->value.ulong_value);
 				break;
+
 			case AMQP_TYPE_BYTE:
 				/* Codes_SRS_AMQPVALUE_01_216: [- byte: compare the char content.] */
 				result = (value1_data->value.byte_value == value2_data->value.byte_value);
 				break;
+
 			case AMQP_TYPE_SHORT:
 				/* Codes_SRS_AMQPVALUE_01_217: [- short: compare the int16_t content.] */
 				result = (value1_data->value.short_value == value2_data->value.short_value);
 				break;
+
 			case AMQP_TYPE_INT:
 				/* Codes_SRS_AMQPVALUE_01_218: [- int: compare the int32_t content.] */
 				result = (value1_data->value.int_value == value2_data->value.int_value);
 				break;
+
 			case AMQP_TYPE_LONG:
 				/* Codes_SRS_AMQPVALUE_01_219: [- long: compare the int64_t content.] */
 				result = (value1_data->value.long_value == value2_data->value.long_value);
 				break;
+
 			case AMQP_TYPE_FLOAT:
 				/* Codes_SRS_AMQPVALUE_01_224: [- float: compare the float content.] */
 				result = (value1_data->value.float_value == value2_data->value.float_value);
 				break;
+
 			case AMQP_TYPE_DOUBLE:
 				/* Codes_SRS_AMQPVALUE_01_225: [- double: compare the double content.] */
 				result = (value1_data->value.double_value == value2_data->value.double_value);
 				break;
+
 			case AMQP_TYPE_CHAR:
 				/* Codes_SRS_AMQPVALUE_01_226: [- char: compare the UNICODE character.] */
 				result = (value1_data->value.char_value == value2_data->value.char_value);
 				break;
+
 			case AMQP_TYPE_TIMESTAMP:
 				/* Codes_SRS_AMQPVALUE_01_227: [- timestamp: compare the underlying 64 bit integer.] */
 				result = (value1_data->value.timestamp_value == value2_data->value.timestamp_value);
 				break;
+
 			case AMQP_TYPE_UUID:
 				/* Codes_SRS_AMQPVALUE_01_228: [- uuid: compare all uuid bytes.] */
 				result = (memcmp(value1_data->value.uuid_value, value2_data->value.uuid_value, sizeof(value1_data->value.uuid_value)) == 0);
 				break;
+
 			case AMQP_TYPE_BINARY:
 				/* Codes_SRS_AMQPVALUE_01_229: [- binary: compare all binary bytes.] */
 				result = (value1_data->value.binary_value.length == value2_data->value.binary_value.length) &&
 					(memcmp(value1_data->value.binary_value.bytes, value2_data->value.binary_value.bytes, value1_data->value.binary_value.length) == 0);
 				break;
+
 			case AMQP_TYPE_STRING:
 				/* Codes_SRS_AMQPVALUE_01_230: [- string: compare all string characters.] */
 				result = (strcmp(value1_data->value.string_value.chars, value2_data->value.string_value.chars) == 0);
 				break;
+
 			case AMQP_TYPE_LIST:
 			{
 				/* Codes_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
@@ -1684,88 +1702,248 @@ bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 	return result;
 }
 
-AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value)
+AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 {
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
-	if (result != NULL)
-	{
-		result->type = AMQP_TYPE_DESCRIBED;
-		result->value.described_value.descriptor = descriptor;
-		result->value.described_value.value = value;
-	}
-	return result;
-}
+	AMQP_VALUE result;
 
-AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size)
-{
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
-	if (result != NULL)
+	if (value == NULL)
 	{
-		result->type = AMQP_TYPE_COMPOSITE;
-		result->value.described_value.descriptor = amqpvalue_clone(descriptor);
-		if (result->value.described_value.descriptor == NULL)
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		switch (value_data->type)
 		{
-			free(result);
+		default:
 			result = NULL;
-		}
-		else
+			break;
+
+		case AMQP_TYPE_NULL:
+			/* Codes_SRS_AMQPVALUE_01_237: [null] */
+			result = amqpvalue_create_null();
+			break;
+
+		case AMQP_TYPE_BOOL:
+			/* Codes_SRS_AMQPVALUE_01_238: [boolean] */
+			result = amqpvalue_create_boolean(value_data->value.bool_value);
+			break;
+
+		case AMQP_TYPE_UBYTE:
+			/* Codes_SRS_AMQPVALUE_01_239: [ubyte] */
+			result = amqpvalue_create_ubyte(value_data->value.ubyte_value);
+			break;
+
+		case AMQP_TYPE_USHORT:
+			/* Codes_SRS_AMQPVALUE_01_240: [ushort] */
+			result = amqpvalue_create_ushort(value_data->value.ushort_value);
+			break;
+
+		case AMQP_TYPE_UINT:
+			/* Codes_SRS_AMQPVALUE_01_241: [uint] */
+			result = amqpvalue_create_uint(value_data->value.uint_value);
+			break;
+
+		case AMQP_TYPE_ULONG:
+			/* Codes_SRS_AMQPVALUE_01_242: [ulong] */
+			result = amqpvalue_create_ulong(value_data->value.ulong_value);
+			break;
+
+		case AMQP_TYPE_BYTE:
+			/* Codes_SRS_AMQPVALUE_01_243: [byte] */
+			result = amqpvalue_create_byte(value_data->value.byte_value);
+			break;
+
+		case AMQP_TYPE_SHORT:
+			/* Codes_SRS_AMQPVALUE_01_244: [short] */
+			result = amqpvalue_create_short(value_data->value.short_value);
+			break;
+
+		case AMQP_TYPE_INT:
+			/* Codes_SRS_AMQPVALUE_01_245: [int] */
+			result = amqpvalue_create_int(value_data->value.int_value);
+			break;
+
+		case AMQP_TYPE_LONG:
+			/* Codes_SRS_AMQPVALUE_01_246: [long] */
+			result = amqpvalue_create_long(value_data->value.long_value);
+			break;
+
+		case AMQP_TYPE_FLOAT:
+			/* Codes_SRS_AMQPVALUE_01_247: [float] */
+			result = amqpvalue_create_float(value_data->value.float_value);
+			break;
+
+		case AMQP_TYPE_DOUBLE:
+			/* Codes_SRS_AMQPVALUE_01_248: [double] */
+			result = amqpvalue_create_double(value_data->value.double_value);
+			break;
+
+		case AMQP_TYPE_CHAR:
+			/* Codes_SRS_AMQPVALUE_01_252: [char] */
+			result = amqpvalue_create_char(value_data->value.char_value);
+			break;
+
+		case AMQP_TYPE_TIMESTAMP:
+			/* Codes_SRS_AMQPVALUE_01_253: [timestamp] */
+			result = amqpvalue_create_timestamp(value_data->value.timestamp_value);
+			break;
+
+		case AMQP_TYPE_UUID:
+			/* Codes_SRS_AMQPVALUE_01_254: [uuid] */
+			result = amqpvalue_create_uuid(value_data->value.uuid_value);
+			break;
+
+		case AMQP_TYPE_BINARY:
+			/* Codes_SRS_AMQPVALUE_01_255: [binary] */
+			result = amqpvalue_create_binary(value_data->value.binary_value);
+			break;
+
+		case AMQP_TYPE_STRING:
+			/* Codes_SRS_AMQPVALUE_01_256: [string] */
+			result = amqpvalue_create_string(value_data->value.string_value.chars);
+			break;
+
+		case AMQP_TYPE_LIST:
 		{
-			result->value.described_value.value = amqpvalue_create_list();
-			if (result->value.described_value.value == NULL)
+			/* Codes_SRS_AMQPVALUE_01_258: [list] */
+			uint32_t i;
+			AMQP_VALUE_DATA* result_data = amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+			result_data->type = AMQP_TYPE_LIST;
+			result_data->value.list_value.count = value_data->value.list_value.count;
+
+			if (value_data->value.list_value.count > 0)
 			{
-				amqpvalue_destroy(result->value.described_value.descriptor);
-				free(result);
+				result_data->value.list_value.items = (AMQP_VALUE*)amqpalloc_malloc(value_data->value.list_value.count * sizeof(AMQP_VALUE));
+
+				for (i = 0; i < value_data->value.list_value.count; i++)
+				{
+					result_data->value.list_value.items[i] = amqpvalue_clone(value_data->value.list_value.items[i]);
+					if (result_data->value.list_value.items[i] == NULL)
+					{
+						break;
+					}
+				}
+
+				if (i < value_data->value.list_value.count)
+				{
+					uint32_t j;
+
+					/* destroy all the allocated values to return to theinitial state */
+					for (j = 0; j < i; j++)
+					{
+						amqpvalue_destroy(result_data->value.list_value.items[j]);
+					}
+
+					amqpalloc_free(result_data);
+					result = NULL;
+				}
+				else
+				{
+					result = result_data;
+				}
+			}
+			else
+			{
+				result_data->value.list_value.items = NULL;
+				result = result_data;
+			}
+
+			break;
+		}
+		case AMQP_TYPE_MAP:
+		{
+			/* Codes_SRS_AMQPVALUE_01_259: [map] */
+			uint32_t i;
+			AMQP_VALUE_DATA* result_data = amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+			result_data->type = AMQP_TYPE_MAP;
+			result_data->value.map_value.pair_count = value_data->value.map_value.pair_count;
+
+			if (result_data->value.map_value.pair_count > 0)
+			{
+				result_data->value.map_value.pairs = (AMQP_MAP_KEY_VALUE_PAIR*)amqpalloc_malloc(value_data->value.map_value.pair_count * sizeof(AMQP_MAP_KEY_VALUE_PAIR));
+
+				for (i = 0; i < value_data->value.map_value.pair_count; i++)
+				{
+					result_data->value.map_value.pairs[i].key = amqpvalue_clone(value_data->value.map_value.pairs[i].key);
+					if (result_data->value.map_value.pairs[i].key == NULL)
+					{
+						break;
+					}
+
+					result_data->value.map_value.pairs[i].value = amqpvalue_clone(value_data->value.map_value.pairs[i].value);
+					if (result_data->value.map_value.pairs[i].value == NULL)
+					{
+						amqpvalue_destroy(result_data->value.map_value.pairs[i].key);
+						break;
+					}
+				}
+
+				if (i < value_data->value.map_value.pair_count)
+				{
+					uint32_t j;
+
+					for (j = 0; j < i; j++)
+					{
+						amqpvalue_destroy(result_data->value.map_value.pairs[j].key);
+						amqpvalue_destroy(result_data->value.map_value.pairs[j].value);
+					}
+
+					amqpalloc_free(result_data->value.map_value.pairs);
+					amqpalloc_free(result_data);
+					result = NULL;
+				}
+				else
+				{
+					result = (AMQP_VALUE)result_data;
+				}
+			}
+			else
+			{
+				result_data->value.map_value.pairs = NULL;
+				result = (AMQP_VALUE)result_data;
+			}
+			break;
+		}
+		case AMQP_TYPE_DESCRIBED:
+			result = amqpvalue_create_described(value_data->value.described_value.descriptor, value_data->value.described_value.value);
+			break;
+
+		case AMQP_TYPE_COMPOSITE:
+		{
+			AMQP_VALUE_DATA* result_data = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+			AMQP_VALUE cloned_descriptor;
+			AMQP_VALUE cloned_list;
+
+			if (result_data == NULL)
+			{
+				result = NULL;
+			}
+			else if ((cloned_descriptor = amqpvalue_clone(value_data->value.described_value.descriptor)) == NULL)
+			{
+				free(result_data);
+				result = NULL;
+			}
+			else if ((cloned_list = amqpvalue_clone(value_data->value.described_value.value)) == NULL)
+			{
+				amqpvalue_destroy(cloned_descriptor);
+				free(result_data);
 				result = NULL;
 			}
 			else
 			{
-				if (amqpvalue_set_list_item_count(result->value.described_value.value, list_size) != 0)
-				{
-					amqpvalue_destroy(result->value.described_value.descriptor);
-					amqpvalue_destroy(result->value.described_value.value);
-					free(result);
-					result = NULL;
-				}
+				result_data->value.described_value.descriptor = cloned_descriptor;
+				result_data->value.described_value.value = cloned_list;
+				result_data->type = AMQP_TYPE_COMPOSITE;
+
+				result = (AMQP_VALUE)result_data;
 			}
+			break;
+		}
 		}
 	}
 
-	return result;
-}
-
-AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor)
-{
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
-	if (result != NULL)
-	{
-		AMQP_VALUE descriptor_ulong_value = amqpvalue_create_ulong(descriptor);
-		if (descriptor_ulong_value == NULL)
-		{
-			amqpalloc_free(result);
-			result = NULL;
-		}
-		else
-		{
-			result->type = AMQP_TYPE_COMPOSITE;
-			result->value.described_value.descriptor = descriptor_ulong_value;
-			if (result->value.described_value.descriptor == NULL)
-			{
-				amqpalloc_free(descriptor_ulong_value);
-				amqpalloc_free(result);
-				result = NULL;
-			}
-			else
-			{
-				result->value.described_value.value = amqpvalue_create_list();
-				if (result->value.described_value.value == NULL)
-				{
-					amqpalloc_free(result);
-					result = NULL;
-				}
-			}
-		}
-	}
-
+	/* Codes_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
 	return result;
 }
 
@@ -1879,134 +2057,85 @@ AMQP_VALUE amqpvalue_get_described_value(AMQP_VALUE value)
 	return result;
 }
 
-AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
+AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value)
 {
-	AMQP_VALUE result;
-
-	if (value == NULL)
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
 	{
-		result = NULL;
+		result->type = AMQP_TYPE_DESCRIBED;
+		result->value.described_value.descriptor = descriptor;
+		result->value.described_value.value = value;
 	}
-	else
+	return result;
+}
+
+AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
 	{
-		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		switch (value_data->type)
+		result->type = AMQP_TYPE_COMPOSITE;
+		result->value.described_value.descriptor = amqpvalue_clone(descriptor);
+		if (result->value.described_value.descriptor == NULL)
 		{
-		default:
+			free(result);
 			result = NULL;
-			break;
-
-		case AMQP_TYPE_DESCRIBED:
-			result = amqpvalue_create_described(value_data->value.described_value.descriptor, value_data->value.described_value.value);
-			break;
-
-		case AMQP_TYPE_COMPOSITE:
-		{
-			AMQP_VALUE_DATA* result_data = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
-			AMQP_VALUE cloned_descriptor;
-			AMQP_VALUE cloned_list;
-
-			if (result_data == NULL)
-			{
-				result = NULL;
-			}
-			else if ((cloned_descriptor = amqpvalue_clone(value_data->value.described_value.descriptor)) == NULL)
-			{
-				free(result_data);
-				result = NULL;
-			}
-			else if ((cloned_list = amqpvalue_clone(value_data->value.described_value.value)) == NULL)
-			{
-				amqpvalue_destroy(cloned_descriptor);
-				free(result_data);
-				result = NULL;
-			}
-			else
-			{
-				result_data->value.described_value.descriptor = cloned_descriptor;
-				result_data->value.described_value.value = cloned_list;
-				result_data->type = AMQP_TYPE_COMPOSITE;
-
-				result = (AMQP_VALUE)result_data;
-			}
-			break;
 		}
-
-		case AMQP_TYPE_NULL:
-			result = amqpvalue_create_null();
-			break;
-
-		case AMQP_TYPE_STRING:
-			result = amqpvalue_create_string(value_data->value.string_value.chars);
-			break;
-
-		case AMQP_TYPE_ULONG:
-			result = amqpvalue_create_ulong(value_data->value.ulong_value);
-			break;
-
-		case AMQP_TYPE_UINT:
-			result = amqpvalue_create_uint(value_data->value.uint_value);
-			break;
-
-		case AMQP_TYPE_USHORT:
-			result = amqpvalue_create_ushort(value_data->value.ushort_value);
-			break;
-
-		case AMQP_TYPE_BOOL:
-			result = amqpvalue_create_boolean(value_data->value.bool_value);
-			break;
-
-		case AMQP_TYPE_UBYTE:
-			result = amqpvalue_create_ubyte(value_data->value.ubyte_value);
-			break;
-
-		case AMQP_TYPE_INT:
-			result = amqpvalue_create_int(value_data->value.int_value);
-			break;
-
-		case AMQP_TYPE_BINARY:
-			result = amqpvalue_create_binary(value_data->value.binary_value);
-			break;
-		case AMQP_TYPE_LIST:
+		else
 		{
-			uint32_t list_size;
-			if (amqpvalue_get_list_item_count(value, &list_size) != 0)
+			result->value.described_value.value = amqpvalue_create_list();
+			if (result->value.described_value.value == NULL)
 			{
+				amqpvalue_destroy(result->value.described_value.descriptor);
+				free(result);
 				result = NULL;
 			}
 			else
 			{
-				uint32_t i;
-				result = amqpvalue_create_list();
-				for (i = 0; i < list_size; i++)
+				if (amqpvalue_set_list_item_count(result->value.described_value.value, list_size) != 0)
 				{
-					amqpvalue_set_list_item(result, i, value_data->value.list_value.items[i]);
-				}
-
-				if (i < list_size)
-				{
-					amqpvalue_destroy(result);
+					amqpvalue_destroy(result->value.described_value.descriptor);
+					amqpvalue_destroy(result->value.described_value.value);
+					free(result);
 					result = NULL;
 				}
 			}
-			break;
 		}
-		case AMQP_TYPE_MAP:
-		{
-			uint32_t i;
-			result = amqpvalue_create_map();
-			for (i = 0; i < value_data->value.map_value.pair_count; i++)
-			{
-				amqpvalue_set_map_value(result, value_data->value.map_value.pairs[i].key, value_data->value.map_value.pairs[i].value);
-			}
+	}
 
-			if (i < value_data->value.map_value.pair_count)
+	return result;
+}
+
+AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor)
+{
+	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	if (result != NULL)
+	{
+		AMQP_VALUE descriptor_ulong_value = amqpvalue_create_ulong(descriptor);
+		if (descriptor_ulong_value == NULL)
+		{
+			amqpalloc_free(result);
+			result = NULL;
+		}
+		else
+		{
+			result->type = AMQP_TYPE_COMPOSITE;
+			result->value.described_value.descriptor = descriptor_ulong_value;
+			if (result->value.described_value.descriptor == NULL)
 			{
-				amqpvalue_destroy(result);
+				amqpalloc_free(descriptor_ulong_value);
+				amqpalloc_free(result);
 				result = NULL;
 			}
-			break;
-		}
+			else
+			{
+				result->value.described_value.value = amqpvalue_create_list();
+				if (result->value.described_value.value == NULL)
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+			}
 		}
 	}
 

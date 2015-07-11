@@ -5670,12 +5670,36 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
 			// cleanup
 			amqpvalue_destroy(source);
 			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_237: [null] */
+		TEST_METHOD(when_allocating_cloned_value_fails_amqpvalue_clone_for_a_null_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
@@ -5693,6 +5717,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -5716,6 +5741,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -5739,6 +5765,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -5762,6 +5789,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -5785,6 +5813,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -5808,6 +5837,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -5831,6 +5861,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -5854,6 +5885,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -5877,6 +5909,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -5900,6 +5933,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -5923,6 +5957,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -5946,6 +5981,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -5969,6 +6005,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -5992,6 +6029,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6015,6 +6053,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6038,6 +6077,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6061,6 +6101,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6084,6 +6125,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6107,6 +6149,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6130,6 +6173,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6153,6 +6197,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6176,6 +6221,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6199,6 +6245,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6222,6 +6269,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6245,6 +6293,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6268,6 +6317,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6292,6 +6342,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6316,6 +6367,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6342,6 +6394,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6368,6 +6421,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6392,6 +6446,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6416,6 +6471,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6439,6 +6495,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6466,6 +6523,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6496,6 +6554,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6521,6 +6580,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6557,6 +6617,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 
@@ -6590,6 +6651,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			AMQP_VALUE result = amqpvalue_clone(source);
 
 			// assert
+			ASSERT_IS_NOT_NULL(result);
 			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
 			mocks.AssertActualAndExpectedCalls();
 

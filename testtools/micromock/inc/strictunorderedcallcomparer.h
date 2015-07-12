@@ -61,7 +61,8 @@ public:
     {
         return ((!expectedCall->HasMatch()) &&
                 (expectedCall->m_ExpectedTimes > 0) &&
-                (!expectedCall->m_OnlySpecifiesActions));
+                (!expectedCall->m_OnlySpecifiesActions)) &&
+				(!expectedCall->m_IgnoreAllCalls);
     }
 
     _Must_inspect_result_

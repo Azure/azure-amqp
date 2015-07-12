@@ -2434,31 +2434,42 @@ static int encode_binary(ENCODER_OUTPUT encoder_output, void* context, const uns
 static int encode_string(ENCODER_OUTPUT encoder_output, void* context, const char* value)
 {
 	int result;
-	if (value == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		size_t length = strlen(value);
+	uint32_t length = strlen(value);
 
-		if (length <= 255)
+	if (length <= 255)
+	{
+		/* Codes_SRS_AMQPVALUE_01_299: [<encoding name="str8-utf8" code="0xa1" category="variable" width="1" label="up to 2^8 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
+		if ((output_byte(encoder_output, context, (unsigned char)0xA1) != 0) ||
+			(output_byte(encoder_output, context, (unsigned char)length) != 0) ||
+			(output_bytes(encoder_output, context, value, length) != 0))
 		{
-			output_byte(encoder_output, context, (unsigned char)0xA1);
-			output_byte(encoder_output, context, (unsigned char)length);
-			output_bytes(encoder_output, context, value, length);
+			/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+			result = __LINE__;
 		}
 		else
 		{
-			output_byte(encoder_output, context, 0xB1);
-			output_byte(encoder_output, context, (length >> 24) & 0xFF);
-			output_byte(encoder_output, context, (length >> 16) & 0xFF);
-			output_byte(encoder_output, context, (length >> 8) & 0xFF);
-			output_byte(encoder_output, context, length & 0xFF);
-			output_bytes(encoder_output, context, value, length);
+			/* Codes_SRS_AMQPVALUE_01_266: [On success amqpvalue_encode shall return 0.] */
+			result = 0;
 		}
-
-		result = 0;
+	}
+	else
+	{
+		/* Codes_SRS_AMQPVALUE_01_300: [<encoding name="str32-utf8" code="0xb1" category="variable" width="4" label="up to 2^32 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
+		if ((output_byte(encoder_output, context, 0xB1) != 0) ||
+			(output_byte(encoder_output, context, (length >> 24) & 0xFF) != 0) ||
+			(output_byte(encoder_output, context, (length >> 16) & 0xFF) != 0) ||
+			(output_byte(encoder_output, context, (length >> 8) & 0xFF) != 0) ||
+			(output_byte(encoder_output, context, length & 0xFF) != 0) ||
+			(output_bytes(encoder_output, context, value, length) != 0))
+		{
+			/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_266: [On success amqpvalue_encode shall return 0.] */
+			result = 0;
+		}
 	}
 
 	return result;

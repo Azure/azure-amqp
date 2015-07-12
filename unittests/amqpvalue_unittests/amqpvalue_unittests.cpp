@@ -8200,4 +8200,62 @@ BEGIN_TEST_SUITE(connection_unittests)
 			test_amqp_encode_failure(&mocks, source);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_299: [<encoding name="str8-utf8" code="0xa1" category="variable" width="1" label="up to 2^8 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
+		TEST_METHOD(amqpvalue_encode_string_with_empty_string_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_string("");
+			test_amqp_encode(&mocks, source, "[0xA1,0x00]");
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_299: [<encoding name="str8-utf8" code="0xa1" category="variable" width="1" label="up to 2^8 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
+		TEST_METHOD(amqpvalue_encode_string_with_char_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_string("a");
+			test_amqp_encode(&mocks, source, "[0xA1,0x01,0x61]");
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_299: [<encoding name="str8-utf8" code="0xa1" category="variable" width="1" label="up to 2^8 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
+		TEST_METHOD(amqpvalue_encode_string_with_255_chars_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			char chars[256];
+			int i;
+			for (i = 0; i < 255; i++)
+			{
+				chars[i] = 'a';
+			}
+			chars[255] = '\0';
+			unsigned char expected_bytes[257] = { 0xA1, 0xFF };
+			for (i = 0; i < 255; i++)
+			{
+				expected_bytes[i + 2] = 'a';
+			}
+			AMQP_VALUE source = amqpvalue_create_string(chars);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
+			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_300: [<encoding name="str32-utf8" code="0xb1" category="variable" width="4" label="up to 2^32 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
+		TEST_METHOD(amqpvalue_encode_string_with_256_chars_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			char chars[257];
+			int i;
+			for (i = 0; i < 256; i++)
+			{
+				chars[i] = 'a';
+			}
+			chars[256] = '\0';
+			unsigned char expected_bytes[261] = { 0xB1, 0x00, 0x00, 0x01, 0x00 };
+			for (i = 0; i < 256; i++)
+			{
+				expected_bytes[i + 5] = 'a';
+			}
+			AMQP_VALUE source = amqpvalue_create_string(chars);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
+			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+		}
+
 END_TEST_SUITE(amqpvalue_unittests)

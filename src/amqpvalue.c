@@ -2557,6 +2557,14 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 			result = encode_uuid(encoder_output, context, value_data->value.uuid_value);
 			break;
 
+		case AMQP_TYPE_BINARY:
+			result = encode_binary(encoder_output, context, value_data->value.binary_value.bytes, value_data->value.binary_value.length);
+			break;
+
+		case AMQP_TYPE_STRING:
+			result = encode_string(encoder_output, context, value_data->value.string_value.chars);
+			break;
+
 		case AMQP_TYPE_COMPOSITE:
 		case AMQP_TYPE_DESCRIBED:
 		{
@@ -2570,34 +2578,6 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 			{
 				result = 0;
 			}
-			break;
-		}
-
-		case AMQP_TYPE_STRING:
-			if (encode_string(encoder_output, context, value_data->value.string_value.chars) != 0)
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				result = 0;
-			}
-			break;
-
-		case AMQP_TYPE_BINARY:
-		{
-			amqp_binary binary_value;
-
-			if ((amqpvalue_get_binary(value, &binary_value) != 0) ||
-				(encode_binary(encoder_output, context, binary_value.bytes, binary_value.length) != 0))
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				result = 0;
-			}
-
 			break;
 		}
 

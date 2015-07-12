@@ -8237,6 +8237,21 @@ BEGIN_TEST_SUITE(connection_unittests)
 			test_amqp_encode(&mocks, source, expected_stringified_encoded);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+		TEST_METHOD(when_encoder_output_fails_amqpvalue_encode_string_with_255_chars_fails)
+		{
+			amqpvalue_mocks mocks;
+			char chars[256];
+			int i;
+			for (i = 0; i < 255; i++)
+			{
+				chars[i] = 'a';
+			}
+			chars[255] = '\0';
+			AMQP_VALUE source = amqpvalue_create_string(chars);
+			test_amqp_encode_failure(&mocks, source);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_300: [<encoding name="str32-utf8" code="0xb1" category="variable" width="4" label="up to 2^32 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
 		TEST_METHOD(amqpvalue_encode_string_with_256_chars_succeeds)
 		{
@@ -8257,5 +8272,22 @@ BEGIN_TEST_SUITE(connection_unittests)
 			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
 			test_amqp_encode(&mocks, source, expected_stringified_encoded);
 		}
+
+		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+		TEST_METHOD(when_encoder_output_fails_amqpvalue_encode_string_with_256_chars_fails)
+		{
+			amqpvalue_mocks mocks;
+			char chars[257];
+			int i;
+			for (i = 0; i < 256; i++)
+			{
+				chars[i] = 'a';
+			}
+			chars[256] = '\0';
+			AMQP_VALUE source = amqpvalue_create_string(chars);
+			test_amqp_encode_failure(&mocks, source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_303: [<encoding name="list0" code="0x45" category="fixed" width="0" label="the empty list (i.e. the list with no elements)"/>] */
 
 END_TEST_SUITE(amqpvalue_unittests)

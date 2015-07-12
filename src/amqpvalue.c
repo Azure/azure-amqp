@@ -2475,6 +2475,115 @@ static int encode_string(ENCODER_OUTPUT encoder_output, void* context, const cha
 	return result;
 }
 
+static int encode_list(ENCODER_OUTPUT encoder_output, void* context, uint32_t count, AMQP_VALUE* items)
+{
+	size_t i;
+	int result;
+
+	if (count == 0)
+	{
+		/* Codes_SRS_AMQPVALUE_01_303: [<encoding name="list0" code="0x45" category="fixed" width="0" label="the empty list (i.e. the list with no elements)"/>] */
+		if (output_byte(encoder_output, context, 0x45) != 0)
+		{
+			/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_266: [On success amqpvalue_encode shall return 0.] */
+			result = 0;
+		}
+	}
+	else
+	{
+		uint32_t size = 0;
+
+		/* get the size of all items in the list */
+		for (i = 0; i < count; i++)
+		{
+			size_t item_size;
+			if (amqpvalue_get_encoded_size(items[i], &item_size) != 0)
+			{
+				break;
+			}
+
+			size += item_size;
+		}
+
+		if (i < count)
+		{
+			/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			if ((count <= 255) && (size < 256))
+			{
+				/* Codes_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
+				if ((output_byte(encoder_output, context, 0xC0) != 0) ||
+					/* size */
+					(output_byte(encoder_output, context, (size & 0xFF)) != 0) ||
+					/* count */
+					(output_byte(encoder_output, context, (count & 0xFF)) != 0))
+				{
+					/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+					result = __LINE__;
+				}
+				else
+				{
+					/* Codes_SRS_AMQPVALUE_01_266: [On success amqpvalue_encode shall return 0.] */
+					result = 0;
+				}
+			}
+			else
+			{
+				if ((output_byte(encoder_output, context, 0xD0) != 0) ||
+					/* size */
+					(output_byte(encoder_output, context, (size >> 24) & 0xFF) != 0) ||
+					(output_byte(encoder_output, context, (size >> 16) & 0xFF) != 0) ||
+					(output_byte(encoder_output, context, (size >> 8) & 0xFF) != 0) ||
+					(output_byte(encoder_output, context, size & 0xFF) != 0) ||
+					/* count */
+					(output_byte(encoder_output, context, (count >> 24) & 0xFF) != 0) ||
+					(output_byte(encoder_output, context, (count >> 16) & 0xFF) != 0) ||
+					(output_byte(encoder_output, context, (count >> 8) & 0xFF) != 0) ||
+					(output_byte(encoder_output, context, count & 0xFF) != 0))
+				{
+					/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+					result = __LINE__;
+				}
+				else
+				{
+					/* Codes_SRS_AMQPVALUE_01_266: [On success amqpvalue_encode shall return 0.] */
+					result = 0;
+				}
+			}
+
+			if (result == 0)
+			{
+				for (i = 0; i < count; i++)
+				{
+					if (amqpvalue_encode(items[i], encoder_output, context) != 0)
+					{
+						break;
+					}
+				}
+
+				if (i < count)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
 static int encode_descriptor_header(ENCODER_OUTPUT encoder_output, void* context)
 {
 	int result;
@@ -2582,61 +2691,8 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 		}
 
 		case AMQP_TYPE_LIST:
-		{
-			size_t i;
-			uint32_t size = 0;
-			AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-			size_t item_count = value_data->value.list_value.count;
-
-			output_byte(encoder_output, context, 0xD0);
-
-			for (i = 0; i < item_count; i++)
-			{
-				size_t item_size;
-				if (amqpvalue_get_encoded_size(value_data->value.list_value.items[i], &item_size) != 0)
-				{
-					break;
-				}
-
-				size += item_size;
-			}
-
-			if (i < item_count)
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				output_byte(encoder_output, context, (size >> 24) & 0xFF);
-				output_byte(encoder_output, context, (size >> 16) & 0xFF);
-				output_byte(encoder_output, context, (size >> 8) & 0xFF);
-				output_byte(encoder_output, context, size & 0xFF);
-
-				output_byte(encoder_output, context, (item_count >> 24) & 0xFF);
-				output_byte(encoder_output, context, (item_count >> 16) & 0xFF);
-				output_byte(encoder_output, context, (item_count >> 8) & 0xFF);
-				output_byte(encoder_output, context, item_count & 0xFF);
-
-				for (i = 0; i < item_count; i++)
-				{
-					if (amqpvalue_encode(value_data->value.list_value.items[i], encoder_output, context) != 0)
-					{
-						break;
-					}
-				}
-
-				if (i < item_count)
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					result = 0;
-				}
-			}
-
+			return encode_list(encoder_output, context, value_data->value.list_value.count, value_data->value.list_value.items);
 			break;
-		}
 		}
 	}
 

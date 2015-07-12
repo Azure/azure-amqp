@@ -8289,5 +8289,89 @@ BEGIN_TEST_SUITE(connection_unittests)
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_303: [<encoding name="list0" code="0x45" category="fixed" width="0" label="the empty list (i.e. the list with no elements)"/>] */
+		TEST_METHOD(amqpvalue_encode_list_empty_list_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			test_amqp_encode(&mocks, source, "[0x45]");
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+		TEST_METHOD(when_encoder_output_fails_amqpvalue_encode_list_empty_list_fails)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			test_amqp_encode_failure(&mocks, source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
+		TEST_METHOD(amqpvalue_encode_list_with_one_null_item_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			AMQP_VALUE item = amqpvalue_create_null();
+			amqpvalue_set_list_item(source, 0, item);
+			amqpvalue_destroy(item);
+			test_amqp_encode(&mocks, source, "[0xC0,0x01,0x01,0x40]");
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+		TEST_METHOD(when_encoder_output_fails_amqpvalue_encode_list_with_one_null_item_fails)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			AMQP_VALUE item = amqpvalue_create_null();
+			amqpvalue_set_list_item(source, 0, item);
+			amqpvalue_destroy(item);
+			test_amqp_encode_failure(&mocks, source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
+		TEST_METHOD(amqpvalue_encode_list_with_2_null_item_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			AMQP_VALUE item = amqpvalue_create_null();
+			amqpvalue_set_list_item(source, 0, item);
+			amqpvalue_set_list_item(source, 1, item);
+			amqpvalue_destroy(item);
+			test_amqp_encode(&mocks, source, "[0xC0,0x02,0x02,0x40,0x40]");
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
+		TEST_METHOD(amqpvalue_encode_list_with_255_null_items_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			AMQP_VALUE item = amqpvalue_create_null();
+			int i;
+			for (i = 0; i < 255; i++)
+			{
+				amqpvalue_set_list_item(source, i, item);
+			}
+			amqpvalue_destroy(item);
+			unsigned char expected_bytes[258] = { 0xC0, 0xFF, 0xFF };
+			for (i = 0; i < 255; i++)
+			{
+				expected_bytes[i + 3] = 0x40;
+			}
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
+			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+		TEST_METHOD(when_encoder_output_fails_then_amqpvalue_encode_list_with_255_null_items_fails)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			AMQP_VALUE item = amqpvalue_create_null();
+			int i;
+			for (i = 0; i < 255; i++)
+			{
+				amqpvalue_set_list_item(source, i, item);
+			}
+			amqpvalue_destroy(item);
+			test_amqp_encode_failure(&mocks, source);
+		}
 
 END_TEST_SUITE(amqpvalue_unittests)

@@ -2537,6 +2537,7 @@ static int encode_list(ENCODER_OUTPUT encoder_output, void* context, uint32_t co
 			}
 			else
 			{
+				/* Codes_SRS_AMQPVALUE_01_305: [<encoding name="list32" code="0xd0" category="compound" width="4" label="up to 2^32 - 1 list elements with total size less than 2^32 octets"/>] */
 				if ((output_byte(encoder_output, context, 0xD0) != 0) ||
 					/* size */
 					(output_byte(encoder_output, context, (size >> 24) & 0xFF) != 0) ||

@@ -8374,4 +8374,133 @@ BEGIN_TEST_SUITE(connection_unittests)
 			test_amqp_encode_failure(&mocks, source);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
+		TEST_METHOD(amqpvalue_encode_list_1_item_with_255_bytes_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			unsigned char bytes[253] = { 0 };
+			amqp_binary binary = { &bytes, sizeof(bytes) };
+			AMQP_VALUE item = amqpvalue_create_binary(binary);
+			amqpvalue_set_list_item(source, 0, item);
+			amqpvalue_destroy(item);
+			unsigned char expected_bytes[258] = { 0xC0, 0xFF, 0x01, 0xA0, 0xFD };
+			int i;
+			for (i = 0; i < 253; i++)
+			{
+				expected_bytes[i + 5] = 0;
+			}
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
+			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_305: [<encoding name="list32" code="0xd0" category="compound" width="4" label="up to 2^32 - 1 list elements with total size less than 2^32 octets"/>] */
+		TEST_METHOD(amqpvalue_encode_list_1_item_with_256_bytes_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			unsigned char bytes[254] = { 0 };
+			amqp_binary binary = { &bytes, sizeof(bytes) };
+			AMQP_VALUE item = amqpvalue_create_binary(binary);
+			amqpvalue_set_list_item(source, 0, item);
+			amqpvalue_destroy(item);
+			unsigned char expected_bytes[254 + 11] = { 0xD0, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0xA0, 0xFE };
+			int i;
+			for (i = 0; i < 254; i++)
+			{
+				expected_bytes[i + 11] = 0;
+			}
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
+			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+		TEST_METHOD(when_encoder_output_fails_amqpvalue_encode_list_1_item_with_256_bytes_fails)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			unsigned char bytes[254] = { 0 };
+			amqp_binary binary = { &bytes, sizeof(bytes) };
+			AMQP_VALUE item = amqpvalue_create_binary(binary);
+			amqpvalue_set_list_item(source, 0, item);
+			amqpvalue_destroy(item);
+			test_amqp_encode_failure(&mocks, source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_305: [<encoding name="list32" code="0xd0" category="compound" width="4" label="up to 2^32 - 1 list elements with total size less than 2^32 octets"/>] */
+		TEST_METHOD(amqpvalue_encode_list_256_null_items_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			AMQP_VALUE item = amqpvalue_create_null();
+			int i;
+			for (i = 0; i < 256; i++)
+			{
+				amqpvalue_set_list_item(source, i, item);
+			}
+			amqpvalue_destroy(item);
+			unsigned char expected_bytes[256 + 9] = { 0xD0, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00 };
+			for (i = 0; i < 256; i++)
+			{
+				expected_bytes[i + 9] = 0x40;
+			}
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
+			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+		TEST_METHOD(when_encoder_output_fails_amqpvalue_encode_list_256_null_items_fails)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			AMQP_VALUE item = amqpvalue_create_null();
+			int i;
+			for (i = 0; i < 256; i++)
+			{
+				amqpvalue_set_list_item(source, i, item);
+			}
+			amqpvalue_destroy(item);
+			test_amqp_encode_failure(&mocks, source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
+		TEST_METHOD(amqpvalue_encode_list_with_2_different_items_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			unsigned char bytes[] = { 0x42 };
+			amqp_binary binary = { &bytes, sizeof(bytes) };
+			AMQP_VALUE item = amqpvalue_create_binary(binary);
+			amqpvalue_set_list_item(source, 0, item);
+			amqpvalue_destroy(item);
+			item = amqpvalue_create_null();
+			amqpvalue_set_list_item(source, 1, item);
+			amqpvalue_destroy(item);
+			unsigned char expected_bytes[] = { 0xC0, 0x04, 0x02, 0xA0, 0x01, 0x42, 0x40 };
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
+			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+		}
+
+#if 0
+		/* Tests_SRS_AMQPVALUE_01_305: [<encoding name="list32" code="0xd0" category="compound" width="4" label="up to 2^32 - 1 list elements with total size less than 2^32 octets"/>] */
+		TEST_METHOD(amqpvalue_encode_list_with_max_items_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			AMQP_VALUE item = amqpvalue_create_null();
+			long i;
+			amqpvalue_set_list_item(source, 2147483646i32, item);
+			for (i = 0; i < 2147483647i32; i++)
+			{
+				amqpvalue_set_list_item(source, i, item);
+				mocks.ResetAllCalls();
+			}
+			amqpvalue_destroy(item);
+			mocks.ResetAllCalls();
+//			unsigned char expected_bytes[] = { 0xD0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+//			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
+//			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+		}
+#endif
+
 END_TEST_SUITE(amqpvalue_unittests)

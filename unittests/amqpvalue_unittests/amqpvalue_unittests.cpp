@@ -8481,4 +8481,14 @@ BEGIN_TEST_SUITE(connection_unittests)
 			test_amqp_encode(&mocks, source, expected_stringified_encoded);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
+		TEST_METHOD(amqpvalue_encode_empty_map_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_map();
+			unsigned char expected_bytes[] = { 0xC1, 0x00, 0x00 };
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
+			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+		}
+
 END_TEST_SUITE(amqpvalue_unittests)

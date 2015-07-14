@@ -2585,6 +2585,107 @@ static int encode_list(ENCODER_OUTPUT encoder_output, void* context, uint32_t co
 	return result;
 }
 
+static int encode_map(ENCODER_OUTPUT encoder_output, void* context, uint32_t count, AMQP_MAP_KEY_VALUE_PAIR* pairs)
+{
+	size_t i;
+	int result;
+
+	uint32_t size = 0;
+
+	/* get the size of all items in the list */
+	for (i = 0; i < count; i++)
+	{
+		size_t item_size;
+		if (amqpvalue_get_encoded_size(pairs[i].key, &item_size) != 0)
+		{
+			break;
+		}
+
+		size += item_size;
+
+		if (amqpvalue_get_encoded_size(pairs[i].value, &item_size) != 0)
+		{
+			break;
+		}
+
+		size += item_size;
+	}
+
+	if (i < count)
+	{
+		/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+		result = __LINE__;
+	}
+	else
+	{
+		if ((count <= 255) && (size < 256))
+		{
+			/* Codes_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
+			if ((output_byte(encoder_output, context, 0xC1) != 0) ||
+				/* size */
+				(output_byte(encoder_output, context, (size & 0xFF)) != 0) ||
+				/* count */
+				(output_byte(encoder_output, context, (count & 0xFF)) != 0))
+			{
+				/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+				result = __LINE__;
+			}
+			else
+			{
+				/* Codes_SRS_AMQPVALUE_01_266: [On success amqpvalue_encode shall return 0.] */
+				result = 0;
+			}
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_307: [<encoding name="map32" code="0xd1" category="compound" width="4" label="up to 2^32 - 1 octets of encoded map data"/>] */
+			if ((output_byte(encoder_output, context, 0xD0) != 0) ||
+				/* size */
+				(output_byte(encoder_output, context, (size >> 24) & 0xFF) != 0) ||
+				(output_byte(encoder_output, context, (size >> 16) & 0xFF) != 0) ||
+				(output_byte(encoder_output, context, (size >> 8) & 0xFF) != 0) ||
+				(output_byte(encoder_output, context, size & 0xFF) != 0) ||
+				/* count */
+				(output_byte(encoder_output, context, (count >> 24) & 0xFF) != 0) ||
+				(output_byte(encoder_output, context, (count >> 16) & 0xFF) != 0) ||
+				(output_byte(encoder_output, context, (count >> 8) & 0xFF) != 0) ||
+				(output_byte(encoder_output, context, count & 0xFF) != 0))
+			{
+				/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+				result = __LINE__;
+			}
+			else
+			{
+				/* Codes_SRS_AMQPVALUE_01_266: [On success amqpvalue_encode shall return 0.] */
+				result = 0;
+			}
+		}
+
+		if (result == 0)
+		{
+			for (i = 0; i < count; i++)
+			{
+				if ((amqpvalue_encode(pairs[i].key, encoder_output, context) != 0) ||
+					(amqpvalue_encode(pairs[i].value, encoder_output, context) != 0))
+				{
+					break;
+				}
+			}
+
+			if (i < count)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+	}
+
+	return result;
+}
+
 static int encode_descriptor_header(ENCODER_OUTPUT encoder_output, void* context)
 {
 	int result;
@@ -2675,6 +2776,14 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 			result = encode_string(encoder_output, context, value_data->value.string_value.chars);
 			break;
 
+		case AMQP_TYPE_LIST:
+			result = encode_list(encoder_output, context, value_data->value.list_value.count, value_data->value.list_value.items);
+			break;
+
+		case AMQP_TYPE_MAP:
+			result = encode_map(encoder_output, context, value_data->value.map_value.pair_count, value_data->value.map_value.pairs);
+			break;
+
 		case AMQP_TYPE_COMPOSITE:
 		case AMQP_TYPE_DESCRIBED:
 		{
@@ -2690,10 +2799,6 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 			}
 			break;
 		}
-
-		case AMQP_TYPE_LIST:
-			return encode_list(encoder_output, context, value_data->value.list_value.count, value_data->value.list_value.items);
-			break;
 		}
 	}
 

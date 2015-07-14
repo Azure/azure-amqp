@@ -8481,26 +8481,4 @@ BEGIN_TEST_SUITE(connection_unittests)
 			test_amqp_encode(&mocks, source, expected_stringified_encoded);
 		}
 
-#if 0
-		/* Tests_SRS_AMQPVALUE_01_305: [<encoding name="list32" code="0xd0" category="compound" width="4" label="up to 2^32 - 1 list elements with total size less than 2^32 octets"/>] */
-		TEST_METHOD(amqpvalue_encode_list_with_max_items_succeeds)
-		{
-			amqpvalue_mocks mocks;
-			AMQP_VALUE source = amqpvalue_create_list();
-			AMQP_VALUE item = amqpvalue_create_null();
-			long i;
-			amqpvalue_set_list_item(source, 2147483646i32, item);
-			for (i = 0; i < 2147483647i32; i++)
-			{
-				amqpvalue_set_list_item(source, i, item);
-				mocks.ResetAllCalls();
-			}
-			amqpvalue_destroy(item);
-			mocks.ResetAllCalls();
-//			unsigned char expected_bytes[] = { 0xD0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-//			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-//			test_amqp_encode(&mocks, source, expected_stringified_encoded);
-		}
-#endif
-
 END_TEST_SUITE(amqpvalue_unittests)

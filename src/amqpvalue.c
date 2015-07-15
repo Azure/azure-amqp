@@ -2618,14 +2618,14 @@ static int encode_map(ENCODER_OUTPUT encoder_output, void* context, uint32_t cou
 	}
 	else
 	{
-		if ((count <= 255) && (size < 256))
+        if ((count * 2 <= 255) && (size < 256))
 		{
 			/* Codes_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
 			if ((output_byte(encoder_output, context, 0xC1) != 0) ||
 				/* size */
 				(output_byte(encoder_output, context, (size & 0xFF)) != 0) ||
 				/* count */
-				(output_byte(encoder_output, context, (count & 0xFF)) != 0))
+				(output_byte(encoder_output, context, ((count * 2) & 0xFF)) != 0))
 			{
 				/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
 				result = __LINE__;
@@ -2646,10 +2646,10 @@ static int encode_map(ENCODER_OUTPUT encoder_output, void* context, uint32_t cou
 				(output_byte(encoder_output, context, (size >> 8) & 0xFF) != 0) ||
 				(output_byte(encoder_output, context, size & 0xFF) != 0) ||
 				/* count */
-				(output_byte(encoder_output, context, (count >> 24) & 0xFF) != 0) ||
-				(output_byte(encoder_output, context, (count >> 16) & 0xFF) != 0) ||
-				(output_byte(encoder_output, context, (count >> 8) & 0xFF) != 0) ||
-				(output_byte(encoder_output, context, count & 0xFF) != 0))
+				(output_byte(encoder_output, context, ((count * 2) >> 24) & 0xFF) != 0) ||
+                (output_byte(encoder_output, context, ((count * 2) >> 16) & 0xFF) != 0) ||
+                (output_byte(encoder_output, context, ((count * 2) >> 8) & 0xFF) != 0) ||
+                (output_byte(encoder_output, context, (count * 2) & 0xFF) != 0))
 			{
 				/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
 				result = __LINE__;
@@ -2663,7 +2663,8 @@ static int encode_map(ENCODER_OUTPUT encoder_output, void* context, uint32_t cou
 
 		if (result == 0)
 		{
-			for (i = 0; i < count; i++)
+            /* Codes_SRS_AMQPVALUE_01_123: [A map is encoded as a compound value where the constituent elements form alternating key value pairs.] */
+            for (i = 0; i < count; i++)
 			{
 				if ((amqpvalue_encode(pairs[i].key, encoder_output, context) != 0) ||
 					(amqpvalue_encode(pairs[i].value, encoder_output, context) != 0))

@@ -51,20 +51,20 @@ static void* test_context = (void*)0x4243;
 
 MICROMOCK_MUTEX_HANDLE test_serialize_mutex;
 
-BEGIN_TEST_SUITE(connection_unittests)
+BEGIN_TEST_SUITE(amqpvalue_limits_unittests)
 
-		TEST_CLASS_INITIALIZE(suite_init)
+		TEST_SUITE_INITIALIZE(suite_init)
 		{
 			test_serialize_mutex = MicroMockCreateMutex();
 			ASSERT_IS_NOT_NULL(test_serialize_mutex);
 		}
 
-		TEST_CLASS_CLEANUP(suite_cleanup)
+		TEST_SUITE_CLEANUP(suite_cleanup)
 		{
 			MicroMockDestroyMutex(test_serialize_mutex);
 		}
 
-		TEST_METHOD_INITIALIZE(method_init)
+		TEST_FUNCTION_INITIALIZE(method_init)
 		{
 			if (!MicroMockAcquireMutex(test_serialize_mutex))
 			{
@@ -74,7 +74,7 @@ BEGIN_TEST_SUITE(connection_unittests)
 			when_shall_encoder_output_fail = 0;
 		}
 
-		TEST_METHOD_CLEANUP(method_cleanup)
+		TEST_FUNCTION_CLEANUP(method_cleanup)
 		{
 			if (encoded_bytes != NULL)
 			{
@@ -108,4 +108,4 @@ BEGIN_TEST_SUITE(connection_unittests)
 		}
 #endif
 
-END_TEST_SUITE(amqpvalue_unittests)
+END_TEST_SUITE(amqpvalue_limits_unittests)

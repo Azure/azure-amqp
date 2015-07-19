@@ -8,5 +8,5 @@ int main(void)
     RUN_TEST_SUITE(MicroMockTest, failedTestCount);
     RUN_TEST_SUITE(MicroMockValidateArgumentBufferTests, failedTestCount);
     RUN_TEST_SUITE(NULLArgsStringificationTests, failedTestCount);
-    return failedTestCount;
+    return failedTestCount; 
 }

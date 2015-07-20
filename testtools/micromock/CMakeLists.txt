@@ -1,0 +1,49 @@
+add_definitions(-DUSE_CTEST)
+include_directories(inc)
+include_directories(../testrunnerswitcher/inc)
+include_directories(../ctest/inc)
+add_library(micromock
+	#src/detourshookclass.cpp
+	src/micromockcharstararenullterminatedstrings.cpp
+	src/micromockexception.cpp
+	src/micromocktestmutex.cpp
+	src/mockcallrecorder.cpp
+	src/mockmethodcallbase.cpp
+	src/mockvaluebase.cpp
+	src/sources.ce800
+	#src/stdafx.cpp
+	src/timediscretemicromock.cpp
+
+	inc/detourshookclass.h
+	inc/globalmock.h
+	inc/macro_utils.h
+	inc/micromock.h
+	inc/micromockcallmacros.h
+	inc/micromockcharstararenullterminatedstrings.h
+	inc/micromockcommon.h
+	inc/micromockenumtostring.h
+	inc/micromockexception.h
+	inc/micromocktestmutex.h
+	inc/micromocktestrunnerhooks.h
+	inc/mock.h
+	inc/mockcallargument.h
+	inc/mockcallargumentbase.h
+	inc/mockcallcomparer.h
+	inc/mockcallrecorder.h
+	inc/mockmethodcall.h
+	inc/mockmethodcallbase.h
+	inc/mockresultvalue.h
+	inc/mockvalue.h
+	inc/mockvaluebase.h
+	inc/nicecallcomparer.h
+	inc/runtimemock.h
+	inc/stdafx.h
+	inc/strictorderedcallcomparer.h
+	inc/strictunorderedcallcomparer.h
+	inc/targetver.h
+	inc/threadsafeglobalmock.h
+	inc/timediscretemicromock.h
+	inc/timediscretemicromockcallmacros.h
+)
+
+add_subdirectory(unittests)

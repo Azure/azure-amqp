@@ -151,20 +151,20 @@ extern "C"
 
 MICROMOCK_MUTEX_HANDLE test_serialize_mutex;
 
-BEGIN_TEST_SUITE(amqpvalue_unittests)
+BEGIN_TEST_SUITE(frame_codec_unittests)
 
-TEST_CLASS_INITIALIZE(suite_init)
+TEST_SUITE_INITIALIZE(suite_init)
 {
 	test_serialize_mutex = MicroMockCreateMutex();
 	ASSERT_IS_NOT_NULL(test_serialize_mutex);
 }
 
-TEST_CLASS_CLEANUP(suite_cleanup)
+TEST_SUITE_CLEANUP(suite_cleanup)
 {
 	MicroMockDestroyMutex(test_serialize_mutex);
 }
 
-TEST_METHOD_INITIALIZE(method_init)
+TEST_FUNCTION_INITIALIZE(method_init)
 {
 	if (!MicroMockAcquireMutex(test_serialize_mutex))
 	{
@@ -172,7 +172,7 @@ TEST_METHOD_INITIALIZE(method_init)
 	}
 }
 
-TEST_METHOD_CLEANUP(method_cleanup)
+TEST_FUNCTION_CLEANUP(method_cleanup)
 {
 	if (list_items != NULL)
 	{
@@ -195,7 +195,7 @@ TEST_METHOD_CLEANUP(method_cleanup)
 /* frame_codec_create */
 
 /* Tests_SRS_FRAME_CODEC_01_021: [frame_codec_create shall create a new instance of frame_codec and return a non-NULL handle to it on success.] */
-TEST_METHOD(frame_codec_create_with_valid_args_succeeds)
+TEST_FUNCTION(frame_codec_create_with_valid_args_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -211,7 +211,7 @@ TEST_METHOD(frame_codec_create_with_valid_args_succeeds)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_020: [If the io argument is NULL, frame_codec_create shall return NULL.] */
-TEST_METHOD(when_io_is_NULL_frame_codec_create_fails)
+TEST_FUNCTION(when_io_is_NULL_frame_codec_create_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -224,7 +224,7 @@ TEST_METHOD(when_io_is_NULL_frame_codec_create_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_022: [If allocating memory for the frame_codec instance fails, frame_codec_create shall return NULL.] */
-TEST_METHOD(when_allocating_memory_for_the_frame_codec_fails_frame_code_create_fails)
+TEST_FUNCTION(when_allocating_memory_for_the_frame_codec_fails_frame_code_create_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -241,7 +241,7 @@ TEST_METHOD(when_allocating_memory_for_the_frame_codec_fails_frame_code_create_f
 
 /* Tests_SRS_FRAME_CODEC_01_082: [The initial max_frame_size_shall be 512.] */
 /* Tests_SRS_FRAME_CODEC_01_095: [If the frame_size needed for the frame is bigger than the maximum frame size, frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
-TEST_METHOD(sending_a_frame_with_more_than_512_bytes_of_total_frame_size_fails_immediately_after_create)
+TEST_FUNCTION(sending_a_frame_with_more_than_512_bytes_of_total_frame_size_fails_immediately_after_create)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -257,7 +257,7 @@ TEST_METHOD(sending_a_frame_with_more_than_512_bytes_of_total_frame_size_fails_i
 
 /* Tests_SRS_FRAME_CODEC_01_082: [The initial max_frame_size_shall be 512.] */
 /* Tests_SRS_FRAME_CODEC_01_075: [frame_codec_set_max_frame_size shall set the maximum frame size for a frame_codec.] */
-TEST_METHOD(a_frame_of_exactly_max_frame_size_immediately_after_create_can_be_sent)
+TEST_FUNCTION(a_frame_of_exactly_max_frame_size_immediately_after_create_can_be_sent)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -280,7 +280,7 @@ TEST_METHOD(a_frame_of_exactly_max_frame_size_immediately_after_create_can_be_se
 
 /* Tests_SRS_FRAME_CODEC_01_082: [The initial max_frame_size_shall be 512.] */
 /* Tests_SRS_FRAME_CODEC_01_096: [If a frame bigger than the current max frame size is received, frame_codec_receive_bytes shall fail and return a non-zero value.] */
-TEST_METHOD(receiving_a_frame_with_more_than_512_bytes_of_total_frame_size_immediately_after_create_fails)
+TEST_FUNCTION(receiving_a_frame_with_more_than_512_bytes_of_total_frame_size_immediately_after_create_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -298,7 +298,7 @@ TEST_METHOD(receiving_a_frame_with_more_than_512_bytes_of_total_frame_size_immed
 
 /* Tests_SRS_FRAME_CODEC_01_082: [The initial max_frame_size_shall be 512.] */
 /* Tests_SRS_FRAME_CODEC_01_096: [If a frame bigger than the current max frame size is received, frame_codec_receive_bytes shall fail and return a non-zero value.] */
-TEST_METHOD(receiving_a_frame_with_exactly_512_bytes_of_total_frame_size_immediately_after_create_succeeds)
+TEST_FUNCTION(receiving_a_frame_with_exactly_512_bytes_of_total_frame_size_immediately_after_create_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -330,7 +330,7 @@ TEST_METHOD(receiving_a_frame_with_exactly_512_bytes_of_total_frame_size_immedia
 /* frame_codec_destroy */
 
 /* Tests_SRS_FRAME_CODEC_01_023: [frame_codec_destroy shall free all resources associated with a frame_codec instance.] */
-TEST_METHOD(frame_codec_destroy_frees_the_memory_for_frame_codec)
+TEST_FUNCTION(frame_codec_destroy_frees_the_memory_for_frame_codec)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -348,7 +348,7 @@ TEST_METHOD(frame_codec_destroy_frees_the_memory_for_frame_codec)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_024: [If frame_codec is NULL, frame_codec_destroy shall do nothing.] */
-TEST_METHOD(when_frame_codec_is_NULL_frame_codec_destroy_does_nothing)
+TEST_FUNCTION(when_frame_codec_is_NULL_frame_codec_destroy_does_nothing)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -361,7 +361,7 @@ TEST_METHOD(when_frame_codec_is_NULL_frame_codec_destroy_does_nothing)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_023: [frame_codec_destroy shall free all resources associated with a frame_codec instance.] */
-TEST_METHOD(frame_codec_destroy_while_receiving_type_specific_data_frees_the_type_specific_buffer)
+TEST_FUNCTION(frame_codec_destroy_while_receiving_type_specific_data_frees_the_type_specific_buffer)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -386,7 +386,7 @@ TEST_METHOD(frame_codec_destroy_while_receiving_type_specific_data_frees_the_typ
 
 /* Tests_SRS_FRAME_CODEC_01_075: [frame_codec_set_max_frame_size shall set the maximum frame size for a frame_codec.] */
 /* Tests_SRS_FRAME_CODEC_01_076: [On success, frame_codec_set_max_frame_size shall return 0.] */
-TEST_METHOD(frame_codec_set_max_frame_size_with_8_succeeds)
+TEST_FUNCTION(frame_codec_set_max_frame_size_with_8_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -401,7 +401,7 @@ TEST_METHOD(frame_codec_set_max_frame_size_with_8_succeeds)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_075: [frame_codec_set_max_frame_size shall set the maximum frame size for a frame_codec.] */
-TEST_METHOD(when_a_frame_bigger_than_max_frame_size_is_sent_frame_codec_begin_encode_frame_fails)
+TEST_FUNCTION(when_a_frame_bigger_than_max_frame_size_is_sent_frame_codec_begin_encode_frame_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -417,7 +417,7 @@ TEST_METHOD(when_a_frame_bigger_than_max_frame_size_is_sent_frame_codec_begin_en
 }
 
 /* Tests_SRS_FRAME_CODEC_01_075: [frame_codec_set_max_frame_size shall set the maximum frame size for a frame_codec.] */
-TEST_METHOD(a_frame_of_exactly_max_frame_size_can_be_sent)
+TEST_FUNCTION(a_frame_of_exactly_max_frame_size_can_be_sent)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -440,7 +440,7 @@ TEST_METHOD(a_frame_of_exactly_max_frame_size_can_be_sent)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_096: [If a frame bigger than the current max frame size is received, frame_codec_receive_bytes shall fail and return a non-zero value.] */
-TEST_METHOD(receiving_a_frame_with_more_than_max_frame_size_bytes_of_total_frame_size_fails)
+TEST_FUNCTION(receiving_a_frame_with_more_than_max_frame_size_bytes_of_total_frame_size_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -458,7 +458,7 @@ TEST_METHOD(receiving_a_frame_with_more_than_max_frame_size_bytes_of_total_frame
 }
 
 /* Tests_SRS_FRAME_CODEC_01_096: [If a frame bigger than the current max frame size is received, frame_codec_receive_bytes shall fail and return a non-zero value.] */
-TEST_METHOD(receiving_a_frame_with_exactly_max_frame_size_bytes_of_total_frame_size_fails_succeeds)
+TEST_FUNCTION(receiving_a_frame_with_exactly_max_frame_size_bytes_of_total_frame_size_fails_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -489,7 +489,7 @@ TEST_METHOD(receiving_a_frame_with_exactly_max_frame_size_bytes_of_total_frame_s
 }
 
 /* Tests_SRS_FRAME_CODEC_01_077: [If frame_codec is NULL, frame_codec_set_max_frame_size shall return a non-zero value.] */
-TEST_METHOD(when_frame_codec_is_NULL_frame_codec_set_max_frame_size_fails)
+TEST_FUNCTION(when_frame_codec_is_NULL_frame_codec_set_max_frame_size_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -503,7 +503,7 @@ TEST_METHOD(when_frame_codec_is_NULL_frame_codec_set_max_frame_size_fails)
 
 /* Tests_SRS_FRAME_CODEC_01_078: [If max_frame_size is invalid according to the AMQP standard, frame_codec_set_max_frame_size shall return a non-zero value.] */
 /* Tests_SRS_FRAME_CODEC_01_010: [The frame is malformed if the size is less than the size of the frame header (8 bytes).] */
-TEST_METHOD(when_frame_codec_is_too_small_then_frame_codec_set_max_frame_size_fails)
+TEST_FUNCTION(when_frame_codec_is_too_small_then_frame_codec_set_max_frame_size_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -518,7 +518,7 @@ TEST_METHOD(when_frame_codec_is_too_small_then_frame_codec_set_max_frame_size_fa
 }
 
 /* Tests_SRS_FRAME_CODEC_01_081: [If a frame being decoded already has a size bigger than the max_frame_size argument then frame_codec_set_max_frame_size shall return a non-zero value and the previous frame size shall be kept.] */
-TEST_METHOD(attempting_to_set_a_max_frame_size_lower_than_the_size_of_the_currently_being_received_frame_fails)
+TEST_FUNCTION(attempting_to_set_a_max_frame_size_lower_than_the_size_of_the_currently_being_received_frame_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -537,7 +537,7 @@ TEST_METHOD(attempting_to_set_a_max_frame_size_lower_than_the_size_of_the_curren
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
-TEST_METHOD(attempting_to_set_a_max_frame_size_when_the_decoder_is_in_error_succeeds)
+TEST_FUNCTION(attempting_to_set_a_max_frame_size_when_the_decoder_is_in_error_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -557,7 +557,7 @@ TEST_METHOD(attempting_to_set_a_max_frame_size_when_the_decoder_is_in_error_succ
 }
 
 /* Tests_SRS_FRAME_CODEC_01_097: [Setting a frame size on a frame_codec that had a decode error shall fail.] */
-TEST_METHOD(setting_the_max_frame_size_on_a_codec_with_a_decode_error_fails)
+TEST_FUNCTION(setting_the_max_frame_size_on_a_codec_with_a_decode_error_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -575,7 +575,7 @@ TEST_METHOD(setting_the_max_frame_size_on_a_codec_with_a_decode_error_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_097: [Setting a frame size on a frame_codec that had a decode error shall fail.] */
-TEST_METHOD(setting_the_max_frame_size_on_a_codec_with_an_encode_error_fails)
+TEST_FUNCTION(setting_the_max_frame_size_on_a_codec_with_an_encode_error_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -598,7 +598,7 @@ TEST_METHOD(setting_the_max_frame_size_on_a_codec_with_an_encode_error_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_079: [The new frame size shall take effect immediately, even for a frame that is being decoded at the time of the call.] */
-TEST_METHOD(setting_a_new_max_frame_while_the_frame_size_is_being_received_makes_the_new_frame_size_be_in_effect)
+TEST_FUNCTION(setting_a_new_max_frame_while_the_frame_size_is_being_received_makes_the_new_frame_size_be_in_effect)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -636,7 +636,7 @@ TEST_METHOD(setting_a_new_max_frame_while_the_frame_size_is_being_received_makes
 /* Tests_SRS_FRAME_CODEC_01_028: [The sequence of bytes shall be decoded according to the AMQP ISO.] */
 /* Tests_SRS_FRAME_CODEC_01_085: [If the frame body is empty, no call to frame_body_bytes_received_callback_1 shall be made.] */
 /* Tests_SRS_FRAME_CODEC_01_035: [After successfully registering a callback for a certain frame type, when subsequently that frame type is received the callbacks shall be invoked, passing to it the received frame and the callback_context value. */
-TEST_METHOD(frame_codec_receive_bytes_decodes_one_empty_frame)
+TEST_FUNCTION(frame_codec_receive_bytes_decodes_one_empty_frame)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -663,7 +663,7 @@ TEST_METHOD(frame_codec_receive_bytes_decodes_one_empty_frame)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
-TEST_METHOD(frame_codec_receive_bytes_with_not_enough_bytes_for_a_frame_does_not_trigger_callback)
+TEST_FUNCTION(frame_codec_receive_bytes_with_not_enough_bytes_for_a_frame_does_not_trigger_callback)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -687,7 +687,7 @@ TEST_METHOD(frame_codec_receive_bytes_with_not_enough_bytes_for_a_frame_does_not
 }
 
 /* Tests_SRS_FRAME_CODEC_01_026: [If frame_codec or buffer are NULL, frame_codec_receive_bytes shall return a non-zero value.] */
-TEST_METHOD(frame_codec_receive_bytes_with_NULL_frame_codec_handle_fails)
+TEST_FUNCTION(frame_codec_receive_bytes_with_NULL_frame_codec_handle_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -701,7 +701,7 @@ TEST_METHOD(frame_codec_receive_bytes_with_NULL_frame_codec_handle_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_026: [If frame_codec or buffer are NULL, frame_codec_receive_bytes shall return a non-zero value.] */
-TEST_METHOD(frame_codec_receive_bytes_with_NULL_buffer_fails)
+TEST_FUNCTION(frame_codec_receive_bytes_with_NULL_buffer_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -717,7 +717,7 @@ TEST_METHOD(frame_codec_receive_bytes_with_NULL_buffer_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_027: [If size is zero, frame_codec_receive_bytes shall return a non-zero value.] */
-TEST_METHOD(frame_codec_receive_bytes_with_zero_size_fails)
+TEST_FUNCTION(frame_codec_receive_bytes_with_zero_size_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -736,7 +736,7 @@ TEST_METHOD(frame_codec_receive_bytes_with_zero_size_fails)
 /* Tests_SRS_FRAME_CODEC_01_029: [The sequence of bytes does not have to be a complete frame, frame_codec shall be responsible for maintaining decoding state between frame_codec_receive_bytes calls.] */
 /* Codes_SRS_FRAME_CODEC_01_005: [This is an extension point defined for future expansion.] */
 /* Codes_SRS_FRAME_CODEC_01_006: [The treatment of this area depends on the frame type.] */
-TEST_METHOD(when_frame_codec_receive_1_byte_in_one_call_and_the_rest_of_the_frame_in_another_call_yields_succesfull_decode)
+TEST_FUNCTION(when_frame_codec_receive_1_byte_in_one_call_and_the_rest_of_the_frame_in_another_call_yields_succesfull_decode)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -765,7 +765,7 @@ TEST_METHOD(when_frame_codec_receive_1_byte_in_one_call_and_the_rest_of_the_fram
 }
 
 /* Tests_SRS_FRAME_CODEC_01_029: [The sequence of bytes does not have to be a complete frame, frame_codec shall be responsible for maintaining decoding state between frame_codec_receive_bytes calls.] */
-TEST_METHOD(when_frame_codec_receive_the_frame_bytes_in_1_byte_per_call_a_succesfull_decode_happens)
+TEST_FUNCTION(when_frame_codec_receive_the_frame_bytes_in_1_byte_per_call_a_succesfull_decode_happens)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -798,7 +798,7 @@ TEST_METHOD(when_frame_codec_receive_the_frame_bytes_in_1_byte_per_call_a_succes
 }
 
 /* Tests_SRS_FRAME_CODEC_01_029: [The sequence of bytes does not have to be a complete frame, frame_codec shall be responsible for maintaining decoding state between frame_codec_receive_bytes calls.] */
-TEST_METHOD(a_frame_codec_receive_bytes_call_with_bad_args_before_any_real_frame_bytes_does_not_affect_decoding)
+TEST_FUNCTION(a_frame_codec_receive_bytes_call_with_bad_args_before_any_real_frame_bytes_does_not_affect_decoding)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -827,7 +827,7 @@ TEST_METHOD(a_frame_codec_receive_bytes_call_with_bad_args_before_any_real_frame
 }
 
 /* Tests_SRS_FRAME_CODEC_01_029: [The sequence of bytes does not have to be a complete frame, frame_codec shall be responsible for maintaining decoding state between frame_codec_receive_bytes calls.] */
-TEST_METHOD(a_frame_codec_receive_bytes_call_with_bad_args_in_the_middle_of_the_frame_does_not_affect_decoding)
+TEST_FUNCTION(a_frame_codec_receive_bytes_call_with_bad_args_in_the_middle_of_the_frame_does_not_affect_decoding)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -857,7 +857,7 @@ TEST_METHOD(a_frame_codec_receive_bytes_call_with_bad_args_in_the_middle_of_the_
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
-TEST_METHOD(frame_codec_receive_bytes_decodes_2_empty_frames)
+TEST_FUNCTION(frame_codec_receive_bytes_decodes_2_empty_frames)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -896,7 +896,7 @@ TEST_METHOD(frame_codec_receive_bytes_decodes_2_empty_frames)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
-TEST_METHOD(a_call_to_frame_codec_receive_bytes_with_bad_args_between_2_frames_does_not_affect_decoding)
+TEST_FUNCTION(a_call_to_frame_codec_receive_bytes_with_bad_args_between_2_frames_does_not_affect_decoding)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -936,7 +936,7 @@ TEST_METHOD(a_call_to_frame_codec_receive_bytes_with_bad_args_between_2_frames_d
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
-TEST_METHOD(when_getting_the_list_item_value_fails_no_callback_is_invoked)
+TEST_FUNCTION(when_getting_the_list_item_value_fails_no_callback_is_invoked)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -959,7 +959,7 @@ TEST_METHOD(when_getting_the_list_item_value_fails_no_callback_is_invoked)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_010: [The frame is malformed if the size is less than the size of the frame header (8 bytes).] */
-TEST_METHOD(when_frame_size_is_bad_frame_codec_receive_bytes_fails)
+TEST_FUNCTION(when_frame_size_is_bad_frame_codec_receive_bytes_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -976,7 +976,7 @@ TEST_METHOD(when_frame_size_is_bad_frame_codec_receive_bytes_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_014: [Due to the mandatory 8-byte frame header, the frame is malformed if the value is less than 2.] */
-TEST_METHOD(when_frame_size_has_a_bad_doff_frame_codec_receive_bytes_fails)
+TEST_FUNCTION(when_frame_size_has_a_bad_doff_frame_codec_receive_bytes_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -993,7 +993,7 @@ TEST_METHOD(when_frame_size_has_a_bad_doff_frame_codec_receive_bytes_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_receive_bytes shall fail.] */
-TEST_METHOD(after_a_frame_decode_error_occurs_due_to_frame_size_a_subsequent_decode_fails)
+TEST_FUNCTION(after_a_frame_decode_error_occurs_due_to_frame_size_a_subsequent_decode_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1013,7 +1013,7 @@ TEST_METHOD(after_a_frame_decode_error_occurs_due_to_frame_size_a_subsequent_dec
 }
 
 /* Tests_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_receive_bytes shall fail.] */
-TEST_METHOD(after_a_frame_decode_error_occurs_due_to_bad_doff_size_a_subsequent_decode_fails)
+TEST_FUNCTION(after_a_frame_decode_error_occurs_due_to_bad_doff_size_a_subsequent_decode_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1035,7 +1035,7 @@ TEST_METHOD(after_a_frame_decode_error_occurs_due_to_bad_doff_size_a_subsequent_
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
 /* Tests_SRS_FRAME_CODEC_01_083: [The frame body bytes shall be passed to the frame_body_bytes_received_callback_1 function that was given to frame_codec_subscribe.] */
 /* Tests_SRS_FRAME_CODEC_01_086: [Besides passing the frame information, the callback_context value passed to frame_codec_subscribe shall be passed to the frame_body_bytes_received_callback_1 function.] */
-TEST_METHOD(receiving_a_frame_with_1_byte_frame_body_succeeds)
+TEST_FUNCTION(receiving_a_frame_with_1_byte_frame_body_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1064,7 +1064,7 @@ TEST_METHOD(receiving_a_frame_with_1_byte_frame_body_succeeds)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_030: [If a decoding error occurs, frame_codec_receive_bytes shall return a non-zero value.] */
-TEST_METHOD(when_allocating_type_specific_data_fails_frame_codec_receive_bytes_fails)
+TEST_FUNCTION(when_allocating_type_specific_data_fails_frame_codec_receive_bytes_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1089,7 +1089,7 @@ TEST_METHOD(when_allocating_type_specific_data_fails_frame_codec_receive_bytes_f
 }
 
 /* Tests_SRS_FRAME_CODEC_01_030: [If a decoding error occurs, frame_codec_receive_bytes shall return a non-zero value.] */
-TEST_METHOD(when_allocating_type_specific_data_fails_a_subsequent_decode_Call_fails)
+TEST_FUNCTION(when_allocating_type_specific_data_fails_a_subsequent_decode_Call_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1112,7 +1112,7 @@ TEST_METHOD(when_allocating_type_specific_data_fails_a_subsequent_decode_Call_fa
 }
 
 /* Tests_SRS_FRAME_CODEC_01_084: [The bytes shall be passed to frame_body_bytes_received_callback_1 as they arrive, not waiting for all frame body bytes to be received.] */
-TEST_METHOD(a_frame_with_2_bytes_received_in_2_frame_codec_receive_bytes_calls_passes_the_bytes_as_they_arrive)
+TEST_FUNCTION(a_frame_with_2_bytes_received_in_2_frame_codec_receive_bytes_calls_passes_the_bytes_as_they_arrive)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1138,7 +1138,7 @@ TEST_METHOD(a_frame_with_2_bytes_received_in_2_frame_codec_receive_bytes_calls_p
 }
 
 /* Tests_SRS_FRAME_CODEC_01_084: [The bytes shall be passed to frame_body_bytes_received_callback_1 as they arrive, not waiting for all frame body bytes to be received.] */
-TEST_METHOD(a_frame_with_2_bytes_received_in_1_frame_codec_receive_bytes_call_passes_the_bytes_as_they_arrive)
+TEST_FUNCTION(a_frame_with_2_bytes_received_in_1_frame_codec_receive_bytes_call_passes_the_bytes_as_they_arrive)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1160,7 +1160,7 @@ TEST_METHOD(a_frame_with_2_bytes_received_in_1_frame_codec_receive_bytes_call_pa
 }
 
 /* Tests_SRS_FRAME_CODEC_01_084: [The bytes shall be passed to frame_body_bytes_received_callback_1 as they arrive, not waiting for all frame body bytes to be received.] */
-TEST_METHOD(a_frame_with_2_bytes_received_together_with_the_header_passes_the_bytes_in_one_call)
+TEST_FUNCTION(a_frame_with_2_bytes_received_together_with_the_header_passes_the_bytes_in_one_call)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1189,7 +1189,7 @@ TEST_METHOD(a_frame_with_2_bytes_received_together_with_the_header_passes_the_by
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.]  */
-TEST_METHOD(two_empty_frames_received_in_the_same_call_yields_2_callbacks)
+TEST_FUNCTION(two_empty_frames_received_in_the_same_call_yields_2_callbacks)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1226,7 +1226,7 @@ TEST_METHOD(two_empty_frames_received_in_the_same_call_yields_2_callbacks)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.]  */
-TEST_METHOD(two_frames_with_1_byte_each_received_in_the_same_call_yields_2_callbacks)
+TEST_FUNCTION(two_frames_with_1_byte_each_received_in_the_same_call_yields_2_callbacks)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1270,7 +1270,7 @@ TEST_METHOD(two_frames_with_1_byte_each_received_in_the_same_call_yields_2_callb
 
 /* Tests_SRS_FRAME_CODEC_01_033: [frame_codec_subscribe subscribes for a certain type of frame received by the frame_codec instance identified by frame_codec.] */
 /* Tests_SRS_FRAME_CODEC_01_087: [On success, frame_codec_subscribe shall return zero.] */
-TEST_METHOD(frame_codec_subscribe_with_valid_args_succeeds)
+TEST_FUNCTION(frame_codec_subscribe_with_valid_args_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1294,7 +1294,7 @@ TEST_METHOD(frame_codec_subscribe_with_valid_args_succeeds)
 
 /* Tests_SRS_FRAME_CODEC_01_033: [frame_codec_subscribe subscribes for a certain type of frame received by the frame_codec instance identified by frame_codec.] */
 /* Tests_SRS_FRAME_CODEC_01_087: [On success, frame_codec_subscribe shall return zero.] */
-TEST_METHOD(when_list_find_returns_NULL_a_new_subscription_is_created)
+TEST_FUNCTION(when_list_find_returns_NULL_a_new_subscription_is_created)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1318,7 +1318,7 @@ TEST_METHOD(when_list_find_returns_NULL_a_new_subscription_is_created)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback or frame_body_bytes_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
-TEST_METHOD(when_frame_codec_is_NULL_frame_codec_subscribe_fails)
+TEST_FUNCTION(when_frame_codec_is_NULL_frame_codec_subscribe_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1331,7 +1331,7 @@ TEST_METHOD(when_frame_codec_is_NULL_frame_codec_subscribe_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback or frame_body_bytes_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
-TEST_METHOD(when_frame_begin_callback_is_NULL_frame_codec_subscribe_fails)
+TEST_FUNCTION(when_frame_begin_callback_is_NULL_frame_codec_subscribe_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1346,7 +1346,7 @@ TEST_METHOD(when_frame_begin_callback_is_NULL_frame_codec_subscribe_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback_1 or frame_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
-TEST_METHOD(when_frame_body_bytes_received_callback_is_NULL_frame_codec_subscribe_fails)
+TEST_FUNCTION(when_frame_body_bytes_received_callback_is_NULL_frame_codec_subscribe_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1361,7 +1361,7 @@ TEST_METHOD(when_frame_body_bytes_received_callback_is_NULL_frame_codec_subscrib
 }
 
 /* Tests_SRS_FRAME_CODEC_01_035: [After successfully registering a callback for a certain frame type, when subsequently that frame type is received the callbacks shall be invoked, passing to it the received frame and the callback_context value. */
-TEST_METHOD(when_a_frame_type_that_has_no_subscribers_is_received_no_callback_is_called)
+TEST_FUNCTION(when_a_frame_type_that_has_no_subscribers_is_received_no_callback_is_called)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1383,7 +1383,7 @@ TEST_METHOD(when_a_frame_type_that_has_no_subscribers_is_received_no_callback_is
 }
 
 /* Tests_SRS_FRAME_CODEC_01_035: [After successfully registering a callback for a certain frame type, when subsequently that frame type is received the callbacks shall be invoked, passing to it the received frame and the callback_context value.] */
-TEST_METHOD(when_no_subscribe_is_done_no_callback_is_called)
+TEST_FUNCTION(when_no_subscribe_is_done_no_callback_is_called)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1403,7 +1403,7 @@ TEST_METHOD(when_no_subscribe_is_done_no_callback_is_called)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_035: [After successfully registering a callback for a certain frame type, when subsequently that frame type is received the callbacks shall be invoked, passing to it the received frame and the callback_context value.] */
-TEST_METHOD(when_2_subscriptions_exist_and_first_one_matches_the_callback_is_invoked)
+TEST_FUNCTION(when_2_subscriptions_exist_and_first_one_matches_the_callback_is_invoked)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1433,7 +1433,7 @@ TEST_METHOD(when_2_subscriptions_exist_and_first_one_matches_the_callback_is_inv
 }
 
 /* Tests_SRS_FRAME_CODEC_01_035: [After successfully registering a callback for a certain frame type, when subsequently that frame type is received the callbacks shall be invoked, passing to it the received frame and the callback_context value.] */
-TEST_METHOD(when_2_subscriptions_exist_and_second_one_matches_the_callback_is_invoked)
+TEST_FUNCTION(when_2_subscriptions_exist_and_second_one_matches_the_callback_is_invoked)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1464,7 +1464,7 @@ TEST_METHOD(when_2_subscriptions_exist_and_second_one_matches_the_callback_is_in
 }
 
 /* Tests_SRS_FRAME_CODEC_01_036: [Only one callback pair shall be allowed to be registered for a given frame type.] */
-TEST_METHOD(when_frame_codec_subscribe_is_called_twice_for_the_same_frame_type_it_succeeds)
+TEST_FUNCTION(when_frame_codec_subscribe_is_called_twice_for_the_same_frame_type_it_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1486,7 +1486,7 @@ TEST_METHOD(when_frame_codec_subscribe_is_called_twice_for_the_same_frame_type_i
 }
 
 /* Tests_SRS_FRAME_CODEC_01_036: [Only one callback pair shall be allowed to be registered for a given frame type.] */
-TEST_METHOD(the_callbacks_for_the_2nd_frame_codec_subscribe_for_the_same_frame_type_remain_in_effect)
+TEST_FUNCTION(the_callbacks_for_the_2nd_frame_codec_subscribe_for_the_same_frame_type_remain_in_effect)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1517,7 +1517,7 @@ TEST_METHOD(the_callbacks_for_the_2nd_frame_codec_subscribe_for_the_same_frame_t
 }
 
 /* Tests_SRS_FRAME_CODEC_01_037: [If any failure occurs while performing the subscribe operation, frame_codec_subscribe shall return a non-zero value.] */
-TEST_METHOD(when_allocating_memory_for_the_subscription_fails_frame_codec_subscribe_fails)
+TEST_FUNCTION(when_allocating_memory_for_the_subscription_fails_frame_codec_subscribe_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1539,7 +1539,7 @@ TEST_METHOD(when_allocating_memory_for_the_subscription_fails_frame_codec_subscr
 }
 
 /* Tests_SRS_FRAME_CODEC_01_037: [If any failure occurs while performing the subscribe operation, frame_codec_subscribe shall return a non-zero value.] */
-TEST_METHOD(when_adding_the_subscription_fails_then_frame_codec_subscribe_fails)
+TEST_FUNCTION(when_adding_the_subscription_fails_then_frame_codec_subscribe_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1566,7 +1566,7 @@ TEST_METHOD(when_adding_the_subscription_fails_then_frame_codec_subscribe_fails)
 /* frame_codec_unsubscribe */
 
 /* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
-TEST_METHOD(removing_an_existing_subscription_succeeds)
+TEST_FUNCTION(removing_an_existing_subscription_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1589,7 +1589,7 @@ TEST_METHOD(removing_an_existing_subscription_succeeds)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
-TEST_METHOD(removing_an_existing_subscription_does_not_trigger_callback_when_a_frame_of_that_type_is_received)
+TEST_FUNCTION(removing_an_existing_subscription_does_not_trigger_callback_when_a_frame_of_that_type_is_received)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1611,7 +1611,7 @@ TEST_METHOD(removing_an_existing_subscription_does_not_trigger_callback_when_a_f
 }
 
 /* Tests_SRS_FRAME_CODEC_01_039: [If frame_codec is NULL, frame_codec_unsubscribe shall return a non-zero value.] */
-TEST_METHOD(frame_codec_unsubscribe_with_NULL_frame_codec_handle_fails)
+TEST_FUNCTION(frame_codec_unsubscribe_with_NULL_frame_codec_handle_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1624,7 +1624,7 @@ TEST_METHOD(frame_codec_unsubscribe_with_NULL_frame_codec_handle_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_040: [If no subscription for the type frame type exists, frame_codec_unsubscribe shall return a non-zero value.] */
-TEST_METHOD(frame_codec_unsubscribe_with_no_subscribe_call_has_been_made_fails)
+TEST_FUNCTION(frame_codec_unsubscribe_with_no_subscribe_call_has_been_made_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1644,7 +1644,7 @@ TEST_METHOD(frame_codec_unsubscribe_with_no_subscribe_call_has_been_made_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_041: [If any failure occurs while performing the unsubscribe operation, frame_codec_unsubscribe shall return a non-zero value.] */
-TEST_METHOD(when_list_remove_matching_item_fails_then_frame_codec_unsubscribe_fails)
+TEST_FUNCTION(when_list_remove_matching_item_fails_then_frame_codec_unsubscribe_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1665,7 +1665,7 @@ TEST_METHOD(when_list_remove_matching_item_fails_then_frame_codec_unsubscribe_fa
 }
 
 /* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
-TEST_METHOD(unsubscribe_one_of_2_subscriptions_succeeds)
+TEST_FUNCTION(unsubscribe_one_of_2_subscriptions_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1688,7 +1688,7 @@ TEST_METHOD(unsubscribe_one_of_2_subscriptions_succeeds)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
-TEST_METHOD(unsubscribe_2nd_out_of_2_subscriptions_succeeds)
+TEST_FUNCTION(unsubscribe_2nd_out_of_2_subscriptions_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1712,7 +1712,7 @@ TEST_METHOD(unsubscribe_2nd_out_of_2_subscriptions_succeeds)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
-TEST_METHOD(subscribe_unsubscribe_subscribe_succeeds)
+TEST_FUNCTION(subscribe_unsubscribe_subscribe_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1737,7 +1737,7 @@ TEST_METHOD(subscribe_unsubscribe_subscribe_succeeds)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
-TEST_METHOD(subscribe_unsubscribe_unsubscribe_fails)
+TEST_FUNCTION(subscribe_unsubscribe_unsubscribe_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1764,7 +1764,7 @@ TEST_METHOD(subscribe_unsubscribe_unsubscribe_fails)
 /* Tests_SRS_FRAME_CODEC_01_070: [The type code indicates the format and purpose of the frame.] */
 /* Tests_SRS_FRAME_CODEC_01_071: [The subsequent bytes in the frame header MAY be interpreted differently depending on the type of the frame.] */
 /* Tests_SRS_FRAME_CODEC_01_072: [A type code of 0x00 indicates that the frame is an AMQP frame.] */
-TEST_METHOD(frame_type_amqp_is_zero)
+TEST_FUNCTION(frame_type_amqp_is_zero)
 {
 	// arrange
 
@@ -1780,7 +1780,7 @@ TEST_METHOD(frame_type_amqp_is_zero)
 /* Tests_SRS_FRAME_CODEC_01_070: [The type code indicates the format and purpose of the frame.] */
 /* Tests_SRS_FRAME_CODEC_01_071: [The subsequent bytes in the frame header MAY be interpreted differently depending on the type of the frame.] */
 /* Tests_SRS_FRAME_CODEC_01_073: [A type code of 0x01 indicates that the frame is a SASL frame] */
-TEST_METHOD(frame_type_sasl_is_one)
+TEST_FUNCTION(frame_type_sasl_is_one)
 {
 	// arrange
 
@@ -1804,7 +1804,7 @@ TEST_METHOD(frame_type_sasl_is_one)
 /* Tests_SRS_FRAME_CODEC_01_062: [SIZE Bytes 0-3 of the frame header contain the frame size.] */
 /* Tests_SRS_FRAME_CODEC_01_063: [This is an unsigned 32-bit integer that MUST contain the total frame size of the frame header, extended header, and frame body.] */
 /* Tests_SRS_FRAME_CODEC_01_064: [The frame is malformed if the size is less than the size of the frame header (8 bytes).] */
-TEST_METHOD(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeeds)
+TEST_FUNCTION(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1826,7 +1826,7 @@ TEST_METHOD(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succeed
 }
 
 /* Tests_SRS_FRAME_CODEC_01_044: [If the argument frame_codec is NULL, frame_codec_begin_encode_frame shall return a non-zero value.] */
-TEST_METHOD(when_frame_codec_is_NULL_frame_codec_begin_encode_frame_fails)
+TEST_FUNCTION(when_frame_codec_is_NULL_frame_codec_begin_encode_frame_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1839,7 +1839,7 @@ TEST_METHOD(when_frame_codec_is_NULL_frame_codec_begin_encode_frame_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_091: [If the argument type_specific_size is greater than 0 and type_specific_bytes is NULL, frame_codec_begin_encode_frame shall return a non-zero value.] */
-TEST_METHOD(when_type_specific_size_is_positive_and_type_speific_bytes_is_NULL_frame_codec_begin_encode_frame_fails)
+TEST_FUNCTION(when_type_specific_size_is_positive_and_type_speific_bytes_is_NULL_frame_codec_begin_encode_frame_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1854,7 +1854,7 @@ TEST_METHOD(when_type_specific_size_is_positive_and_type_speific_bytes_is_NULL_f
 }
 
 /* Tests_SRS_FRAME_CODEC_01_045: [If encoding the header fails (cannot be sent through the IO interface), frame_codec_begin_encode_frame shall return a non-zero value.] */
-TEST_METHOD(when_io_send_fails_then_frame_codec_begin_encode_frame_fails)
+TEST_FUNCTION(when_io_send_fails_then_frame_codec_begin_encode_frame_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1875,7 +1875,7 @@ TEST_METHOD(when_io_send_fails_then_frame_codec_begin_encode_frame_fails)
 /* Tests_SRS_FRAME_CODEC_01_065: [DOFF Byte 4 of the frame header is the data offset.] */
 /* Tests_SRS_FRAME_CODEC_01_066: [This gives the position of the body within the frame.] */
 /* Tests_SRS_FRAME_CODEC_01_058: [extended header The extended header is a variable width area preceding the frame body.] */
-TEST_METHOD(when_type_specific_size_is_too_big_then_frame_codec_begin_encode_frame_fails)
+TEST_FUNCTION(when_type_specific_size_is_too_big_then_frame_codec_begin_encode_frame_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1899,7 +1899,7 @@ TEST_METHOD(when_type_specific_size_is_too_big_then_frame_codec_begin_encode_fra
 /* Tests_SRS_FRAME_CODEC_01_066: [This gives the position of the body within the frame.] */
 /* Tests_SRS_FRAME_CODEC_01_067: [The value of the data offset is an unsigned, 8-bit integer specifying a count of 4-byte words.] */
 /* Tests_SRS_FRAME_CODEC_01_063: [This is an unsigned 32-bit integer that MUST contain the total frame size of the frame header, extended header, and frame body.] */
-TEST_METHOD(when_type_specific_size_is_max_allowed_then_frame_codec_begin_encode_frame_succeeds)
+TEST_FUNCTION(when_type_specific_size_is_max_allowed_then_frame_codec_begin_encode_frame_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1929,7 +1929,7 @@ TEST_METHOD(when_type_specific_size_is_max_allowed_then_frame_codec_begin_encode
 /* Tests_SRS_FRAME_CODEC_01_066: [This gives the position of the body within the frame.] */
 /* Tests_SRS_FRAME_CODEC_01_067: [The value of the data offset is an unsigned, 8-bit integer specifying a count of 4-byte words.] */
 /* Tests_SRS_FRAME_CODEC_01_068: [Due to the mandatory 8-byte frame header, the frame is malformed if the value is less than 2.] */
-TEST_METHOD(one_byte_of_padding_is_added_to_type_specific_data_to_make_the_frame_header)
+TEST_FUNCTION(one_byte_of_padding_is_added_to_type_specific_data_to_make_the_frame_header)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1957,7 +1957,7 @@ TEST_METHOD(one_byte_of_padding_is_added_to_type_specific_data_to_make_the_frame
 /* Tests_SRS_FRAME_CODEC_01_066: [This gives the position of the body within the frame.] */
 /* Tests_SRS_FRAME_CODEC_01_067: [The value of the data offset is an unsigned, 8-bit integer specifying a count of 4-byte words.] */
 /* Tests_SRS_FRAME_CODEC_01_068: [Due to the mandatory 8-byte frame header, the frame is malformed if the value is less than 2.] */
-TEST_METHOD(no_bytes_of_padding_are_added_to_type_specific_data_when_enough_bytes_are_there)
+TEST_FUNCTION(no_bytes_of_padding_are_added_to_type_specific_data_when_enough_bytes_are_there)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -1983,7 +1983,7 @@ TEST_METHOD(no_bytes_of_padding_are_added_to_type_specific_data_when_enough_byte
 }
 
 /* Tests_SRS_FRAME_CODEC_01_069: [TYPE Byte 5 of the frame header is a type code.] */
-TEST_METHOD(the_type_is_placed_in_the_underlying_frame)
+TEST_FUNCTION(the_type_is_placed_in_the_underlying_frame)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2005,7 +2005,7 @@ TEST_METHOD(the_type_is_placed_in_the_underlying_frame)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_089: [If any IO calls fail then frame_codec_begin_encode_frame shall return a non-zero value.] */
-TEST_METHOD(when_2nd_io_send_fails_frame_codec_begin_encode_frame_fails_too)
+TEST_FUNCTION(when_2nd_io_send_fails_frame_codec_begin_encode_frame_fails_too)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2024,7 +2024,7 @@ TEST_METHOD(when_2nd_io_send_fails_frame_codec_begin_encode_frame_fails_too)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_089: [If any IO calls fail then frame_codec_begin_encode_frame shall return a non-zero value.] */
-TEST_METHOD(when_3rd_io_send_fails_frame_codec_begin_encode_frame_fails_too)
+TEST_FUNCTION(when_3rd_io_send_fails_frame_codec_begin_encode_frame_fails_too)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2045,7 +2045,7 @@ TEST_METHOD(when_3rd_io_send_fails_frame_codec_begin_encode_frame_fails_too)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_046: [Once encoding succeeds, all subsequent frame_codec_begin_encode_frame calls shall fail, until all the bytes of the frame have been encoded by using frame_codec_encode_frame_bytes.] */
-TEST_METHOD(while_not_all_frame_body_bytes_were_encoded_frame_codec_begin_encode_frame_fails)
+TEST_FUNCTION(while_not_all_frame_body_bytes_were_encoded_frame_codec_begin_encode_frame_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2061,7 +2061,7 @@ TEST_METHOD(while_not_all_frame_body_bytes_were_encoded_frame_codec_begin_encode
 }
 
 /* Tests_SRS_FRAME_CODEC_01_093: [Once encoding has failed due to IO issues, all subsequent calls to frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
-TEST_METHOD(after_an_io_failure_a_subsequent_call_to_frame_codec_begin_encode_frame_fails)
+TEST_FUNCTION(after_an_io_failure_a_subsequent_call_to_frame_codec_begin_encode_frame_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2082,7 +2082,7 @@ TEST_METHOD(after_an_io_failure_a_subsequent_call_to_frame_codec_begin_encode_fr
 }
 
 /* Tests_SRS_FRAME_CODEC_01_093: [Once encoding has failed due to IO issues, all subsequent calls to frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
-TEST_METHOD(after_an_io_failure_with_2nd_io_send_call_a_subsequent_call_to_frame_codec_begin_encode_frame_fails)
+TEST_FUNCTION(after_an_io_failure_with_2nd_io_send_call_a_subsequent_call_to_frame_codec_begin_encode_frame_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2105,7 +2105,7 @@ TEST_METHOD(after_an_io_failure_with_2nd_io_send_call_a_subsequent_call_to_frame
 }
 
 /* Tests_SRS_FRAME_CODEC_01_093: [Once encoding has failed due to IO issues, all subsequent calls to frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
-TEST_METHOD(after_an_io_failure_with_3rd_io_send_call_a_subsequent_call_to_frame_codec_begin_encode_frame_fails)
+TEST_FUNCTION(after_an_io_failure_with_3rd_io_send_call_a_subsequent_call_to_frame_codec_begin_encode_frame_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2133,7 +2133,7 @@ TEST_METHOD(after_an_io_failure_with_3rd_io_send_call_a_subsequent_call_to_frame
 /* Tests_SRS_FRAME_CODEC_01_047: [frame_codec_encode_frame_bytes encodes the frame bytes for a frame encoding started with a frame_codec_start_encode_frame call.] */
 /* Tests_SRS_FRAME_CODEC_01_048: [If all bytes are successfully encoded, frame_codec_encode_frame_bytes shall return 0.] */
 /* Tests_SRS_FRAME_CODEC_01_061: [frame body The frame body is a variable width sequence of bytes the format of which depends on the frame type.] */
-TEST_METHOD(frame_codec_encode_frame_bytes_with_1_encoded_byte_succeeds)
+TEST_FUNCTION(frame_codec_encode_frame_bytes_with_1_encoded_byte_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2154,7 +2154,7 @@ TEST_METHOD(frame_codec_encode_frame_bytes_with_1_encoded_byte_succeeds)
 
 /* Tests_SRS_FRAME_CODEC_01_047: [frame_codec_encode_frame_bytes encodes the frame bytes for a frame encoding started with a frame_codec_start_encode_frame call.] */
 /* Tests_SRS_FRAME_CODEC_01_048: [If all bytes are successfully encoded, frame_codec_encode_frame_bytes shall return 0.] */
-TEST_METHOD(frame_codec_encode_frame_bytes_with_2_bytes_succeeds)
+TEST_FUNCTION(frame_codec_encode_frame_bytes_with_2_bytes_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2174,7 +2174,7 @@ TEST_METHOD(frame_codec_encode_frame_bytes_with_2_bytes_succeeds)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_049: [If any of the frame_codec or bytes arguments is NULL, frame_codec_encode_frame_bytes shall return a non-zero value.] */
-TEST_METHOD(frame_codec_encode_frame_bytes_with_NULL_frame_codec_fails)
+TEST_FUNCTION(frame_codec_encode_frame_bytes_with_NULL_frame_codec_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2188,7 +2188,7 @@ TEST_METHOD(frame_codec_encode_frame_bytes_with_NULL_frame_codec_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_049: [If any of the frame_codec or bytes arguments is NULL, frame_codec_encode_frame_bytes shall return a non-zero value.] */
-TEST_METHOD(frame_codec_encode_frame_bytes_with_NULL_bytes_fails)
+TEST_FUNCTION(frame_codec_encode_frame_bytes_with_NULL_bytes_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2204,7 +2204,7 @@ TEST_METHOD(frame_codec_encode_frame_bytes_with_NULL_bytes_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_050: [If the length argument is zero, frame_codec_encode_frame_bytes shall return a non-zero value.] */
-TEST_METHOD(frame_codec_encode_frame_bytes_with_zero_length_fails)
+TEST_FUNCTION(frame_codec_encode_frame_bytes_with_zero_length_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2221,7 +2221,7 @@ TEST_METHOD(frame_codec_encode_frame_bytes_with_zero_length_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_053: [If length is bigger than the expected amount of bytes for the frame currently being encoded, then frame_codec_encode_frame_bytes shall return a non-zero value.] */
-TEST_METHOD(when_more_bytes_are_passed_than_expected_frame_codec_encode_frame_bytes_fails)
+TEST_FUNCTION(when_more_bytes_are_passed_than_expected_frame_codec_encode_frame_bytes_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2238,7 +2238,7 @@ TEST_METHOD(when_more_bytes_are_passed_than_expected_frame_codec_encode_frame_by
 }
 
 /* Tests_SRS_FRAME_CODEC_01_054: [If any encoding error (passing the data to the IO interface) occurs, frame_codec_encode_frame_bytes shall return a non-zero value.] */
-TEST_METHOD(when_io_send_fails_then_frame_codec_encode_frame_bytes_fails)
+TEST_FUNCTION(when_io_send_fails_then_frame_codec_encode_frame_bytes_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2260,7 +2260,7 @@ TEST_METHOD(when_io_send_fails_then_frame_codec_encode_frame_bytes_fails)
 
 /* Tests_SRS_FRAME_CODEC_01_051: [The total number of bytes to be encoded for a frame can be passed in multiple frame_codec_encode_frame_bytes calls.] */
 /* Tests_SRS_FRAME_CODEC_01_052: [At each call, the frame_codec instance shall decrease the amount of bytes still needed to be encoded for the frame.] */
-TEST_METHOD(sending_only_1_byte_out_of_2_frame_body_bytes_succeeds)
+TEST_FUNCTION(sending_only_1_byte_out_of_2_frame_body_bytes_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2281,7 +2281,7 @@ TEST_METHOD(sending_only_1_byte_out_of_2_frame_body_bytes_succeeds)
 
 /* Tests_SRS_FRAME_CODEC_01_051: [The total number of bytes to be encoded for a frame can be passed in multiple frame_codec_encode_frame_bytes calls.] */
 /* Tests_SRS_FRAME_CODEC_01_052: [At each call, the frame_codec instance shall decrease the amount of bytes still needed to be encoded for the frame.] */
-TEST_METHOD(sending_2_bytes_1_by_1_via_frame_codec_encode_frame_bytes_succeeds)
+TEST_FUNCTION(sending_2_bytes_1_by_1_via_frame_codec_encode_frame_bytes_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2306,7 +2306,7 @@ TEST_METHOD(sending_2_bytes_1_by_1_via_frame_codec_encode_frame_bytes_succeeds)
 
 /* Tests_SRS_FRAME_CODEC_01_051: [The total number of bytes to be encoded for a frame can be passed in multiple frame_codec_encode_frame_bytes calls.] */
 /* Tests_SRS_FRAME_CODEC_01_052: [At each call, the frame_codec instance shall decrease the amount of bytes still needed to be encoded for the frame.] */
-TEST_METHOD(sending_an_extra_byte_1_by_1_via_frame_codec_encode_frame_bytes_fails)
+TEST_FUNCTION(sending_an_extra_byte_1_by_1_via_frame_codec_encode_frame_bytes_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2329,7 +2329,7 @@ TEST_METHOD(sending_an_extra_byte_1_by_1_via_frame_codec_encode_frame_bytes_fail
 
 /* Tests_SRS_FRAME_CODEC_01_051: [The total number of bytes to be encoded for a frame can be passed in multiple frame_codec_encode_frame_bytes calls.] */
 /* Tests_SRS_FRAME_CODEC_01_052: [At each call, the frame_codec instance shall decrease the amount of bytes still needed to be encoded for the frame.] */
-TEST_METHOD(after_a_frame_is_completed_another_one_can_be_started)
+TEST_FUNCTION(after_a_frame_is_completed_another_one_can_be_started)
 {
 	// arrange
 	frame_codec_mocks mocks;
@@ -2354,7 +2354,7 @@ TEST_METHOD(after_a_frame_is_completed_another_one_can_be_started)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_094: [Once encoding has failed due to IO issues, all subsequent encoding calls to shall fail and return a non-zero value.] */
-TEST_METHOD(when_encoding_frame_body_bytes_fails_subsequent_frame_encoding_attempts_fail)
+TEST_FUNCTION(when_encoding_frame_body_bytes_fails_subsequent_frame_encoding_attempts_fail)
 {
 	// arrange
 	frame_codec_mocks mocks;

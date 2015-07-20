@@ -62,18 +62,18 @@ MICROMOCK_MUTEX_HANDLE test_serialize_mutex;
 
 BEGIN_TEST_SUITE(io_unittests)
 
-TEST_CLASS_INITIALIZE(suite_init)
+TEST_SUITE_INITIALIZE(suite_init)
 {
 	test_serialize_mutex = MicroMockCreateMutex();
 	ASSERT_IS_NOT_NULL(test_serialize_mutex);
 }
 
-TEST_CLASS_CLEANUP(suite_cleanup)
+TEST_SUITE_CLEANUP(suite_cleanup)
 {
 	MicroMockDestroyMutex(test_serialize_mutex);
 }
 
-TEST_METHOD_INITIALIZE(method_init)
+TEST_FUNCTION_INITIALIZE(method_init)
 {
 	if (!MicroMockAcquireMutex(test_serialize_mutex))
 	{
@@ -81,7 +81,7 @@ TEST_METHOD_INITIALIZE(method_init)
 	}
 }
 
-TEST_METHOD_CLEANUP(method_cleanup)
+TEST_FUNCTION_CLEANUP(method_cleanup)
 {
 	if (!MicroMockReleaseMutex(test_serialize_mutex))
 	{
@@ -93,7 +93,7 @@ TEST_METHOD_CLEANUP(method_cleanup)
 
 /* Tests_SRS_IO_01_001: [io_create shall return on success a non-NULL handle to a new IO interface.] */
 /* Tests_SRS_IO_01_002: [In order to instantiate the concrete IO implementation the function concrete_io_create from the io_interface_description shall be called, passing the io_create_parameters, receive_callback, receive_callback_context and logger_log arguments.] */
-TEST_METHOD(io_create_with_all_args_except_interface_description_NULL_succeeds)
+TEST_FUNCTION(io_create_with_all_args_except_interface_description_NULL_succeeds)
 {
 	// arrange
 	io_mocks mocks;
@@ -109,7 +109,7 @@ TEST_METHOD(io_create_with_all_args_except_interface_description_NULL_succeeds)
 }
 
 /* Tests_SRS_IO_01_002: [In order to instantiate the concrete IO implementation the function concrete_io_create from the io_interface_description shall be called, passing the io_create_parameters, receive_callback, receive_callback_context and logger_log arguments.] */
-TEST_METHOD(io_create_passes_the_args_to_the_concrete_io_implementation)
+TEST_FUNCTION(io_create_passes_the_args_to_the_concrete_io_implementation)
 {
 	// arrange
 	io_mocks mocks;
@@ -125,7 +125,7 @@ TEST_METHOD(io_create_passes_the_args_to_the_concrete_io_implementation)
 }
 
 /* Tests_SRS_IO_01_016: [If the underlying concrete_io_create call fails, io_create shall return NULL.] */
-TEST_METHOD(when_concrete_io_create_fails_then_io_create_fails)
+TEST_FUNCTION(when_concrete_io_create_fails_then_io_create_fails)
 {
 	// arrange
 	io_mocks mocks;
@@ -144,7 +144,7 @@ TEST_METHOD(when_concrete_io_create_fails_then_io_create_fails)
 }
 
 /* Tests_SRS_IO_01_003: [If the argument io_interface_description is NULL, io_create shall return NULL.] */
-TEST_METHOD(when_io_interface_description_is_NULL_then_io_create_fails)
+TEST_FUNCTION(when_io_interface_description_is_NULL_then_io_create_fails)
 {
 	// arrange
 	io_mocks mocks;
@@ -157,7 +157,7 @@ TEST_METHOD(when_io_interface_description_is_NULL_then_io_create_fails)
 }
 
 /* Tests_SRS_IO_01_004: [If any io_interface_description member is NULL, io_create shall return NULL.] */
-TEST_METHOD(when_concrete_io_create_is_NULL_then_io_create_fails)
+TEST_FUNCTION(when_concrete_io_create_is_NULL_then_io_create_fails)
 {
 	// arrange
 	io_mocks mocks;
@@ -177,7 +177,7 @@ TEST_METHOD(when_concrete_io_create_is_NULL_then_io_create_fails)
 }
 
 /* Tests_SRS_IO_01_004: [If any io_interface_description member is NULL, io_create shall return NULL.] */
-TEST_METHOD(when_concrete_io_destroy_is_NULL_then_io_create_fails)
+TEST_FUNCTION(when_concrete_io_destroy_is_NULL_then_io_create_fails)
 {
 	// arrange
 	io_mocks mocks;
@@ -197,7 +197,7 @@ TEST_METHOD(when_concrete_io_destroy_is_NULL_then_io_create_fails)
 }
 
 /* Tests_SRS_IO_01_004: [If any io_interface_description member is NULL, io_create shall return NULL.] */
-TEST_METHOD(when_concrete_io_send_is_NULL_then_io_create_fails)
+TEST_FUNCTION(when_concrete_io_send_is_NULL_then_io_create_fails)
 {
 	// arrange
 	io_mocks mocks;
@@ -217,7 +217,7 @@ TEST_METHOD(when_concrete_io_send_is_NULL_then_io_create_fails)
 }
 
 /* Tests_SRS_IO_01_004: [If any io_interface_description member is NULL, io_create shall return NULL.] */
-TEST_METHOD(when_concrete_io_dowork_is_NULL_then_io_create_fails)
+TEST_FUNCTION(when_concrete_io_dowork_is_NULL_then_io_create_fails)
 {
 	// arrange
 	io_mocks mocks;
@@ -237,7 +237,7 @@ TEST_METHOD(when_concrete_io_dowork_is_NULL_then_io_create_fails)
 }
 
 /* Tests_SRS_IO_01_017: [If allocating the memory needed for the IO interface fails then io_create shall return NULL.] */
-TEST_METHOD(when_allocating_memory_Fails_then_io_create_fails)
+TEST_FUNCTION(when_allocating_memory_Fails_then_io_create_fails)
 {
 	// arrange
 	io_mocks mocks;
@@ -256,7 +256,7 @@ TEST_METHOD(when_allocating_memory_Fails_then_io_create_fails)
 
 /* Tests_SRS_IO_01_005: [io_destroy shall free all resources associated with the IO handle.] */
 /* Tests_SRS_IO_01_006: [io_destroy shall also call the concrete_io_destroy function that is member of the io_interface_description argument passed to io_create, while passing as argument to concrete_io_destroy the result of the underlying concrete_io_create handle that was called as part of the io_create call.] */
-TEST_METHOD(io_destroy_calls_concrete_io_destroy_and_frees_memory)
+TEST_FUNCTION(io_destroy_calls_concrete_io_destroy_and_frees_memory)
 {
 	// arrange
 	io_mocks mocks;
@@ -273,7 +273,7 @@ TEST_METHOD(io_destroy_calls_concrete_io_destroy_and_frees_memory)
 }
 
 /* Tests_SRS_IO_01_007: [If handle is NULL, io_destroy shall do nothing.] */
-TEST_METHOD(io_destroy_with_null_handle_does_nothing)
+TEST_FUNCTION(io_destroy_with_null_handle_does_nothing)
 {
 	// arrange
 	io_mocks mocks;
@@ -288,7 +288,7 @@ TEST_METHOD(io_destroy_with_null_handle_does_nothing)
 
 /* Tests_SRS_IO_01_008: [io_send shall pass the sequence of bytes pointed to by buffer to the concrete IO implementation specified in io_create, by calling the concrete_io_send function while passing down the buffer and size arguments to it.] */
 /* Tests_SRS_IO_01_009: [On success, io_send shall return 0.] */
-TEST_METHOD(io_send_calls_the_underlying_concrete_io_send_an_succeeds)
+TEST_FUNCTION(io_send_calls_the_underlying_concrete_io_send_an_succeeds)
 {
 	// arrange
 	io_mocks mocks;
@@ -306,7 +306,7 @@ TEST_METHOD(io_send_calls_the_underlying_concrete_io_send_an_succeeds)
 }
 
 /* Tests_SRS_IO_01_010: [If handle is NULL, io_send shall return a non-zero value.] */
-TEST_METHOD(io_send_with_NULL_handle_fails)
+TEST_FUNCTION(io_send_with_NULL_handle_fails)
 {
 	// arrange
 	io_mocks mocks;
@@ -321,7 +321,7 @@ TEST_METHOD(io_send_with_NULL_handle_fails)
 }
 
 /* Tests_SRS_IO_01_015: [If the underlying concrete_io_send fails, io_send shall return a non-zero value.] */
-TEST_METHOD(when_the_concrete_io_send_fails_then_io_send_fails)
+TEST_FUNCTION(when_the_concrete_io_send_fails_then_io_send_fails)
 {
 	// arrange
 	io_mocks mocks;
@@ -340,7 +340,7 @@ TEST_METHOD(when_the_concrete_io_send_fails_then_io_send_fails)
 }
 
 /* Tests_SRS_IO_01_011: [No error check shall be performed on buffer and size.] */
-TEST_METHOD(io_send_with_NULL_buffer_and_nonzero_length_passes_the_args_down_and_succeeds)
+TEST_FUNCTION(io_send_with_NULL_buffer_and_nonzero_length_passes_the_args_down_and_succeeds)
 {
 	// arrange
 	io_mocks mocks;
@@ -357,7 +357,7 @@ TEST_METHOD(io_send_with_NULL_buffer_and_nonzero_length_passes_the_args_down_and
 }
 
 /* Tests_SRS_IO_01_011: [No error check shall be performed on buffer and size.] */
-TEST_METHOD(io_send_with_NULL_buffer_and_zero_length_passes_the_args_down_and_succeeds)
+TEST_FUNCTION(io_send_with_NULL_buffer_and_zero_length_passes_the_args_down_and_succeeds)
 {
 	// arrange
 	io_mocks mocks;
@@ -374,7 +374,7 @@ TEST_METHOD(io_send_with_NULL_buffer_and_zero_length_passes_the_args_down_and_su
 }
 
 /* Tests_SRS_IO_01_011: [No error check shall be performed on buffer and size.] */
-TEST_METHOD(io_send_with_non_NULL_buffer_and_zero_length_passes_the_args_down_and_succeeds)
+TEST_FUNCTION(io_send_with_non_NULL_buffer_and_zero_length_passes_the_args_down_and_succeeds)
 {
 	// arrange
 	io_mocks mocks;
@@ -394,7 +394,7 @@ TEST_METHOD(io_send_with_non_NULL_buffer_and_zero_length_passes_the_args_down_an
 /* io_dowork */
 
 /* Tests_SRS_IO_01_012: [io_dowork shall call the concrete IO implementation specified in io_create, by calling the concrete_io_dowork function.] */
-TEST_METHOD(io_dowork_calls_the_concrete_dowork_and_succeeds)
+TEST_FUNCTION(io_dowork_calls_the_concrete_dowork_and_succeeds)
 {
 	// arrange
 	io_mocks mocks;
@@ -412,7 +412,7 @@ TEST_METHOD(io_dowork_calls_the_concrete_dowork_and_succeeds)
 }
 
 /* Tests_SRS_IO_01_018: [When the handle argument is NULL, io_dowork shall do nothing.] */
-TEST_METHOD(io_dowork_with_NULL_handle_does_nothing)
+TEST_FUNCTION(io_dowork_with_NULL_handle_does_nothing)
 {
 	// arrange
 	io_mocks mocks;

@@ -24,6 +24,30 @@ static IO_RECEIVE_CALLBACK io_receive_callback;
 static void* io_receive_callback_context;
 static uint64_t performative_ulong;
 
+std::ostream& operator<<(std::ostream& left, const delivery_tag& delivery)
+{
+    std::ios::fmtflags f(left.flags());
+    left << std::hex;
+    for (size_t i = 0; i < delivery.length; i++)
+    {
+        left << ((const unsigned char*)delivery.bytes)[i];
+    }
+    left.flags(f);
+    return left;
+}
+
+static bool operator==(const delivery_tag& left, const delivery_tag& right)
+{
+    if (left.length != right.length)
+    {
+        return false;
+    }
+    else
+    {
+        return memcmp(left.bytes, right.bytes, left.length) == 0;
+    }
+}
+
 TYPED_MOCK_CLASS(connection_mocks, CGlobalMock)
 {
 public:
@@ -57,6 +81,8 @@ public:
 	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_3(, int, frame_codec_receive_bytes, FRAME_CODEC_HANDLE, handle, const unsigned char*, buffer, size_t, size)
 	MOCK_METHOD_END(int, 0);
+    MOCK_STATIC_METHOD_4(, int, amqp_frame_codec_begin_encode_frame, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec, uint16_t, channel, const AMQP_VALUE, performative, uint32_t, payload_size)
+    MOCK_METHOD_END(int, 0);
 
 	/* amqp_frame_codec */
 	MOCK_STATIC_METHOD_5(, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_create, FRAME_CODEC_HANDLE, frame_codec, AMQP_FRAME_RECEIVED_CALLBACK, frame_received_callback, AMQP_EMPTY_FRAME_RECEIVED_CALLBACK, empty_frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK, payload_bytes_received_callback, void*, frame_received_callback_context)
@@ -70,6 +96,9 @@ public:
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_get_descriptor, AMQP_VALUE, value)
 	MOCK_METHOD_END(AMQP_VALUE, TEST_DESCRIPTOR_AMQP_VALUE);
+
+    MOCK_STATIC_METHOD_1(, void, amqpvalue_destroy, AMQP_VALUE, value)
+    MOCK_VOID_METHOD_END();
 };
 
 extern "C"
@@ -89,10 +118,15 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , int, frame_codec_receive_bytes, FRAME_CODEC_HANDLE, handle, const unsigned char*, buffer, size_t, size);
 
 	DECLARE_GLOBAL_MOCK_METHOD_5(connection_mocks, , AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_create, FRAME_CODEC_HANDLE, frame_codec, AMQP_FRAME_RECEIVED_CALLBACK, frame_received_callback, AMQP_EMPTY_FRAME_RECEIVED_CALLBACK, empty_frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK, payload_bytes_received_callback, void*, frame_received_callback_context);
+    DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , int, amqp_frame_codec_begin_encode_frame, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec, uint16_t, channel, const AMQP_VALUE, performative, uint32_t, payload_size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, amqp_frame_codec_destroy, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec);
 
 	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , int, amqpvalue_get_ulong, AMQP_VALUE, value, uint64_t*, ulong_value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , AMQP_VALUE, amqpvalue_get_descriptor, AMQP_VALUE, value);
+
+    DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, amqpvalue_destroy, AMQP_VALUE, value);
+
+    
 
 	extern void consolelogger_log(char* format, ...)
 	{
@@ -102,20 +136,20 @@ extern "C"
 
 MICROMOCK_MUTEX_HANDLE test_serialize_mutex;
 
-BEGIN_TEST_SUITE(amqpvalue_unittests)
+BEGIN_TEST_SUITE(connection_unittests)
 
-TEST_CLASS_INITIALIZE(suite_init)
+TEST_SUITE_INITIALIZE(suite_init)
 {
 	test_serialize_mutex = MicroMockCreateMutex();
 	ASSERT_IS_NOT_NULL(test_serialize_mutex);
 }
 
-TEST_CLASS_CLEANUP(suite_cleanup)
+TEST_SUITE_CLEANUP(suite_cleanup)
 {
 	MicroMockDestroyMutex(test_serialize_mutex);
 }
 
-TEST_METHOD_INITIALIZE(method_init)
+TEST_FUNCTION_INITIALIZE(method_init)
 {
 	if (!MicroMockAcquireMutex(test_serialize_mutex))
 	{
@@ -124,7 +158,7 @@ TEST_METHOD_INITIALIZE(method_init)
 	performative_ulong = 0x10;
 }
 
-TEST_METHOD_CLEANUP(method_cleanup)
+TEST_FUNCTION_CLEANUP(method_cleanup)
 {
 	if (!MicroMockReleaseMutex(test_serialize_mutex))
 	{

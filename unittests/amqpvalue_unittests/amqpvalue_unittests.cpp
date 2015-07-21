@@ -3583,6 +3583,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 
 		/* Tests_SRS_AMQPVALUE_01_184: [If the key already exists in the map, its value shall be replaced with the value provided by the value argument.] */
 		/* Tests_SRS_AMQPVALUE_01_185: [When storing the key or value, their contents shall be cloned.] */
+        /* Tests_SRS_AMQPVALUE_01_125: [A map in which there exist two identical key values is invalid.] */
 		TEST_FUNCTION(amqpvalue_set_map_value_with_an_already_existing_value_replaces_the_old_value)
 		{
 			// arrange
@@ -8502,8 +8503,17 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			test_amqp_encode(&mocks, source, expected_stringified_encoded);
 		}
 
+        /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+        TEST_FUNCTION(when_encoder_output_fails_amqpvalue_encode_empty_map_fails)
+        {
+            amqpvalue_mocks mocks;
+            AMQP_VALUE source = amqpvalue_create_map();
+            test_amqp_encode_failure(&mocks, source);
+        }
+
         /* Tests_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
         /* Tests_SRS_AMQPVALUE_01_123: [A map is encoded as a compound value where the constituent elements form alternating key value pairs.] */
+        /* Tests_SRS_AMQPVALUE_01_124: [Map encodings MUST contain an even number of items (i.e. an equal number of keys and values).] */
         TEST_FUNCTION(amqpvalue_encode_a_map_with_a_null_key_and_null_value_succeeds)
         {
             amqpvalue_mocks mocks;
@@ -8511,9 +8521,200 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
             AMQP_VALUE key = amqpvalue_create_null();
             AMQP_VALUE value = amqpvalue_create_null();
             amqpvalue_set_map_value(source, key, value);
+            amqpvalue_destroy(key);
+            amqpvalue_destroy(value);
             unsigned char expected_bytes[] = { 0xC1, 0x02, 0x02, 0x40, 0x40 };
             stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
             test_amqp_encode(&mocks, source, expected_stringified_encoded);
+        }
+
+        /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+        TEST_FUNCTION(when_encoder_output_fails_amqpvalue_encode_a_map_with_a_null_key_and_null_value_fails)
+        {
+            amqpvalue_mocks mocks;
+            AMQP_VALUE source = amqpvalue_create_map();
+            AMQP_VALUE key = amqpvalue_create_null();
+            AMQP_VALUE value = amqpvalue_create_null();
+            amqpvalue_set_map_value(source, key, value);
+            amqpvalue_destroy(key);
+            amqpvalue_destroy(value);
+            test_amqp_encode_failure(&mocks, source);
+        }
+
+        /* Tests_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
+        /* Tests_SRS_AMQPVALUE_01_123: [A map is encoded as a compound value where the constituent elements form alternating key value pairs.] */
+        /* Tests_SRS_AMQPVALUE_01_124: [Map encodings MUST contain an even number of items (i.e. an equal number of keys and values).] */
+        TEST_FUNCTION(amqpvalue_encode_a_map_with_a_uint_key_and_uint_value_succeeds)
+        {
+            amqpvalue_mocks mocks;
+            AMQP_VALUE source = amqpvalue_create_map();
+            AMQP_VALUE key = amqpvalue_create_uint(0x42);
+            AMQP_VALUE value = amqpvalue_create_uint(0x43);
+            amqpvalue_set_map_value(source, key, value);
+            amqpvalue_destroy(key);
+            amqpvalue_destroy(value);
+            unsigned char expected_bytes[] = { 0xC1, 0x04, 0x02, 0x52, 0x42, 0x52, 0x43 };
+            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
+            test_amqp_encode(&mocks, source, expected_stringified_encoded);
+        }
+
+        /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+        TEST_FUNCTION(when_encoder_output_fails_amqpvalue_encode_a_map_with_a_uint_key_and_uint_value_fails)
+        {
+            amqpvalue_mocks mocks;
+            AMQP_VALUE source = amqpvalue_create_map();
+            AMQP_VALUE key = amqpvalue_create_uint(0x42);
+            AMQP_VALUE value = amqpvalue_create_uint(0x43);
+            amqpvalue_set_map_value(source, key, value);
+            amqpvalue_destroy(key);
+            amqpvalue_destroy(value);
+            test_amqp_encode_failure(&mocks, source);
+        }
+
+        /* Tests_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
+        /* Tests_SRS_AMQPVALUE_01_123: [A map is encoded as a compound value where the constituent elements form alternating key value pairs.] */
+        /* Tests_SRS_AMQPVALUE_01_124: [Map encodings MUST contain an even number of items (i.e. an equal number of keys and values).] */
+        TEST_FUNCTION(amqpvalue_encode_85_key_value_pairs_succeeds)
+        {
+            amqpvalue_mocks mocks;
+            AMQP_VALUE source = amqpvalue_create_map();
+            int i;
+            for (i = 0; i < 85; i++)
+            {
+                AMQP_VALUE key = amqpvalue_create_uint(i + 1);
+                AMQP_VALUE value = amqpvalue_create_null();
+                amqpvalue_set_map_value(source, key, value);
+                amqpvalue_destroy(key);
+                amqpvalue_destroy(value);
+            }
+            unsigned char expected_bytes[3 + 255] = { 0xC1, 0xFF, 0xAA };
+            for (i = 0; i < 85; i++)
+            {
+                expected_bytes[3 + (i * 3)] = 0x52;
+                expected_bytes[3 + (i * 3) + 1] = i + 1;
+                expected_bytes[3 + (i * 3) + 2] = 0x40;
+            }
+            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
+            test_amqp_encode(&mocks, source, expected_stringified_encoded);
+        }
+
+        /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+        TEST_FUNCTION(when_encoder_output_fails_amqpvalue_encode_85_key_value_pairs_fails)
+        {
+            amqpvalue_mocks mocks;
+            AMQP_VALUE source = amqpvalue_create_map();
+            int i;
+            for (i = 0; i < 85; i++)
+            {
+                AMQP_VALUE key = amqpvalue_create_uint(i + 1);
+                AMQP_VALUE value = amqpvalue_create_null();
+                amqpvalue_set_map_value(source, key, value);
+                amqpvalue_destroy(key);
+                amqpvalue_destroy(value);
+            }
+            test_amqp_encode_failure(&mocks, source);
+        }
+
+        /* Tests_SRS_AMQPVALUE_01_307: [<encoding name="map32" code="0xd1" category="compound" width="4" label="up to 2^32 - 1 octets of encoded map data"/>]  */
+        /* Tests_SRS_AMQPVALUE_01_123: [A map is encoded as a compound value where the constituent elements form alternating key value pairs.] */
+        /* Tests_SRS_AMQPVALUE_01_124: [Map encodings MUST contain an even number of items (i.e. an equal number of keys and values).] */
+        TEST_FUNCTION(amqpvalue_encode_86_key_value_pairs_succeeds)
+        {
+            amqpvalue_mocks mocks;
+            AMQP_VALUE source = amqpvalue_create_map();
+            int i;
+
+            AMQP_VALUE key = amqpvalue_create_uint(0xFF);
+            AMQP_VALUE value = amqpvalue_create_uint(0xFF);
+            amqpvalue_set_map_value(source, key, value);
+            amqpvalue_destroy(key);
+            amqpvalue_destroy(value);
+
+            for (i = 1; i < 85; i++)
+            {
+                AMQP_VALUE key = amqpvalue_create_uint(i);
+                AMQP_VALUE value = amqpvalue_create_null();
+                amqpvalue_set_map_value(source, key, value);
+                amqpvalue_destroy(key);
+                amqpvalue_destroy(value);
+            }
+            unsigned char expected_bytes[9 + 256] = { 0xD0, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0xAA, 0x52, 0xFF, 0x52, 0xFF };
+            for (i = 1; i < 85; i++)
+            {
+                expected_bytes[10 + (i * 3)] = 0x52;
+                expected_bytes[10 + (i * 3) + 1] = i;
+                expected_bytes[10 + (i * 3) + 2] = 0x40;
+            }
+            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
+            test_amqp_encode(&mocks, source, expected_stringified_encoded);
+        }
+
+        /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+        TEST_FUNCTION(when_encoder_output_fails_amqpvalue_encode_86_key_value_pairs_fails)
+        {
+            amqpvalue_mocks mocks;
+            AMQP_VALUE source = amqpvalue_create_map();
+            int i;
+
+            AMQP_VALUE key = amqpvalue_create_uint(0xFF);
+            AMQP_VALUE value = amqpvalue_create_uint(0xFF);
+            amqpvalue_set_map_value(source, key, value);
+            amqpvalue_destroy(key);
+            amqpvalue_destroy(value);
+
+            for (i = 1; i < 85; i++)
+            {
+                AMQP_VALUE key = amqpvalue_create_uint(i);
+                AMQP_VALUE value = amqpvalue_create_null();
+                amqpvalue_set_map_value(source, key, value);
+                amqpvalue_destroy(key);
+                amqpvalue_destroy(value);
+            }
+            test_amqp_encode_failure(&mocks, source);
+        }
+
+        /* Tests_SRS_AMQPVALUE_01_307: [<encoding name="map32" code="0xd1" category="compound" width="4" label="up to 2^32 - 1 octets of encoded map data"/>]  */
+        /* Tests_SRS_AMQPVALUE_01_123: [A map is encoded as a compound value where the constituent elements form alternating key value pairs.] */
+        /* Tests_SRS_AMQPVALUE_01_124: [Map encodings MUST contain an even number of items (i.e. an equal number of keys and values).] */
+        TEST_FUNCTION(amqpvalue_encode_128_key_value_pairs_succeeds)
+        {
+            amqpvalue_mocks mocks;
+            AMQP_VALUE source = amqpvalue_create_map();
+            int i;
+            for (i = 0; i < 128; i++)
+            {
+                AMQP_VALUE key = amqpvalue_create_uint(i + 1);
+                AMQP_VALUE value = amqpvalue_create_null();
+                amqpvalue_set_map_value(source, key, value);
+                amqpvalue_destroy(key);
+                amqpvalue_destroy(value);
+            }
+            unsigned char expected_bytes[9 + 384] = { 0xD0, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x01, 0x00 };
+            for (i = 0; i < 128; i++)
+            {
+                expected_bytes[9 + (i * 3)] = 0x52;
+                expected_bytes[9 + (i * 3) + 1] = i + 1;
+                expected_bytes[9 + (i * 3) + 2] = 0x40;
+            }
+            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
+            test_amqp_encode(&mocks, source, expected_stringified_encoded);
+        }
+
+        /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+        TEST_FUNCTION(when_encoder_output_fails_amqpvalue_encode_128_key_value_pairs_fails)
+        {
+            amqpvalue_mocks mocks;
+            AMQP_VALUE source = amqpvalue_create_map();
+            int i;
+            for (i = 0; i < 128; i++)
+            {
+                AMQP_VALUE key = amqpvalue_create_uint(i + 1);
+                AMQP_VALUE value = amqpvalue_create_null();
+                amqpvalue_set_map_value(source, key, value);
+                amqpvalue_destroy(key);
+                amqpvalue_destroy(value);
+            }
+            test_amqp_encode_failure(&mocks, source);
         }
 
 END_TEST_SUITE(amqpvalue_unittests)

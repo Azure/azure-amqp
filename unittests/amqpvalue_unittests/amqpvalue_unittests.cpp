@@ -8717,4 +8717,61 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
             test_amqp_encode_failure(&mocks, source);
         }
 
+        /* amqpvalue_get_encoded_size */
+
+        /* Tests_SRS_AMQPVALUE_01_309: [If any argument is NULL, amqpvalue_get_encoded_size shall return a non-zero value.] */
+        TEST_FUNCTION(amqpvalue_get_encoded_size_with_NULL_value_argument_fails)
+        {
+            // arrange
+            amqpvalue_mocks mocks;
+
+            // act
+            size_t encoded_size;
+            int result = amqpvalue_get_encoded_size(NULL, &encoded_size);
+
+            // assert
+            ASSERT_ARE_NOT_EQUAL(int, 0, result);
+        }
+
+        /* Tests_SRS_AMQPVALUE_01_309: [If any argument is NULL, amqpvalue_get_encoded_size shall return a non-zero value.] */
+        TEST_FUNCTION(amqpvalue_get_encoded_size_with_NULL_encoded_size_argument_fails)
+        {
+            // arrange
+            amqpvalue_mocks mocks;
+            AMQP_VALUE source = amqpvalue_create_null();
+            mocks.ResetAllCalls();
+
+            // act
+            int result = amqpvalue_get_encoded_size(source, NULL);
+
+            // assert
+            ASSERT_ARE_NOT_EQUAL(int, 0, result);
+            mocks.AssertActualAndExpectedCalls();
+
+            // cleanup
+            amqpvalue_destroy(source);
+        }
+
+        /* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+        /* Tests_SRS_AMQPVALUE_01_264: [<encoding code="0x40" category="fixed" width="0" label="the null value"/>] */
+        TEST_FUNCTION(amqpvalue_get_encoded_size_with_null_value_succeeds)
+        {
+            // arrange
+            amqpvalue_mocks mocks;
+            AMQP_VALUE source = amqpvalue_create_null();
+            mocks.ResetAllCalls();
+
+            // act
+            size_t encoded_size;
+            int result = amqpvalue_get_encoded_size(source, &encoded_size);
+
+            // assert
+            ASSERT_ARE_EQUAL(int, 0, result);
+            ASSERT_ARE_EQUAL(size_t, 1, encoded_size);
+            mocks.AssertActualAndExpectedCalls();
+
+            // cleanup
+            amqpvalue_destroy(source);
+        }
+
 END_TEST_SUITE(amqpvalue_unittests)

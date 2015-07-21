@@ -2811,6 +2811,32 @@ int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* cont
 	return result;
 }
 
+static int count_bytes(void* context, const void* bytes, size_t length)
+{
+    size_t* byte_count = (uint32_t*)context;
+    *byte_count += length;
+    return 0;
+}
+
+int amqpvalue_get_encoded_size(AMQP_VALUE value, size_t* encoded_size)
+{
+    int result;
+
+    /* Codes_SRS_AMQPVALUE_01_309: [If any argument is NULL, amqpvalue_get_encoded_size shall return a non-zero value.] */
+    if ((value == NULL) ||
+        (encoded_size == NULL))
+    {
+        result = __LINE__;
+    }
+    else
+    {
+        *encoded_size = 0;
+        result = amqpvalue_encode(value, count_bytes, encoded_size);
+    }
+
+    return result;
+}
+
 static void amqpvalue_clear(AMQP_VALUE_DATA* value_data)
 {
 	switch (value_data->type)
@@ -3959,31 +3985,6 @@ int amqpvalue_set_composite_item(AMQP_VALUE value, size_t index, AMQP_VALUE item
 				result = 0;
 			}
 		}
-	}
-
-	return result;
-}
-
-int count_bytes(void* context, const void* bytes, size_t length)
-{
-	size_t* byte_count = (uint32_t*)context;
-	*byte_count += length;
-	return 0;
-}
-
-int amqpvalue_get_encoded_size(AMQP_VALUE value, size_t* encoded_size)
-{
-	int result;
-
-	if ((value == NULL) ||
-		(encoded_size == NULL))
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		*encoded_size = 0;
-		result = amqpvalue_encode(value, count_bytes, encoded_size);
 	}
 
 	return result;

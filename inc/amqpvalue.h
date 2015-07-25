@@ -69,6 +69,8 @@ extern "C" {
 	extern int amqpvalue_get_map_pair_count(AMQP_VALUE map, uint32_t* pair_count);
 	extern int amqpvalue_get_map_key_value_pair(AMQP_VALUE map, uint32_t index, AMQP_VALUE* key, AMQP_VALUE* value);
 
+	extern void amqpvalue_destroy(AMQP_VALUE value);
+
 	extern bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2);
 	extern AMQP_VALUE amqpvalue_clone(AMQP_VALUE value);
 
@@ -78,16 +80,6 @@ extern "C" {
 	extern int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* context);
 	extern int amqpvalue_get_encoded_size(AMQP_VALUE value, size_t* encoded_size);
 
-	extern AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value);
-	extern AMQP_VALUE amqpvalue_get_described_value(AMQP_VALUE value);
-	extern void amqpvalue_destroy(AMQP_VALUE value);
-	extern AMQP_VALUE amqpvalue_clone(AMQP_VALUE value);
-
-	extern AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size);
-	extern int amqpvalue_set_composite_item(AMQP_VALUE value, size_t index, AMQP_VALUE item_value);
-	extern AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value);
-	extern AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor);
-
 	/* decoding */
 	typedef void* DECODER_HANDLE;
 	typedef int(*VALUE_DECODED_CALLBACK)(void* context, AMQP_VALUE decoded_value);
@@ -95,6 +87,15 @@ extern "C" {
 	extern DECODER_HANDLE decoder_create(VALUE_DECODED_CALLBACK value_decoded_callback, void* value_decoded_callback_context);
 	extern void decoder_destroy(DECODER_HANDLE handle);
 	extern int decoder_decode_bytes(DECODER_HANDLE handle, const unsigned char* buffer, size_t size);
+
+	/* misc for now */
+	extern AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value);
+	extern AMQP_VALUE amqpvalue_get_described_value(AMQP_VALUE value);
+
+	extern AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size);
+	extern int amqpvalue_set_composite_item(AMQP_VALUE value, size_t index, AMQP_VALUE item_value);
+	extern AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value);
+	extern AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor);
 
 #ifdef __cplusplus
 }

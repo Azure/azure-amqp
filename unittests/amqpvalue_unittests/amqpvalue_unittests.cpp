@@ -7514,7 +7514,30 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 
 		/* amqpvalue_encode */
 
-		static void test_amqp_encode_failure(amqpvalue_mocks* mocks, AMQP_VALUE source)
+		static void test_amqpvalue_encode(amqpvalue_mocks* mocks, AMQP_VALUE source, const char* expected_stringified_bytes)
+		{
+			// arrange
+			mocks->ResetAllCalls();
+
+			EXPECTED_CALL((*mocks), test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.ExpectedAtLeastTimes(1);
+			EXPECTED_CALL((*mocks), test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+
+			// act
+			int result = amqpvalue_encode(source, test_encoder_output, NULL);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			stringify_bytes(encoded_bytes, encoded_byte_count, actual_stringified_encoded);
+			ASSERT_ARE_EQUAL(char_ptr, expected_stringified_bytes, actual_stringified_encoded);
+			mocks->AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		static void test_amqpvalue_encode_failure(amqpvalue_mocks* mocks, AMQP_VALUE source)
 		{
 			(void)amqpvalue_encode(source, test_encoder_output, NULL);
 			mocks->ResetAllCalls();
@@ -7537,29 +7560,6 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 				ASSERT_ARE_NOT_EQUAL(int, 0, result);
 				mocks->AssertActualAndExpectedCalls();
 			}
-
-			// cleanup
-			amqpvalue_destroy(source);
-		}
-
-		static void test_amqp_encode(amqpvalue_mocks* mocks, AMQP_VALUE source, const char* expected_stringified_bytes)
-		{
-			// arrange
-			mocks->ResetAllCalls();
-
-			EXPECTED_CALL((*mocks), test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
-				.ExpectedAtLeastTimes(1);
-			EXPECTED_CALL((*mocks), test_encoder_output(NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
-				.IgnoreAllCalls();
-
-			// act
-			int result = amqpvalue_encode(source, test_encoder_output, NULL);
-
-			// assert
-			ASSERT_ARE_EQUAL(int, 0, result);
-			stringify_bytes(encoded_bytes, encoded_byte_count, actual_stringified_encoded);
-			ASSERT_ARE_EQUAL(char_ptr, expected_stringified_bytes, actual_stringified_encoded);
-			mocks->AssertActualAndExpectedCalls();
 
 			// cleanup
 			amqpvalue_destroy(source);
@@ -7602,7 +7602,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_null();
-			test_amqp_encode(&mocks, source, "[0x40]");
+			test_amqpvalue_encode(&mocks, source, "[0x40]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7664,7 +7664,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_boolean(true);
-			test_amqp_encode(&mocks, source, "[0x41]");
+			test_amqpvalue_encode(&mocks, source, "[0x41]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_273: [<encoding name="false" code="0x42" category="fixed" width="0" label="the boolean value false"/>] */
@@ -7672,7 +7672,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_boolean(false);
-			test_amqp_encode(&mocks, source, "[0x42]");
+			test_amqpvalue_encode(&mocks, source, "[0x42]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7680,7 +7680,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_boolean(false);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7688,7 +7688,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_boolean(true);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_275: [<encoding code="0x50" category="fixed" width="1" label="8-bit unsigned integer"/>] */
@@ -7696,7 +7696,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ubyte(0x0);
-			test_amqp_encode(&mocks, source, "[0x50,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0x50,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_275: [<encoding code="0x50" category="fixed" width="1" label="8-bit unsigned integer"/>] */
@@ -7704,7 +7704,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ubyte(0xFF);
-			test_amqp_encode(&mocks, source, "[0x50,0xFF]");
+			test_amqpvalue_encode(&mocks, source, "[0x50,0xFF]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7712,7 +7712,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ubyte(0xFF);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_276: [<encoding code="0x60" category="fixed" width="2" label="16-bit unsigned integer in network byte order"/>] */
@@ -7720,7 +7720,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ushort(0x0);
-			test_amqp_encode(&mocks, source, "[0x60,0x00,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0x60,0x00,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_276: [<encoding code="0x60" category="fixed" width="2" label="16-bit unsigned integer in network byte order"/>] */
@@ -7728,7 +7728,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ushort(0x4243);
-			test_amqp_encode(&mocks, source, "[0x60,0x42,0x43]");
+			test_amqpvalue_encode(&mocks, source, "[0x60,0x42,0x43]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7736,7 +7736,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ushort(0x4243);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_277: [<encoding code="0x70" category="fixed" width="4" label="32-bit unsigned integer in network byte order"/>] */
@@ -7744,7 +7744,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_uint(0xFFFFFFFF);
-			test_amqp_encode(&mocks, source, "[0x70,0xFF,0xFF,0xFF,0xFF]");
+			test_amqpvalue_encode(&mocks, source, "[0x70,0xFF,0xFF,0xFF,0xFF]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_277: [<encoding code="0x70" category="fixed" width="4" label="32-bit unsigned integer in network byte order"/>] */
@@ -7752,7 +7752,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_uint(0x42434445);
-			test_amqp_encode(&mocks, source, "[0x70,0x42,0x43,0x44,0x45]");
+			test_amqpvalue_encode(&mocks, source, "[0x70,0x42,0x43,0x44,0x45]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7760,7 +7760,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_uint(0x42434445);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_278: [<encoding name="smalluint" code="0x52" category="fixed" width="1" label="unsigned integer value in the range 0 to 255 inclusive"/>] */
@@ -7768,7 +7768,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_uint(0x42);
-			test_amqp_encode(&mocks, source, "[0x52,0x42]");
+			test_amqpvalue_encode(&mocks, source, "[0x52,0x42]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_278: [<encoding name="smalluint" code="0x52" category="fixed" width="1" label="unsigned integer value in the range 0 to 255 inclusive"/>] */
@@ -7776,7 +7776,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_uint(0xFF);
-			test_amqp_encode(&mocks, source, "[0x52,0xFF]");
+			test_amqpvalue_encode(&mocks, source, "[0x52,0xFF]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7784,7 +7784,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_uint(0xFF);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_279: [<encoding name="uint0" code="0x43" category="fixed" width="0" label="the uint value 0"/>] */
@@ -7792,7 +7792,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_uint(0x00);
-			test_amqp_encode(&mocks, source, "[0x43]");
+			test_amqpvalue_encode(&mocks, source, "[0x43]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7800,7 +7800,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_uint(0x00);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_280: [<encoding code="0x80" category="fixed" width="8" label="64-bit unsigned integer in network byte order"/>] */
@@ -7808,7 +7808,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ulong(0x4243444546474849);
-			test_amqp_encode(&mocks, source, "[0x80,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49]");
+			test_amqpvalue_encode(&mocks, source, "[0x80,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_280: [<encoding code="0x80" category="fixed" width="8" label="64-bit unsigned integer in network byte order"/>] */
@@ -7816,7 +7816,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ulong(0xFFFFFFFFFFFFFFFF);
-			test_amqp_encode(&mocks, source, "[0x80,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]");
+			test_amqpvalue_encode(&mocks, source, "[0x80,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7824,7 +7824,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ulong(0xFFFFFFFFFFFFFFFF);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_281: [<encoding name="smallulong" code="0x53" category="fixed" width="1" label="unsigned long value in the range 0 to 255 inclusive"/>] */
@@ -7832,7 +7832,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ulong(0x42);
-			test_amqp_encode(&mocks, source, "[0x53,0x42]");
+			test_amqpvalue_encode(&mocks, source, "[0x53,0x42]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_281: [<encoding name="smallulong" code="0x53" category="fixed" width="1" label="unsigned long value in the range 0 to 255 inclusive"/>] */
@@ -7840,7 +7840,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ulong(0xFF);
-			test_amqp_encode(&mocks, source, "[0x53,0xFF]");
+			test_amqpvalue_encode(&mocks, source, "[0x53,0xFF]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7848,7 +7848,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ulong(0xFF);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_282: [<encoding name="ulong0" code="0x44" category="fixed" width="0" label="the ulong value 0"/>] */
@@ -7856,7 +7856,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ulong(0x00);
-			test_amqp_encode(&mocks, source, "[0x44]");
+			test_amqpvalue_encode(&mocks, source, "[0x44]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7864,7 +7864,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_ulong(0x00);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_283: [<encoding code="0x51" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
@@ -7872,7 +7872,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_byte(-128);
-			test_amqp_encode(&mocks, source, "[0x51,0x80]");
+			test_amqpvalue_encode(&mocks, source, "[0x51,0x80]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_283: [<encoding code="0x51" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
@@ -7880,7 +7880,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_byte(0);
-			test_amqp_encode(&mocks, source, "[0x51,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0x51,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_283: [<encoding code="0x51" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
@@ -7888,7 +7888,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_byte(127);
-			test_amqp_encode(&mocks, source, "[0x51,0x7F]");
+			test_amqpvalue_encode(&mocks, source, "[0x51,0x7F]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7896,7 +7896,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_byte(127);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_284: [<encoding code="0x61" category="fixed" width="2" label="16-bit two's-complement integer in network byte order"/>] */
@@ -7904,7 +7904,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_short(-32768);
-			test_amqp_encode(&mocks, source, "[0x61,0x80,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0x61,0x80,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_284: [<encoding code="0x61" category="fixed" width="2" label="16-bit two's-complement integer in network byte order"/>] */
@@ -7912,7 +7912,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_short(0);
-			test_amqp_encode(&mocks, source, "[0x61,0x00,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0x61,0x00,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_284: [<encoding code="0x61" category="fixed" width="2" label="16-bit two's-complement integer in network byte order"/>] */
@@ -7920,7 +7920,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_short(32767);
-			test_amqp_encode(&mocks, source, "[0x61,0x7F,0xFF]");
+			test_amqpvalue_encode(&mocks, source, "[0x61,0x7F,0xFF]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7928,7 +7928,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_short(32767);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_285: [<encoding code="0x71" category="fixed" width="4" label="32-bit two's-complement integer in network byte order"/>] */
@@ -7936,7 +7936,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_int(-2147483647-1);
-			test_amqp_encode(&mocks, source, "[0x71,0x80,0x00,0x00,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0x71,0x80,0x00,0x00,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_285: [<encoding code="0x71" category="fixed" width="4" label="32-bit two's-complement integer in network byte order"/>] */
@@ -7944,7 +7944,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_int(0x42434445);
-			test_amqp_encode(&mocks, source, "[0x71,0x42,0x43,0x44,0x45]");
+			test_amqpvalue_encode(&mocks, source, "[0x71,0x42,0x43,0x44,0x45]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_285: [<encoding code="0x71" category="fixed" width="4" label="32-bit two's-complement integer in network byte order"/>] */
@@ -7952,7 +7952,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_int(2147483647);
-			test_amqp_encode(&mocks, source, "[0x71,0x7F,0xFF,0xFF,0xFF]");
+			test_amqpvalue_encode(&mocks, source, "[0x71,0x7F,0xFF,0xFF,0xFF]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7960,7 +7960,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_int(2147483647);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_286: [<encoding name="smallint" code="0x54" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
@@ -7968,7 +7968,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_int(-128);
-			test_amqp_encode(&mocks, source, "[0x54,0x80]");
+			test_amqpvalue_encode(&mocks, source, "[0x54,0x80]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_286: [<encoding name="smallint" code="0x54" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
@@ -7976,7 +7976,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_int(0);
-			test_amqp_encode(&mocks, source, "[0x54,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0x54,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_286: [<encoding name="smallint" code="0x54" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
@@ -7984,7 +7984,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_int(127);
-			test_amqp_encode(&mocks, source, "[0x54,0x7F]");
+			test_amqpvalue_encode(&mocks, source, "[0x54,0x7F]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -7992,7 +7992,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_int(127);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_287: [<encoding code="0x81" category="fixed" width="8" label="64-bit two's-complement integer in network byte order"/>] */
@@ -8000,7 +8000,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_long(-9223372036854775807L - 1);
-			test_amqp_encode(&mocks, source, "[0x81,0x80,0x00,0x00,0x00,0x00,0x00,0x00,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0x81,0x80,0x00,0x00,0x00,0x00,0x00,0x00,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_287: [<encoding code="0x81" category="fixed" width="8" label="64-bit two's-complement longeger in network byte order"/>] */
@@ -8008,7 +8008,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_long(0x4243444546474849L);
-			test_amqp_encode(&mocks, source, "[0x81,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49]");
+			test_amqpvalue_encode(&mocks, source, "[0x81,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_287: [<encoding code="0x81" category="fixed" width="8" label="64-bit two's-complement longeger in network byte order"/>] */
@@ -8016,7 +8016,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_long(9223372036854775807L);
-			test_amqp_encode(&mocks, source, "[0x81,0x7F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]");
+			test_amqpvalue_encode(&mocks, source, "[0x81,0x7F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8024,7 +8024,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_long(9223372036854775807L);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_288: [<encoding name="smalllong" code="0x55" category="fixed" width="1" label="8-bit two's-complement longeger"/>] */
@@ -8032,7 +8032,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_long(-128);
-			test_amqp_encode(&mocks, source, "[0x55,0x80]");
+			test_amqpvalue_encode(&mocks, source, "[0x55,0x80]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_288: [<encoding name="smalllong" code="0x55" category="fixed" width="1" label="8-bit two's-complement longeger"/>] */
@@ -8040,7 +8040,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_long(0);
-			test_amqp_encode(&mocks, source, "[0x55,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0x55,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_288: [<encoding name="smalllong" code="0x55" category="fixed" width="1" label="8-bit two's-complement longeger"/>] */
@@ -8048,7 +8048,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_long(127);
-			test_amqp_encode(&mocks, source, "[0x55,0x7F]");
+			test_amqpvalue_encode(&mocks, source, "[0x55,0x7F]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8056,7 +8056,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_long(127);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_295: [<encoding name="ms64" code="0x83" category="fixed" width="8" label="64-bit two's-complement integer representing milliseconds since the unix epoch"/>] */
@@ -8064,7 +8064,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_timestamp(-9223372036854775807L - 1);
-			test_amqp_encode(&mocks, source, "[0x83,0x80,0x00,0x00,0x00,0x00,0x00,0x00,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0x83,0x80,0x00,0x00,0x00,0x00,0x00,0x00,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_295: [<encoding name="ms64" code="0x83" category="fixed" width="8" label="64-bit two's-complement integer representing milliseconds since the unix epoch"/>] */
@@ -8072,7 +8072,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_timestamp(0);
-			test_amqp_encode(&mocks, source, "[0x83,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0x83,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_295: [<encoding name="ms64" code="0x83" category="fixed" width="8" label="64-bit two's-complement integer representing milliseconds since the unix epoch"/>] */
@@ -8080,7 +8080,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_timestamp(9223372036854775807L);
-			test_amqp_encode(&mocks, source, "[0x83,0x7F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]");
+			test_amqpvalue_encode(&mocks, source, "[0x83,0x7F,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8088,7 +8088,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_timestamp(127);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_296: [<encoding code="0x98" category="fixed" width="16" label="UUID as defined in section 4.1.2 of RFC-4122"/>] */
@@ -8097,7 +8097,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqpvalue_mocks mocks;
 			amqp_uuid uuid = { 0 };
 			AMQP_VALUE source = amqpvalue_create_uuid(uuid);
-			test_amqp_encode(&mocks, source, "[0x98,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0x98,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_296: [<encoding code="0x98" category="fixed" width="16" label="UUID as defined in section 4.1.2 of RFC-4122"/>] */
@@ -8107,7 +8107,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqp_uuid uuid = { 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
 				0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F };
 			AMQP_VALUE source = amqpvalue_create_uuid(uuid);
-			test_amqp_encode(&mocks, source, "[0x98,0x40,0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x4A,0x4B,0x4C,0x4D,0x4E,0x4F]");
+			test_amqpvalue_encode(&mocks, source, "[0x98,0x40,0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x4A,0x4B,0x4C,0x4D,0x4E,0x4F]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8117,7 +8117,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqp_uuid uuid = { 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
 				0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F };
 			AMQP_VALUE source = amqpvalue_create_uuid(uuid);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_297: [<encoding name="vbin8" code="0xa0" category="variable" width="1" label="up to 2^8 - 1 octets of binary data"/>] */
@@ -8127,7 +8127,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			unsigned char bytes[] = { 0x00 };
 			amqp_binary binary = { &bytes, 0 };
 			AMQP_VALUE source = amqpvalue_create_binary(binary);
-			test_amqp_encode(&mocks, source, "[0xA0,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0xA0,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_297: [<encoding name="vbin8" code="0xa0" category="variable" width="1" label="up to 2^8 - 1 octets of binary data"/>] */
@@ -8137,7 +8137,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			unsigned char bytes[] = { 0x42 };
 			amqp_binary binary = { &bytes, sizeof(bytes) };
 			AMQP_VALUE source = amqpvalue_create_binary(binary);
-			test_amqp_encode(&mocks, source, "[0xA0,0x01,0x42]");
+			test_amqpvalue_encode(&mocks, source, "[0xA0,0x01,0x42]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_297: [<encoding name="vbin8" code="0xa0" category="variable" width="1" label="up to 2^8 - 1 octets of binary data"/>] */
@@ -8158,7 +8158,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqp_binary binary = { &bytes, sizeof(bytes) };
 			AMQP_VALUE source = amqpvalue_create_binary(binary);
 			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8173,7 +8173,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			}
 			amqp_binary binary = { &bytes, sizeof(bytes) };
 			AMQP_VALUE source = amqpvalue_create_binary(binary);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_298: [<encoding name="vbin32" code="0xb0" category="variable" width="4" label="up to 2^32 - 1 octets of binary data"/>] */
@@ -8194,7 +8194,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqp_binary binary = { &bytes, sizeof(bytes) };
 			AMQP_VALUE source = amqpvalue_create_binary(binary);
 			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8209,7 +8209,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			}
 			amqp_binary binary = { &bytes, sizeof(bytes) };
 			AMQP_VALUE source = amqpvalue_create_binary(binary);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_299: [<encoding name="str8-utf8" code="0xa1" category="variable" width="1" label="up to 2^8 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
@@ -8217,7 +8217,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_string("");
-			test_amqp_encode(&mocks, source, "[0xA1,0x00]");
+			test_amqpvalue_encode(&mocks, source, "[0xA1,0x00]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_299: [<encoding name="str8-utf8" code="0xa1" category="variable" width="1" label="up to 2^8 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
@@ -8225,7 +8225,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_string("a");
-			test_amqp_encode(&mocks, source, "[0xA1,0x01,0x61]");
+			test_amqpvalue_encode(&mocks, source, "[0xA1,0x01,0x61]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_299: [<encoding name="str8-utf8" code="0xa1" category="variable" width="1" label="up to 2^8 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
@@ -8246,7 +8246,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			}
 			AMQP_VALUE source = amqpvalue_create_string(chars);
 			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8261,7 +8261,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			}
 			chars[255] = '\0';
 			AMQP_VALUE source = amqpvalue_create_string(chars);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_300: [<encoding name="str32-utf8" code="0xb1" category="variable" width="4" label="up to 2^32 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
@@ -8282,7 +8282,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			}
 			AMQP_VALUE source = amqpvalue_create_string(chars);
 			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8297,7 +8297,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			}
 			chars[256] = '\0';
 			AMQP_VALUE source = amqpvalue_create_string(chars);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_303: [<encoding name="list0" code="0x45" category="fixed" width="0" label="the empty list (i.e. the list with no elements)"/>] */
@@ -8305,7 +8305,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_list();
-			test_amqp_encode(&mocks, source, "[0x45]");
+			test_amqpvalue_encode(&mocks, source, "[0x45]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8313,7 +8313,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_list();
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
@@ -8324,7 +8324,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			AMQP_VALUE item = amqpvalue_create_null();
 			amqpvalue_set_list_item(source, 0, item);
 			amqpvalue_destroy(item);
-			test_amqp_encode(&mocks, source, "[0xC0,0x01,0x01,0x40]");
+			test_amqpvalue_encode(&mocks, source, "[0xC0,0x01,0x01,0x40]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8335,7 +8335,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			AMQP_VALUE item = amqpvalue_create_null();
 			amqpvalue_set_list_item(source, 0, item);
 			amqpvalue_destroy(item);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
@@ -8347,7 +8347,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqpvalue_set_list_item(source, 0, item);
 			amqpvalue_set_list_item(source, 1, item);
 			amqpvalue_destroy(item);
-			test_amqp_encode(&mocks, source, "[0xC0,0x02,0x02,0x40,0x40]");
+			test_amqpvalue_encode(&mocks, source, "[0xC0,0x02,0x02,0x40,0x40]");
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
@@ -8368,7 +8368,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 				expected_bytes[i + 3] = 0x40;
 			}
 			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8383,7 +8383,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 				amqpvalue_set_list_item(source, i, item);
 			}
 			amqpvalue_destroy(item);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
@@ -8403,7 +8403,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 				expected_bytes[i + 5] = 0;
 			}
 			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_305: [<encoding name="list32" code="0xd0" category="compound" width="4" label="up to 2^32 - 1 list elements with total size less than 2^32 octets"/>] */
@@ -8423,7 +8423,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 				expected_bytes[i + 11] = 0;
 			}
 			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8436,7 +8436,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			AMQP_VALUE item = amqpvalue_create_binary(binary);
 			amqpvalue_set_list_item(source, 0, item);
 			amqpvalue_destroy(item);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_305: [<encoding name="list32" code="0xd0" category="compound" width="4" label="up to 2^32 - 1 list elements with total size less than 2^32 octets"/>] */
@@ -8457,7 +8457,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 				expected_bytes[i + 9] = 0x40;
 			}
 			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8472,7 +8472,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 				amqpvalue_set_list_item(source, i, item);
 			}
 			amqpvalue_destroy(item);
-			test_amqp_encode_failure(&mocks, source);
+			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
@@ -8490,7 +8490,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqpvalue_destroy(item);
 			unsigned char expected_bytes[] = { 0xC0, 0x04, 0x02, 0xA0, 0x01, 0x42, 0x40 };
 			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
@@ -8500,7 +8500,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			AMQP_VALUE source = amqpvalue_create_map();
 			unsigned char expected_bytes[] = { 0xC1, 0x00, 0x00 };
 			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqp_encode(&mocks, source, expected_stringified_encoded);
+			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
 		}
 
         /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8508,7 +8508,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
         {
             amqpvalue_mocks mocks;
             AMQP_VALUE source = amqpvalue_create_map();
-            test_amqp_encode_failure(&mocks, source);
+            test_amqpvalue_encode_failure(&mocks, source);
         }
 
         /* Tests_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
@@ -8525,7 +8525,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
             amqpvalue_destroy(value);
             unsigned char expected_bytes[] = { 0xC1, 0x02, 0x02, 0x40, 0x40 };
             stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-            test_amqp_encode(&mocks, source, expected_stringified_encoded);
+            test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
         }
 
         /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8538,7 +8538,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
             amqpvalue_set_map_value(source, key, value);
             amqpvalue_destroy(key);
             amqpvalue_destroy(value);
-            test_amqp_encode_failure(&mocks, source);
+            test_amqpvalue_encode_failure(&mocks, source);
         }
 
         /* Tests_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
@@ -8555,7 +8555,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
             amqpvalue_destroy(value);
             unsigned char expected_bytes[] = { 0xC1, 0x04, 0x02, 0x52, 0x42, 0x52, 0x43 };
             stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-            test_amqp_encode(&mocks, source, expected_stringified_encoded);
+            test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
         }
 
         /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8568,7 +8568,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
             amqpvalue_set_map_value(source, key, value);
             amqpvalue_destroy(key);
             amqpvalue_destroy(value);
-            test_amqp_encode_failure(&mocks, source);
+            test_amqpvalue_encode_failure(&mocks, source);
         }
 
         /* Tests_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
@@ -8595,7 +8595,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
                 expected_bytes[3 + (i * 3) + 2] = 0x40;
             }
             stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-            test_amqp_encode(&mocks, source, expected_stringified_encoded);
+            test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
         }
 
         /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8612,7 +8612,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
                 amqpvalue_destroy(key);
                 amqpvalue_destroy(value);
             }
-            test_amqp_encode_failure(&mocks, source);
+            test_amqpvalue_encode_failure(&mocks, source);
         }
 
         /* Tests_SRS_AMQPVALUE_01_307: [<encoding name="map32" code="0xd1" category="compound" width="4" label="up to 2^32 - 1 octets of encoded map data"/>]  */
@@ -8646,7 +8646,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
                 expected_bytes[10 + (i * 3) + 2] = 0x40;
             }
             stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-            test_amqp_encode(&mocks, source, expected_stringified_encoded);
+            test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
         }
 
         /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8670,7 +8670,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
                 amqpvalue_destroy(key);
                 amqpvalue_destroy(value);
             }
-            test_amqp_encode_failure(&mocks, source);
+            test_amqpvalue_encode_failure(&mocks, source);
         }
 
         /* Tests_SRS_AMQPVALUE_01_307: [<encoding name="map32" code="0xd1" category="compound" width="4" label="up to 2^32 - 1 octets of encoded map data"/>]  */
@@ -8697,7 +8697,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
                 expected_bytes[9 + (i * 3) + 2] = 0x40;
             }
             stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-            test_amqp_encode(&mocks, source, expected_stringified_encoded);
+            test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
         }
 
         /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8714,7 +8714,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
                 amqpvalue_destroy(key);
                 amqpvalue_destroy(value);
             }
-            test_amqp_encode_failure(&mocks, source);
+            test_amqpvalue_encode_failure(&mocks, source);
         }
 
         /* amqpvalue_get_encoded_size */
@@ -8752,6 +8752,24 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
             amqpvalue_destroy(source);
         }
 
+		static void test_amqpvalue_get_encoded_size(amqpvalue_mocks* mocks, AMQP_VALUE source, size_t expected_encoded_size)
+		{
+			// arrange
+			mocks->ResetAllCalls();
+
+			// act
+			size_t encoded_size;
+			int result = amqpvalue_get_encoded_size(source, &encoded_size);
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			ASSERT_ARE_EQUAL(size_t, expected_encoded_size, encoded_size);
+			mocks->AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
         /* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
         /* Tests_SRS_AMQPVALUE_01_264: [<encoding code="0x40" category="fixed" width="0" label="the null value"/>] */
         TEST_FUNCTION(amqpvalue_get_encoded_size_with_null_value_succeeds)
@@ -8759,19 +8777,528 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
             // arrange
             amqpvalue_mocks mocks;
             AMQP_VALUE source = amqpvalue_create_null();
-            mocks.ResetAllCalls();
-
-            // act
-            size_t encoded_size;
-            int result = amqpvalue_get_encoded_size(source, &encoded_size);
-
-            // assert
-            ASSERT_ARE_EQUAL(int, 0, result);
-            ASSERT_ARE_EQUAL(size_t, 1, encoded_size);
-            mocks.AssertActualAndExpectedCalls();
-
-            // cleanup
-            amqpvalue_destroy(source);
+			test_amqpvalue_get_encoded_size(&mocks, source, 1);
         }
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_272: [<encoding name="true" code="0x41" category="fixed" width="0" label="the boolean value true"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_true_bool_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_boolean(true);
+			test_amqpvalue_get_encoded_size(&mocks, source, 1);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_273: [<encoding name="false" code="0x42" category="fixed" width="0" label="the boolean value false"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_false_bool_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_boolean(false);
+			test_amqpvalue_get_encoded_size(&mocks, source, 1);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_275: [<encoding code="0x50" category="fixed" width="1" label="8-bit unsigned integer"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_ubyte_0x0_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_ubyte(0x0);
+			test_amqpvalue_get_encoded_size(&mocks, source, 2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_275: [<encoding code="0x50" category="fixed" width="1" label="8-bit unsigned integer"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_ubyte_0xFF_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_ubyte(0xFF);
+			test_amqpvalue_get_encoded_size(&mocks, source, 2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_276: [<encoding code="0x60" category="fixed" width="2" label="16-bit unsigned integer in network byte order"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_ushort_0x0_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_ushort(0x0);
+			test_amqpvalue_get_encoded_size(&mocks, source, 3);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_276: [<encoding code="0x60" category="fixed" width="2" label="16-bit unsigned integer in network byte order"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_ushort_0xFFFF_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_ushort(0xFFFF);
+			test_amqpvalue_get_encoded_size(&mocks, source, 3);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_277: [<encoding code="0x70" category="fixed" width="4" label="32-bit unsigned integer in network byte order"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_uint_0xFFFFFFFF_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_uint(0xFFFFFFFF);
+			test_amqpvalue_get_encoded_size(&mocks, source, 5);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_278: [<encoding name="smalluint" code="0x52" category="fixed" width="1" label="unsigned integer value in the range 0 to 255 inclusive"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_uint_0xFF_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_uint(0xFF);
+			test_amqpvalue_get_encoded_size(&mocks, source, 2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_279: [<encoding name="uint0" code="0x43" category="fixed" width="0" label="the uint value 0"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_uint_0x0_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_uint(0x0);
+			test_amqpvalue_get_encoded_size(&mocks, source, 1);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_280: [<encoding code="0x80" category="fixed" width="8" label="64-bit unsigned integer in network byte order"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_ulong_0xFFFFFFFFFFFFFFFF_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_ulong(0xFFFFFFFFFFFFFFFF);
+			test_amqpvalue_get_encoded_size(&mocks, source, 9);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_281: [<encoding name="smallulong" code="0x53" category="fixed" width="1" label="unsigned long value in the range 0 to 255 inclusive"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_ulong_0xFF_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_ulong(0xFF);
+			test_amqpvalue_get_encoded_size(&mocks, source, 2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_282: [<encoding name="ulong0" code="0x44" category="fixed" width="0" label="the ulong value 0"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_ulong_0x0_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_ulong(0x0);
+			test_amqpvalue_get_encoded_size(&mocks, source, 1);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_283: [<encoding code="0x51" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_byte_minus_128_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_byte(-128);
+			test_amqpvalue_get_encoded_size(&mocks, source, 2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_283: [<encoding code="0x51" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_byte_127_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_byte(127);
+			test_amqpvalue_get_encoded_size(&mocks, source, 2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_284: [<encoding code="0x61" category="fixed" width="2" label="16-bit two's-complement integer in network byte order"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_short_minus_32768_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_short(-32768);
+			test_amqpvalue_get_encoded_size(&mocks, source, 3);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_285: [<encoding code="0x71" category="fixed" width="4" label="32-bit two's-complement integer in network byte order"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_int_2147483647_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_int(2147483647);
+			test_amqpvalue_get_encoded_size(&mocks, source, 5);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_285: [<encoding code="0x71" category="fixed" width="4" label="32-bit two's-complement integer in network byte order"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_int_minus_2147483648_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_int(-2147483647-1);
+			test_amqpvalue_get_encoded_size(&mocks, source, 5);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_286: [<encoding name="smallint" code="0x54" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_int_127_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_int(127);
+			test_amqpvalue_get_encoded_size(&mocks, source, 2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_286: [<encoding name="smallint" code="0x54" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_int_minus_128_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_int(-128);
+			test_amqpvalue_get_encoded_size(&mocks, source, 2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_287: [<encoding code="0x81" category="fixed" width="8" label="64-bit two's-complement integer in network byte order"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_long_9223372036854775807_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_long(9223372036854775807i64);
+			test_amqpvalue_get_encoded_size(&mocks, source, 9);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_287: [<encoding code="0x81" category="fixed" width="8" label="64-bit two's-complement integer in network byte order"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_long_minus_9223372036854775808_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_long(-9223372036854775807i64 - 1);
+			test_amqpvalue_get_encoded_size(&mocks, source, 9);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_288: [<encoding name="smalllong" code="0x55" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_long_127_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_long(127);
+			test_amqpvalue_get_encoded_size(&mocks, source, 2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_288: [<encoding name="smalllong" code="0x55" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_long_minus_128_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_long(-128);
+			test_amqpvalue_get_encoded_size(&mocks, source, 2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_295: [<encoding name="ms64" code="0x83" category="fixed" width="8" label="64-bit two's-complement integer representing milliseconds since the unix epoch"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_timestamp_9223372036854775807_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_timestamp(9223372036854775807i64);
+			test_amqpvalue_get_encoded_size(&mocks, source, 9);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_295: [<encoding name="ms64" code="0x83" category="fixed" width="8" label="64-bit two's-complement integer representing milliseconds since the unix epoch"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_timestamp_minus_9223372036854775808_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_timestamp(-9223372036854775807i64 - 1);
+			test_amqpvalue_get_encoded_size(&mocks, source, 9);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_296: [<encoding code="0x98" category="fixed" width="16" label="UUID as defined in section 4.1.2 of RFC-4122"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_uuid_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			amqp_uuid uuid = { 0 };
+			AMQP_VALUE source = amqpvalue_create_uuid(uuid);
+			test_amqpvalue_get_encoded_size(&mocks, source, 17);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_297: [<encoding name="vbin8" code="0xa0" category="variable" width="1" label="up to 2^8 - 1 octets of binary data"/>]  */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_binary_zero_length_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			amqp_binary binary = { NULL, 0 };
+			AMQP_VALUE source = amqpvalue_create_binary(binary);
+			test_amqpvalue_get_encoded_size(&mocks, source, 2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_297: [<encoding name="vbin8" code="0xa0" category="variable" width="1" label="up to 2^8 - 1 octets of binary data"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_binary_1_length_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char bytes[] = { 0x42 };
+			amqp_binary binary = { &bytes, sizeof(bytes) };
+			AMQP_VALUE source = amqpvalue_create_binary(binary);
+			test_amqpvalue_get_encoded_size(&mocks, source, 3);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_297: [<encoding name="vbin8" code="0xa0" category="variable" width="1" label="up to 2^8 - 1 octets of binary data"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_binary_255_length_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char bytes[255] = { 0x42 };
+			amqp_binary binary = { &bytes, sizeof(bytes) };
+			AMQP_VALUE source = amqpvalue_create_binary(binary);
+			test_amqpvalue_get_encoded_size(&mocks, source, 257);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_298: [<encoding name="vbin32" code="0xb0" category="variable" width="4" label="up to 2^32 - 1 octets of binary data"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_binary_256_length_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char bytes[256] = { 0x42 };
+			amqp_binary binary = { &bytes, sizeof(bytes) };
+			AMQP_VALUE source = amqpvalue_create_binary(binary);
+			test_amqpvalue_get_encoded_size(&mocks, source, 261);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_299: [<encoding name="str8-utf8" code="0xa1" category="variable" width="1" label="up to 2^8 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_string_0_length_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_string("");
+			test_amqpvalue_get_encoded_size(&mocks, source, 2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_299: [<encoding name="str8-utf8" code="0xa1" category="variable" width="1" label="up to 2^8 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_string_1_length_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_string("a");
+			test_amqpvalue_get_encoded_size(&mocks, source, 3);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_299: [<encoding name="str8-utf8" code="0xa1" category="variable" width="1" label="up to 2^8 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_string_255_chars_length_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			char string[256];
+			memset(string, 'a', 255);
+			string[255] = 0;
+			AMQP_VALUE source = amqpvalue_create_string(string);
+			test_amqpvalue_get_encoded_size(&mocks, source, 257);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_300: [<encoding name="str32-utf8" code="0xb1" category="variable" width="4" label="up to 2^32 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_string_256_chars_length_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			char string[257];
+			memset(string, 'a', 256);
+			string[256] = 0;
+			AMQP_VALUE source = amqpvalue_create_string(string);
+			test_amqpvalue_get_encoded_size(&mocks, source, 261);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_303: [<encoding name="list0" code="0x45" category="fixed" width="0" label="the empty list (i.e. the list with no elements)"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_empty_list_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			test_amqpvalue_get_encoded_size(&mocks, source, 1);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_list_value_with_1_item_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			AMQP_VALUE item = amqpvalue_create_null();
+			(void)amqpvalue_set_list_item(source, 0, item);
+			amqpvalue_destroy(item);
+			test_amqpvalue_get_encoded_size(&mocks, source, 4);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_list_value_with_2_items_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			AMQP_VALUE item = amqpvalue_create_null();
+			(void)amqpvalue_set_list_item(source, 0, item);
+			(void)amqpvalue_set_list_item(source, 1, item);
+			amqpvalue_destroy(item);
+			test_amqpvalue_get_encoded_size(&mocks, source, 5);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_list_value_with_1_string_item_with_5_chars_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			AMQP_VALUE item = amqpvalue_create_string("fluff");
+			(void)amqpvalue_set_list_item(source, 0, item);
+			amqpvalue_destroy(item);
+			/* 1 - list descriptor +
+			   1 - list size
+			   1 - list item count
+			   1 - string descriptor
+			   1 - string length
+			   5 - string chars */
+			test_amqpvalue_get_encoded_size(&mocks, source, 10);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_304: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_list_value_with_255_null_items_succeeds)
+		{
+			// arrange
+			uint32_t i;
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			AMQP_VALUE item = amqpvalue_create_null();
+			for (i = 0; i < 255; i++)
+			{
+				(void)amqpvalue_set_list_item(source, i, item);
+			}
+			amqpvalue_destroy(item);
+			test_amqpvalue_get_encoded_size(&mocks, source, 258);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_305: [<encoding name="list32" code="0xd0" category="compound" width="4" label="up to 2^32 - 1 list elements with total size less than 2^32 octets"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_list_value_with_256_null_items_succeeds)
+		{
+			// arrange
+			uint32_t i;
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_list();
+			AMQP_VALUE item = amqpvalue_create_null();
+			for (i = 0; i < 256; i++)
+			{
+				(void)amqpvalue_set_list_item(source, i, item);
+			}
+			amqpvalue_destroy(item);
+			test_amqpvalue_get_encoded_size(&mocks, source, 265);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_empty_map_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_map();
+			test_amqpvalue_get_encoded_size(&mocks, source, 3);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_map_value_with_1_null_key_and_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_map();
+			AMQP_VALUE item = amqpvalue_create_null();
+			amqpvalue_set_map_value(source, item, item);
+			amqpvalue_destroy(item);
+			test_amqpvalue_get_encoded_size(&mocks, source, 5);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_map_value_with_2_keys_and_values_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_map();
+			AMQP_VALUE key1 = amqpvalue_create_uint(1);
+			AMQP_VALUE key2 = amqpvalue_create_uint(2);
+			AMQP_VALUE item = amqpvalue_create_null();
+			amqpvalue_set_map_value(source, key1, item);
+			amqpvalue_set_map_value(source, key2, item);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(key2);
+			amqpvalue_destroy(item);
+			test_amqpvalue_get_encoded_size(&mocks, source, 9);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_map_value_with_1_key_and_value_255_bytes_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_map();
+			AMQP_VALUE key1 = amqpvalue_create_null();
+			char string[253];
+			memset(string, 'a', 252);
+			string[252] = 0;
+			AMQP_VALUE item = amqpvalue_create_string(string);
+			amqpvalue_set_map_value(source, key1, item);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(item);
+			test_amqpvalue_get_encoded_size(&mocks, source, 258);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_308: [amqpvalue_get_encoded_size shall fill in the encoded_size argument the number of bytes required to encode the given AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_307: [<encoding name="map32" code="0xd1" category="compound" width="4" label="up to 2^32 - 1 octets of encoded map data"/>] */
+		TEST_FUNCTION(amqpvalue_get_encoded_size_with_map_value_with_1_key_and_value_256_bytes_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_map();
+			AMQP_VALUE key1 = amqpvalue_create_null();
+			char string[254];
+			memset(string, 'a', 253);
+			string[253] = 0;
+			AMQP_VALUE item = amqpvalue_create_string(string);
+			amqpvalue_set_map_value(source, key1, item);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(item);
+			test_amqpvalue_get_encoded_size(&mocks, source, 265);
+		}
 
 END_TEST_SUITE(amqpvalue_unittests)

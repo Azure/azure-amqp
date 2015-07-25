@@ -34,7 +34,7 @@ typedef struct AMQP_FRAME_CODEC_DATA_TAG
 	uint32_t decode_frame_body_size;
 	uint32_t decode_frame_body_pos;
 	uint16_t channel;
-	DECODER_HANDLE decoder;
+	AMQPVALUE_DECODER_HANDLE decoder;
 	AMQP_FRAME_DECODE_STATE decode_state;
 
 	/* encode */
@@ -193,7 +193,7 @@ static int frame_body_bytes_received(void* context, const unsigned char* frame_b
 			case AMQP_FRAME_DECODE_FRAME_PERFORMATIVE:
 				/* Codes_SRS_AMQP_FRAME_CODEC_01_052: [Decoding the performative shall be done by feeding the bytes to the decoder create in amqp_frame_codec_create.] */
 				amqp_frame_codec_instance->decode_frame_body_pos++;
-				if (decoder_decode_bytes(amqp_frame_codec_instance->decoder, frame_body_bytes, 1) != 0)
+				if (amqpvalue_decode_bytes(amqp_frame_codec_instance->decoder, frame_body_bytes, 1) != 0)
 				{
 					result = __LINE__;
 				}
@@ -267,7 +267,7 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			result->encode_state = AMQP_FRAME_ENCODE_FRAME_HEADER;
 
 			/* Codes_SRS_AMQP_FRAME_CODEC_01_018: [amqp_frame_codec_create shall create a decoder to be used for decoding AMQP values.] */
-			result->decoder = decoder_create(amqp_value_decoded, result);
+			result->decoder = amqpvalue_decoder_create(amqp_value_decoded, result);
 			if (result->decoder == NULL)
 			{
 				/* Codes_SRS_AMQP_FRAME_CODEC_01_019: [If creating the decoder fails, amqp_frame_codec_create shall fail and return NULL.] */
@@ -280,7 +280,7 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 				if (frame_codec_subscribe(frame_codec, 0, frame_begin, frame_body_bytes_received, result) != 0)
 				{
 					/* Codes_SRS_AMQP_FRAME_CODEC_01_014: [If subscribing for AMQP frames fails, amqp_frame_codec_create shall fail and return NULL.] */
-					decoder_destroy(result->decoder);
+					amqpvalue_decoder_destroy(result->decoder);
 					amqpalloc_free(result);
 					result = NULL;
 				}
@@ -301,7 +301,7 @@ void amqp_frame_codec_destroy(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec)
 		(void)frame_codec_unsubscribe(amqp_frame_codec_instance->frame_codec, FRAME_TYPE_AMQP);
 
 		/* Codes_SRS_AMQP_FRAME_CODEC_01_021: [The decoder created in amqp_frame_codec_create shall be destroyed by amqp_frame_codec_destroy.] */
-		decoder_destroy(amqp_frame_codec_instance->decoder);
+		amqpvalue_decoder_destroy(amqp_frame_codec_instance->decoder);
 
 		/* Codes_SRS_AMQP_FRAME_CODEC_01_015: [amqp_frame_codec_destroy shall free all resources associated with the amqp_frame_codec instance.] */
 		amqpalloc_free(amqp_frame_codec_instance);

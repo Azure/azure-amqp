@@ -75,18 +75,18 @@ extern "C" {
 	extern AMQP_VALUE amqpvalue_clone(AMQP_VALUE value);
 
 	/* encoding */
-	typedef int(*ENCODER_OUTPUT)(void* context, const void* bytes, size_t length);
+	typedef int(*AMQPVALUE_ENCODER_OUTPUT)(void* context, const void* bytes, size_t length);
 
-	extern int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* context);
+	extern int amqpvalue_encode(AMQP_VALUE value, AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context);
 	extern int amqpvalue_get_encoded_size(AMQP_VALUE value, size_t* encoded_size);
 
 	/* decoding */
-	typedef void* DECODER_HANDLE;
+	typedef void* AMQPVALUE_DECODER_HANDLE;
 	typedef int(*VALUE_DECODED_CALLBACK)(void* context, AMQP_VALUE decoded_value);
 
-	extern DECODER_HANDLE decoder_create(VALUE_DECODED_CALLBACK value_decoded_callback, void* value_decoded_callback_context);
-	extern void decoder_destroy(DECODER_HANDLE handle);
-	extern int decoder_decode_bytes(DECODER_HANDLE handle, const unsigned char* buffer, size_t size);
+	extern AMQPVALUE_DECODER_HANDLE amqpvalue_decoder_create(VALUE_DECODED_CALLBACK value_decoded_callback, void* value_decoded_callback_context);
+	extern void amqpvalue_decoder_destroy(AMQPVALUE_DECODER_HANDLE handle);
+	extern int amqpvalue_decode_bytes(AMQPVALUE_DECODER_HANDLE handle, const unsigned char* buffer, size_t size);
 
 	/* misc for now */
 	extern AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value);

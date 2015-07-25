@@ -1989,7 +1989,7 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 	return result;
 }
 
-static int output_byte(ENCODER_OUTPUT encoder_output, void* context, unsigned char b)
+static int output_byte(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, unsigned char b)
 {
 	int result;
 
@@ -2007,7 +2007,7 @@ static int output_byte(ENCODER_OUTPUT encoder_output, void* context, unsigned ch
 	return result;
 }
 
-static int output_bytes(ENCODER_OUTPUT encoder_output, void* context, const void* bytes, size_t length)
+static int output_bytes(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, const void* bytes, size_t length)
 {
 	int result;
 
@@ -2025,7 +2025,7 @@ static int output_bytes(ENCODER_OUTPUT encoder_output, void* context, const void
 	return result;
 }
 
-static int encode_boolean(ENCODER_OUTPUT encoder_output, void* context, bool value)
+static int encode_boolean(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, bool value)
 {
 	int result;
 
@@ -2059,7 +2059,7 @@ static int encode_boolean(ENCODER_OUTPUT encoder_output, void* context, bool val
 	return result;
 }
 
-static int encode_ubyte(ENCODER_OUTPUT encoder_output, void* context, unsigned char value)
+static int encode_ubyte(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, unsigned char value)
 {
 	int result;
 
@@ -2079,7 +2079,7 @@ static int encode_ubyte(ENCODER_OUTPUT encoder_output, void* context, unsigned c
 	return result;
 }
 
-static int encode_ushort(ENCODER_OUTPUT encoder_output, void* context, uint16_t value)
+static int encode_ushort(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, uint16_t value)
 {
 	int result;
 
@@ -2100,7 +2100,7 @@ static int encode_ushort(ENCODER_OUTPUT encoder_output, void* context, uint16_t 
 	return result;
 }
 
-static int encode_uint(ENCODER_OUTPUT encoder_output, void* context, uint32_t value)
+static int encode_uint(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, uint32_t value)
 {
 	int result;
 
@@ -2156,7 +2156,7 @@ static int encode_uint(ENCODER_OUTPUT encoder_output, void* context, uint32_t va
 	return result;
 }
 
-static int encode_ulong(ENCODER_OUTPUT encoder_output, void* context, uint64_t value)
+static int encode_ulong(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, uint64_t value)
 {
 	int result;
 	if (value == 0)
@@ -2216,7 +2216,7 @@ static int encode_ulong(ENCODER_OUTPUT encoder_output, void* context, uint64_t v
 	return result;
 }
 
-static int encode_byte(ENCODER_OUTPUT encoder_output, void* context, char value)
+static int encode_byte(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, char value)
 {
 	int result;
 
@@ -2236,7 +2236,7 @@ static int encode_byte(ENCODER_OUTPUT encoder_output, void* context, char value)
 	return result;
 }
 
-static int encode_short(ENCODER_OUTPUT encoder_output, void* context, int16_t value)
+static int encode_short(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, int16_t value)
 {
 	int result;
 
@@ -2257,7 +2257,7 @@ static int encode_short(ENCODER_OUTPUT encoder_output, void* context, int16_t va
 	return result;
 }
 
-static int encode_int(ENCODER_OUTPUT encoder_output, void* context, int32_t value)
+static int encode_int(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, int32_t value)
 {
 	int result;
 
@@ -2298,7 +2298,7 @@ static int encode_int(ENCODER_OUTPUT encoder_output, void* context, int32_t valu
 	return result;
 }
 
-static int encode_long(ENCODER_OUTPUT encoder_output, void* context, int64_t value)
+static int encode_long(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, int64_t value)
 {
 	int result;
 
@@ -2343,7 +2343,7 @@ static int encode_long(ENCODER_OUTPUT encoder_output, void* context, int64_t val
 	return result;
 }
 
-static int encode_timestamp(ENCODER_OUTPUT encoder_output, void* context, int64_t value)
+static int encode_timestamp(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, int64_t value)
 {
 	int result;
 
@@ -2370,7 +2370,7 @@ static int encode_timestamp(ENCODER_OUTPUT encoder_output, void* context, int64_
 	return result;
 }
 
-static int encode_uuid(ENCODER_OUTPUT encoder_output, void* context, amqp_uuid uuid)
+static int encode_uuid(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, amqp_uuid uuid)
 {
 	int result;
 
@@ -2390,7 +2390,7 @@ static int encode_uuid(ENCODER_OUTPUT encoder_output, void* context, amqp_uuid u
 	return result;
 }
 
-static int encode_binary(ENCODER_OUTPUT encoder_output, void* context, const unsigned char* value, uint32_t length)
+static int encode_binary(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, const unsigned char* value, uint32_t length)
 {
 	int result;
 	if (length <= 255)
@@ -2432,7 +2432,7 @@ static int encode_binary(ENCODER_OUTPUT encoder_output, void* context, const uns
 	return result;
 }
 
-static int encode_string(ENCODER_OUTPUT encoder_output, void* context, const char* value)
+static int encode_string(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, const char* value)
 {
 	int result;
 	uint32_t length = strlen(value);
@@ -2476,7 +2476,7 @@ static int encode_string(ENCODER_OUTPUT encoder_output, void* context, const cha
 	return result;
 }
 
-static int encode_list(ENCODER_OUTPUT encoder_output, void* context, uint32_t count, AMQP_VALUE* items)
+static int encode_list(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, uint32_t count, AMQP_VALUE* items)
 {
 	size_t i;
 	int result;
@@ -2586,7 +2586,7 @@ static int encode_list(ENCODER_OUTPUT encoder_output, void* context, uint32_t co
 	return result;
 }
 
-static int encode_map(ENCODER_OUTPUT encoder_output, void* context, uint32_t count, AMQP_MAP_KEY_VALUE_PAIR* pairs)
+static int encode_map(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, uint32_t count, AMQP_MAP_KEY_VALUE_PAIR* pairs)
 {
 	size_t i;
 	int result;
@@ -2692,7 +2692,7 @@ static int encode_map(ENCODER_OUTPUT encoder_output, void* context, uint32_t cou
 	return result;
 }
 
-static int encode_descriptor_header(ENCODER_OUTPUT encoder_output, void* context)
+static int encode_descriptor_header(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context)
 {
 	int result;
 
@@ -2703,7 +2703,7 @@ static int encode_descriptor_header(ENCODER_OUTPUT encoder_output, void* context
 }
 
 /* Codes_SRS_AMQPVALUE_01_265: [amqpvalue_encode shall encode the value per the ISO.] */
-int amqpvalue_encode(AMQP_VALUE value, ENCODER_OUTPUT encoder_output, void* context)
+int amqpvalue_encode(AMQP_VALUE value, AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context)
 {
 	int result;
 
@@ -3901,7 +3901,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 	return result;
 }
 
-DECODER_HANDLE decoder_create(VALUE_DECODED_CALLBACK value_decoded_callback, void* value_decoded_callback_context)
+AMQPVALUE_DECODER_HANDLE amqpvalue_decoder_create(VALUE_DECODED_CALLBACK value_decoded_callback, void* value_decoded_callback_context)
 {
 	DECODER_DATA* decoder_data = (DECODER_DATA*)amqpalloc_malloc(sizeof(DECODER_DATA));
 	if (decoder_data != NULL)
@@ -3922,7 +3922,7 @@ DECODER_HANDLE decoder_create(VALUE_DECODED_CALLBACK value_decoded_callback, voi
 	return decoder_data;
 }
 
-void decoder_destroy(DECODER_HANDLE handle)
+void amqpvalue_decoder_destroy(AMQPVALUE_DECODER_HANDLE handle)
 {
 	DECODER_DATA* decoder_data = (DECODER_DATA*)handle;
 	if (decoder_data != NULL)
@@ -3933,7 +3933,7 @@ void decoder_destroy(DECODER_HANDLE handle)
 	}
 }
 
-int decoder_decode_bytes(DECODER_HANDLE handle, const unsigned char* buffer, size_t size)
+int amqpvalue_decode_bytes(AMQPVALUE_DECODER_HANDLE handle, const unsigned char* buffer, size_t size)
 {
 	int result;
 

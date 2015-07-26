@@ -67,6 +67,9 @@ public:
 		}
 		encoder_output_call_count++;
 	MOCK_METHOD_END(int, (encoder_output_call_count == when_shall_encoder_output_fail) ? 1 : 0);
+
+	MOCK_STATIC_METHOD_2(, int, value_decoded_callback, void*, context, AMQP_VALUE, decoded_value)
+	MOCK_METHOD_END(int, 0);
 };
 
 extern "C"
@@ -76,6 +79,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqpvalue_mocks, , void, amqpalloc_free, void*, ptr);
 
 	DECLARE_GLOBAL_MOCK_METHOD_3(amqpvalue_mocks, , int, test_encoder_output, void*, context, const void*, bytes, size_t, length);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqpvalue_mocks, , int, value_decoded_callback, void*, context, AMQP_VALUE, decoded_value);
 }
 
 static void* test_context = (void*)0x4243;
@@ -9299,6 +9303,928 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqpvalue_destroy(key1);
 			amqpvalue_destroy(item);
 			test_amqpvalue_get_encoded_size(&mocks, source, 265);
+		}
+
+		/* amqpvalue_destroy */
+
+		/* Tests_SRS_AMQPVALUE_01_315: [If the value argument is NULL, amqpvalue_destroy shall do nothing.] */
+		TEST_FUNCTION(amqpvalue_decoder_destroy_with_NULL_does_nothing)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			// act
+			amqpvalue_destroy(NULL);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_null_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_null();
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_ubyte_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_ubyte(0);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_ushort_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_ushort(0);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_uint_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_uint(0);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_ulong_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_ulong(0);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_byte_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_byte(0);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_short_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_short(0);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_int_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_int(0);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_long_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_long(0);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_float_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_float(0);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_double_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_double(0);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_char_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_char(0);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_timestamp_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_timestamp(0);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_uuid_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			amqp_uuid uuid = { 0 };
+			AMQP_VALUE value = amqpvalue_create_uuid(uuid);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_binary_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char bytes[] = { 0x42 };
+			amqp_binary binary = { bytes, sizeof(bytes) };
+			AMQP_VALUE value = amqpvalue_create_binary(binary);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_string_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_string("test");
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_empty_list_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_list();
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_list_value_with_1_null_item)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_list();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_list_item(value, 0, null_value);
+			amqpvalue_destroy(null_value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_list_value_with_2_null_items)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_list();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_list_item(value, 0, null_value);
+			(void)amqpvalue_set_list_item(value, 1, null_value);
+			amqpvalue_destroy(null_value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			/* this is for the 2 null items */
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_empty_map_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_map();
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_map_value_with_1_key_value_pair)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_map();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_map_value(value, null_value, null_value);
+			amqpvalue_destroy(null_value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			/* this is for the key and value */
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_map_value_with_2_key_value_pairs)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_map();
+			AMQP_VALUE key1 = amqpvalue_create_ubyte(1);
+			AMQP_VALUE key2 = amqpvalue_create_uint(2);
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_map_value(value, key1, null_value);
+			(void)amqpvalue_set_map_value(value, key2, null_value);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(key2);
+			amqpvalue_destroy(null_value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			/* this is for the first key and value */
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			/* this is for the first second and value */
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_null_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_null();
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_ubyte_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_ubyte(0);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_ushort_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_ushort(0);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_uint_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_uint(0);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_ulong_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_ulong(0);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_byte_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_byte(0);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_short_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_short(0);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_int_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_int(0);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_long_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_long(0);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_float_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_float(0);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_double_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_double(0);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_char_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_char(0);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_timestamp_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_timestamp(0);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_uuid_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			amqp_uuid uuid = { 0 };
+			AMQP_VALUE value = amqpvalue_create_uuid(uuid);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_binary_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char bytes[] = { 0x42 };
+			amqp_binary binary = { bytes, sizeof(bytes) };
+			AMQP_VALUE value = amqpvalue_create_binary(binary);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_string_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_string("test");
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_empty_list_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_list();
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_list_cloned_value_with_1_null_item)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_list();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_list_item(value, 0, null_value);
+			amqpvalue_destroy(null_value);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_list_cloned_value_with_2_null_items)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_list();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_list_item(value, 0, null_value);
+			(void)amqpvalue_set_list_item(value, 1, null_value);
+			amqpvalue_destroy(null_value);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			/* this is for the 2 null items */
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_empty_map_cloned_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_map();
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_map_cloned_value_with_1_key_value_pair)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_map();
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_map_value(value, null_value, null_value);
+			amqpvalue_destroy(null_value);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			/* this is for the key and value */
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_map_cloned_value_with_2_key_value_pairs)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_map();
+			AMQP_VALUE key1 = amqpvalue_create_ubyte(1);
+			AMQP_VALUE key2 = amqpvalue_create_uint(2);
+			AMQP_VALUE null_value = amqpvalue_create_null();
+			(void)amqpvalue_set_map_value(value, key1, null_value);
+			(void)amqpvalue_set_map_value(value, key2, null_value);
+			amqpvalue_destroy(key1);
+			amqpvalue_destroy(key2);
+			amqpvalue_destroy(null_value);
+			AMQP_VALUE cloned_value = amqpvalue_clone(value);
+			amqpvalue_destroy(value);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			/* this is for the first key and value */
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			/* this is for the first second and value */
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(cloned_value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* amqpvalue_decoder_create */
+
+		/* Tests_SRS_AMQPVALUE_01_311: [amqpvalue_decoder_create shall create a new amqp value decoder and return a non-NULL handle to it.] */
+		TEST_FUNCTION(amqpvalue_decoder_create_returns_a_non_NULL_handle)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+
+			// act
+			AMQPVALUE_DECODER_HANDLE result = amqpvalue_decoder_create(value_decoded_callback, test_context);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(result);
 		}
 
 END_TEST_SUITE(amqpvalue_unittests)

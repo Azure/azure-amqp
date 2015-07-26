@@ -2813,8 +2813,11 @@ int amqpvalue_encode(AMQP_VALUE value, AMQPVALUE_ENCODER_OUTPUT encoder_output, 
 
 static int count_bytes(void* context, const void* bytes, size_t length)
 {
+	(void)bytes;
+
     size_t* byte_count = (uint32_t*)context;
     *byte_count += length;
+
     return 0;
 }
 
@@ -2890,8 +2893,10 @@ static void amqpvalue_clear(AMQP_VALUE_DATA* value_data)
 
 void amqpvalue_destroy(AMQP_VALUE value)
 {
+	/* Codes_SRS_AMQPVALUE_01_315: [If the value argument is NULL, amqpvalue_destroy shall do nothing.] */
 	if (value != NULL)
 	{
+		/* Codes_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
 		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
 		amqpvalue_clear(value_data);
 		amqpalloc_free(value);
@@ -3087,6 +3092,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 				internal_decoder_data->constructor_byte = buffer[0];
 				buffer++;
 				size--;
+
 				switch (internal_decoder_data->constructor_byte)
 				{
 				default:
@@ -3919,6 +3925,7 @@ AMQPVALUE_DECODER_HANDLE amqpvalue_decoder_create(VALUE_DECODED_CALLBACK value_d
 		}
 	}
 
+	/* Codes_SRS_AMQPVALUE_01_311: [amqpvalue_decoder_create shall create a new amqp value decoder and return a non-NULL handle to it.] */
 	return decoder_data;
 }
 

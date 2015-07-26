@@ -10227,4 +10227,104 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqpvalue_decoder_destroy(result);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_312: [If the value_decoded_callback argument is NULL, amqpvalue_decoder_create shall return NULL.] */
+		TEST_FUNCTION(amqpvalue_decoder_create_with_NULL_callback_returns_NULL)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			// act
+			AMQPVALUE_DECODER_HANDLE result = amqpvalue_decoder_create(NULL, test_context);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_313: [If creating the decoder fails, amqpvalue_decoder_create shall return NULL.] */
+		TEST_FUNCTION(when_allocating_the_decoder_fails_amqpvalue_decoder_create_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQPVALUE_DECODER_HANDLE result = amqpvalue_decoder_create(value_decoded_callback, test_context);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_313: [If creating the decoder fails, amqpvalue_decoder_create shall return NULL.] */
+		TEST_FUNCTION(when_allocating_the_initial_decode_value_fails_amqpvalue_decoder_create_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQPVALUE_DECODER_HANDLE result = amqpvalue_decoder_create(value_decoded_callback, test_context);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_313: [If creating the decoder fails, amqpvalue_decoder_create shall return NULL.] */
+		TEST_FUNCTION(when_allocating_memoory_fails_amqpvalue_decoder_create_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQPVALUE_DECODER_HANDLE result = amqpvalue_decoder_create(value_decoded_callback, test_context);
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* amqpvalue_decoder_destroy */
+
+		/* Tests_SRS_AMQPVALUE_01_316: [amqpvalue_decoder_destroy shall free all resources associated with the amqpvalue_decoder.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_underlying_allocated_chunks)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG))
+				.ExpectedAtLeastTimes(3);
+
+			// act
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_317: [If handle is NULL, amqpvalue_decoder_destroy shall do nothing.] */
+		TEST_FUNCTION(amqpvalue_destroy_with_NULL_handle_does_not_free_anything)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			// act
+			amqpvalue_decoder_destroy(NULL);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
 END_TEST_SUITE(amqpvalue_unittests)

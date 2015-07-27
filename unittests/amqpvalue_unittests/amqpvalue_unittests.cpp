@@ -10327,4 +10327,59 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			// no explicit assert, uMock checks the calls
 		}
 
+		/* amqpvalue_decode_bytes */
+
+		/* Tests_SRS_AMQPVALUE_01_320: [If handle or buffer are NULL, amqpvalue_decode_bytes shall return a non-zero value.] */
+		TEST_FUNCTION(amqpvalue_decode_bytes_with_NULL_handle_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			unsigned char bytes[] = { 0x40 };
+
+			// act
+			int result = amqpvalue_decode_bytes(NULL, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_320: [If handle or buffer are NULL, amqpvalue_decode_bytes shall return a non-zero value.] */
+		TEST_FUNCTION(amqpvalue_decode_bytes_with_NULL_buffer_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, NULL, 1);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_321: [If size is 0, amqpvalue_decode_bytes shall return a non-zero value.] */
+		TEST_FUNCTION(amqpvalue_decode_bytes_with_0_size_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x40 };
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, 0);
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(amqpvalue_decoder);
+		}
+
 END_TEST_SUITE(amqpvalue_unittests)

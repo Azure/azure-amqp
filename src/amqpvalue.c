@@ -3775,55 +3775,55 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 AMQPVALUE_DECODER_HANDLE amqpvalue_decoder_create(VALUE_DECODED_CALLBACK value_decoded_callback, void* value_decoded_callback_context)
 {
-	DECODER_DATA* decoder_data;
+	DECODER_DATA* decoder_instance;
 
 	/* Codes_SRS_AMQPVALUE_01_312: [If the value_decoded_callback argument is NULL, amqpvalue_decoder_create shall return NULL.] */
 	if (value_decoded_callback == NULL)
 	{
-		decoder_data = NULL;
+		decoder_instance = NULL;
 	}
 	else
 	{
-		decoder_data = (DECODER_DATA*)amqpalloc_malloc(sizeof(DECODER_DATA));
+		decoder_instance = (DECODER_DATA*)amqpalloc_malloc(sizeof(DECODER_DATA));
 		/* Codes_SRS_AMQPVALUE_01_313: [If creating the decoder fails, amqpvalue_decoder_create shall return NULL.] */
-		if (decoder_data != NULL)
+		if (decoder_instance != NULL)
 		{
-			decoder_data->decode_to_value = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
-			if (decoder_data->decode_to_value == NULL)
+			decoder_instance->decode_to_value = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+			if (decoder_instance->decode_to_value == NULL)
 			{
 				/* Codes_SRS_AMQPVALUE_01_313: [If creating the decoder fails, amqpvalue_decoder_create shall return NULL.] */
-				amqpalloc_free(decoder_data);
-				decoder_data = NULL;
+				amqpalloc_free(decoder_instance);
+				decoder_instance = NULL;
 			}
 			else
 			{
-				decoder_data->decode_to_value->type = AMQP_TYPE_UNKNOWN;
-				decoder_data->internal_decoder = internal_decoder_create(value_decoded_callback, value_decoded_callback_context, decoder_data->decode_to_value);
-				if (decoder_data->internal_decoder == NULL)
+				decoder_instance->decode_to_value->type = AMQP_TYPE_UNKNOWN;
+				decoder_instance->internal_decoder = internal_decoder_create(value_decoded_callback, value_decoded_callback_context, decoder_instance->decode_to_value);
+				if (decoder_instance->internal_decoder == NULL)
 				{
 					/* Codes_SRS_AMQPVALUE_01_313: [If creating the decoder fails, amqpvalue_decoder_create shall return NULL.] */
-					amqpalloc_free(decoder_data->decode_to_value);
-					amqpalloc_free(decoder_data);
-					decoder_data = NULL;
+					amqpalloc_free(decoder_instance->decode_to_value);
+					amqpalloc_free(decoder_instance);
+					decoder_instance = NULL;
 				}
 			}
 		}
 	}
 
 	/* Codes_SRS_AMQPVALUE_01_311: [amqpvalue_decoder_create shall create a new amqp value decoder and return a non-NULL handle to it.] */
-	return decoder_data;
+	return decoder_instance;
 }
 
 void amqpvalue_decoder_destroy(AMQPVALUE_DECODER_HANDLE handle)
 {
-	DECODER_DATA* decoder_data = (DECODER_DATA*)handle;
+	DECODER_DATA* decoder_instance = (DECODER_DATA*)handle;
 	
 	/* Codes_SRS_AMQPVALUE_01_317: [If handle is NULL, amqpvalue_decoder_destroy shall do nothing.] */
-	if (decoder_data != NULL)
+	if (decoder_instance != NULL)
 	{
 		/* Codes_SRS_AMQPVALUE_01_316: [amqpvalue_decoder_destroy shall free all resources associated with the amqpvalue_decoder.] */
-		amqpvalue_destroy(decoder_data->decode_to_value);
-		internal_decoder_destroy(decoder_data->internal_decoder);
+		amqpvalue_destroy(decoder_instance->decode_to_value);
+		internal_decoder_destroy(decoder_instance->internal_decoder);
 		amqpalloc_free(handle);
 	}
 }
@@ -3832,15 +3832,19 @@ int amqpvalue_decode_bytes(AMQPVALUE_DECODER_HANDLE handle, const unsigned char*
 {
 	int result;
 
-	DECODER_DATA* decoder_data = (DECODER_DATA*)handle;
-	if (decoder_data == NULL)
+	DECODER_DATA* decoder_instance = (DECODER_DATA*)handle;
+	/* Codes_SRS_AMQPVALUE_01_320: [If handle or buffer are NULL, amqpvalue_decode_bytes shall return a non-zero value.] */
+	if ((decoder_instance == NULL) ||
+		(buffer == NULL) ||
+		/* Codes_SRS_AMQPVALUE_01_321: [If size is 0, amqpvalue_decode_bytes shall return a non-zero value.] */
+		(size == 0))
 	{
 		result = __LINE__;
 	}
 	else
 	{
 		size_t used_bytes;
-		result = internal_decoder_decode_bytes(decoder_data->internal_decoder, buffer, size, &used_bytes);
+		result = internal_decoder_decode_bytes(decoder_instance->internal_decoder, buffer, size, &used_bytes);
 		if (used_bytes < size)
 		{
 			result = __LINE__;

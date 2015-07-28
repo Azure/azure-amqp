@@ -1989,6 +1989,12 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 	return result;
 }
 
+AMQP_TYPE amqpvalue_get_type(AMQP_VALUE value)
+{
+	AMQP_VALUE_DATA* amqpvalue_data = (AMQP_VALUE_DATA*)value;
+	return amqpvalue_data->type;
+}
+
 static int output_byte(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, unsigned char b)
 {
 	int result;
@@ -2946,6 +2952,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 	}
 	else
 	{
+		/* Codes_SRS_AMQPVALUE_01_322: [amqpvalue_decode_bytes shall process the bytes byte by byte, as a stream.] */
 		while ((size > 0) && (internal_decoder_data->decoder_state != DECODER_STATE_DONE))
 		{
 			switch (internal_decoder_data->decoder_state)
@@ -2992,11 +2999,17 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					}
 
 					break;
+
+				/* Codes_SRS_AMQPVALUE_01_329: [<encoding code="0x40" category="fixed" width="0" label="the null value"/>] */
 				case 0x40:
 				{
-					/* null */
+					/* Codes_SRS_AMQPVALUE_01_328: [1.6.1 null Indicates an empty value.] */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_NULL;
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+					/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+					/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+					/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
 					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
 					{
 						result = __LINE__;
@@ -3005,6 +3018,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					{
 						result = 0;
 					}
+
 					break;
 				}
 				case 0x41:
@@ -3828,6 +3842,7 @@ void amqpvalue_decoder_destroy(AMQPVALUE_DECODER_HANDLE handle)
 	}
 }
 
+/* Codes_SRS_AMQPVALUE_01_318: [amqpvalue_decode_bytes shall decode size bytes that are passed in the buffer argument.] */
 int amqpvalue_decode_bytes(AMQPVALUE_DECODER_HANDLE handle, const unsigned char* buffer, size_t size)
 {
 	int result;
@@ -3844,6 +3859,8 @@ int amqpvalue_decode_bytes(AMQPVALUE_DECODER_HANDLE handle, const unsigned char*
 	else
 	{
 		size_t used_bytes;
+
+		/* Codes_SRS_AMQPVALUE_01_318: [amqpvalue_decode_bytes shall decode size bytes that are passed in the buffer argument.] */
 		result = internal_decoder_decode_bytes(decoder_instance->internal_decoder, buffer, size, &used_bytes);
 		if (used_bytes < size)
 		{
@@ -3851,6 +3868,7 @@ int amqpvalue_decode_bytes(AMQPVALUE_DECODER_HANDLE handle, const unsigned char*
 		}
 		else
 		{
+			/* Codes_SRS_AMQPVALUE_01_319: [On success, amqpvalue_decode_bytes shall return 0.] */
 			result = 0;
 		}
 	}

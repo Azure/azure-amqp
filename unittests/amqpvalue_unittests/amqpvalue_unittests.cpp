@@ -25,6 +25,8 @@ static char actual_stringified_encoded[8192];
 static char expected_stringified_encoded[8192];
 static int when_shall_encoder_output_fail = 0;
 static int encoder_output_call_count;
+static size_t decoded_value_count;
+static AMQP_VALUE* decoded_values;
 
 void stringify_bytes(const unsigned char* bytes, size_t byte_count, char* output_string)
 {
@@ -69,6 +71,13 @@ public:
 	MOCK_METHOD_END(int, (encoder_output_call_count == when_shall_encoder_output_fail) ? 1 : 0);
 
 	MOCK_STATIC_METHOD_2(, int, value_decoded_callback, void*, context, AMQP_VALUE, decoded_value)
+		AMQP_VALUE* new_values = (AMQP_VALUE*)realloc(decoded_values, sizeof(AMQP_VALUE) * (decoded_value_count + 1));
+		if (new_values != NULL)
+		{
+			decoded_values = new_values;
+			new_values[decoded_value_count] = amqpvalue_clone(decoded_value);
+			decoded_value_count++;
+		}
 	MOCK_METHOD_END(int, 0);
 };
 
@@ -111,12 +120,27 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 
 		TEST_FUNCTION_CLEANUP(method_cleanup)
 		{
+			amqpvalue_mocks mocks;
+			mocks.SetPerformAutomaticCallComparison(AUTOMATIC_CALL_COMPARISON_OFF);
+
 			if (encoded_bytes != NULL)
 			{
 				free(encoded_bytes);
 				encoded_bytes = NULL;
 			}
 			encoded_byte_count = 0;
+
+			if (decoded_values != NULL)
+			{
+				size_t i;
+				for (i = 0; i < decoded_value_count; i++)
+				{
+					amqpvalue_destroy(decoded_values[i]);
+				}
+				free(decoded_values);
+				decoded_values = NULL;
+			}
+			decoded_value_count = 0;
 
 			if (!MicroMockReleaseMutex(test_serialize_mutex))
 			{
@@ -10359,7 +10383,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			mocks.AssertActualAndExpectedCalls();
 
 			// cleanup
-			amqpvalue_destroy(amqpvalue_decoder);
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_321: [If size is 0, amqpvalue_decode_bytes shall return a non-zero value.] */
@@ -10379,7 +10403,76 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			mocks.AssertActualAndExpectedCalls();
 
 			// cleanup
-			amqpvalue_destroy(amqpvalue_decoder);
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_318: [amqpvalue_decode_bytes shall decode size bytes that are passed in the buffer argument.] */
+		/* Tests_SRS_AMQPVALUE_01_319: [On success, amqpvalue_decode_bytes shall return 0.] */
+		/* Tests_SRS_AMQPVALUE_01_322: [amqpvalue_decode_bytes shall process the bytes byte by byte, as a stream.] */
+		/* Tests_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+		/* Tests_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+		/* Tests_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+		/* Tests_SRS_AMQPVALUE_01_328: [1.6.1 null Indicates an empty value.] */
+		/* Tests_SRS_AMQPVALUE_01_329: [<encoding code="0x40" category="fixed" width="0" label="the null value"/>] */
+		TEST_FUNCTION(amqpvalue_decode_1_amqp_null_value_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x40 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_NULL, (int)amqpvalue_get_type(decoded_values[0]));
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_318: [amqpvalue_decode_bytes shall decode size bytes that are passed in the buffer argument.] */
+		/* Tests_SRS_AMQPVALUE_01_319: [On success, amqpvalue_decode_bytes shall return 0.] */
+		/* Tests_SRS_AMQPVALUE_01_322: [amqpvalue_decode_bytes shall process the bytes byte by byte, as a stream.] */
+		/* Tests_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+		/* Tests_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+		/* Tests_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+		/* Tests_SRS_AMQPVALUE_01_328: [1.6.1 null Indicates an empty value.] */
+		/* Tests_SRS_AMQPVALUE_01_329: [<encoding code="0x40" category="fixed" width="0" label="the null value"/>] */
+		TEST_FUNCTION(amqpvalue_decode_2_amqp_null_values_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x40, 0x40 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_NULL, (int)amqpvalue_get_type(decoded_values[0]));
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_NULL, (int)amqpvalue_get_type(decoded_values[1]));
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
 		}
 
 END_TEST_SUITE(amqpvalue_unittests)

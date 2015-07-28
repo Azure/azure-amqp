@@ -3032,12 +3032,17 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					result = 0;
 					break;
 				}
+				/* Codes_SRS_AMQPVALUE_01_332: [<encoding name="true" code="0x41" category="fixed" width="0" label="the boolean value true"/>] */
 				case 0x41:
 				{
-					/* true */
+					/* Codes_SRS_AMQPVALUE_01_330: [1.6.2 boolean Represents a true or false value.] */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_BOOL;
 					internal_decoder_data->decode_to_value->value.bool_value = true;
 					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+					/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+					/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+					/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
 					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
 					{
 						result = __LINE__;

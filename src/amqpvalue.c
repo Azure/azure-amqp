@@ -3021,6 +3021,17 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 					break;
 				}
+
+				/* Codes_SRS_AMQPVALUE_01_331: [<encoding code="0x56" category="fixed" width="1" label="boolean with the octet 0x00 being false and octet 0x01 being true"/>] */
+				case 0x56:
+				{
+					/* Codes_SRS_AMQPVALUE_01_330: [1.6.2 boolean Represents a true or false value.] */
+					internal_decoder_data->decode_to_value->type = AMQP_TYPE_BOOL;
+					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
+					internal_decoder_data->bytes_decoded = 0;
+					result = 0;
+					break;
+				}
 				case 0x41:
 				{
 					/* true */
@@ -3271,6 +3282,36 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 						break;
 					}
 					}
+					break;
+				}
+				case 0x56:
+				{
+					/* Codes_SRS_AMQPVALUE_01_331: [<encoding code="0x56" category="fixed" width="1" label="boolean with the octet 0x00 being false and octet 0x01 being true"/>] */
+					if (buffer[0] >= 2)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						internal_decoder_data->decode_to_value->value.bool_value = (buffer[0] == 0) ? false : true;
+
+						buffer++;
+						size--;
+						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+						/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+						/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+						/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+						if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							result = 0;
+						}
+					}
+
 					break;
 				}
 				case 0x50:
@@ -3779,6 +3820,11 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 				break;
 			}
 			}
+
+			if (result != 0)
+			{
+				break;
+			}
 		}
 	}
 
@@ -3861,8 +3907,7 @@ int amqpvalue_decode_bytes(AMQPVALUE_DECODER_HANDLE handle, const unsigned char*
 		size_t used_bytes;
 
 		/* Codes_SRS_AMQPVALUE_01_318: [amqpvalue_decode_bytes shall decode size bytes that are passed in the buffer argument.] */
-		result = internal_decoder_decode_bytes(decoder_instance->internal_decoder, buffer, size, &used_bytes);
-		if (used_bytes < size)
+		if (internal_decoder_decode_bytes(decoder_instance->internal_decoder, buffer, size, &used_bytes) != 0)
 		{
 			result = __LINE__;
 		}

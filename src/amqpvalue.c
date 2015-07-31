@@ -3076,38 +3076,6 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					}
 					break;
 				}
-				case 0x43:
-				{
-					/* uint0 */
-					internal_decoder_data->decode_to_value->type = AMQP_TYPE_UINT;
-					internal_decoder_data->decode_to_value->value.uint_value = 0;
-					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
-					{
-						result = __LINE__;
-					}
-					else
-					{
-						result = 0;
-					}
-					break;
-				}
-				case 0x44:
-				{
-					/* ulong0 */
-					internal_decoder_data->decode_to_value->type = AMQP_TYPE_ULONG;
-					internal_decoder_data->decode_to_value->value.ulong_value = 0;
-					internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
-					{
-						result = __LINE__;
-					}
-					else
-					{
-						result = 0;
-					}
-					break;
-				}
 				/* Tests_SRS_AMQPVALUE_01_335: [<encoding code="0x50" category="fixed" width="1" label="8-bit unsigned integer"/>] */
 				case 0x50:
 				{
@@ -3120,20 +3088,56 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					result = 0;
 					break;
 				}
-				case 0x53: /* smallulong */
+                /* Codes_SRS_AMQPVALUE_01_337: [<encoding code="0x60" category="fixed" width="2" label="16-bit unsigned integer in network byte order"/>] */
+                case 0x60:
+                {
+                    /* Codes_SRS_AMQPVALUE_01_336: [1.6.4 ushort Integer in the range 0 to 216 - 1 inclusive.] */
+                    internal_decoder_data->decode_to_value->type = AMQP_TYPE_USHORT;
+                    internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
+                    internal_decoder_data->decode_to_value->value.ushort_value = 0;
+                    internal_decoder_data->bytes_decoded = 0;
+
+                    /* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+                    result = 0;
+                    break;
+                }
+                case 0x43:
+                {
+                    /* uint0 */
+                    internal_decoder_data->decode_to_value->type = AMQP_TYPE_UINT;
+                    internal_decoder_data->decode_to_value->value.uint_value = 0;
+                    internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+                    if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+                    {
+                        result = __LINE__;
+                    }
+                    else
+                    {
+                        result = 0;
+                    }
+                    break;
+                }
+                case 0x44:
+                {
+                    /* ulong0 */
+                    internal_decoder_data->decode_to_value->type = AMQP_TYPE_ULONG;
+                    internal_decoder_data->decode_to_value->value.ulong_value = 0;
+                    internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+                    if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+                    {
+                        result = __LINE__;
+                    }
+                    else
+                    {
+                        result = 0;
+                    }
+                    break;
+                }
+                case 0x53: /* smallulong */
 				{
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_ULONG;
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.ulong_value = 0;
-					internal_decoder_data->bytes_decoded = 0;
-					result = 0;
-					break;
-				}
-				case 0x60: /* ushort */
-				{
-					internal_decoder_data->decode_to_value->type = AMQP_TYPE_USHORT;
-					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
-					internal_decoder_data->decode_to_value->value.ushort_value = 0;
 					internal_decoder_data->bytes_decoded = 0;
 					result = 0;
 					break;
@@ -3351,7 +3355,36 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					}
 					break;
 				}
-				case 0x52:
+                /* Codes_SRS_AMQPVALUE_01_337: [<encoding code="0x60" category="fixed" width="2" label="16-bit unsigned integer in network byte order"/>] */
+                case 0x60:
+                {
+                    internal_decoder_data->decode_to_value->value.ushort_value += ((uint16_t)buffer[0]) << ((1 - internal_decoder_data->bytes_decoded) * 8);
+                    internal_decoder_data->bytes_decoded++;
+                    buffer++;
+                    size--;
+                    if (internal_decoder_data->bytes_decoded == 2)
+                    {
+                        internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+                        /* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+                        /* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+                        /* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+                        if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+                        {
+                            result = __LINE__;
+                        }
+                        else
+                        {
+                            result = 0;
+                        }
+                    }
+                    else
+                    {
+                        result = 0;
+                    }
+                    break;
+                }
+                case 0x52:
 				{
 					/* smalluint */
 					internal_decoder_data->decode_to_value->value.uint_value = buffer[0];
@@ -3378,31 +3411,6 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
 					{
 						result = __LINE__;
-					}
-					else
-					{
-						result = 0;
-					}
-					break;
-				}
-				case 0x60:
-				{
-					/* ushort */
-					internal_decoder_data->decode_to_value->value.ushort_value += ((uint16_t)buffer[0]) << ((1 - internal_decoder_data->bytes_decoded) * 8);
-					internal_decoder_data->bytes_decoded++;
-					buffer++;
-					size--;
-					if (internal_decoder_data->bytes_decoded == 2)
-					{
-						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-						if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
-						{
-							result = __LINE__;
-						}
-						else
-						{
-							result = 0;
-						}
 					}
 					else
 					{

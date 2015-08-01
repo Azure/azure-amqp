@@ -3115,13 +3115,18 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					result = 0;
 					break;
 				}
+				/* Codes_SRS_AMQPVALUE_01_341: [<encoding name="uint0" code="0x43" category="fixed" width="0" label="the uint value 0"/>] */
 				case 0x43:
                 {
-                    /* uint0 */
-                    internal_decoder_data->decode_to_value->type = AMQP_TYPE_UINT;
+					/* Codes_SRS_AMQPVALUE_01_338: [1.6.5 uint Integer in the range 0 to 232 - 1 inclusive.] */
+					internal_decoder_data->decode_to_value->type = AMQP_TYPE_UINT;
                     internal_decoder_data->decode_to_value->value.uint_value = 0;
                     internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-                    if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+					
+					/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+					/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+					/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
                     {
                         result = __LINE__;
                     }
@@ -3147,20 +3152,27 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
                     }
                     break;
                 }
-                case 0x53: /* smallulong */
+				/* Codes_SRS_AMQPVALUE_01_343: [<encoding code="0x80" category="fixed" width="8" label="64-bit unsigned integer in network byte order"/>] */
+				case 0x80:
 				{
+					/* Codes_SRS_AMQPVALUE_01_342: [1.6.6 ulong Integer in the range 0 to 264 - 1 inclusive.] */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_ULONG;
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.ulong_value = 0;
+
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
 					internal_decoder_data->bytes_decoded = 0;
 					result = 0;
 					break;
 				}
-				case 0x80: /* ulong */
+				/* Tests_SRS_AMQPVALUE_01_344: [<encoding name="smallulong" code="0x53" category="fixed" width="1" label="unsigned long value in the range 0 to 255 inclusive"/>] */
+				case 0x53: /* smallulong */
 				{
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_ULONG;
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.ulong_value = 0;
+
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
 					internal_decoder_data->bytes_decoded = 0;
 					result = 0;
 					break;
@@ -3455,9 +3467,9 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					}
 					break;
 				}
+				/* Codes_SRS_AMQPVALUE_01_343: [<encoding code="0x80" category="fixed" width="8" label="64-bit unsigned integer in network byte order"/>] */
 				case 0x80:
 				{
-					/* ulong */
 					internal_decoder_data->decode_to_value->value.ulong_value += ((uint64_t)buffer[0]) << ((7 - internal_decoder_data->bytes_decoded) * 8);
 					internal_decoder_data->bytes_decoded++;
 					buffer++;
@@ -3465,6 +3477,10 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					if (internal_decoder_data->bytes_decoded == 8)
 					{
 						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+						/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+						/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+						/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
 						if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
 						{
 							result = __LINE__;

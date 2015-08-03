@@ -3292,6 +3292,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_BINARY;
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.binary_value.length = 0;
+					internal_decoder_data->decode_to_value->value.binary_value.bytes = NULL;
 					internal_decoder_data->bytes_decoded = 0;
 
 					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */

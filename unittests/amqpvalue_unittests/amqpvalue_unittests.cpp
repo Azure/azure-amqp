@@ -21,8 +21,8 @@ static void bool_ToString(char* string, size_t bufferSize, bool val)
 
 static unsigned char* encoded_bytes;
 static size_t encoded_byte_count;
-static char actual_stringified_encoded[8192];
-static char expected_stringified_encoded[8192];
+static char actual_stringified[8192];
+static char expected_stringified[8192];
 static int when_shall_encoder_output_fail = 0;
 static int encoder_output_call_count;
 static size_t decoded_value_count;
@@ -7557,8 +7557,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
-			stringify_bytes(encoded_bytes, encoded_byte_count, actual_stringified_encoded);
-			ASSERT_ARE_EQUAL(char_ptr, expected_stringified_bytes, actual_stringified_encoded);
+			stringify_bytes(encoded_bytes, encoded_byte_count, actual_stringified);
+			ASSERT_ARE_EQUAL(char_ptr, expected_stringified_bytes, actual_stringified);
 			mocks->AssertActualAndExpectedCalls();
 
 			// cleanup
@@ -7613,8 +7613,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
-			stringify_bytes(encoded_bytes, encoded_byte_count, actual_stringified_encoded);
-			ASSERT_ARE_EQUAL(char_ptr, "[0x40]", actual_stringified_encoded);
+			stringify_bytes(encoded_bytes, encoded_byte_count, actual_stringified);
+			ASSERT_ARE_EQUAL(char_ptr, "[0x40]", actual_stringified);
 			mocks.AssertActualAndExpectedCalls();
 
 			// cleanup
@@ -8185,8 +8185,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			}
 			amqp_binary binary = { &bytes, sizeof(bytes) };
 			AMQP_VALUE source = amqpvalue_create_binary(binary);
-			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+			test_amqpvalue_encode(&mocks, source, expected_stringified);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8221,8 +8221,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			}
 			amqp_binary binary = { &bytes, sizeof(bytes) };
 			AMQP_VALUE source = amqpvalue_create_binary(binary);
-			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+			test_amqpvalue_encode(&mocks, source, expected_stringified);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8273,8 +8273,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 				expected_bytes[i + 2] = 'a';
 			}
 			AMQP_VALUE source = amqpvalue_create_string(chars);
-			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+			test_amqpvalue_encode(&mocks, source, expected_stringified);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8309,8 +8309,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 				expected_bytes[i + 5] = 'a';
 			}
 			AMQP_VALUE source = amqpvalue_create_string(chars);
-			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+			test_amqpvalue_encode(&mocks, source, expected_stringified);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8395,8 +8395,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			{
 				expected_bytes[i + 3] = 0x40;
 			}
-			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+			test_amqpvalue_encode(&mocks, source, expected_stringified);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8430,8 +8430,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			{
 				expected_bytes[i + 5] = 0;
 			}
-			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+			test_amqpvalue_encode(&mocks, source, expected_stringified);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_305: [<encoding name="list32" code="0xd0" category="compound" width="4" label="up to 2^32 - 1 list elements with total size less than 2^32 octets"/>] */
@@ -8450,8 +8450,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			{
 				expected_bytes[i + 11] = 0;
 			}
-			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+			test_amqpvalue_encode(&mocks, source, expected_stringified);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8484,8 +8484,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			{
 				expected_bytes[i + 9] = 0x40;
 			}
-			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+			test_amqpvalue_encode(&mocks, source, expected_stringified);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8517,8 +8517,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqpvalue_set_list_item(source, 1, item);
 			amqpvalue_destroy(item);
 			unsigned char expected_bytes[] = { 0xC0, 0x04, 0x02, 0xA0, 0x01, 0x42, 0x40 };
-			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+			test_amqpvalue_encode(&mocks, source, expected_stringified);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_306: [<encoding name="map8" code="0xc1" category="compound" width="1" label="up to 2^8 - 1 octets of encoded map data"/>] */
@@ -8527,8 +8527,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_map();
 			unsigned char expected_bytes[] = { 0xC1, 0x00, 0x00 };
-			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-			test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+			test_amqpvalue_encode(&mocks, source, expected_stringified);
 		}
 
         /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8552,8 +8552,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
             amqpvalue_destroy(key);
             amqpvalue_destroy(value);
             unsigned char expected_bytes[] = { 0xC1, 0x02, 0x02, 0x40, 0x40 };
-            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-            test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+            test_amqpvalue_encode(&mocks, source, expected_stringified);
         }
 
         /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8582,8 +8582,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
             amqpvalue_destroy(key);
             amqpvalue_destroy(value);
             unsigned char expected_bytes[] = { 0xC1, 0x04, 0x02, 0x52, 0x42, 0x52, 0x43 };
-            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-            test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+            test_amqpvalue_encode(&mocks, source, expected_stringified);
         }
 
         /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8622,8 +8622,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
                 expected_bytes[3 + (i * 3) + 1] = i + 1;
                 expected_bytes[3 + (i * 3) + 2] = 0x40;
             }
-            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-            test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+            test_amqpvalue_encode(&mocks, source, expected_stringified);
         }
 
         /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8673,8 +8673,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
                 expected_bytes[10 + (i * 3) + 1] = i;
                 expected_bytes[10 + (i * 3) + 2] = 0x40;
             }
-            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-            test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+            test_amqpvalue_encode(&mocks, source, expected_stringified);
         }
 
         /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -8724,8 +8724,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
                 expected_bytes[9 + (i * 3) + 1] = i + 1;
                 expected_bytes[9 + (i * 3) + 2] = 0x40;
             }
-            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified_encoded);
-            test_amqpvalue_encode(&mocks, source, expected_stringified_encoded);
+            stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+            test_amqpvalue_encode(&mocks, source, expected_stringified);
         }
 
         /* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
@@ -12186,6 +12186,96 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
 			mocks.ResetAllCalls();
 			unsigned char bytes[] = { 0x83, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_370: [1.6.18 uuid A universally unique identifier as defined by RFC-4122 section 4.1.2 .] */
+		/* Tests_SRS_AMQPVALUE_01_371: [<encoding code="0x98" category="fixed" width="16" label="UUID as defined in section 4.1.2 of RFC-4122"/>] */
+		TEST_FUNCTION(amqpvalue_decode_uuid_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x98, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
+			amqp_uuid expected_uuid = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_UUID, (int)amqpvalue_get_type(decoded_values[0]));
+			amqp_uuid actual_value = { 0 };
+			amqpvalue_get_uuid(decoded_values[0], &actual_value);
+			stringify_bytes(actual_value, sizeof(actual_value), actual_stringified);
+			stringify_bytes(expected_uuid, sizeof(expected_uuid), expected_stringified);
+			ASSERT_ARE_EQUAL(char_ptr, expected_stringified, actual_stringified);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_370: [1.6.18 uuid A universally unique identifier as defined by RFC-4122 section 4.1.2 .] */
+		/* Tests_SRS_AMQPVALUE_01_371: [<encoding code="0x98" category="fixed" width="16" label="UUID as defined in section 4.1.2 of RFC-4122"/>] */
+		TEST_FUNCTION(amqpvalue_decode_uuid_byte_by_byte_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x98, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
+			amqp_uuid expected_uuid = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
+			int i;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			for (i = 0; i < sizeof(bytes); i++)
+			{
+				int result = amqpvalue_decode_bytes(amqpvalue_decoder, &bytes[i], 1);
+				ASSERT_ARE_EQUAL(int, 0, result);
+			}
+
+			// assert
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_UUID, (int)amqpvalue_get_type(decoded_values[0]));
+			amqp_uuid actual_value = { 0 };
+			amqpvalue_get_uuid(decoded_values[0], &actual_value);
+			stringify_bytes(actual_value, sizeof(actual_value), actual_stringified);
+			stringify_bytes(expected_uuid, sizeof(expected_uuid), expected_stringified);
+			ASSERT_ARE_EQUAL(char_ptr, expected_stringified, actual_stringified);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+		TEST_FUNCTION(amqpvalue_decode_uuid_not_enough_bytes_does_not_trigger_a_callback)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x98, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17 };
 
 			// act
 			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));

@@ -3271,6 +3271,19 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					result = 0;
 					break;
 				}
+				/* Codes_SRS_AMQPVALUE_01_371: [<encoding code="0x98" category="fixed" width="16" label="UUID as defined in section 4.1.2 of RFC-4122"/>] */
+				case 0x98:
+				{
+					/* Codes_SRS_AMQPVALUE_01_370: [1.6.18 uuid A universally unique identifier as defined by RFC-4122 section 4.1.2 .] */
+					internal_decoder_data->decode_to_value->type = AMQP_TYPE_UUID;
+					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
+					internal_decoder_data->decode_to_value->value.timestamp_value = 0;
+					internal_decoder_data->bytes_decoded = 0;
+
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+					result = 0;
+					break;
+				}
 				case 0xA0: /* vbin8 */
 				case 0xB0: /* vbin32 */
 				{
@@ -3764,6 +3777,43 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
 					if (internal_decoder_data->bytes_decoded == 8)
+					{
+						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+						/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+						/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+						/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+						if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							result = 0;
+						}
+					}
+					else
+					{
+						result = 0;
+					}
+					break;
+				}
+				/* Codes_SRS_AMQPVALUE_01_369: [<encoding name="ms64" code="0x83" category="fixed" width="8" label="64-bit two's-complement integer representing milliseconds since the unix epoch"/>] */
+				case 0x98:
+				{
+					size_t to_copy = 16 - internal_decoder_data->bytes_decoded;
+					if (to_copy > size)
+					{
+						to_copy = size;
+					}
+
+					(void)memcpy(&internal_decoder_data->decode_to_value->value.uuid_value[internal_decoder_data->bytes_decoded], buffer, to_copy);
+					internal_decoder_data->bytes_decoded += to_copy;
+					buffer += to_copy;
+					size -= to_copy;
+
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+					if (internal_decoder_data->bytes_decoded == 16)
 					{
 						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
 

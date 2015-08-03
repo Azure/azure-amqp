@@ -48,8 +48,8 @@ extern "C" {
 	extern int amqpvalue_get_double(AMQP_VALUE value, double* double_value);
 	extern AMQP_VALUE amqpvalue_create_char(uint32_t value);
 	extern int amqpvalue_get_char(AMQP_VALUE value, uint32_t* char_value);
-	extern AMQP_VALUE amqpvalue_create_timestamp(uint64_t value);
-	extern int amqpvalue_get_timestamp(AMQP_VALUE value, uint64_t* timestamp_value);
+	extern AMQP_VALUE amqpvalue_create_timestamp(int64_t value);
+	extern int amqpvalue_get_timestamp(AMQP_VALUE value, int64_t* timestamp_value);
 	extern AMQP_VALUE amqpvalue_create_uuid(amqp_uuid value);
 	extern int amqpvalue_get_uuid(AMQP_VALUE value, amqp_uuid* uuid_value);
 	extern AMQP_VALUE amqpvalue_create_binary(amqp_binary value);

@@ -1849,7 +1849,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			uint64_t timestamp_value;
+			int64_t timestamp_value;
 			AMQP_VALUE value = amqpvalue_create_timestamp(0);
 			mocks.ResetAllCalls();
 
@@ -1857,7 +1857,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			int result = amqpvalue_get_timestamp(value, &timestamp_value);
 
 			// assert
-			ASSERT_ARE_EQUAL(uint64_t, 0, timestamp_value);
+			ASSERT_ARE_EQUAL(uint64_t, (uint64_t)0, timestamp_value);
 			ASSERT_ARE_EQUAL(int, 0, result);
 		}
 
@@ -1867,7 +1867,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			uint64_t timestamp_value;
+			int64_t timestamp_value;
 			AMQP_VALUE value = amqpvalue_create_timestamp(1311704463521);
 			mocks.ResetAllCalls();
 
@@ -1875,7 +1875,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			int result = amqpvalue_get_timestamp(value, &timestamp_value);
 
 			// assert
-			ASSERT_ARE_EQUAL(uint64_t, (uint64_t)1311704463521, timestamp_value);
+			ASSERT_ARE_EQUAL(uint64_t, (uint64_t)1311704463521i64, timestamp_value);
 			ASSERT_ARE_EQUAL(int, 0, result);
 		}
 
@@ -1884,7 +1884,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			uint64_t timestamp_value;
+			int64_t timestamp_value;
 
 			// act
 			int result = amqpvalue_get_timestamp(NULL, &timestamp_value);
@@ -1913,7 +1913,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			uint64_t timestamp_value;
+			int64_t timestamp_value;
 			AMQP_VALUE value = amqpvalue_create_null();
 			mocks.ResetAllCalls();
 
@@ -12072,6 +12072,120 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
 			mocks.ResetAllCalls();
 			unsigned char bytes[] = { 0x55 };
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_368: [1.6.17 timestamp An absolute point in time.] */
+		/* Tests_SRS_AMQPVALUE_01_369: [<encoding name="ms64" code="0x83" category="fixed" width="8" label="64-bit two's-complement integer representing milliseconds since the unix epoch"/>] */
+		TEST_FUNCTION(amqpvalue_decode_timestamp_value_minus_9223372036854775808_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x83, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_TIMESTAMP, (int)amqpvalue_get_type(decoded_values[0]));
+			int64_t actual_value = 1;
+			amqpvalue_get_timestamp(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(uint64_t, (uint64_t)(-9223372036854775807i64-1), (uint64_t)actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_368: [1.6.17 timestamp An absolute point in time.] */
+		/* Tests_SRS_AMQPVALUE_01_369: [<encoding name="ms64" code="0x83" category="fixed" width="8" label="64-bit two's-complement integer representing milliseconds since the unix epoch"/>] */
+		TEST_FUNCTION(amqpvalue_decode_timestamp_value_9223372036854775807_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x83, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_TIMESTAMP, (int)amqpvalue_get_type(decoded_values[0]));
+			int64_t actual_value = 1;
+			amqpvalue_get_timestamp(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(uint64_t, (uint64_t)(9223372036854775807i64), (uint64_t)actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_368: [1.6.17 timestamp An absolute point in time.] */
+		/* Tests_SRS_AMQPVALUE_01_369: [<encoding name="ms64" code="0x83" category="fixed" width="8" label="64-bit two's-complement integer representing milliseconds since the unix epoch"/>] */
+		TEST_FUNCTION(amqpvalue_decode_timestamp_value_9223372036854775807_byte_by_byte_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x83, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+			int i;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			for (i = 0; i < sizeof(bytes); i++)
+			{
+				int result = amqpvalue_decode_bytes(amqpvalue_decoder, &bytes[i], 1);
+				ASSERT_ARE_EQUAL(int, 0, result);
+			}
+
+			// assert
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_TIMESTAMP, (int)amqpvalue_get_type(decoded_values[0]));
+			int64_t actual_value = 1;
+			amqpvalue_get_timestamp(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(uint64_t, (uint64_t)(9223372036854775807i64), (uint64_t)actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+		TEST_FUNCTION(amqpvalue_decode_timestamp_not_enough_bytes_does_not_trigger_a_callback)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x83, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
 			// act
 			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));

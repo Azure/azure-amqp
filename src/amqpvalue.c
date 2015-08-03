@@ -61,7 +61,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	float float_value;
 	double double_value;
 	uint32_t char_value;
-	uint64_t timestamp_value;
+	int64_t timestamp_value;
 	amqp_uuid uuid_value;
 	AMQP_STRING_VALUE string_value;
 	amqp_binary binary_value;
@@ -704,7 +704,7 @@ int amqpvalue_get_char(AMQP_VALUE value, uint32_t* char_value)
 }
 
 /* Codes_SRS_AMQPVALUE_01_025: [1.6.17 timestamp An absolute point in time.] */
-AMQP_VALUE amqpvalue_create_timestamp(uint64_t value)
+AMQP_VALUE amqpvalue_create_timestamp(int64_t value)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	/* Codes_SRS_AMQPVALUE_01_108: [If allocating the AMQP_VALUE fails then amqpvalue_create_timestamp shall return NULL.] */
@@ -717,7 +717,7 @@ AMQP_VALUE amqpvalue_create_timestamp(uint64_t value)
 	return result;
 }
 
-int amqpvalue_get_timestamp(AMQP_VALUE value, uint64_t* timestamp_value)
+int amqpvalue_get_timestamp(AMQP_VALUE value, int64_t* timestamp_value)
 {
 	int result;
 
@@ -3258,6 +3258,19 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					result = 0;
 					break;
 				}
+				/* Codes_SRS_AMQPVALUE_01_369: [<encoding name="ms64" code="0x83" category="fixed" width="8" label="64-bit two's-complement integer representing milliseconds since the unix epoch"/>] */
+				case 0x83:
+				{
+					/* Codes_SRS_AMQPVALUE_01_368: [1.6.17 timestamp An absolute point in time.] */
+					internal_decoder_data->decode_to_value->type = AMQP_TYPE_TIMESTAMP;
+					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
+					internal_decoder_data->decode_to_value->value.timestamp_value = 0;
+					internal_decoder_data->bytes_decoded = 0;
+
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+					result = 0;
+					break;
+				}
 				case 0xA0: /* vbin8 */
 				case 0xB0: /* vbin32 */
 				{
@@ -3734,6 +3747,37 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
 					{
 						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
+					break;
+				}
+				/* Codes_SRS_AMQPVALUE_01_369: [<encoding name="ms64" code="0x83" category="fixed" width="8" label="64-bit two's-complement integer representing milliseconds since the unix epoch"/>] */
+				case 0x83:
+				{
+					internal_decoder_data->decode_to_value->value.timestamp_value = (int64_t)((uint64_t)internal_decoder_data->decode_to_value->value.timestamp_value + (((uint64_t)buffer[0]) << ((7 - internal_decoder_data->bytes_decoded) * 8)));
+					internal_decoder_data->bytes_decoded++;
+					buffer++;
+					size--;
+
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+					if (internal_decoder_data->bytes_decoded == 8)
+					{
+						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+						/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+						/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+						/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+						if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							result = 0;
+						}
 					}
 					else
 					{

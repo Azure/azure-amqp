@@ -18,7 +18,7 @@ extern "C" {
 	typedef unsigned char amqp_uuid[16];
 	typedef struct amqp_binary_TAG
 	{
-		void* bytes;
+		const void* bytes;
 		uint32_t length;
 	} amqp_binary;
 

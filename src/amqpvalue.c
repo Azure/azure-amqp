@@ -759,7 +759,7 @@ AMQP_VALUE amqpvalue_create_uuid(amqp_uuid value)
 		result->type = AMQP_TYPE_UUID;
 		if (memcpy(&result->value.uuid_value, value, sizeof(amqp_uuid)) == NULL)
 		{
-			free(result);
+			amqpalloc_free(result);
 			result = NULL;
 		}
 	}
@@ -839,10 +839,10 @@ AMQP_VALUE amqpvalue_create_binary(amqp_binary value)
 			}
 			else
 			{
-				if ((value.length > 0) && (memcpy(result->value.binary_value.bytes, value.bytes, value.length) == NULL))
+				if ((value.length > 0) && (memcpy((void*)result->value.binary_value.bytes, value.bytes, value.length) == NULL))
 				{
 					/* Codes_SRS_AMQPVALUE_01_130: [If any other error occurs, amqpvalue_create_binary shall return NULL.] */
-					amqpalloc_free(result->value.binary_value.bytes);
+					amqpalloc_free((void*)result->value.binary_value.bytes);
 					amqpalloc_free(result);
 					result = NULL;
 				}
@@ -1953,7 +1953,7 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 
 		case AMQP_TYPE_COMPOSITE:
 		{
-			AMQP_VALUE_DATA* result_data = (AMQP_VALUE_DATA*)malloc(sizeof(AMQP_VALUE_DATA));
+			AMQP_VALUE_DATA* result_data = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 			AMQP_VALUE cloned_descriptor;
 			AMQP_VALUE cloned_list;
 
@@ -1963,13 +1963,13 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 			}
 			else if ((cloned_descriptor = amqpvalue_clone(value_data->value.described_value.descriptor)) == NULL)
 			{
-				free(result_data);
+				amqpalloc_free(result_data);
 				result = NULL;
 			}
 			else if ((cloned_list = amqpvalue_clone(value_data->value.described_value.value)) == NULL)
 			{
 				amqpvalue_destroy(cloned_descriptor);
-				free(result_data);
+				amqpalloc_free(result_data);
 				result = NULL;
 			}
 			else
@@ -2855,7 +2855,7 @@ static void amqpvalue_clear(AMQP_VALUE_DATA* value_data)
 	case AMQP_TYPE_BINARY:
 		if (value_data->value.binary_value.bytes != NULL)
 		{
-			amqpalloc_free(value_data->value.binary_value.bytes);
+			amqpalloc_free((void*)value_data->value.binary_value.bytes);
 		}
 		break;
 	case AMQP_TYPE_STRING:
@@ -3284,13 +3284,17 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					result = 0;
 					break;
 				}
-				case 0xA0: /* vbin8 */
+				/* Codes_SRS_AMQPVALUE_01_373: [<encoding name="vbin8" code="0xa0" category="variable" width="1" label="up to 2^8 - 1 octets of binary data"/>] */
+				case 0xA0:
 				case 0xB0: /* vbin32 */
 				{
+					/* Codes_SRS_AMQPVALUE_01_372: [1.6.19 binary A sequence of octets.] */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_BINARY;
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.binary_value.length = 0;
 					internal_decoder_data->bytes_decoded = 0;
+
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
 					result = 0;
 					break;
 				}
@@ -3299,7 +3303,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 				{
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_STRING;
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
-					internal_decoder_data->decode_to_value->value.string_value.chars = malloc(1);
+					internal_decoder_data->decode_to_value->value.string_value.chars = amqpalloc_malloc(1);
 					if (internal_decoder_data->decode_to_value->value.string_value.chars == NULL)
 					{
 						result = __LINE__;
@@ -3835,9 +3839,9 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					}
 					break;
 				}
+				/* Codes_SRS_AMQPVALUE_01_373: [<encoding name="vbin8" code="0xa0" category="variable" width="1" label="up to 2^8 - 1 octets of binary data"/>] */
 				case 0xA0:
 				{
-					/* vbin8 */
 					if (internal_decoder_data->bytes_decoded == 0)
 					{
 						internal_decoder_data->decode_to_value->value.binary_value.length = buffer[0];
@@ -3845,15 +3849,34 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 						buffer++;
 						size--;
 
-						internal_decoder_data->decode_to_value->value.binary_value.bytes = (unsigned char*)malloc(internal_decoder_data->decode_to_value->value.binary_value.length);
-						if (internal_decoder_data->decode_to_value->value.binary_value.bytes == NULL)
+						if (internal_decoder_data->decode_to_value->value.binary_value.length == 0)
 						{
-							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
-							result = __LINE__;
+							internal_decoder_data->decode_to_value->value.binary_value.bytes = NULL;
+
+							/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+							/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+							/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+							if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+							{
+								result = __LINE__;
+							}
+							else
+							{
+								result = 0;
+							}
 						}
 						else
 						{
-							result = 0;
+							internal_decoder_data->decode_to_value->value.binary_value.bytes = (unsigned char*)amqpalloc_malloc(internal_decoder_data->decode_to_value->value.binary_value.length);
+							if (internal_decoder_data->decode_to_value->value.binary_value.bytes == NULL)
+							{
+								internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+								result = __LINE__;
+							}
+							else
+							{
+								result = 0;
+							}
 						}
 					}
 					else
@@ -3893,6 +3916,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							}
 						}
 					}
+
+					break;
 				}
 				case 0xA1:
 				{
@@ -3905,7 +3930,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 						internal_decoder_data->decode_value_state.string_value_state.length = buffer[0];
 
-						internal_decoder_data->decode_to_value->value.string_value.chars = (char*)malloc(internal_decoder_data->decode_value_state.string_value_state.length + 1);
+						internal_decoder_data->decode_to_value->value.string_value.chars = (char*)amqpalloc_malloc(internal_decoder_data->decode_value_state.string_value_state.length + 1);
 						if (internal_decoder_data->decode_to_value->value.string_value.chars == NULL)
 						{
 							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
@@ -3965,7 +3990,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 						buffer++;
 						size--;
 
-						internal_decoder_data->decode_to_value->value.binary_value.bytes = (unsigned char*)malloc(internal_decoder_data->decode_to_value->value.binary_value.length + 1);
+						internal_decoder_data->decode_to_value->value.binary_value.bytes = (unsigned char*)amqpalloc_malloc(internal_decoder_data->decode_to_value->value.binary_value.length + 1);
 						if (internal_decoder_data->decode_to_value->value.binary_value.bytes == NULL)
 						{
 							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
@@ -4024,7 +4049,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 						buffer++;
 						size--;
 
-						internal_decoder_data->decode_to_value->value.string_value.chars = (char*)malloc(internal_decoder_data->decode_value_state.string_value_state.length + 1);
+						internal_decoder_data->decode_to_value->value.string_value.chars = (char*)amqpalloc_malloc(internal_decoder_data->decode_value_state.string_value_state.length + 1);
 						if (internal_decoder_data->decode_to_value->value.string_value.chars == NULL)
 						{
 							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
@@ -4386,7 +4411,7 @@ AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size)
 		result->value.described_value.descriptor = amqpvalue_clone(descriptor);
 		if (result->value.described_value.descriptor == NULL)
 		{
-			free(result);
+			amqpalloc_free(result);
 			result = NULL;
 		}
 		else
@@ -4395,7 +4420,7 @@ AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size)
 			if (result->value.described_value.value == NULL)
 			{
 				amqpvalue_destroy(result->value.described_value.descriptor);
-				free(result);
+				amqpalloc_free(result);
 				result = NULL;
 			}
 			else
@@ -4404,7 +4429,7 @@ AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size)
 				{
 					amqpvalue_destroy(result->value.described_value.descriptor);
 					amqpvalue_destroy(result->value.described_value.value);
-					free(result);
+					amqpalloc_free(result);
 					result = NULL;
 				}
 			}

@@ -11379,7 +11379,6 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
 			mocks.ResetAllCalls();
 			unsigned char bytes[] = { 0x44 };
-			int i;
 
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.IgnoreAllCalls();
@@ -11396,6 +11395,120 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			uint64_t actual_value = 1;
 			amqpvalue_get_ulong(decoded_values[0], &actual_value);
 			ASSERT_ARE_EQUAL(uint64_t, 0, actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_346: [1.6.7 byte Integer in the range -(27) to 27 - 1 inclusive.] */
+		/* Tests_SRS_AMQPVALUE_01_347: [<encoding code="0x51" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
+		TEST_FUNCTION(amqpvalue_decode_byte_minus_128_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x51, 0x80 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_BYTE, (int)amqpvalue_get_type(decoded_values[0]));
+			char actual_value = 1;
+			amqpvalue_get_byte(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(char, -128, actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_346: [1.6.7 byte Integer in the range -(27) to 27 - 1 inclusive.] */
+		/* Tests_SRS_AMQPVALUE_01_347: [<encoding code="0x51" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
+		TEST_FUNCTION(amqpvalue_decode_byte_127_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x51, 0x7F };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_BYTE, (int)amqpvalue_get_type(decoded_values[0]));
+			char actual_value = 1;
+			amqpvalue_get_byte(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(char, 127, actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_346: [1.6.7 byte Integer in the range -(27) to 27 - 1 inclusive.] */
+		/* Tests_SRS_AMQPVALUE_01_347: [<encoding code="0x51" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
+		TEST_FUNCTION(amqpvalue_decode_byte_127_byte_by_byte_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x51, 0x7F };
+			int i;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			for (i = 0; i < sizeof(bytes); i++)
+			{
+				int result = amqpvalue_decode_bytes(amqpvalue_decoder, &bytes[i], 1);
+				ASSERT_ARE_EQUAL(int, 0, result);
+			}
+
+			// assert
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_BYTE, (int)amqpvalue_get_type(decoded_values[0]));
+			char actual_value = 1;
+			amqpvalue_get_byte(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(char, 127, actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+		TEST_FUNCTION(amqpvalue_decode_byte_127_not_enoutgh_bytes_do_not_trigger_a_callback)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x51 };
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
 
 			// cleanup
 			amqpvalue_decoder_destroy(amqpvalue_decoder);

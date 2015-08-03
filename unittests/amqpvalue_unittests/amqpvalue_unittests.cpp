@@ -12666,4 +12666,34 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqpvalue_decoder_destroy(amqpvalue_decoder);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_375: [1.6.20 string A sequence of Unicode characters.] */
+		/* Tests_SRS_AMQPVALUE_01_376: [<encoding name="str8-utf8" code="0xa1" category="variable" width="1" label="up to 2^8 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
+		TEST_FUNCTION(amqpvalue_decode_string_0xA1_value_zero_bytes_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xA1, 0x00 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_STRING, (int)amqpvalue_get_type(decoded_values[0]));
+			const char* actual_value;
+			(void)amqpvalue_get_string(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(char_ptr, "", actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
 END_TEST_SUITE(amqpvalue_unittests)

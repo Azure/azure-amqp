@@ -901,13 +901,7 @@ AMQP_VALUE amqpvalue_create_string(const char* value)
 #if _MSC_VER
 #pragma warning(suppress: 6324) /* we use strcpy intentionally */
 #endif
-				if (strcpy(result->value.string_value.chars, value) == NULL)
-				{
-					/* Codes_SRS_AMQPVALUE_01_137: [If any other error occurs, amqpvalue_create_string shall return NULL.] */
-					amqpalloc_free(result->value.string_value.chars);
-					amqpalloc_free(result);
-					result = NULL;
-				}
+				(void)strcpy(result->value.string_value.chars, value);
 			}
 		}
 	}
@@ -3999,21 +3993,37 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					/* str8-utf8 */
 					if (internal_decoder_data->bytes_decoded == 0)
 					{
+						internal_decoder_data->decode_value_state.string_value_state.length = buffer[0];
 						internal_decoder_data->bytes_decoded++;
 						buffer++;
 						size--;
 
-						internal_decoder_data->decode_value_state.string_value_state.length = buffer[0];
-
-						internal_decoder_data->decode_to_value->value.string_value.chars = (char*)amqpalloc_malloc(internal_decoder_data->decode_value_state.string_value_state.length + 1);
-						if (internal_decoder_data->decode_to_value->value.string_value.chars == NULL)
+						if (internal_decoder_data->decode_value_state.string_value_state.length == 0)
 						{
-							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
-							result = __LINE__;
+							/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+							/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+							/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+							if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+							{
+								result = __LINE__;
+							}
+							else
+							{
+								result = 0;
+							}
 						}
 						else
 						{
-							result = 0;
+							internal_decoder_data->decode_to_value->value.string_value.chars = (char*)amqpalloc_malloc(internal_decoder_data->decode_value_state.string_value_state.length + 1);
+							if (internal_decoder_data->decode_to_value->value.string_value.chars == NULL)
+							{
+								internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+								result = __LINE__;
+							}
+							else
+							{
+								result = 0;
+							}
 						}
 					}
 					else

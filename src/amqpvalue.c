@@ -3182,11 +3182,26 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					}
 					break;
 				}
-				/* Tests_SRS_AMQPVALUE_01_347: [<encoding code="0x51" category="fixed" width="1" label="8-bit two's-complement integer"/>]  */
+				/* Codes_SRS_AMQPVALUE_01_347: [<encoding code="0x51" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
 				case 0x51:
 				{
 					/* Codes_SRS_AMQPVALUE_01_346: [1.6.7 byte Integer in the range -(27) to 27 - 1 inclusive.] */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_BYTE;
+					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
+					internal_decoder_data->decode_to_value->value.ulong_value = 0;
+
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+					internal_decoder_data->bytes_decoded = 0;
+
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+					result = 0;
+					break;
+				}
+				/* Codes_SRS_AMQPVALUE_01_349: [<encoding code="0x61" category="fixed" width="2" label="16-bit two's-complement integer in network byte order"/>] */
+				case 0x61:
+				{
+					/* Codes_SRS_AMQPVALUE_01_348: [1.6.8 short Integer in the range -(215) to 215 - 1 inclusive.] */
+					internal_decoder_data->decode_to_value->type = AMQP_TYPE_SHORT;
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.ulong_value = 0;
 
@@ -3427,6 +3442,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->bytes_decoded++;
 					buffer++;
 					size--;
+
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
 					if (internal_decoder_data->bytes_decoded == 4)
 					{
 						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
@@ -3477,6 +3494,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->bytes_decoded++;
 					buffer++;
 					size--;
+
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
 					if (internal_decoder_data->bytes_decoded == 8)
 					{
 						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
@@ -3520,7 +3539,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					}
 					break;
 				}
-				/* Tests_SRS_AMQPVALUE_01_347: [<encoding code="0x51" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
+				/* Codes_SRS_AMQPVALUE_01_347: [<encoding code="0x51" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
 				case 0x51:
 				{
 					internal_decoder_data->decode_to_value->value.byte_value = buffer[0];
@@ -3534,6 +3553,37 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
 					{
 						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
+					break;
+				}
+				/* Codes_SRS_AMQPVALUE_01_349: [<encoding code="0x61" category="fixed" width="2" label="16-bit two's-complement integer in network byte order"/>] */
+				case 0x61:
+				{
+					internal_decoder_data->decode_to_value->value.short_value = (int16_t)((uint16_t)internal_decoder_data->decode_to_value->value.short_value + (((uint16_t)buffer[0]) << ((1 - internal_decoder_data->bytes_decoded) * 8)));
+					internal_decoder_data->bytes_decoded++;
+					buffer++;
+					size--;
+
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+					if (internal_decoder_data->bytes_decoded == 2)
+					{
+						internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+						/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+						/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+						/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+						if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							result = 0;
+						}
 					}
 					else
 					{

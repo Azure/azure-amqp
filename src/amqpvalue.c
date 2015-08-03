@@ -3274,7 +3274,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 				}
 				/* Codes_SRS_AMQPVALUE_01_373: [<encoding name="vbin8" code="0xa0" category="variable" width="1" label="up to 2^8 - 1 octets of binary data"/>] */
 				case 0xA0:
-				case 0xB0: /* vbin32 */
+				/* Codes_SRS_AMQPVALUE_01_374: [<encoding name="vbin32" code="0xb0" category="variable" width="4" label="up to 2^32 - 1 octets of binary data"/>] */
+				case 0xB0:
 				{
 					/* Codes_SRS_AMQPVALUE_01_372: [1.6.19 binary A sequence of octets.] */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_BINARY;
@@ -3906,6 +3907,93 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 					break;
 				}
+				/* Codes_SRS_AMQPVALUE_01_374: [<encoding name="vbin32" code="0xb0" category="variable" width="4" label="up to 2^32 - 1 octets of binary data"/>] */
+				case 0xB0:
+				{
+					if (internal_decoder_data->bytes_decoded < 4)
+					{
+						internal_decoder_data->decode_to_value->value.binary_value.length += buffer[0] << ((3 - internal_decoder_data->bytes_decoded) * 8);
+						internal_decoder_data->bytes_decoded++;
+						buffer++;
+						size--;
+
+						if (internal_decoder_data->bytes_decoded == 4)
+						{
+							if (internal_decoder_data->decode_to_value->value.binary_value.length == 0)
+							{
+								internal_decoder_data->decode_to_value->value.binary_value.bytes = NULL;
+
+								/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+								/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+								/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+								{
+									result = __LINE__;
+								}
+								else
+								{
+									result = 0;
+								}
+							}
+							else
+							{
+								internal_decoder_data->decode_to_value->value.binary_value.bytes = (unsigned char*)amqpalloc_malloc(internal_decoder_data->decode_to_value->value.binary_value.length + 1);
+								if (internal_decoder_data->decode_to_value->value.binary_value.bytes == NULL)
+								{
+									internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+									result = __LINE__;
+								}
+								else
+								{
+									result = 0;
+								}
+							}
+						}
+						else
+						{
+							result = 0;
+						}
+					}
+					else
+					{
+						uint32_t to_copy = internal_decoder_data->decode_to_value->value.binary_value.length - (internal_decoder_data->bytes_decoded - 4);
+						if (to_copy > size)
+						{
+							to_copy = size;
+						}
+
+						if (memcpy((unsigned char*)(internal_decoder_data->decode_to_value->value.binary_value.bytes) + (internal_decoder_data->bytes_decoded - 4), buffer, to_copy) == NULL)
+						{
+							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+							result = __LINE__;
+						}
+						else
+						{
+							buffer += to_copy;
+							size -= to_copy;
+							internal_decoder_data->bytes_decoded += to_copy;
+
+							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.binary_value.length + 4)
+							{
+								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+								{
+									result = __LINE__;
+								}
+								else
+								{
+									result = 0;
+								}
+							}
+							else
+							{
+								result = 0;
+							}
+						}
+					}
+
+					break;
+				}
 				case 0xA1:
 				{
 					/* str8-utf8 */
@@ -3966,65 +4054,6 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 						}
 					}
 					break;
-				}
-				case 0xB0:
-				{
-					/* vbin32 */
-					if (internal_decoder_data->bytes_decoded < 4)
-					{
-						internal_decoder_data->decode_to_value->value.binary_value.length += buffer[0] << ((3 - internal_decoder_data->bytes_decoded) * 8);
-						internal_decoder_data->bytes_decoded++;
-						buffer++;
-						size--;
-
-						internal_decoder_data->decode_to_value->value.binary_value.bytes = (unsigned char*)amqpalloc_malloc(internal_decoder_data->decode_to_value->value.binary_value.length + 1);
-						if (internal_decoder_data->decode_to_value->value.binary_value.bytes == NULL)
-						{
-							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
-							result = __LINE__;
-						}
-						else
-						{
-							result = 0;
-						}
-					}
-					else
-					{
-						uint32_t to_copy = internal_decoder_data->decode_to_value->value.binary_value.length - (internal_decoder_data->bytes_decoded - 4);
-						if (to_copy > size)
-						{
-							to_copy = size;
-						}
-
-						if (memcpy((unsigned char*)(internal_decoder_data->decode_to_value->value.binary_value.bytes) + (internal_decoder_data->bytes_decoded - 4), buffer, to_copy) == NULL)
-						{
-							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
-							result = __LINE__;
-						}
-						else
-						{
-							buffer += to_copy;
-							size -= to_copy;
-							internal_decoder_data->bytes_decoded += to_copy;
-
-							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.binary_value.length + 4)
-							{
-								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
-								{
-									result = __LINE__;
-								}
-								else
-								{
-									result = 0;
-								}
-							}
-							else
-							{
-								result = 0;
-							}
-						}
-					}
 				}
 				case 0xB1:
 				{

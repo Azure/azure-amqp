@@ -757,11 +757,7 @@ AMQP_VALUE amqpvalue_create_uuid(amqp_uuid value)
 	{
 		/* Codes_SRS_AMQPVALUE_01_113: [amqpvalue_create_uuid shall return a handle to an AMQP_VALUE that stores an amqp_uuid value that represents a unique identifier per RFC-4122 section 4.1.2.] */
 		result->type = AMQP_TYPE_UUID;
-		if (memcpy(&result->value.uuid_value, value, sizeof(amqp_uuid)) == NULL)
-		{
-			amqpalloc_free(result);
-			result = NULL;
-		}
+		(void)memcpy(&result->value.uuid_value, value, sizeof(amqp_uuid));
 	}
 	return result;
 }
@@ -787,15 +783,10 @@ int amqpvalue_get_uuid(AMQP_VALUE value, amqp_uuid* uuid_value)
 		else
 		{
 			/* Codes_SRS_AMQPVALUE_01_115: [amqpvalue_get_uuid shall fill in the uuid_value argument the uuid value stored by the AMQP value indicated by the value argument.] */
-			if (memcpy(*uuid_value, value_data->value.uuid_value, sizeof(amqp_uuid)) == NULL)
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				/* Codes_SRS_AMQPVALUE_01_116: [On success amqpvalue_get_uuid shall return 0.] */
-				result = 0;
-			}
+			(void)memcpy(*uuid_value, value_data->value.uuid_value, sizeof(amqp_uuid));
+
+			/* Codes_SRS_AMQPVALUE_01_116: [On success amqpvalue_get_uuid shall return 0.] */
+			result = 0;
 		}
 	}
 
@@ -839,12 +830,9 @@ AMQP_VALUE amqpvalue_create_binary(amqp_binary value)
 			}
 			else
 			{
-				if ((value.length > 0) && (memcpy((void*)result->value.binary_value.bytes, value.bytes, value.length) == NULL))
+				if (value.length > 0)
 				{
-					/* Codes_SRS_AMQPVALUE_01_130: [If any other error occurs, amqpvalue_create_binary shall return NULL.] */
-					amqpalloc_free((void*)result->value.binary_value.bytes);
-					amqpalloc_free(result);
-					result = NULL;
+					(void)memcpy((void*)result->value.binary_value.bytes, value.bytes, value.length);
 				}
 			}
 		}
@@ -3888,33 +3876,31 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							to_copy = size;
 						}
 
-						if (memcpy((unsigned char*)(internal_decoder_data->decode_to_value->value.binary_value.bytes) + (internal_decoder_data->bytes_decoded - 1), buffer, to_copy) == NULL)
-						{
-							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
-							result = __LINE__;
-						}
-						else
-						{
-							buffer += to_copy;
-							size -= to_copy;
-							internal_decoder_data->bytes_decoded += to_copy;
+						(void)memcpy((unsigned char*)(internal_decoder_data->decode_to_value->value.binary_value.bytes) + (internal_decoder_data->bytes_decoded - 1), buffer, to_copy);
 
-							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.binary_value.length + 1)
+						buffer += to_copy;
+						size -= to_copy;
+						internal_decoder_data->bytes_decoded += to_copy;
+
+						if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_to_value->value.binary_value.length + 1)
+						{
+							internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+							/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+							/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+							/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+							if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
 							{
-								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
-								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
-								{
-									result = __LINE__;
-								}
-								else
-								{
-									result = 0;
-								}
+								result = __LINE__;
 							}
 							else
 							{
 								result = 0;
 							}
+						}
+						else
+						{
+							result = 0;
 						}
 					}
 

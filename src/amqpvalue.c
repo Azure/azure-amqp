@@ -3058,7 +3058,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					}
 					break;
 				}
-				/* Tests_SRS_AMQPVALUE_01_335: [<encoding code="0x50" category="fixed" width="1" label="8-bit unsigned integer"/>] */
+				/* Codes_SRS_AMQPVALUE_01_335: [<encoding code="0x50" category="fixed" width="1" label="8-bit unsigned integer"/>] */
 				case 0x50:
 				{
 					/* Codes_SRS_AMQPVALUE_01_334: [1.6.3 ubyte Integer in the range 0 to 28 - 1 inclusive.] */
@@ -3131,7 +3131,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					result = 0;
 					break;
 				}
-				/* Tests_SRS_AMQPVALUE_01_344: [<encoding name="smallulong" code="0x53" category="fixed" width="1" label="unsigned long value in the range 0 to 255 inclusive"/>] */
+				/* Codes_SRS_AMQPVALUE_01_344: [<encoding name="smallulong" code="0x53" category="fixed" width="1" label="unsigned long value in the range 0 to 255 inclusive"/>] */
 				case 0x53:
 				{
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_ULONG;
@@ -3203,7 +3203,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					result = 0;
 					break;
 				}
-				/* Tests_SRS_AMQPVALUE_01_352: [<encoding name="smallint" code="0x54" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
+				/* Codes_SRS_AMQPVALUE_01_352: [<encoding name="smallint" code="0x54" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
 				case 0x54:
 				{
 					/* Codes_SRS_AMQPVALUE_01_350: [1.6.9 int Integer in the range -(231) to 231 - 1 inclusive.] */
@@ -3228,7 +3228,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					result = 0;
 					break;
 				}
-				/* Tests_SRS_AMQPVALUE_01_355: [<encoding name="smalllong" code="0x55" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
+				/* Codes_SRS_AMQPVALUE_01_355: [<encoding name="smalllong" code="0x55" category="fixed" width="1" label="8-bit two's-complement integer"/>] */
 				case 0x55:
 				{
 					/* Codes_SRS_AMQPVALUE_01_353: [1.6.10 long Integer in the range -(263) to 263 - 1 inclusive.] */
@@ -3282,23 +3282,20 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					result = 0;
 					break;
 				}
-				case 0xA1: /* str8-utf8 */
-				case 0xB1: /* str32-utf8 */
+				/* Codes_SRS_AMQPVALUE_01_376: [<encoding name="str8-utf8" code="0xa1" category="variable" width="1" label="up to 2^8 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
+				case 0xA1:
+				/* Codes_SRS_AMQPVALUE_01_377: [<encoding name="str32-utf8" code="0xb1" category="variable" width="4" label="up to 2^32 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
+				case 0xB1:
 				{
+					/* Codes_SRS_AMQPVALUE_01_375: [1.6.20 string A sequence of Unicode characters.] */
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_STRING;
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
-					internal_decoder_data->decode_to_value->value.string_value.chars = amqpalloc_malloc(1);
-					if (internal_decoder_data->decode_to_value->value.string_value.chars == NULL)
-					{
-						result = __LINE__;
-					}
-					else
-					{
-						internal_decoder_data->decode_to_value->value.string_value.chars[0] = '\0';
-						internal_decoder_data->bytes_decoded = 0;
-						result = 0;
-					}
+					internal_decoder_data->decode_to_value->value.string_value.chars = NULL;
+					internal_decoder_data->decode_value_state.string_value_state.length = 0;
+					internal_decoder_data->bytes_decoded = 0;
 
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+					result = 0;
 					break;
 				}
 				case 0xD0: /* list32 */
@@ -3445,7 +3442,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 					break;
 				}
-				/* Tests_SRS_AMQPVALUE_01_335: [<encoding code="0x50" category="fixed" width="1" label="8-bit unsigned integer"/>] */
+				/* Codes_SRS_AMQPVALUE_01_335: [<encoding code="0x50" category="fixed" width="1" label="8-bit unsigned integer"/>] */
 				case 0x50:
 				{
 					internal_decoder_data->decode_to_value->value.ubyte_value = buffer[0];
@@ -3578,7 +3575,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					}
 					break;
 				}
-				/* Tests_SRS_AMQPVALUE_01_344: [<encoding name="smallulong" code="0x53" category="fixed" width="1" label="unsigned long value in the range 0 to 255 inclusive"/>] */
+				/* Codes_SRS_AMQPVALUE_01_344: [<encoding name="smallulong" code="0x53" category="fixed" width="1" label="unsigned long value in the range 0 to 255 inclusive"/>] */
 				case 0x53:
 				{
 					internal_decoder_data->decode_to_value->value.ulong_value = buffer[0];
@@ -3988,9 +3985,9 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 					break;
 				}
+				/* Codes_SRS_AMQPVALUE_01_376: [<encoding name="str8-utf8" code="0xa1" category="variable" width="1" label="up to 2^8 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
 				case 0xA1:
 				{
-					/* str8-utf8 */
 					if (internal_decoder_data->bytes_decoded == 0)
 					{
 						internal_decoder_data->decode_value_state.string_value_state.length = buffer[0];
@@ -3998,27 +3995,29 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 						buffer++;
 						size--;
 
-						if (internal_decoder_data->decode_value_state.string_value_state.length == 0)
+						internal_decoder_data->decode_to_value->value.string_value.chars = (char*)amqpalloc_malloc(internal_decoder_data->decode_value_state.string_value_state.length + 1);
+						if (internal_decoder_data->decode_to_value->value.string_value.chars == NULL)
 						{
-							/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
-							/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
-							/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
-							if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
-							{
-								result = __LINE__;
-							}
-							else
-							{
-								result = 0;
-							}
+							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+							result = __LINE__;
 						}
 						else
 						{
-							internal_decoder_data->decode_to_value->value.string_value.chars = (char*)amqpalloc_malloc(internal_decoder_data->decode_value_state.string_value_state.length + 1);
-							if (internal_decoder_data->decode_to_value->value.string_value.chars == NULL)
+							if (internal_decoder_data->decode_value_state.string_value_state.length == 0)
 							{
-								internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
-								result = __LINE__;
+								internal_decoder_data->decode_to_value->value.string_value.chars[0] = '\0';
+
+								/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+								/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+								/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+								{
+									result = __LINE__;
+								}
+								else
+								{
+									result = 0;
+								}
 							}
 							else
 							{
@@ -4047,7 +4046,12 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_value_state.string_value_state.length + 1)
 							{
+								internal_decoder_data->decode_to_value->value.string_value.chars[internal_decoder_data->decode_value_state.string_value_state.length] = 0;
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+								/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+								/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+								/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
 								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
 								{
 									result = __LINE__;
@@ -4065,9 +4069,9 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					}
 					break;
 				}
+				/* Codes_SRS_AMQPVALUE_01_377: [<encoding name="str32-utf8" code="0xb1" category="variable" width="4" label="up to 2^32 - 1 octets worth of UTF-8 Unicode (with no byte order mark)"/>] */
 				case 0xB1:
 				{
-					/* str32-utf8 */
 					if (internal_decoder_data->bytes_decoded < 4)
 					{
 						internal_decoder_data->decode_value_state.string_value_state.length += buffer[0] << ((3 - internal_decoder_data->bytes_decoded) * 8);
@@ -4075,11 +4079,37 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 						buffer++;
 						size--;
 
-						internal_decoder_data->decode_to_value->value.string_value.chars = (char*)amqpalloc_malloc(internal_decoder_data->decode_value_state.string_value_state.length + 1);
-						if (internal_decoder_data->decode_to_value->value.string_value.chars == NULL)
+						if (internal_decoder_data->bytes_decoded == 4)
 						{
-							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
-							result = __LINE__;
+							internal_decoder_data->decode_to_value->value.string_value.chars = (char*)amqpalloc_malloc(internal_decoder_data->decode_value_state.string_value_state.length + 1);
+							if (internal_decoder_data->decode_to_value->value.string_value.chars == NULL)
+							{
+								internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+								result = __LINE__;
+							}
+							else
+							{
+								if (internal_decoder_data->decode_value_state.string_value_state.length == 0)
+								{
+									internal_decoder_data->decode_to_value->value.string_value.chars[0] = '\0';
+
+									/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+									/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+									/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+									if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
+									{
+										result = __LINE__;
+									}
+									else
+									{
+										result = 0;
+									}
+								}
+								else
+								{
+									result = 0;
+								}
+							}
 						}
 						else
 						{
@@ -4107,7 +4137,12 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_value_state.string_value_state.length + 4)
 							{
+								internal_decoder_data->decode_to_value->value.string_value.chars[internal_decoder_data->decode_value_state.string_value_state.length] = '\0';
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+								/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+								/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+								/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
 								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
 								{
 									result = __LINE__;

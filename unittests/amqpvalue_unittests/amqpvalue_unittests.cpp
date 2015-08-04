@@ -12473,6 +12473,29 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqpvalue_decoder_destroy(amqpvalue_decoder);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_326: [If any allocation failure occurs during decoding, amqpvalue_decode_bytes shall fail and return a non-zero value.] */
+		TEST_FUNCTION(when_allocating_memory_fails_then_amqpvalue_decode_binary_one_byte_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xA0, 0x01, 0x42 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
 		TEST_FUNCTION(amqpvalue_decode_binary_255_bytes_not_enough_bytes_does_not_trigger_callback)
 		{
@@ -12644,6 +12667,29 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqpvalue_decoder_destroy(amqpvalue_decoder);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_326: [If any allocation failure occurs during decoding, amqpvalue_decode_bytes shall fail and return a non-zero value.] */
+		TEST_FUNCTION(when_allocating_fails_then_amqpvalue_decode_binary_0xB0_1_byte_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xB0, 0x00, 0x00, 0x00, 0x01, 0x42 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
 		TEST_FUNCTION(amqpvalue_decode_binary_0xB0_256_byte_not_enough_bytes_does_not_trigger_callback)
 		{
@@ -12795,7 +12841,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
-		TEST_FUNCTION(amqpvalue_decode_binary_0xA1_zero_bytes_not_enough_bytes_does_not_trigger_callback)
+		TEST_FUNCTION(amqpvalue_decode_string_0xA1_zero_bytes_not_enough_bytes_does_not_trigger_callback)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
@@ -12815,7 +12861,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
-		TEST_FUNCTION(amqpvalue_decode_binary_0xA1_one_byte_not_enough_bytes_does_not_trigger_callback)
+		TEST_FUNCTION(amqpvalue_decode_string_0xA1_one_byte_not_enough_bytes_does_not_trigger_callback)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
@@ -12836,8 +12882,31 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqpvalue_decoder_destroy(amqpvalue_decoder);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_326: [If any allocation failure occurs during decoding, amqpvalue_decode_bytes shall fail and return a non-zero value.] */
+		TEST_FUNCTION(when_allocating_memory_fails_amqpvalue_decode_string_0xA1_one_byte_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xA1, 0x01, 'a' };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
-		TEST_FUNCTION(amqpvalue_decode_binary_0xA1_255_byte_not_enough_bytes_does_not_trigger_callback)
+		TEST_FUNCTION(amqpvalue_decode_string_0xA1_255_byte_not_enough_bytes_does_not_trigger_callback)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
@@ -13023,7 +13092,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
-		TEST_FUNCTION(amqpvalue_decode_binary_0xB1_zero_bytes_not_enough_bytes_does_not_trigger_callback)
+		TEST_FUNCTION(amqpvalue_decode_string_0xB1_zero_bytes_not_enough_bytes_does_not_trigger_callback)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
@@ -13043,7 +13112,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
-		TEST_FUNCTION(amqpvalue_decode_binary_0xB1_one_byte_not_enough_bytes_does_not_trigger_callback)
+		TEST_FUNCTION(amqpvalue_decode_string_0xB1_one_byte_not_enough_bytes_does_not_trigger_callback)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
@@ -13065,7 +13134,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
-		TEST_FUNCTION(amqpvalue_decode_binary_0xB1_255_byte_not_enough_bytes_does_not_trigger_callback)
+		TEST_FUNCTION(amqpvalue_decode_string_0xB1_255_byte_not_enough_bytes_does_not_trigger_callback)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
@@ -13083,6 +13152,89 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
 			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_326: [If any allocation failure occurs during decoding, amqpvalue_decode_bytes shall fail and return a non-zero value.] */
+		TEST_FUNCTION(when_amqpalloc_malloc_fails_then_amqpvalue_decode_string_0xB1_one_byte_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xB1, 0x00, 0x00, 0x00, 0x01, 'a' };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_383: [1.6.22 list A sequence of polymorphic values.] */
+		/* Tests_SRS_AMQPVALUE_01_384: [<encoding name="list0" code="0x45" category="fixed" width="0" label="the empty list (i.e. the list with no elements)"/>] */
+		TEST_FUNCTION(amqpvalue_decode_list_empty_list_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0x45 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_LIST, (int)amqpvalue_get_type(decoded_values[0]));
+			uint32_t item_count;
+			(void)amqpvalue_get_list_item_count(decoded_values[0], &item_count);
+			ASSERT_ARE_EQUAL(uint32_t, 0, item_count);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_383: [1.6.22 list A sequence of polymorphic values.] */
+		/* Tests_SRS_AMQPVALUE_01_385: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
+		TEST_FUNCTION(amqpvalue_decode_list_0xC0_zero_items_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xC0, 0x00, 0x00 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_LIST, (int)amqpvalue_get_type(decoded_values[0]));
+			uint32_t item_count;
+			(void)amqpvalue_get_list_item_count(decoded_values[0], &item_count);
+			ASSERT_ARE_EQUAL(uint32_t, 0, item_count);
 
 			// cleanup
 			amqpvalue_decoder_destroy(amqpvalue_decoder);

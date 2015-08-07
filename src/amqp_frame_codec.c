@@ -42,9 +42,8 @@ typedef struct AMQP_FRAME_CODEC_DATA_TAG
 	uint32_t encode_payload_bytes_left;
 } AMQP_FRAME_CODEC_INSTANCE;
 
-static int amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
+static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 {
-	int result = 0;
 	AMQP_FRAME_CODEC_INSTANCE* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_INSTANCE*)context;
 	uint64_t performative_descriptor_ulong;
 
@@ -52,7 +51,6 @@ static int amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 	{
 	default:
 		amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_ERROR;
-		result = __LINE__;
 		break;
 
 	case AMQP_FRAME_DECODE_FRAME_PERFORMATIVE:
@@ -67,7 +65,6 @@ static int amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 			(performative_descriptor_ulong > AMQP_CLOSE))
 		{
 			amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_ERROR;
-			result = __LINE__;
 		}
 		else
 		{
@@ -78,7 +75,6 @@ static int amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 			{
 				/* Codes_SRS_AMQP_FRAME_CODEC_01_061: [When the callback frame_received_callback fails, the decoder shall fail and return a non-zero value to frame_codec.] */
 				amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_ERROR;
-				result = __LINE__;
 			}
 			else
 			{
@@ -90,15 +86,11 @@ static int amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 				{
 					amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_FRAME_HEADER;
 				}
-
-				result = 0;
 			}
 		}
 		break;
 	}
 	}
-
-	return result;
 }
 
 static int frame_begin(void* context, uint32_t decode_frame_body_size, const unsigned char* type_specific, uint32_t type_specific_size)

@@ -70,7 +70,7 @@ public:
 		encoder_output_call_count++;
 	MOCK_METHOD_END(int, (encoder_output_call_count == when_shall_encoder_output_fail) ? 1 : 0);
 
-	MOCK_STATIC_METHOD_2(, int, value_decoded_callback, void*, context, AMQP_VALUE, decoded_value)
+	MOCK_STATIC_METHOD_2(, void, value_decoded_callback, void*, context, AMQP_VALUE, decoded_value)
 		AMQP_VALUE* new_values = (AMQP_VALUE*)realloc(decoded_values, sizeof(AMQP_VALUE) * (decoded_value_count + 1));
 		if (new_values != NULL)
 		{
@@ -78,7 +78,7 @@ public:
 			new_values[decoded_value_count] = amqpvalue_clone(decoded_value);
 			decoded_value_count++;
 		}
-	MOCK_METHOD_END(int, 0);
+	MOCK_VOID_METHOD_END();
 };
 
 extern "C"
@@ -88,7 +88,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqpvalue_mocks, , void, amqpalloc_free, void*, ptr);
 
 	DECLARE_GLOBAL_MOCK_METHOD_3(amqpvalue_mocks, , int, test_encoder_output, void*, context, const void*, bytes, size_t, length);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqpvalue_mocks, , int, value_decoded_callback, void*, context, AMQP_VALUE, decoded_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqpvalue_mocks, , void, value_decoded_callback, void*, context, AMQP_VALUE, decoded_value);
 }
 
 static void* test_context = (void*)0x4243;

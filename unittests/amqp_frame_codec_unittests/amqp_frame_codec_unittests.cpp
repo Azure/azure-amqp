@@ -111,10 +111,10 @@ public:
 		total_bytes += size;
 		if (total_bytes == sizeof(test_performative))
 		{
-			my_result = saved_value_decoded_callback(saved_value_decoded_callback_context, TEST_AMQP_VALUE);
+			saved_value_decoded_callback(saved_value_decoded_callback_context, TEST_AMQP_VALUE);
 			total_bytes = 0;
 		}
-		MOCK_METHOD_END(int, my_result);
+		MOCK_METHOD_END(int, 0);
 
 	/* encoder mocks */
 	MOCK_STATIC_METHOD_2(, int, amqpvalue_get_encoded_size, AMQP_VALUE, value, size_t*, encoded_size);

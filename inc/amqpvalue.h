@@ -83,7 +83,7 @@ extern "C" {
 
 	/* decoding */
 	typedef void* AMQPVALUE_DECODER_HANDLE;
-	typedef int(*VALUE_DECODED_CALLBACK)(void* context, AMQP_VALUE decoded_value);
+	typedef void(*VALUE_DECODED_CALLBACK)(void* context, AMQP_VALUE decoded_value);
 
 	extern AMQPVALUE_DECODER_HANDLE amqpvalue_decoder_create(VALUE_DECODED_CALLBACK value_decoded_callback, void* value_decoded_callback_context);
 	extern void amqpvalue_decoder_destroy(AMQPVALUE_DECODER_HANDLE handle);

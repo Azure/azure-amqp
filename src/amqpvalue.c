@@ -4192,6 +4192,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 				}
 				/* Codes_SRS_AMQPVALUE_01_385: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
 				case 0xC0:
+				/* Codes_SRS_AMQPVALUE_01_386: [<encoding name="list32" code="0xd0" category="compound" width="4" label="up to 2^32 - 1 list elements with total size less than 2^32 octets"/>] */
 				case 0xD0:
 				{
 					DECODE_LIST_STEP step = internal_decoder_data->decode_value_state.list_value_state.list_value_state;
@@ -4245,6 +4246,10 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							if (internal_decoder_data->decode_to_value->value.list_value.count == 0)
 							{
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+								/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+								/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+								/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
 								if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
 								{
 									result = __LINE__;
@@ -4268,6 +4273,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 									{
 										internal_decoder_data->decode_to_value->value.list_value.items[i] = NULL;
 									}
+
 									internal_decoder_data->decode_value_state.list_value_state.list_value_state = DECODE_LIST_STEP_ITEMS;
 									internal_decoder_data->bytes_decoded = 0;
 									internal_decoder_data->inner_decoder = NULL;
@@ -4375,6 +4381,10 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 								if (internal_decoder_data->decode_value_state.list_value_state.item == internal_decoder_data->decode_to_value->value.list_value.count)
 								{
 									internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+									/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+									/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+									/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
 									if (internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value) != 0)
 									{
 										result = __LINE__;

@@ -138,8 +138,10 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 
 		if (true)
 		{
+			CONNECTION_OPTIONS connection_options = { 0 };
+
 			/* create connection */
-			connection = connection_create(to, 5672, NULL);
+			connection = connection_create(to, 5672, &connection_options);
 			messaging->connection = connection;
 		}
 

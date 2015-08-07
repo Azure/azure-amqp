@@ -63,10 +63,10 @@ extern "C" {
 
 	typedef struct CONNECTION_OPTIONS_TAG
 	{
+		uint8_t use_options;
 		uint32_t max_frame_size;
 		uint16_t channel_max;
 		milliseconds idle_timeout;
-		uint8_t use_options;
 	} CONNECTION_OPTIONS;
 
 	extern CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIONS* options);

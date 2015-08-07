@@ -166,7 +166,6 @@ TEST_FUNCTION_CLEANUP(method_cleanup)
 	}
 }
 
-#if 0
 /* connection_create */
 
 /* Tests_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
@@ -179,7 +178,9 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 {
 	// arrange
 	connection_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
+	CONNECTION_OPTIONS connection_options = { 0 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
@@ -189,9 +190,10 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, open_create("1"));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
 
 	// assert
 	ASSERT_IS_NOT_NULL(connection);
@@ -200,6 +202,7 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_START, connection_state);
 }
 
+#if 0
 /* Tests_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
 TEST_METHOD(when_io_create_fails_then_connection_create_fails)
 {

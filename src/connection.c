@@ -29,6 +29,9 @@ typedef struct CONNECTION_DATA_TAG
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
 	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
 	void* frame_received_callback_context;
+	uint32_t max_frame_size;
+	uint16_t channel_max;
+	milliseconds idle_timeout;
 } CONNECTION_INSTANCE;
 
 static int send_header(CONNECTION_INSTANCE* connection_instance)
@@ -284,11 +287,13 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 
 	if (host == NULL)
 	{
+		/* Codes_SRS_CONNECTION_01_071: [If host is NULL, connection_create shall return NULL.] */
 		result = NULL;
 	}
 	else
 	{
 		result = (CONNECTION_INSTANCE*)amqpalloc_malloc(sizeof(CONNECTION_INSTANCE));
+		/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
 		if (result != NULL)
 		{
 			/* Codes_SRS_CONNECTION_01_069: [The socket_io parameters shall be filled in with the host and port information passed to connection_create.] */
@@ -299,6 +304,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 			io_interface_description = socketio_get_interface_description();
 			if (io_interface_description == NULL)
 			{
+				/* Codes_SRS_CONNECTION_01_124: [If getting the io interface information (by calling socketio_get_interface_description) fails, connection_create shall return NULL.] */
 				amqpalloc_free(result);
 				result = NULL;
 			}
@@ -318,6 +324,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 					result->frame_codec = frame_codec_create(result->socket_io, consolelogger_log);
 					if (result->frame_codec == NULL)
 					{
+						/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
 						io_destroy(result->socket_io);
 						amqpalloc_free(result);
 						result = NULL;
@@ -327,6 +334,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 						result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, connection_payload_bytes_received, result);
 						if (result->amqp_frame_codec == NULL)
 						{
+							/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */
 							frame_codec_destroy(result->frame_codec);
 							io_destroy(result->socket_io);
 							amqpalloc_free(result);
@@ -334,36 +342,30 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 						}
 						else
 						{
-							result->open_performative = open_create("1");
-							if (result->open_performative == NULL)
-							{
-								amqp_frame_codec_destroy(result->amqp_frame_codec);
-								frame_codec_destroy(result->frame_codec);
-								io_destroy(result->socket_io);
-								amqpalloc_free(result);
-								result = NULL;
-							}
-							else
-							{
-								result->frame_received_callback = NULL;
+							result->open_performative = NULL;
+							result->frame_received_callback = NULL;
 
-								if (options->use_options & CONNECTION_OPTION_MAX_FRAME_SIZE)
-								{
-									open_set_max_frame_size(result->open_performative, options->max_frame_size);
-								}
-								if (options->use_options & CONNECTION_OPTION_CHANNEL_MAX)
-								{
-									open_set_max_frame_size(result->open_performative, options->channel_max);
-								}
-								if (options->use_options & CONNECTION_OPTION_IDLE_TIMEOUT)
-								{
-									open_set_max_frame_size(result->open_performative, options->idle_timeout);
-								}
-
-								/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
-								result->connection_state = CONNECTION_STATE_START;
-								result->header_bytes_received = 0;
+							if ((options != NULL) &&
+								(options->use_options & CONNECTION_OPTION_MAX_FRAME_SIZE))
+							{
+								result->max_frame_size = options->max_frame_size;
 							}
+
+							if ((options != NULL) && 
+								(options->use_options & CONNECTION_OPTION_CHANNEL_MAX))
+							{
+								result->channel_max = options->channel_max;
+							}
+
+							if ((options != NULL) && 
+								(options->use_options & CONNECTION_OPTION_IDLE_TIMEOUT))
+							{
+								result->idle_timeout = options->idle_timeout;
+							}
+
+							/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
+							result->connection_state = CONNECTION_STATE_START;
+							result->header_bytes_received = 0;
 						}
 					}
 				}
@@ -383,7 +385,6 @@ void connection_destroy(CONNECTION_HANDLE connection)
 		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
 		amqp_frame_codec_destroy(connection_instance->amqp_frame_codec);
 		frame_codec_destroy(connection_instance->frame_codec);
-		open_destroy(connection_instance->open_performative);
 
 		/* Codes_SRS_CONNECTION_01_074: [connection_destroy shall close the socket connection.] */
 		io_destroy(connection_instance->socket_io);

@@ -191,7 +191,6 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
-	STRICT_EXPECTED_CALL(amqp_definitions_mocks, open_create("1"));
 
 	// act
 	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
@@ -201,6 +200,44 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	CONNECTION_STATE connection_state;
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_START, connection_state);
+}
+
+/* Tests_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
+TEST_METHOD(when_allocating_memory_fails_then_connection_create_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	SOCKETIO_CONFIG config = { "testhost", 5672 };
+	CONNECTION_OPTIONS connection_options = { 0 };
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+		.SetReturn((void*)NULL);
+
+	// act
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
+
+	// assert
+	ASSERT_IS_NULL(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_124: [If getting the io interface information (by calling socketio_get_interface_description) fails, connection_create shall return NULL.] */
+TEST_METHOD(when_get_socketio_interface_description_fails_then_connection_create_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	SOCKETIO_CONFIG config = { "testhost", 5672 };
+	CONNECTION_OPTIONS connection_options = { 0 };
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description())
+		.SetReturn((IO_INTERFACE_DESCRIPTION*)NULL);
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
+
+	// assert
+	ASSERT_IS_NULL(connection);
 }
 
 /* Tests_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
@@ -225,13 +262,13 @@ TEST_METHOD(when_io_create_fails_then_connection_create_fails)
 	ASSERT_IS_NULL(connection);
 }
 
-#if 0
-/* Tests_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return a non-zero value.] */
+/* Tests_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
 TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 {
 	// arrange
 	connection_mocks mocks;
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
+	CONNECTION_OPTIONS connection_options = { 0 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
@@ -244,7 +281,35 @@ TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
+
+	// assert
+	ASSERT_IS_NULL(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */
+TEST_METHOD(when_amqp_frame_codec_create_fails_then_connection_create_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	SOCKETIO_CONFIG config = { "testhost", 5672 };
+	CONNECTION_OPTIONS connection_options = { 0 };
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
+	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1)
+		.SetReturn((AMQP_FRAME_CODEC_HANDLE)NULL);
+	STRICT_EXPECTED_CALL(mocks, frame_codec_destroy(TEST_FRAME_CODEC_HANDLE));
+	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -255,62 +320,56 @@ TEST_METHOD(connection_create_with_NULL_host_fails)
 {
 	// arrange
 	connection_mocks mocks;
+	CONNECTION_OPTIONS connection_options = { 0 };
 
 	// act
-	CONNECTION_HANDLE connection = connection_create(NULL, 5672);
+	CONNECTION_HANDLE connection = connection_create(NULL, 5672, &connection_options);
 
 	// assert
 	ASSERT_IS_NULL(connection);
 }
 
-/* Tests_SRS_CONNECTION_01_080: [If socketio_get_interface_description fails, connection_create shall return NULL.] */
-TEST_METHOD(when_getting_socketio_interface_description_fails_connection_create_fails)
+/* Tests_SRS_CONNECTION_01_109: [The argument options is optional.] */
+TEST_METHOD(connection_create_with_NULL_options_succeeds)
 {
 	// arrange
 	connection_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
+	CONNECTION_OPTIONS connection_options = { 0 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description())
-		.SetReturn((IO_INTERFACE_DESCRIPTION*)NULL);
-	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
+	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, NULL);
 
 	// assert
-	ASSERT_IS_NULL(connection);
-}
-
-/* Tests_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
-TEST_METHOD(when_allocating_memory_fails_connection_create_fails)
-{
-	// arrange
-	connection_mocks mocks;
-	SOCKETIO_CONFIG config = { "testhost", 5672 };
-
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
-		.SetReturn((void*)NULL);
-
-	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
-
-	// assert
-	ASSERT_IS_NULL(connection);
+	ASSERT_IS_NOT_NULL(connection);
+	CONNECTION_STATE connection_state;
+	(void)connection_get_state(connection, &connection_state);
+	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_START, connection_state);
 }
 
 /* connection_destroy */
 
 /* Tests_SRS_CONNECTION_01_073: [connection_destroy shall free all resources associated with a connection.] */
+/* Tests_SRS_CONNECTION_01_074: [connection_destroy shall close the socket connection.] */
 TEST_METHOD(connection_destroy_frees_resources)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, NULL);
 	mocks.ResetAllCalls();
 
-	STRICT_EXPECTED_CALL(mocks, frame_codec_destroy(TEST_FRAME_CODEC_HANDLE));
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_destroy(TEST_AMQP_FRAME_CODEC_HANDLE));
+	STRICT_EXPECTED_CALL(mocks, frame_codec_destroy(TEST_FRAME_CODEC_HANDLE));
 	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
@@ -334,6 +393,7 @@ TEST_METHOD(connection_destroy_with_NULL_handle_does_nothing)
 	// uMock checks the calls
 }
 
+#if 0
 /* connection_dowork */
 
 /* Tests_SRS_CONNECTION_01_076: [connection_dowork shall schedule the underlying IO interface to do its work by calling io_dowork.] */

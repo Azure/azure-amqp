@@ -392,6 +392,21 @@ TEST_METHOD(connection_destroy_with_NULL_handle_does_nothing)
 {
 	// arrange
 	connection_mocks mocks;
+
+	// act
+	connection_destroy(NULL);
+
+	// assert
+	// uMock checks the calls
+}
+
+/* connection_register_session */
+
+/* Tests_SRS_CONNECTION_01_112: [connection_register_session registers a callback for received frames for a new session.] */
+TEST_METHOD(connection_register_session_with_valid_args_succeeds)
+{
+	// arrange
+	connection_mocks mocks;
 	CONNECTION_HANDLE connection = connection_create("testhost", 5672, NULL);
 	mocks.ResetAllCalls();
 
@@ -404,21 +419,6 @@ TEST_METHOD(connection_destroy_with_NULL_handle_does_nothing)
 
 	// cleanup
 	connection_destroy(NULL);
-}
-
-/* connection_register_session */
-
-/* Tests_SRS_CONNECTION_01_112: [connection_register_session registers a callback for received frames for a new session.] */
-TEST_METHOD(connection_register_session_with_valid_args_succeeds)
-{
-	// arrange
-	connection_mocks mocks;
-
-	// act
-	connection_destroy(NULL);
-
-	// assert
-	// uMock checks the calls
 }
 
 #if 0

@@ -282,7 +282,6 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 {
 	CONNECTION_INSTANCE* result;
 
-	/* Codes_SRS_CONNECTION_01_071: [If host is NULL, connection_create shall return NULL.] */
 	if (host == NULL)
 	{
 		result = NULL;
@@ -290,7 +289,6 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 	else
 	{
 		result = (CONNECTION_INSTANCE*)amqpalloc_malloc(sizeof(CONNECTION_INSTANCE));
-		/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
 		if (result != NULL)
 		{
 			/* Codes_SRS_CONNECTION_01_069: [The socket_io parameters shall be filled in with the host and port information passed to connection_create.] */
@@ -301,7 +299,6 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 			io_interface_description = socketio_get_interface_description();
 			if (io_interface_description == NULL)
 			{
-				/* Codes_SRS_CONNECTION_01_080: [If socketio_get_interface_description fails, connection_create shall return NULL.] */
 				amqpalloc_free(result);
 				result = NULL;
 			}
@@ -321,7 +318,6 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 					result->frame_codec = frame_codec_create(result->socket_io, consolelogger_log);
 					if (result->frame_codec == NULL)
 					{
-						/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
 						io_destroy(result->socket_io);
 						amqpalloc_free(result);
 						result = NULL;

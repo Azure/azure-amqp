@@ -173,6 +173,7 @@ TEST_FUNCTION_CLEANUP(method_cleanup)
 /* Tests_SRS_CONNECTION_01_068: [connection_create shall pass to io_create the interface obtained by a call to socketio_get_interface_description.] */
 /* Tests_SRS_CONNECTION_01_069: [The socket_io parameters shall be filled in with the host and port information passed to connection_create.] */
 /* Tests_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
+/* Tests_SRS_CONNECTION_01_107: [connection_create shall create an amqp_frame_codec instance by calling amqp_frame_codec_create.] */
 /* Tests_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
 TEST_METHOD(connection_create_with_valid_args_succeeds)
 {
@@ -202,13 +203,13 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_START, connection_state);
 }
 
-#if 0
 /* Tests_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
 TEST_METHOD(when_io_create_fails_then_connection_create_fails)
 {
 	// arrange
 	connection_mocks mocks;
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
+	CONNECTION_OPTIONS connection_options = { 0 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
@@ -218,12 +219,13 @@ TEST_METHOD(when_io_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
 
 	// assert
 	ASSERT_IS_NULL(connection);
 }
 
+#if 0
 /* Tests_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return a non-zero value.] */
 TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 {

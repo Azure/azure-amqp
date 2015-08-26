@@ -18,6 +18,8 @@
 #define TEST_DESCRIPTOR_AMQP_VALUE		(AMQP_VALUE)0x4245
 #define TEST_AMQP_OPEN_FRAME_HANDLE		(AMQP_OPEN_FRAME_HANDLE)0x4245
 
+#define TEST_CONTEXT					(void*)(0x4242)
+
 const IO_INTERFACE_DESCRIPTION test_io_interface_description = { 0 };
 
 static IO_RECEIVE_CALLBACK io_receive_callback;
@@ -99,6 +101,10 @@ public:
 
     MOCK_STATIC_METHOD_1(, void, amqpvalue_destroy, AMQP_VALUE, value)
     MOCK_VOID_METHOD_END();
+
+	/* session frame received callback mocks */
+	MOCK_STATIC_METHOD_4(, void, test_session_frame_received_callback, void*, context, uint16_t, channel, AMQP_VALUE, performative, uint32_t, frame_payload_size)
+	MOCK_VOID_METHOD_END();
 };
 
 extern "C"
@@ -126,7 +132,8 @@ extern "C"
 
     DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, amqpvalue_destroy, AMQP_VALUE, value);
 
-    
+	DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , void, test_session_frame_received_callback, void*, context, uint16_t, channel, AMQP_VALUE, performative, uint32_t, frame_payload_size);
+
 
 	extern void consolelogger_log(char* format, ...)
 	{
@@ -382,6 +389,27 @@ TEST_METHOD(connection_destroy_frees_resources)
 
 /* Tests_SRS_CONNECTION_01_079: [If handle is NULL, connection_destroy shall do nothing.] */
 TEST_METHOD(connection_destroy_with_NULL_handle_does_nothing)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, NULL);
+	mocks.ResetAllCalls();
+
+	// act
+	uint16_t channel_no;
+	int result = connection_register_session(connection, test_session_frame_received_callback, TEST_CONTEXT, &channel_no);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+
+	// cleanup
+	connection_destroy(NULL);
+}
+
+/* connection_register_session */
+
+/* Tests_SRS_CONNECTION_01_112: [connection_register_session registers a callback for received frames for a new session.] */
+TEST_METHOD(connection_register_session_with_valid_args_succeeds)
 {
 	// arrange
 	connection_mocks mocks;

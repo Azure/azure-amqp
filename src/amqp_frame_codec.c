@@ -71,21 +71,15 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 			/* Codes_SRS_AMQP_FRAME_CODEC_01_054: [Once the performative is decoded, the callback frame_received_callback shall be called.] */
 			/* Codes_SRS_AMQP_FRAME_CODEC_01_055: [The decoded channel and performative shall be passed to frame_received_callback.] */
 			/* Codes_SRS_AMQP_FRAME_CODEC_01_056: [The AMQP frame payload size passed to frame_received_callback shall be computed from the frame payload size received from frame_codec and substracting the performative size.] */
-			if (amqp_frame_codec_instance->frame_received_callback(amqp_frame_codec_instance->callback_context, amqp_frame_codec_instance->channel, decoded_value, amqp_frame_codec_instance->decode_frame_body_size - amqp_frame_codec_instance->decode_frame_body_pos) !=0)
+			amqp_frame_codec_instance->frame_received_callback(amqp_frame_codec_instance->callback_context, amqp_frame_codec_instance->channel, decoded_value, amqp_frame_codec_instance->decode_frame_body_size - amqp_frame_codec_instance->decode_frame_body_pos);
+
+			if (amqp_frame_codec_instance->decode_frame_body_size > amqp_frame_codec_instance->decode_frame_body_pos)
 			{
-				/* Codes_SRS_AMQP_FRAME_CODEC_01_061: [When the callback frame_received_callback fails, the decoder shall fail and return a non-zero value to frame_codec.] */
-				amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_ERROR;
+				amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_FRAME_PAYLOAD;
 			}
 			else
 			{
-				if (amqp_frame_codec_instance->decode_frame_body_size > amqp_frame_codec_instance->decode_frame_body_pos)
-				{
-					amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_FRAME_PAYLOAD;
-				}
-				else
-				{
-					amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_FRAME_HEADER;
-				}
+				amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_FRAME_HEADER;
 			}
 		}
 		break;
@@ -129,16 +123,8 @@ static int frame_begin(void* context, uint32_t decode_frame_body_size, const uns
 			{
 				/* Codes_SRS_AMQP_FRAME_CODEC_01_048: [When a frame header is received from frame_codec and the frame payload size is 0, empty_frame_received_callback shall be invoked, while passing the channel number as argument.] */
 				/* Codes_SRS_AMQP_FRAME_CODEC_01_007: [An AMQP frame with no body MAY be used to generate artificial traffic as needed to satisfy any negotiated idle timeout interval ] */
-				if (amqp_frame_codec_instance->empty_frame_received_callback(amqp_frame_codec_instance->callback_context, amqp_frame_codec_instance->channel) != 0)
-				{
-					/* Codes_SRS_AMQP_FRAME_CODEC_01_062: [When the callback empty_frame_received_callback fails, the decoder shall fail and return a non-zero value to frame_codec.] */
-					amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_ERROR;
-					result = __LINE__;
-				}
-				else
-				{
-					result = 0;
-				}
+				amqp_frame_codec_instance->empty_frame_received_callback(amqp_frame_codec_instance->callback_context, amqp_frame_codec_instance->channel);
+				result = 0;
 			}
 			else
 			{
@@ -185,7 +171,8 @@ static int frame_body_bytes_received(void* context, const unsigned char* frame_b
 			case AMQP_FRAME_DECODE_FRAME_PERFORMATIVE:
 				/* Codes_SRS_AMQP_FRAME_CODEC_01_052: [Decoding the performative shall be done by feeding the bytes to the decoder create in amqp_frame_codec_create.] */
 				amqp_frame_codec_instance->decode_frame_body_pos++;
-				if (amqpvalue_decode_bytes(amqp_frame_codec_instance->decoder, frame_body_bytes, 1) != 0)
+				if ((amqpvalue_decode_bytes(amqp_frame_codec_instance->decoder, frame_body_bytes, 1) != 0) ||
+					(amqp_frame_codec_instance->decode_state == AMQP_FRAME_DECODE_ERROR))
 				{
 					result = __LINE__;
 				}
@@ -201,20 +188,15 @@ static int frame_body_bytes_received(void* context, const unsigned char* frame_b
 			{
 				/* Codes_SRS_AMQP_FRAME_CODEC_01_004: [The remaining bytes in the frame body form the payload for that frame.] */
 				uint32_t to_indicate = frame_body_bytes_size;
-				if (amqp_frame_codec_instance->payload_bytes_received_callback(amqp_frame_codec_instance->callback_context, frame_body_bytes, frame_body_bytes_size) != 0)
+				amqp_frame_codec_instance->payload_bytes_received_callback(amqp_frame_codec_instance->callback_context, frame_body_bytes, frame_body_bytes_size);
+
+				amqp_frame_codec_instance->decode_frame_body_pos += frame_body_bytes_size;
+				frame_body_bytes_size = 0;
+				if (amqp_frame_codec_instance->decode_frame_body_pos == amqp_frame_codec_instance->decode_frame_body_size)
 				{
-					result = __LINE__;
+					amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_FRAME_HEADER;
 				}
-				else
-				{
-					amqp_frame_codec_instance->decode_frame_body_pos += frame_body_bytes_size;
-					frame_body_bytes_size = 0;
-					if (amqp_frame_codec_instance->decode_frame_body_pos == amqp_frame_codec_instance->decode_frame_body_size)
-					{
-						amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_FRAME_HEADER;
-					}
-					result = 0;
-				}
+				result = 0;
 				break;
 			}
 			}

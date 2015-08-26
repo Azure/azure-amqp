@@ -403,6 +403,7 @@ TEST_METHOD(connection_destroy_with_NULL_handle_does_nothing)
 /* connection_register_session */
 
 /* Tests_SRS_CONNECTION_01_112: [connection_register_session registers a callback for received frames for a new session.] */
+/* Tests_SRS_CONNECTION_01_114: [On success, connection_register_session shall return 0 and fill into channel_no the channel number associated with the registered session.] */
 TEST_METHOD(connection_register_session_with_valid_args_succeeds)
 {
 	// arrange
@@ -416,6 +417,76 @@ TEST_METHOD(connection_register_session_with_valid_args_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+
+	// cleanup
+	connection_destroy(NULL);
+}
+
+/* Tests_SRS_CONNECTION_01_112: [connection_register_session registers a callback for received frames for a new session.] */
+TEST_METHOD(connection_register_session_with_NULL_context_still_succeeds)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, NULL);
+	mocks.ResetAllCalls();
+
+	// act
+	uint16_t channel_no;
+	int result = connection_register_session(connection, test_session_frame_received_callback, TEST_CONTEXT, &channel_no);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+
+	// cleanup
+	connection_destroy(NULL);
+}
+
+/* Tests_SRS_CONNECTION_01_113: [If connection, callback or channel_no are NULL, connection_register_session shall fail and return a non-zero value.] */
+TEST_METHOD(connection_register_session_with_NULL_conneciton_fails)
+{
+	// arrange
+	connection_mocks mocks;
+
+	// act
+	uint16_t channel_no;
+	int result = connection_register_session(NULL, test_session_frame_received_callback, TEST_CONTEXT, &channel_no);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_CONNECTION_01_113: [If connection, callback or channel_no are NULL, connection_register_session shall fail and return a non-zero value.] */
+TEST_METHOD(connection_register_session_with_NULL_callback_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, NULL);
+	mocks.ResetAllCalls();
+
+	// act
+	uint16_t channel_no;
+	int result = connection_register_session(connection, NULL, TEST_CONTEXT, &channel_no);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+
+	// cleanup
+	connection_destroy(NULL);
+}
+
+/* Tests_SRS_CONNECTION_01_113: [If connection, callback or channel_no are NULL, connection_register_session shall fail and return a non-zero value.] */
+TEST_METHOD(connection_register_session_with_NULL_channel_no_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, NULL);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = connection_register_session(connection, test_session_frame_received_callback, TEST_CONTEXT, NULL);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 
 	// cleanup
 	connection_destroy(NULL);

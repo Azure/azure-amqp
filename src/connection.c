@@ -475,12 +475,16 @@ AMQP_FRAME_CODEC_HANDLE connection_get_amqp_frame_codec(CONNECTION_HANDLE connec
 	return result;
 }
 
+/* Codes_SRS_CONNECTION_01_112: [connection_register_session registers a callback for received frames for a new session.] */
 int connection_register_session(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context, uint16_t* channel_no)
 {
 	int result;
 
-	if (connection == NULL)
+	if ((connection == NULL) ||
+		(callback == NULL) ||
+		(channel_no == NULL))
 	{
+		/* Codes_SRS_CONNECTION_01_113: [If connection, callback or channel_no are NULL, connection_register_session shall fail and return a non-zero value.] */
 		result = __LINE__;
 	}
 	else
@@ -493,7 +497,7 @@ int connection_register_session(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVE
 		result = 0;
 	}
 
-	return 0;
+	return result;
 }
 
 int connection_unregister_session(CONNECTION_HANDLE connection, uint16_t channel_no)

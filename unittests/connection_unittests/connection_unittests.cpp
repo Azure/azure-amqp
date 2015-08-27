@@ -400,6 +400,8 @@ TEST_METHOD(connection_destroy_with_NULL_handle_does_nothing)
 	// uMock checks the calls
 }
 
+#if 0
+
 /* connection_register_session */
 
 /* Tests_SRS_CONNECTION_01_112: [connection_register_session registers a callback for received frames for a new session.] */
@@ -492,7 +494,6 @@ TEST_METHOD(connection_register_session_with_NULL_channel_no_fails)
 	connection_destroy(NULL);
 }
 
-#if 0
 /* connection_dowork */
 
 /* Tests_SRS_CONNECTION_01_076: [connection_dowork shall schedule the underlying IO interface to do its work by calling io_dowork.] */

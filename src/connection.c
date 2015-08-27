@@ -27,12 +27,17 @@ typedef struct CONNECTION_DATA_TAG
 	CONNECTION_STATE connection_state;
 	FRAME_CODEC_HANDLE frame_codec;
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
-	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
-	void* frame_received_callback_context;
 	uint32_t max_frame_size;
 	uint16_t channel_max;
 	milliseconds idle_timeout;
 } CONNECTION_INSTANCE;
+
+typedef struct CHANNEL_ENDPOINT_INSTACE_TAG
+{
+	uint16_t channel_no;
+	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
+	void* frame_received_callback_context;
+} CHANNEL_ENDPOINT_INSTACE;
 
 static int send_header(CONNECTION_INSTANCE* connection_instance)
 {
@@ -281,7 +286,7 @@ static int connection_frame_received(void* context, uint16_t channel, AMQP_VALUE
 }
 
 /* Codes_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
-CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIONS* options)
+CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIONS* options, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context)
 {
 	CONNECTION_INSTANCE* result;
 
@@ -475,24 +480,30 @@ AMQP_FRAME_CODEC_HANDLE connection_get_amqp_frame_codec(CONNECTION_HANDLE connec
 	return result;
 }
 
-/* Codes_SRS_CONNECTION_01_112: [connection_register_session registers a callback for received frames for a new session.] */
-int connection_register_session(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context, uint16_t* channel_no)
+CHANNEL_ENDPOINT_HANDLE connection_create_channel_endpoint(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context)
 {
-	int result;
+	CHANNEL_ENDPOINT_HANDLE result;
 
 	if ((connection == NULL) ||
-		(callback == NULL) ||
-		(channel_no == NULL))
+		(callback == NULL))
 	{
-		/* Codes_SRS_CONNECTION_01_113: [If connection, callback or channel_no are NULL, connection_register_session shall fail and return a non-zero value.] */
-		result = __LINE__;
+		result = NULL;
 	}
 	else
 	{
 		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+		CHANNEL_ENDPOINT_INSTACE* channel_endpoint = (CHANNEL_ENDPOINT_INSTACE*)malloc(sizeof(CHANNEL_ENDPOINT_INSTACE));
 
-		connection_instance->frame_received_callback = callback;
-		connection_instance->frame_received_callback_context = context;
+		if (channel_endpoint == NULL)
+		{
+			result = NULL;
+		}
+		else
+		{
+			channel_endpoint->channel_no = 0;
+			channel_endpoint->frame_received_callback = callback;
+			channel_endpoint->frame_received_callback_context = context;
+		}
 
 		result = 0;
 	}

@@ -107,16 +107,16 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 	SESSION_DATA* result = amqpalloc_malloc(sizeof(SESSION_DATA));
 	if (result != NULL)
 	{
-		uint16_t channel_no;
+		CHANNEL_ENDPOINT_HANDLE channel_endpoint;
 
-		if (connection_register_session(connection, frame_received, result, &channel_no) != 0)
+		result->connection_channel_endpoint = connection_create_channel_endpoint(connection, frame_received, result);
+		if (channel_endpoint == NULL)
 		{
 			amqpalloc_free(result);
 			result = NULL;
 		}
 		else
 		{
-			result->channel_no = channel_no;
 			result->frame_received_callback = NULL;
 			result->session_state = SESSION_STATE_UNMAPPED;
 			result->connection = connection;

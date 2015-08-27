@@ -11,6 +11,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 	typedef void* CONNECTION_HANDLE;
+	typedef void* CHANNEL_ENDPOINT_HANDLE;
 
 	typedef enum CONNECTION_STATE_TAG
 	{
@@ -69,12 +70,10 @@ extern "C" {
 		milliseconds idle_timeout;
 	} CONNECTION_OPTIONS;
 
-	extern CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIONS* options);
+	extern CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIONS* options, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context);
 	extern void connection_destroy(CONNECTION_HANDLE connection);
 	extern void connection_dowork(CONNECTION_HANDLE connection);
 	extern int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connection_state);
-	extern int connection_register_session(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context, uint16_t* channel_no);
-	extern int connection_unregister_session(CONNECTION_HANDLE connection, uint16_t channel_no);
 	extern AMQP_FRAME_CODEC_HANDLE connection_get_amqp_frame_codec(CONNECTION_HANDLE handle);
 
 #ifdef __cplusplus

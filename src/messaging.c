@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "messaging.h"
+#include "session_manager.h"
+#include "connection.h"
 #include "message.h"
 #include "amqpvalue.h"
 #include "link.h"
@@ -17,7 +19,8 @@ typedef struct MESSAGE_WITH_CALLBACK_TAG
 typedef struct MESSAGING_DATA_TAG
 {
 	LIST_HANDLE connections;
-	CONNECTION_HANDLE* connection;
+	CONNECTION_HANDLE connection;
+	SESSION_MANAGER_HANDLE session_manager;
 	SESSION_HANDLE session;
 	LINK_HANDLE link;
 	MESSAGE_WITH_CALLBACK* outgoing_messages;
@@ -141,8 +144,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 			CONNECTION_OPTIONS connection_options = { 0 };
 
 			/* create connection */
-			connection = connection_create(to, 5672, &connection_options);
-			messaging->connection = connection;
+			messaging->session_manager = session_manager_create(to, 5672, &connection_options);
 		}
 
 		if (connection == NULL)

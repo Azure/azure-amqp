@@ -7,10 +7,12 @@
 #include "consolelogger.h"
 #include "amqpalloc.h"
 #include "amqp_frame_codec.h"
+#include "session_manager.h"
 
 typedef struct SESSION_DATA_TAG
 {
-	CONNECTION_HANDLE connection;
+	SESSION_MANAGER_HANDLE session_manager;
+	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
 	SESSION_STATE session_state;
 	uint16_t channel_no;
 	SESSION_FRAME_RECEIVED_CALLBACK frame_received_callback;
@@ -35,12 +37,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 		}
 		else
 		{
-			AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = connection_get_amqp_frame_codec(session_data->connection);
-			if (amqp_frame_codec == NULL)
-			{
-				result = __LINE__;
-			}
-			else if (amqp_frame_codec_begin_encode_frame(amqp_frame_codec, 0, begin_performative_value, 0) != 0)
+			if (amqp_frame_codec_begin_encode_frame(session_data->amqp_frame_codec, 0, begin_performative_value, 0) != 0)
 			{
 				result = __LINE__;
 			}
@@ -56,7 +53,7 @@ static int send_begin(SESSION_DATA* session_data, transfer_number next_outgoing_
 	return result;
 }
 
-static int frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t frame_payload_size)
+static void frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size)
 {
 	SESSION_DATA* session = (SESSION_DATA*)context;
 	uint64_t performative_descriptor;
@@ -98,28 +95,41 @@ static int frame_received(void* context, uint16_t channel, AMQP_VALUE performati
 			break;
 		}
 	}
-
-	return 0;
 }
 
-SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
+static void frame_payload_bytes_received(void* context, const unsigned char* payload_bytes, uint32_t byte_count)
 {
-	SESSION_DATA* result = amqpalloc_malloc(sizeof(SESSION_DATA));
-	if (result != NULL)
-	{
-		CHANNEL_ENDPOINT_HANDLE channel_endpoint;
+}
 
-		result->connection_channel_endpoint = connection_create_channel_endpoint(connection, frame_received, result);
-		if (channel_endpoint == NULL)
-		{
-			amqpalloc_free(result);
-			result = NULL;
-		}
-		else
+SESSION_HANDLE session_create(SESSION_MANAGER_HANDLE session_manager)
+{
+	SESSION_DATA* result;
+
+	if (session_manager == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = amqpalloc_malloc(sizeof(SESSION_DATA));
+		if (result != NULL)
 		{
 			result->frame_received_callback = NULL;
 			result->session_state = SESSION_STATE_UNMAPPED;
-			result->connection = connection;
+			result->session_manager = session_manager;
+			if (result->amqp_frame_codec == NULL)
+			{
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				if (session_manager_create_endpoint(result->session_manager, frame_received, frame_payload_bytes_received, result) != 0)
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+			}
 		}
 	}
 
@@ -146,7 +156,7 @@ void session_dowork(SESSION_HANDLE handle)
 
 		case SESSION_STATE_UNMAPPED:
 		{
-			CONNECTION_STATE connection_state;
+/*			CONNECTION_STATE connection_state;
 			if (connection_get_state(session_data->connection, &connection_state) == 0)
 			{
 				if (connection_state == CONNECTION_STATE_OPENED)
@@ -156,7 +166,7 @@ void session_dowork(SESSION_HANDLE handle)
 						session_data->session_state = SESSION_STATE_BEGIN_SENT;
 					}
 				}
-			}
+			}*/
 			break;
 		}
 	}
@@ -210,7 +220,7 @@ AMQP_FRAME_CODEC_HANDLE session_get_amqp_frame_codec(SESSION_HANDLE handle)
 	}
 	else
 	{
-		result = connection_get_amqp_frame_codec(session->connection);
+		result = session_manager_get_amqp_frame_codec(session->session_manager);
 	}
 
 	return result;

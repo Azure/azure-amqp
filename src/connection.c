@@ -6,6 +6,7 @@
 #include "amqp_definitions.h"
 #include "socketio.h"
 #include "amqpalloc.h"
+#include "session_manager.h"
 
 /* Requirements satisfied by the virtue of implementing the ISO:*/
 /* Codes_SRS_CONNECTION_01_088: [Any data appearing beyond the protocol header MUST match the version indicated by the protocol header.] */
@@ -27,6 +28,9 @@ typedef struct CONNECTION_DATA_TAG
 	CONNECTION_STATE connection_state;
 	FRAME_CODEC_HANDLE frame_codec;
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
+	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
+	AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback;
+	void* frame_received_callback_context;
 	uint32_t max_frame_size;
 	uint16_t channel_max;
 	milliseconds idle_timeout;
@@ -286,7 +290,7 @@ static int connection_frame_received(void* context, uint16_t channel, AMQP_VALUE
 }
 
 /* Codes_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
-CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIONS* options, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context)
+CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIONS* options, AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_paylaod_bytes_received_callback, void* context)
 {
 	CONNECTION_INSTANCE* result;
 
@@ -466,52 +470,34 @@ int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connect
 AMQP_FRAME_CODEC_HANDLE connection_get_amqp_frame_codec(CONNECTION_HANDLE connection)
 {
 	AMQP_FRAME_CODEC_HANDLE result;
-	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
 
-	if (connection_instance == NULL)
-	{
-		result = NULL;
-	}
-	else
-	{
-		result = connection_instance->amqp_frame_codec;
-	}
-
-	return result;
-}
-
-CHANNEL_ENDPOINT_HANDLE connection_create_channel_endpoint(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK callback, void* context)
-{
-	CHANNEL_ENDPOINT_HANDLE result;
-
-	if ((connection == NULL) ||
-		(callback == NULL))
+	if (connection == NULL)
 	{
 		result = NULL;
 	}
 	else
 	{
 		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-		CHANNEL_ENDPOINT_INSTACE* channel_endpoint = (CHANNEL_ENDPOINT_INSTACE*)malloc(sizeof(CHANNEL_ENDPOINT_INSTACE));
-
-		if (channel_endpoint == NULL)
-		{
-			result = NULL;
-		}
-		else
-		{
-			channel_endpoint->channel_no = 0;
-			channel_endpoint->frame_received_callback = callback;
-			channel_endpoint->frame_received_callback_context = context;
-		}
-
-		result = 0;
+		result = connection_instance->amqp_frame_codec;
 	}
 
 	return result;
 }
 
-int connection_unregister_session(CONNECTION_HANDLE connection, uint16_t channel_no)
+int connection_get_channel_max(CONNECTION_HANDLE connection, uint16_t* channel_max)
 {
-	return 0;
+	int result;
+
+	if (connection == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+		*channel_max = connection_instance->channel_max;
+		result = 0;
+	}
+
+	return result;
 }

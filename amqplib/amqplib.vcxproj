@@ -34,7 +34,6 @@
     <ClInclude Include="..\inc\message.h" />
     <ClInclude Include="..\inc\messaging.h" />
     <ClInclude Include="..\inc\platform.h" />
-    <ClInclude Include="..\inc\session.h" />
     <ClInclude Include="..\inc\session_manager.h" />
     <ClInclude Include="..\inc\socketio.h" />
   </ItemGroup>
@@ -53,7 +52,6 @@
     <ClCompile Include="..\src\message.c" />
     <ClCompile Include="..\src\messaging.c" />
     <ClCompile Include="..\src\platform_win32.c" />
-    <ClCompile Include="..\src\session.c" />
     <ClCompile Include="..\src\session_manager.c" />
     <ClCompile Include="..\src\socketio_win32.c" />
   </ItemGroup>

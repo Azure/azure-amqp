@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "link.h"
-#include "session.h"
+#include "session_manager.h"
 #include "amqpvalue.h"
 #include "amqp_definitions.h"
 #include "amqpalloc.h"
@@ -18,12 +18,15 @@ typedef struct LINK_DATA_TAG
 	delivery_number delivery_id;
 } LINK_DATA;
 
-static void link_frame_received(void* context, uint64_t performative, AMQP_VALUE frame_list_value)
+static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size)
 {
 	LINK_DATA* link = (LINK_DATA*)context;
-	switch (performative)
+	AMQP_VALUE descriptor = amqpvalue_get_descriptor(performative);
+	uint64_t performative_ulong;
+	amqpvalue_get_ulong(descriptor, &performative_ulong);
+	switch (performative_ulong)
 	{
-	case 0x12:
+	case AMQP_ATTACH:
 		if (link->link_state == LINK_STATE_HALF_ATTACHED)
 		{
 			link->link_state = LINK_STATE_ATTACHED;
@@ -182,7 +185,7 @@ void link_dowork(LINK_HANDLE handle)
 	LINK_DATA* link = (LINK_DATA*)handle;
 	SESSION_STATE session_state;
 
-	if (session_get_state(link->session, &session_state) == 0)
+	if (session_get_endpoint_state(link->session, &session_state) == 0)
 	{
 		if (session_state == SESSION_STATE_MAPPED)
 		{

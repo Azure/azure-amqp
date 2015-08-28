@@ -50,7 +50,7 @@ void messaging_destroy(MESSAGING_HANDLE handle)
 		MESSAGING_DATA* messaging = (MESSAGING_DATA*)handle;
 		list_destroy(messaging->connections);
 		link_destroy(messaging->link);
-		session_destroy(messaging->session);
+		session_manager_destroy_endpoint(messaging->session);
 		connection_destroy(messaging->connection);
 		amqpalloc_free(messaging->outgoing_messages);
 		amqpalloc_free(handle);
@@ -157,7 +157,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 		{
 			if (messaging->session == NULL)
 			{
-				messaging->session = session_create(messaging->session_manager);
+				messaging->session = session_manager_create_endpoint(messaging->session_manager, NULL, NULL, NULL);
 				if (messaging->session == NULL)
 				{
 					result = __LINE__;
@@ -243,7 +243,6 @@ void messaging_dowork(MESSAGING_HANDLE handle)
 			}
 
 			connection_dowork(messaging->connection);
-			session_dowork(messaging->session);
 			link_dowork(messaging->link);
 		}
 	}

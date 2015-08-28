@@ -1,7 +1,7 @@
 #ifndef LINK_H
 #define LINK_H
 
-#include "session.h"
+#include "session_manager.h"
 
 #ifdef __cplusplus
 extern "C" {

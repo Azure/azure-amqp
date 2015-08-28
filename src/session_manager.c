@@ -2,42 +2,44 @@
 #include "amqpalloc.h"
 #include "connection.h"
 
-typedef struct SESSION_ENDPOINT_INSTANCE_TAG
+typedef struct SESSION_INSTANCE_TAG
 {
 	uint16_t outgoing_channel;
 	uint16_t incoming_channel;
 	SESSION_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback;
 	SESSION_ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback;
 	void* frame_received_callback_context;
-} SESSION_ENDPOINT_INSTANCE;
+	SESSION_STATE session_state;
+	SESSION_MANAGER_HANDLE session_manager;
+} SESSION_INSTANCE;
 
 typedef struct SESSION_MANAGER_INSTANCE_TAG
 {
 	CONNECTION_HANDLE connection;
-	SESSION_ENDPOINT_INSTANCE* session_endpoints;
-	uint32_t session_endpoint_count;
+	SESSION_INSTANCE* sessions;
+	uint32_t session_count;
 } SESSION_MANAGER_INSTANCE;
 
-static SESSION_ENDPOINT_INSTANCE* find_session_endpoint_by_outgoing_channel(SESSION_MANAGER_INSTANCE* session_manager, uint16_t outgoing_channel)
+static SESSION_INSTANCE* find_session_by_outgoing_channel(SESSION_MANAGER_INSTANCE* session_manager, uint16_t outgoing_channel)
 {
 	uint32_t i;
-	SESSION_ENDPOINT_INSTANCE* result;
+	SESSION_INSTANCE* result;
 
-	for (i = 0; i < session_manager->session_endpoint_count; i++)
+	for (i = 0; i < session_manager->session_count; i++)
 	{
-		if (session_manager->session_endpoints[i].outgoing_channel == outgoing_channel)
+		if (session_manager->sessions[i].outgoing_channel == outgoing_channel)
 		{
 			break;
 		}
 	}
 
-	if (i == session_manager->session_endpoint_count)
+	if (i == session_manager->session_count)
 	{
 		result = NULL;
 	}
 	else
 	{
-		result = &session_manager->session_endpoints[i];
+		result = &session_manager->sessions[i];
 	}
 
 	return result;
@@ -57,14 +59,23 @@ static void frame_received(void* context, uint16_t channel, AMQP_VALUE performat
 
 	case AMQP_BEGIN:
 	{
-		SESSION_ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_outgoing_channel(session_manager_instance, 0);
-		if (session_endpoint == NULL)
+		SESSION_INSTANCE* session = find_session_by_outgoing_channel(session_manager_instance, 0);
+		if (session == NULL)
 		{
 			/* error */
 		}
 		else
 		{
-			session_endpoint->incoming_channel = channel;
+			switch (session->session_state)
+			{
+			default:
+				break;
+
+			case SESSION_STATE_BEGIN_SENT:
+				session->session_state = SESSION_STATE_MAPPED;
+				session->incoming_channel = channel;
+				break;
+			}
 		}
 
 		break;
@@ -76,13 +87,47 @@ static void frame_payload_bytes_received(void* context, const unsigned char* pay
 {
 }
 
+static int send_begin(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
+{
+	int result;
+	BEGIN_HANDLE begin = begin_create(next_outgoing_id, incoming_window, outgoing_window);
+
+	if (begin == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE begin_performative_value = amqpvalue_create_begin(begin);
+		if (begin_performative_value == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			if (amqp_frame_codec_begin_encode_frame(amqp_frame_codec, 0, begin_performative_value, 0) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+
+			amqpvalue_destroy(begin_performative_value);
+		}
+	}
+
+	return result;
+}
+
 SESSION_MANAGER_HANDLE session_manager_create(const char* host, int port, CONNECTION_OPTIONS* options)
 {
 	SESSION_MANAGER_INSTANCE* result = amqpalloc_malloc(sizeof(SESSION_MANAGER_INSTANCE));
 	if (result != NULL)
 	{
-		result->session_endpoints = NULL;
-		result->session_endpoint_count = 0;
+		result->sessions = NULL;
+		result->session_count = 0;
 
 		result->connection = connection_create(host, port, options, frame_received, frame_payload_bytes_received, result);
 		if (result->connection == NULL)
@@ -105,9 +150,9 @@ void session_manager_destroy(SESSION_MANAGER_HANDLE session_manager)
 	}
 }
 
-SESSION_ENDPOINT_HANDLE session_manager_create_endpoint(SESSION_MANAGER_HANDLE session_manager, SESSION_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, SESSION_ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context)
+SESSION_HANDLE session_manager_create_endpoint(SESSION_MANAGER_HANDLE session_manager, SESSION_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, SESSION_ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context)
 {
-	SESSION_ENDPOINT_INSTANCE* result;
+	SESSION_INSTANCE* result;
 
 	if (session_manager == NULL)
 	{
@@ -131,13 +176,15 @@ SESSION_ENDPOINT_HANDLE session_manager_create_endpoint(SESSION_MANAGER_HANDLE s
 				channel_no++;
 			}
 
-			result = amqpalloc_malloc(sizeof(SESSION_ENDPOINT_INSTANCE));
+			result = amqpalloc_malloc(sizeof(SESSION_INSTANCE));
 			if (result != NULL)
 			{
 				result->frame_received_callback = frame_received_callback;
 				result->frame_payload_bytes_received_callback = frame_payload_bytes_received_callback;
 				result->frame_received_callback_context = context;
 				result->outgoing_channel = channel_no;
+				result->session_state = SESSION_STATE_UNMAPPED;
+				result->session_manager = session_manager;
 			}
 		}
 	}
@@ -145,12 +192,12 @@ SESSION_ENDPOINT_HANDLE session_manager_create_endpoint(SESSION_MANAGER_HANDLE s
 	return result;
 }
 
-void session_manager_destroy_endpoint(SESSION_ENDPOINT_HANDLE session_endpoint)
+void session_manager_destroy_endpoint(SESSION_HANDLE session)
 {
-	if (session_endpoint != NULL)
+	if (session != NULL)
 	{
-		SESSION_ENDPOINT_INSTANCE* session_endpoint_instance = (SESSION_ENDPOINT_INSTANCE*)session_endpoint;
-		amqpalloc_free(session_endpoint_instance);
+		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
+		amqpalloc_free(session_instance);
 	}
 }
 
@@ -183,6 +230,98 @@ CONNECTION_HANDLE session_manager_get_connection(SESSION_MANAGER_HANDLE session_
 	{
 		SESSION_MANAGER_INSTANCE* session_manager_instance = (SESSION_MANAGER_INSTANCE*)session_manager;
 		result = session_manager_instance->connection;
+	}
+
+	return result;
+}
+
+int session_get_endpoint_state(SESSION_HANDLE session, SESSION_STATE* session_state)
+{
+	int result;
+
+	if ((session == NULL) ||
+		(session_state == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
+		*session_state = session_instance->session_state;
+		result = 0;
+	}
+
+	return result;
+}
+
+void session_manager_dowork(SESSION_MANAGER_HANDLE session_manager)
+{
+	SESSION_MANAGER_INSTANCE* session_manager_instance = (SESSION_MANAGER_INSTANCE*)session_manager;
+	uint32_t i;
+	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = session_manager_get_amqp_frame_codec(session_manager);
+
+	for (i = 0; i < session_manager_instance->session_count; i++)
+	{
+		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)&session_manager_instance->sessions[i];
+		switch (session_instance->session_state)
+		{
+		default:
+			break;
+
+		case SESSION_STATE_BEGIN_SENT:
+		case SESSION_STATE_MAPPED:
+			break;
+
+		case SESSION_STATE_UNMAPPED:
+		{
+			CONNECTION_STATE connection_state;
+			if (connection_get_state(session_manager_instance->connection, &connection_state) == 0)
+			{
+				if (connection_state == CONNECTION_STATE_OPENED)
+				{
+					if (send_begin(amqp_frame_codec, 0, 1, 1) == 0)
+					{
+						session_instance->session_state = SESSION_STATE_BEGIN_SENT;
+					}
+				}
+			}
+			break;
+		}
+		}
+	}
+}
+
+AMQP_FRAME_CODEC_HANDLE session_get_amqp_frame_codec(SESSION_HANDLE session)
+{
+	AMQP_FRAME_CODEC_HANDLE result;
+
+	if (session == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
+		result = session_manager_get_amqp_frame_codec(session_instance->session_manager);
+	}
+
+	return result;
+}
+
+int session_set_frame_received_callback(SESSION_HANDLE session, SESSION_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context)
+{
+	int result;
+
+	if (session == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
+		session_instance->frame_received_callback = frame_received_callback;
+		session_instance->frame_received_callback_context = context;
+		result = 0;
 	}
 
 	return result;

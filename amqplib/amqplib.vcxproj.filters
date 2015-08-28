@@ -36,9 +36,6 @@
     <ClInclude Include="..\inc\amqpvalue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\inc\session.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\inc\connection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -87,9 +84,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\amqpvalue.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\session.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\connection.c">

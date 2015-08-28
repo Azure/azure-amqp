@@ -21,6 +21,7 @@ extern "C" {
 	extern SESSION_ENDPOINT_HANDLE session_manager_create_endpoint(SESSION_MANAGER_HANDLE session_manager, SESSION_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, SESSION_ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context);
 	extern void session_manager_destroy_endpoint(SESSION_ENDPOINT_HANDLE session_endpoint);
 	extern AMQP_FRAME_CODEC_HANDLE session_manager_get_amqp_frame_codec(SESSION_MANAGER_HANDLE session_manager);
+	extern CONNECTION_HANDLE session_manager_get_connection(SESSION_MANAGER_HANDLE session_manager);
 
 #ifdef __cplusplus
 }

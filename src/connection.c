@@ -74,6 +74,7 @@ static int send_header(CONNECTION_INSTANCE* connection_instance)
 static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 {
 	int result;
+	connection_instance->open_performative = open_create("1");
 	AMQP_VALUE open_performative_value = amqpvalue_create_open(connection_instance->open_performative);
 
 	if (open_performative_value == NULL)

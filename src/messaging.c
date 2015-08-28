@@ -145,6 +145,8 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 
 			/* create connection */
 			messaging->session_manager = session_manager_create(to, 5672, &connection_options);
+			connection = session_manager_get_connection(messaging->session_manager);
+			messaging->connection = connection;
 		}
 
 		if (connection == NULL)
@@ -155,7 +157,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 		{
 			if (messaging->session == NULL)
 			{
-				messaging->session = session_create(connection);
+				messaging->session = session_create(messaging->session_manager);
 				if (messaging->session == NULL)
 				{
 					result = __LINE__;

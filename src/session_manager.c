@@ -170,3 +170,20 @@ AMQP_FRAME_CODEC_HANDLE session_manager_get_amqp_frame_codec(SESSION_MANAGER_HAN
 
 	return result;
 }
+
+CONNECTION_HANDLE session_manager_get_connection(SESSION_MANAGER_HANDLE session_manager)
+{
+	CONNECTION_HANDLE result;
+
+	if (session_manager == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		SESSION_MANAGER_INSTANCE* session_manager_instance = (SESSION_MANAGER_INSTANCE*)session_manager;
+		result = session_manager_instance->connection;
+	}
+
+	return result;
+}

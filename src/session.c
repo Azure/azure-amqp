@@ -14,7 +14,7 @@ typedef struct SESSION_DATA_TAG
 	SESSION_MANAGER_HANDLE session_manager;
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
 	SESSION_STATE session_state;
-	uint16_t channel_no;
+	SESSION_ENDPOINT_HANDLE session_endpoint;
 	SESSION_FRAME_RECEIVED_CALLBACK frame_received_callback;
 	void* frame_received_callback_context;
 } SESSION_DATA;
@@ -124,7 +124,8 @@ SESSION_HANDLE session_create(SESSION_MANAGER_HANDLE session_manager)
 			}
 			else
 			{
-				if (session_manager_create_endpoint(result->session_manager, frame_received, frame_payload_bytes_received, result) != 0)
+				result->session_endpoint = session_manager_create_endpoint(result->session_manager, frame_received, frame_payload_bytes_received, result);
+				if (result->session_endpoint == NULL)
 				{
 					amqpalloc_free(result);
 					result = NULL;

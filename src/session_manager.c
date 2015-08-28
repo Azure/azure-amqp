@@ -176,16 +176,18 @@ SESSION_HANDLE session_manager_create_endpoint(SESSION_MANAGER_HANDLE session_ma
 				channel_no++;
 			}
 
-			result = amqpalloc_malloc(sizeof(SESSION_INSTANCE));
-			if (result != NULL)
-			{
-				result->frame_received_callback = frame_received_callback;
-				result->frame_payload_bytes_received_callback = frame_payload_bytes_received_callback;
-				result->frame_received_callback_context = context;
-				result->outgoing_channel = channel_no;
-				result->session_state = SESSION_STATE_UNMAPPED;
-				result->session_manager = session_manager;
-			}
+			session_manager_instance->sessions = amqpalloc_realloc(session_manager_instance->sessions, sizeof(SESSION_INSTANCE) * (session_manager_instance->session_count + 1));
+
+			session_manager_instance->sessions[session_manager_instance->session_count].frame_received_callback = frame_received_callback;
+			session_manager_instance->sessions[session_manager_instance->session_count].frame_payload_bytes_received_callback = frame_payload_bytes_received_callback;
+			session_manager_instance->sessions[session_manager_instance->session_count].frame_received_callback_context = context;
+			session_manager_instance->sessions[session_manager_instance->session_count].outgoing_channel = channel_no;
+			session_manager_instance->sessions[session_manager_instance->session_count].session_state = SESSION_STATE_UNMAPPED;
+			session_manager_instance->sessions[session_manager_instance->session_count].session_manager = session_manager;
+
+			result = &session_manager_instance->sessions[session_manager_instance->session_count];
+
+			session_manager_instance->session_count++;
 		}
 	}
 

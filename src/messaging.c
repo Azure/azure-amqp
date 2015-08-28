@@ -243,6 +243,7 @@ void messaging_dowork(MESSAGING_HANDLE handle)
 			}
 
 			connection_dowork(messaging->connection);
+			session_manager_dowork(messaging->session_manager);
 			link_dowork(messaging->link);
 		}
 	}

@@ -353,7 +353,8 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 						else
 						{
 							result->open_performative = NULL;
-							result->frame_received_callback = NULL;
+							result->frame_received_callback = frame_received_callback;
+							result->frame_received_callback_context = context;
 
 							if ((options != NULL) &&
 								(options->use_options & CONNECTION_OPTION_MAX_FRAME_SIZE))

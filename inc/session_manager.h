@@ -29,6 +29,7 @@ extern "C" {
 
 	extern SESSION_MANAGER_HANDLE session_manager_create(const char* host, int port, CONNECTION_OPTIONS* options);
 	extern void session_manager_destroy(SESSION_MANAGER_HANDLE session_manager);
+	extern void session_manager_dowork(SESSION_MANAGER_HANDLE session_manager);
 	extern SESSION_HANDLE session_manager_create_endpoint(SESSION_MANAGER_HANDLE session_manager, SESSION_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, SESSION_ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context);
 	extern void session_manager_destroy_endpoint(SESSION_HANDLE session);
 	extern int session_get_endpoint_state(SESSION_HANDLE session, SESSION_STATE* session_state);

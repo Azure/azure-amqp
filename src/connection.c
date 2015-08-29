@@ -41,6 +41,7 @@ typedef struct CONNECTION_DATA_TAG
 	uint32_t endpoint_count;
 	uint16_t frame_receive_channel;
 
+	/* options */
 	uint32_t max_frame_size;
 	uint16_t channel_max;
 	milliseconds idle_timeout;

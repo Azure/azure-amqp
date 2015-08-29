@@ -552,23 +552,6 @@ int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connect
 	return result;
 }
 
-AMQP_FRAME_CODEC_HANDLE connection_get_amqp_frame_codec(CONNECTION_HANDLE connection)
-{
-	AMQP_FRAME_CODEC_HANDLE result;
-
-	if (connection == NULL)
-	{
-		result = NULL;
-	}
-	else
-	{
-		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-		result = connection_instance->amqp_frame_codec;
-	}
-
-	return result;
-}
-
 ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context)
 {
 	ENDPOINT_INSTANCE* result;
@@ -594,6 +577,7 @@ ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOIN
 		connection_instance->endpoints[connection_instance->endpoint_count].frame_payload_bytes_received_callback = frame_payload_bytes_received_callback;
 		connection_instance->endpoints[connection_instance->endpoint_count].frame_received_callback_context = context;
 		connection_instance->endpoints[connection_instance->endpoint_count].outgoing_channel = channel_no;
+		connection_instance->endpoints[connection_instance->endpoint_count].connection = connection;
 
 		result = &connection_instance->endpoints[connection_instance->endpoint_count];
 

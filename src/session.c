@@ -12,7 +12,7 @@ typedef struct SESSION_INSTANCE_TAG
 	ENDPOINT_HANDLE endpoint;
 } SESSION_INSTANCE;
 
-static int send_begin(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
+static int send_begin(ENDPOINT_HANDLE endpoint, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
 {
 	int result;
 	BEGIN_HANDLE begin = begin_create(next_outgoing_id, incoming_window, outgoing_window);
@@ -30,7 +30,7 @@ static int send_begin(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec, transfer_number 
 		}
 		else
 		{
-			if (amqp_frame_codec_begin_encode_frame(amqp_frame_codec, 0, begin_performative_value, 0) != 0)
+			if (connection_begin_encode_frame(endpoint, begin_performative_value, 0) != 0)
 			{
 				result = __LINE__;
 			}
@@ -93,23 +93,6 @@ void session_destroy(SESSION_HANDLE session)
 	}
 }
 
-AMQP_FRAME_CODEC_HANDLE session_get_amqp_frame_codec(SESSION_HANDLE session)
-{
-	AMQP_FRAME_CODEC_HANDLE result;
-
-	if (session == NULL)
-	{
-		result = NULL;
-	}
-	else
-	{
-		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
-		result = connection_get_amqp_frame_codec(session_instance->connection);
-	}
-
-	return result;
-}
-
 int session_set_frame_received_callback(SESSION_HANDLE session, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context)
 {
 	int result;
@@ -149,9 +132,7 @@ void session_dowork(SESSION_HANDLE session)
 		{
 			if (connection_state == CONNECTION_STATE_OPENED)
 			{
-				AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = connection_get_amqp_frame_codec(session_instance->connection);
-				if ((amqp_frame_codec != NULL) &&
-					(send_begin(amqp_frame_codec, 0, 1, 1) == 0))
+				if (send_begin(session_instance->endpoint, 0, 1, 1) == 0)
 				{
 					session_instance->session_state = SESSION_STATE_BEGIN_SENT;
 				}
@@ -176,6 +157,56 @@ int session_get_state(SESSION_HANDLE session, SESSION_STATE* session_state)
 		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
 		*session_state = session_instance->session_state;
 		result = 0;
+	}
+
+	return result;
+}
+
+int session_begin_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performative, uint32_t payload_size)
+{
+	int result;
+
+	if (session == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
+
+		if (connection_begin_encode_frame(session_instance->endpoint, performative, payload_size) != 0)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+int session_encode_payload_bytes(SESSION_HANDLE session, const unsigned char* bytes, uint32_t count)
+{
+	int result;
+
+	if (session == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
+
+		if (session_encode_payload_bytes(session_instance->endpoint, bytes, count) != 0)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
 	}
 
 	return result;

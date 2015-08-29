@@ -34,8 +34,10 @@
     <ClInclude Include="..\inc\message.h" />
     <ClInclude Include="..\inc\messaging.h" />
     <ClInclude Include="..\inc\platform.h" />
+    <ClInclude Include="..\inc\session.h" />
     <ClInclude Include="..\inc\session_manager.h" />
     <ClInclude Include="..\inc\socketio.h" />
+    <ClInclude Include="..\src\session.c" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\amqplib.c" />

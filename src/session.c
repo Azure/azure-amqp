@@ -4,14 +4,12 @@
 
 typedef struct SESSION_INSTANCE_TAG
 {
-	uint16_t outgoing_channel;
-	uint16_t incoming_channel;
-	SESSION_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback;
-	SESSION_ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback;
+	ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback;
+	ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback;
 	void* frame_received_callback_context;
 	SESSION_STATE session_state;
 	CONNECTION_HANDLE connection;
-	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
+	ENDPOINT_HANDLE endpoint;
 } SESSION_INSTANCE;
 
 static int send_begin(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
@@ -48,6 +46,32 @@ static int send_begin(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec, transfer_number 
 	return result;
 }
 
+static void session_frame_received(void* context, AMQP_VALUE performative, uint32_t payload_size)
+{
+	SESSION_INSTANCE* session = (SESSION_INSTANCE*)context;
+	AMQP_VALUE descriptor = amqpvalue_get_descriptor(performative);
+	uint64_t performative_ulong;
+
+	amqpvalue_get_ulong(descriptor, &performative_ulong);
+	switch (performative_ulong)
+	{
+	default:
+		break;
+
+	case AMQP_ATTACH:
+	case AMQP_FLOW:
+	case AMQP_TRANSFER:
+	case AMQP_DISPOSITION:
+	case AMQP_DETACH:
+		break;
+	}
+}
+
+static void session_frame_payload_bytes_received(void* context, const unsigned char* payload_bytes, uint32_t byte_count)
+{
+	SESSION_INSTANCE* session = (SESSION_INSTANCE*)context;
+}
+
 SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 {
 	SESSION_INSTANCE* result = amqpalloc_malloc(sizeof(SESSION_INSTANCE));
@@ -55,6 +79,7 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 	{
 		result->connection = connection;
 		result->session_state = SESSION_STATE_UNMAPPED;
+		result->endpoint = connection_create_endpoint(connection, session_frame_received, session_frame_payload_bytes_received, result);
 	}
 
 	return result;
@@ -85,7 +110,7 @@ AMQP_FRAME_CODEC_HANDLE session_get_amqp_frame_codec(SESSION_HANDLE session)
 	return result;
 }
 
-int session_set_frame_received_callback(SESSION_HANDLE session, SESSION_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context)
+int session_set_frame_received_callback(SESSION_HANDLE session, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context)
 {
 	int result;
 
@@ -102,13 +127,6 @@ int session_set_frame_received_callback(SESSION_HANDLE session, SESSION_ENDPOINT
 	}
 
 	return result;
-}
-
-int session_get_outgoing_channel(SESSION_HANDLE session, uint16_t* outgoing_channel)
-{
-	SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
-	*outgoing_channel = session_instance->outgoing_channel;
-	return 0;
 }
 
 void session_dowork(SESSION_HANDLE session)

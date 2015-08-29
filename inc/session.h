@@ -23,15 +23,11 @@ extern "C" {
 		SESSION_STATE_DISCARDING
 	} SESSION_STATE;
 
-	typedef void(*SESSION_ENDPOINT_FRAME_RECEIVED_CALLBACK)(void* context, AMQP_VALUE performative, uint32_t frame_payload_size);
-	typedef void(*SESSION_ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK)(void* context, const unsigned char* payload_bytes, uint32_t byte_count);
-
 	extern SESSION_HANDLE session_create(CONNECTION_HANDLE connection);
 	extern int session_get_state(SESSION_HANDLE session, SESSION_STATE* session_state);
 	extern void session_dowork(SESSION_HANDLE session);
 	extern AMQP_FRAME_CODEC_HANDLE session_get_amqp_frame_codec(SESSION_HANDLE session);
-	extern int session_set_frame_received_callback(SESSION_HANDLE session, SESSION_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context);
-	extern int session_get_outgoing_channel(SESSION_HANDLE session, uint16_t* outgoing_channel);
+	extern int session_set_frame_received_callback(SESSION_HANDLE session, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context);
 
 #ifdef __cplusplus
 }

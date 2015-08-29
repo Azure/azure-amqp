@@ -358,7 +358,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 	}
 }
 
-static void connection_payload_bytes_received(void* context, const unsigned char* payload_bytes, uint32_t byte_count)
+static void connection_frame_payload_bytes_received(void* context, const unsigned char* payload_bytes, uint32_t byte_count)
 {
 	CONNECTION_INSTANCE* connection_instance = context;
 	ENDPOINT_INSTANCE* endpoint_instance = find_session_endpoint_by_incoming_channel(connection_instance, connection_instance->frame_receive_channel);
@@ -423,7 +423,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 					}
 					else
 					{
-						result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, connection_payload_bytes_received, result);
+						result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, connection_frame_payload_bytes_received, result);
 						if (result->amqp_frame_codec == NULL)
 						{
 							/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */
@@ -568,7 +568,7 @@ AMQP_FRAME_CODEC_HANDLE connection_get_amqp_frame_codec(CONNECTION_HANDLE connec
 	return result;
 }
 
-ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context)
+ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context)
 {
 	ENDPOINT_INSTANCE* result;
 

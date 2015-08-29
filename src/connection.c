@@ -257,9 +257,8 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 	return result;
 }
 
-static int connection_receive_callback(void* context, const void* buffer, size_t size)
+static void connection_receive_callback(void* context, const void* buffer, size_t size)
 {
-	int result;
 	size_t i;
 
 	for (i = 0; i < size; i++)
@@ -269,17 +268,6 @@ static int connection_receive_callback(void* context, const void* buffer, size_t
 			break;
 		}
 	}
-
-	if (i < size)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		result = 0;
-	}
-
-	return result;
 }
 
 static void connection_empty_frame_received(void* context, uint16_t channel)

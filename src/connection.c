@@ -23,9 +23,10 @@ typedef struct ENDPOINT_INSTANCE_TAG
 {
 	uint16_t incoming_channel;
 	uint16_t outgoing_channel;
-	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
-	AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback;
+	ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback;
+	ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback;
 	void* frame_received_callback_context;
+	CONNECTION_HANDLE connection;
 } ENDPOINT_INSTANCE;
 
 typedef struct CONNECTION_DATA_TAG
@@ -329,7 +330,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 		else
 		{
 			session_endpoint->incoming_channel = channel;
-			session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, channel, performative, payload_size);
+			session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size);
 		}
 
 		break;
@@ -349,7 +350,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 		}
 		else
 		{
-			session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, channel, performative, payload_size);
+			session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size);
 			connection->frame_receive_channel = channel;
 		}
 
@@ -602,11 +603,65 @@ ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOIN
 	return result;
 }
 
-void connection_destroy_endpoint(ENDPOINT_HANDLE session)
+void connection_destroy_endpoint(ENDPOINT_HANDLE endpoint)
 {
-	if (session != NULL)
+	if (endpoint != NULL)
 	{
-		ENDPOINT_INSTANCE* session_instance = (ENDPOINT_INSTANCE*)session;
-		amqpalloc_free(session_instance);
+		ENDPOINT_INSTANCE* endpoint_instance = (ENDPOINT_INSTANCE*)endpoint;
+		amqpalloc_free(endpoint_instance);
 	}
+}
+
+int connection_begin_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE performative, uint32_t payload_size)
+{
+	int result;
+
+	if (endpoint == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		ENDPOINT_INSTANCE* endpoint_instance = (ENDPOINT_INSTANCE*)endpoint;
+		CONNECTION_INSTANCE* connection = endpoint_instance->connection;
+		AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = connection->amqp_frame_codec;
+
+		if (amqp_frame_codec_begin_encode_frame(amqp_frame_codec, endpoint_instance->outgoing_channel, performative, payload_size) != 0)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+int connection_encode_payload_bytes(ENDPOINT_HANDLE endpoint, const unsigned char* bytes, uint32_t count)
+{
+	int result;
+
+	if (endpoint == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		ENDPOINT_INSTANCE* endpoint_instance = (ENDPOINT_INSTANCE*)endpoint;
+		CONNECTION_INSTANCE* connection = endpoint_instance->connection;
+		AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = connection->amqp_frame_codec;
+
+		if (amqp_frame_codec_encode_payload_bytes(amqp_frame_codec, bytes, count) != 0)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
+	}
+
+	return result;
 }

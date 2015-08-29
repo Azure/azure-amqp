@@ -63,12 +63,6 @@
     <ClInclude Include="..\inc\amqp_definitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\inc\session_manager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\session.c">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\inc\session.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -119,7 +113,7 @@
     <ClCompile Include="..\src\amqp_definitions.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\session_manager.c">
+    <ClCompile Include="..\src\session.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

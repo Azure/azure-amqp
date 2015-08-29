@@ -1,7 +1,9 @@
 #ifndef LINK_H
 #define LINK_H
 
-#include "session_manager.h"
+#include <stddef.h>
+#include "session.h"
+#include "amqpvalue.h"
 
 #ifdef __cplusplus
 extern "C" {

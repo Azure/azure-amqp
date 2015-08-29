@@ -6,7 +6,6 @@
 #include "amqp_definitions.h"
 #include "socketio.h"
 #include "amqpalloc.h"
-#include "session_manager.h"
 
 /* Requirements satisfied by the virtue of implementing the ISO:*/
 /* Codes_SRS_CONNECTION_01_088: [Any data appearing beyond the protocol header MUST match the version indicated by the protocol header.] */
@@ -20,6 +19,15 @@ typedef enum RECEIVE_FRAME_STATE_TAG
 	RECEIVE_FRAME_STATE_FRAME_DATA
 } RECEIVE_FRAME_STATE;
 
+typedef struct ENDPOINT_INSTANCE_TAG
+{
+	uint16_t incoming_channel;
+	uint16_t outgoing_channel;
+	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
+	AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback;
+	void* frame_received_callback_context;
+} ENDPOINT_INSTANCE;
+
 typedef struct CONNECTION_DATA_TAG
 {
 	IO_HANDLE socket_io;
@@ -28,20 +36,14 @@ typedef struct CONNECTION_DATA_TAG
 	CONNECTION_STATE connection_state;
 	FRAME_CODEC_HANDLE frame_codec;
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
-	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
-	AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback;
-	void* frame_received_callback_context;
+	ENDPOINT_INSTANCE* endpoints;
+	uint32_t endpoint_count;
+	uint16_t frame_receive_channel;
+
 	uint32_t max_frame_size;
 	uint16_t channel_max;
 	milliseconds idle_timeout;
 } CONNECTION_INSTANCE;
-
-typedef struct CHANNEL_ENDPOINT_INSTACE_TAG
-{
-	uint16_t channel_no;
-	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
-	void* frame_received_callback_context;
-} CHANNEL_ENDPOINT_INSTACE;
 
 static int send_header(CONNECTION_INSTANCE* connection_instance)
 {
@@ -102,6 +104,56 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 		}
 
 		amqpvalue_destroy(open_performative_value);
+	}
+
+	return result;
+}
+
+static ENDPOINT_INSTANCE* find_session_endpoint_by_outgoing_channel(CONNECTION_INSTANCE* connection, uint16_t outgoing_channel)
+{
+	uint32_t i;
+	ENDPOINT_INSTANCE* result;
+
+	for (i = 0; i < connection->endpoint_count; i++)
+	{
+		if (connection->endpoints[i].outgoing_channel == outgoing_channel)
+		{
+			break;
+		}
+	}
+
+	if (i == connection->endpoint_count)
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = &connection->endpoints[i];
+	}
+
+	return result;
+}
+
+static ENDPOINT_INSTANCE* find_session_endpoint_by_incoming_channel(CONNECTION_INSTANCE* connection, uint16_t incoming_channel)
+{
+	uint32_t i;
+	ENDPOINT_INSTANCE* result;
+
+	for (i = 0; i < connection->endpoint_count; i++)
+	{
+		if (connection->endpoints[i].incoming_channel == incoming_channel)
+		{
+			break;
+		}
+	}
+
+	if (i == connection->endpoint_count)
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = &connection->endpoints[i];
 	}
 
 	return result;
@@ -228,17 +280,11 @@ static int connection_receive_callback(void* context, const void* buffer, size_t
 	return result;
 }
 
-static int connection_empty_frame_received(void* context, uint16_t channel)
+static void connection_empty_frame_received(void* context, uint16_t channel)
 {
-	return 0;
 }
 
-static int connection_payload_bytes_received(void* context, const unsigned char* payload_bytes, uint32_t byte_count)
-{
-	return 0;
-}
-
-static int connection_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t payload_size)
+static void connection_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t payload_size)
 {
 	CONNECTION_INSTANCE* connection = (CONNECTION_INSTANCE*)context;
 	AMQP_VALUE descriptor = amqpvalue_get_descriptor(performative);
@@ -274,24 +320,60 @@ static int connection_frame_received(void* context, uint16_t channel, AMQP_VALUE
 		break;
 
 	case AMQP_BEGIN:
+	{
+		ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_outgoing_channel(connection, 0);
+		if (session_endpoint == NULL)
+		{
+			/* error */
+		}
+		else
+		{
+			session_endpoint->incoming_channel = channel;
+			session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, channel, performative, payload_size);
+		}
+
+		break;
+	}
+
 	case AMQP_ATTACH:
 	case AMQP_FLOW:
 	case AMQP_TRANSFER:
 	case AMQP_DISPOSITION:
 	case AMQP_DETACH:
 	case AMQP_END:
-		if (connection->frame_received_callback != NULL)
+	{
+		ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_incoming_channel(connection, channel);
+		if (session_endpoint == NULL)
 		{
-			connection->frame_received_callback(connection->frame_received_callback_context, 0, performative, 0);
+			/* error */
 		}
+		else
+		{
+			session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, channel, performative, payload_size);
+			connection->frame_receive_channel = channel;
+		}
+
 		break;
 	}
+	}
+}
 
-	return 0;
+static void connection_payload_bytes_received(void* context, const unsigned char* payload_bytes, uint32_t byte_count)
+{
+	CONNECTION_INSTANCE* connection_instance = context;
+	ENDPOINT_INSTANCE* endpoint_instance = find_session_endpoint_by_incoming_channel(connection_instance, connection_instance->frame_receive_channel);
+	if (endpoint_instance == NULL)
+	{
+		/* error */
+	}
+	else
+	{
+		endpoint_instance->frame_payload_bytes_received_callback(context, payload_bytes, byte_count);
+	}
 }
 
 /* Codes_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
-CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIONS* options, AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_paylaod_bytes_received_callback, void* context)
+CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIONS* options)
 {
 	CONNECTION_INSTANCE* result;
 
@@ -353,8 +435,6 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 						else
 						{
 							result->open_performative = NULL;
-							result->frame_received_callback = frame_received_callback;
-							result->frame_received_callback_context = context;
 
 							if ((options != NULL) &&
 								(options->use_options & CONNECTION_OPTION_MAX_FRAME_SIZE))
@@ -377,6 +457,8 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 							/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
 							result->connection_state = CONNECTION_STATE_START;
 							result->header_bytes_received = 0;
+							result->endpoint_count = 0;
+							result->endpoints = NULL;
 						}
 					}
 				}
@@ -486,20 +568,45 @@ AMQP_FRAME_CODEC_HANDLE connection_get_amqp_frame_codec(CONNECTION_HANDLE connec
 	return result;
 }
 
-int connection_get_channel_max(CONNECTION_HANDLE connection, uint16_t* channel_max)
+ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context)
 {
-	int result;
+	ENDPOINT_INSTANCE* result;
 
 	if (connection == NULL)
 	{
-		result = __LINE__;
+		result = NULL;
 	}
 	else
 	{
 		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-		*channel_max = connection_instance->channel_max;
-		result = 0;
+		uint16_t channel_no = 0;
+
+		while (channel_no < connection_instance->channel_max)
+		{
+			break;
+			channel_no++;
+		}
+
+		connection_instance->endpoints = amqpalloc_realloc(connection_instance->endpoints, sizeof(ENDPOINT_INSTANCE) * (connection_instance->endpoint_count + 1));
+
+		connection_instance->endpoints[connection_instance->endpoint_count].frame_received_callback = frame_received_callback;
+		connection_instance->endpoints[connection_instance->endpoint_count].frame_payload_bytes_received_callback = frame_payload_bytes_received_callback;
+		connection_instance->endpoints[connection_instance->endpoint_count].frame_received_callback_context = context;
+		connection_instance->endpoints[connection_instance->endpoint_count].outgoing_channel = channel_no;
+
+		result = &connection_instance->endpoints[connection_instance->endpoint_count];
+
+		connection_instance->endpoint_count++;
 	}
 
 	return result;
+}
+
+void connection_destroy_endpoint(ENDPOINT_HANDLE session)
+{
+	if (session != NULL)
+	{
+		ENDPOINT_INSTANCE* session_instance = (ENDPOINT_INSTANCE*)session;
+		amqpalloc_free(session_instance);
+	}
 }

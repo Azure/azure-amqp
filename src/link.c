@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "link.h"
-#include "session_manager.h"
+#include "session.h"
 #include "amqpvalue.h"
 #include "amqp_definitions.h"
 #include "amqpalloc.h"
@@ -185,7 +185,7 @@ void link_dowork(LINK_HANDLE handle)
 	LINK_DATA* link = (LINK_DATA*)handle;
 	SESSION_STATE session_state;
 
-	if (session_get_endpoint_state(link->session, &session_state) == 0)
+	if (session_get_state(link->session, &session_state) == 0)
 	{
 		if (session_state == SESSION_STATE_MAPPED)
 		{

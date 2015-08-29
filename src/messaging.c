@@ -1,13 +1,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "messaging.h"
-#include "session_manager.h"
 #include "connection.h"
 #include "message.h"
 #include "amqpvalue.h"
 #include "link.h"
 #include "list.h"
 #include "amqpalloc.h"
+#include "session.h"
 
 typedef struct MESSAGE_WITH_CALLBACK_TAG
 {
@@ -20,7 +20,6 @@ typedef struct MESSAGING_DATA_TAG
 {
 	LIST_HANDLE connections;
 	CONNECTION_HANDLE connection;
-	SESSION_MANAGER_HANDLE session_manager;
 	SESSION_HANDLE session;
 	LINK_HANDLE link;
 	MESSAGE_WITH_CALLBACK* outgoing_messages;
@@ -50,7 +49,6 @@ void messaging_destroy(MESSAGING_HANDLE handle)
 		MESSAGING_DATA* messaging = (MESSAGING_DATA*)handle;
 		list_destroy(messaging->connections);
 		link_destroy(messaging->link);
-		session_manager_destroy_endpoint(messaging->session);
 		connection_destroy(messaging->connection);
 		amqpalloc_free(messaging->outgoing_messages);
 		amqpalloc_free(handle);
@@ -144,8 +142,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 			CONNECTION_OPTIONS connection_options = { 0 };
 
 			/* create connection */
-			messaging->session_manager = session_manager_create(to, 5672, &connection_options);
-			connection = session_manager_get_connection(messaging->session_manager);
+			connection = connection_create(to, 5672, &connection_options);
 			messaging->connection = connection;
 		}
 
@@ -157,7 +154,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 		{
 			if (messaging->session == NULL)
 			{
-				messaging->session = session_manager_create_endpoint(messaging->session_manager, NULL, NULL, NULL);
+				messaging->session = session_create(messaging->connection);
 				if (messaging->session == NULL)
 				{
 					result = __LINE__;
@@ -243,7 +240,7 @@ void messaging_dowork(MESSAGING_HANDLE handle)
 			}
 
 			connection_dowork(messaging->connection);
-			session_manager_dowork(messaging->session_manager);
+			session_dowork(messaging->session);
 			link_dowork(messaging->link);
 		}
 	}

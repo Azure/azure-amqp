@@ -72,6 +72,8 @@ public:
 	/* amqpalloc mocks */
 	MOCK_STATIC_METHOD_1(, void*, amqpalloc_malloc, size_t, size)
 	MOCK_METHOD_END(void*, malloc(size));
+	MOCK_STATIC_METHOD_2(, void*, amqpalloc_realloc, void*, ptr, size_t, size)
+	MOCK_METHOD_END(void*, realloc(ptr, size));
 	MOCK_STATIC_METHOD_1(, void, amqpalloc_free, void*, ptr)
 		free(ptr);
 	MOCK_VOID_METHOD_END();
@@ -119,6 +121,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_0(connection_mocks, , const IO_INTERFACE_DESCRIPTION*, socketio_get_interface_description);
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void*, amqpalloc_malloc, size_t, size);
+	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , void*, amqpalloc_realloc, void*, ptr, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, amqpalloc_free, void*, ptr);
 
 	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, LOGGER_LOG, logger_log);
@@ -202,7 +205,7 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 		.ValidateArgument(1);
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options, test_frame_received_callback, test_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
 
 	// assert
 	ASSERT_IS_NOT_NULL(connection);
@@ -223,7 +226,7 @@ TEST_METHOD(when_allocating_memory_fails_then_connection_create_fails)
 		.SetReturn((void*)NULL);
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options, test_frame_received_callback, test_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -243,7 +246,7 @@ TEST_METHOD(when_get_socketio_interface_description_fails_then_connection_create
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options, test_frame_received_callback, test_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -265,7 +268,7 @@ TEST_METHOD(when_io_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options, test_frame_received_callback, test_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -290,7 +293,7 @@ TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options, test_frame_received_callback, test_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -318,7 +321,7 @@ TEST_METHOD(when_amqp_frame_codec_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options, test_frame_received_callback, test_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -332,7 +335,7 @@ TEST_METHOD(connection_create_with_NULL_host_fails)
 	CONNECTION_OPTIONS connection_options = { 0 };
 
 	// act
-	CONNECTION_HANDLE connection = connection_create(NULL, 5672, &connection_options, test_frame_received_callback, test_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	CONNECTION_HANDLE connection = connection_create(NULL, 5672, &connection_options);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -357,7 +360,7 @@ TEST_METHOD(connection_create_with_NULL_options_succeeds)
 		.ValidateArgument(1);
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, NULL, test_frame_received_callback, test_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, NULL);
 
 	// assert
 	ASSERT_IS_NOT_NULL(connection);
@@ -374,7 +377,7 @@ TEST_METHOD(connection_destroy_frees_resources)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, NULL, test_frame_received_callback, test_frame_payload_bytes_received_callback, TEST_CONTEXT);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, NULL);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_destroy(TEST_AMQP_FRAME_CODEC_HANDLE));

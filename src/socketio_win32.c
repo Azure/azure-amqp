@@ -20,7 +20,8 @@ static const IO_INTERFACE_DESCRIPTION socket_io_interface_description =
 	socketio_create,
 	socketio_destroy,
 	socketio_send,
-	socketio_dowork
+	socketio_dowork,
+	socketio_get_state
 };
 
 IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log)
@@ -84,22 +85,22 @@ IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receiv
 	return result;
 }
 
-void socketio_destroy(IO_HANDLE handle)
+void socketio_destroy(IO_HANDLE socket_io)
 {
-	if (handle != NULL)
+	if (socket_io != NULL)
 	{
-		SOCKET_IO_DATA* socket_io_data = (SOCKET_IO_DATA*)handle;
+		SOCKET_IO_DATA* socket_io_data = (SOCKET_IO_DATA*)socket_io;
 		/* we cannot do much if the close fails, so just ignore the result */
 		(void)closesocket(socket_io_data->socket);
-		amqpalloc_free(handle);
+		amqpalloc_free(socket_io);
 	}
 }
 
-int socketio_send(IO_HANDLE handle, const void* buffer, size_t size)
+int socketio_send(IO_HANDLE socket_io, const void* buffer, size_t size)
 {
 	int result;
 
-	if ((handle == NULL) ||
+	if ((socket_io == NULL) ||
 		(buffer == NULL) ||
 		(size == 0))
 	{
@@ -108,7 +109,7 @@ int socketio_send(IO_HANDLE handle, const void* buffer, size_t size)
 	}
 	else
 	{
-		SOCKET_IO_DATA* socket_io_data = (SOCKET_IO_DATA*)handle;
+		SOCKET_IO_DATA* socket_io_data = (SOCKET_IO_DATA*)socket_io;
 		int send_result = send(socket_io_data->socket, buffer, size, 0);
 		if (send_result != size)
 		{
@@ -129,11 +130,11 @@ int socketio_send(IO_HANDLE handle, const void* buffer, size_t size)
 	return result;
 }
 
-void socketio_dowork(IO_HANDLE handle)
+void socketio_dowork(IO_HANDLE socket_io)
 {
-	if (handle != NULL)
+	if (socket_io != NULL)
 	{
-		SOCKET_IO_DATA* socket_io_data = (SOCKET_IO_DATA*)handle;
+		SOCKET_IO_DATA* socket_io_data = (SOCKET_IO_DATA*)socket_io;
 		unsigned char c;
 		int received = 1;
 
@@ -152,6 +153,22 @@ void socketio_dowork(IO_HANDLE handle)
 			}
 		}
 	}
+}
+
+IO_STATE socketio_get_state(IO_HANDLE socket_io)
+{
+	IO_STATE result;
+
+	if (socket_io == NULL)
+	{
+		result = IO_STATE_ERROR;
+	}
+	else
+	{
+		result = IO_STATE_READY;
+	}
+
+	return result;
 }
 
 const IO_INTERFACE_DESCRIPTION* socketio_get_interface_description(void)

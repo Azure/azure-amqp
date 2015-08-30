@@ -33,7 +33,6 @@ typedef struct ENDPOINT_INSTANCE_TAG
 typedef struct CONNECTION_DATA_TAG
 {
 	IO_HANDLE io;
-	IO_HANDLE socket_io;
 	OPEN_HANDLE open_performative;
 	size_t header_bytes_received;
 	CONNECTION_STATE connection_state;
@@ -401,7 +400,6 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 				{
 					/* Codes_SRS_CONNECTION_01_124: [If getting the io interface information (by calling socketio_get_interface_description) fails, connection_create shall return NULL.] */
 					amqpalloc_free(result);
-					io_destroy(result->socket_io);
 					result = NULL;
 				}
 				else
@@ -412,7 +410,6 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 					{
 						/* Codes_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
 						amqpalloc_free(result);
-						io_destroy(result->socket_io);
 						result = NULL;
 					}
 					else
@@ -422,7 +419,6 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 						if (result->frame_codec == NULL)
 						{
 							/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
-							io_destroy(result->socket_io);
 							io_destroy(result->io);
 							amqpalloc_free(result);
 							result = NULL;
@@ -434,7 +430,6 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 							{
 								/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */
 								frame_codec_destroy(result->frame_codec);
-								io_destroy(result->socket_io);
 								io_destroy(result->io);
 								amqpalloc_free(result);
 								result = NULL;
@@ -489,7 +484,6 @@ void connection_destroy(CONNECTION_HANDLE connection)
 
 		/* Codes_SRS_CONNECTION_01_074: [connection_destroy shall close the socket connection.] */
 		io_destroy(connection_instance->io);
-		io_destroy(connection_instance->socket_io);
 		amqpalloc_free(connection_instance);
 	}
 }

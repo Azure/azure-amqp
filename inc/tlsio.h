@@ -18,9 +18,10 @@ typedef struct TLSIO_CONFIG_TAG
 } TLSIO_CONFIG;
 
 extern IO_HANDLE tlsio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log);
-extern void tlsio_destroy(IO_HANDLE handle);
-extern int tlsio_send(IO_HANDLE handle, const void* buffer, size_t size);
-extern void tlsio_dowork(IO_HANDLE handle);
+extern void tlsio_destroy(IO_HANDLE tls_io);
+extern int tlsio_send(IO_HANDLE tls_io, const void* buffer, size_t size);
+extern void tlsio_dowork(IO_HANDLE tls_io);
+extern IO_STATE tlsio_get_state(IO_HANDLE tls_io);
 extern const IO_INTERFACE_DESCRIPTION* tlsio_get_interface_description(void);
 
 #ifdef __cplusplus

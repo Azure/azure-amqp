@@ -29,7 +29,8 @@ static const IO_INTERFACE_DESCRIPTION sasl_io_interface_description =
 	saslio_create,
 	saslio_destroy,
 	saslio_send,
-	saslio_dowork
+	saslio_dowork,
+	saslio_get_state
 };
 
 const unsigned char sasl_header[] = { 'A', 'M', 'Q', 'P', 3, 1, 0, 0 };
@@ -157,20 +158,20 @@ IO_HANDLE saslio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_
 	return result;
 }
 
-void saslio_destroy(IO_HANDLE handle)
+void saslio_destroy(IO_HANDLE sasl_io)
 {
-	if (handle != NULL)
+	if (sasl_io != NULL)
 	{
-		SASL_IO_DATA* sasl_io_data = (SASL_IO_DATA*)handle;
-		amqpalloc_free(handle);
+		SASL_IO_DATA* sasl_io_data = (SASL_IO_DATA*)sasl_io;
+		amqpalloc_free(sasl_io);
 	}
 }
 
-int saslio_send(IO_HANDLE handle, const void* buffer, size_t size)
+int saslio_send(IO_HANDLE sasl_io, const void* buffer, size_t size)
 {
 	int result;
 
-	if ((handle == NULL) ||
+	if ((sasl_io == NULL) ||
 		(buffer == NULL) ||
 		(size == 0))
 	{
@@ -179,7 +180,7 @@ int saslio_send(IO_HANDLE handle, const void* buffer, size_t size)
 	}
 	else
 	{
-		SASL_IO_DATA* sasl_io_data = (SASL_IO_DATA*)handle;
+		SASL_IO_DATA* sasl_io_data = (SASL_IO_DATA*)sasl_io;
 		result = 0;
 	}
 
@@ -191,6 +192,8 @@ void saslio_dowork(IO_HANDLE sasl_io)
 	if (sasl_io != NULL)
 	{
 		SASL_IO_DATA* sasl_io_instance = (SASL_IO_DATA*)sasl_io;
+		io_dowork(sasl_io_instance->socket_io);
+
 		switch (sasl_io_instance->sasl_io_state)
 		{
 		default:
@@ -208,6 +211,38 @@ void saslio_dowork(IO_HANDLE sasl_io)
 			break;
 		}
 	}
+}
+
+IO_STATE saslio_get_state(IO_HANDLE sasl_io)
+{
+	IO_STATE result;
+
+	if (sasl_io == NULL)
+	{
+		result = IO_STATE_ERROR;
+	}
+	else
+	{
+		SASL_IO_DATA* sasl_io_instance = (SASL_IO_DATA*)sasl_io;
+		switch (sasl_io_instance->sasl_io_state)
+		{
+		default:
+			result = IO_STATE_ERROR;
+			break;
+
+		case SASL_IO_HEADER_EXCH:
+			result = IO_STATE_READY;
+			break;
+
+		case SASL_IO_IDLE:
+		case SASL_IO_HEADER_SENT:
+		case SASL_IO_HEADER_RCVD:
+			result = IO_STATE_NOT_READY;
+			break;
+		}
+	}
+
+	return result;
 }
 
 const IO_INTERFACE_DESCRIPTION* saslio_get_interface_description(void)

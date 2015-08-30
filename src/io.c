@@ -9,7 +9,7 @@ typedef struct IO_DATA_TAG
 	IO_HANDLE concrete_io_handle;
 } IO_DATA;
 
-IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* receive_callback_context, LOGGER_LOG logger_log)
+IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, const void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* receive_callback_context, LOGGER_LOG logger_log)
 {
 	IO_DATA* io_data;
 	/* Codes_SRS_IO_01_003: [If the argument io_interface_description is NULL, io_create shall return NULL.] */
@@ -33,7 +33,7 @@ IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, vo
 			io_data->io_interface_description = io_interface_description;
 
 			/* Codes_SRS_IO_01_002: [In order to instantiate the concrete IO implementation the function concrete_io_create from the io_interface_description shall be called, passing the io_create_parameters, receive_callback, receive_callback_context and logger_log arguments.] */
-			io_data->concrete_io_handle = io_data->io_interface_description->concrete_io_create(io_create_parameters, receive_callback, receive_callback_context, logger_log);
+			io_data->concrete_io_handle = io_data->io_interface_description->concrete_io_create((void*)io_create_parameters, receive_callback, receive_callback_context, logger_log);
 
 			/* Codes_SRS_IO_01_016: [If the underlying concrete_io_create call fails, io_create shall return NULL.] */
 			if (io_data->concrete_io_handle == NULL)

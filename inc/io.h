@@ -28,7 +28,7 @@ extern "C" {
 		IO_DOWORK concrete_io_dowork;
 	} IO_INTERFACE_DESCRIPTION;
 
-	extern IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* receive_callback_context, LOGGER_LOG logger_log);
+	extern IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, const void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* receive_callback_context, LOGGER_LOG logger_log);
 	extern void io_destroy(IO_HANDLE handle);
 	extern int io_send(IO_HANDLE handle, const void* buffer, size_t size);
 	extern void io_dowork(IO_HANDLE handle);

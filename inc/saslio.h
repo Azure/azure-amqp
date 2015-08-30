@@ -13,7 +13,8 @@ extern "C" {
 
 typedef struct SASLIO_CONFIG_TAG
 {
-	IO_HANDLE socket_io;
+	IO_INTERFACE_DESCRIPTION* socket_io_interface;
+	const void* socket_io_parameters;
 } SASLIO_CONFIG;
 
 extern IO_HANDLE saslio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log);

@@ -394,44 +394,46 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 			}
 			else
 			{
-				/* Codes_SRS_CONNECTION_01_067: [connection_create shall call io_create to create its TCP IO interface.] */
-				result->socket_io = io_create(io_interface_description, &socket_io_config, connection_receive_callback, result, consolelogger_log);
-				if (result->socket_io == NULL)
+				SASLIO_CONFIG sasl_io_config = { result->socket_io };
+
+				io_interface_description = saslio_get_interface_description();
+				if (io_interface_description == NULL)
 				{
-					/* Codes_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
+					/* Codes_SRS_CONNECTION_01_124: [If getting the io interface information (by calling socketio_get_interface_description) fails, connection_create shall return NULL.] */
 					amqpalloc_free(result);
+					io_destroy(result->socket_io);
 					result = NULL;
 				}
 				else
 				{
-					SASLIO_CONFIG sasl_io_config = { result->socket_io };
-
-					io_interface_description = saslio_get_interface_description();
-					if (io_interface_description == NULL)
+					/* Codes_SRS_CONNECTION_01_067: [connection_create shall call io_create to create its TCP IO interface.] */
+					result->io = io_create(io_interface_description, &sasl_io_config, connection_receive_callback, result, consolelogger_log);
+					if (result->io == NULL)
 					{
-						/* Codes_SRS_CONNECTION_01_124: [If getting the io interface information (by calling socketio_get_interface_description) fails, connection_create shall return NULL.] */
+						/* Codes_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
 						amqpalloc_free(result);
 						io_destroy(result->socket_io);
 						result = NULL;
 					}
 					else
 					{
-						/* Codes_SRS_CONNECTION_01_067: [connection_create shall call io_create to create its TCP IO interface.] */
-						result->io = io_create(io_interface_description, &sasl_io_config, connection_receive_callback, result, consolelogger_log);
-						if (result->io == NULL)
+						/* Codes_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
+						result->frame_codec = frame_codec_create(result->io, consolelogger_log);
+						if (result->frame_codec == NULL)
 						{
-							/* Codes_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
-							amqpalloc_free(result);
+							/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
 							io_destroy(result->socket_io);
+							io_destroy(result->io);
+							amqpalloc_free(result);
 							result = NULL;
 						}
 						else
 						{
-							/* Codes_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
-							result->frame_codec = frame_codec_create(result->io, consolelogger_log);
-							if (result->frame_codec == NULL)
+							result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, connection_frame_payload_bytes_received, result);
+							if (result->amqp_frame_codec == NULL)
 							{
-								/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
+								/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */
+								frame_codec_destroy(result->frame_codec);
 								io_destroy(result->socket_io);
 								io_destroy(result->io);
 								amqpalloc_free(result);
@@ -439,44 +441,31 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 							}
 							else
 							{
-								result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, connection_frame_payload_bytes_received, result);
-								if (result->amqp_frame_codec == NULL)
+								result->open_performative = NULL;
+
+								if ((options != NULL) &&
+									(options->use_options & CONNECTION_OPTION_MAX_FRAME_SIZE))
 								{
-									/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */
-									frame_codec_destroy(result->frame_codec);
-									io_destroy(result->socket_io);
-									io_destroy(result->io);
-									amqpalloc_free(result);
-									result = NULL;
+									result->max_frame_size = options->max_frame_size;
 								}
-								else
+
+								if ((options != NULL) &&
+									(options->use_options & CONNECTION_OPTION_CHANNEL_MAX))
 								{
-									result->open_performative = NULL;
-
-									if ((options != NULL) &&
-										(options->use_options & CONNECTION_OPTION_MAX_FRAME_SIZE))
-									{
-										result->max_frame_size = options->max_frame_size;
-									}
-
-									if ((options != NULL) &&
-										(options->use_options & CONNECTION_OPTION_CHANNEL_MAX))
-									{
-										result->channel_max = options->channel_max;
-									}
-
-									if ((options != NULL) &&
-										(options->use_options & CONNECTION_OPTION_IDLE_TIMEOUT))
-									{
-										result->idle_timeout = options->idle_timeout;
-									}
-
-									/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
-									result->connection_state = CONNECTION_STATE_START;
-									result->header_bytes_received = 0;
-									result->endpoint_count = 0;
-									result->endpoints = NULL;
+									result->channel_max = options->channel_max;
 								}
+
+								if ((options != NULL) &&
+									(options->use_options & CONNECTION_OPTION_IDLE_TIMEOUT))
+								{
+									result->idle_timeout = options->idle_timeout;
+								}
+
+								/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
+								result->connection_state = CONNECTION_STATE_START;
+								result->header_bytes_received = 0;
+								result->endpoint_count = 0;
+								result->endpoints = NULL;
 							}
 						}
 					}

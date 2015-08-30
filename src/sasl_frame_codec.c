@@ -183,7 +183,52 @@ void sasl_frame_codec_destroy(SASL_FRAME_CODEC_HANDLE sasl_frame_codec)
 
 }
 
-int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, const AMQP_VALUE sasl_frame, uint32_t payload_size)
+int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, const AMQP_VALUE sasl_frame)
 {
-	return 0;
+	int result;
+	uint32_t amqp_frame_payload_size;
+	SASL_FRAME_CODEC_INSTANCE* sasl_frame_codec_instance = (SASL_FRAME_CODEC_INSTANCE*)sasl_frame_codec;
+
+	if ((sasl_frame_codec == NULL) ||
+		(sasl_frame == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE descriptor;
+		uint64_t performative_ulong;
+
+		if (((descriptor = amqpvalue_get_descriptor(sasl_frame)) == NULL) ||
+			(amqpvalue_get_ulong(descriptor, &performative_ulong) != 0) ||
+			(performative_ulong < SASL_MECHANISMS) ||
+			(performative_ulong > SASL_OUTCOME))
+		{
+			result = __LINE__;
+		}
+		else if (amqpvalue_get_encoded_size(sasl_frame, &amqp_frame_payload_size) != 0)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			if (frame_codec_begin_encode_frame(sasl_frame_codec_instance->frame_codec, FRAME_TYPE_SASL, amqp_frame_payload_size, NULL, 0) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (amqpvalue_encode(sasl_frame, frame_codec_encode_frame_bytes, sasl_frame_codec_instance->frame_codec) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+			}
+		}
+	}
+
+	return result;
 }

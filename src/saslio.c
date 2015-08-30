@@ -5,6 +5,7 @@
 #include "amqpalloc.h"
 #include "frame_codec.h"
 #include "sasl_frame_codec.h"
+#include "amqp_definitions.h"
 
 typedef enum SASL_IO_STATE_TAG
 {
@@ -172,6 +173,42 @@ static void saslio_receive_bytes(void* context, const void* buffer, size_t size)
 	}
 }
 
+static int send_sasl_init(SASL_IO_INSTANCE* sasl_io)
+{
+	int result;
+
+	SASL_INIT_HANDLE sasl_init = sasl_init_create("ANONYMOUS");
+	if (sasl_init == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE sasl_init_value = amqpvalue_create_sasl_init(sasl_init);
+		if (sasl_init_value == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			if (sasl_frame_codec_encode_frame(sasl_io->sasl_frame_codec, sasl_init_value) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+
+			amqpvalue_destroy(sasl_init_value);
+		}
+
+		sasl_init_destroy(sasl_init);
+	}
+
+	return result;
+}
+
 static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 {
 	SASL_IO_INSTANCE* sasl_io = (SASL_IO_INSTANCE*)context;
@@ -186,10 +223,28 @@ static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 		break;
 
 	case SASL_MECHANISMS:
+		sasl_io->logger_log("[SASL_MECHANISMS]");
+		switch (sasl_io->sasl_client_negotiation_state)
+		{
+		case SASL_CLIENT_NEGOTIATION_NOT_STARTED:
+			sasl_io->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_MECH_RCVD;
+			if (send_sasl_init(sasl_io) != 0)
+			{
+				sasl_io->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_ERROR;
+			}
+			else
+			{
+				sasl_io->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_INIT_SENT;
+			}
+			break;
+		}
 		break;
 	case SASL_CHALLENGE:
+		sasl_io->logger_log("[SASL_CHALLENGE]");
 		break;
 	case SASL_OUTCOME:
+		sasl_io->logger_log("[SASL_OUTCOME]");
+		sasl_io->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD;
 		break;
 	}
 }

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "saslio.h"
 #include "amqpalloc.h"
+#include "sasl_frame_codec.h"
 
 typedef struct SASL_IO_DATA_TAG
 {

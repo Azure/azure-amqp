@@ -56,8 +56,8 @@ extern "C" {
 	extern int amqpvalue_get_binary(AMQP_VALUE value, amqp_binary* binary_value);
 	extern AMQP_VALUE amqpvalue_create_string(const char* value);
 	extern int amqpvalue_get_string(AMQP_VALUE value, const char** string_value);
-	extern AMQP_VALUE amqpvalue_create_symbol(uint32_t value);
-	extern int amqpvalue_get_symbol(AMQP_VALUE value, uint32_t* symbol_value);
+	extern AMQP_VALUE amqpvalue_create_symbol(const char* value);
+	extern int amqpvalue_get_symbol(AMQP_VALUE value, const char** symbol_value);
 	extern AMQP_VALUE amqpvalue_create_list(void);
 	extern int amqpvalue_set_list_item_count(AMQP_VALUE value, uint32_t count);
 	extern int amqpvalue_get_list_item_count(AMQP_VALUE value, uint32_t* count);

@@ -240,11 +240,16 @@ static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 		}
 		break;
 	case SASL_CHALLENGE:
+		/* we should send the response here */
 		sasl_io->logger_log("[SASL_CHALLENGE]");
 		break;
 	case SASL_OUTCOME:
 		sasl_io->logger_log("[SASL_OUTCOME]");
-		sasl_io->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD;
+		if (sasl_io->sasl_client_negotiation_state != SASL_CLIENT_NEGOTIATION_ERROR)
+		{
+			sasl_io->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD;
+		}
+
 		break;
 	}
 }
@@ -350,6 +355,7 @@ void saslio_dowork(IO_HANDLE sasl_io)
 		{
 		default:
 			break;
+
 		case SASL_IO_IDLE:
 			/* send SASL header */
 			if (send_sasl_header(sasl_io_instance) != 0)
@@ -359,6 +365,50 @@ void saslio_dowork(IO_HANDLE sasl_io)
 			else
 			{
 				sasl_io_instance->sasl_io_state = SASL_IO_HEADER_SENT;
+			}
+			break;
+
+		case SASL_IO_HEADER_RCVD:
+			if (send_sasl_header(sasl_io_instance) != 0)
+			{
+				sasl_io_instance->sasl_io_state = SASL_IO_ERROR;
+			}
+			else
+			{
+				sasl_io_instance->sasl_io_state = SASL_IO_HEADER_EXCH;
+			}
+			break;
+
+		case SASL_IO_HEADER_EXCH:
+			switch (sasl_io_instance->sasl_client_negotiation_state)
+			{
+			default:
+				break;
+
+			case SASL_CLIENT_NEGOTIATION_NOT_STARTED:
+			case SASL_CLIENT_NEGOTIATION_INIT_SENT:
+			case SASL_CLIENT_NEGOTIATION_RESPONSE_SENT:
+				/* do nothing, just wait */
+				break;
+
+			case SASL_CLIENT_NEGOTIATION_MECH_RCVD:
+				if (send_sasl_init(sasl_io_instance) != 0)
+				{
+					sasl_io_instance->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_ERROR;
+				}
+				else
+				{
+					sasl_io_instance->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_INIT_SENT;
+				}
+				break;
+
+			case SASL_CLIENT_NEGOTIATION_CHALLENGE_RCVD:
+				/* we should send the response here */
+				break;
+
+			case SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD:
+				/* SASL negotiated, simply do nothing*/
+				break;
 			}
 			break;
 		}

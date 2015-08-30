@@ -174,7 +174,24 @@ static void saslio_receive_bytes(void* context, const void* buffer, size_t size)
 
 static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 {
+	SASL_IO_INSTANCE* sasl_io = (SASL_IO_INSTANCE*)context;
+	AMQP_VALUE descriptor = amqpvalue_get_descriptor(sasl_frame);
+	uint64_t sasl_frame_code_ulong;
 
+	amqpvalue_get_ulong(descriptor, &sasl_frame_code_ulong);
+	switch (sasl_frame_code_ulong)
+	{
+	default:
+		sasl_io->logger_log("Bad SASL frame: %02x", sasl_frame_code_ulong);
+		break;
+
+	case SASL_MECHANISMS:
+		break;
+	case SASL_CHALLENGE:
+		break;
+	case SASL_OUTCOME:
+		break;
+	}
 }
 
 IO_HANDLE saslio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log)

@@ -69,6 +69,10 @@ public:
 	MOCK_STATIC_METHOD_0(, const IO_INTERFACE_DESCRIPTION*, socketio_get_interface_description)
 	MOCK_METHOD_END(const IO_INTERFACE_DESCRIPTION*, &test_io_interface_description);
 
+	/* saslio mocks */
+	MOCK_STATIC_METHOD_0(, const IO_INTERFACE_DESCRIPTION*, saslio_get_interface_description)
+	MOCK_METHOD_END(const IO_INTERFACE_DESCRIPTION*, &test_io_interface_description);
+
 	/* amqpalloc mocks */
 	MOCK_STATIC_METHOD_1(, void*, amqpalloc_malloc, size_t, size)
 	MOCK_METHOD_END(void*, malloc(size));
@@ -121,6 +125,8 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, io_dowork, IO_HANDLE, handle);
 
 	DECLARE_GLOBAL_MOCK_METHOD_0(connection_mocks, , const IO_INTERFACE_DESCRIPTION*, socketio_get_interface_description);
+
+	DECLARE_GLOBAL_MOCK_METHOD_0(connection_mocks, , const IO_INTERFACE_DESCRIPTION*, saslio_get_interface_description);
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void*, amqpalloc_malloc, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , void*, amqpalloc_realloc, void*, ptr, size_t, size);

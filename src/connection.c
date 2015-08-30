@@ -5,6 +5,7 @@
 #include "amqp_frame_codec.h"
 #include "amqp_definitions.h"
 #include "socketio.h"
+#include "saslio.h"
 #include "amqpalloc.h"
 
 /* Requirements satisfied by the virtue of implementing the ISO:*/
@@ -31,6 +32,7 @@ typedef struct ENDPOINT_INSTANCE_TAG
 
 typedef struct CONNECTION_DATA_TAG
 {
+	IO_HANDLE io;
 	IO_HANDLE socket_io;
 	OPEN_HANDLE open_performative;
 	size_t header_bytes_received;
@@ -53,11 +55,11 @@ static int send_header(CONNECTION_INSTANCE* connection_instance)
 
 	/* Codes_SRS_CONNECTION_01_093: [_ When the client opens a new socket connection to a server, it MUST send a protocol header with the client’s preferred protocol version.] */
 	/* Codes_SRS_CONNECTION_01_104: [Sending the protocol header shall be done by using io_send.] */
-	if (io_send(connection_instance->socket_io, amqp_header, sizeof(amqp_header)) != 0)
+	if (io_send(connection_instance->io, amqp_header, sizeof(amqp_header)) != 0)
 	{
 		/* Codes_SRS_CONNECTION_01_106: [When sending the protocol header fails, the connection shall be immediately closed.] */
-		io_destroy(connection_instance->socket_io);
-		connection_instance->socket_io = NULL;
+		io_destroy(connection_instance->io);
+		connection_instance->io = NULL;
 
 		/* Codes_SRS_CONNECTION_01_057: [END In this state it is illegal for either endpoint to write anything more onto the connection. The connection can be safely closed and discarded.] */
 		connection_instance->connection_state = CONNECTION_STATE_END;
@@ -93,8 +95,8 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 		/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
 		if (amqp_frame_codec_begin_encode_frame(connection_instance->amqp_frame_codec, 0, open_performative_value, 0) != 0)
 		{
-			io_destroy(connection_instance->socket_io);
-			connection_instance->socket_io = NULL;
+			io_destroy(connection_instance->io);
+			connection_instance->io = NULL;
 			connection_instance->connection_state = CONNECTION_STATE_END;
 			result = __LINE__;
 		}
@@ -179,8 +181,8 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 		if (b != amqp_header[connection_instance->header_bytes_received])
 		{
 			/* Codes_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
-			io_destroy(connection_instance->socket_io);
-			connection_instance->socket_io = NULL;
+			io_destroy(connection_instance->io);
+			connection_instance->io = NULL;
 			connection_instance->connection_state = CONNECTION_STATE_END;
 			result = __LINE__;
 		}
@@ -193,8 +195,8 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 				{
 					if (send_header(connection_instance) != 0)
 					{
-						io_destroy(connection_instance->socket_io);
-						connection_instance->socket_io = NULL;
+						io_destroy(connection_instance->io);
+						connection_instance->io = NULL;
 						connection_instance->connection_state = CONNECTION_STATE_END;
 						result = __LINE__;
 					}
@@ -232,8 +234,8 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 		AMQP_VALUE close_performative_value = amqpvalue_create_close(close_performative);
 		if (amqp_frame_codec_begin_encode_frame(connection_instance->amqp_frame_codec, 0, close_performative_value, 0) != 0)
 		{
-			io_destroy(connection_instance->socket_io);
-			connection_instance->socket_io = NULL;
+			io_destroy(connection_instance->io);
+			connection_instance->io = NULL;
 			connection_instance->connection_state = CONNECTION_STATE_END;
 		}
 		else
@@ -378,8 +380,8 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 		/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
 		if (result != NULL)
 		{
-			/* Codes_SRS_CONNECTION_01_069: [The socket_io parameters shall be filled in with the host and port information passed to connection_create.] */
-			SOCKETIO_CONFIG socket_io_config = { host, port };
+			/* Codes_SRS_CONNECTION_01_069: [The io parameters shall be filled in with the host and port information passed to connection_create.] */
+			SOCKETIO_CONFIG io_config = { host, port };
 			const IO_INTERFACE_DESCRIPTION* io_interface_description;
 
 			/* Codes_SRS_CONNECTION_01_068: [connection_create shall pass to io_create the interface obtained by a call to socketio_get_interface_description.] */
@@ -393,7 +395,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 			else
 			{
 				/* Codes_SRS_CONNECTION_01_067: [connection_create shall call io_create to create its TCP IO interface.] */
-				result->socket_io = io_create(io_interface_description, &socket_io_config, connection_receive_callback, result, consolelogger_log);
+				result->socket_io = io_create(io_interface_description, &io_config, connection_receive_callback, result, consolelogger_log);
 				if (result->socket_io == NULL)
 				{
 					/* Codes_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
@@ -402,53 +404,80 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 				}
 				else
 				{
-					/* Codes_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
-					result->frame_codec = frame_codec_create(result->socket_io, consolelogger_log);
-					if (result->frame_codec == NULL)
+					SASLIO_CONFIG sasl_io_config = { result->socket_io };
+
+					io_interface_description = saslio_get_interface_description();
+					if (io_interface_description == NULL)
 					{
-						/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
-						io_destroy(result->socket_io);
+						/* Codes_SRS_CONNECTION_01_124: [If getting the io interface information (by calling socketio_get_interface_description) fails, connection_create shall return NULL.] */
 						amqpalloc_free(result);
+						io_destroy(result->socket_io);
 						result = NULL;
 					}
 					else
 					{
-						result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, connection_frame_payload_bytes_received, result);
-						if (result->amqp_frame_codec == NULL)
+						/* Codes_SRS_CONNECTION_01_067: [connection_create shall call io_create to create its TCP IO interface.] */
+						result->io = io_create(io_interface_description, &io_config, connection_receive_callback, result, consolelogger_log);
+						if (result->io == NULL)
 						{
-							/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */
-							frame_codec_destroy(result->frame_codec);
-							io_destroy(result->socket_io);
+							/* Codes_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
 							amqpalloc_free(result);
+							io_destroy(result->socket_io);
 							result = NULL;
 						}
 						else
 						{
-							result->open_performative = NULL;
-
-							if ((options != NULL) &&
-								(options->use_options & CONNECTION_OPTION_MAX_FRAME_SIZE))
+							/* Codes_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
+							result->frame_codec = frame_codec_create(result->io, consolelogger_log);
+							if (result->frame_codec == NULL)
 							{
-								result->max_frame_size = options->max_frame_size;
+								/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
+								io_destroy(result->socket_io);
+								io_destroy(result->io);
+								amqpalloc_free(result);
+								result = NULL;
 							}
-
-							if ((options != NULL) && 
-								(options->use_options & CONNECTION_OPTION_CHANNEL_MAX))
+							else
 							{
-								result->channel_max = options->channel_max;
-							}
+								result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, connection_frame_payload_bytes_received, result);
+								if (result->amqp_frame_codec == NULL)
+								{
+									/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */
+									frame_codec_destroy(result->frame_codec);
+									io_destroy(result->socket_io);
+									io_destroy(result->io);
+									amqpalloc_free(result);
+									result = NULL;
+								}
+								else
+								{
+									result->open_performative = NULL;
 
-							if ((options != NULL) && 
-								(options->use_options & CONNECTION_OPTION_IDLE_TIMEOUT))
-							{
-								result->idle_timeout = options->idle_timeout;
-							}
+									if ((options != NULL) &&
+										(options->use_options & CONNECTION_OPTION_MAX_FRAME_SIZE))
+									{
+										result->max_frame_size = options->max_frame_size;
+									}
 
-							/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
-							result->connection_state = CONNECTION_STATE_START;
-							result->header_bytes_received = 0;
-							result->endpoint_count = 0;
-							result->endpoints = NULL;
+									if ((options != NULL) &&
+										(options->use_options & CONNECTION_OPTION_CHANNEL_MAX))
+									{
+										result->channel_max = options->channel_max;
+									}
+
+									if ((options != NULL) &&
+										(options->use_options & CONNECTION_OPTION_IDLE_TIMEOUT))
+									{
+										result->idle_timeout = options->idle_timeout;
+									}
+
+									/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
+									result->connection_state = CONNECTION_STATE_START;
+									result->header_bytes_received = 0;
+									result->endpoint_count = 0;
+									result->endpoints = NULL;
+								}
+							}
 						}
 					}
 				}
@@ -470,6 +499,7 @@ void connection_destroy(CONNECTION_HANDLE connection)
 		frame_codec_destroy(connection_instance->frame_codec);
 
 		/* Codes_SRS_CONNECTION_01_074: [connection_destroy shall close the socket connection.] */
+		io_destroy(connection_instance->io);
 		io_destroy(connection_instance->socket_io);
 		amqpalloc_free(connection_instance);
 	}
@@ -491,8 +521,8 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			/* Codes_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection_instance) MUST immediately send its outgoing protocol header on establishment of the TCP connection_instance.] */
 			if (send_header(connection_instance))
 			{
-				io_destroy(connection_instance->socket_io);
-				connection_instance->socket_io = NULL;
+				io_destroy(connection_instance->io);
+				connection_instance->io = NULL;
 				connection_instance->connection_state = CONNECTION_STATE_END;
 			}
 			break;
@@ -508,8 +538,8 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
 			if (send_open_frame(connection) != 0)
 			{
-				io_destroy(connection_instance->socket_io);
-				connection_instance->socket_io = NULL;
+				io_destroy(connection_instance->io);
+				connection_instance->io = NULL;
 				connection_instance->connection_state = CONNECTION_STATE_END;
 			}
 			break;
@@ -519,7 +549,7 @@ void connection_dowork(CONNECTION_HANDLE connection)
 		}
 
 		/* Codes_SRS_CONNECTION_01_076: [connection_dowork shall schedule the underlying IO interface to do its work by calling io_dowork.] */
-		io_dowork(connection_instance->socket_io);
+		io_dowork(connection_instance->io);
 	}
 }
 

@@ -381,7 +381,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 		if (result != NULL)
 		{
 			/* Codes_SRS_CONNECTION_01_069: [The io parameters shall be filled in with the host and port information passed to connection_create.] */
-			SOCKETIO_CONFIG socket_io_config = { host, port };
+			const SOCKETIO_CONFIG socket_io_config = { host, port };
 			const IO_INTERFACE_DESCRIPTION* io_interface_description;
 
 			/* Codes_SRS_CONNECTION_01_068: [connection_create shall pass to io_create the interface obtained by a call to socketio_get_interface_description.] */
@@ -394,7 +394,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 			}
 			else
 			{
-				SASLIO_CONFIG sasl_io_config = { result->socket_io };
+				SASLIO_CONFIG sasl_io_config = { io_interface_description, &socket_io_config };
 
 				io_interface_description = saslio_get_interface_description();
 				if (io_interface_description == NULL)

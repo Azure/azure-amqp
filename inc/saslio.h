@@ -13,7 +13,7 @@ extern "C" {
 
 typedef struct SASLIO_CONFIG_TAG
 {
-	IO_INTERFACE_DESCRIPTION* socket_io_interface;
+	const IO_INTERFACE_DESCRIPTION* socket_io_interface;
 	const void* socket_io_parameters;
 } SASLIO_CONFIG;
 

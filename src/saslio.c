@@ -88,6 +88,7 @@ int saslio_send(IO_HANDLE handle, const void* buffer, size_t size)
 	else
 	{
 		SASL_IO_DATA* sasl_io_data = (SASL_IO_DATA*)handle;
+		result = 0;
 	}
 
 	return result;

@@ -381,7 +381,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 		if (result != NULL)
 		{
 			/* Codes_SRS_CONNECTION_01_069: [The io parameters shall be filled in with the host and port information passed to connection_create.] */
-			SOCKETIO_CONFIG io_config = { host, port };
+			SOCKETIO_CONFIG socket_io_config = { host, port };
 			const IO_INTERFACE_DESCRIPTION* io_interface_description;
 
 			/* Codes_SRS_CONNECTION_01_068: [connection_create shall pass to io_create the interface obtained by a call to socketio_get_interface_description.] */
@@ -395,7 +395,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 			else
 			{
 				/* Codes_SRS_CONNECTION_01_067: [connection_create shall call io_create to create its TCP IO interface.] */
-				result->socket_io = io_create(io_interface_description, &io_config, connection_receive_callback, result, consolelogger_log);
+				result->socket_io = io_create(io_interface_description, &socket_io_config, connection_receive_callback, result, consolelogger_log);
 				if (result->socket_io == NULL)
 				{
 					/* Codes_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
@@ -417,7 +417,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 					else
 					{
 						/* Codes_SRS_CONNECTION_01_067: [connection_create shall call io_create to create its TCP IO interface.] */
-						result->io = io_create(io_interface_description, &io_config, connection_receive_callback, result, consolelogger_log);
+						result->io = io_create(io_interface_description, &sasl_io_config, connection_receive_callback, result, consolelogger_log);
 						if (result->io == NULL)
 						{
 							/* Codes_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */

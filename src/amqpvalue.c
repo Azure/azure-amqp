@@ -17,6 +17,12 @@ typedef struct AMQP_LIST_VALUE_TAG
 	uint32_t count;
 } AMQP_LIST_VALUE;
 
+typedef struct AMQP_ARRAY_VALUE_TAG
+{
+	AMQP_VALUE* items;
+	uint32_t count;
+} AMQP_ARRAY_VALUE;
+
 typedef struct AMQP_MAP_KEY_VALUE_PAIR_TAG
 {
 	AMQP_VALUE key;
@@ -67,6 +73,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	amqp_binary binary_value;
 	AMQP_LIST_VALUE list_value;
 	AMQP_MAP_VALUE map_value;
+	AMQP_ARRAY_VALUE array_value;
 	uint32_t symbol_value;
 } AMQP_VALUE_UNION;
 
@@ -76,6 +83,13 @@ typedef enum DECODE_LIST_STEP_TAG
 	DECODE_LIST_STEP_COUNT,
 	DECODE_LIST_STEP_ITEMS
 } DECODE_LIST_STEP;
+
+typedef enum DECODE_ARRAY_STEP_TAG
+{
+	DECODE_ARRAY_STEP_SIZE,
+	DECODE_ARRAY_STEP_COUNT,
+	DECODE_ARRAY_STEP_ITEMS
+} DECODE_ARRAY_STEP;
 
 typedef enum DECODE_DESCRIBED_VALUE_STEP_TAG
 {
@@ -88,6 +102,12 @@ typedef struct DECODE_LIST_VALUE_STATE_TAG
 	DECODE_LIST_STEP list_value_state;
 	uint32_t item;
 } DECODE_LIST_VALUE_STATE;
+
+typedef struct DECODE_ARRAY_VALUE_STATE_TAG
+{
+	DECODE_ARRAY_STEP array_value_state;
+	uint32_t item;
+} DECODE_ARRAY_VALUE_STATE;
 
 typedef struct DECODE_DESCRIBED_VALUE_STATE_TAG
 {
@@ -102,6 +122,7 @@ typedef struct STRING_VALUE_STATE_TAG
 typedef union DECODE_VALUE_STATE_UNION_TAG
 {
 	DECODE_LIST_VALUE_STATE list_value_state;
+	DECODE_ARRAY_VALUE_STATE array_value_state;
 	DECODE_DESCRIBED_VALUE_STATE described_value_state;
 	STRING_VALUE_STATE string_value_state;
 } DECODE_VALUE_STATE_UNION;
@@ -3285,7 +3306,7 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 				/* Codes_SRS_AMQPVALUE_01_385: [<encoding name="list8" code="0xc0" category="compound" width="1" label="up to 2^8 - 1 list elements with total size less than 2^8 octets"/>] */
 				case 0xC0:
-				case 0xD0: /* list32 */
+				case 0xD0:
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_LIST;
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.list_value.count = 0;
@@ -3294,6 +3315,18 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decode_value_state.list_value_state.list_value_state = DECODE_LIST_STEP_SIZE;
 
 					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+					result = 0;
+					break;
+
+				case 0xE0:
+				case 0xF0:
+					internal_decoder_data->decode_to_value->type = AMQP_TYPE_ARRAY;
+					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
+					internal_decoder_data->decode_to_value->value.list_value.count = 0;
+					internal_decoder_data->decode_to_value->value.list_value.items = NULL;
+					internal_decoder_data->bytes_decoded = 0;
+					internal_decoder_data->decode_value_state.list_value_state.list_value_state = DECODE_ARRAY_STEP_SIZE;
+
 					result = 0;
 					break;
 				}
@@ -4152,6 +4185,194 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 									/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
 									/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
 									/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+									internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
+								}
+
+							}
+
+							result = 0;
+						}
+
+						break;
+					}
+					}
+
+					break;
+				}
+				case 0xE0:
+				case 0xF0:
+				{
+					DECODE_ARRAY_STEP step = internal_decoder_data->decode_value_state.array_value_state.array_value_state;
+
+					switch (step)
+					{
+					default:
+						result = __LINE__;
+						break;
+
+					case DECODE_ARRAY_STEP_SIZE:
+						internal_decoder_data->bytes_decoded++;
+						buffer++;
+						size--;
+
+						if (internal_decoder_data->constructor_byte == 0xE0)
+						{
+							internal_decoder_data->decode_value_state.array_value_state.array_value_state = DECODE_ARRAY_STEP_COUNT;
+							internal_decoder_data->bytes_decoded = 0;
+							internal_decoder_data->decode_to_value->value.list_value.count = 0;
+							result = 0;
+						}
+						else
+						{
+							if (internal_decoder_data->bytes_decoded == 4)
+							{
+								internal_decoder_data->decode_value_state.array_value_state.array_value_state = DECODE_ARRAY_STEP_COUNT;
+								internal_decoder_data->bytes_decoded = 0;
+								internal_decoder_data->decode_to_value->value.array_value.count = 0;
+							}
+							result = 0;
+						}
+
+						break;
+
+					case DECODE_ARRAY_STEP_COUNT:
+						if (internal_decoder_data->constructor_byte == 0xE0)
+						{
+							internal_decoder_data->decode_to_value->value.array_value.count = buffer[0];
+						}
+						else
+						{
+							internal_decoder_data->decode_to_value->value.array_value.count += buffer[0] << ((3 - internal_decoder_data->bytes_decoded) * 8);
+						}
+						internal_decoder_data->bytes_decoded++;
+						buffer++;
+						size--;
+
+						if (internal_decoder_data->constructor_byte == 0xE0)
+						{
+							if (internal_decoder_data->decode_to_value->value.array_value.count == 0)
+							{
+								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
+								result = 0;
+							}
+							else
+							{
+								uint32_t i;
+								internal_decoder_data->decode_to_value->value.array_value.items = (AMQP_VALUE*)amqpalloc_malloc(sizeof(AMQP_VALUE) * internal_decoder_data->decode_to_value->value.array_value.count);
+								if (internal_decoder_data->decode_to_value->value.array_value.items == NULL)
+								{
+									result = __LINE__;
+								}
+								else
+								{
+									for (i = 0; i < internal_decoder_data->decode_to_value->value.array_value.count; i++)
+									{
+										internal_decoder_data->decode_to_value->value.array_value.items[i] = NULL;
+									}
+
+									internal_decoder_data->decode_value_state.array_value_state.array_value_state = DECODE_ARRAY_STEP_ITEMS;
+									internal_decoder_data->bytes_decoded = 0;
+									internal_decoder_data->inner_decoder = NULL;
+									internal_decoder_data->decode_value_state.list_value_state.item = 0;
+									result = 0;
+								}
+							}
+						}
+						else
+						{
+							if (internal_decoder_data->bytes_decoded == 4)
+							{
+								if (internal_decoder_data->decode_to_value->value.array_value.count == 0)
+								{
+									internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+									internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
+									result = 0;
+								}
+								else
+								{
+									uint32_t i;
+									internal_decoder_data->decode_to_value->value.array_value.items = (AMQP_VALUE*)amqpalloc_malloc(sizeof(AMQP_VALUE) * internal_decoder_data->decode_to_value->value.array_value.count);
+									if (internal_decoder_data->decode_to_value->value.array_value.items == NULL)
+									{
+										result = __LINE__;
+									}
+									else
+									{
+										for (i = 0; i < internal_decoder_data->decode_to_value->value.array_value.count; i++)
+										{
+											internal_decoder_data->decode_to_value->value.array_value.items[i] = NULL;
+										}
+										internal_decoder_data->decode_value_state.array_value_state.array_value_state = DECODE_ARRAY_STEP_ITEMS;
+										internal_decoder_data->bytes_decoded = 0;
+										internal_decoder_data->inner_decoder = NULL;
+										internal_decoder_data->decode_value_state.array_value_state.item = 0;
+										result = 0;
+									}
+								}
+							}
+							else
+							{
+								result = 0;
+							}
+						}
+						break;
+
+					case DECODE_ARRAY_STEP_ITEMS:
+					{
+						size_t used_bytes;
+
+						if (internal_decoder_data->bytes_decoded == 0)
+						{
+							AMQP_VALUE_DATA* array_item = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+							if (array_item == NULL)
+							{
+								internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+								result = __LINE__;
+							}
+							else
+							{
+								array_item->type = AMQP_TYPE_UNKNOWN;
+								internal_decoder_data->decode_to_value->value.array_value.items[internal_decoder_data->decode_value_state.array_value_state.item] = array_item;
+								internal_decoder_data->inner_decoder = internal_decoder_create(inner_decoder_callback, internal_decoder_data, array_item);
+								if (internal_decoder_data->inner_decoder == NULL)
+								{
+									internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+									result = __LINE__;
+								}
+								else
+								{
+									result = 0;
+								}
+							}
+						}
+
+						if (internal_decoder_data->inner_decoder == NULL)
+						{
+							result = __LINE__;
+						}
+						else if (internal_decoder_decode_bytes(internal_decoder_data->inner_decoder, buffer, size, &used_bytes) != 0)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							INTERNAL_DECODER_DATA* inner_decoder = (INTERNAL_DECODER_DATA*)internal_decoder_data->inner_decoder;
+							internal_decoder_data->bytes_decoded += used_bytes;
+							buffer += used_bytes;
+							size -= used_bytes;
+
+							if (inner_decoder->decoder_state == DECODER_STATE_DONE)
+							{
+								internal_decoder_destroy(inner_decoder);
+								internal_decoder_data->inner_decoder = NULL;
+								internal_decoder_data->bytes_decoded = 0;
+
+								internal_decoder_data->decode_value_state.array_value_state.item++;
+								if (internal_decoder_data->decode_value_state.array_value_state.item == internal_decoder_data->decode_to_value->value.array_value.count)
+								{
+									internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
 									internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
 								}
 

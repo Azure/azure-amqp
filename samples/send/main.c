@@ -37,7 +37,7 @@ int main(int argc, char** argv)
 
 		messaging = messaging_create();
 		message = message_create();
-		message_set_to(message, "127.0.0.1");
+		message_set_to(message, "pupupu.servicebus.windows.net");
 		message_set_body(message, amqpvalue_create_binary(body));
 		(void)messaging_send(messaging, message, message_send_callback, NULL);
 

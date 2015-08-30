@@ -177,7 +177,7 @@ static int send_sasl_init(SASL_IO_INSTANCE* sasl_io)
 {
 	int result;
 
-	SASL_INIT_HANDLE sasl_init = sasl_init_create("ANONYMOUS");
+	SASL_INIT_HANDLE sasl_init = sasl_init_create("EXTERNAL");
 	if (sasl_init == NULL)
 	{
 		result = __LINE__;

@@ -112,6 +112,7 @@ typedef struct DECODE_ARRAY_VALUE_STATE_TAG
 {
 	DECODE_ARRAY_STEP array_value_state;
 	uint32_t item;
+	unsigned char constructor_byte;
 } DECODE_ARRAY_VALUE_STATE;
 
 typedef struct DECODE_DESCRIBED_VALUE_STATE_TAG
@@ -4578,6 +4579,8 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 
 						if (internal_decoder_data->bytes_decoded == 0)
 						{
+							internal_decoder_data->decode_value_state.array_value_state.constructor_byte = buffer[0];
+
 							AMQP_VALUE_DATA* array_item = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 							if (array_item == NULL)
 							{
@@ -4620,18 +4623,51 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							{
 								internal_decoder_destroy(inner_decoder);
 								internal_decoder_data->inner_decoder = NULL;
-								internal_decoder_data->bytes_decoded = 0;
 
 								internal_decoder_data->decode_value_state.array_value_state.item++;
 								if (internal_decoder_data->decode_value_state.array_value_state.item == internal_decoder_data->decode_to_value->value.array_value.count)
 								{
 									internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
 									internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
+
+									result = 0;
 								}
-
+								else
+								{
+									AMQP_VALUE_DATA* array_item = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+									if (array_item == NULL)
+									{
+										internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+										result = __LINE__;
+									}
+									else
+									{
+										array_item->type = AMQP_TYPE_UNKNOWN;
+										internal_decoder_data->decode_to_value->value.array_value.items[internal_decoder_data->decode_value_state.array_value_state.item] = array_item;
+										internal_decoder_data->inner_decoder = internal_decoder_create(inner_decoder_callback, internal_decoder_data, array_item);
+										if (internal_decoder_data->inner_decoder == NULL)
+										{
+											internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+											result = __LINE__;
+										}
+										else
+										{
+											if (internal_decoder_decode_bytes(internal_decoder_data->inner_decoder, &internal_decoder_data->decode_value_state.array_value_state.constructor_byte, 1, NULL) != 0)
+											{
+												result = __LINE__;
+											}
+											else
+											{
+												result = 0;
+											}
+										}
+									}
+								}
 							}
-
-							result = 0;
+							else
+							{
+								result = 0;
+							}
 						}
 
 						break;
@@ -4652,7 +4688,10 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 		}
 	}
 
-	*used_bytes = initial_size - size;
+	if (used_bytes != NULL)
+	{
+		*used_bytes = initial_size - size;
+	}
 
 	return result;
 }

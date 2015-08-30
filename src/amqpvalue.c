@@ -2510,6 +2510,51 @@ static int encode_string(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context,
 	return result;
 }
 
+static int encode_symbol(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, const char* value)
+{
+	int result;
+	uint32_t length = strlen(value);
+
+	if (length <= 255)
+	{
+		/* Codes_SRS_AMQPVALUE_01_301: [<encoding name="sym8" code="0xa3" category="variable" width="1" label="up to 2^8 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		if ((output_byte(encoder_output, context, (unsigned char)0xA3) != 0) ||
+			(output_byte(encoder_output, context, (unsigned char)length) != 0) ||
+			(output_bytes(encoder_output, context, value, length) != 0))
+		{
+			/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_266: [On success amqpvalue_encode shall return 0.] */
+			result = 0;
+		}
+	}
+	else
+	{
+		/* Codes_SRS_AMQPVALUE_01_302: [<encoding name="sym32" code="0xb3" category="variable" width="4" label="up to 2^32 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		if ((output_byte(encoder_output, context, 0xB3) != 0) ||
+			(output_byte(encoder_output, context, (length >> 24) & 0xFF) != 0) ||
+			(output_byte(encoder_output, context, (length >> 16) & 0xFF) != 0) ||
+			(output_byte(encoder_output, context, (length >> 8) & 0xFF) != 0) ||
+			(output_byte(encoder_output, context, length & 0xFF) != 0) ||
+			/* Codes_SRS_AMQPVALUE_01_122: [Symbols are encoded as ASCII characters [ASCII].] */
+			(output_bytes(encoder_output, context, value, length) != 0))
+		{
+			/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_AMQPVALUE_01_266: [On success amqpvalue_encode shall return 0.] */
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
 static int encode_list(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, uint32_t count, AMQP_VALUE* items)
 {
 	size_t i;
@@ -2814,6 +2859,10 @@ int amqpvalue_encode(AMQP_VALUE value, AMQPVALUE_ENCODER_OUTPUT encoder_output, 
 
 		case AMQP_TYPE_STRING:
 			result = encode_string(encoder_output, context, value_data->value.string_value.chars);
+			break;
+
+		case AMQP_TYPE_SYMBOL:
+			result = encode_symbol(encoder_output, context, value_data->value.symbol_value.chars);
 			break;
 
 		case AMQP_TYPE_LIST:

@@ -8465,6 +8465,95 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			test_amqpvalue_encode_failure(&mocks, source);
 		}
 
+		/* Tests_SRS_AMQPVALUE_01_301: [<encoding name="sym8" code="0xa3" category="variable" width="1" label="up to 2^8 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		TEST_FUNCTION(amqpvalue_encode_symbol_with_empty_symbol_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_symbol("");
+			test_amqpvalue_encode(&mocks, source, "[0xA3,0x00]");
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_301: [<encoding name="sym8" code="0xa3" category="variable" width="1" label="up to 2^8 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		TEST_FUNCTION(amqpvalue_encode_symbol_with_char_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_symbol("a");
+			test_amqpvalue_encode(&mocks, source, "[0xA3,0x01,0x61]");
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_301: [<encoding name="sym8" code="0xa3" category="variable" width="1" label="up to 2^8 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		TEST_FUNCTION(amqpvalue_encode_symbol_with_255_chars_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			char chars[256];
+			int i;
+			for (i = 0; i < 255; i++)
+			{
+				chars[i] = 'a';
+			}
+			chars[255] = '\0';
+			unsigned char expected_bytes[257] = { 0xA3, 0xFF };
+			for (i = 0; i < 255; i++)
+			{
+				expected_bytes[i + 2] = 'a';
+			}
+			AMQP_VALUE source = amqpvalue_create_symbol(chars);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+			test_amqpvalue_encode(&mocks, source, expected_stringified);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+		TEST_FUNCTION(when_encoder_output_fails_amqpvalue_encode_symbol_with_255_chars_fails)
+		{
+			amqpvalue_mocks mocks;
+			char chars[256];
+			int i;
+			for (i = 0; i < 255; i++)
+			{
+				chars[i] = 'a';
+			}
+			chars[255] = '\0';
+			AMQP_VALUE source = amqpvalue_create_symbol(chars);
+			test_amqpvalue_encode_failure(&mocks, source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_302: [<encoding name="sym32" code="0xb3" category="variable" width="4" label="up to 2^32 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		/* Tests_SRS_AMQPVALUE_01_122: [Symbols are encoded as ASCII characters [ASCII].] */
+		TEST_FUNCTION(amqpvalue_encode_symbol_with_256_chars_succeeds)
+		{
+			amqpvalue_mocks mocks;
+			char chars[257];
+			int i;
+			for (i = 0; i < 256; i++)
+			{
+				chars[i] = 'a';
+			}
+			chars[256] = '\0';
+			unsigned char expected_bytes[261] = { 0xB3, 0x00, 0x00, 0x01, 0x00 };
+			for (i = 0; i < 256; i++)
+			{
+				expected_bytes[i + 5] = 'a';
+			}
+			AMQP_VALUE source = amqpvalue_create_symbol(chars);
+			stringify_bytes(expected_bytes, sizeof(expected_bytes), expected_stringified);
+			test_amqpvalue_encode(&mocks, source, expected_stringified);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
+		TEST_FUNCTION(when_encoder_output_fails_amqpvalue_encode_symbol_with_256_chars_fails)
+		{
+			amqpvalue_mocks mocks;
+			char chars[257];
+			int i;
+			for (i = 0; i < 256; i++)
+			{
+				chars[i] = 'a';
+			}
+			chars[256] = '\0';
+			AMQP_VALUE source = amqpvalue_create_symbol(chars);
+			test_amqpvalue_encode_failure(&mocks, source);
+		}
+
 		/* Tests_SRS_AMQPVALUE_01_303: [<encoding name="list0" code="0x45" category="fixed" width="0" label="the empty list (i.e. the list with no elements)"/>] */
 		TEST_FUNCTION(amqpvalue_encode_list_empty_list_succeeds)
 		{

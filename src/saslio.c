@@ -39,7 +39,7 @@ static int send_sasl_header(SASL_IO_DATA* sasl_io)
 {
 	int result;
 
-	if (io_send(sasl_io->socket_io, sasl_header, sizeof(sasl_header)) != sizeof(sasl_header))
+	if (io_send(sasl_io->socket_io, sasl_header, sizeof(sasl_header)) != 0)
 	{
 		result = __LINE__;
 	}

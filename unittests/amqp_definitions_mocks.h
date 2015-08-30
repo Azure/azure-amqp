@@ -79,6 +79,28 @@ static const AMQP_VALUE test_end_amqp_value = (AMQP_VALUE)16971;
 
 static const CLOSE_HANDLE test_close_handle = (CLOSE_HANDLE)16971;
 static const AMQP_VALUE test_close_amqp_value = (AMQP_VALUE)16972;
+/* sasl-code */
+
+/* sasl-mechanisms */
+
+static const SASL_MECHANISMS_HANDLE test_sasl_mechanisms_handle = (SASL_MECHANISMS_HANDLE)16972;
+static const AMQP_VALUE test_sasl_mechanisms_amqp_value = (AMQP_VALUE)16973;
+/* sasl-init */
+
+static const SASL_INIT_HANDLE test_sasl_init_handle = (SASL_INIT_HANDLE)16973;
+static const AMQP_VALUE test_sasl_init_amqp_value = (AMQP_VALUE)16974;
+/* sasl-challenge */
+
+static const SASL_CHALLENGE_HANDLE test_sasl_challenge_handle = (SASL_CHALLENGE_HANDLE)16974;
+static const AMQP_VALUE test_sasl_challenge_amqp_value = (AMQP_VALUE)16975;
+/* sasl-response */
+
+static const SASL_RESPONSE_HANDLE test_sasl_response_handle = (SASL_RESPONSE_HANDLE)16975;
+static const AMQP_VALUE test_sasl_response_amqp_value = (AMQP_VALUE)16976;
+/* sasl-outcome */
+
+static const SASL_OUTCOME_HANDLE test_sasl_outcome_handle = (SASL_OUTCOME_HANDLE)16976;
+static const AMQP_VALUE test_sasl_outcome_amqp_value = (AMQP_VALUE)16977;
 
 TYPED_MOCK_CLASS(amqp_definitions_mocks, CGlobalMock)
 {
@@ -111,16 +133,16 @@ public:
 
 /* error */
 
-	MOCK_STATIC_METHOD_1(,ERROR_HANDLE, error_create, uint32_t, condition_value);
+	MOCK_STATIC_METHOD_1(,ERROR_HANDLE, error_create, const char*, condition_value);
 	MOCK_METHOD_END(ERROR_HANDLE, test_error_handle);
 	MOCK_STATIC_METHOD_1(, void, error_destroy, ERROR_HANDLE, error);
 	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_create_error, ERROR_HANDLE, error);
 	MOCK_METHOD_END(AMQP_VALUE, test_error_amqp_value);
 
-	MOCK_STATIC_METHOD_2(, int, error_get_condition, ERROR_HANDLE, error, uint32_t*, condition_value);
+	MOCK_STATIC_METHOD_2(, int, error_get_condition, ERROR_HANDLE, error, const char**, condition_value);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, error_set_condition, ERROR_HANDLE, error, uint32_t, condition_value);
+	MOCK_STATIC_METHOD_2(, int, error_set_condition, ERROR_HANDLE, error, const char*, condition_value);
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_2(, int, error_get_description, ERROR_HANDLE, error, const char**, description_value);
 	MOCK_METHOD_END(int, 0);
@@ -176,13 +198,13 @@ public:
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_2(, int, open_set_incoming_locales, OPEN_HANDLE, open, ietf_language_tag, incoming_locales_value);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, open_get_offered_capabilities, OPEN_HANDLE, open, uint32_t*, offered_capabilities_value);
+	MOCK_STATIC_METHOD_2(, int, open_get_offered_capabilities, OPEN_HANDLE, open, const char**, offered_capabilities_value);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, open_set_offered_capabilities, OPEN_HANDLE, open, uint32_t, offered_capabilities_value);
+	MOCK_STATIC_METHOD_2(, int, open_set_offered_capabilities, OPEN_HANDLE, open, const char*, offered_capabilities_value);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, open_get_desired_capabilities, OPEN_HANDLE, open, uint32_t*, desired_capabilities_value);
+	MOCK_STATIC_METHOD_2(, int, open_get_desired_capabilities, OPEN_HANDLE, open, const char**, desired_capabilities_value);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, open_set_desired_capabilities, OPEN_HANDLE, open, uint32_t, desired_capabilities_value);
+	MOCK_STATIC_METHOD_2(, int, open_set_desired_capabilities, OPEN_HANDLE, open, const char*, desired_capabilities_value);
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_2(, int, open_get_properties, OPEN_HANDLE, open, fields*, properties_value);
 	MOCK_METHOD_END(int, 0);
@@ -218,13 +240,13 @@ public:
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_2(, int, begin_set_handle_max, BEGIN_HANDLE, begin, handle, handle_max_value);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, begin_get_offered_capabilities, BEGIN_HANDLE, begin, uint32_t*, offered_capabilities_value);
+	MOCK_STATIC_METHOD_2(, int, begin_get_offered_capabilities, BEGIN_HANDLE, begin, const char**, offered_capabilities_value);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, begin_set_offered_capabilities, BEGIN_HANDLE, begin, uint32_t, offered_capabilities_value);
+	MOCK_STATIC_METHOD_2(, int, begin_set_offered_capabilities, BEGIN_HANDLE, begin, const char*, offered_capabilities_value);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, begin_get_desired_capabilities, BEGIN_HANDLE, begin, uint32_t*, desired_capabilities_value);
+	MOCK_STATIC_METHOD_2(, int, begin_get_desired_capabilities, BEGIN_HANDLE, begin, const char**, desired_capabilities_value);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, begin_set_desired_capabilities, BEGIN_HANDLE, begin, uint32_t, desired_capabilities_value);
+	MOCK_STATIC_METHOD_2(, int, begin_set_desired_capabilities, BEGIN_HANDLE, begin, const char*, desired_capabilities_value);
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_2(, int, begin_get_properties, BEGIN_HANDLE, begin, fields*, properties_value);
 	MOCK_METHOD_END(int, 0);
@@ -284,13 +306,13 @@ public:
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_2(, int, attach_set_max_message_size, ATTACH_HANDLE, attach, uint64_t, max_message_size_value);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, attach_get_offered_capabilities, ATTACH_HANDLE, attach, uint32_t*, offered_capabilities_value);
+	MOCK_STATIC_METHOD_2(, int, attach_get_offered_capabilities, ATTACH_HANDLE, attach, const char**, offered_capabilities_value);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, attach_set_offered_capabilities, ATTACH_HANDLE, attach, uint32_t, offered_capabilities_value);
+	MOCK_STATIC_METHOD_2(, int, attach_set_offered_capabilities, ATTACH_HANDLE, attach, const char*, offered_capabilities_value);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, attach_get_desired_capabilities, ATTACH_HANDLE, attach, uint32_t*, desired_capabilities_value);
+	MOCK_STATIC_METHOD_2(, int, attach_get_desired_capabilities, ATTACH_HANDLE, attach, const char**, desired_capabilities_value);
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, attach_set_desired_capabilities, ATTACH_HANDLE, attach, uint32_t, desired_capabilities_value);
+	MOCK_STATIC_METHOD_2(, int, attach_set_desired_capabilities, ATTACH_HANDLE, attach, const char*, desired_capabilities_value);
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_2(, int, attach_get_properties, ATTACH_HANDLE, attach, fields*, properties_value);
 	MOCK_METHOD_END(int, 0);
@@ -489,6 +511,90 @@ public:
 	MOCK_STATIC_METHOD_2(, int, close_set_error, CLOSE_HANDLE, close, ERROR_HANDLE, error_value);
 	MOCK_METHOD_END(int, 0);
 
+/* sasl-code */
+
+/* sasl-mechanisms */
+
+	MOCK_STATIC_METHOD_1(,SASL_MECHANISMS_HANDLE, sasl_mechanisms_create, const char*, sasl_server_mechanisms_value);
+	MOCK_METHOD_END(SASL_MECHANISMS_HANDLE, test_sasl_mechanisms_handle);
+	MOCK_STATIC_METHOD_1(, void, sasl_mechanisms_destroy, SASL_MECHANISMS_HANDLE, sasl_mechanisms);
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_create_sasl_mechanisms, SASL_MECHANISMS_HANDLE, sasl_mechanisms);
+	MOCK_METHOD_END(AMQP_VALUE, test_sasl_mechanisms_amqp_value);
+
+	MOCK_STATIC_METHOD_2(, int, sasl_mechanisms_get_sasl_server_mechanisms, SASL_MECHANISMS_HANDLE, sasl_mechanisms, const char**, sasl_server_mechanisms_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, sasl_mechanisms_set_sasl_server_mechanisms, SASL_MECHANISMS_HANDLE, sasl_mechanisms, const char*, sasl_server_mechanisms_value);
+	MOCK_METHOD_END(int, 0);
+
+/* sasl-init */
+
+	MOCK_STATIC_METHOD_1(,SASL_INIT_HANDLE, sasl_init_create, const char*, mechanism_value);
+	MOCK_METHOD_END(SASL_INIT_HANDLE, test_sasl_init_handle);
+	MOCK_STATIC_METHOD_1(, void, sasl_init_destroy, SASL_INIT_HANDLE, sasl_init);
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_create_sasl_init, SASL_INIT_HANDLE, sasl_init);
+	MOCK_METHOD_END(AMQP_VALUE, test_sasl_init_amqp_value);
+
+	MOCK_STATIC_METHOD_2(, int, sasl_init_get_mechanism, SASL_INIT_HANDLE, sasl_init, const char**, mechanism_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, sasl_init_set_mechanism, SASL_INIT_HANDLE, sasl_init, const char*, mechanism_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, sasl_init_get_initial_response, SASL_INIT_HANDLE, sasl_init, amqp_binary*, initial_response_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, sasl_init_set_initial_response, SASL_INIT_HANDLE, sasl_init, amqp_binary, initial_response_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, sasl_init_get_hostname, SASL_INIT_HANDLE, sasl_init, const char**, hostname_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, sasl_init_set_hostname, SASL_INIT_HANDLE, sasl_init, const char*, hostname_value);
+	MOCK_METHOD_END(int, 0);
+
+/* sasl-challenge */
+
+	MOCK_STATIC_METHOD_1(,SASL_CHALLENGE_HANDLE, sasl_challenge_create, amqp_binary, challenge_value);
+	MOCK_METHOD_END(SASL_CHALLENGE_HANDLE, test_sasl_challenge_handle);
+	MOCK_STATIC_METHOD_1(, void, sasl_challenge_destroy, SASL_CHALLENGE_HANDLE, sasl_challenge);
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_create_sasl_challenge, SASL_CHALLENGE_HANDLE, sasl_challenge);
+	MOCK_METHOD_END(AMQP_VALUE, test_sasl_challenge_amqp_value);
+
+	MOCK_STATIC_METHOD_2(, int, sasl_challenge_get_challenge, SASL_CHALLENGE_HANDLE, sasl_challenge, amqp_binary*, challenge_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, sasl_challenge_set_challenge, SASL_CHALLENGE_HANDLE, sasl_challenge, amqp_binary, challenge_value);
+	MOCK_METHOD_END(int, 0);
+
+/* sasl-response */
+
+	MOCK_STATIC_METHOD_1(,SASL_RESPONSE_HANDLE, sasl_response_create, amqp_binary, response_value);
+	MOCK_METHOD_END(SASL_RESPONSE_HANDLE, test_sasl_response_handle);
+	MOCK_STATIC_METHOD_1(, void, sasl_response_destroy, SASL_RESPONSE_HANDLE, sasl_response);
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_create_sasl_response, SASL_RESPONSE_HANDLE, sasl_response);
+	MOCK_METHOD_END(AMQP_VALUE, test_sasl_response_amqp_value);
+
+	MOCK_STATIC_METHOD_2(, int, sasl_response_get_response, SASL_RESPONSE_HANDLE, sasl_response, amqp_binary*, response_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, sasl_response_set_response, SASL_RESPONSE_HANDLE, sasl_response, amqp_binary, response_value);
+	MOCK_METHOD_END(int, 0);
+
+/* sasl-outcome */
+
+	MOCK_STATIC_METHOD_1(,SASL_OUTCOME_HANDLE, sasl_outcome_create, sasl_code, code_value);
+	MOCK_METHOD_END(SASL_OUTCOME_HANDLE, test_sasl_outcome_handle);
+	MOCK_STATIC_METHOD_1(, void, sasl_outcome_destroy, SASL_OUTCOME_HANDLE, sasl_outcome);
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_create_sasl_outcome, SASL_OUTCOME_HANDLE, sasl_outcome);
+	MOCK_METHOD_END(AMQP_VALUE, test_sasl_outcome_amqp_value);
+
+	MOCK_STATIC_METHOD_2(, int, sasl_outcome_get_code, SASL_OUTCOME_HANDLE, sasl_outcome, sasl_code*, code_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, sasl_outcome_set_code, SASL_OUTCOME_HANDLE, sasl_outcome, sasl_code, code_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, sasl_outcome_get_additional_data, SASL_OUTCOME_HANDLE, sasl_outcome, amqp_binary*, additional_data_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, sasl_outcome_set_additional_data, SASL_OUTCOME_HANDLE, sasl_outcome, amqp_binary, additional_data_value);
+	MOCK_METHOD_END(int, 0);
+
 };
 
 /* role */
@@ -519,12 +625,12 @@ public:
 
 /* error */
 
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,ERROR_HANDLE, error_create, uint32_t, condition_value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,ERROR_HANDLE, error_create, const char*, condition_value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, error_destroy, ERROR_HANDLE, error);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_error, ERROR_HANDLE, error);
 
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, error_get_condition, ERROR_HANDLE, error, uint32_t*, condition_value);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, error_set_condition, ERROR_HANDLE, error, uint32_t, condition_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, error_get_condition, ERROR_HANDLE, error, const char**, condition_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, error_set_condition, ERROR_HANDLE, error, const char*, condition_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, error_get_description, ERROR_HANDLE, error, const char**, description_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, error_set_description, ERROR_HANDLE, error, const char*, description_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, error_get_info, ERROR_HANDLE, error, fields*, info_value);
@@ -558,10 +664,10 @@ public:
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, open_set_outgoing_locales, OPEN_HANDLE, open, ietf_language_tag, outgoing_locales_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, open_get_incoming_locales, OPEN_HANDLE, open, ietf_language_tag*, incoming_locales_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, open_set_incoming_locales, OPEN_HANDLE, open, ietf_language_tag, incoming_locales_value);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, open_get_offered_capabilities, OPEN_HANDLE, open, uint32_t*, offered_capabilities_value);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, open_set_offered_capabilities, OPEN_HANDLE, open, uint32_t, offered_capabilities_value);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, open_get_desired_capabilities, OPEN_HANDLE, open, uint32_t*, desired_capabilities_value);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, open_set_desired_capabilities, OPEN_HANDLE, open, uint32_t, desired_capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, open_get_offered_capabilities, OPEN_HANDLE, open, const char**, offered_capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, open_set_offered_capabilities, OPEN_HANDLE, open, const char*, offered_capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, open_get_desired_capabilities, OPEN_HANDLE, open, const char**, desired_capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, open_set_desired_capabilities, OPEN_HANDLE, open, const char*, desired_capabilities_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, open_get_properties, OPEN_HANDLE, open, fields*, properties_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, open_set_properties, OPEN_HANDLE, open, fields, properties_value);
 
@@ -581,10 +687,10 @@ public:
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, begin_set_outgoing_window, BEGIN_HANDLE, begin, uint32_t, outgoing_window_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, begin_get_handle_max, BEGIN_HANDLE, begin, handle*, handle_max_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, begin_set_handle_max, BEGIN_HANDLE, begin, handle, handle_max_value);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, begin_get_offered_capabilities, BEGIN_HANDLE, begin, uint32_t*, offered_capabilities_value);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, begin_set_offered_capabilities, BEGIN_HANDLE, begin, uint32_t, offered_capabilities_value);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, begin_get_desired_capabilities, BEGIN_HANDLE, begin, uint32_t*, desired_capabilities_value);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, begin_set_desired_capabilities, BEGIN_HANDLE, begin, uint32_t, desired_capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, begin_get_offered_capabilities, BEGIN_HANDLE, begin, const char**, offered_capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, begin_set_offered_capabilities, BEGIN_HANDLE, begin, const char*, offered_capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, begin_get_desired_capabilities, BEGIN_HANDLE, begin, const char**, desired_capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, begin_set_desired_capabilities, BEGIN_HANDLE, begin, const char*, desired_capabilities_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, begin_get_properties, BEGIN_HANDLE, begin, fields*, properties_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, begin_set_properties, BEGIN_HANDLE, begin, fields, properties_value);
 
@@ -616,10 +722,10 @@ public:
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, attach_set_initial_delivery_count, ATTACH_HANDLE, attach, sequence_no, initial_delivery_count_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, attach_get_max_message_size, ATTACH_HANDLE, attach, uint64_t*, max_message_size_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, attach_set_max_message_size, ATTACH_HANDLE, attach, uint64_t, max_message_size_value);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, attach_get_offered_capabilities, ATTACH_HANDLE, attach, uint32_t*, offered_capabilities_value);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, attach_set_offered_capabilities, ATTACH_HANDLE, attach, uint32_t, offered_capabilities_value);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, attach_get_desired_capabilities, ATTACH_HANDLE, attach, uint32_t*, desired_capabilities_value);
-	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, attach_set_desired_capabilities, ATTACH_HANDLE, attach, uint32_t, desired_capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, attach_get_offered_capabilities, ATTACH_HANDLE, attach, const char**, offered_capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, attach_set_offered_capabilities, ATTACH_HANDLE, attach, const char*, offered_capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, attach_get_desired_capabilities, ATTACH_HANDLE, attach, const char**, desired_capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, attach_set_desired_capabilities, ATTACH_HANDLE, attach, const char*, desired_capabilities_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, attach_get_properties, ATTACH_HANDLE, attach, fields*, properties_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, attach_set_properties, ATTACH_HANDLE, attach, fields, properties_value);
 
@@ -730,6 +836,59 @@ public:
 
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, close_get_error, CLOSE_HANDLE, close, ERROR_HANDLE*, error_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, close_set_error, CLOSE_HANDLE, close, ERROR_HANDLE, error_value);
+
+/* sasl-code */
+
+/* sasl-mechanisms */
+
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_MECHANISMS_HANDLE, sasl_mechanisms_create, const char*, sasl_server_mechanisms_value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, sasl_mechanisms_destroy, SASL_MECHANISMS_HANDLE, sasl_mechanisms);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_sasl_mechanisms, SASL_MECHANISMS_HANDLE, sasl_mechanisms);
+
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_mechanisms_get_sasl_server_mechanisms, SASL_MECHANISMS_HANDLE, sasl_mechanisms, const char**, sasl_server_mechanisms_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_mechanisms_set_sasl_server_mechanisms, SASL_MECHANISMS_HANDLE, sasl_mechanisms, const char*, sasl_server_mechanisms_value);
+
+/* sasl-init */
+
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_INIT_HANDLE, sasl_init_create, const char*, mechanism_value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, sasl_init_destroy, SASL_INIT_HANDLE, sasl_init);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_sasl_init, SASL_INIT_HANDLE, sasl_init);
+
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_init_get_mechanism, SASL_INIT_HANDLE, sasl_init, const char**, mechanism_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_init_set_mechanism, SASL_INIT_HANDLE, sasl_init, const char*, mechanism_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_init_get_initial_response, SASL_INIT_HANDLE, sasl_init, amqp_binary*, initial_response_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_init_set_initial_response, SASL_INIT_HANDLE, sasl_init, amqp_binary, initial_response_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_init_get_hostname, SASL_INIT_HANDLE, sasl_init, const char**, hostname_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_init_set_hostname, SASL_INIT_HANDLE, sasl_init, const char*, hostname_value);
+
+/* sasl-challenge */
+
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_CHALLENGE_HANDLE, sasl_challenge_create, amqp_binary, challenge_value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, sasl_challenge_destroy, SASL_CHALLENGE_HANDLE, sasl_challenge);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_sasl_challenge, SASL_CHALLENGE_HANDLE, sasl_challenge);
+
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_challenge_get_challenge, SASL_CHALLENGE_HANDLE, sasl_challenge, amqp_binary*, challenge_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_challenge_set_challenge, SASL_CHALLENGE_HANDLE, sasl_challenge, amqp_binary, challenge_value);
+
+/* sasl-response */
+
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_RESPONSE_HANDLE, sasl_response_create, amqp_binary, response_value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, sasl_response_destroy, SASL_RESPONSE_HANDLE, sasl_response);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_sasl_response, SASL_RESPONSE_HANDLE, sasl_response);
+
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_response_get_response, SASL_RESPONSE_HANDLE, sasl_response, amqp_binary*, response_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_response_set_response, SASL_RESPONSE_HANDLE, sasl_response, amqp_binary, response_value);
+
+/* sasl-outcome */
+
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_OUTCOME_HANDLE, sasl_outcome_create, sasl_code, code_value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, sasl_outcome_destroy, SASL_OUTCOME_HANDLE, sasl_outcome);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_sasl_outcome, SASL_OUTCOME_HANDLE, sasl_outcome);
+
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_outcome_get_code, SASL_OUTCOME_HANDLE, sasl_outcome, sasl_code*, code_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_outcome_set_code, SASL_OUTCOME_HANDLE, sasl_outcome, sasl_code, code_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_outcome_get_additional_data, SASL_OUTCOME_HANDLE, sasl_outcome, amqp_binary*, additional_data_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_outcome_set_additional_data, SASL_OUTCOME_HANDLE, sasl_outcome, amqp_binary, additional_data_value);
 
 
 #endif /* AMQP_DEFINITIONS_MOCKS_H */

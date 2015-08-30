@@ -59,7 +59,7 @@ namespace amqplib_generator
                     break;
 
                 case "symbol":
-                    result = "uint32_t";
+                    result = "const char*";
                     break;
 
                 case "map":

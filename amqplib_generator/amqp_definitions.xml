@@ -156,5 +156,35 @@
       <descriptor name="amqp:close:list" code="0x00000000:0x00000018"/>
       <field name="error" type="error"/>
     </type>
+    <type name="sasl-code" class="restricted" source="ubyte">
+      <choice name="ok" value="0"/>
+      <choice name="auth" value="1"/>
+      <choice name="sys" value="2"/>
+      <choice name="sys-perm" value="3"/>
+      <choice name="sys-temp" value="4"/>
+    </type>
+    <type name="sasl-mechanisms" class="composite" source="list" provides="sasl-frame">
+      <descriptor name="amqp:sasl-mechanisms:list" code="0x00000000:0x00000040"/>
+      <field name="sasl-server-mechanisms" type="symbol" multiple="true" mandatory="true"/>
+    </type>
+    <type name="sasl-init" class="composite" source="list" provides="sasl-frame">
+      <descriptor name="amqp:sasl-init:list" code="0x00000000:0x00000041"/>
+      <field name="mechanism" type="symbol" mandatory="true"/>
+      <field name="initial-response" type="binary"/>
+      <field name="hostname" type="string"/>
+    </type>
+    <type name="sasl-challenge" class="composite" source="list" provides="sasl-frame">
+      <descriptor name="amqp:sasl-challenge:list" code="0x00000000:0x00000042"/>
+      <field name="challenge" type="binary" mandatory="true"/>
+    </type>
+    <type name="sasl-response" class="composite" source="list" provides="sasl-frame">
+      <descriptor name="amqp:sasl-response:list" code="0x00000000:0x00000043"/>
+      <field name="response" type="binary" mandatory="true"/>
+    </type>
+    <type name="sasl-outcome" class="composite" source="list" provides="sasl-frame">
+      <descriptor name="amqp:sasl-outcome:list" code="0x00000000:0x00000044"/>
+      <field name="code" type="sasl-code" mandatory="true"/>
+      <field name="additional-data" type="binary"/>
+    </type>
   </section>
 </amqp>

@@ -100,7 +100,7 @@ extern "C" {
 
 /* ietf-language-tag */
 
-	typedef uint32_t ietf_language_tag;
+	typedef const char* ietf_language_tag;
 
 	#define amqpvalue_create_ietf_language_tag amqpvalue_create_symbol
 
@@ -116,12 +116,12 @@ extern "C" {
 
 	typedef void* ERROR_HANDLE;
 
-	extern ERROR_HANDLE error_create(uint32_t condition_value);
+	extern ERROR_HANDLE error_create(const char* condition_value);
 	extern void error_destroy(ERROR_HANDLE error);
 	extern AMQP_VALUE amqpvalue_create_error(ERROR_HANDLE error);
 
-	extern int error_get_condition(ERROR_HANDLE error, uint32_t* condition_value);
-	extern int error_set_condition(ERROR_HANDLE error, uint32_t condition_value);
+	extern int error_get_condition(ERROR_HANDLE error, const char** condition_value);
+	extern int error_set_condition(ERROR_HANDLE error, const char* condition_value);
 	extern int error_get_description(ERROR_HANDLE error, const char** description_value);
 	extern int error_set_description(ERROR_HANDLE error, const char* description_value);
 	extern int error_get_info(ERROR_HANDLE error, fields* info_value);
@@ -129,7 +129,7 @@ extern "C" {
 
 /* amqp-error */
 
-	typedef uint32_t amqp_error;
+	typedef const char* amqp_error;
 
 	#define amqpvalue_create_amqp_error amqpvalue_create_symbol
 
@@ -149,7 +149,7 @@ extern "C" {
 
 /* connection-error */
 
-	typedef uint32_t connection_error;
+	typedef const char* connection_error;
 
 	#define amqpvalue_create_connection_error amqpvalue_create_symbol
 
@@ -159,7 +159,7 @@ extern "C" {
 
 /* session-error */
 
-	typedef uint32_t session_error;
+	typedef const char* session_error;
 
 	#define amqpvalue_create_session_error amqpvalue_create_symbol
 
@@ -170,7 +170,7 @@ extern "C" {
 
 /* link-error */
 
-	typedef uint32_t link_error;
+	typedef const char* link_error;
 
 	#define amqpvalue_create_link_error amqpvalue_create_symbol
 
@@ -202,10 +202,10 @@ extern "C" {
 	extern int open_set_outgoing_locales(OPEN_HANDLE open, ietf_language_tag outgoing_locales_value);
 	extern int open_get_incoming_locales(OPEN_HANDLE open, ietf_language_tag* incoming_locales_value);
 	extern int open_set_incoming_locales(OPEN_HANDLE open, ietf_language_tag incoming_locales_value);
-	extern int open_get_offered_capabilities(OPEN_HANDLE open, uint32_t* offered_capabilities_value);
-	extern int open_set_offered_capabilities(OPEN_HANDLE open, uint32_t offered_capabilities_value);
-	extern int open_get_desired_capabilities(OPEN_HANDLE open, uint32_t* desired_capabilities_value);
-	extern int open_set_desired_capabilities(OPEN_HANDLE open, uint32_t desired_capabilities_value);
+	extern int open_get_offered_capabilities(OPEN_HANDLE open, const char** offered_capabilities_value);
+	extern int open_set_offered_capabilities(OPEN_HANDLE open, const char* offered_capabilities_value);
+	extern int open_get_desired_capabilities(OPEN_HANDLE open, const char** desired_capabilities_value);
+	extern int open_set_desired_capabilities(OPEN_HANDLE open, const char* desired_capabilities_value);
 	extern int open_get_properties(OPEN_HANDLE open, fields* properties_value);
 	extern int open_set_properties(OPEN_HANDLE open, fields properties_value);
 
@@ -227,10 +227,10 @@ extern "C" {
 	extern int begin_set_outgoing_window(BEGIN_HANDLE begin, uint32_t outgoing_window_value);
 	extern int begin_get_handle_max(BEGIN_HANDLE begin, handle* handle_max_value);
 	extern int begin_set_handle_max(BEGIN_HANDLE begin, handle handle_max_value);
-	extern int begin_get_offered_capabilities(BEGIN_HANDLE begin, uint32_t* offered_capabilities_value);
-	extern int begin_set_offered_capabilities(BEGIN_HANDLE begin, uint32_t offered_capabilities_value);
-	extern int begin_get_desired_capabilities(BEGIN_HANDLE begin, uint32_t* desired_capabilities_value);
-	extern int begin_set_desired_capabilities(BEGIN_HANDLE begin, uint32_t desired_capabilities_value);
+	extern int begin_get_offered_capabilities(BEGIN_HANDLE begin, const char** offered_capabilities_value);
+	extern int begin_set_offered_capabilities(BEGIN_HANDLE begin, const char* offered_capabilities_value);
+	extern int begin_get_desired_capabilities(BEGIN_HANDLE begin, const char** desired_capabilities_value);
+	extern int begin_set_desired_capabilities(BEGIN_HANDLE begin, const char* desired_capabilities_value);
 	extern int begin_get_properties(BEGIN_HANDLE begin, fields* properties_value);
 	extern int begin_set_properties(BEGIN_HANDLE begin, fields properties_value);
 
@@ -264,10 +264,10 @@ extern "C" {
 	extern int attach_set_initial_delivery_count(ATTACH_HANDLE attach, sequence_no initial_delivery_count_value);
 	extern int attach_get_max_message_size(ATTACH_HANDLE attach, uint64_t* max_message_size_value);
 	extern int attach_set_max_message_size(ATTACH_HANDLE attach, uint64_t max_message_size_value);
-	extern int attach_get_offered_capabilities(ATTACH_HANDLE attach, uint32_t* offered_capabilities_value);
-	extern int attach_set_offered_capabilities(ATTACH_HANDLE attach, uint32_t offered_capabilities_value);
-	extern int attach_get_desired_capabilities(ATTACH_HANDLE attach, uint32_t* desired_capabilities_value);
-	extern int attach_set_desired_capabilities(ATTACH_HANDLE attach, uint32_t desired_capabilities_value);
+	extern int attach_get_offered_capabilities(ATTACH_HANDLE attach, const char** offered_capabilities_value);
+	extern int attach_set_offered_capabilities(ATTACH_HANDLE attach, const char* offered_capabilities_value);
+	extern int attach_get_desired_capabilities(ATTACH_HANDLE attach, const char** desired_capabilities_value);
+	extern int attach_set_desired_capabilities(ATTACH_HANDLE attach, const char* desired_capabilities_value);
 	extern int attach_get_properties(ATTACH_HANDLE attach, fields* properties_value);
 	extern int attach_set_properties(ATTACH_HANDLE attach, fields properties_value);
 
@@ -390,6 +390,79 @@ extern "C" {
 
 	extern int close_get_error(CLOSE_HANDLE close, ERROR_HANDLE* error_value);
 	extern int close_set_error(CLOSE_HANDLE close, ERROR_HANDLE error_value);
+
+/* sasl-code */
+
+	typedef uint8_t sasl_code;
+
+	#define amqpvalue_create_sasl_code amqpvalue_create_ubyte
+
+	#define sasl_code_ok 0
+	#define sasl_code_auth 1
+	#define sasl_code_sys 2
+	#define sasl_code_sys_perm 3
+	#define sasl_code_sys_temp 4
+
+/* sasl-mechanisms */
+
+	typedef void* SASL_MECHANISMS_HANDLE;
+
+	extern SASL_MECHANISMS_HANDLE sasl_mechanisms_create(const char* sasl_server_mechanisms_value);
+	extern void sasl_mechanisms_destroy(SASL_MECHANISMS_HANDLE sasl_mechanisms);
+	extern AMQP_VALUE amqpvalue_create_sasl_mechanisms(SASL_MECHANISMS_HANDLE sasl_mechanisms);
+
+	extern int sasl_mechanisms_get_sasl_server_mechanisms(SASL_MECHANISMS_HANDLE sasl_mechanisms, const char** sasl_server_mechanisms_value);
+	extern int sasl_mechanisms_set_sasl_server_mechanisms(SASL_MECHANISMS_HANDLE sasl_mechanisms, const char* sasl_server_mechanisms_value);
+
+/* sasl-init */
+
+	typedef void* SASL_INIT_HANDLE;
+
+	extern SASL_INIT_HANDLE sasl_init_create(const char* mechanism_value);
+	extern void sasl_init_destroy(SASL_INIT_HANDLE sasl_init);
+	extern AMQP_VALUE amqpvalue_create_sasl_init(SASL_INIT_HANDLE sasl_init);
+
+	extern int sasl_init_get_mechanism(SASL_INIT_HANDLE sasl_init, const char** mechanism_value);
+	extern int sasl_init_set_mechanism(SASL_INIT_HANDLE sasl_init, const char* mechanism_value);
+	extern int sasl_init_get_initial_response(SASL_INIT_HANDLE sasl_init, amqp_binary* initial_response_value);
+	extern int sasl_init_set_initial_response(SASL_INIT_HANDLE sasl_init, amqp_binary initial_response_value);
+	extern int sasl_init_get_hostname(SASL_INIT_HANDLE sasl_init, const char** hostname_value);
+	extern int sasl_init_set_hostname(SASL_INIT_HANDLE sasl_init, const char* hostname_value);
+
+/* sasl-challenge */
+
+	typedef void* SASL_CHALLENGE_HANDLE;
+
+	extern SASL_CHALLENGE_HANDLE sasl_challenge_create(amqp_binary challenge_value);
+	extern void sasl_challenge_destroy(SASL_CHALLENGE_HANDLE sasl_challenge);
+	extern AMQP_VALUE amqpvalue_create_sasl_challenge(SASL_CHALLENGE_HANDLE sasl_challenge);
+
+	extern int sasl_challenge_get_challenge(SASL_CHALLENGE_HANDLE sasl_challenge, amqp_binary* challenge_value);
+	extern int sasl_challenge_set_challenge(SASL_CHALLENGE_HANDLE sasl_challenge, amqp_binary challenge_value);
+
+/* sasl-response */
+
+	typedef void* SASL_RESPONSE_HANDLE;
+
+	extern SASL_RESPONSE_HANDLE sasl_response_create(amqp_binary response_value);
+	extern void sasl_response_destroy(SASL_RESPONSE_HANDLE sasl_response);
+	extern AMQP_VALUE amqpvalue_create_sasl_response(SASL_RESPONSE_HANDLE sasl_response);
+
+	extern int sasl_response_get_response(SASL_RESPONSE_HANDLE sasl_response, amqp_binary* response_value);
+	extern int sasl_response_set_response(SASL_RESPONSE_HANDLE sasl_response, amqp_binary response_value);
+
+/* sasl-outcome */
+
+	typedef void* SASL_OUTCOME_HANDLE;
+
+	extern SASL_OUTCOME_HANDLE sasl_outcome_create(sasl_code code_value);
+	extern void sasl_outcome_destroy(SASL_OUTCOME_HANDLE sasl_outcome);
+	extern AMQP_VALUE amqpvalue_create_sasl_outcome(SASL_OUTCOME_HANDLE sasl_outcome);
+
+	extern int sasl_outcome_get_code(SASL_OUTCOME_HANDLE sasl_outcome, sasl_code* code_value);
+	extern int sasl_outcome_set_code(SASL_OUTCOME_HANDLE sasl_outcome, sasl_code code_value);
+	extern int sasl_outcome_get_additional_data(SASL_OUTCOME_HANDLE sasl_outcome, amqp_binary* additional_data_value);
+	extern int sasl_outcome_set_additional_data(SASL_OUTCOME_HANDLE sasl_outcome, amqp_binary additional_data_value);
 
 
 #ifdef __cplusplus

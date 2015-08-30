@@ -78,6 +78,7 @@ static int frame_begin(void* context, uint32_t decode_frame_body_size, const uns
 
 	case SASL_FRAME_DECODE_FRAME_HEADER:
 		sasl_frame_codec_instance->decode_state = SASL_FRAME_DECODE_FRAME;
+		sasl_frame_codec_instance->decode_frame_body_size = decode_frame_body_size;
 		result = 0;
 		break;
 	}
@@ -164,7 +165,7 @@ SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			}
 			else
 			{
-				if (frame_codec_subscribe(frame_codec, 0, frame_begin, frame_body_bytes_received, result) != 0)
+				if (frame_codec_subscribe(frame_codec, 1, frame_begin, frame_body_bytes_received, result) != 0)
 				{
 					amqpvalue_decoder_destroy(result->decoder);
 					amqpalloc_free(result);

@@ -500,13 +500,16 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			break;
 
 		case CONNECTION_STATE_START:
-			/* Codes_SRS_CONNECTION_01_086: [Prior to sending any frames on a connection_instance, each peer MUST start by sending a protocol header that indicates the protocol version used on the connection_instance.] */
-			/* Codes_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection_instance) MUST immediately send its outgoing protocol header on establishment of the TCP connection_instance.] */
-			if (send_header(connection_instance))
+			if (io_get_state(connection_instance->io) == IO_STATE_READY)
 			{
-				io_destroy(connection_instance->io);
-				connection_instance->io = NULL;
-				connection_instance->connection_state = CONNECTION_STATE_END;
+				/* Codes_SRS_CONNECTION_01_086: [Prior to sending any frames on a connection_instance, each peer MUST start by sending a protocol header that indicates the protocol version used on the connection_instance.] */
+				/* Codes_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection_instance) MUST immediately send its outgoing protocol header on establishment of the TCP connection_instance.] */
+				if (send_header(connection_instance))
+				{
+					io_destroy(connection_instance->io);
+					connection_instance->io = NULL;
+					connection_instance->connection_state = CONNECTION_STATE_END;
+				}
 			}
 			break;
 
@@ -516,14 +519,17 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			break;
 
 		case CONNECTION_STATE_HDR_EXCH:
-			/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection_instance begins with an exchange of capabilities and limitations, including the maximum frame size.] */
-			/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection_instance and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
-			/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-			if (send_open_frame(connection) != 0)
+			if (io_get_state(connection_instance->io) == IO_STATE_READY)
 			{
-				io_destroy(connection_instance->io);
-				connection_instance->io = NULL;
-				connection_instance->connection_state = CONNECTION_STATE_END;
+				/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection_instance begins with an exchange of capabilities and limitations, including the maximum frame size.] */
+				/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection_instance and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+				/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
+				if (send_open_frame(connection) != 0)
+				{
+					io_destroy(connection_instance->io);
+					connection_instance->io = NULL;
+					connection_instance->connection_state = CONNECTION_STATE_END;
+				}
 			}
 			break;
 

@@ -504,7 +504,7 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			{
 				/* Codes_SRS_CONNECTION_01_086: [Prior to sending any frames on a connection_instance, each peer MUST start by sending a protocol header that indicates the protocol version used on the connection_instance.] */
 				/* Codes_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection_instance) MUST immediately send its outgoing protocol header on establishment of the TCP connection_instance.] */
-				if (send_header(connection_instance))
+				if (send_header(connection_instance) != 0)
 				{
 					io_destroy(connection_instance->io);
 					connection_instance->io = NULL;

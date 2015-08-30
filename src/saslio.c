@@ -338,7 +338,21 @@ int saslio_send(IO_HANDLE sasl_io, const void* buffer, size_t size)
 	else
 	{
 		SASL_IO_INSTANCE* sasl_io_instance = (SASL_IO_INSTANCE*)sasl_io;
-		result = 0;
+		if (sasl_io_instance->sasl_client_negotiation_state != SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			if (io_send(sasl_io_instance->socket_io, buffer, size) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
 	}
 
 	return result;
@@ -426,19 +440,21 @@ IO_STATE saslio_get_state(IO_HANDLE sasl_io)
 	else
 	{
 		SASL_IO_INSTANCE* sasl_io_instance = (SASL_IO_INSTANCE*)sasl_io;
-		switch (sasl_io_instance->sasl_io_state)
+		switch (sasl_io_instance->sasl_client_negotiation_state)
 		{
 		default:
 			result = IO_STATE_ERROR;
 			break;
 
-		case SASL_IO_HEADER_EXCH:
+		case SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD:
 			result = IO_STATE_READY;
 			break;
 
-		case SASL_IO_IDLE:
-		case SASL_IO_HEADER_SENT:
-		case SASL_IO_HEADER_RCVD:
+		case SASL_CLIENT_NEGOTIATION_NOT_STARTED:
+		case SASL_CLIENT_NEGOTIATION_MECH_RCVD:
+		case SASL_CLIENT_NEGOTIATION_INIT_SENT:
+		case SASL_CLIENT_NEGOTIATION_CHALLENGE_RCVD:
+		case SASL_CLIENT_NEGOTIATION_RESPONSE_SENT:
 			result = IO_STATE_NOT_READY;
 			break;
 		}

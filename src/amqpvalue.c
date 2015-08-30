@@ -40,6 +40,11 @@ typedef struct AMQP_STRING_VALUE_TAG
 	char* chars;
 } AMQP_STRING_VALUE;
 
+typedef struct AMQP_SYMBOL_VALUE_TAG
+{
+	char* chars;
+} AMQP_SYMBOL_VALUE;
+
 typedef struct AMQP_BINARY_VALUE_TAG
 {
 	unsigned char* bytes;
@@ -74,7 +79,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	AMQP_LIST_VALUE list_value;
 	AMQP_MAP_VALUE map_value;
 	AMQP_ARRAY_VALUE array_value;
-	uint32_t symbol_value;
+	AMQP_SYMBOL_VALUE symbol_value;
 } AMQP_VALUE_UNION;
 
 typedef enum DECODE_LIST_STEP_TAG
@@ -963,21 +968,41 @@ int amqpvalue_get_string(AMQP_VALUE value, const char** string_value)
 }
 
 /* Codes_SRS_AMQPVALUE_01_029: [1.6.21 symbol Symbolic values from a constrained domain.] */
-AMQP_VALUE amqpvalue_create_symbol(uint32_t value)
+AMQP_VALUE amqpvalue_create_symbol(const char* value)
 {
-	/* Codes_SRS_AMQPVALUE_01_143: [If allocating the AMQP_VALUE fails then amqpvalue_create_symbol shall return NULL.] */
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
-	if (result != NULL)
+	AMQP_VALUE_DATA* result;
+	if (value == NULL)
 	{
-		/* Codes_SRS_AMQPVALUE_01_142: [amqpvalue_create_symbol shall return a handle to an AMQP_VALUE that stores a uint32_t value.] */
-		result->type = AMQP_TYPE_SYMBOL;
-		result->value.symbol_value = value;
+		/* Codes_SRS_AMQPVALUE_01_400: [If value is NULL, amqpvalue_create_symbol shall fail and return NULL.] */
+		result = NULL;
+	}
+	else
+	{
+		/* Codes_SRS_AMQPVALUE_01_143: [If allocating the AMQP_VALUE fails then amqpvalue_create_symbol shall return NULL.] */
+		result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+		if (result != NULL)
+		{
+			uint32_t length = strlen(value);
+
+			/* Codes_SRS_AMQPVALUE_01_142: [amqpvalue_create_symbol shall return a handle to an AMQP_VALUE that stores a symbol (ASCII string) value.] */
+			result->type = AMQP_TYPE_SYMBOL;
+			result->value.symbol_value.chars = (char*)amqpalloc_malloc(length + 1);
+			if (result->value.symbol_value.chars == NULL)
+			{
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				(void)strcpy(result->value.symbol_value.chars, value);
+			}
+		}
 	}
 
 	return result;
 }
 
-int amqpvalue_get_symbol(AMQP_VALUE value, uint32_t* symbol_value)
+int amqpvalue_get_symbol(AMQP_VALUE value, const char** symbol_value)
 {
 	int result;
 
@@ -998,8 +1023,8 @@ int amqpvalue_get_symbol(AMQP_VALUE value, uint32_t* symbol_value)
 		}
 		else
 		{
-			/* Codes_SRS_AMQPVALUE_01_145: [amqpvalue_get_symbol shall fill in the symbol_value the uint32_t symbol value held by the AMQP_VALUE.] */
-			*symbol_value = value_data->value.symbol_value;
+			/* Codes_SRS_AMQPVALUE_01_145: [amqpvalue_get_symbol shall fill in the symbol_value the symbol value string held by the AMQP_VALUE.] */
+			*symbol_value = value_data->value.symbol_value.chars;
 
 			/* Codes_SRS_AMQPVALUE_01_146: [On success, amqpvalue_get_symbol shall return 0.] */
 			result = 0;

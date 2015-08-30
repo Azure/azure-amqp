@@ -2351,6 +2351,10 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
 			ASSERT_ARE_EQUAL(char_ptr, "a", string_value);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_138: [amqpvalue_get_string shall yield a pointer to the sequence of bytes held by the AMQP_VALUE in string_value.] */
@@ -2368,6 +2372,10 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			// assert
 			ASSERT_ARE_EQUAL(int, 0, result);
 			ASSERT_ARE_EQUAL(char_ptr, "", string_value);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_139: [If any of the arguments is NULL then amqpvalue_get_string shall return a non-zero value.] */
@@ -2398,6 +2406,10 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_140: [If the type of the value is not string (was not created with amqpvalue_create_string), then amqpvalue_get_string shall return a non-zero value.] */
@@ -2414,11 +2426,36 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 
 			// assert
 			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value);
 		}
 
 		/* amqpvalue_create_symbol */
 
-		/* Tests_SRS_AMQPVALUE_01_142: [amqpvalue_create_symbol shall return a handle to an AMQP_VALUE that stores a uint32_t value.] */
+		/* Tests_SRS_AMQPVALUE_01_142: [amqpvalue_create_symbol shall return a handle to an AMQP_VALUE that stores a symbol (ASCII string) value.] */
+		/* Tests_SRS_AMQPVALUE_01_029: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		TEST_FUNCTION(amqpvalue_create_symbol_with_an_empty_string_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_symbol("");
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_142: [amqpvalue_create_symbol shall return a handle to an AMQP_VALUE that stores a symbol (ASCII string) value.] */
 		/* Tests_SRS_AMQPVALUE_01_029: [1.6.21 symbol Symbolic values from a constrained domain.] */
 		TEST_FUNCTION(amqpvalue_create_symbol_with_one_char_succeeds)
 		{
@@ -2426,28 +2463,66 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqpvalue_mocks mocks;
 
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-
-			// act
-			AMQP_VALUE result = amqpvalue_create_symbol(1);
-
-			// assert
-			ASSERT_IS_NOT_NULL(result);
-		}
-
-		/* Tests_SRS_AMQPVALUE_01_142: [amqpvalue_create_symbol shall return a handle to an AMQP_VALUE that stores a uint32_t value.] */
-		/* Tests_SRS_AMQPVALUE_01_029: [1.6.21 symbol Symbolic values from a constrained domain.] */
-		TEST_FUNCTION(amqpvalue_create_symbol_value_0xFFFFFFFF_length_succeeds)
-		{
-			// arrange
-			amqpvalue_mocks mocks;
-
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
 			// act
-			AMQP_VALUE result = amqpvalue_create_symbol(0xFFFFFFFF);
+			AMQP_VALUE result = amqpvalue_create_symbol("t");
 
 			// assert
 			ASSERT_IS_NOT_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_142: [amqpvalue_create_symbol shall return a handle to an AMQP_VALUE that stores a symbol (ASCII string) value.] */
+		/* Tests_SRS_AMQPVALUE_01_029: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		TEST_FUNCTION(amqpvalue_create_symbol_with_a_255_char_string_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			char symbol[256];
+
+			(void)memset(symbol, 'a', 255);
+			symbol[255] = 0;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_symbol(symbol);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_142: [amqpvalue_create_symbol shall return a handle to an AMQP_VALUE that stores a symbol (ASCII string) value.] */
+		/* Tests_SRS_AMQPVALUE_01_029: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		TEST_FUNCTION(amqpvalue_create_symbol_with_a_256_char_string_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			char symbol[257];
+			(void)memset(symbol, 'a', 256);
+			symbol[256] = 0;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_symbol(symbol);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(result);
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_143: [If allocating the AMQP_VALUE fails then amqpvalue_create_symbol shall return NULL.] */
@@ -2455,13 +2530,25 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			unsigned char input[] = { 0x0, 0x42 };
 
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
 
 			// act
-			AMQP_VALUE result = amqpvalue_create_symbol(42);
+			AMQP_VALUE result = amqpvalue_create_symbol("42");
+
+			// assert
+			ASSERT_IS_NULL(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_400: [If value is NULL, amqpvalue_create_symbol shall fail and return NULL.] */
+		TEST_FUNCTION(amqpvalue_create_symbol_with_NULL_value_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+
+			// act
+			AMQP_VALUE result = amqpvalue_create_symbol(NULL);
 
 			// assert
 			ASSERT_IS_NULL(result);
@@ -2469,21 +2556,21 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 
 		/* amqpvalue_get_symbol */
 
-		/* Tests_SRS_AMQPVALUE_01_145: [amqpvalue_get_symbol shall fill in the symbol_value the uint32_t symbol value held by the AMQP_VALUE.] */
+		/* Tests_SRS_AMQPVALUE_01_145: [amqpvalue_get_symbol shall fill in the symbol_value the symbol value string held by the AMQP_VALUE.] */
 		/* Tests_SRS_AMQPVALUE_01_146: [On success, amqpvalue_get_symbol shall return 0.] */
-		TEST_FUNCTION(amqpvalue_get_symbol_0_succeeds)
+		TEST_FUNCTION(amqpvalue_get_symbol_empty_string_succeeds)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			uint32_t symbol_value;
-			AMQP_VALUE value = amqpvalue_create_symbol(0);
+			const char* symbol_value;
+			AMQP_VALUE value = amqpvalue_create_symbol("");
 			mocks.ResetAllCalls();
 
 			// act
 			int result = amqpvalue_get_symbol(value, &symbol_value);
 
 			// assert
-			ASSERT_ARE_EQUAL(uint32_t, 0, symbol_value);
+			ASSERT_ARE_EQUAL(char_ptr, "", symbol_value);
 			ASSERT_ARE_EQUAL(int, 0, result);
 			mocks.AssertActualAndExpectedCalls();
 
@@ -2491,21 +2578,71 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			amqpvalue_destroy(value);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_145: [amqpvalue_get_symbol shall fill in the symbol_value the uint32_t symbol value held by the AMQP_VALUE.] */
+		/* Tests_SRS_AMQPVALUE_01_145: [amqpvalue_get_symbol shall fill in the symbol_value the symbol value string held by the AMQP_VALUE.] */
 		/* Tests_SRS_AMQPVALUE_01_146: [On success, amqpvalue_get_symbol shall return 0.] */
-		TEST_FUNCTION(amqpvalue_get_symbol_0xFFFFFFFF_succeeds)
+		TEST_FUNCTION(amqpvalue_get_symbol_one_char_succeeds)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			uint32_t symbol_value;
-			AMQP_VALUE value = amqpvalue_create_symbol(0xFFFFFFFF);
+			const char* symbol_value;
+			AMQP_VALUE value = amqpvalue_create_symbol("a");
 			mocks.ResetAllCalls();
 
 			// act
 			int result = amqpvalue_get_symbol(value, &symbol_value);
 
 			// assert
-			ASSERT_ARE_EQUAL(uint32_t, (uint32_t)0xFFFFFFFF, symbol_value);
+			ASSERT_ARE_EQUAL(char_ptr, "a", symbol_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_145: [amqpvalue_get_symbol shall fill in the symbol_value the symbol value string held by the AMQP_VALUE.] */
+		/* Tests_SRS_AMQPVALUE_01_146: [On success, amqpvalue_get_symbol shall return 0.] */
+		TEST_FUNCTION(amqpvalue_get_symbol_255_chars_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			const char* symbol_value;
+			char symbol[256];
+			(void)memset(symbol, 'a', 255);
+			symbol[255] = 0;
+			AMQP_VALUE value = amqpvalue_create_symbol(symbol);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_symbol(value, &symbol_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(char_ptr, symbol, symbol_value);
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_145: [amqpvalue_get_symbol shall fill in the symbol_value the symbol value string held by the AMQP_VALUE.] */
+		/* Tests_SRS_AMQPVALUE_01_146: [On success, amqpvalue_get_symbol shall return 0.] */
+		TEST_FUNCTION(amqpvalue_get_symbol_256_chars_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			const char* symbol_value;
+			char symbol[257];
+			(void)memset(symbol, 'a', 256);
+			symbol[256] = 0;
+			AMQP_VALUE value = amqpvalue_create_symbol(symbol);
+			mocks.ResetAllCalls();
+
+			// act
+			int result = amqpvalue_get_symbol(value, &symbol_value);
+
+			// assert
+			ASSERT_ARE_EQUAL(char_ptr, symbol, symbol_value);
 			ASSERT_ARE_EQUAL(int, 0, result);
 			mocks.AssertActualAndExpectedCalls();
 
@@ -2518,7 +2655,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			uint32_t symbol_value;
+			const char* symbol_value;
 
 			// act
 			int result = amqpvalue_get_symbol(NULL, &symbol_value);
@@ -2551,7 +2688,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			uint32_t symbol_value;
+			const char* symbol_value;
 			AMQP_VALUE value = amqpvalue_create_null();
 			mocks.ResetAllCalls();
 

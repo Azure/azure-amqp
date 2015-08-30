@@ -209,6 +209,7 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
+	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
 	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
@@ -274,6 +275,7 @@ TEST_METHOD(when_io_create_fails_then_connection_create_fails)
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
+	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
 	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1)
 		.SetReturn((IO_HANDLE)NULL);
@@ -296,6 +298,7 @@ TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
+	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
 	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
@@ -321,6 +324,7 @@ TEST_METHOD(when_amqp_frame_codec_create_fails_then_connection_create_fails)
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
+	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
 	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
@@ -364,6 +368,7 @@ TEST_METHOD(connection_create_with_NULL_options_succeeds)
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
+	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
 	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))

@@ -119,17 +119,23 @@ typedef struct DECODE_DESCRIBED_VALUE_STATE_TAG
 	DECODE_DESCRIBED_VALUE_STEP described_value_state;
 } DECODE_DESCRIBED_VALUE_STATE;
 
-typedef struct STRING_VALUE_STATE_TAG
+typedef struct DECODE_STRING_VALUE_STATE_TAG
 {
 	uint32_t length;
-} STRING_VALUE_STATE;
+} DECODE_STRING_VALUE_STATE;
+
+typedef struct DECODE_SYMBOL_VALUE_STATE_TAG
+{
+	uint32_t length;
+} DECODE_SYMBOL_VALUE_STATE;
 
 typedef union DECODE_VALUE_STATE_UNION_TAG
 {
 	DECODE_LIST_VALUE_STATE list_value_state;
 	DECODE_ARRAY_VALUE_STATE array_value_state;
 	DECODE_DESCRIBED_VALUE_STATE described_value_state;
-	STRING_VALUE_STATE string_value_state;
+	DECODE_STRING_VALUE_STATE string_value_state;
+	DECODE_SYMBOL_VALUE_STATE symbol_value_state;
 } DECODE_VALUE_STATE_UNION;
 
 typedef struct AMQP_VALUE_DATA_TAG
@@ -1677,6 +1683,11 @@ bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 				result = (strcmp(value1_data->value.string_value.chars, value2_data->value.string_value.chars) == 0);
 				break;
 
+			case AMQP_TYPE_SYMBOL:
+				/* Codes_SRS_AMQPVALUE_01_263: [- symbol: compare all symbol characters.] */
+				result = (strcmp(value1_data->value.symbol_value.chars, value2_data->value.symbol_value.chars) == 0);
+				break;
+
 			case AMQP_TYPE_LIST:
 			{
 				/* Codes_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
@@ -1836,6 +1847,11 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 		case AMQP_TYPE_STRING:
 			/* Codes_SRS_AMQPVALUE_01_256: [string] */
 			result = amqpvalue_create_string(value_data->value.string_value.chars);
+			break;
+
+		case AMQP_TYPE_SYMBOL:
+			/* Codes_SRS_AMQPVALUE_01_257: [symbol] */
+			result = amqpvalue_create_symbol(value_data->value.symbol_value.chars);
 			break;
 
 		case AMQP_TYPE_LIST:
@@ -2941,6 +2957,12 @@ static void amqpvalue_clear(AMQP_VALUE_DATA* value_data)
 			amqpalloc_free(value_data->value.string_value.chars);
 		}
 		break;
+	case AMQP_TYPE_SYMBOL:
+		if (value_data->value.symbol_value.chars != NULL)
+		{
+			amqpalloc_free(value_data->value.symbol_value.chars);
+		}
+		break;
 	case AMQP_TYPE_LIST:
 	{
 		size_t i;
@@ -3357,6 +3379,22 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
 					internal_decoder_data->decode_to_value->value.string_value.chars = NULL;
 					internal_decoder_data->decode_value_state.string_value_state.length = 0;
+					internal_decoder_data->bytes_decoded = 0;
+
+					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+					result = 0;
+					break;
+				}
+				/* Codes_SRS_AMQPVALUE_01_379: [<encoding name="sym8" code="0xa3" category="variable" width="1" label="up to 2^8 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+				case 0xA3:
+				/* Codes_SRS_AMQPVALUE_01_380: [<encoding name="sym32" code="0xb3" category="variable" width="4" label="up to 2^32 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+				case 0xB3:
+				{
+					/* Codes_SRS_AMQPVALUE_01_378: [1.6.21 symbol Symbolic values from a constrained domain.] */
+					internal_decoder_data->decode_to_value->type = AMQP_TYPE_SYMBOL;
+					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
+					internal_decoder_data->decode_to_value->value.symbol_value.chars = NULL;
+					internal_decoder_data->decode_value_state.symbol_value_state.length = 0;
 					internal_decoder_data->bytes_decoded = 0;
 
 					/* Codes_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
@@ -4059,6 +4097,147 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_value_state.string_value_state.length + 4)
 							{
 								internal_decoder_data->decode_to_value->value.string_value.chars[internal_decoder_data->decode_value_state.string_value_state.length] = '\0';
+								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+								/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+								/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+								/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
+							}
+
+							result = 0;
+						}
+					}
+					break;
+				}
+				/* Codes_SRS_AMQPVALUE_01_379: [<encoding name="sym8" code="0xa3" category="variable" width="1" label="up to 2^8 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+				case 0xA3:
+				{
+					if (internal_decoder_data->bytes_decoded == 0)
+					{
+						internal_decoder_data->decode_value_state.symbol_value_state.length = buffer[0];
+						internal_decoder_data->bytes_decoded++;
+						buffer++;
+						size--;
+
+						internal_decoder_data->decode_to_value->value.symbol_value.chars = (char*)amqpalloc_malloc(internal_decoder_data->decode_value_state.symbol_value_state.length + 1);
+						if (internal_decoder_data->decode_to_value->value.symbol_value.chars == NULL)
+						{
+							/* Codes_SRS_AMQPVALUE_01_326: [If any allocation failure occurs during decoding, amqpvalue_decode_bytes shall fail and return a non-zero value.] */
+							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+							result = __LINE__;
+						}
+						else
+						{
+							if (internal_decoder_data->decode_value_state.symbol_value_state.length == 0)
+							{
+								internal_decoder_data->decode_to_value->value.symbol_value.chars[0] = '\0';
+
+								/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+								/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+								/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
+							}
+
+							result = 0;
+						}
+					}
+					else
+					{
+						uint32_t to_copy = internal_decoder_data->decode_value_state.symbol_value_state.length - (internal_decoder_data->bytes_decoded - 1);
+						if (to_copy > size)
+						{
+							to_copy = size;
+						}
+
+						if (memcpy(internal_decoder_data->decode_to_value->value.symbol_value.chars + (internal_decoder_data->bytes_decoded - 1), buffer, to_copy) == NULL)
+						{
+							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+							result = __LINE__;
+						}
+						else
+						{
+							buffer += to_copy;
+							size -= to_copy;
+							internal_decoder_data->bytes_decoded += to_copy;
+
+							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_value_state.symbol_value_state.length + 1)
+							{
+								internal_decoder_data->decode_to_value->value.symbol_value.chars[internal_decoder_data->decode_value_state.symbol_value_state.length] = 0;
+								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+								/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+								/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+								/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
+							}
+
+							result = 0;
+						}
+					}
+					break;
+				}
+				/* Codes_SRS_AMQPVALUE_01_380: [<encoding name="sym32" code="0xb3" category="variable" width="4" label="up to 2^32 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+				case 0xB3:
+				{
+					if (internal_decoder_data->bytes_decoded < 4)
+					{
+						internal_decoder_data->decode_value_state.symbol_value_state.length += buffer[0] << ((3 - internal_decoder_data->bytes_decoded) * 8);
+						internal_decoder_data->bytes_decoded++;
+						buffer++;
+						size--;
+
+						if (internal_decoder_data->bytes_decoded == 4)
+						{
+							internal_decoder_data->decode_to_value->value.symbol_value.chars = (char*)amqpalloc_malloc(internal_decoder_data->decode_value_state.symbol_value_state.length + 1);
+							if (internal_decoder_data->decode_to_value->value.symbol_value.chars == NULL)
+							{
+								/* Codes_SRS_AMQPVALUE_01_326: [If any allocation failure occurs during decoding, amqpvalue_decode_bytes shall fail and return a non-zero value.] */
+								internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+								result = __LINE__;
+							}
+							else
+							{
+								if (internal_decoder_data->decode_value_state.symbol_value_state.length == 0)
+								{
+									internal_decoder_data->decode_to_value->value.symbol_value.chars[0] = '\0';
+
+									/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */
+									/* Codes_SRS_AMQPVALUE_01_324: [The decoded amqp value shall be passed to value_decoded_callback.] */
+									/* Codes_SRS_AMQPVALUE_01_325: [Also the context stored in amqpvalue_decoder_create shall be passed to the value_decoded_callback callback.] */
+									internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
+								}
+
+								result = 0;
+							}
+						}
+						else
+						{
+							result = 0;
+						}
+					}
+					else
+					{
+						uint32_t to_copy = internal_decoder_data->decode_value_state.symbol_value_state.length - (internal_decoder_data->bytes_decoded - 4);
+						if (to_copy > size)
+						{
+							to_copy = size;
+						}
+
+						if (memcpy(internal_decoder_data->decode_to_value->value.symbol_value.chars + (internal_decoder_data->bytes_decoded - 4), buffer, to_copy) == NULL)
+						{
+							internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+							result = __LINE__;
+						}
+						else
+						{
+							buffer += to_copy;
+							size -= to_copy;
+							internal_decoder_data->bytes_decoded += to_copy;
+
+							if (internal_decoder_data->bytes_decoded == internal_decoder_data->decode_value_state.symbol_value_state.length + 4)
+							{
+								internal_decoder_data->decode_to_value->value.symbol_value.chars[internal_decoder_data->decode_value_state.symbol_value_state.length] = '\0';
 								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
 
 								/* Codes_SRS_AMQPVALUE_01_323: [When enough bytes have been processed for a valid amqp value, the value_decoded_callback passed in amqpvalue_decoder_create shall be called.] */

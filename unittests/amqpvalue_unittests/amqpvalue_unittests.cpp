@@ -5288,6 +5288,70 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		}
 
 		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
+		/* Tests_SRS_AMQPVALUE_01_263: [- symbol: compare all symbol characters.] */
+		TEST_FUNCTION(for_2_equal_symbol_values_amqpvalue_are_equal_returns_true)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_symbol("a");
+			AMQP_VALUE value2 = amqpvalue_create_symbol("a");
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_TRUE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_263: [- symbol: compare all symbol characters.] */
+		TEST_FUNCTION(for_2_different_symbol_values_with_same_length_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_symbol("a");
+			AMQP_VALUE value2 = amqpvalue_create_symbol("b");
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_263: [- symbol: compare all symbol characters.] */
+		TEST_FUNCTION(for_2_different_symbol_values_with_different_length_amqpvalue_are_equal_returns_false)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value1 = amqpvalue_create_symbol("a");
+			AMQP_VALUE value2 = amqpvalue_create_symbol("ab");
+			mocks.ResetAllCalls();
+
+			// act
+			bool result = amqpvalue_are_equal(value1, value2);
+
+			// assert
+			ASSERT_IS_FALSE(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(value1);
+			amqpvalue_destroy(value2);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 		/* Tests_SRS_AMQPVALUE_01_231: [- list: compare list item count and each element.] */
 		TEST_FUNCTION(for_2_empty_list_values_amqpvalue_are_equal_returns_true)
 		{
@@ -7115,6 +7179,104 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 			AMQP_VALUE source = amqpvalue_create_string("abcd");
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_257: [symbol] */
+		TEST_FUNCTION(amqpvalue_clone_clones_a_symbol_succesfully_a)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_symbol("a");
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_235: [amqpvalue_clone shall clone the value passed as argument and return a new non-NULL handle to the cloned AMQP value.] */
+		/* Tests_SRS_AMQPVALUE_01_257: [symbol] */
+		TEST_FUNCTION(amqpvalue_clone_clones_a_symbol_succesfully_abcd)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_symbol("abcd");
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NOT_NULL(result);
+			ASSERT_IS_TRUE(amqpvalue_are_equal(result, source));
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+			amqpvalue_destroy(result);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_257: [symbol] */
+		TEST_FUNCTION(when_allocating_the_cloned_value_amqpvalue_clone_for_a_symbol_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_symbol("abcd");
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			AMQP_VALUE result = amqpvalue_clone(source);
+
+			// assert
+			ASSERT_IS_NULL(result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_destroy(source);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_236: [If creating the cloned value fails, amqpvalue_clone shall return NULL.] */
+		/* Tests_SRS_AMQPVALUE_01_257: [symbol] */
+		TEST_FUNCTION(when_allocating_the_underlying_buffer_amqpvalue_clone_for_a_symbol_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE source = amqpvalue_create_symbol("abcd");
 			mocks.ResetAllCalls();
 
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
@@ -9835,6 +9997,24 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			// arrange
 			amqpvalue_mocks mocks;
 			AMQP_VALUE value = amqpvalue_create_string("test");
+			mocks.ResetAllCalls();
+
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+			// act
+			amqpvalue_destroy(value);
+
+			// assert
+			// no explicit assert, uMock checks the calls
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_314: [amqpvalue_destroy shall free all resources allocated by any of the amqpvalue_create_xxx functions or amqpvalue_clone.] */
+		TEST_FUNCTION(amqpvalue_destroy_frees_the_memory_for_symbol_value)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQP_VALUE value = amqpvalue_create_symbol("test");
 			mocks.ResetAllCalls();
 
 			EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
@@ -13391,6 +13571,474 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
 			mocks.ResetAllCalls();
 			unsigned char bytes[] = { 0xB1, 0x00, 0x00, 0x00, 0x01, 'a' };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_378: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		/* Tests_SRS_AMQPVALUE_01_379: [<encoding name="sym8" code="0xa3" category="variable" width="1" label="up to 2^8 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xA3_value_zero_chars_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xA3, 0x00 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_SYMBOL, (int)amqpvalue_get_type(decoded_values[0]));
+			const char* actual_value;
+			(void)amqpvalue_get_symbol(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(char_ptr, "", actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_378: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		/* Tests_SRS_AMQPVALUE_01_379: [<encoding name="sym8" code="0xa3" category="variable" width="1" label="up to 2^8 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xA3_value_1_char_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xA3, 0x01, 'a' };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_SYMBOL, (int)amqpvalue_get_type(decoded_values[0]));
+			const char* actual_value;
+			(void)amqpvalue_get_symbol(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(char_ptr, "a", actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_378: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		/* Tests_SRS_AMQPVALUE_01_379: [<encoding name="sym8" code="0xa3" category="variable" width="1" label="up to 2^8 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xA3_value_255_chars_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[255 + 2] = { 0xA3, 0xFF, 'x' };
+
+			(void)memset(bytes + 2, 'x', 255);
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_SYMBOL, (int)amqpvalue_get_type(decoded_values[0]));
+			const char* actual_value;
+			(void)amqpvalue_get_symbol(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(char_ptr, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+				"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+				"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" "xxxxx", actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_378: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		/* Tests_SRS_AMQPVALUE_01_379: [<encoding name="sym8" code="0xa3" category="variable" width="1" label="up to 2^8 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xA3_value_2_chars_byte_by_byte_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xA3, 0x02, 'a', 'b' };
+			int i;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			for (i = 0; i < sizeof(bytes); i++)
+			{
+				int result = amqpvalue_decode_bytes(amqpvalue_decoder, &bytes[i], 1);
+				ASSERT_ARE_EQUAL(int, 0, result);
+			}
+
+			// assert
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_SYMBOL, (int)amqpvalue_get_type(decoded_values[0]));
+			const char* actual_value;
+			(void)amqpvalue_get_symbol(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(char_ptr, "ab", actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xA3_zero_bytes_not_enough_bytes_does_not_trigger_callback)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xA3 };
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xA3_one_byte_not_enough_bytes_does_not_trigger_callback)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xA3, 0x01 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_326: [If any allocation failure occurs during decoding, amqpvalue_decode_bytes shall fail and return a non-zero value.] */
+		TEST_FUNCTION(when_allocating_memory_fails_amqpvalue_decode_symbol_0xA3_one_byte_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xA3, 0x01, 'a' };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.SetReturn((void*)NULL);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_NOT_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xA3_255_byte_not_enough_bytes_does_not_trigger_callback)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[254 + 2] = { 0xA3, 0xFF, 'x' };
+
+			(void)memset(bytes + 2, 'x', 254);
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_378: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		/* Tests_SRS_AMQPVALUE_01_380: [<encoding name="sym32" code="0xb3" category="variable" width="4" label="up to 2^32 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xB3_value_zero_chars_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xB3, 0x00, 0x00, 0x00, 0x00 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_SYMBOL, (int)amqpvalue_get_type(decoded_values[0]));
+			const char* actual_value;
+			(void)amqpvalue_get_symbol(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(char_ptr, "", actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_378: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		/* Tests_SRS_AMQPVALUE_01_380: [<encoding name="sym32" code="0xb3" category="variable" width="4" label="up to 2^32 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xB3_value_1_char_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xB3, 0x00, 0x00, 0x00, 0x01, 'a' };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_SYMBOL, (int)amqpvalue_get_type(decoded_values[0]));
+			const char* actual_value;
+			(void)amqpvalue_get_symbol(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(char_ptr, "a", actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_378: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		/* Tests_SRS_AMQPVALUE_01_380: [<encoding name="sym32" code="0xb3" category="variable" width="4" label="up to 2^32 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xB3_value_255_chars_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[255 + 5] = { 0xB3, 0x00, 0x00, 0x00, 0xFF, 'x' };
+
+			(void)memset(bytes + 5, 'x', 255);
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_SYMBOL, (int)amqpvalue_get_type(decoded_values[0]));
+			const char* actual_value;
+			(void)amqpvalue_get_symbol(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(char_ptr, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+				"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+				"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" "xxxxx", actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_378: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		/* Tests_SRS_AMQPVALUE_01_380: [<encoding name="sym32" code="0xb3" category="variable" width="4" label="up to 2^32 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xB3_value_256_chars_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[256 + 5] = { 0xB3, 0x00, 0x00, 0x01, 0x00, 'x' };
+
+			(void)memset(bytes + 5, 'x', 256);
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_SYMBOL, (int)amqpvalue_get_type(decoded_values[0]));
+			const char* actual_value;
+			(void)amqpvalue_get_symbol(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(char_ptr, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+				"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+				"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" "xxxxxx", actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_378: [1.6.21 symbol Symbolic values from a constrained domain.] */
+		/* Tests_SRS_AMQPVALUE_01_380: [<encoding name="sym32" code="0xb3" category="variable" width="4" label="up to 2^32 - 1 seven bit ASCII characters representing a symbolic value"/>] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xB3_value_2_chars_byte_by_byte_succeeds)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xB3, 0x00, 0x00, 0x00, 0x02, 'a', 'b' };
+			int i;
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+				.IgnoreAllCalls();
+			STRICT_EXPECTED_CALL(mocks, value_decoded_callback(test_context, IGNORED_PTR_ARG))
+				.IgnoreArgument(2);
+
+			// act
+			for (i = 0; i < sizeof(bytes); i++)
+			{
+				int result = amqpvalue_decode_bytes(amqpvalue_decoder, &bytes[i], 1);
+				ASSERT_ARE_EQUAL(int, 0, result);
+			}
+
+			// assert
+			mocks.AssertActualAndExpectedCalls();
+			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_SYMBOL, (int)amqpvalue_get_type(decoded_values[0]));
+			const char* actual_value;
+			(void)amqpvalue_get_symbol(decoded_values[0], &actual_value);
+			ASSERT_ARE_EQUAL(char_ptr, "ab", actual_value);
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xB3_zero_bytes_not_enough_bytes_does_not_trigger_callback)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xB3 };
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xB3_one_byte_not_enough_bytes_does_not_trigger_callback)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xB3, 0x00, 0x00, 0x00, 0x01 };
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_327: [If not enough bytes have accumulated to decode a value, the value_decoded_callback shall not be called.] */
+		TEST_FUNCTION(amqpvalue_decode_symbol_0xB3_255_byte_not_enough_bytes_does_not_trigger_callback)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[255 + 5] = { 0xB3, 0x00, 0x00, 0x01, 0x00, 'x' };
+
+			(void)memset(bytes + 5, 'x', 255);
+
+			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+			// act
+			int result = amqpvalue_decode_bytes(amqpvalue_decoder, bytes, sizeof(bytes));
+
+			// assert
+			ASSERT_ARE_EQUAL(int, 0, result);
+			mocks.AssertActualAndExpectedCalls();
+
+			// cleanup
+			amqpvalue_decoder_destroy(amqpvalue_decoder);
+		}
+
+		/* Tests_SRS_AMQPVALUE_01_326: [If any allocation failure occurs during decoding, amqpvalue_decode_bytes shall fail and return a non-zero value.] */
+		TEST_FUNCTION(when_amqpalloc_malloc_fails_then_amqpvalue_decode_symbol_0xB3_one_byte_fails)
+		{
+			// arrange
+			amqpvalue_mocks mocks;
+			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
+			mocks.ResetAllCalls();
+			unsigned char bytes[] = { 0xB3, 0x00, 0x00, 0x00, 0x01, 'a' };
 
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);

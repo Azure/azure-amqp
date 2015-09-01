@@ -4,7 +4,7 @@
 #include "frame_codec.h"
 #include "amqp_frame_codec.h"
 #include "amqp_definitions.h"
-#include "socketio.h"
+#include "tlsio.h"
 #include "saslio.h"
 #include "amqpalloc.h"
 
@@ -380,11 +380,11 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 		if (result != NULL)
 		{
 			/* Codes_SRS_CONNECTION_01_069: [The io parameters shall be filled in with the host and port information passed to connection_create.] */
-			const SOCKETIO_CONFIG socket_io_config = { host, port };
+			const TLSIO_CONFIG socket_io_config = { host, port };
 			const IO_INTERFACE_DESCRIPTION* io_interface_description;
 
 			/* Codes_SRS_CONNECTION_01_068: [connection_create shall pass to io_create the interface obtained by a call to socketio_get_interface_description.] */
-			io_interface_description = socketio_get_interface_description();
+			io_interface_description = tlsio_get_interface_description();
 			if (io_interface_description == NULL)
 			{
 				/* Codes_SRS_CONNECTION_01_124: [If getting the io interface information (by calling socketio_get_interface_description) fails, connection_create shall return NULL.] */

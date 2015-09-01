@@ -238,9 +238,20 @@ void messaging_dowork(MESSAGING_HANDLE handle)
 
 				messaging->outgoing_message_count = 0;
 			}
+		}
 
+		if (messaging->connection != NULL)
+		{
 			connection_dowork(messaging->connection);
+		}
+
+		if (messaging->session != NULL)
+		{
 			session_dowork(messaging->session);
+		}
+
+		if (messaging->link != NULL)
+		{
 			link_dowork(messaging->link);
 		}
 	}

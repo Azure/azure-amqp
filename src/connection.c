@@ -68,6 +68,8 @@ static int send_header(CONNECTION_INSTANCE* connection_instance)
 	}
 	else
 	{
+		consolelogger_log("-> Header (AMQP 0.1.0.0)");
+
 		/* Codes_SRS_CONNECTION_01_041: [HDR SENT In this state the connection header has been sent to the peer but no connection header has been received.] */
 		connection_instance->connection_state = CONNECTION_STATE_HDR_SENT;
 		result = 0;

@@ -97,8 +97,8 @@ IO_HANDLE tlsio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_c
 			}
 			else
 			{
-				result->socket_io = socketio_create(&socketio_config, tlsio_receive_bytes, result, logger_log);
-				if (result->socket_io == NULL)
+				const IO_INTERFACE_DESCRIPTION* socket_io_interface = socketio_get_interface_description();
+				if (socket_io_interface == NULL)
 				{
 					amqpalloc_free(result->host_name);
 					amqpalloc_free(result);
@@ -106,7 +106,17 @@ IO_HANDLE tlsio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_c
 				}
 				else
 				{
-					result->tls_state = TLS_STATE_HANDSHAKE_NOT_STARTED;
+					result->socket_io = io_create(socket_io_interface, &socketio_config, tlsio_receive_bytes, result, logger_log);
+					if (result->socket_io == NULL)
+					{
+						amqpalloc_free(result->host_name);
+						amqpalloc_free(result);
+						result = NULL;
+					}
+					else
+					{
+						result->tls_state = TLS_STATE_HANDSHAKE_NOT_STARTED;
+					}
 				}
 			}
 		}
@@ -203,7 +213,14 @@ void tlsio_dowork(IO_HANDLE tls_io)
 
 				if ((status == SEC_I_COMPLETE_NEEDED) || (status == SEC_I_CONTINUE_NEEDED) || (status == SEC_I_COMPLETE_AND_CONTINUE))
 				{
-					tls_io_instance->tls_state = TLS_STATE_HANDSHAKE_CLIENT_HELLO_SENT;
+					if (io_send(tls_io_instance->socket_io, init_security_buffers[0].pvBuffer, init_security_buffers[0].cbBuffer) != 0)
+					{
+						tls_io_instance->tls_state = TLS_STATE_ERROR;
+					}
+					else
+					{
+						tls_io_instance->tls_state = TLS_STATE_HANDSHAKE_CLIENT_HELLO_SENT;
+					}
 				}
 			}
 
@@ -211,7 +228,7 @@ void tlsio_dowork(IO_HANDLE tls_io)
 		}
 		}
 
-		socketio_dowork(tls_io_instance->socket_io);
+		io_dowork(tls_io_instance->socket_io);
 	}
 }
 

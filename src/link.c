@@ -7,6 +7,8 @@
 #include "amqp_definitions.h"
 #include "amqpalloc.h"
 #include "amqp_frame_codec.h"
+#include "consolelogger.h"
+#include "logger.h"
 
 typedef struct LINK_DATA_TAG
 {
@@ -27,10 +29,14 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 	switch (performative_ulong)
 	{
 	case AMQP_ATTACH:
+		LOG(consolelogger_log, LOG_LINE, "<- [ATTACH]");
 		if (link->link_state == LINK_STATE_HALF_ATTACHED)
 		{
 			link->link_state = LINK_STATE_ATTACHED;
 		}
+		break;
+	case AMQP_FLOW:
+		LOG(consolelogger_log, LOG_LINE, "<- [FLOW]");
 		break;
 	}
 }
@@ -124,6 +130,7 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 				}
 				else
 				{
+					LOG(consolelogger_log, LOG_LINE, "-> [TRANSFER]");
 					result = 0;
 				}
 
@@ -183,8 +190,11 @@ void link_dowork(LINK_HANDLE handle)
 		{
 			if (link->link_state == LINK_STATE_DETACHED)
 			{
-				(void)send_attach(link, "fake", 1, role_sender, sender_settle_mode_unsettled, receiver_settle_mode_first, link->source, link->target);
-				link->link_state = LINK_STATE_HALF_ATTACHED;
+				if (send_attach(link, "fake", 1, role_sender, sender_settle_mode_unsettled, receiver_settle_mode_first, link->source, link->target) == 0)
+				{
+					LOG(consolelogger_log, LOG_LINE, "-> [ATTACH]");
+					link->link_state = LINK_STATE_HALF_ATTACHED;
+				}
 			}
 		}
 	}

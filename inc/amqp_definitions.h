@@ -213,7 +213,7 @@ extern "C" {
 
 	typedef void* BEGIN_HANDLE;
 
-	extern BEGIN_HANDLE begin_create(transfer_number next_outgoing_id_value, uint32_t incoming_window_value, uint32_t outgoing_window_value);
+	extern BEGIN_HANDLE begin_create(uint16_t remote_channel_value, transfer_number next_outgoing_id_value, uint32_t incoming_window_value, uint32_t outgoing_window_value);
 	extern void begin_destroy(BEGIN_HANDLE begin);
 	extern AMQP_VALUE amqpvalue_create_begin(BEGIN_HANDLE begin);
 

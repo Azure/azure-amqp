@@ -102,6 +102,13 @@ typedef enum DECODE_DESCRIBED_VALUE_STEP_TAG
 	DECODE_DESCRIBED_VALUE_STEP_VALUE
 } DECODE_DESCRIBED_VALUE_STEP;
 
+typedef enum DECODE_MAP_STEP_TAG
+{
+	DECODE_MAP_STEP_SIZE,
+	DECODE_MAP_STEP_COUNT,
+	DECODE_MAP_STEP_PAIRS
+} DECODE_MAP_STEP;
+
 typedef struct DECODE_LIST_VALUE_STATE_TAG
 {
 	DECODE_LIST_STEP list_value_state;
@@ -130,6 +137,12 @@ typedef struct DECODE_SYMBOL_VALUE_STATE_TAG
 	uint32_t length;
 } DECODE_SYMBOL_VALUE_STATE;
 
+typedef struct DECODE_MAP_VALUE_STATE_TAG
+{
+	DECODE_MAP_STEP map_value_state;
+	uint32_t item;
+} DECODE_MAP_VALUE_STATE;
+
 typedef union DECODE_VALUE_STATE_UNION_TAG
 {
 	DECODE_LIST_VALUE_STATE list_value_state;
@@ -137,6 +150,7 @@ typedef union DECODE_VALUE_STATE_UNION_TAG
 	DECODE_DESCRIBED_VALUE_STATE described_value_state;
 	DECODE_STRING_VALUE_STATE string_value_state;
 	DECODE_SYMBOL_VALUE_STATE symbol_value_state;
+	DECODE_MAP_VALUE_STATE map_value_state;
 } DECODE_VALUE_STATE_UNION;
 
 typedef struct AMQP_VALUE_DATA_TAG
@@ -3431,6 +3445,18 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 					result = 0;
 					break;
 
+				case 0xC1:
+				case 0xD1:
+					internal_decoder_data->decode_to_value->type = AMQP_TYPE_MAP;
+					internal_decoder_data->decoder_state = DECODER_STATE_TYPE_DATA;
+					internal_decoder_data->decode_to_value->value.map_value.pair_count = 0;
+					internal_decoder_data->decode_to_value->value.map_value.pairs = NULL;
+					internal_decoder_data->bytes_decoded = 0;
+					internal_decoder_data->decode_value_state.map_value_state.map_value_state = DECODE_MAP_STEP_SIZE;
+
+					result = 0;
+					break;
+
 				case 0xE0:
 				case 0xF0:
 					internal_decoder_data->decode_to_value->type = AMQP_TYPE_ARRAY;
@@ -4442,6 +4468,213 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 									internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
 								}
 
+							}
+
+							result = 0;
+						}
+
+						break;
+					}
+					}
+
+					break;
+				}
+				case 0xC1:
+				case 0xD1:
+				{
+					DECODE_MAP_STEP step = internal_decoder_data->decode_value_state.map_value_state.map_value_state;
+
+					switch (step)
+					{
+					default:
+						result = __LINE__;
+						break;
+
+					case DECODE_MAP_STEP_SIZE:
+						internal_decoder_data->bytes_decoded++;
+						buffer++;
+						size--;
+
+						if (internal_decoder_data->constructor_byte == 0xC1)
+						{
+							internal_decoder_data->decode_value_state.map_value_state.map_value_state = DECODE_MAP_STEP_COUNT;
+							internal_decoder_data->bytes_decoded = 0;
+							internal_decoder_data->decode_to_value->value.map_value.pair_count = 0;
+							result = 0;
+						}
+						else
+						{
+							if (internal_decoder_data->bytes_decoded == 4)
+							{
+								internal_decoder_data->decode_value_state.map_value_state.map_value_state = DECODE_MAP_STEP_COUNT;
+								internal_decoder_data->bytes_decoded = 0;
+								internal_decoder_data->decode_to_value->value.map_value.pair_count = 0;
+							}
+							result = 0;
+						}
+
+						break;
+
+					case DECODE_MAP_STEP_COUNT:
+						if (internal_decoder_data->constructor_byte == 0xC1)
+						{
+							internal_decoder_data->decode_to_value->value.map_value.pair_count = buffer[0];
+						}
+						else
+						{
+							internal_decoder_data->decode_to_value->value.map_value.pair_count += buffer[0] << ((3 - internal_decoder_data->bytes_decoded) * 8);
+						}
+						internal_decoder_data->bytes_decoded++;
+						buffer++;
+						size--;
+
+						if (internal_decoder_data->constructor_byte == 0xC1)
+						{
+							if (internal_decoder_data->decode_to_value->value.map_value.pair_count == 0)
+							{
+								internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+								internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
+								result = 0;
+							}
+							else
+							{
+								uint32_t i;
+
+								internal_decoder_data->decode_to_value->value.map_value.pair_count /= 2;
+
+								internal_decoder_data->decode_to_value->value.map_value.pairs = (AMQP_MAP_KEY_VALUE_PAIR*)amqpalloc_malloc(sizeof(AMQP_MAP_KEY_VALUE_PAIR) * (internal_decoder_data->decode_to_value->value.map_value.pair_count * 2));
+								if (internal_decoder_data->decode_to_value->value.map_value.pairs == NULL)
+								{
+									result = __LINE__;
+								}
+								else
+								{
+									for (i = 0; i < internal_decoder_data->decode_to_value->value.map_value.pair_count; i++)
+									{
+										internal_decoder_data->decode_to_value->value.map_value.pairs[i].key = NULL;
+										internal_decoder_data->decode_to_value->value.map_value.pairs[i].value = NULL;
+									}
+
+									internal_decoder_data->decode_value_state.map_value_state.map_value_state = DECODE_MAP_STEP_PAIRS;
+									internal_decoder_data->bytes_decoded = 0;
+									internal_decoder_data->inner_decoder = NULL;
+									internal_decoder_data->decode_value_state.map_value_state.item = 0;
+									result = 0;
+								}
+							}
+						}
+						else
+						{
+							if (internal_decoder_data->bytes_decoded == 4)
+							{
+								if (internal_decoder_data->decode_to_value->value.map_value.pair_count == 0)
+								{
+									internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+									internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
+									result = 0;
+								}
+								else
+								{
+									uint32_t i;
+
+									internal_decoder_data->decode_to_value->value.map_value.pair_count /= 2;
+
+									internal_decoder_data->decode_to_value->value.map_value.pairs = (AMQP_MAP_KEY_VALUE_PAIR*)amqpalloc_malloc(sizeof(AMQP_MAP_KEY_VALUE_PAIR) * (internal_decoder_data->decode_to_value->value.map_value.pair_count * 2));
+									if (internal_decoder_data->decode_to_value->value.map_value.pairs == NULL)
+									{
+										result = __LINE__;
+									}
+									else
+									{
+										for (i = 0; i < internal_decoder_data->decode_to_value->value.map_value.pair_count; i++)
+										{
+											internal_decoder_data->decode_to_value->value.map_value.pairs[i].key = NULL;
+											internal_decoder_data->decode_to_value->value.map_value.pairs[i].value = NULL;
+										}
+										internal_decoder_data->decode_value_state.map_value_state.map_value_state = DECODE_MAP_STEP_PAIRS;
+										internal_decoder_data->bytes_decoded = 0;
+										internal_decoder_data->inner_decoder = NULL;
+										internal_decoder_data->decode_value_state.map_value_state.item = 0;
+										result = 0;
+									}
+								}
+							}
+							else
+							{
+								result = 0;
+							}
+						}
+						break;
+
+					case DECODE_MAP_STEP_PAIRS:
+					{
+						size_t used_bytes;
+
+						if (internal_decoder_data->bytes_decoded == 0)
+						{
+							AMQP_VALUE_DATA* map_item = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+							if (map_item == NULL)
+							{
+								internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+								result = __LINE__;
+							}
+							else
+							{
+								map_item->type = AMQP_TYPE_UNKNOWN;
+								if (internal_decoder_data->decode_to_value->value.map_value.pairs[internal_decoder_data->decode_value_state.map_value_state.item].key == NULL)
+								{
+									internal_decoder_data->decode_to_value->value.map_value.pairs[internal_decoder_data->decode_value_state.map_value_state.item].key = map_item;
+								}
+								else
+								{
+									internal_decoder_data->decode_to_value->value.map_value.pairs[internal_decoder_data->decode_value_state.map_value_state.item].value = map_item;
+								}
+								internal_decoder_data->inner_decoder = internal_decoder_create(inner_decoder_callback, internal_decoder_data, map_item);
+								if (internal_decoder_data->inner_decoder == NULL)
+								{
+									internal_decoder_data->decoder_state = DECODER_STATE_ERROR;
+									result = __LINE__;
+								}
+								else
+								{
+									result = 0;
+								}
+							}
+						}
+
+						if (internal_decoder_data->inner_decoder == NULL)
+						{
+							result = __LINE__;
+						}
+						else if (internal_decoder_decode_bytes(internal_decoder_data->inner_decoder, buffer, size, &used_bytes) != 0)
+						{
+							result = __LINE__;
+						}
+						else
+						{
+							INTERNAL_DECODER_DATA* inner_decoder = (INTERNAL_DECODER_DATA*)internal_decoder_data->inner_decoder;
+							internal_decoder_data->bytes_decoded += used_bytes;
+							buffer += used_bytes;
+							size -= used_bytes;
+
+							if (inner_decoder->decoder_state == DECODER_STATE_DONE)
+							{
+								internal_decoder_destroy(inner_decoder);
+								internal_decoder_data->inner_decoder = NULL;
+								internal_decoder_data->bytes_decoded = 0;
+
+								if (internal_decoder_data->decode_to_value->value.map_value.pairs[internal_decoder_data->decode_value_state.map_value_state.item].value != NULL)
+								{
+									internal_decoder_data->decode_value_state.map_value_state.item++;
+									if (internal_decoder_data->decode_value_state.map_value_state.item == internal_decoder_data->decode_to_value->value.map_value.pair_count)
+									{
+										internal_decoder_data->decoder_state = DECODER_STATE_CONSTRUCTOR;
+
+										internal_decoder_data->value_decoded_callback(internal_decoder_data->value_decoded_callback_context, internal_decoder_data->decode_to_value);
+									}
+								}
 							}
 
 							result = 0;

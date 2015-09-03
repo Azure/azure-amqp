@@ -1,6 +1,8 @@
 #include "session.h"
 #include "connection.h"
 #include "amqpalloc.h"
+#include "consolelogger.h"
+#include "logger.h"
 
 typedef struct SESSION_INSTANCE_TAG
 {
@@ -15,7 +17,7 @@ typedef struct SESSION_INSTANCE_TAG
 static int send_begin(ENDPOINT_HANDLE endpoint, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
 {
 	int result;
-	BEGIN_HANDLE begin = begin_create(next_outgoing_id, incoming_window, outgoing_window);
+	BEGIN_HANDLE begin = begin_create(1, next_outgoing_id, incoming_window, outgoing_window);
 
 	if (begin == NULL)
 	{
@@ -36,6 +38,8 @@ static int send_begin(ENDPOINT_HANDLE endpoint, transfer_number next_outgoing_id
 			}
 			else
 			{
+				LOG(consolelogger_log, LOG_LINE, "-> [BEGIN]");
+
 				result = 0;
 			}
 
@@ -58,12 +62,32 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 	default:
 		break;
 
+	case AMQP_BEGIN:
+		LOG(consolelogger_log, LOG_LINE, "<- [BEGIN]");
+		session->session_state = SESSION_STATE_MAPPED;
+		break;
+
 	case AMQP_ATTACH:
+		break;
+
 	case AMQP_FLOW:
 	case AMQP_TRANSFER:
 	case AMQP_DISPOSITION:
 	case AMQP_DETACH:
 		break;
+
+	case AMQP_END:
+	{
+		const char* error;
+		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+		AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 0);
+		AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
+		AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
+		amqpvalue_get_string(error_description_value, &error);
+
+		LOG(consolelogger_log, LOG_LINE, "<- [END:%s]", error);
+		break;
+	}
 	}
 }
 
@@ -132,7 +156,7 @@ void session_dowork(SESSION_HANDLE session)
 		{
 			if (connection_state == CONNECTION_STATE_OPENED)
 			{
-				if (send_begin(session_instance->endpoint, 0, 1, 1) == 0)
+				if (send_begin(session_instance->endpoint, 1, 2, 3) == 0)
 				{
 					session_instance->session_state = SESSION_STATE_BEGIN_SENT;
 				}

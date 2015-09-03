@@ -213,7 +213,7 @@ public:
 
 /* begin */
 
-	MOCK_STATIC_METHOD_3(,BEGIN_HANDLE, begin_create, transfer_number, next_outgoing_id_value, uint32_t, incoming_window_value, uint32_t, outgoing_window_value);
+	MOCK_STATIC_METHOD_4(,BEGIN_HANDLE, begin_create, uint16_t, remote_channel_value, transfer_number, next_outgoing_id_value, uint32_t, incoming_window_value, uint32_t, outgoing_window_value);
 	MOCK_METHOD_END(BEGIN_HANDLE, test_begin_handle);
 	MOCK_STATIC_METHOD_1(, void, begin_destroy, BEGIN_HANDLE, begin);
 	MOCK_VOID_METHOD_END();
@@ -673,7 +673,7 @@ public:
 
 /* begin */
 
-	DECLARE_GLOBAL_MOCK_METHOD_3(amqp_definitions_mocks, ,BEGIN_HANDLE, begin_create, transfer_number, next_outgoing_id_value, uint32_t, incoming_window_value, uint32_t, outgoing_window_value);
+	DECLARE_GLOBAL_MOCK_METHOD_4(amqp_definitions_mocks, ,BEGIN_HANDLE, begin_create, uint16_t, remote_channel_value, transfer_number, next_outgoing_id_value, uint32_t, incoming_window_value, uint32_t, outgoing_window_value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, begin_destroy, BEGIN_HANDLE, begin);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_begin, BEGIN_HANDLE, begin);
 

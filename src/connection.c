@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "connection.h"
 #include "consolelogger.h"
 #include "frame_codec.h"
@@ -42,6 +43,7 @@ typedef struct CONNECTION_DATA_TAG
 	ENDPOINT_INSTANCE* endpoints;
 	uint32_t endpoint_count;
 	uint16_t frame_receive_channel;
+	char* host_name;
 
 	/* options */
 	uint32_t max_frame_size;
@@ -83,6 +85,8 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 {
 	int result;
 	connection_instance->open_performative = open_create("1");
+	frame_codec_set_max_frame_size(connection_instance->frame_codec, connection_instance->max_frame_size);
+	open_set_hostname(connection_instance->open_performative, connection_instance->host_name);
 	AMQP_VALUE open_performative_value = amqpvalue_create_open(connection_instance->open_performative);
 
 	if (open_performative_value == NULL)
@@ -104,7 +108,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 		}
 		else
 		{
-			LOG(consolelogger_log, LOG_LINE, "-> [BEGIN]");
+			LOG(consolelogger_log, LOG_LINE, "-> [OPEN]");
 
 			/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
 			connection_instance->connection_state = CONNECTION_STATE_OPEN_SENT;
@@ -302,6 +306,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 			break;
 
 		case CONNECTION_STATE_OPEN_SENT:
+			LOG(consolelogger_log, LOG_LINE, "<- [OPEN]");
 			connection->connection_state = CONNECTION_STATE_OPENED;
 			break;
 
@@ -315,7 +320,17 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 		break;
 
 	case AMQP_CLOSE:
+	{
+		const char* error;
+		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+		AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 0);
+		AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
+		AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
+		amqpvalue_get_string(error_description_value, &error);
+
+		LOG(consolelogger_log, LOG_LINE, "<- [CLOSE:%s]", error);
 		break;
+	}
 
 	case AMQP_BEGIN:
 	{
@@ -338,6 +353,8 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 	case AMQP_TRANSFER:
 	case AMQP_DISPOSITION:
 	case AMQP_DETACH:
+		break;
+
 	case AMQP_END:
 	{
 		ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_incoming_channel(connection, channel);
@@ -443,31 +460,57 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 							}
 							else
 							{
-								result->open_performative = NULL;
-
-								if ((options != NULL) &&
-									(options->use_options & CONNECTION_OPTION_MAX_FRAME_SIZE))
+								result->host_name = (char*)amqpalloc_malloc(strlen(host) + 1);
+								if (result->host_name == NULL)
 								{
-									result->max_frame_size = options->max_frame_size;
+									amqp_frame_codec_destroy(result->amqp_frame_codec);
+									frame_codec_destroy(result->frame_codec);
+									io_destroy(result->io);
+									amqpalloc_free(result);
+									result = NULL;
 								}
-
-								if ((options != NULL) &&
-									(options->use_options & CONNECTION_OPTION_CHANNEL_MAX))
+								else
 								{
-									result->channel_max = options->channel_max;
-								}
+									strcpy(result->host_name, host);
 
-								if ((options != NULL) &&
-									(options->use_options & CONNECTION_OPTION_IDLE_TIMEOUT))
-								{
-									result->idle_timeout = options->idle_timeout;
-								}
+									result->open_performative = NULL;
 
-								/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
-								result->connection_state = CONNECTION_STATE_START;
-								result->header_bytes_received = 0;
-								result->endpoint_count = 0;
-								result->endpoints = NULL;
+									if ((options != NULL) &&
+										(options->use_options & CONNECTION_OPTION_MAX_FRAME_SIZE))
+									{
+										result->max_frame_size = options->max_frame_size;
+									}
+									else
+									{
+										result->max_frame_size = 0x1000;
+									}
+
+									if ((options != NULL) &&
+										(options->use_options & CONNECTION_OPTION_CHANNEL_MAX))
+									{
+										result->channel_max = options->channel_max;
+									}
+									else
+									{
+										result->channel_max = 0xFFFF;
+									}
+
+									if ((options != NULL) &&
+										(options->use_options & CONNECTION_OPTION_IDLE_TIMEOUT))
+									{
+										result->idle_timeout = options->idle_timeout;
+									}
+									else
+									{
+										result->idle_timeout = 0;
+									}
+
+									/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
+									result->connection_state = CONNECTION_STATE_START;
+									result->header_bytes_received = 0;
+									result->endpoint_count = 0;
+									result->endpoints = NULL;
+								}
 							}
 						}
 					}

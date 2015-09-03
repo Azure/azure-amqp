@@ -696,7 +696,7 @@
 		AMQP_VALUE composite_value;
 	} BEGIN_INSTANCE;
 
-	BEGIN_HANDLE begin_create(transfer_number next_outgoing_id_value, uint32_t incoming_window_value, uint32_t outgoing_window_value)
+	BEGIN_HANDLE begin_create(uint16_t remote_channel_value, transfer_number next_outgoing_id_value, uint32_t incoming_window_value, uint32_t outgoing_window_value)
 	{
 		BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)malloc(sizeof(BEGIN_INSTANCE));
 		if (begin_instance != NULL)
@@ -709,27 +709,34 @@
 			}
 			else
 			{
+				AMQP_VALUE remote_channel_amqp_value;
 				AMQP_VALUE next_outgoing_id_amqp_value;
 				AMQP_VALUE incoming_window_amqp_value;
 				AMQP_VALUE outgoing_window_amqp_value;
 				int result = 0;
 
+				remote_channel_amqp_value = amqpvalue_create_null();
+				if ((result == 0) && (amqpvalue_set_composite_item(begin_instance->composite_value, 0, remote_channel_amqp_value) != 0))
+				{
+					result = __LINE__;
+				}
 				next_outgoing_id_amqp_value = amqpvalue_create_transfer_number(next_outgoing_id_value);
-				if ((result == 0) && (amqpvalue_set_composite_item(begin_instance->composite_value, 0, next_outgoing_id_amqp_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(begin_instance->composite_value, 1, next_outgoing_id_amqp_value) != 0))
 				{
 					result = __LINE__;
 				}
 				incoming_window_amqp_value = amqpvalue_create_uint(incoming_window_value);
-				if ((result == 0) && (amqpvalue_set_composite_item(begin_instance->composite_value, 1, incoming_window_amqp_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(begin_instance->composite_value, 2, incoming_window_amqp_value) != 0))
 				{
 					result = __LINE__;
 				}
 				outgoing_window_amqp_value = amqpvalue_create_uint(outgoing_window_value);
-				if ((result == 0) && (amqpvalue_set_composite_item(begin_instance->composite_value, 2, outgoing_window_amqp_value) != 0))
+				if ((result == 0) && (amqpvalue_set_composite_item(begin_instance->composite_value, 3, outgoing_window_amqp_value) != 0))
 				{
 					result = __LINE__;
 				}
 
+				amqpvalue_destroy(remote_channel_amqp_value);
 				amqpvalue_destroy(next_outgoing_id_amqp_value);
 				amqpvalue_destroy(incoming_window_amqp_value);
 				amqpvalue_destroy(outgoing_window_amqp_value);

@@ -6,6 +6,7 @@
 #include "frame_codec.h"
 #include "sasl_frame_codec.h"
 #include "amqp_definitions.h"
+#include "logger.h"
 
 typedef enum SASL_IO_STATE_TAG
 {
@@ -219,11 +220,11 @@ static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 	switch (sasl_frame_code_ulong)
 	{
 	default:
-		sasl_io->logger_log("Bad SASL frame: %02x", sasl_frame_code_ulong);
+		LOG(sasl_io->logger_log, LOG_LINE, "Bad SASL frame: %02x", sasl_frame_code_ulong);
 		break;
 
 	case SASL_MECHANISMS:
-		sasl_io->logger_log("[SASL_MECHANISMS]");
+		LOG(sasl_io->logger_log, LOG_LINE, "[SASL_MECHANISMS]");
 		switch (sasl_io->sasl_client_negotiation_state)
 		{
 		case SASL_CLIENT_NEGOTIATION_NOT_STARTED:
@@ -241,10 +242,10 @@ static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 		break;
 	case SASL_CHALLENGE:
 		/* we should send the response here */
-		sasl_io->logger_log("[SASL_CHALLENGE]");
+		LOG(sasl_io->logger_log, LOG_LINE, "[SASL_CHALLENGE]");
 		break;
 	case SASL_OUTCOME:
-		sasl_io->logger_log("[SASL_OUTCOME]");
+		LOG(sasl_io->logger_log, LOG_LINE, "[SASL_OUTCOME]");
 		if (sasl_io->sasl_client_negotiation_state != SASL_CLIENT_NEGOTIATION_ERROR)
 		{
 			sasl_io->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD;

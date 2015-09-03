@@ -42,8 +42,9 @@ extern "C"
 		(void)size;
 	}
 
-	void test_logger_log(char* format, ...)
+	void test_logger_log(unsigned int options, char* format, ...)
 	{
+		(void)options;
 		(void)format;
 	}
 }

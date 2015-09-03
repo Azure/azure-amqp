@@ -10,6 +10,7 @@
 #include "amqpalloc.h"
 #include "sspi.h"
 #include "schannel.h"
+#include "logger.h"
 
 typedef enum TLS_STATE_TAG
 {
@@ -246,6 +247,12 @@ static void tlsio_receive_bytes(void* context, const void* buffer, size_t size)
 					}
 					else
 					{
+						size_t i;
+						for (i = 0; i < security_buffers[1].cbBuffer; i++)
+						{
+							LOG(tls_io_instance->logger_log, 0, "<-%02x ", ((unsigned char*)security_buffers[1].pvBuffer)[i]);
+						}
+
 						/* notify of the received data */
 						tls_io_instance->receive_callback(tls_io_instance->context, security_buffers[1].pvBuffer, security_buffers[1].cbBuffer);
 
@@ -412,6 +419,12 @@ int tlsio_send(IO_HANDLE tls_io, const void* buffer, size_t size)
 				}
 				else
 				{
+					size_t i;
+					for (i = 0; i < size; i++)
+					{
+						LOG(tls_io_instance->logger_log, 0, "%02x-> ", ((unsigned char*)buffer)[i]);
+					}
+
 					result = 0;
 				}
 			}

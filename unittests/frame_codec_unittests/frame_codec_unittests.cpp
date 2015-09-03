@@ -143,8 +143,9 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , LIST_ITEM_HANDLE, list_find, LIST_HANDLE, handle, LIST_MATCH_FUNCTION, match_function, const void*, match_context);
 	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , int, list_remove_matching_item, LIST_HANDLE, handle, LIST_MATCH_FUNCTION, match_function, const void*, match_context);
 
-	extern void consolelogger_log(char* format, ...)
+	extern void consolelogger_log(unsigned int options, char* format, ...)
 	{
+		(void)options;
 		(void)format;
 	}
 }

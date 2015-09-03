@@ -7,6 +7,7 @@
 #include "tlsio.h"
 #include "saslio.h"
 #include "amqpalloc.h"
+#include "logger.h"
 
 /* Requirements satisfied by the virtue of implementing the ISO:*/
 /* Codes_SRS_CONNECTION_01_088: [Any data appearing beyond the protocol header MUST match the version indicated by the protocol header.] */
@@ -68,7 +69,7 @@ static int send_header(CONNECTION_INSTANCE* connection_instance)
 	}
 	else
 	{
-		consolelogger_log("-> Header (AMQP 0.1.0.0)");
+		LOG(consolelogger_log, LOG_LINE, "-> Header (AMQP 0.1.0.0)");
 
 		/* Codes_SRS_CONNECTION_01_041: [HDR SENT In this state the connection header has been sent to the peer but no connection header has been received.] */
 		connection_instance->connection_state = CONNECTION_STATE_HDR_SENT;
@@ -192,6 +193,8 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 			connection_instance->header_bytes_received++;
 			if (connection_instance->header_bytes_received == sizeof(amqp_header))
 			{
+				LOG(consolelogger_log, LOG_LINE, "<- Header (AMQP 0.1.0.0)");
+
 				if (connection_instance->connection_state == CONNECTION_STATE_START)
 				{
 					if (send_header(connection_instance) != 0)
@@ -287,7 +290,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 	switch (performative_ulong)
 	{
 	default:
-		consolelogger_log("Bad performative: %02x", performative);
+		LOG(consolelogger_log, LOG_LINE, "Bad performative: %02x", performative);
 		break;
 
 	case AMQP_OPEN:

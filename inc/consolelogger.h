@@ -5,7 +5,9 @@
 extern "C" {
 #endif /* __cplusplus */
 
-	extern void consolelogger_log(char* format, ...);
+#include "logger.h"
+
+	extern void consolelogger_log(unsigned int options, char* format, ...);
 
 #ifdef __cplusplus
 }

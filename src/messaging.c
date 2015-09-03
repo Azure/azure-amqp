@@ -170,6 +170,8 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 				AMQP_VALUE source_address = amqpvalue_create_string("/");
 				AMQP_VALUE target_address = amqpvalue_create_string("/");
 
+				AMQP_VALUE source_address_described = amqpvalue_create_string("/");
+
 				if (messaging->link == NULL)
 				{
 					messaging->link = link_create(messaging->session, source_address, target_address);

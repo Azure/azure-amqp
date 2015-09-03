@@ -101,6 +101,22 @@ static const AMQP_VALUE test_sasl_response_amqp_value = (AMQP_VALUE)16976;
 
 static const SASL_OUTCOME_HANDLE test_sasl_outcome_handle = (SASL_OUTCOME_HANDLE)16976;
 static const AMQP_VALUE test_sasl_outcome_amqp_value = (AMQP_VALUE)16977;
+/* terminus-durability */
+
+/* terminus-expiry-policy */
+
+/* node-properties */
+
+/* filter-set */
+
+/* source */
+
+static const SOURCE_HANDLE test_source_handle = (SOURCE_HANDLE)16977;
+static const AMQP_VALUE test_source_amqp_value = (AMQP_VALUE)16978;
+/* target */
+
+static const TARGET_HANDLE test_target_handle = (TARGET_HANDLE)16978;
+static const AMQP_VALUE test_target_amqp_value = (AMQP_VALUE)16979;
 
 TYPED_MOCK_CLASS(amqp_definitions_mocks, CGlobalMock)
 {
@@ -595,6 +611,106 @@ public:
 	MOCK_STATIC_METHOD_2(, int, sasl_outcome_set_additional_data, SASL_OUTCOME_HANDLE, sasl_outcome, amqp_binary, additional_data_value);
 	MOCK_METHOD_END(int, 0);
 
+/* terminus-durability */
+
+/* terminus-expiry-policy */
+
+/* node-properties */
+
+/* filter-set */
+
+/* source */
+
+	MOCK_STATIC_METHOD_0(,SOURCE_HANDLE, source_create);
+	MOCK_METHOD_END(SOURCE_HANDLE, test_source_handle);
+	MOCK_STATIC_METHOD_1(, void, source_destroy, SOURCE_HANDLE, source);
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_create_source, SOURCE_HANDLE, source);
+	MOCK_METHOD_END(AMQP_VALUE, test_source_amqp_value);
+
+	MOCK_STATIC_METHOD_2(, int, source_get_address, SOURCE_HANDLE, source, AMQP_VALUE*, address_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_set_address, SOURCE_HANDLE, source, AMQP_VALUE, address_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_get_durable, SOURCE_HANDLE, source, terminus_durability*, durable_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_set_durable, SOURCE_HANDLE, source, terminus_durability, durable_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_get_expiry_policy, SOURCE_HANDLE, source, terminus_expiry_policy*, expiry_policy_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_set_expiry_policy, SOURCE_HANDLE, source, terminus_expiry_policy, expiry_policy_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_get_timeout, SOURCE_HANDLE, source, seconds*, timeout_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_set_timeout, SOURCE_HANDLE, source, seconds, timeout_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_get_dynamic, SOURCE_HANDLE, source, bool*, dynamic_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_set_dynamic, SOURCE_HANDLE, source, bool, dynamic_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_get_dynamic_node_properties, SOURCE_HANDLE, source, node_properties*, dynamic_node_properties_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_set_dynamic_node_properties, SOURCE_HANDLE, source, node_properties, dynamic_node_properties_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_get_distribution_mode, SOURCE_HANDLE, source, const char**, distribution_mode_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_set_distribution_mode, SOURCE_HANDLE, source, const char*, distribution_mode_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_get_filter, SOURCE_HANDLE, source, filter_set*, filter_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_set_filter, SOURCE_HANDLE, source, filter_set, filter_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_get_default_outcome, SOURCE_HANDLE, source, AMQP_VALUE*, default_outcome_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_set_default_outcome, SOURCE_HANDLE, source, AMQP_VALUE, default_outcome_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_get_outcomes, SOURCE_HANDLE, source, const char**, outcomes_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_set_outcomes, SOURCE_HANDLE, source, const char*, outcomes_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_get_capabilities, SOURCE_HANDLE, source, const char**, capabilities_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, source_set_capabilities, SOURCE_HANDLE, source, const char*, capabilities_value);
+	MOCK_METHOD_END(int, 0);
+
+/* target */
+
+	MOCK_STATIC_METHOD_0(,TARGET_HANDLE, target_create);
+	MOCK_METHOD_END(TARGET_HANDLE, test_target_handle);
+	MOCK_STATIC_METHOD_1(, void, target_destroy, TARGET_HANDLE, target);
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_create_target, TARGET_HANDLE, target);
+	MOCK_METHOD_END(AMQP_VALUE, test_target_amqp_value);
+
+	MOCK_STATIC_METHOD_2(, int, target_get_address, TARGET_HANDLE, target, AMQP_VALUE*, address_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, target_set_address, TARGET_HANDLE, target, AMQP_VALUE, address_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, target_get_durable, TARGET_HANDLE, target, terminus_durability*, durable_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, target_set_durable, TARGET_HANDLE, target, terminus_durability, durable_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, target_get_expiry_policy, TARGET_HANDLE, target, terminus_expiry_policy*, expiry_policy_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, target_set_expiry_policy, TARGET_HANDLE, target, terminus_expiry_policy, expiry_policy_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, target_get_timeout, TARGET_HANDLE, target, seconds*, timeout_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, target_set_timeout, TARGET_HANDLE, target, seconds, timeout_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, target_get_dynamic, TARGET_HANDLE, target, bool*, dynamic_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, target_set_dynamic, TARGET_HANDLE, target, bool, dynamic_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, target_get_dynamic_node_properties, TARGET_HANDLE, target, node_properties*, dynamic_node_properties_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, target_set_dynamic_node_properties, TARGET_HANDLE, target, node_properties, dynamic_node_properties_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, target_get_capabilities, TARGET_HANDLE, target, const char**, capabilities_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, target_set_capabilities, TARGET_HANDLE, target, const char*, capabilities_value);
+	MOCK_METHOD_END(int, 0);
+
 };
 
 /* role */
@@ -889,6 +1005,64 @@ public:
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_outcome_set_code, SASL_OUTCOME_HANDLE, sasl_outcome, sasl_code, code_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_outcome_get_additional_data, SASL_OUTCOME_HANDLE, sasl_outcome, amqp_binary*, additional_data_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, sasl_outcome_set_additional_data, SASL_OUTCOME_HANDLE, sasl_outcome, amqp_binary, additional_data_value);
+
+/* terminus-durability */
+
+/* terminus-expiry-policy */
+
+/* node-properties */
+
+/* filter-set */
+
+/* source */
+
+	DECLARE_GLOBAL_MOCK_METHOD_0(amqp_definitions_mocks, ,SOURCE_HANDLE, source_create);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, source_destroy, SOURCE_HANDLE, source);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_source, SOURCE_HANDLE, source);
+
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_get_address, SOURCE_HANDLE, source, AMQP_VALUE*, address_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_set_address, SOURCE_HANDLE, source, AMQP_VALUE, address_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_get_durable, SOURCE_HANDLE, source, terminus_durability*, durable_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_set_durable, SOURCE_HANDLE, source, terminus_durability, durable_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_get_expiry_policy, SOURCE_HANDLE, source, terminus_expiry_policy*, expiry_policy_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_set_expiry_policy, SOURCE_HANDLE, source, terminus_expiry_policy, expiry_policy_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_get_timeout, SOURCE_HANDLE, source, seconds*, timeout_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_set_timeout, SOURCE_HANDLE, source, seconds, timeout_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_get_dynamic, SOURCE_HANDLE, source, bool*, dynamic_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_set_dynamic, SOURCE_HANDLE, source, bool, dynamic_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_get_dynamic_node_properties, SOURCE_HANDLE, source, node_properties*, dynamic_node_properties_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_set_dynamic_node_properties, SOURCE_HANDLE, source, node_properties, dynamic_node_properties_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_get_distribution_mode, SOURCE_HANDLE, source, const char**, distribution_mode_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_set_distribution_mode, SOURCE_HANDLE, source, const char*, distribution_mode_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_get_filter, SOURCE_HANDLE, source, filter_set*, filter_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_set_filter, SOURCE_HANDLE, source, filter_set, filter_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_get_default_outcome, SOURCE_HANDLE, source, AMQP_VALUE*, default_outcome_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_set_default_outcome, SOURCE_HANDLE, source, AMQP_VALUE, default_outcome_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_get_outcomes, SOURCE_HANDLE, source, const char**, outcomes_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_set_outcomes, SOURCE_HANDLE, source, const char*, outcomes_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_get_capabilities, SOURCE_HANDLE, source, const char**, capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, source_set_capabilities, SOURCE_HANDLE, source, const char*, capabilities_value);
+
+/* target */
+
+	DECLARE_GLOBAL_MOCK_METHOD_0(amqp_definitions_mocks, ,TARGET_HANDLE, target_create);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, target_destroy, TARGET_HANDLE, target);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_target, TARGET_HANDLE, target);
+
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_get_address, TARGET_HANDLE, target, AMQP_VALUE*, address_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_set_address, TARGET_HANDLE, target, AMQP_VALUE, address_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_get_durable, TARGET_HANDLE, target, terminus_durability*, durable_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_set_durable, TARGET_HANDLE, target, terminus_durability, durable_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_get_expiry_policy, TARGET_HANDLE, target, terminus_expiry_policy*, expiry_policy_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_set_expiry_policy, TARGET_HANDLE, target, terminus_expiry_policy, expiry_policy_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_get_timeout, TARGET_HANDLE, target, seconds*, timeout_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_set_timeout, TARGET_HANDLE, target, seconds, timeout_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_get_dynamic, TARGET_HANDLE, target, bool*, dynamic_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_set_dynamic, TARGET_HANDLE, target, bool, dynamic_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_get_dynamic_node_properties, TARGET_HANDLE, target, node_properties*, dynamic_node_properties_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_set_dynamic_node_properties, TARGET_HANDLE, target, node_properties, dynamic_node_properties_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_get_capabilities, TARGET_HANDLE, target, const char**, capabilities_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_set_capabilities, TARGET_HANDLE, target, const char*, capabilities_value);
 
 
 #endif /* AMQP_DEFINITIONS_MOCKS_H */

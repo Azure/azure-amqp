@@ -464,6 +464,95 @@ extern "C" {
 	extern int sasl_outcome_get_additional_data(SASL_OUTCOME_HANDLE sasl_outcome, amqp_binary* additional_data_value);
 	extern int sasl_outcome_set_additional_data(SASL_OUTCOME_HANDLE sasl_outcome, amqp_binary additional_data_value);
 
+/* terminus-durability */
+
+	typedef uint32_t terminus_durability;
+
+	#define amqpvalue_create_terminus_durability amqpvalue_create_uint
+
+	#define terminus_durability_none 0
+	#define terminus_durability_configuration 1
+	#define terminus_durability_unsettled_state 2
+
+/* terminus-expiry-policy */
+
+	typedef const char* terminus_expiry_policy;
+
+	#define amqpvalue_create_terminus_expiry_policy amqpvalue_create_symbol
+
+	#define terminus_expiry_policy_link_detach link_detach
+	#define terminus_expiry_policy_session_end session_end
+	#define terminus_expiry_policy_connection_close connection_close
+	#define terminus_expiry_policy_never never
+
+/* node-properties */
+
+	typedef fields node_properties;
+
+	#define amqpvalue_create_node_properties amqpvalue_create_fields
+
+
+/* filter-set */
+
+	typedef AMQP_VALUE filter_set;
+
+	#define amqpvalue_create_filter_set amqpvalue_clone
+
+
+/* source */
+
+	typedef void* SOURCE_HANDLE;
+
+	extern SOURCE_HANDLE source_create(void);
+	extern void source_destroy(SOURCE_HANDLE source);
+	extern AMQP_VALUE amqpvalue_create_source(SOURCE_HANDLE source);
+
+	extern int source_get_address(SOURCE_HANDLE source, AMQP_VALUE* address_value);
+	extern int source_set_address(SOURCE_HANDLE source, AMQP_VALUE address_value);
+	extern int source_get_durable(SOURCE_HANDLE source, terminus_durability* durable_value);
+	extern int source_set_durable(SOURCE_HANDLE source, terminus_durability durable_value);
+	extern int source_get_expiry_policy(SOURCE_HANDLE source, terminus_expiry_policy* expiry_policy_value);
+	extern int source_set_expiry_policy(SOURCE_HANDLE source, terminus_expiry_policy expiry_policy_value);
+	extern int source_get_timeout(SOURCE_HANDLE source, seconds* timeout_value);
+	extern int source_set_timeout(SOURCE_HANDLE source, seconds timeout_value);
+	extern int source_get_dynamic(SOURCE_HANDLE source, bool* dynamic_value);
+	extern int source_set_dynamic(SOURCE_HANDLE source, bool dynamic_value);
+	extern int source_get_dynamic_node_properties(SOURCE_HANDLE source, node_properties* dynamic_node_properties_value);
+	extern int source_set_dynamic_node_properties(SOURCE_HANDLE source, node_properties dynamic_node_properties_value);
+	extern int source_get_distribution_mode(SOURCE_HANDLE source, const char** distribution_mode_value);
+	extern int source_set_distribution_mode(SOURCE_HANDLE source, const char* distribution_mode_value);
+	extern int source_get_filter(SOURCE_HANDLE source, filter_set* filter_value);
+	extern int source_set_filter(SOURCE_HANDLE source, filter_set filter_value);
+	extern int source_get_default_outcome(SOURCE_HANDLE source, AMQP_VALUE* default_outcome_value);
+	extern int source_set_default_outcome(SOURCE_HANDLE source, AMQP_VALUE default_outcome_value);
+	extern int source_get_outcomes(SOURCE_HANDLE source, const char** outcomes_value);
+	extern int source_set_outcomes(SOURCE_HANDLE source, const char* outcomes_value);
+	extern int source_get_capabilities(SOURCE_HANDLE source, const char** capabilities_value);
+	extern int source_set_capabilities(SOURCE_HANDLE source, const char* capabilities_value);
+
+/* target */
+
+	typedef void* TARGET_HANDLE;
+
+	extern TARGET_HANDLE target_create(void);
+	extern void target_destroy(TARGET_HANDLE target);
+	extern AMQP_VALUE amqpvalue_create_target(TARGET_HANDLE target);
+
+	extern int target_get_address(TARGET_HANDLE target, AMQP_VALUE* address_value);
+	extern int target_set_address(TARGET_HANDLE target, AMQP_VALUE address_value);
+	extern int target_get_durable(TARGET_HANDLE target, terminus_durability* durable_value);
+	extern int target_set_durable(TARGET_HANDLE target, terminus_durability durable_value);
+	extern int target_get_expiry_policy(TARGET_HANDLE target, terminus_expiry_policy* expiry_policy_value);
+	extern int target_set_expiry_policy(TARGET_HANDLE target, terminus_expiry_policy expiry_policy_value);
+	extern int target_get_timeout(TARGET_HANDLE target, seconds* timeout_value);
+	extern int target_set_timeout(TARGET_HANDLE target, seconds timeout_value);
+	extern int target_get_dynamic(TARGET_HANDLE target, bool* dynamic_value);
+	extern int target_set_dynamic(TARGET_HANDLE target, bool dynamic_value);
+	extern int target_get_dynamic_node_properties(TARGET_HANDLE target, node_properties* dynamic_node_properties_value);
+	extern int target_set_dynamic_node_properties(TARGET_HANDLE target, node_properties dynamic_node_properties_value);
+	extern int target_get_capabilities(TARGET_HANDLE target, const char** capabilities_value);
+	extern int target_set_capabilities(TARGET_HANDLE target, const char* capabilities_value);
+
 
 #ifdef __cplusplus
 }

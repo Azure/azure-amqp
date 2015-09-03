@@ -4247,3 +4247,877 @@
 	}
 
 
+/* source */
+
+	typedef struct SOURCE_INSTANCE_TAG
+	{
+		AMQP_VALUE composite_value;
+	} SOURCE_INSTANCE;
+
+	SOURCE_HANDLE source_create(void)
+	{
+		SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)malloc(sizeof(SOURCE_INSTANCE));
+		if (source_instance != NULL)
+		{
+			source_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(40);
+			if (source_instance->composite_value == NULL)
+			{
+				free(source_instance);
+				source_instance = NULL;
+			}
+		}
+
+		return source_instance;
+	}
+
+	void source_destroy(SOURCE_HANDLE source)
+	{
+		if (source != NULL)
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			amqpvalue_destroy(source_instance->composite_value);
+		}
+	}
+
+	AMQP_VALUE amqpvalue_create_source(SOURCE_HANDLE source)
+	{
+		AMQP_VALUE result;
+
+		if (source == NULL)
+		{
+			result = NULL;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			result = amqpvalue_clone(source_instance->composite_value);
+		}
+
+		return result;
+	}
+
+	int source_get_address(SOURCE_HANDLE source, AMQP_VALUE* address_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int source_set_address(SOURCE_HANDLE source, AMQP_VALUE address_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			AMQP_VALUE address_amqp_value = amqpvalue_clone(address_value);
+			if ((address_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(source_instance->composite_value, 0, address_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int source_get_durable(SOURCE_HANDLE source, terminus_durability* durable_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int source_set_durable(SOURCE_HANDLE source, terminus_durability durable_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			AMQP_VALUE durable_amqp_value = amqpvalue_create_terminus_durability(durable_value);
+			if ((durable_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(source_instance->composite_value, 1, durable_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int source_get_expiry_policy(SOURCE_HANDLE source, terminus_expiry_policy* expiry_policy_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int source_set_expiry_policy(SOURCE_HANDLE source, terminus_expiry_policy expiry_policy_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			AMQP_VALUE expiry_policy_amqp_value = amqpvalue_create_terminus_expiry_policy(expiry_policy_value);
+			if ((expiry_policy_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(source_instance->composite_value, 2, expiry_policy_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int source_get_timeout(SOURCE_HANDLE source, seconds* timeout_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int source_set_timeout(SOURCE_HANDLE source, seconds timeout_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			AMQP_VALUE timeout_amqp_value = amqpvalue_create_seconds(timeout_value);
+			if ((timeout_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(source_instance->composite_value, 3, timeout_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int source_get_dynamic(SOURCE_HANDLE source, bool* dynamic_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int source_set_dynamic(SOURCE_HANDLE source, bool dynamic_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			AMQP_VALUE dynamic_amqp_value = amqpvalue_create_boolean(dynamic_value);
+			if ((dynamic_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(source_instance->composite_value, 4, dynamic_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int source_get_dynamic_node_properties(SOURCE_HANDLE source, node_properties* dynamic_node_properties_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int source_set_dynamic_node_properties(SOURCE_HANDLE source, node_properties dynamic_node_properties_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			AMQP_VALUE dynamic_node_properties_amqp_value = amqpvalue_create_node_properties(dynamic_node_properties_value);
+			if ((dynamic_node_properties_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(source_instance->composite_value, 5, dynamic_node_properties_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int source_get_distribution_mode(SOURCE_HANDLE source, const char** distribution_mode_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int source_set_distribution_mode(SOURCE_HANDLE source, const char* distribution_mode_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			AMQP_VALUE distribution_mode_amqp_value = amqpvalue_create_symbol(distribution_mode_value);
+			if ((distribution_mode_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(source_instance->composite_value, 6, distribution_mode_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int source_get_filter(SOURCE_HANDLE source, filter_set* filter_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int source_set_filter(SOURCE_HANDLE source, filter_set filter_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			AMQP_VALUE filter_amqp_value = amqpvalue_create_filter_set(filter_value);
+			if ((filter_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(source_instance->composite_value, 7, filter_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int source_get_default_outcome(SOURCE_HANDLE source, AMQP_VALUE* default_outcome_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int source_set_default_outcome(SOURCE_HANDLE source, AMQP_VALUE default_outcome_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			AMQP_VALUE default_outcome_amqp_value = amqpvalue_clone(default_outcome_value);
+			if ((default_outcome_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(source_instance->composite_value, 8, default_outcome_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int source_get_outcomes(SOURCE_HANDLE source, const char** outcomes_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int source_set_outcomes(SOURCE_HANDLE source, const char* outcomes_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			AMQP_VALUE outcomes_amqp_value = amqpvalue_create_symbol(outcomes_value);
+			if ((outcomes_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(source_instance->composite_value, 9, outcomes_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int source_get_capabilities(SOURCE_HANDLE source, const char** capabilities_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int source_set_capabilities(SOURCE_HANDLE source, const char* capabilities_value)
+	{
+		int result;
+
+		if (source == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
+			AMQP_VALUE capabilities_amqp_value = amqpvalue_create_symbol(capabilities_value);
+			if ((capabilities_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(source_instance->composite_value, 10, capabilities_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+
+/* target */
+
+	typedef struct TARGET_INSTANCE_TAG
+	{
+		AMQP_VALUE composite_value;
+	} TARGET_INSTANCE;
+
+	TARGET_HANDLE target_create(void)
+	{
+		TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)malloc(sizeof(TARGET_INSTANCE));
+		if (target_instance != NULL)
+		{
+			target_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(41);
+			if (target_instance->composite_value == NULL)
+			{
+				free(target_instance);
+				target_instance = NULL;
+			}
+		}
+
+		return target_instance;
+	}
+
+	void target_destroy(TARGET_HANDLE target)
+	{
+		if (target != NULL)
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			amqpvalue_destroy(target_instance->composite_value);
+		}
+	}
+
+	AMQP_VALUE amqpvalue_create_target(TARGET_HANDLE target)
+	{
+		AMQP_VALUE result;
+
+		if (target == NULL)
+		{
+			result = NULL;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			result = amqpvalue_clone(target_instance->composite_value);
+		}
+
+		return result;
+	}
+
+	int target_get_address(TARGET_HANDLE target, AMQP_VALUE* address_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int target_set_address(TARGET_HANDLE target, AMQP_VALUE address_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			AMQP_VALUE address_amqp_value = amqpvalue_clone(address_value);
+			if ((address_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(target_instance->composite_value, 0, address_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int target_get_durable(TARGET_HANDLE target, terminus_durability* durable_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int target_set_durable(TARGET_HANDLE target, terminus_durability durable_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			AMQP_VALUE durable_amqp_value = amqpvalue_create_terminus_durability(durable_value);
+			if ((durable_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(target_instance->composite_value, 1, durable_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int target_get_expiry_policy(TARGET_HANDLE target, terminus_expiry_policy* expiry_policy_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int target_set_expiry_policy(TARGET_HANDLE target, terminus_expiry_policy expiry_policy_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			AMQP_VALUE expiry_policy_amqp_value = amqpvalue_create_terminus_expiry_policy(expiry_policy_value);
+			if ((expiry_policy_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(target_instance->composite_value, 2, expiry_policy_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int target_get_timeout(TARGET_HANDLE target, seconds* timeout_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int target_set_timeout(TARGET_HANDLE target, seconds timeout_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			AMQP_VALUE timeout_amqp_value = amqpvalue_create_seconds(timeout_value);
+			if ((timeout_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(target_instance->composite_value, 3, timeout_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int target_get_dynamic(TARGET_HANDLE target, bool* dynamic_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int target_set_dynamic(TARGET_HANDLE target, bool dynamic_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			AMQP_VALUE dynamic_amqp_value = amqpvalue_create_boolean(dynamic_value);
+			if ((dynamic_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(target_instance->composite_value, 4, dynamic_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int target_get_dynamic_node_properties(TARGET_HANDLE target, node_properties* dynamic_node_properties_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int target_set_dynamic_node_properties(TARGET_HANDLE target, node_properties dynamic_node_properties_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			AMQP_VALUE dynamic_node_properties_amqp_value = amqpvalue_create_node_properties(dynamic_node_properties_value);
+			if ((dynamic_node_properties_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(target_instance->composite_value, 5, dynamic_node_properties_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+	int target_get_capabilities(TARGET_HANDLE target, const char** capabilities_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			result = 0;
+		}
+
+		return result;
+	}
+
+	int target_set_capabilities(TARGET_HANDLE target, const char* capabilities_value)
+	{
+		int result;
+
+		if (target == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
+			AMQP_VALUE capabilities_amqp_value = amqpvalue_create_symbol(capabilities_value);
+			if ((capabilities_amqp_value == NULL) ||
+				(amqpvalue_set_composite_item(target_instance->composite_value, 6, capabilities_amqp_value) != 0))
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+
+		return result;
+	}
+
+

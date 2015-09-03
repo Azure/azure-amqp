@@ -190,7 +190,7 @@ void link_dowork(LINK_HANDLE handle)
 		{
 			if (link->link_state == LINK_STATE_DETACHED)
 			{
-				if (send_attach(link, "fake", 1, role_sender, sender_settle_mode_unsettled, receiver_settle_mode_first, link->source, link->target) == 0)
+				if (send_attach(link, "ingress", 1, role_sender, sender_settle_mode_unsettled, receiver_settle_mode_first, link->source, link->target) == 0)
 				{
 					LOG(consolelogger_log, LOG_LINE, "-> [ATTACH]");
 					link->link_state = LINK_STATE_HALF_ATTACHED;

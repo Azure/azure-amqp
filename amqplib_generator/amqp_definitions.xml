@@ -192,5 +192,42 @@
       <field name="code" type="sasl-code" mandatory="true"/>
       <field name="additional-data" type="binary"/>
     </type>
+    <type name="terminus-durability" class="restricted" source="uint">
+      <choice name="none" value="0"/>
+      <choice name="configuration" value="1"/>
+      <choice name="unsettled-state" value="2"/>
+    </type>
+    <type name="terminus-expiry-policy" class="restricted" source="symbol">
+      <choice name="link-detach" value="link-detach"/>
+      <choice name="session-end" value="session-end"/>
+      <choice name="connection-close" value="connection-close"/>
+      <choice name="never" value="never"/>
+    </type>
+    <type name="node-properties" class="restricted" source="fields"/>
+    <type name="filter-set" class="restricted" source="map"/>
+    <type name="source" class="composite" source="list" provides="source">
+      <descriptor name="amqp:source:list" code="0x00000000:0x00000028"/>
+      <field name="address" type="*" requires="address"/>
+      <field name="durable" type="terminus-durability" default="none"/>
+      <field name="expiry-policy" type="terminus-expiry-policy" default="session-end"/>
+      <field name="timeout" type="seconds" default="0"/>
+      <field name="dynamic" type="boolean" default="false"/>
+      <field name="dynamic-node-properties" type="node-properties"/>
+      <field name="distribution-mode" type="symbol" requires="distribution-mode"/>
+      <field name="filter" type="filter-set"/>
+      <field name="default-outcome" type="*" requires="outcome"/>
+      <field name="outcomes" type="symbol" multiple="true"/>
+      <field name="capabilities" type="symbol" multiple="true"/>
+    </type>
+    <type name="target" class="composite" source="list" provides="target">
+      <descriptor name="amqp:target:list" code="0x00000000:0x00000029"/>
+      <field name="address" type="*" requires="address"/>
+      <field name="durable" type="terminus-durability" default="none"/>
+      <field name="expiry-policy" type="terminus-expiry-policy" default="session-end"/>
+      <field name="timeout" type="seconds" default="0"/>
+      <field name="dynamic" type="boolean" default="false"/>
+      <field name="dynamic-node-properties" type="node-properties"/>
+      <field name="capabilities" type="symbol" multiple="true"/>
+    </type>
   </section>
 </amqp>

@@ -167,14 +167,18 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 			}
 			else
 			{
-				AMQP_VALUE source_address = amqpvalue_create_string("/");
-				AMQP_VALUE target_address = amqpvalue_create_string("/");
+				SOURCE_HANDLE source = source_create();
+				TARGET_HANDLE target = target_create();
 
-				AMQP_VALUE source_address_described = amqpvalue_create_string("/");
+				source_set_address(source, "/ingress");
+				target_set_address(source, "/ingress");
+
+				AMQP_VALUE source_value = amqpvalue_create_source(source);
+				AMQP_VALUE target_value = amqpvalue_create_target(target);
 
 				if (messaging->link == NULL)
 				{
-					messaging->link = link_create(messaging->session, source_address, target_address);
+					messaging->link = link_create(messaging->session, source_value, target_value);
 					if (messaging->link == NULL)
 					{
 						result = __LINE__;
@@ -204,8 +208,8 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 					}
 				}
 
-				amqpvalue_destroy(source_address);
-				amqpvalue_destroy(target_address);
+				amqpvalue_destroy(source_value);
+				amqpvalue_destroy(target_value);
 			}
 		}
 	}
@@ -222,7 +226,7 @@ void messaging_dowork(MESSAGING_HANDLE handle)
 
 		if (link_get_state(messaging->link, &link_state) == 0)
 		{
-			if (link_state == LINK_STATE_ATTACHED)
+			if (link_state == LINK_STATE_HALF_ATTACHED)
 			{
 				size_t i;
 

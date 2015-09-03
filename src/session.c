@@ -223,7 +223,7 @@ int session_encode_payload_bytes(SESSION_HANDLE session, const unsigned char* by
 	{
 		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
 
-		if (session_encode_payload_bytes(session_instance->endpoint, bytes, count) != 0)
+		if (connection_encode_payload_bytes(session_instance->endpoint, bytes, count) != 0)
 		{
 			result = __LINE__;
 		}

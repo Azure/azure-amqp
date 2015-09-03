@@ -35,9 +35,23 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 			link->link_state = LINK_STATE_ATTACHED;
 		}
 		break;
+
 	case AMQP_FLOW:
 		LOG(consolelogger_log, LOG_LINE, "<- [FLOW]");
 		break;
+
+	case AMQP_DETACH:
+	{
+		const char* error;
+		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+		AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 2);
+		AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
+		AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
+		amqpvalue_get_string(error_description_value, &error);
+
+		LOG(consolelogger_log, LOG_LINE, "<- [DETACH:%s]", error);
+		break;
+	}
 	}
 }
 
@@ -78,6 +92,13 @@ static int send_attach(LINK_DATA* link, const char* name, handle handle, role ro
 	}
 
 	return result;
+}
+
+static int encode_bytes(void* context, const void* bytes, size_t length)
+{
+	SESSION_HANDLE session = context;
+	(void)session_encode_payload_bytes(session, bytes, length);
+	return 0;
 }
 
 static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_t payload_chunk_count)
@@ -123,13 +144,17 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 					chunks[i + 1] = payload_chunks[i];
 				}
 
+				size_t encoded_size;
+				amqpvalue_get_encoded_size(payload_chunks[0], &encoded_size);
+
 				/* here we should feed data to the transfer frame */
-				if (session_begin_encode_frame(link->session, performative, 0) != 0)
+				if (session_begin_encode_frame(link->session, performative, encoded_size) != 0)
 				{
 					result = __LINE__;
 				}
 				else
 				{
+					amqpvalue_encode(payload_chunks[0], encode_bytes, link->session);
 					LOG(consolelogger_log, LOG_LINE, "-> [TRANSFER]");
 					result = 0;
 				}

@@ -182,7 +182,10 @@ static int send_sasl_init(SASL_IO_INSTANCE* sasl_io)
 {
 	int result;
 
-	SASL_INIT_HANDLE sasl_init = sasl_init_create("EXTERNAL");
+	SASL_INIT_HANDLE sasl_init = sasl_init_create("PLAIN");
+	char binary_creds[] = "\0keyname\0key";
+	amqp_binary creds = { &binary_creds, sizeof(binary_creds) - 1 };
+	sasl_init_set_initial_response(sasl_init, creds);
 	if (sasl_init == NULL)
 	{
 		result = __LINE__;

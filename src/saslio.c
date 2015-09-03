@@ -62,6 +62,8 @@ static int send_sasl_header(SASL_IO_INSTANCE* sasl_io)
 	}
 	else
 	{
+		LOG(sasl_io->logger_log, LOG_LINE, "-> Header (AMQP 3.1.0.0)");
+
 		result = 0;
 	}
 
@@ -118,6 +120,8 @@ static int saslio_receive_byte(SASL_IO_INSTANCE* sasl_io, unsigned char b)
 			sasl_io->header_bytes_received++;
 			if (sasl_io->header_bytes_received == sizeof(sasl_header))
 			{
+				LOG(sasl_io->logger_log, LOG_LINE, "<- Header (AMQP 3.1.0.0)");
+
 				switch (sasl_io->sasl_io_state)
 				{
 				default:
@@ -198,6 +202,8 @@ static int send_sasl_init(SASL_IO_INSTANCE* sasl_io)
 			}
 			else
 			{
+				LOG(sasl_io->logger_log, LOG_LINE, "-> [SASL_INIT]");
+
 				result = 0;
 			}
 
@@ -224,7 +230,7 @@ static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 		break;
 
 	case SASL_MECHANISMS:
-		LOG(sasl_io->logger_log, LOG_LINE, "[SASL_MECHANISMS]");
+		LOG(sasl_io->logger_log, LOG_LINE, "<- [SASL_MECHANISMS]");
 		switch (sasl_io->sasl_client_negotiation_state)
 		{
 		case SASL_CLIENT_NEGOTIATION_NOT_STARTED:
@@ -242,10 +248,10 @@ static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 		break;
 	case SASL_CHALLENGE:
 		/* we should send the response here */
-		LOG(sasl_io->logger_log, LOG_LINE, "[SASL_CHALLENGE]");
+		LOG(sasl_io->logger_log, LOG_LINE, "<- [SASL_CHALLENGE]");
 		break;
 	case SASL_OUTCOME:
-		LOG(sasl_io->logger_log, LOG_LINE, "[SASL_OUTCOME]");
+		LOG(sasl_io->logger_log, LOG_LINE, "<- [SASL_OUTCOME]");
 		if (sasl_io->sasl_client_negotiation_state != SASL_CLIENT_NEGOTIATION_ERROR)
 		{
 			sasl_io->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD;

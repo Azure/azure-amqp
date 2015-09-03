@@ -104,6 +104,8 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 		}
 		else
 		{
+			LOG(consolelogger_log, LOG_LINE, "-> [BEGIN]");
+
 			/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
 			connection_instance->connection_state = CONNECTION_STATE_OPEN_SENT;
 			result = 0;

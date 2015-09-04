@@ -183,7 +183,7 @@ void session_dowork(SESSION_HANDLE session)
 		{
 			if (connection_state == CONNECTION_STATE_OPENED)
 			{
-				if (send_begin(session_instance->endpoint, 1, 2, 3) == 0)
+				if (send_begin(session_instance->endpoint, 0, 2000, 1) == 0)
 				{
 					session_instance->session_state = SESSION_STATE_BEGIN_SENT;
 				}

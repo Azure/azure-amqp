@@ -84,7 +84,7 @@ static int send_header(CONNECTION_INSTANCE* connection_instance)
 static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 {
 	int result;
-	connection_instance->open_performative = open_create("1");
+	connection_instance->open_performative = open_create("123456");
 	frame_codec_set_max_frame_size(connection_instance->frame_codec, connection_instance->max_frame_size);
 	open_set_hostname(connection_instance->open_performative, connection_instance->host_name);
 	AMQP_VALUE open_performative_value = amqpvalue_create_open(connection_instance->open_performative);

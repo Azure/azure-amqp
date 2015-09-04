@@ -170,8 +170,14 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 				SOURCE_HANDLE source = source_create();
 				TARGET_HANDLE target = target_create();
 
-				source_set_address(source, "/ingress");
-				target_set_address(source, "/ingress");
+				source_set_address(source, "ingress");
+				source_set_durable(source, false);
+				source_set_timeout(source, 0);
+				source_set_dynamic(source, false);
+				target_set_address(target, "amqps://pupupupu.servicebus.windows.net/ingress");
+				target_set_durable(target, false);
+				target_set_timeout(target, 0);
+				target_set_dynamic(target, false);
 
 				AMQP_VALUE source_value = amqpvalue_create_source(source);
 				AMQP_VALUE target_value = amqpvalue_create_target(target);

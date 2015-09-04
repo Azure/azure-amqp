@@ -68,6 +68,7 @@ static int send_attach(LINK_DATA* link, const char* name, handle handle, role ro
 	{
 		attach_set_snd_settle_mode(attach, snd_settle_mode);
 		attach_set_rcv_settle_mode(attach, rcv_settle_mode);
+		attach_set_role(attach, false);
 		attach_set_source(attach, source);
 		attach_set_target(attach, target);
 
@@ -108,16 +109,16 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 	delivery_tag delivery_tag = { &link->delivery_id, sizeof(link->delivery_id) };
 	transfer_set_delivery_id(transfer, link->delivery_id++);
 	transfer_set_delivery_tag(transfer, delivery_tag);
+	transfer_set_message_format(transfer, 0);
+	transfer_set_settled(transfer, true);
+	transfer_set_more(transfer, false);
 	AMQP_VALUE transfer_value = amqpvalue_create_transfer(transfer);
-
-	AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(0x14);
-	AMQP_VALUE performative = amqpvalue_create_described(ulong_descriptor_value, transfer_value);
 
 	size_t encoded_size;
 	amqpvalue_get_encoded_size(payload_chunks[0], &encoded_size);
 
 	/* here we should feed data to the transfer frame */
-	if (session_begin_encode_frame(link->session, performative, encoded_size) != 0)
+	if (session_begin_encode_frame(link->session, transfer_value, encoded_size) != 0)
 	{
 		result = __LINE__;
 	}
@@ -149,7 +150,7 @@ LINK_HANDLE link_create(SESSION_HANDLE session, AMQP_VALUE source, AMQP_VALUE ta
 			result->source = amqpvalue_clone(source);
 			result->target = amqpvalue_clone(target);
 			result->session = session;
-			result->handle = 1;
+			result->handle = 0;
 			result->delivery_id = 0;
 		}
 	}
@@ -179,7 +180,7 @@ void link_dowork(LINK_HANDLE handle)
 		{
 			if (link->link_state == LINK_STATE_DETACHED)
 			{
-				if (send_attach(link, "ingress", 1, role_sender, sender_settle_mode_unsettled, receiver_settle_mode_first, link->source, link->target) == 0)
+				if (send_attach(link, "sender-xxx", 0, role_sender, sender_settle_mode_settled, receiver_settle_mode_first, link->source, link->target) == 0)
 				{
 					LOG(consolelogger_log, LOG_LINE, "-> [ATTACH]");
 					link->link_state = LINK_STATE_HALF_ATTACHED;

@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 		message_set_body(message, amqpvalue_create_binary(body));
 		(void)messaging_send(messaging, message, message_send_callback, NULL);
 
-		while (!sent)
+		while (true)
 		{
 			size_t current_memory_used;
 			messaging_dowork(messaging);

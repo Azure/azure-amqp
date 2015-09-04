@@ -68,12 +68,32 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 		break;
 
 	case AMQP_ATTACH:
+		LOG(consolelogger_log, LOG_LINE, "<- [ATTACH]");
 		break;
+
+	case AMQP_DETACH:
+	{
+		const char* error;
+		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+		AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 2);
+		AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
+		AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
+		if (error_description_value != NULL)
+		{
+			amqpvalue_get_string(error_description_value, &error);
+		}
+		else
+		{
+			error = NULL;
+		}
+
+		LOG(consolelogger_log, LOG_LINE, "<- [DETACH:%s]", error);
+		break;
+	}
 
 	case AMQP_FLOW:
 	case AMQP_TRANSFER:
 	case AMQP_DISPOSITION:
-	case AMQP_DETACH:
 		break;
 
 	case AMQP_END:
@@ -83,7 +103,14 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 		AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 0);
 		AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
 		AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
-		amqpvalue_get_string(error_description_value, &error);
+		if (error_description_value != NULL)
+		{
+			amqpvalue_get_string(error_description_value, &error);
+		}
+		else
+		{
+			error = NULL;
+		}
 
 		LOG(consolelogger_log, LOG_LINE, "<- [END:%s]", error);
 		break;

@@ -348,14 +348,14 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 		break;
 	}
 
-	case AMQP_ATTACH:
 	case AMQP_FLOW:
 	case AMQP_TRANSFER:
 	case AMQP_DISPOSITION:
-	case AMQP_DETACH:
 		break;
 
 	case AMQP_END:
+	case AMQP_ATTACH:
+	case AMQP_DETACH:
 	{
 		ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_incoming_channel(connection, channel);
 		if (session_endpoint == NULL)

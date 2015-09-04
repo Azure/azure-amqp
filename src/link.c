@@ -104,67 +104,31 @@ static int encode_bytes(void* context, const void* bytes, size_t length)
 static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_t payload_chunk_count)
 {
 	int result;
-	AMQP_VALUE transfer_frame_list = amqpvalue_create_list();
-	if (transfer_frame_list == NULL)
+	TRANSFER_HANDLE transfer =  transfer_create(0);
+	delivery_tag delivery_tag = { &link->delivery_id, sizeof(link->delivery_id) };
+	transfer_set_delivery_id(transfer, link->delivery_id++);
+	transfer_set_delivery_tag(transfer, delivery_tag);
+	AMQP_VALUE transfer_value = amqpvalue_create_transfer(transfer);
+
+	AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(0x14);
+	AMQP_VALUE performative = amqpvalue_create_described(ulong_descriptor_value, transfer_value);
+
+	size_t encoded_size;
+	amqpvalue_get_encoded_size(payload_chunks[0], &encoded_size);
+
+	/* here we should feed data to the transfer frame */
+	if (session_begin_encode_frame(link->session, performative, encoded_size) != 0)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		delivery_tag delivery_tag = { &link->delivery_id, sizeof(link->delivery_id) };
-		AMQP_VALUE handle_value = amqpvalue_create_handle(link->handle);
-		AMQP_VALUE delivery_id_value = amqpvalue_create_delivery_number(link->delivery_id++);
-		AMQP_VALUE delivery_tag_value = amqpvalue_create_delivery_tag(delivery_tag);
-
-		if ((handle_value == NULL) ||
-			(delivery_id_value == NULL) ||
-			(delivery_tag_value == NULL) ||
-			(amqpvalue_set_list_item(transfer_frame_list, 0, handle_value) != 0) ||
-			(amqpvalue_set_list_item(transfer_frame_list, 1, delivery_id_value) != 0) ||
-			(amqpvalue_set_list_item(transfer_frame_list, 2, delivery_tag_value) != 0))
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			AMQP_VALUE* chunks = amqpalloc_malloc(sizeof(AMQP_VALUE) * (payload_chunk_count + 1));
-			if (chunks == NULL)
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				AMQP_VALUE ulong_descriptor_value = amqpvalue_create_ulong(0x14);
-				AMQP_VALUE performative = amqpvalue_create_described(ulong_descriptor_value, transfer_frame_list);
-				size_t i;
-
-				chunks[0] = transfer_frame_list;
-				for (i = 0; i < payload_chunk_count; i++)
-				{
-					chunks[i + 1] = payload_chunks[i];
-				}
-
-				size_t encoded_size;
-				amqpvalue_get_encoded_size(payload_chunks[0], &encoded_size);
-
-				/* here we should feed data to the transfer frame */
-				if (session_begin_encode_frame(link->session, performative, encoded_size) != 0)
-				{
-					result = __LINE__;
-				}
-				else
-				{
-					amqpvalue_encode(payload_chunks[0], encode_bytes, link->session);
-					LOG(consolelogger_log, LOG_LINE, "-> [TRANSFER]");
-					result = 0;
-				}
-
-				amqpalloc_free(chunks);
-			}
-		}
-
-		amqpvalue_destroy(transfer_frame_list);
+		amqpvalue_encode(payload_chunks[0], encode_bytes, link->session);
+		LOG(consolelogger_log, LOG_LINE, "-> [TRANSFER]");
+		result = 0;
 	}
+
+	transfer_destroy(transfer);
 
 	return result;
 }

@@ -117,6 +117,10 @@ static const AMQP_VALUE test_source_amqp_value = (AMQP_VALUE)16978;
 
 static const TARGET_HANDLE test_target_handle = (TARGET_HANDLE)16978;
 static const AMQP_VALUE test_target_amqp_value = (AMQP_VALUE)16979;
+/* properties */
+
+static const PROPERTIES_HANDLE test_properties_handle = (PROPERTIES_HANDLE)16979;
+static const AMQP_VALUE test_properties_amqp_value = (AMQP_VALUE)16980;
 
 TYPED_MOCK_CLASS(amqp_definitions_mocks, CGlobalMock)
 {
@@ -711,6 +715,68 @@ public:
 	MOCK_STATIC_METHOD_2(, int, target_set_capabilities, TARGET_HANDLE, target, const char*, capabilities_value);
 	MOCK_METHOD_END(int, 0);
 
+/* properties */
+
+	MOCK_STATIC_METHOD_0(,PROPERTIES_HANDLE, properties_create);
+	MOCK_METHOD_END(PROPERTIES_HANDLE, test_properties_handle);
+	MOCK_STATIC_METHOD_1(, void, properties_destroy, PROPERTIES_HANDLE, properties);
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_create_properties, PROPERTIES_HANDLE, properties);
+	MOCK_METHOD_END(AMQP_VALUE, test_properties_amqp_value);
+
+	MOCK_STATIC_METHOD_2(, int, properties_get_message_id, PROPERTIES_HANDLE, properties, AMQP_VALUE*, message_id_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_set_message_id, PROPERTIES_HANDLE, properties, AMQP_VALUE, message_id_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_get_user_id, PROPERTIES_HANDLE, properties, amqp_binary*, user_id_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_set_user_id, PROPERTIES_HANDLE, properties, amqp_binary, user_id_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_get_to, PROPERTIES_HANDLE, properties, AMQP_VALUE*, to_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_set_to, PROPERTIES_HANDLE, properties, AMQP_VALUE, to_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_get_subject, PROPERTIES_HANDLE, properties, const char**, subject_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_set_subject, PROPERTIES_HANDLE, properties, const char*, subject_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_get_reply_to, PROPERTIES_HANDLE, properties, AMQP_VALUE*, reply_to_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_set_reply_to, PROPERTIES_HANDLE, properties, AMQP_VALUE, reply_to_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_get_correlation_id, PROPERTIES_HANDLE, properties, AMQP_VALUE*, correlation_id_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_set_correlation_id, PROPERTIES_HANDLE, properties, AMQP_VALUE, correlation_id_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_get_content_type, PROPERTIES_HANDLE, properties, const char**, content_type_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_set_content_type, PROPERTIES_HANDLE, properties, const char*, content_type_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_get_content_encoding, PROPERTIES_HANDLE, properties, const char**, content_encoding_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_set_content_encoding, PROPERTIES_HANDLE, properties, const char*, content_encoding_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_get_absolute_expiry_time, PROPERTIES_HANDLE, properties, timestamp*, absolute_expiry_time_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_set_absolute_expiry_time, PROPERTIES_HANDLE, properties, timestamp, absolute_expiry_time_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_get_creation_time, PROPERTIES_HANDLE, properties, timestamp*, creation_time_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_set_creation_time, PROPERTIES_HANDLE, properties, timestamp, creation_time_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_get_group_id, PROPERTIES_HANDLE, properties, const char**, group_id_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_set_group_id, PROPERTIES_HANDLE, properties, const char*, group_id_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_get_group_sequence, PROPERTIES_HANDLE, properties, sequence_no*, group_sequence_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_set_group_sequence, PROPERTIES_HANDLE, properties, sequence_no, group_sequence_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_get_reply_to_group_id, PROPERTIES_HANDLE, properties, const char**, reply_to_group_id_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, properties_set_reply_to_group_id, PROPERTIES_HANDLE, properties, const char*, reply_to_group_id_value);
+	MOCK_METHOD_END(int, 0);
+
 };
 
 /* role */
@@ -1063,6 +1129,39 @@ public:
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_set_dynamic_node_properties, TARGET_HANDLE, target, node_properties, dynamic_node_properties_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_get_capabilities, TARGET_HANDLE, target, const char**, capabilities_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_set_capabilities, TARGET_HANDLE, target, const char*, capabilities_value);
+
+/* properties */
+
+	DECLARE_GLOBAL_MOCK_METHOD_0(amqp_definitions_mocks, ,PROPERTIES_HANDLE, properties_create);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, properties_destroy, PROPERTIES_HANDLE, properties);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_properties, PROPERTIES_HANDLE, properties);
+
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_message_id, PROPERTIES_HANDLE, properties, AMQP_VALUE*, message_id_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_message_id, PROPERTIES_HANDLE, properties, AMQP_VALUE, message_id_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_user_id, PROPERTIES_HANDLE, properties, amqp_binary*, user_id_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_user_id, PROPERTIES_HANDLE, properties, amqp_binary, user_id_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_to, PROPERTIES_HANDLE, properties, AMQP_VALUE*, to_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_to, PROPERTIES_HANDLE, properties, AMQP_VALUE, to_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_subject, PROPERTIES_HANDLE, properties, const char**, subject_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_subject, PROPERTIES_HANDLE, properties, const char*, subject_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_reply_to, PROPERTIES_HANDLE, properties, AMQP_VALUE*, reply_to_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_reply_to, PROPERTIES_HANDLE, properties, AMQP_VALUE, reply_to_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_correlation_id, PROPERTIES_HANDLE, properties, AMQP_VALUE*, correlation_id_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_correlation_id, PROPERTIES_HANDLE, properties, AMQP_VALUE, correlation_id_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_content_type, PROPERTIES_HANDLE, properties, const char**, content_type_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_content_type, PROPERTIES_HANDLE, properties, const char*, content_type_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_content_encoding, PROPERTIES_HANDLE, properties, const char**, content_encoding_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_content_encoding, PROPERTIES_HANDLE, properties, const char*, content_encoding_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_absolute_expiry_time, PROPERTIES_HANDLE, properties, timestamp*, absolute_expiry_time_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_absolute_expiry_time, PROPERTIES_HANDLE, properties, timestamp, absolute_expiry_time_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_creation_time, PROPERTIES_HANDLE, properties, timestamp*, creation_time_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_creation_time, PROPERTIES_HANDLE, properties, timestamp, creation_time_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_group_id, PROPERTIES_HANDLE, properties, const char**, group_id_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_group_id, PROPERTIES_HANDLE, properties, const char*, group_id_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_group_sequence, PROPERTIES_HANDLE, properties, sequence_no*, group_sequence_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_group_sequence, PROPERTIES_HANDLE, properties, sequence_no, group_sequence_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_reply_to_group_id, PROPERTIES_HANDLE, properties, const char**, reply_to_group_id_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_reply_to_group_id, PROPERTIES_HANDLE, properties, const char*, reply_to_group_id_value);
 
 
 #endif /* AMQP_DEFINITIONS_MOCKS_H */

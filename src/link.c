@@ -40,6 +40,10 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 		LOG(consolelogger_log, LOG_LINE, "<- [FLOW]");
 		break;
 
+	case AMQP_DISPOSITION:
+		LOG(consolelogger_log, LOG_LINE, "<- [DISPOSITION]");
+		break;
+
 	case AMQP_DETACH:
 	{
 		const char* error;
@@ -55,7 +59,7 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 	}
 }
 
-static int send_attach(LINK_DATA* link, const char* name, handle handle, role role, sender_settle_mode snd_settle_mode, receiver_settle_mode rcv_settle_mode, AMQP_VALUE source, AMQP_VALUE target)
+static int send_attach(LINK_DATA* link, const char* name, handle handle, role role, sender_settle_mode snd_settle_mode, receiver_settle_mode rcv_settle_mode)
 {
 	int result;
 	ATTACH_HANDLE attach = attach_create(name, handle, role);
@@ -69,8 +73,8 @@ static int send_attach(LINK_DATA* link, const char* name, handle handle, role ro
 		attach_set_snd_settle_mode(attach, snd_settle_mode);
 		attach_set_rcv_settle_mode(attach, rcv_settle_mode);
 		attach_set_role(attach, false);
-		attach_set_source(attach, source);
-		attach_set_target(attach, target);
+		attach_set_source(attach, link->source);
+		attach_set_target(attach, link->target);
 
 		AMQP_VALUE attach_performative_value = amqpvalue_create_attach(attach);
 		if (attach_performative_value == NULL)
@@ -115,7 +119,16 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 	AMQP_VALUE transfer_value = amqpvalue_create_transfer(transfer);
 
 	size_t encoded_size;
-	amqpvalue_get_encoded_size(payload_chunks[0], &encoded_size);
+	AMQP_VALUE amqp_value_descriptor = amqpvalue_create_ulong(0x77);
+	AMQP_VALUE amqp_value = amqpvalue_create_described(amqpvalue_clone(amqp_value_descriptor), amqpvalue_clone(payload_chunks[0]));
+	amqpvalue_get_encoded_size(amqp_value, &encoded_size);
+
+	size_t x;
+	PROPERTIES_HANDLE properties = properties_create();
+	properties_set_to(properties, link->target);
+	AMQP_VALUE properties_value = amqpvalue_create_properties(properties);
+	amqpvalue_get_encoded_size(properties_value, &x);
+	//encoded_size += x;
 
 	/* here we should feed data to the transfer frame */
 	if (session_begin_encode_frame(link->session, transfer_value, encoded_size) != 0)
@@ -124,10 +137,15 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 	}
 	else
 	{
-		amqpvalue_encode(payload_chunks[0], encode_bytes, link->session);
+		//amqpvalue_encode(properties_value, encode_bytes, link->session);
+		amqpvalue_encode(amqp_value, encode_bytes, link->session);
 		LOG(consolelogger_log, LOG_LINE, "-> [TRANSFER]");
 		result = 0;
 	}
+
+	amqpvalue_destroy(amqp_value);
+	amqpvalue_destroy(amqp_value_descriptor);
+	amqpvalue_destroy(properties_value);
 
 	transfer_destroy(transfer);
 
@@ -180,7 +198,7 @@ void link_dowork(LINK_HANDLE handle)
 		{
 			if (link->link_state == LINK_STATE_DETACHED)
 			{
-				if (send_attach(link, "sender-xxx", 0, role_sender, sender_settle_mode_settled, receiver_settle_mode_first, link->source, link->target) == 0)
+				if (send_attach(link, "sender-xxx", 0, role_sender, sender_settle_mode_settled, receiver_settle_mode_first) == 0)
 				{
 					LOG(consolelogger_log, LOG_LINE, "-> [ATTACH]");
 					link->link_state = LINK_STATE_HALF_ATTACHED;

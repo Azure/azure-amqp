@@ -92,8 +92,15 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 	}
 
 	case AMQP_FLOW:
+		LOG(consolelogger_log, LOG_LINE, "<- [FLOW]");
+		break;
+
 	case AMQP_TRANSFER:
+		LOG(consolelogger_log, LOG_LINE, "<- [TRANSFER]");
+		break;
+
 	case AMQP_DISPOSITION:
+		LOG(consolelogger_log, LOG_LINE, "<- [DISPOSITION]");
 		break;
 
 	case AMQP_END:

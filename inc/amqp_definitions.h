@@ -553,6 +553,41 @@ extern "C" {
 	extern int target_get_capabilities(TARGET_HANDLE target, const char** capabilities_value);
 	extern int target_set_capabilities(TARGET_HANDLE target, const char* capabilities_value);
 
+/* properties */
+
+	typedef void* PROPERTIES_HANDLE;
+
+	extern PROPERTIES_HANDLE properties_create(void);
+	extern void properties_destroy(PROPERTIES_HANDLE properties);
+	extern AMQP_VALUE amqpvalue_create_properties(PROPERTIES_HANDLE properties);
+
+	extern int properties_get_message_id(PROPERTIES_HANDLE properties, AMQP_VALUE* message_id_value);
+	extern int properties_set_message_id(PROPERTIES_HANDLE properties, AMQP_VALUE message_id_value);
+	extern int properties_get_user_id(PROPERTIES_HANDLE properties, amqp_binary* user_id_value);
+	extern int properties_set_user_id(PROPERTIES_HANDLE properties, amqp_binary user_id_value);
+	extern int properties_get_to(PROPERTIES_HANDLE properties, AMQP_VALUE* to_value);
+	extern int properties_set_to(PROPERTIES_HANDLE properties, AMQP_VALUE to_value);
+	extern int properties_get_subject(PROPERTIES_HANDLE properties, const char** subject_value);
+	extern int properties_set_subject(PROPERTIES_HANDLE properties, const char* subject_value);
+	extern int properties_get_reply_to(PROPERTIES_HANDLE properties, AMQP_VALUE* reply_to_value);
+	extern int properties_set_reply_to(PROPERTIES_HANDLE properties, AMQP_VALUE reply_to_value);
+	extern int properties_get_correlation_id(PROPERTIES_HANDLE properties, AMQP_VALUE* correlation_id_value);
+	extern int properties_set_correlation_id(PROPERTIES_HANDLE properties, AMQP_VALUE correlation_id_value);
+	extern int properties_get_content_type(PROPERTIES_HANDLE properties, const char** content_type_value);
+	extern int properties_set_content_type(PROPERTIES_HANDLE properties, const char* content_type_value);
+	extern int properties_get_content_encoding(PROPERTIES_HANDLE properties, const char** content_encoding_value);
+	extern int properties_set_content_encoding(PROPERTIES_HANDLE properties, const char* content_encoding_value);
+	extern int properties_get_absolute_expiry_time(PROPERTIES_HANDLE properties, timestamp* absolute_expiry_time_value);
+	extern int properties_set_absolute_expiry_time(PROPERTIES_HANDLE properties, timestamp absolute_expiry_time_value);
+	extern int properties_get_creation_time(PROPERTIES_HANDLE properties, timestamp* creation_time_value);
+	extern int properties_set_creation_time(PROPERTIES_HANDLE properties, timestamp creation_time_value);
+	extern int properties_get_group_id(PROPERTIES_HANDLE properties, const char** group_id_value);
+	extern int properties_set_group_id(PROPERTIES_HANDLE properties, const char* group_id_value);
+	extern int properties_get_group_sequence(PROPERTIES_HANDLE properties, sequence_no* group_sequence_value);
+	extern int properties_set_group_sequence(PROPERTIES_HANDLE properties, sequence_no group_sequence_value);
+	extern int properties_get_reply_to_group_id(PROPERTIES_HANDLE properties, const char** reply_to_group_id_value);
+	extern int properties_set_reply_to_group_id(PROPERTIES_HANDLE properties, const char* reply_to_group_id_value);
+
 
 #ifdef __cplusplus
 }

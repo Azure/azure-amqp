@@ -16,6 +16,8 @@ extern "C" {
 
 	typedef void* AMQP_VALUE;
 	typedef unsigned char amqp_uuid[16];
+	typedef int64_t timestamp;
+
 	typedef struct amqp_binary_TAG
 	{
 		const void* bytes;

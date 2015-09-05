@@ -351,8 +351,6 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 	case AMQP_FLOW:
 	case AMQP_TRANSFER:
 	case AMQP_DISPOSITION:
-		break;
-
 	case AMQP_END:
 	case AMQP_ATTACH:
 	case AMQP_DETACH:

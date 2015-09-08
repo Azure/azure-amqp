@@ -11,6 +11,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 	typedef void* SESSION_HANDLE;
+	typedef void* LINK_ENDPOINT_HANDLE;
 
 	typedef enum SESION_STATE_TAG
 	{
@@ -29,6 +30,8 @@ extern "C" {
 	extern int session_set_frame_received_callback(SESSION_HANDLE session, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context);
 	extern int session_begin_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performative, uint32_t payload_size);
 	extern int session_encode_payload_bytes(SESSION_HANDLE session, const unsigned char* bytes, uint32_t count);
+	extern LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, char* name, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context);
+	extern void session_destroy_link_endpoint(LINK_ENDPOINT_HANDLE endpoint);
 
 #ifdef __cplusplus
 }

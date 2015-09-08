@@ -184,7 +184,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 
 				if (messaging->link == NULL)
 				{
-					messaging->link = link_create(messaging->session, source_value, target_value);
+					messaging->link = link_create(messaging->session, "voodoo", source_value, target_value);
 					if (messaging->link == NULL)
 					{
 						result = __LINE__;

@@ -10,7 +10,7 @@
 #include "consolelogger.h"
 #include "logger.h"
 
-typedef struct LINK_DATA_TAG
+typedef struct LINK_INSTANCE_TAG
 {
 	SESSION_HANDLE session;
 	LINK_STATE link_state;
@@ -18,11 +18,12 @@ typedef struct LINK_DATA_TAG
 	AMQP_VALUE target;
 	handle handle;
 	delivery_number delivery_id;
-} LINK_DATA;
+	LINK_ENDPOINT_HANDLE link_endpoint;
+} LINK_INSTANCE;
 
 static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size)
 {
-	LINK_DATA* link = (LINK_DATA*)context;
+	LINK_INSTANCE* link = (LINK_INSTANCE*)context;
 	AMQP_VALUE descriptor = amqpvalue_get_descriptor(performative);
 	uint64_t performative_ulong;
 	amqpvalue_get_ulong(descriptor, &performative_ulong);
@@ -59,7 +60,12 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 	}
 }
 
-static int send_attach(LINK_DATA* link, const char* name, handle handle, role role, sender_settle_mode snd_settle_mode, receiver_settle_mode rcv_settle_mode)
+static void link_frame_payload_bytes_received(void* context, const unsigned char* payload_bytes, uint32_t byte_count)
+{
+	LINK_INSTANCE* link = (LINK_INSTANCE*)context;
+}
+
+static int send_attach(LINK_INSTANCE* link, const char* name, handle handle, role role, sender_settle_mode snd_settle_mode, receiver_settle_mode rcv_settle_mode)
 {
 	int result;
 	ATTACH_HANDLE attach = attach_create(name, handle, role);
@@ -106,7 +112,7 @@ static int encode_bytes(void* context, const void* bytes, size_t length)
 	return 0;
 }
 
-static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_t payload_chunk_count)
+static int send_tranfer(LINK_INSTANCE* link, const AMQP_VALUE* payload_chunks, size_t payload_chunk_count)
 {
 	int result;
 	TRANSFER_HANDLE transfer =  transfer_create(0);
@@ -143,9 +149,9 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 	return result;
 }
 
-LINK_HANDLE link_create(SESSION_HANDLE session, AMQP_VALUE source, AMQP_VALUE target)
+LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target)
 {
-	LINK_DATA* result = amqpalloc_malloc(sizeof(LINK_DATA));
+	LINK_INSTANCE* result = amqpalloc_malloc(sizeof(LINK_INSTANCE));
 	if (result != NULL)
 	{
 		if (session_set_frame_received_callback(session, link_frame_received, result) != 0)
@@ -161,6 +167,8 @@ LINK_HANDLE link_create(SESSION_HANDLE session, AMQP_VALUE source, AMQP_VALUE ta
 			result->session = session;
 			result->handle = 0;
 			result->delivery_id = 0;
+
+			result->link_endpoint = session_create_link_endpoint(session, name, link_frame_received, link_frame_payload_bytes_received, result);
 		}
 	}
 
@@ -171,7 +179,7 @@ void link_destroy(LINK_HANDLE handle)
 {
 	if (handle != NULL)
 	{
-		LINK_DATA* link = (LINK_DATA*)handle;
+		LINK_INSTANCE* link = (LINK_INSTANCE*)handle;
 		amqpvalue_destroy(link->source);
 		amqpvalue_destroy(link->target);
 		amqpalloc_free(handle);
@@ -180,7 +188,7 @@ void link_destroy(LINK_HANDLE handle)
 
 void link_dowork(LINK_HANDLE handle)
 {
-	LINK_DATA* link = (LINK_DATA*)handle;
+	LINK_INSTANCE* link = (LINK_INSTANCE*)handle;
 	SESSION_STATE session_state;
 
 	if (session_get_state(link->session, &session_state) == 0)
@@ -202,7 +210,7 @@ void link_dowork(LINK_HANDLE handle)
 int link_get_state(LINK_HANDLE handle, LINK_STATE* link_state)
 {
 	int result;
-	LINK_DATA* link = (LINK_DATA*)handle;
+	LINK_INSTANCE* link = (LINK_INSTANCE*)handle;
 
 	if ((link == NULL) ||
 		(link_state == NULL))
@@ -221,7 +229,7 @@ int link_get_state(LINK_HANDLE handle, LINK_STATE* link_state)
 int link_transfer(LINK_HANDLE handle, const AMQP_VALUE* payload_chunks, size_t payload_chunk_count)
 {
 	int result;
-	LINK_DATA* link = (LINK_DATA*)handle;
+	LINK_INSTANCE* link = (LINK_INSTANCE*)handle;
 	if (link == NULL)
 	{
 		result = __LINE__;

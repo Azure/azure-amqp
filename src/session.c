@@ -333,7 +333,7 @@ int session_encode_payload_bytes(SESSION_HANDLE session, const unsigned char* by
 	return result;
 }
 
-LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, char* name, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context)
+LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context)
 {
 	LINK_ENDPOINT_INSTANCE* result;
 
@@ -344,7 +344,7 @@ LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, char* 
 	else
 	{
 		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
-		handle selected_handle;
+		handle selected_handle = 0;
 
 		while (selected_handle < session_instance->handle_max)
 		{

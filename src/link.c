@@ -123,13 +123,6 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 	AMQP_VALUE amqp_value = amqpvalue_create_described(amqpvalue_clone(amqp_value_descriptor), amqpvalue_clone(payload_chunks[0]));
 	amqpvalue_get_encoded_size(amqp_value, &encoded_size);
 
-	size_t x;
-	PROPERTIES_HANDLE properties = properties_create();
-	properties_set_to(properties, link->target);
-	AMQP_VALUE properties_value = amqpvalue_create_properties(properties);
-	amqpvalue_get_encoded_size(properties_value, &x);
-	//encoded_size += x;
-
 	/* here we should feed data to the transfer frame */
 	if (session_begin_encode_frame(link->session, transfer_value, encoded_size) != 0)
 	{
@@ -145,7 +138,6 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 
 	amqpvalue_destroy(amqp_value);
 	amqpvalue_destroy(amqp_value_descriptor);
-	amqpvalue_destroy(properties_value);
 
 	transfer_destroy(transfer);
 

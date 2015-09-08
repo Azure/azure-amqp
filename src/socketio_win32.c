@@ -120,7 +120,7 @@ int socketio_send(IO_HANDLE socket_io, const void* buffer, size_t size)
 			size_t i;
 			for (i = 0; i < size; i++)
 			{
-				LOG(socket_io_data->logger_log, "%02x-> ", ((unsigned char*)buffer)[i]);
+				LOG(socket_io_data->logger_log, 0, "%02x-> ", ((unsigned char*)buffer)[i]);
 			}
 
 			result = 0;
@@ -143,7 +143,7 @@ void socketio_dowork(IO_HANDLE socket_io)
 			received = recv(socket_io_data->socket, &c, 1, 0);
 			if (received > 0)
 			{
-				LOG(socket_io_data->logger_log, "<-%02x ", (unsigned char)c);
+				LOG(socket_io_data->logger_log, 0, "<-%02x ", (unsigned char)c);
 
 				if (socket_io_data->receive_callback != NULL)
 				{

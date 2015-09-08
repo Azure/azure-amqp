@@ -46,7 +46,7 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 
 	case AMQP_DETACH:
 	{
-		const char* error;
+		const char* error = NULL;
 		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
 		AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 2);
 		AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);

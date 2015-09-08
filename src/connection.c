@@ -321,7 +321,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 
 	case AMQP_CLOSE:
 	{
-		const char* error;
+		const char* error = NULL;
 		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
 		AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 0);
 		AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);

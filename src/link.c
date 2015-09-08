@@ -117,7 +117,7 @@ static int encode_bytes(void* context, const void* bytes, size_t length)
 	return 0;
 }
 
-static int send_tranfer(LINK_INSTANCE* link, const AMQP_VALUE* payload_chunks, size_t payload_chunk_count)
+static int send_tranfer(LINK_INSTANCE* link, AMQP_VALUE payload)
 {
 	int result;
 	TRANSFER_HANDLE transfer =  transfer_create(0);
@@ -131,7 +131,7 @@ static int send_tranfer(LINK_INSTANCE* link, const AMQP_VALUE* payload_chunks, s
 
 	size_t encoded_size;
 	AMQP_VALUE amqp_value_descriptor = amqpvalue_create_ulong(0x77);
-	AMQP_VALUE amqp_value = amqpvalue_create_described(amqpvalue_clone(amqp_value_descriptor), amqpvalue_clone(payload_chunks[0]));
+	AMQP_VALUE amqp_value = amqpvalue_create_described(amqpvalue_clone(amqp_value_descriptor), amqpvalue_clone(payload));
 	amqpvalue_get_encoded_size(amqp_value, &encoded_size);
 
 	/* here we should feed data to the transfer frame */
@@ -236,7 +236,7 @@ int link_get_state(LINK_HANDLE handle, LINK_STATE* link_state)
 	return result;
 }
 
-int link_transfer(LINK_HANDLE handle, const AMQP_VALUE* payload_chunks, size_t payload_chunk_count)
+int link_transfer(LINK_HANDLE handle, AMQP_VALUE payload_chunk)
 {
 	int result;
 	LINK_INSTANCE* link = (LINK_INSTANCE*)handle;
@@ -246,7 +246,7 @@ int link_transfer(LINK_HANDLE handle, const AMQP_VALUE* payload_chunks, size_t p
 	}
 	else
 	{
-		result = send_tranfer(link, payload_chunks, payload_chunk_count);
+		result = send_tranfer(link, payload_chunk);
 	}
 
 	return result;

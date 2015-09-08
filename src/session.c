@@ -356,6 +356,33 @@ int session_begin_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performa
 	return result;
 }
 
+int session_begin_encode_transfer(SESSION_HANDLE session, const AMQP_VALUE performative, uint32_t payload_size)
+{
+	int result;
+
+	if (session == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
+
+
+
+		if (connection_begin_encode_frame(session_instance->endpoint, performative, payload_size) != 0)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
 int session_encode_payload_bytes(SESSION_HANDLE session, const unsigned char* bytes, uint32_t count)
 {
 	int result;

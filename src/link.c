@@ -169,6 +169,7 @@ LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE sou
 		}
 		else
 		{
+			(void)strcpy(result->name, name);
 			result->link_endpoint = session_create_link_endpoint(session, name, link_frame_received, link_frame_payload_bytes_received, result);
 		}
 	}

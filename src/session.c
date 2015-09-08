@@ -65,7 +65,7 @@ static int send_begin(ENDPOINT_HANDLE endpoint, transfer_number next_outgoing_id
 	return result;
 }
 
-static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_outgoing_handle(SESSION_INSTANCE* session, uint16_t outgoing_handle)
+static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_name(SESSION_INSTANCE* session, const char* name)
 {
 	uint32_t i;
 	LINK_ENDPOINT_INSTANCE* result;
@@ -73,7 +73,7 @@ static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_outgoing_handle(SESSION_INS
 	for (i = 0; i < session->link_endpoint_count; i++)
 	{
 		/* what do we compare with ? */
-		if (session->link_endpoints[i].incoming_handle == 0)
+		if (strcmp(session->link_endpoints[i].name, name) == 0)
 		{
 			break;
 		}
@@ -110,8 +110,13 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 
 	case AMQP_ATTACH:
 	{
+		const char* name = NULL;
 		LOG(consolelogger_log, LOG_LINE, "<- [ATTACH]");
-		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_outgoing_handle(session, 0);
+		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+		AMQP_VALUE name_value = amqpvalue_get_list_item(described_value, 0);
+		amqpvalue_get_string(name_value, &name);
+
+		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_name(session, name);
 		if (link_endpoint == NULL)
 		{
 			/* error */

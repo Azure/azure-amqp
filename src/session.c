@@ -214,25 +214,6 @@ void session_destroy(SESSION_HANDLE session)
 	}
 }
 
-int session_set_frame_received_callback(SESSION_HANDLE session, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context)
-{
-	int result;
-
-	if (session == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
-		session_instance->frame_received_callback = frame_received_callback;
-		session_instance->frame_received_callback_context = context;
-		result = 0;
-	}
-
-	return result;
-}
-
 void session_dowork(SESSION_HANDLE session)
 {
 	SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;

@@ -19,6 +19,7 @@ typedef struct LINK_INSTANCE_TAG
 	handle handle;
 	delivery_number delivery_id;
 	LINK_ENDPOINT_HANDLE link_endpoint;
+	const char* name;
 } LINK_INSTANCE;
 
 static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size)
@@ -154,20 +155,20 @@ LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE sou
 	LINK_INSTANCE* result = amqpalloc_malloc(sizeof(LINK_INSTANCE));
 	if (result != NULL)
 	{
-		if (session_set_frame_received_callback(session, link_frame_received, result) != 0)
+		result->link_state = LINK_STATE_DETACHED;
+		result->source = amqpvalue_clone(source);
+		result->target = amqpvalue_clone(target);
+		result->session = session;
+		result->handle = 0;
+		result->delivery_id = 0;
+		result->name = amqpalloc_malloc(_mbstrlen(name) + 1);
+		if (result->name == NULL)
 		{
 			amqpalloc_free(result);
 			result = NULL;
 		}
 		else
 		{
-			result->link_state = LINK_STATE_DETACHED;
-			result->source = amqpvalue_clone(source);
-			result->target = amqpvalue_clone(target);
-			result->session = session;
-			result->handle = 0;
-			result->delivery_id = 0;
-
 			result->link_endpoint = session_create_link_endpoint(session, name, link_frame_received, link_frame_payload_bytes_received, result);
 		}
 	}
@@ -198,7 +199,7 @@ void link_dowork(LINK_HANDLE handle)
 		{
 			if (link->link_state == LINK_STATE_DETACHED)
 			{
-				if (send_attach(link, "sender-xxx", 0, role_sender, sender_settle_mode_settled, receiver_settle_mode_first) == 0)
+				if (send_attach(link, link->name, 0, role_sender, sender_settle_mode_settled, receiver_settle_mode_first) == 0)
 				{
 					LOG(consolelogger_log, LOG_LINE, "-> [ATTACH]");
 					link->link_state = LINK_STATE_HALF_ATTACHED;

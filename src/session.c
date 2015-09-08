@@ -200,8 +200,25 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 	}
 
 	case AMQP_TRANSFER:
+	{
+		uint32_t remote_handle;
+		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+		AMQP_VALUE handle_value = amqpvalue_get_list_item(described_value, 0);
+		amqpvalue_get_uint(handle_value, &remote_handle);
+		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session, remote_handle);
+		if (link_endpoint == NULL)
+		{
+			/* error */
+		}
+		else
+		{
+			link_endpoint->incoming_handle = 0;
+			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size);
+		}
+
 		LOG(consolelogger_log, LOG_LINE, "<- [TRANSFER]");
 		break;
+	}
 
 	case AMQP_DISPOSITION:
 		LOG(consolelogger_log, LOG_LINE, "<- [DISPOSITION]");

@@ -20,6 +20,8 @@ typedef struct LINK_INSTANCE_TAG
 	delivery_number delivery_id;
 	LINK_ENDPOINT_HANDLE link_endpoint;
 	const char* name;
+	DELIVERY_SETTLED_CALLBACK delivery_settled_callback;
+	void* callback_context;
 } LINK_INSTANCE;
 
 static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size)
@@ -39,6 +41,9 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 		break;
 
 	case AMQP_FLOW:
+		break;
+
+	case AMQP_TRANSFER:
 		break;
 
 	case AMQP_DISPOSITION:
@@ -149,7 +154,7 @@ static int send_tranfer(LINK_INSTANCE* link, const AMQP_VALUE* payload_chunks, s
 	return result;
 }
 
-LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target)
+LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target, DELIVERY_SETTLED_CALLBACK delivery_settled_callback, void* callback_context)
 {
 	LINK_INSTANCE* result = amqpalloc_malloc(sizeof(LINK_INSTANCE));
 	if (result != NULL)
@@ -160,6 +165,9 @@ LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE sou
 		result->session = session;
 		result->handle = 0;
 		result->delivery_id = 0;
+		result->delivery_settled_callback = delivery_settled_callback;
+		result->callback_context = callback_context;
+
 		result->name = amqpalloc_malloc(_mbstrlen(name) + 1);
 		if (result->name == NULL)
 		{

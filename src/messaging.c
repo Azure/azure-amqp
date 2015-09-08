@@ -123,6 +123,10 @@ AMQP_VALUE messaging_create_target(AMQP_VALUE address)
 	return result;
 }
 
+static void delivery_settled_callback(void* context, delivery_number delivery_no)
+{
+}
+
 int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND_COMPLETE_CALLBACK callback, const void* callback_context)
 {
 	int result;
@@ -184,7 +188,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 
 				if (messaging->link == NULL)
 				{
-					messaging->link = link_create(messaging->session, "voodoo", source_value, target_value);
+					messaging->link = link_create(messaging->session, "voodoo", source_value, target_value, delivery_settled_callback, messaging);
 					if (messaging->link == NULL)
 					{
 						result = __LINE__;

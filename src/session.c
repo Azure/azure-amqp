@@ -91,6 +91,32 @@ static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_name(SESSION_INSTANCE* sess
 	return result;
 }
 
+static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_incoming_handle(SESSION_INSTANCE* session, handle incoming_handle)
+{
+	uint32_t i;
+	LINK_ENDPOINT_INSTANCE* result;
+
+	for (i = 0; i < session->link_endpoint_count; i++)
+	{
+		/* what do we compare with ? */
+		if (session->link_endpoints[i].incoming_handle == incoming_handle)
+		{
+			break;
+		}
+	}
+
+	if (i == session->link_endpoint_count)
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = &session->link_endpoints[i];
+	}
+
+	return result;
+}
+
 static void session_frame_received(void* context, AMQP_VALUE performative, uint32_t payload_size)
 {
 	SESSION_INSTANCE* session = (SESSION_INSTANCE*)context;
@@ -111,7 +137,6 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 	case AMQP_ATTACH:
 	{
 		const char* name = NULL;
-		LOG(consolelogger_log, LOG_LINE, "<- [ATTACH]");
 		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
 		AMQP_VALUE name_value = amqpvalue_get_list_item(described_value, 0);
 		amqpvalue_get_string(name_value, &name);
@@ -132,27 +157,47 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 
 	case AMQP_DETACH:
 	{
-		const char* error = NULL;
+		uint32_t remote_handle;
 		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
-		AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 2);
-		AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
-		AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
-		if (error_description_value != NULL)
+		AMQP_VALUE handle_value = amqpvalue_get_list_item(described_value, 0);
+		amqpvalue_get_uint(handle_value, &remote_handle);
+		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session, remote_handle);
+		if (link_endpoint == NULL)
 		{
-			amqpvalue_get_string(error_description_value, &error);
+			/* error */
 		}
 		else
 		{
-			error = NULL;
+			link_endpoint->incoming_handle = 0;
+			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size);
 		}
 
-		LOG(consolelogger_log, LOG_LINE, "<- [DETACH:%s]", error);
 		break;
 	}
 
 	case AMQP_FLOW:
+	{
+		uint32_t remote_handle;
+		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+		AMQP_VALUE handle_value = amqpvalue_get_list_item(described_value, 5);
+		if ((handle_value != NULL) &&
+			(amqpvalue_get_uint(handle_value, &remote_handle) == 0))
+		{
+			LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session, remote_handle);
+			if (link_endpoint == NULL)
+			{
+				/* error */
+			}
+			else
+			{
+				link_endpoint->incoming_handle = 0;
+				link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size);
+			}
+		}
+
 		LOG(consolelogger_log, LOG_LINE, "<- [FLOW]");
 		break;
+	}
 
 	case AMQP_TRANSFER:
 		LOG(consolelogger_log, LOG_LINE, "<- [TRANSFER]");

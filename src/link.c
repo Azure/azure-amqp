@@ -39,7 +39,6 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 		break;
 
 	case AMQP_FLOW:
-		LOG(consolelogger_log, LOG_LINE, "<- [FLOW]");
 		break;
 
 	case AMQP_DISPOSITION:

@@ -461,6 +461,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 								result->host_name = (char*)amqpalloc_malloc(strlen(host) + 1);
 								if (result->host_name == NULL)
 								{
+									/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
 									amqp_frame_codec_destroy(result->amqp_frame_codec);
 									frame_codec_destroy(result->frame_codec);
 									io_destroy(result->io);

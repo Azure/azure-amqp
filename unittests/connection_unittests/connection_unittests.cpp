@@ -16,6 +16,8 @@
 #define TEST_FRAME_CODEC_HANDLE			(FRAME_CODEC_HANDLE)0x4243
 #define TEST_AMQP_FRAME_CODEC_HANDLE	(AMQP_FRAME_CODEC_HANDLE)0x4244
 #define TEST_DESCRIPTOR_AMQP_VALUE		(AMQP_VALUE)0x4245
+#define TEST_LIST_ITEM_AMQP_VALUE		(AMQP_VALUE)0x4246
+#define TEST_DESCRIBED_AMQP_VALUE		(AMQP_VALUE)0x4247
 #define TEST_AMQP_OPEN_FRAME_HANDLE		(AMQP_OPEN_FRAME_HANDLE)0x4245
 
 #define TEST_CONTEXT					(void*)(0x4242)
@@ -95,6 +97,8 @@ public:
 	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_3(, int, frame_codec_receive_bytes, FRAME_CODEC_HANDLE, frame_codec, const unsigned char*, buffer, size_t, size)
 	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, frame_codec_set_max_frame_size, FRAME_CODEC_HANDLE, frame_codec, uint32_t, max_frame_size)
+	MOCK_METHOD_END(int, 0);
 
 	/* amqp_frame_codec */
 	MOCK_STATIC_METHOD_5(, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_create, FRAME_CODEC_HANDLE, frame_codec, AMQP_FRAME_RECEIVED_CALLBACK, frame_received_callback, AMQP_EMPTY_FRAME_RECEIVED_CALLBACK, empty_frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK, payload_bytes_received_callback, void*, frame_received_callback_context)
@@ -115,6 +119,13 @@ public:
 
     MOCK_STATIC_METHOD_1(, void, amqpvalue_destroy, AMQP_VALUE, value)
     MOCK_VOID_METHOD_END();
+
+	MOCK_STATIC_METHOD_2(, int, amqpvalue_get_string, AMQP_VALUE, value, const char**, string_value)
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, AMQP_VALUE, amqpvalue_get_list_item, AMQP_VALUE, value, size_t, index)
+	MOCK_METHOD_END(AMQP_VALUE, TEST_LIST_ITEM_AMQP_VALUE);
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_get_described_value, AMQP_VALUE, value)
+	MOCK_METHOD_END(AMQP_VALUE, TEST_DESCRIBED_AMQP_VALUE);
 
 	/* frame received callback mocks */
 	MOCK_STATIC_METHOD_4(, void, test_frame_received_callback, void*, context, uint16_t, channel, AMQP_VALUE, performative, uint32_t, frame_payload_size)
@@ -144,6 +155,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, frame_codec_destroy, FRAME_CODEC_HANDLE, frame_codec);
 	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , int, frame_codec_receive_bytes, FRAME_CODEC_HANDLE, frame_codec, const unsigned char*, buffer, size_t, size);
+	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , int, frame_codec_set_max_frame_size, FRAME_CODEC_HANDLE, frame_codec, uint32_t, max_frame_size);
 
 	DECLARE_GLOBAL_MOCK_METHOD_5(connection_mocks, , AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_create, FRAME_CODEC_HANDLE, frame_codec, AMQP_FRAME_RECEIVED_CALLBACK, frame_received_callback, AMQP_EMPTY_FRAME_RECEIVED_CALLBACK, empty_frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK, payload_bytes_received_callback, void*, frame_received_callback_context);
     DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , int, amqp_frame_codec_begin_encode_frame, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec, uint16_t, channel, const AMQP_VALUE, performative, uint32_t, payload_size);
@@ -152,6 +164,9 @@ extern "C"
 
 	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , int, amqpvalue_get_ulong, AMQP_VALUE, value, uint64_t*, ulong_value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , AMQP_VALUE, amqpvalue_get_descriptor, AMQP_VALUE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , int, amqpvalue_get_string, AMQP_VALUE, value, const char**, string_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , AMQP_VALUE, amqpvalue_get_list_item, AMQP_VALUE, value, size_t, index);
+	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , AMQP_VALUE, amqpvalue_get_described_value, AMQP_VALUE, value);
 
     DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, amqpvalue_destroy, AMQP_VALUE, value);
 
@@ -214,7 +229,7 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	CONNECTION_OPTIONS connection_options = { 0 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
+	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
 	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
 	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
@@ -222,6 +237,7 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 
 	// act
 	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
@@ -260,7 +276,7 @@ TEST_METHOD(when_get_socketio_interface_description_fails_then_connection_create
 	CONNECTION_OPTIONS connection_options = { 0 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description())
+	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description())
 		.SetReturn((IO_INTERFACE_DESCRIPTION*)NULL);
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
@@ -280,7 +296,7 @@ TEST_METHOD(when_io_create_fails_then_connection_create_fails)
 	CONNECTION_OPTIONS connection_options = { 0 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
+	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
 	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
 	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1)
@@ -303,7 +319,7 @@ TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 	CONNECTION_OPTIONS connection_options = { 0 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
+	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
 	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
 	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
@@ -329,7 +345,7 @@ TEST_METHOD(when_amqp_frame_codec_create_fails_then_connection_create_fails)
 	CONNECTION_OPTIONS connection_options = { 0 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
+	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
 	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
 	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
@@ -338,6 +354,37 @@ TEST_METHOD(when_amqp_frame_codec_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1)
 		.SetReturn((AMQP_FRAME_CODEC_HANDLE)NULL);
+	STRICT_EXPECTED_CALL(mocks, frame_codec_destroy(TEST_FRAME_CODEC_HANDLE));
+	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, &connection_options);
+
+	// assert
+	ASSERT_IS_NULL(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
+TEST_METHOD(when_allocating_memory_for_host_fails_connection_create_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	SOCKETIO_CONFIG config = { "testhost", 5672 };
+	CONNECTION_OPTIONS connection_options = { 0 };
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
+	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
+	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+		.SetReturn((void*)NULL);
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_destroy(TEST_AMQP_FRAME_CODEC_HANDLE));
 	STRICT_EXPECTED_CALL(mocks, frame_codec_destroy(TEST_FRAME_CODEC_HANDLE));
 	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
@@ -373,7 +420,8 @@ TEST_METHOD(connection_create_with_NULL_options_succeeds)
 	CONNECTION_OPTIONS connection_options = { 0 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	STRICT_EXPECTED_CALL(mocks, socketio_get_interface_description());
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
 	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
 	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);

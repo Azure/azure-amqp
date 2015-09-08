@@ -130,7 +130,6 @@ static int send_tranfer(LINK_DATA* link, const AMQP_VALUE* payload_chunks, size_
 	}
 	else
 	{
-		//amqpvalue_encode(properties_value, encode_bytes, link->session);
 		amqpvalue_encode(amqp_value, encode_bytes, link->session);
 		LOG(consolelogger_log, LOG_LINE, "-> [TRANSFER]");
 		result = 0;

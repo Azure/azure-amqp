@@ -17,7 +17,6 @@ typedef struct LINK_INSTANCE_TAG
 	AMQP_VALUE source;
 	AMQP_VALUE target;
 	handle handle;
-	delivery_number delivery_id;
 	LINK_ENDPOINT_HANDLE link_endpoint;
 	const char* name;
 	DELIVERY_SETTLED_CALLBACK delivery_settled_callback;
@@ -121,8 +120,8 @@ static int send_tranfer(LINK_INSTANCE* link, AMQP_VALUE payload)
 {
 	int result;
 	TRANSFER_HANDLE transfer =  transfer_create(0);
-	delivery_tag delivery_tag = { &link->delivery_id, sizeof(link->delivery_id) };
-	transfer_set_delivery_id(transfer, link->delivery_id++);
+	unsigned char delivery_tag_bytes[] = "muie";
+	delivery_tag delivery_tag = { &delivery_tag, sizeof(delivery_tag) };
 	transfer_set_delivery_tag(transfer, delivery_tag);
 	transfer_set_message_format(transfer, 0);
 	transfer_set_settled(transfer, true);
@@ -135,7 +134,7 @@ static int send_tranfer(LINK_INSTANCE* link, AMQP_VALUE payload)
 	amqpvalue_get_encoded_size(amqp_value, &encoded_size);
 
 	/* here we should feed data to the transfer frame */
-	if (session_begin_encode_frame(link->session, transfer_value, encoded_size) != 0)
+	if (session_begin_transfer(link->session, transfer, encoded_size) != 0)
 	{
 		result = __LINE__;
 	}
@@ -164,7 +163,6 @@ LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE sou
 		result->target = amqpvalue_clone(target);
 		result->session = session;
 		result->handle = 0;
-		result->delivery_id = 0;
 		result->delivery_settled_callback = delivery_settled_callback;
 		result->callback_context = callback_context;
 

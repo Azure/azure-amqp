@@ -245,7 +245,7 @@ void messaging_dowork(MESSAGING_HANDLE handle)
 					AMQP_VALUE message_payload = message_get_body(messaging->outgoing_messages[i].message);
 					if (message_payload != NULL)
 					{
-						if (link_transfer(messaging->link, &message_payload, 1) == 0)
+						if (link_transfer(messaging->link, message_payload) == 0)
 						{
 							messaging->outgoing_messages[i].callback(MESSAGING_OK, messaging->outgoing_messages[i].context);
 						}

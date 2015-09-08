@@ -28,6 +28,7 @@ extern "C" {
 	extern int session_get_state(SESSION_HANDLE session, SESSION_STATE* session_state);
 	extern void session_dowork(SESSION_HANDLE session);
 	extern int session_begin_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performative, uint32_t payload_size);
+	int session_begin_transfer(SESSION_HANDLE session, TRANSFER_HANDLE transfer, uint32_t frame_size);
 	extern int session_encode_payload_bytes(SESSION_HANDLE session, const unsigned char* bytes, uint32_t count);
 	extern LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context);
 	extern void session_destroy_link_endpoint(LINK_ENDPOINT_HANDLE endpoint);

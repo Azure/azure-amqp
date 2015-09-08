@@ -1,3 +1,4 @@
+#include <string.h>
 #include "session.h"
 #include "connection.h"
 #include "amqpalloc.h"
@@ -25,6 +26,7 @@ typedef struct SESSION_INSTANCE_TAG
 	ENDPOINT_HANDLE endpoint;
 	LINK_ENDPOINT_INSTANCE* link_endpoints;
 	uint32_t link_endpoint_count;
+	delivery_number delivery_id;
 
 	uint32_t handle_max;
 } SESSION_INSTANCE;
@@ -260,6 +262,7 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 		result->session_state = SESSION_STATE_UNMAPPED;
 		result->link_endpoints = NULL;
 		result->link_endpoint_count = 0;
+		result->delivery_id = 0;
 		result->endpoint = connection_create_endpoint(connection, session_frame_received, session_frame_payload_bytes_received, result);
 
 		result->handle_max = 4294967295;
@@ -356,7 +359,7 @@ int session_begin_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performa
 	return result;
 }
 
-int session_begin_encode_transfer(SESSION_HANDLE session, const AMQP_VALUE performative, uint32_t payload_size)
+int session_begin_transfer(SESSION_HANDLE session, TRANSFER_HANDLE transfer, uint32_t frame_size)
 {
 	int result;
 
@@ -367,16 +370,26 @@ int session_begin_encode_transfer(SESSION_HANDLE session, const AMQP_VALUE perfo
 	else
 	{
 		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
+		AMQP_VALUE transfer_value;
 
-
-
-		if (connection_begin_encode_frame(session_instance->endpoint, performative, payload_size) != 0)
+		transfer_set_delivery_id(transfer, session_instance->delivery_id++);
+		transfer_value = amqpvalue_create_transfer(transfer);
+		if (transfer_value == NULL)
 		{
 			result = __LINE__;
 		}
 		else
 		{
-			result = 0;
+			if (connection_begin_encode_frame(session_instance->endpoint, transfer_value, frame_size) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+
+			amqpvalue_destroy(transfer_value);
 		}
 	}
 

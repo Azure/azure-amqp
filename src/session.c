@@ -4,6 +4,16 @@
 #include "consolelogger.h"
 #include "logger.h"
 
+typedef struct LINK_ENDPOINT_INSTANCE_TAG
+{
+	handle incoming_handle;
+	handle outgoing_handle;
+	ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback;
+	ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback;
+	void* frame_received_callback_context;
+	SESSION_HANDLE connection;
+} LINK_ENDPOINT_INSTANCE;
+
 typedef struct SESSION_INSTANCE_TAG
 {
 	ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback;
@@ -12,6 +22,8 @@ typedef struct SESSION_INSTANCE_TAG
 	SESSION_STATE session_state;
 	CONNECTION_HANDLE connection;
 	ENDPOINT_HANDLE endpoint;
+	LINK_ENDPOINT_INSTANCE* link_endpoints;
+	uint32_t link_endpoint_count;
 } SESSION_INSTANCE;
 
 static int send_begin(ENDPOINT_HANDLE endpoint, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
@@ -50,6 +62,32 @@ static int send_begin(ENDPOINT_HANDLE endpoint, transfer_number next_outgoing_id
 	return result;
 }
 
+static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_outgoing_handle(SESSION_INSTANCE* session, uint16_t outgoing_handle)
+{
+	uint32_t i;
+	LINK_ENDPOINT_INSTANCE* result;
+
+	for (i = 0; i < session->link_endpoint_count; i++)
+	{
+		/* what do we compare with ? */
+		if (session->link_endpoints[i].incoming_handle == 0)
+		{
+			break;
+		}
+	}
+
+	if (i == session->link_endpoint_count)
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = &session->link_endpoints[i];
+	}
+
+	return result;
+}
+
 static void session_frame_received(void* context, AMQP_VALUE performative, uint32_t payload_size)
 {
 	SESSION_INSTANCE* session = (SESSION_INSTANCE*)context;
@@ -68,8 +106,21 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 		break;
 
 	case AMQP_ATTACH:
+	{
 		LOG(consolelogger_log, LOG_LINE, "<- [ATTACH]");
+		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_outgoing_handle(session, 0);
+		if (link_endpoint == NULL)
+		{
+			/* error */
+		}
+		else
+		{
+			link_endpoint->incoming_handle = 0;
+			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size);
+		}
+
 		break;
+	}
 
 	case AMQP_DETACH:
 	{
@@ -137,6 +188,8 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 	{
 		result->connection = connection;
 		result->session_state = SESSION_STATE_UNMAPPED;
+		result->link_endpoints = NULL;
+		result->link_endpoint_count = 0;
 		result->endpoint = connection_create_endpoint(connection, session_frame_received, session_frame_payload_bytes_received, result);
 	}
 
@@ -147,6 +200,11 @@ void session_destroy(SESSION_HANDLE session)
 {
 	if (session != NULL)
 	{
+		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
+		if (session_instance->link_endpoints != NULL)
+		{
+			free(session_instance->link_endpoints);
+		}
 		free(session);
 	}
 }

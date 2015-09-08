@@ -180,6 +180,7 @@ void link_destroy(LINK_HANDLE handle)
 	if (handle != NULL)
 	{
 		LINK_INSTANCE* link = (LINK_INSTANCE*)handle;
+		session_destroy_link_endpoint(link->link_endpoint);
 		amqpvalue_destroy(link->source);
 		amqpvalue_destroy(link->target);
 		amqpalloc_free(handle);

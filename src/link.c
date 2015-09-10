@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -18,7 +19,7 @@ typedef struct LINK_INSTANCE_TAG
 	AMQP_VALUE target;
 	handle handle;
 	LINK_ENDPOINT_HANDLE link_endpoint;
-	const char* name;
+	char* name;
 	DELIVERY_SETTLED_CALLBACK delivery_settled_callback;
 	void* callback_context;
 } LINK_INSTANCE;

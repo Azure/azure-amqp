@@ -125,7 +125,7 @@ AMQP_VALUE messaging_create_target(AMQP_VALUE address)
 
 static void delivery_settled_callback(void* context, delivery_number delivery_no)
 {
-	printf("delivery callback\r\n");
+	printf("delivery callback %u\r\n", delivery_no);
 }
 
 int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND_COMPLETE_CALLBACK callback, const void* callback_context)
@@ -142,7 +142,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 	{
 		const char* to = message_get_to(message);
 
-		if (true)
+		if (messaging->connection == NULL)
 		{
 			CONNECTION_OPTIONS connection_options = { 0 };
 
@@ -151,7 +151,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 			messaging->connection = connection;
 		}
 
-		if (connection == NULL)
+		if (messaging->connection == NULL)
 		{
 			result = __LINE__;
 		}

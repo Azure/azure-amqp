@@ -36,10 +36,16 @@ int main(int argc, char** argv)
 		amqp_binary body = { "muie", 4 };
 
 		messaging = messaging_create();
-		message = message_create();
-		message_set_to(message, "pupupupu.servicebus.windows.net");
-		message_set_body(message, amqpvalue_create_binary(body));
-		(void)messaging_send(messaging, message, message_send_callback, NULL);
+		uint32_t i;
+
+		for (i = 0; i < 100; i++)
+		{
+			message = message_create();
+			message_set_to(message, "pupupupu.servicebus.windows.net");
+			message_set_body(message, amqpvalue_create_binary(body));
+
+			(void)messaging_send(messaging, message, message_send_callback, NULL);
+		}
 
 		while (true)
 		{

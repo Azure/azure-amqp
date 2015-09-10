@@ -29,6 +29,7 @@ typedef struct LINK_INSTANCE_TAG
 	char* name;
 	uint32_t pending_delivery_count;
 	DELIVERY_INSTANCE* pending_deliveries;
+	uint32_t delivery_tag_no;
 } LINK_INSTANCE;
 
 static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size)
@@ -64,7 +65,7 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 		amqpvalue_get_uint(first_value, &first);
 		if (amqpvalue_get_uint(last_value, &last) != 0)
 		{
-			last = UINT32_MAX;
+			last = first;
 		}
 
 		uint32_t i;
@@ -74,6 +75,13 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 				(link->pending_deliveries[i].delivery_id <= last))
 			{
 				link->pending_deliveries[i].delivery_settled_callback(link->pending_deliveries[i].callback_context, link->pending_deliveries[i].delivery_id);
+				if (link->pending_delivery_count - i > 1)
+				{
+					memmove(&link->pending_deliveries[i], &link->pending_deliveries[i + 1], sizeof(DELIVERY_INSTANCE) * (link->pending_delivery_count - i - 1));
+				}
+
+				link->pending_delivery_count--;
+				i--;
 			}
 		}
 
@@ -160,6 +168,7 @@ LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE sou
 		result->handle = 0;
 		result->pending_deliveries = NULL;
 		result->pending_delivery_count = 0;
+		result->delivery_tag_no = 0;
 
 		result->name = amqpalloc_malloc(_mbstrlen(name) + 1);
 		if (result->name == NULL)
@@ -247,8 +256,10 @@ int link_transfer(LINK_HANDLE handle, AMQP_VALUE payload_chunk, DELIVERY_SETTLED
 	{
 		TRANSFER_HANDLE transfer = transfer_create(0);
 
-		unsigned char delivery_tag_bytes[] = "muie";
-		delivery_tag delivery_tag = { &delivery_tag, sizeof(delivery_tag) };
+		unsigned char delivery_tag_bytes[sizeof(int)];
+		memcpy(delivery_tag_bytes, &link->delivery_tag_no, sizeof(int));
+		link->delivery_tag_no++;
+		delivery_tag delivery_tag = { &delivery_tag_bytes, sizeof(delivery_tag_bytes) };
 		transfer_set_delivery_tag(transfer, delivery_tag);
 		transfer_set_message_format(transfer, 0);
 		transfer_set_settled(transfer, false);

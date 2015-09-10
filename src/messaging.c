@@ -125,6 +125,7 @@ AMQP_VALUE messaging_create_target(AMQP_VALUE address)
 
 static void delivery_settled_callback(void* context, delivery_number delivery_no)
 {
+	printf("delivery callback\r\n");
 }
 
 int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND_COMPLETE_CALLBACK callback, const void* callback_context)
@@ -188,7 +189,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 
 				if (messaging->link == NULL)
 				{
-					messaging->link = link_create(messaging->session, "voodoo", source_value, target_value, delivery_settled_callback, messaging);
+					messaging->link = link_create(messaging->session, "voodoo", source_value, target_value);
 					if (messaging->link == NULL)
 					{
 						result = __LINE__;
@@ -245,7 +246,7 @@ void messaging_dowork(MESSAGING_HANDLE handle)
 					AMQP_VALUE message_payload = message_get_body(messaging->outgoing_messages[i].message);
 					if (message_payload != NULL)
 					{
-						if (link_transfer(messaging->link, message_payload) == 0)
+						if (link_transfer(messaging->link, message_payload, delivery_settled_callback, messaging) == 0)
 						{
 							messaging->outgoing_messages[i].callback(MESSAGING_OK, messaging->outgoing_messages[i].context);
 						}

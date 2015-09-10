@@ -20,11 +20,11 @@ typedef enum LINK_STATE_TAG
 
 typedef void(*DELIVERY_SETTLED_CALLBACK)(void* context, delivery_number delivery_no);
 
-extern LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target, DELIVERY_SETTLED_CALLBACK delivery_settled_callback, void* callback_context);
+extern LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target);
 extern void link_destroy(LINK_HANDLE handle);
 extern void link_dowork(LINK_HANDLE handle);
 extern int link_get_state(LINK_HANDLE handle, LINK_STATE* link_state);
-extern int link_transfer(LINK_HANDLE link, AMQP_VALUE payload);
+extern int link_transfer(LINK_HANDLE link, AMQP_VALUE payload, DELIVERY_SETTLED_CALLBACK delivery_settled_callback, void* callback_context);
 
 #ifdef __cplusplus
 }

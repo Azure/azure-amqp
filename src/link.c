@@ -11,6 +11,13 @@
 #include "consolelogger.h"
 #include "logger.h"
 
+typedef struct DELIVERY_INSTANCE_TAG
+{
+	delivery_number delivery_id;
+	DELIVERY_SETTLED_CALLBACK delivery_settled_callback;
+	void* callback_context;
+} DELIVERY_INSTANCE;
+
 typedef struct LINK_INSTANCE_TAG
 {
 	SESSION_HANDLE session;
@@ -20,8 +27,8 @@ typedef struct LINK_INSTANCE_TAG
 	handle handle;
 	LINK_ENDPOINT_HANDLE link_endpoint;
 	char* name;
-	DELIVERY_SETTLED_CALLBACK delivery_settled_callback;
-	void* callback_context;
+	uint32_t pending_delivery_count;
+	DELIVERY_INSTANCE* pending_deliveries;
 } LINK_INSTANCE;
 
 static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size)
@@ -47,8 +54,32 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 		break;
 
 	case AMQP_DISPOSITION:
+	{
+		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+		AMQP_VALUE first_value = amqpvalue_get_list_item(described_value, 1);
+		AMQP_VALUE last_value = amqpvalue_get_list_item(described_value, 2);
+		delivery_number first;
+		delivery_number last;
+
+		amqpvalue_get_uint(first_value, &first);
+		if (amqpvalue_get_uint(last_value, &last) != 0)
+		{
+			last = UINT32_MAX;
+		}
+
+		uint32_t i;
+		for (i = 0; i < link->pending_delivery_count; i++)
+		{
+			if ((link->pending_deliveries[i].delivery_id >= first) &&
+				(link->pending_deliveries[i].delivery_id <= last))
+			{
+				link->pending_deliveries[i].delivery_settled_callback(link->pending_deliveries[i].callback_context, link->pending_deliveries[i].delivery_id);
+			}
+		}
+
 		LOG(consolelogger_log, LOG_LINE, "<- [DISPOSITION]");
 		break;
+	}
 
 	case AMQP_DETACH:
 	{
@@ -117,44 +148,7 @@ static int encode_bytes(void* context, const void* bytes, size_t length)
 	return 0;
 }
 
-static int send_tranfer(LINK_INSTANCE* link, AMQP_VALUE payload)
-{
-	int result;
-	TRANSFER_HANDLE transfer =  transfer_create(0);
-	unsigned char delivery_tag_bytes[] = "muie";
-	delivery_tag delivery_tag = { &delivery_tag, sizeof(delivery_tag) };
-	transfer_set_delivery_tag(transfer, delivery_tag);
-	transfer_set_message_format(transfer, 0);
-	transfer_set_settled(transfer, false);
-	transfer_set_more(transfer, false);
-	AMQP_VALUE transfer_value = amqpvalue_create_transfer(transfer);
-
-	size_t encoded_size;
-	AMQP_VALUE amqp_value_descriptor = amqpvalue_create_ulong(0x77);
-	AMQP_VALUE amqp_value = amqpvalue_create_described(amqpvalue_clone(amqp_value_descriptor), amqpvalue_clone(payload));
-	amqpvalue_get_encoded_size(amqp_value, &encoded_size);
-
-	/* here we should feed data to the transfer frame */
-	if (session_begin_transfer(link->session, transfer, encoded_size) != 0)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		amqpvalue_encode(amqp_value, encode_bytes, link->session);
-		LOG(consolelogger_log, LOG_LINE, "-> [TRANSFER]");
-		result = 0;
-	}
-
-	amqpvalue_destroy(amqp_value);
-	amqpvalue_destroy(amqp_value_descriptor);
-
-	transfer_destroy(transfer);
-
-	return result;
-}
-
-LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target, DELIVERY_SETTLED_CALLBACK delivery_settled_callback, void* callback_context)
+LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target)
 {
 	LINK_INSTANCE* result = amqpalloc_malloc(sizeof(LINK_INSTANCE));
 	if (result != NULL)
@@ -164,8 +158,8 @@ LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE sou
 		result->target = amqpvalue_clone(target);
 		result->session = session;
 		result->handle = 0;
-		result->delivery_settled_callback = delivery_settled_callback;
-		result->callback_context = callback_context;
+		result->pending_deliveries = NULL;
+		result->pending_delivery_count = 0;
 
 		result->name = amqpalloc_malloc(_mbstrlen(name) + 1);
 		if (result->name == NULL)
@@ -191,6 +185,11 @@ void link_destroy(LINK_HANDLE handle)
 		session_destroy_link_endpoint(link->link_endpoint);
 		amqpvalue_destroy(link->source);
 		amqpvalue_destroy(link->target);
+		if (link->pending_deliveries != NULL)
+		{
+			amqpalloc_free(link->pending_deliveries);
+		}
+
 		amqpalloc_free(handle);
 	}
 }
@@ -235,17 +234,63 @@ int link_get_state(LINK_HANDLE handle, LINK_STATE* link_state)
 	return result;
 }
 
-int link_transfer(LINK_HANDLE handle, AMQP_VALUE payload_chunk)
+int link_transfer(LINK_HANDLE handle, AMQP_VALUE payload_chunk, DELIVERY_SETTLED_CALLBACK delivery_settled_callback, void* callback_context)
 {
 	int result;
 	LINK_INSTANCE* link = (LINK_INSTANCE*)handle;
+
 	if (link == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		result = send_tranfer(link, payload_chunk);
+		TRANSFER_HANDLE transfer = transfer_create(0);
+
+		unsigned char delivery_tag_bytes[] = "muie";
+		delivery_tag delivery_tag = { &delivery_tag, sizeof(delivery_tag) };
+		transfer_set_delivery_tag(transfer, delivery_tag);
+		transfer_set_message_format(transfer, 0);
+		transfer_set_settled(transfer, false);
+		transfer_set_more(transfer, false);
+		AMQP_VALUE transfer_value = amqpvalue_create_transfer(transfer);
+
+		DELIVERY_INSTANCE* new_pending_deliveries = amqpalloc_realloc(link->pending_deliveries, (link->pending_delivery_count + 1) * sizeof(DELIVERY_INSTANCE));
+		if (new_pending_deliveries == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			size_t encoded_size;
+			AMQP_VALUE amqp_value_descriptor = amqpvalue_create_ulong(0x77);
+			AMQP_VALUE amqp_value = amqpvalue_create_described(amqpvalue_clone(amqp_value_descriptor), amqpvalue_clone(payload_chunk));
+			amqpvalue_get_encoded_size(amqp_value, &encoded_size);
+
+			link->pending_deliveries = new_pending_deliveries;
+			
+			/* here we should feed data to the transfer frame */
+			if (session_begin_transfer(link->session, transfer, encoded_size, &link->pending_deliveries[link->pending_delivery_count].delivery_id) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				link->pending_deliveries[link->pending_delivery_count].delivery_settled_callback = delivery_settled_callback;
+				link->pending_deliveries[link->pending_delivery_count].callback_context = callback_context;
+				link->pending_delivery_count++;
+
+				amqpvalue_encode(amqp_value, encode_bytes, link->session);
+				LOG(consolelogger_log, LOG_LINE, "-> [TRANSFER]");
+
+				result = 0;
+			}
+
+			amqpvalue_destroy(amqp_value);
+			amqpvalue_destroy(amqp_value_descriptor);
+
+			transfer_destroy(transfer);
+		}
 	}
 
 	return result;

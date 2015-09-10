@@ -367,7 +367,7 @@ int session_begin_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performa
 	return result;
 }
 
-int session_begin_transfer(SESSION_HANDLE session, TRANSFER_HANDLE transfer, uint32_t frame_size)
+int session_begin_transfer(SESSION_HANDLE session, TRANSFER_HANDLE transfer, uint32_t frame_size, delivery_number* delivery_id)
 {
 	int result;
 
@@ -380,7 +380,8 @@ int session_begin_transfer(SESSION_HANDLE session, TRANSFER_HANDLE transfer, uin
 		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
 		AMQP_VALUE transfer_value;
 
-		transfer_set_delivery_id(transfer, session_instance->delivery_id++);
+		*delivery_id = session_instance->delivery_id++;
+		transfer_set_delivery_id(transfer, *delivery_id);
 		transfer_value = amqpvalue_create_transfer(transfer);
 		if (transfer_value == NULL)
 		{

@@ -223,8 +223,16 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 	}
 
 	case AMQP_DISPOSITION:
-		LOG(consolelogger_log, LOG_LINE, "<- [DISPOSITION]");
+	{
+		uint32_t i;
+		for (i = 0; i < session->link_endpoint_count; i++)
+		{
+			LINK_ENDPOINT_INSTANCE* link_endpoint = &session->link_endpoints[i];
+			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size);
+		}
+
 		break;
+	}
 
 	case AMQP_END:
 	{

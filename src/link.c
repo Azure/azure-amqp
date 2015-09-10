@@ -125,7 +125,7 @@ static int send_tranfer(LINK_INSTANCE* link, AMQP_VALUE payload)
 	delivery_tag delivery_tag = { &delivery_tag, sizeof(delivery_tag) };
 	transfer_set_delivery_tag(transfer, delivery_tag);
 	transfer_set_message_format(transfer, 0);
-	transfer_set_settled(transfer, true);
+	transfer_set_settled(transfer, false);
 	transfer_set_more(transfer, false);
 	AMQP_VALUE transfer_value = amqpvalue_create_transfer(transfer);
 

@@ -9,6 +9,7 @@
 #include "saslio.h"
 #include "amqpalloc.h"
 #include "logger.h"
+#include "amqpvalue_to_string.h"
 
 /* Requirements satisfied by the virtue of implementing the ISO:*/
 /* Codes_SRS_CONNECTION_01_088: [Any data appearing beyond the protocol header MUST match the version indicated by the protocol header.] */
@@ -300,13 +301,15 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 		break;
 
 	case AMQP_OPEN:
+		LOG(consolelogger_log, 0, "<- [OPEN] ");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
+
 		switch (connection->connection_state)
 		{
 		default:
 			break;
 
 		case CONNECTION_STATE_OPEN_SENT:
-			LOG(consolelogger_log, LOG_LINE, "<- [OPEN]");
 			connection->connection_state = CONNECTION_STATE_OPENED;
 			break;
 

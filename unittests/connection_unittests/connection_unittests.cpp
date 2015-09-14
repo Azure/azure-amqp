@@ -127,6 +127,10 @@ public:
 	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_get_described_value, AMQP_VALUE, value)
 	MOCK_METHOD_END(AMQP_VALUE, TEST_DESCRIBED_AMQP_VALUE);
 
+	/* amqpvalue_to_string mocks */
+	MOCK_STATIC_METHOD_1(, char*, amqpvalue_to_string, AMQP_VALUE, amqp_value)
+	MOCK_METHOD_END(char*, NULL);
+
 	/* frame received callback mocks */
 	MOCK_STATIC_METHOD_4(, void, test_frame_received_callback, void*, context, uint16_t, channel, AMQP_VALUE, performative, uint32_t, frame_payload_size)
 	MOCK_VOID_METHOD_END();
@@ -169,6 +173,8 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , AMQP_VALUE, amqpvalue_get_described_value, AMQP_VALUE, value);
 
     DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, amqpvalue_destroy, AMQP_VALUE, value);
+
+	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , char*, amqpvalue_to_string, AMQP_VALUE, amqp_value)
 
 	DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , void, test_frame_received_callback, void*, context, uint16_t, channel, AMQP_VALUE, performative, uint32_t, frame_payload_size);
 	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , void, test_frame_payload_bytes_received_callback, void*, context, const unsigned char*, payload_bytes, uint32_t, byte_count);

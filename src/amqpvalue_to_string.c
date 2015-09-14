@@ -90,8 +90,8 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			else
 			{
 				unsigned int uint_value = value;
-				if ((sprintf(str_value, "%u", uint_value) != 0) ||
-					(string_concat(&result, (value == true) ? "true" : "false") != 0))
+				if ((sprintf(str_value, "%u", uint_value) < 0) ||
+					(string_concat(&result, str_value) != 0))
 				{
 					amqpalloc_free(result);
 					result = NULL;
@@ -111,8 +111,8 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			else
 			{
 				unsigned int uint_value = value;
-				if ((sprintf(str_value, "%u", uint_value) != 0) ||
-					(string_concat(&result, (value == true) ? "true" : "false") != 0))
+				if ((sprintf(str_value, "%u", uint_value) < 0) ||
+					(string_concat(&result, str_value) != 0))
 				{
 					amqpalloc_free(result);
 					result = NULL;
@@ -132,8 +132,8 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			else
 			{
 				unsigned long uint_value = value;
-				if ((sprintf(str_value, "%ul", uint_value) != 0) ||
-					(string_concat(&result, (value == true) ? "true" : "false") != 0))
+				if ((sprintf(str_value, "%ul", uint_value) < 0) ||
+					(string_concat(&result, str_value) != 0))
 				{
 					amqpalloc_free(result);
 					result = NULL;
@@ -153,8 +153,8 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			else
 			{
 				unsigned long long uint_value = value;
-				if ((sprintf(str_value, "%ull", uint_value) != 0) ||
-					(string_concat(&result, (value == true) ? "true" : "false") != 0))
+				if ((sprintf(str_value, "%ull", uint_value) < 0) ||
+					(string_concat(&result, str_value) != 0))
 				{
 					amqpalloc_free(result);
 					result = NULL;
@@ -174,8 +174,8 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			else
 			{
 				int int_value = value;
-				if ((sprintf(str_value, "%d", int_value) != 0) ||
-					(string_concat(&result, (value == true) ? "true" : "false") != 0))
+				if ((sprintf(str_value, "%d", int_value) < 0) ||
+					(string_concat(&result, str_value) != 0))
 				{
 					amqpalloc_free(result);
 					result = NULL;
@@ -195,8 +195,8 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			else
 			{
 				int int_value = value;
-				if ((sprintf(str_value, "%d", int_value) != 0) ||
-					(string_concat(&result, (value == true) ? "true" : "false") != 0))
+				if ((sprintf(str_value, "%d", int_value) < 0) ||
+					(string_concat(&result, str_value) != 0))
 				{
 					amqpalloc_free(result);
 					result = NULL;
@@ -216,8 +216,8 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			else
 			{
 				unsigned long int_value = value;
-				if ((sprintf(str_value, "%ld", int_value) != 0) ||
-					(string_concat(&result, (value == true) ? "true" : "false") != 0))
+				if ((sprintf(str_value, "%ld", int_value) < 0) ||
+					(string_concat(&result, str_value) != 0))
 				{
 					amqpalloc_free(result);
 					result = NULL;
@@ -237,8 +237,8 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			else
 			{
 				long long int_value = value;
-				if ((sprintf(str_value, "%lld", int_value) != 0) ||
-					(string_concat(&result, (value == true) ? "true" : "false") != 0))
+				if ((sprintf(str_value, "%lld", int_value) < 0) ||
+					(string_concat(&result, str_value) != 0))
 				{
 					amqpalloc_free(result);
 					result = NULL;
@@ -293,7 +293,7 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 						}
 						else
 						{
-							if ((i == 0) || (string_concat(&result, ",") != 0))
+							if ((i > 0) && (string_concat(&result, ",") != 0))
 							{
 								amqpalloc_free(result);
 								result = NULL;
@@ -303,16 +303,56 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 								amqpalloc_free(result);
 								result = NULL;
 							}
+
+							amqpalloc_free(item_string);
 						}
 
 						amqpvalue_destroy(item);
 					}
 				}
 
-				if (i < count)
+				if ((i < count) ||
+					(string_concat(&result, "}") != 0))
 				{
 					amqpalloc_free(result);
 					result = NULL;
+				}
+			}
+			break;
+		}
+		case AMQP_TYPE_DESCRIBED:
+		{
+			AMQP_VALUE described_value = amqpvalue_get_described_value(amqp_value);
+			if (described_value == NULL)
+			{
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				if (string_concat(&result, "* ") != 0)
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+				else
+				{
+					char* described_value_string = amqpvalue_to_string(described_value);
+					if (described_value_string == NULL)
+					{
+						amqpalloc_free(result);
+						result = NULL;
+					}
+					else
+					{
+						if (string_concat(&result, described_value_string) != 0)
+						{
+							amqpalloc_free(result);
+							result = NULL;
+						}
+
+						amqpalloc_free(described_value_string);
+					}
 				}
 			}
 			break;

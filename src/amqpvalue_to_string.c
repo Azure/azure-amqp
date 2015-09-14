@@ -6,7 +6,7 @@
 #include "amqpvalue.h"
 #include "amqpalloc.h"
 
-static int string_concat(char** string, char* to_concat)
+static int string_concat(char** string, const char* to_concat)
 {
 	int result;
 
@@ -246,10 +246,29 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			}
 			break;
 		}
+		case AMQP_TYPE_STRING:
+		{
+			const char* string_value;
+			if (amqpvalue_get_string(amqp_value, &string_value) != 0)
+			{
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				if (string_concat(&result, string_value) != 0)
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+			}
+			break;
+		}
 		case AMQP_TYPE_LIST:
 		{
 			uint32_t count;
-			if (amqpvalue_get_list_item_count(amqp_value, &count) != 0)
+			if ((amqpvalue_get_list_item_count(amqp_value, &count) != 0) ||
+				(string_concat(&result, "{") != 0))
 			{
 				amqpalloc_free(result);
 				result = NULL;
@@ -266,15 +285,20 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 					}
 					else
 					{
-						char* item_string;
-						if (amqpvalue_to_string(item_string) == NULL)
+						char* item_string = amqpvalue_to_string(item);
+						if (item_string == NULL)
 						{
 							amqpvalue_destroy(item);
 							break;
 						}
 						else
 						{
-							if (string_concat(&result, item_string) != 0)
+							if ((i == 0) || (string_concat(&result, ",") != 0))
+							{
+								amqpalloc_free(result);
+								result = NULL;
+							}
+							else if (string_concat(&result, item_string) != 0)
 							{
 								amqpalloc_free(result);
 								result = NULL;

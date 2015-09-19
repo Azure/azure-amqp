@@ -18,6 +18,9 @@
     <ClCompile Include="connection_unittests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\amqp_definitions_mocks.h">

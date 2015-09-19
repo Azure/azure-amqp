@@ -18,5 +18,8 @@
     <ClCompile Include="amqpvalue_limits_unittests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

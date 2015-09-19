@@ -89,6 +89,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="connection_unittests.cpp" />
+    <ClCompile Include="main.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\amqplib\amqplib.vcxproj">

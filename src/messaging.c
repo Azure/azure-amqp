@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "messaging.h"
 #include "connection.h"
@@ -125,8 +126,17 @@ AMQP_VALUE messaging_create_target(AMQP_VALUE address)
 
 static void delivery_settled_callback(void* context, delivery_number delivery_no)
 {
-	printf("delivery callback %u\r\n", delivery_no);
+	(void)printf("delivery callback %u\r\n", delivery_no);
 }
+
+static void messaging_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t frame_payload_size)
+{
+}
+
+static void messaging_frame_payload_bytes_received(void* context, const unsigned char* payload_bytes, uint32_t byte_count)
+{
+}
+
 
 int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND_COMPLETE_CALLBACK callback, const void* callback_context)
 {
@@ -189,7 +199,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 
 				if (messaging->link == NULL)
 				{
-					messaging->link = link_create(messaging->session, "voodoo", source_value, target_value);
+					messaging->link = link_create(messaging->session, "voodoo", source_value, target_value, messaging_frame_received, messaging_frame_payload_bytes_received);
 					if (messaging->link == NULL)
 					{
 						result = __LINE__;

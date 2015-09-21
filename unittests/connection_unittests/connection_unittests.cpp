@@ -461,6 +461,70 @@ TEST_METHOD(connection_set_max_frame_size_with_NULL_connection_fails)
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
+/* Tests_SRS_CONNECTION_01_148: [connection_set_max_frame_size shall set the max_frame_size associated with a connection.] */
+/* Tests_SRS_CONNECTION_01_151: [When max_frame_size is set, it shall be passed down to the frame_codec by a call to frame_codec_set_max_frame_size.] */
+TEST_METHOD(connection_set_max_frame_size_with_valid_connection_succeeds)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 512));
+
+	// act
+	int result = connection_set_max_frame_size(connection, 512);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_150: [If the max_frame_size is invalid then connection_set_max_frame_size shall fail and return a non-zero value.] */
+/* Tests_SRS_CONNECTION_01_167: [Both peers MUST accept frames of up to 512 (MIN-MAX-FRAME-SIZE) octets.] */
+TEST_METHOD(connection_set_max_frame_size_with_511_bytes_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = connection_set_max_frame_size(connection, 511);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_152: [If frame_codec_set_max_frame_size fails then connection_set_max_frame_size shall fail and return a non-zero value.] */
+TEST_METHOD(when_setting_max_frame_size_on_frame_codec_fails_then_connection_set_max_frame_size_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 512))
+		.SetReturn(1);
+
+	// act
+	int result = connection_set_max_frame_size(connection, 512);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
 #if 0
 
 /* connection_register_session */

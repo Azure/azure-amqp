@@ -63,8 +63,11 @@ extern "C" {
 
 	extern CONNECTION_HANDLE connection_create(const char* host, int port, const char* container_id);
 	extern int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_frame_size);
+	extern int connection_get_max_frame_size(CONNECTION_HANDLE connection, uint32_t* max_frame_size);
 	extern int connection_set_channel_max(CONNECTION_HANDLE connection, uint16_t channel_max);
+	extern int connection_get_channel_max(CONNECTION_HANDLE connection, uint16_t* channel_max);
 	extern int connection_set_idle_timeout(CONNECTION_HANDLE connection, milliseconds idle_timeout);
+	extern int connection_get_idle_timeout(CONNECTION_HANDLE connection, milliseconds* idle_timeout);
 	extern void connection_destroy(CONNECTION_HANDLE connection);
 	extern void connection_dowork(CONNECTION_HANDLE connection);
 	extern int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connection_state);

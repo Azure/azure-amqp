@@ -502,14 +502,32 @@ int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_fra
 {
 	int result;
 
-	if (connection == NULL)
+	/* Codes_SRS_CONNECTION_01_163: [If connection is NULL, connection_set_max_frame_size shall fail and return a non-zero value.] */
+	if ((connection == NULL) ||
+		/* Codes_SRS_CONNECTION_01_150: [If the max_frame_size is invalid then connection_set_max_frame_size shall fail and return a non-zero value.] */
+		/* Codes_SRS_CONNECTION_01_167: [Both peers MUST accept frames of up to 512 (MIN-MAX-FRAME-SIZE) octets.] */
+		(max_frame_size < 512))
 	{
-		/* Codes_SRS_CONNECTION_01_163: [If connection is NULL, connection_set_max_frame_size shall fail and return a non-zero value.] */
 		result = __LINE__;
 	}
 	else
 	{
-		result = 0;
+		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+
+		/* Codes_SRS_CONNECTION_01_151: [When max_frame_size is set, it shall be passed down to the frame_codec by a call to frame_codec_set_max_frame_size.] */
+		if (frame_codec_set_max_frame_size(connection_instance->frame_codec, max_frame_size) != 0)
+		{
+			/* Codes_SRS_CONNECTION_01_152: [If frame_codec_set_max_frame_size fails then connection_set_max_frame_size shall fail and return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_CONNECTION_01_148: [connection_set_max_frame_size shall set the max_frame_size associated with a connection.] */
+			connection_instance->max_frame_size = max_frame_size;
+
+			/* Codes_SRS_CONNECTION_01_149: [On success connection_set_max_frame_size shall return 0.] */
+			result = 0;
+		}
 	}
 
 	return result;

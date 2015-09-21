@@ -58,26 +58,17 @@ extern "C" {
 		CONNECTION_STATE_END
 	} CONNECTION_STATE;
 
-#define CONNECTION_OPTION_MAX_FRAME_SIZE	1 << 0
-#define CONNECTION_OPTION_CHANNEL_MAX		1 << 1
-#define CONNECTION_OPTION_IDLE_TIMEOUT		1 << 2
-
-	typedef struct CONNECTION_OPTIONS_TAG
-	{
-		uint8_t use_options;
-		uint32_t max_frame_size;
-		uint16_t channel_max;
-		milliseconds idle_timeout;
-	} CONNECTION_OPTIONS;
-
 	typedef void(*ENDPOINT_FRAME_RECEIVED_CALLBACK)(void* context, AMQP_VALUE performative, uint32_t frame_payload_size);
 	typedef void(*ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK)(void* context, const unsigned char* payload_bytes, uint32_t byte_count);
 
-	extern CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIONS* options);
+	extern CONNECTION_HANDLE connection_create(const char* host, int port);
+	extern int connection_set_container_id(CONNECTION_HANDLE connection, const char* container_id);
+	extern int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_frame_size);
+	extern int connection_set_channel_max(CONNECTION_HANDLE connection, uint16_t channel_max);
+	extern int connection_set_idle_timeout(CONNECTION_HANDLE connection, milliseconds idle_timeout);
 	extern void connection_destroy(CONNECTION_HANDLE connection);
 	extern void connection_dowork(CONNECTION_HANDLE connection);
 	extern int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connection_state);
-	extern AMQP_FRAME_CODEC_HANDLE connection_get_amqp_frame_codec(CONNECTION_HANDLE connection);
 	extern ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context);
 	extern void connection_destroy_endpoint(ENDPOINT_HANDLE endpoint);
 	extern int connection_begin_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE performative, uint32_t payload_size);

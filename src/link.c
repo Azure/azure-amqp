@@ -156,7 +156,7 @@ static int encode_bytes(void* context, const void* bytes, size_t length)
 	return 0;
 }
 
-LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target)
+LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target, AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback)
 {
 	LINK_INSTANCE* result = amqpalloc_malloc(sizeof(LINK_INSTANCE));
 	if (result != NULL)

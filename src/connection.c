@@ -389,7 +389,7 @@ static void connection_frame_payload_bytes_received(void* context, const unsigne
 }
 
 /* Codes_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
-CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIONS* options)
+CONNECTION_HANDLE connection_create(const char* host, int port)
 {
 	CONNECTION_INSTANCE* result;
 
@@ -477,35 +477,9 @@ CONNECTION_HANDLE connection_create(const char* host, int port, CONNECTION_OPTIO
 
 									result->open_performative = NULL;
 
-									if ((options != NULL) &&
-										(options->use_options & CONNECTION_OPTION_MAX_FRAME_SIZE))
-									{
-										result->max_frame_size = options->max_frame_size;
-									}
-									else
-									{
-										result->max_frame_size = 0x1000;
-									}
-
-									if ((options != NULL) &&
-										(options->use_options & CONNECTION_OPTION_CHANNEL_MAX))
-									{
-										result->channel_max = options->channel_max;
-									}
-									else
-									{
-										result->channel_max = 0xFFFF;
-									}
-
-									if ((options != NULL) &&
-										(options->use_options & CONNECTION_OPTION_IDLE_TIMEOUT))
-									{
-										result->idle_timeout = options->idle_timeout;
-									}
-									else
-									{
-										result->idle_timeout = 0;
-									}
+									result->max_frame_size = 0x1000;
+									result->channel_max = 0xFFFF;
+									result->idle_timeout = 0;
 
 									/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
 									result->connection_state = CONNECTION_STATE_START;

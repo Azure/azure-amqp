@@ -446,6 +446,21 @@ TEST_METHOD(connection_destroy_with_NULL_handle_does_nothing)
 	// uMock checks the calls
 }
 
+/* connection_set_max_frame_size */
+
+/* Tests_SRS_CONNECTION_01_163: [If connection is NULL, connection_set_max_frame_size shall fail and return a non-zero value.] */
+TEST_METHOD(connection_set_max_frame_size_with_NULL_connection_fails)
+{
+	// arrange
+	connection_mocks mocks;
+
+	// act
+	int result = connection_set_max_frame_size(NULL, 512);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
 #if 0
 
 /* connection_register_session */

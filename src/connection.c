@@ -498,6 +498,23 @@ CONNECTION_HANDLE connection_create(const char* host, int port, const char* cont
 	return result;
 }
 
+int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_frame_size)
+{
+	int result;
+
+	if (connection == NULL)
+	{
+		/* Codes_SRS_CONNECTION_01_163: [If connection is NULL, connection_set_max_frame_size shall fail and return a non-zero value.] */
+		result = __LINE__;
+	}
+	else
+	{
+		result = 0;
+	}
+
+	return result;
+}
+
 void connection_destroy(CONNECTION_HANDLE connection)
 {
 	/* Codes_SRS_CONNECTION_01_079: [If handle is NULL, connection_destroy shall do nothing.] */

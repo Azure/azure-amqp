@@ -61,7 +61,7 @@ extern "C" {
 	typedef void(*ENDPOINT_FRAME_RECEIVED_CALLBACK)(void* context, AMQP_VALUE performative, uint32_t frame_payload_size);
 	typedef void(*ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK)(void* context, const unsigned char* payload_bytes, uint32_t byte_count);
 
-	extern CONNECTION_HANDLE connection_create(const char* host, int port);
+	extern CONNECTION_HANDLE connection_create(const char* host, int port, const char* container_id);
 	extern int connection_set_container_id(CONNECTION_HANDLE connection, const char* container_id);
 	extern int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_frame_size);
 	extern int connection_set_channel_max(CONNECTION_HANDLE connection, uint16_t channel_max);

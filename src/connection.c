@@ -389,7 +389,7 @@ static void connection_frame_payload_bytes_received(void* context, const unsigne
 }
 
 /* Codes_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
-CONNECTION_HANDLE connection_create(const char* host, int port)
+CONNECTION_HANDLE connection_create(const char* host, int port, const char* container_id)
 {
 	CONNECTION_INSTANCE* result;
 

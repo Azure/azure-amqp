@@ -155,7 +155,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 		if (messaging->connection == NULL)
 		{
 			/* create connection */
-			connection = connection_create(to, 5671);
+			connection = connection_create(to, 5671, "1234");
 			messaging->connection = connection;
 		}
 

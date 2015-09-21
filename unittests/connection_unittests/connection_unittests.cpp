@@ -22,6 +22,8 @@
 
 #define TEST_CONTEXT					(void*)(0x4242)
 
+static const char test_container_id[] = "1234";
+
 const IO_INTERFACE_DESCRIPTION test_io_interface_description = { 0 };
 
 static IO_RECEIVE_CALLBACK io_receive_callback;
@@ -245,7 +247,7 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
 
 	// assert
 	ASSERT_IS_NOT_NULL(connection);
@@ -265,7 +267,7 @@ TEST_METHOD(when_allocating_memory_fails_then_connection_create_fails)
 		.SetReturn((void*)NULL);
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -284,7 +286,7 @@ TEST_METHOD(when_get_socketio_interface_description_fails_then_connection_create
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -306,7 +308,7 @@ TEST_METHOD(when_io_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -331,7 +333,7 @@ TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -359,7 +361,7 @@ TEST_METHOD(when_amqp_frame_codec_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -389,7 +391,7 @@ TEST_METHOD(when_allocating_memory_for_host_fails_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -402,7 +404,7 @@ TEST_METHOD(connection_create_with_NULL_host_fails)
 	connection_mocks mocks;
 
 	// act
-	CONNECTION_HANDLE connection = connection_create(NULL, 5672);
+	CONNECTION_HANDLE connection = connection_create(NULL, 5672, test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -416,7 +418,7 @@ TEST_METHOD(connection_destroy_frees_resources)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_destroy(TEST_AMQP_FRAME_CODEC_HANDLE));

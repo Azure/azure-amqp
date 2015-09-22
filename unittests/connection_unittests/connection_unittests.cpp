@@ -525,6 +525,64 @@ TEST_METHOD(when_setting_max_frame_size_on_frame_codec_fails_then_connection_set
 	connection_destroy(connection);
 }
 
+/* connection_get_max_frame_size */
+
+/* Tests_SRS_CONNECTION_01_170: [If connection or max_frame_size is NULL, connection_get_max_frame_size shall fail and return a non-zero value.] */
+TEST_METHOD(connection_get_max_frame_size_with_NULL_connection_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	uint32_t max_frame_size;
+
+	// act
+	int result = connection_get_max_frame_size(NULL, &max_frame_size);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_CONNECTION_01_170: [If connection or max_frame_size is NULL, connection_get_max_frame_size shall fail and return a non-zero value.] */
+TEST_METHOD(connection_get_max_frame_size_with_NULL_max_frame_size_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = connection_get_max_frame_size(connection, NULL);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_168: [connection_get_max_frame_size shall return in the max_frame_size argument the current max frame size setting.] */
+/* Tests_SRS_CONNECTION_01_169: [On success, connection_get_max_frame_size shall return 0.] */
+/* Tests_SRS_CONNECTION_01_173: [<field name="max-frame-size" type="uint" default="4294967295"/>] */
+TEST_METHOD(connection_get_max_frame_size_with_valid_arguments_succeeds)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	mocks.ResetAllCalls();
+	uint32_t max_frame_size;
+
+	// act
+	int result = connection_get_max_frame_size(connection, &max_frame_size);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	ASSERT_ARE_EQUAL(uint32_t, 4294967295, max_frame_size);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
 #if 0
 
 /* connection_register_session */

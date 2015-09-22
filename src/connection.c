@@ -477,7 +477,8 @@ CONNECTION_HANDLE connection_create(const char* host, int port, const char* cont
 
 									result->open_performative = NULL;
 
-									result->max_frame_size = 0x1000;
+									/* Codes_SRS_CONNECTION_01_173: [<field name="max-frame-size" type="uint" default="4294967295"/>] */
+									result->max_frame_size = 4294967295;
 									result->channel_max = 0xFFFF;
 									result->idle_timeout = 0;
 
@@ -528,6 +529,30 @@ int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_fra
 			/* Codes_SRS_CONNECTION_01_149: [On success connection_set_max_frame_size shall return 0.] */
 			result = 0;
 		}
+	}
+
+	return result;
+}
+
+int connection_get_max_frame_size(CONNECTION_HANDLE connection, uint32_t* max_frame_size)
+{
+	int result;
+
+	/* Codes_SRS_CONNECTION_01_170: [If connection or max_frame_size is NULL, connection_get_max_frame_size shall fail and return a non-zero value.] */
+	if ((connection == NULL) ||
+		(max_frame_size == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+
+		/* Codes_SRS_CONNECTION_01_168: [connection_get_max_frame_size shall return in the max_frame_size argument the current max frame size setting.] */
+		*max_frame_size = connection_instance->max_frame_size;
+
+		/* Codes_SRS_CONNECTION_01_169: [On success, connection_get_max_frame_size shall return 0.] */
+		result = 0;
 	}
 
 	return result;

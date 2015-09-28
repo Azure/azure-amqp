@@ -41,7 +41,7 @@ typedef struct CONNECTION_DATA_TAG
 	CONNECTION_STATE connection_state;
 	FRAME_CODEC_HANDLE frame_codec;
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
-	ENDPOINT_INSTANCE* endpoints;
+	ENDPOINT_INSTANCE** endpoints;
 	uint32_t endpoint_count;
 	uint16_t frame_receive_channel;
 	char* host_name;
@@ -129,7 +129,7 @@ static ENDPOINT_INSTANCE* find_session_endpoint_by_outgoing_channel(CONNECTION_I
 
 	for (i = 0; i < connection->endpoint_count; i++)
 	{
-		if (connection->endpoints[i].outgoing_channel == outgoing_channel)
+		if (connection->endpoints[i]->outgoing_channel == outgoing_channel)
 		{
 			break;
 		}
@@ -141,7 +141,7 @@ static ENDPOINT_INSTANCE* find_session_endpoint_by_outgoing_channel(CONNECTION_I
 	}
 	else
 	{
-		result = &connection->endpoints[i];
+		result = connection->endpoints[i];
 	}
 
 	return result;
@@ -154,7 +154,7 @@ static ENDPOINT_INSTANCE* find_session_endpoint_by_incoming_channel(CONNECTION_I
 
 	for (i = 0; i < connection->endpoint_count; i++)
 	{
-		if (connection->endpoints[i].incoming_channel == incoming_channel)
+		if (connection->endpoints[i]->incoming_channel == incoming_channel)
 		{
 			break;
 		}
@@ -166,7 +166,7 @@ static ENDPOINT_INSTANCE* find_session_endpoint_by_incoming_channel(CONNECTION_I
 	}
 	else
 	{
-		result = &connection->endpoints[i];
+		result = connection->endpoints[i];
 	}
 
 	return result;
@@ -751,7 +751,11 @@ ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOIN
 {
 	ENDPOINT_INSTANCE* result;
 
-	if (connection == NULL)
+	/* Codes_SRS_CONNECTION_01_113: [If connection, frame_received_callback or frame_payload_bytes_received_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
+	/* Codes_SRS_CONNECTION_01_193: [The context argument shall be allowed to be NULL.] */
+	if ((connection == NULL) ||
+		(frame_received_callback == NULL) ||
+		(frame_payload_bytes_received_callback == NULL))
 	{
 		result = NULL;
 	}
@@ -766,17 +770,36 @@ ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOIN
 			channel_no++;
 		}
 
-		connection_instance->endpoints = amqpalloc_realloc(connection_instance->endpoints, sizeof(ENDPOINT_INSTANCE) * (connection_instance->endpoint_count + 1));
+		/* Codes_SRS_CONNECTION_01_127: [On success, connection_create_endpoint shall return a non-NULL handle to the newly created endpoint.] */
+		result = amqpalloc_malloc(sizeof(ENDPOINT_INSTANCE));
+		/* Codes_SRS_CONNECTION_01_196: [If memory cannot be allocated for the new endpoint, connection_create_endpoint shall fail and return NULL.] */
+		if (result != NULL)
+		{
+			ENDPOINT_INSTANCE** new_endpoints;
 
-		connection_instance->endpoints[connection_instance->endpoint_count].frame_received_callback = frame_received_callback;
-		connection_instance->endpoints[connection_instance->endpoint_count].frame_payload_bytes_received_callback = frame_payload_bytes_received_callback;
-		connection_instance->endpoints[connection_instance->endpoint_count].frame_received_callback_context = context;
-		connection_instance->endpoints[connection_instance->endpoint_count].outgoing_channel = channel_no;
-		connection_instance->endpoints[connection_instance->endpoint_count].connection = connection;
+			result->frame_received_callback = frame_received_callback;
+			result->frame_payload_bytes_received_callback = frame_payload_bytes_received_callback;
+			result->frame_received_callback_context = context;
+			result->outgoing_channel = channel_no;
+			result->connection = connection;
 
-		result = &connection_instance->endpoints[connection_instance->endpoint_count];
+			/* Codes_SRS_CONNECTION_01_197: [The newly created endpoint shall be added to the endpoints list, so that it can be tracked.] */
+			new_endpoints = (ENDPOINT_INSTANCE**)amqpalloc_realloc(connection_instance->endpoints, sizeof(ENDPOINT_INSTANCE*) * (connection_instance->endpoint_count + 1));
+			if (new_endpoints == NULL)
+			{
+				/* Tests_SRS_CONNECTION_01_198: [If adding the endpoint to the endpoints list tracked by the connection fails, connection_create_endpoint shall fail and return NULL.] */
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				connection_instance->endpoints = new_endpoints;
+				connection_instance->endpoints[connection_instance->endpoint_count] = result;
+				connection_instance->endpoint_count++;
 
-		connection_instance->endpoint_count++;
+				/* Codes_SRS_CONNECTION_01_112: [connection_create_endpoint shall create a new endpoint that can be used by a session.] */
+			}
+		}
 	}
 
 	return result;
@@ -787,6 +810,30 @@ void connection_destroy_endpoint(ENDPOINT_HANDLE endpoint)
 	if (endpoint != NULL)
 	{
 		ENDPOINT_INSTANCE* endpoint_instance = (ENDPOINT_INSTANCE*)endpoint;
+		CONNECTION_INSTANCE* connection_instance = endpoint_instance->connection;
+		size_t i;
+
+		for (i = 0; i < connection_instance->endpoint_count; i++)
+		{
+			if (connection_instance->endpoints[i] == endpoint)
+			{
+				break;
+			}
+		}
+
+		if (i < connection_instance->endpoint_count)
+		{
+			(void)memmove(connection_instance->endpoints + i, connection_instance->endpoints + i + 1, sizeof(ENDPOINT_INSTANCE*) * (connection_instance->endpoint_count - i - 1));
+
+			ENDPOINT_INSTANCE** new_endpoints = (ENDPOINT_INSTANCE**)amqpalloc_realloc(connection_instance->endpoints, (connection_instance->endpoint_count - 1) * sizeof(ENDPOINT_INSTANCE*));
+			if (new_endpoints != NULL)
+			{
+				connection_instance->endpoints = new_endpoints;
+			}
+
+			connection_instance->endpoint_count--;
+		}
+
 		amqpalloc_free(endpoint_instance);
 	}
 }

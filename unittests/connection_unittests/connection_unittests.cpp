@@ -637,6 +637,7 @@ TEST_METHOD(connection_get_max_frame_size_with_valid_arguments_succeeds)
 
 /* connection_set_channel_max */
 
+/* Tests_SRS_CONNECTION_01_181: [If connection is NULL then connection_set_channel_max shall fail and return a non-zero value.] */
 TEST_METHOD(connection_set_channel_max_with_NULL_connection_fails)
 {
 	// arrange
@@ -744,6 +745,123 @@ TEST_METHOD(connection_get_channel_max_default_value_succeeds)
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
 	ASSERT_ARE_EQUAL(uint32_t, 65535, (uint32_t)channel_max);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* connection_set_idle_timeout */
+
+/* Tests_SRS_CONNECTION_01_191: [If connection is NULL, connection_set_idle_timeout shall fail and return a non-zero value.] */
+TEST_METHOD(connection_set_idle_timeout_with_NULL_connection_fails)
+{
+	// arrange
+	connection_mocks mocks;
+
+	// act
+	int result = connection_set_idle_timeout(NULL, 1000);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_CONNECTION_01_159: [connection_set_idle_timeout shall set the idle_timeout associated with a connection.] */
+/* Tests_SRS_CONNECTION_01_160: [On success connection_set_idle_timeout shall return 0.] */
+TEST_METHOD(connection_set_idle_timeout_with_valid_connection_succeeds)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = connection_set_idle_timeout(connection, 1000);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* connection_get_idle_timeout */
+
+/* Tests_SRS_CONNECTION_01_190: [If connection or idle_timeout is NULL, connection_get_idle_timeout shall fail and return a non-zero value.]  */
+TEST_METHOD(connection_get_idle_timeout_with_NULL_connection_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	milliseconds idle_timeout;
+
+	// act
+	int result = connection_get_idle_timeout(NULL, &idle_timeout);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_CONNECTION_01_190: [If connection or idle_timeout is NULL, connection_get_idle_timeout shall fail and return a non-zero value.]  */
+TEST_METHOD(connection_get_idle_timeout_with_NULL_idle_timeout_argument_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = connection_get_idle_timeout(connection, NULL);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_188: [connection_get_idle_timeout shall return in the idle_timeout argument the current idle_timeout setting.] */
+/* Tests_SRS_CONNECTION_01_189: [On success, connection_get_idle_timeout shall return 0.] */
+TEST_METHOD(connection_get_idle_timeout_with_valid_argument_succeeds)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	(void)connection_set_idle_timeout(connection, 12);
+	mocks.ResetAllCalls();
+	milliseconds idle_timeout;
+
+	// act
+	int result = connection_get_idle_timeout(connection, &idle_timeout);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	ASSERT_ARE_EQUAL(uint32_t, 12, (uint32_t)idle_timeout);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_188: [connection_get_idle_timeout shall return in the idle_timeout argument the current idle_timeout setting.] */
+/* Tests_SRS_CONNECTION_01_189: [On success, connection_get_idle_timeout shall return 0.] */
+/* Tests_SRS_CONNECTION_01_175: [<field name="idle-time-out" type="milliseconds"/>] */
+/* Tests_SRS_CONNECTION_01_192: [A value of zero is the same as if it was not set (null).] */
+TEST_METHOD(connection_get_idle_timeout_default_value_succeeds)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	mocks.ResetAllCalls();
+	milliseconds idle_timeout;
+
+	// act
+	int result = connection_get_idle_timeout(connection, &idle_timeout);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	ASSERT_ARE_EQUAL(uint32_t, 0, (uint32_t)idle_timeout);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup

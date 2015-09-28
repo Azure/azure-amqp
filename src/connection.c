@@ -479,8 +479,11 @@ CONNECTION_HANDLE connection_create(const char* host, int port, const char* cont
 
 									/* Codes_SRS_CONNECTION_01_173: [<field name="max-frame-size" type="uint" default="4294967295"/>] */
 									result->max_frame_size = 4294967295;
-									/*Codes_Tests_SRS_CONNECTION_01_174: [<field name="channel-max" type="ushort" default="65535"/>] */
+									/* Codes: [<field name="channel-max" type="ushort" default="65535"/>] */
 									result->channel_max = 65535;
+
+									/* Codes_SRS_CONNECTION_01_175: [<field name="idle-time-out" type="milliseconds"/>] */
+									/* Codes_SRS_CONNECTION_01_192: [A value of zero is the same as if it was not set (null).] */
 									result->idle_timeout = 0;
 
 									/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
@@ -602,6 +605,54 @@ int connection_get_channel_max(CONNECTION_HANDLE connection, uint16_t* channel_m
 		*channel_max = connection_instance->channel_max;
 
 		/* Codes_SRS_CONNECTION_01_183: [On success, connection_get_channel_max shall return 0.] */
+		result = 0;
+	}
+
+	return result;
+}
+
+int connection_set_idle_timeout(CONNECTION_HANDLE connection, milliseconds idle_timeout)
+{
+	int result;
+
+	/* Codes_SRS_CONNECTION_01_191: [If connection is NULL, connection_set_idle_timeout shall fail and return a non-zero value.] */
+	if (connection == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+
+		/* Codes_SRS_CONNECTION_01_159: [connection_set_idle_timeout shall set the idle_timeout associated with a connection.] */
+		/* Codes_SRS_CONNECTION_01_166: [If connection_set_idle_timeout fails, the previous idle_timeout setting shall be retained.] */
+		connection_instance->idle_timeout = idle_timeout;
+
+		/* Codes_SRS_CONNECTION_01_160: [On success connection_set_idle_timeout shall return 0.] */
+		result = 0;
+	}
+
+	return result;
+}
+
+int connection_get_idle_timeout(CONNECTION_HANDLE connection, milliseconds* idle_timeout)
+{
+	int result;
+
+	/* Codes_SRS_CONNECTION_01_190: [If connection or idle_timeout is NULL, connection_get_idle_timeout shall fail and return a non-zero value.] */
+	if ((connection == NULL) ||
+		(idle_timeout == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+
+		/* Codes_SRS_CONNECTION_01_188: [connection_get_idle_timeout shall return in the idle_timeout argument the current idle_timeout setting.] */
+		*idle_timeout = connection_instance->idle_timeout;
+
+		/* Codes_SRS_CONNECTION_01_189: [On success, connection_get_idle_timeout shall return 0.] */
 		result = 0;
 	}
 

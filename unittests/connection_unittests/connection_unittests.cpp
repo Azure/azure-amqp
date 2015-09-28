@@ -463,6 +463,7 @@ TEST_METHOD(connection_set_max_frame_size_with_NULL_connection_fails)
 
 /* Tests_SRS_CONNECTION_01_148: [connection_set_max_frame_size shall set the max_frame_size associated with a connection.] */
 /* Tests_SRS_CONNECTION_01_151: [When max_frame_size is set, it shall be passed down to the frame_codec by a call to frame_codec_set_max_frame_size.] */
+/* Tests_SRS_CONNECTION_01_149: [On success connection_set_max_frame_size shall return 0.] */
 TEST_METHOD(connection_set_max_frame_size_with_valid_connection_succeeds)
 {
 	// arrange
@@ -525,6 +526,57 @@ TEST_METHOD(when_setting_max_frame_size_on_frame_codec_fails_then_connection_set
 	connection_destroy(connection);
 }
 
+/* Tests_SRS_CONNECTION_01_164: [If connection_set_max_frame_size fails, the previous max_frame_size setting shall be retained.] */
+/* Tests_SRS_CONNECTION_01_167: [Both peers MUST accept frames of up to 512 (MIN-MAX-FRAME-SIZE) octets.] */
+TEST_METHOD(connection_set_max_frame_size_with_511_bytes_fails_and_previous_value_is_kept)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	(void)connection_set_max_frame_size(connection, 1042);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = connection_set_max_frame_size(connection, 511);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	uint32_t max_frame_size;
+	(void)connection_get_max_frame_size(connection, &max_frame_size);
+	ASSERT_ARE_EQUAL(uint32_t, 1042, max_frame_size);
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_164: [If connection_set_max_frame_size fails, the previous max_frame_size setting shall be retained.] */
+/* Tests_SRS_CONNECTION_01_152: [If frame_codec_set_max_frame_size fails then connection_set_max_frame_size shall fail and return a non-zero value.] */
+TEST_METHOD(when_setting_max_frame_size_on_frame_codec_fails_then_connection_set_max_frame_size_fails_and_previous_value_is_kept)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	(void)connection_set_max_frame_size(connection, 1042);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 512))
+		.SetReturn(1);
+
+	// act
+	int result = connection_set_max_frame_size(connection, 512);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	uint32_t max_frame_size;
+	(void)connection_get_max_frame_size(connection, &max_frame_size);
+	ASSERT_ARE_EQUAL(uint32_t, 1042, max_frame_size);
+
+	// cleanup
+	connection_destroy(connection);
+}
+
 /* connection_get_max_frame_size */
 
 /* Tests_SRS_CONNECTION_01_170: [If connection or max_frame_size is NULL, connection_get_max_frame_size shall fail and return a non-zero value.] */
@@ -577,6 +629,121 @@ TEST_METHOD(connection_get_max_frame_size_with_valid_arguments_succeeds)
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
 	ASSERT_ARE_EQUAL(uint32_t, 4294967295, max_frame_size);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* connection_set_channel_max */
+
+TEST_METHOD(connection_set_channel_max_with_NULL_connection_fails)
+{
+	// arrange
+	connection_mocks mocks;
+
+	// act
+	int result = connection_set_channel_max(NULL, 10);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_CONNECTION_01_153: [connection_set_channel_max shall set the channel_max associated with a connection.] */
+/* Tests_SRS_CONNECTION_01_154: [On success connection_set_channel_max shall return 0.] */
+TEST_METHOD(connection_set_channel_max_with_valid_connection_succeeds)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = connection_set_channel_max(connection, 10);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* connection_get_channel_max */
+
+/* Tests_SRS_CONNECTION_01_184: [If connection or channel_max is NULL, connection_get_channel_max shall fail and return a non-zero value.] */
+TEST_METHOD(connection_get_channel_max_with_NULL_connection_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	uint16_t channel_max;
+
+	// act
+	int result = connection_get_channel_max(NULL, &channel_max);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_CONNECTION_01_184: [If connection or channel_max is NULL, connection_get_channel_max shall fail and return a non-zero value.] */
+TEST_METHOD(connection_get_channel_max_with_NULL_channel_max_argument_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = connection_get_channel_max(connection, NULL);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_182: [connection_get_channel_max shall return in the channel_max argument the current channel_max setting.] */
+/* Tests_SRS_CONNECTION_01_183: [On success, connection_get_channel_max shall return 0.] */
+TEST_METHOD(connection_get_channel_max_with_valid_argument_succeeds)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	(void)connection_set_channel_max(connection, 12);
+	mocks.ResetAllCalls();
+	uint16_t channel_max;
+
+	// act
+	int result = connection_get_channel_max(connection, &channel_max);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	ASSERT_ARE_EQUAL(uint32_t, 12, (uint32_t)channel_max);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_182: [connection_get_channel_max shall return in the channel_max argument the current channel_max setting.] */
+/* Tests_SRS_CONNECTION_01_183: [On success, connection_get_channel_max shall return 0.] */
+/* Tests_SRS_CONNECTION_01_174: [<field name="channel-max" type="ushort" default="65535"/>] */
+TEST_METHOD(connection_get_channel_max_default_value_succeeds)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	mocks.ResetAllCalls();
+	uint16_t channel_max;
+
+	// act
+	int result = connection_get_channel_max(connection, &channel_max);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	ASSERT_ARE_EQUAL(uint32_t, 65535, (uint32_t)channel_max);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup

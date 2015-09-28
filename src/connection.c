@@ -479,7 +479,8 @@ CONNECTION_HANDLE connection_create(const char* host, int port, const char* cont
 
 									/* Codes_SRS_CONNECTION_01_173: [<field name="max-frame-size" type="uint" default="4294967295"/>] */
 									result->max_frame_size = 4294967295;
-									result->channel_max = 0xFFFF;
+									/*Codes_Tests_SRS_CONNECTION_01_174: [<field name="channel-max" type="ushort" default="65535"/>] */
+									result->channel_max = 65535;
 									result->idle_timeout = 0;
 
 									/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
@@ -524,6 +525,7 @@ int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_fra
 		else
 		{
 			/* Codes_SRS_CONNECTION_01_148: [connection_set_max_frame_size shall set the max_frame_size associated with a connection.] */
+			/* Codes_SRS_CONNECTION_01_164: [If connection_set_max_frame_size fails, the previous max_frame_size setting shall be retained.] */
 			connection_instance->max_frame_size = max_frame_size;
 
 			/* Codes_SRS_CONNECTION_01_149: [On success connection_set_max_frame_size shall return 0.] */
@@ -552,6 +554,54 @@ int connection_get_max_frame_size(CONNECTION_HANDLE connection, uint32_t* max_fr
 		*max_frame_size = connection_instance->max_frame_size;
 
 		/* Codes_SRS_CONNECTION_01_169: [On success, connection_get_max_frame_size shall return 0.] */
+		result = 0;
+	}
+
+	return result;
+}
+
+int connection_set_channel_max(CONNECTION_HANDLE connection, uint16_t channel_max)
+{
+	int result;
+
+	/* Codes_SRS_CONNECTION_01_181: [If connection is NULL then connection_set_channel_max shall fail and return a non-zero value.] */
+	if (connection == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+
+		/* Codes_SRS_CONNECTION_01_153: [connection_set_channel_max shall set the channel_max associated with a connection.] */
+		/* Codes_SRS_CONNECTION_01_165: [If connection_set_channel_max fails, the previous channel_max setting shall be retained.] */
+		connection_instance->channel_max = channel_max;
+
+		/* Codes_SRS_CONNECTION_01_154: [On success connection_set_channel_max shall return 0.] */
+		result = 0;
+	}
+
+	return result;
+}
+
+int connection_get_channel_max(CONNECTION_HANDLE connection, uint16_t* channel_max)
+{
+	int result;
+
+	/* Codes_SRS_CONNECTION_01_184: [If connection or channel_max is NULL, connection_get_channel_max shall fail and return a non-zero value.] */
+	if ((connection == NULL) ||
+		(channel_max == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+
+		/* Codes_SRS_CONNECTION_01_182: [connection_get_channel_max shall return in the channel_max argument the current channel_max setting.] */
+		*channel_max = connection_instance->channel_max;
+
+		/* Codes_SRS_CONNECTION_01_183: [On success, connection_get_channel_max shall return 0.] */
 		result = 0;
 	}
 

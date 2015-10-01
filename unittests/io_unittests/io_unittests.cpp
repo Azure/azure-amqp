@@ -353,7 +353,7 @@ TEST_FUNCTION(io_destroy_with_null_handle_does_nothing)
 
 /* io_open */
 
-/* Tests_SRS_IO_01_019: [io_open shall call the specific concrete_io_open function specified in io_create.] */
+/* Tests_SRS_IO_01_019: [io_open shall call the specific concrete_io_open function specified in io_create, passing the receive_callback and receive_callback_context arguments.] */
 /* Tests_SRS_IO_01_020: [On success, io_open shall return 0.] */
 TEST_FUNCTION(io_open_calls_the_underlying_concrete_io_open_and_succeeds)
 {

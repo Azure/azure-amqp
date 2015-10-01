@@ -22,9 +22,9 @@ extern "C" {
 
 	typedef void(*IO_RECEIVE_CALLBACK)(void* context, const void* buffer, size_t size);
 
-	typedef CONCRETE_IO_HANDLE(*IO_CREATE)(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* receive_callback_context, LOGGER_LOG logger_log);
+	typedef CONCRETE_IO_HANDLE(*IO_CREATE)(void* io_create_parameters, LOGGER_LOG logger_log);
 	typedef void(*IO_DESTROY)(CONCRETE_IO_HANDLE handle);
-	typedef int(*IO_OPEN)(CONCRETE_IO_HANDLE handle);
+	typedef int(*IO_OPEN)(CONCRETE_IO_HANDLE handle, IO_RECEIVE_CALLBACK receive_callback, void* receive_callback_context);
 	typedef int(*IO_CLOSE)(CONCRETE_IO_HANDLE handle);
 	typedef int(*IO_SEND)(CONCRETE_IO_HANDLE handle, const void* buffer, size_t size);
 	typedef void(*IO_DOWORK)(CONCRETE_IO_HANDLE handle);
@@ -41,9 +41,9 @@ extern "C" {
 		IO_GETSTATE concrete_io_get_state;
 	} IO_INTERFACE_DESCRIPTION;
 
-	extern IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, const void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* receive_callback_context, LOGGER_LOG logger_log);
+	extern IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, const void* io_create_parameters, LOGGER_LOG logger_log);
 	extern void io_destroy(IO_HANDLE handle);
-	extern int io_open(IO_HANDLE handle);
+	extern int io_open(IO_HANDLE handle, IO_RECEIVE_CALLBACK receive_callback, void* receive_callback_context);
 	extern int io_close(IO_HANDLE handle);
 	extern int io_send(IO_HANDLE handle, const void* buffer, size_t size);
 	extern void io_dowork(IO_HANDLE handle);

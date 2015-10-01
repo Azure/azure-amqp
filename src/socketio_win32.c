@@ -13,6 +13,8 @@ typedef struct SOCKET_IO_DATA_TAG
 	IO_RECEIVE_CALLBACK receive_callback;
 	LOGGER_LOG logger_log;
 	void* context;
+	const char* hostname;
+	int port;
 } SOCKET_IO_DATA;
 
 static const IO_INTERFACE_DESCRIPTION socket_io_interface_description = 
@@ -26,7 +28,7 @@ static const IO_INTERFACE_DESCRIPTION socket_io_interface_description =
 	socketio_get_state
 };
 
-IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log)
+IO_HANDLE socketio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 {
 	SOCKETIO_CONFIG* socket_io_config = io_create_parameters;
 	SOCKET_IO_DATA* result;
@@ -42,8 +44,8 @@ IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receiv
 		{
 			result->receive_callback = NULL;
 			result->logger_log = logger_log;
-			result->receive_callback = receive_callback;
-			result->context = context;
+			result->receive_callback = NULL;
+			result->context = NULL;
 
 			result->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (result->socket == INVALID_SOCKET)
@@ -98,9 +100,52 @@ void socketio_destroy(IO_HANDLE socket_io)
 	}
 }
 
-int socketio_open(IO_HANDLE socket_io)
+int socketio_open(IO_HANDLE socket_io, IO_RECEIVE_CALLBACK receive_callback, void* context)
 {
-	int result = 0;
+	int result;
+
+	SOCKET_IO_DATA* socket_io_instance = (SOCKET_IO_DATA*)socket_io;
+
+	ADDRINFO* addrInfo;
+	char portString[16];
+
+	socket_io_instance->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (socket_io_instance->socket == INVALID_SOCKET)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		sprintf(portString, "%u", socket_io_instance->port);
+		if (getaddrinfo(socket_io_instance->hostname, portString, NULL, &addrInfo) != 0)
+		{
+			closesocket(socket_io_instance->socket);
+			socket_io_instance->socket = INVALID_SOCKET;
+			result = __LINE__;
+		}
+		else
+		{
+			u_long iMode = 1;
+
+			if (connect(socket_io_instance->socket, addrInfo->ai_addr, sizeof(*addrInfo->ai_addr)) != 0)
+			{
+				closesocket(socket_io_instance->socket);
+				socket_io_instance->socket = INVALID_SOCKET;
+				result = __LINE__;
+			}
+			else if (ioctlsocket(socket_io_instance->socket, FIONBIO, &iMode))
+			{
+				closesocket(socket_io_instance->socket);
+				socket_io_instance->socket = INVALID_SOCKET;
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+	}
+
 	return result;
 }
 

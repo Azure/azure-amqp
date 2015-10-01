@@ -284,7 +284,7 @@ static void tlsio_receive_bytes(void* context, const void* buffer, size_t size)
 	}
 }
 
-IO_HANDLE tlsio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log)
+IO_HANDLE tlsio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 {
 	TLSIO_CONFIG* tls_io_config = io_create_parameters;
 	TLS_IO_INSTANCE* result;
@@ -305,8 +305,8 @@ IO_HANDLE tlsio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_c
 
 			result->receive_callback = NULL;
 			result->logger_log = logger_log;
-			result->receive_callback = receive_callback;
-			result->context = context;
+			result->receive_callback = NULL;
+			result->context = NULL;
 
 			result->host_name = (SEC_CHAR*)malloc(sizeof(SEC_CHAR) * (1 + strlen(tls_io_config->hostname)));
 			if (result->host_name == NULL)
@@ -327,7 +327,7 @@ IO_HANDLE tlsio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_c
 				}
 				else
 				{
-					result->socket_io = io_create(socket_io_interface, &socketio_config, tlsio_receive_bytes, result, NULL);
+					result->socket_io = io_create(socket_io_interface, &socketio_config, NULL);
 					if (result->socket_io == NULL)
 					{
 						amqpalloc_free(result->host_name);
@@ -366,15 +366,26 @@ void tlsio_destroy(IO_HANDLE tls_io)
 	}
 }
 
-int tlsio_open(IO_HANDLE tls_io)
+int tlsio_open(IO_HANDLE tls_io, IO_RECEIVE_CALLBACK receive_callback, void* context)
 {
 	int result = 0;
+
+	TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
+	tls_io_instance->receive_callback = receive_callback;
+	tls_io_instance->context = context;
+
+	io_open(tls_io_instance->socket_io, receive_callback, context);
+
 	return result;
 }
 
 int tlsio_close(IO_HANDLE tls_io)
 {
 	int result = 0;
+
+	TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
+	io_close(tls_io_instance->socket_io);
+
 	return result;
 }
 

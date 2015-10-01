@@ -266,7 +266,7 @@ static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 	}
 }
 
-IO_HANDLE saslio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log)
+IO_HANDLE saslio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 {
 	SASLIO_CONFIG* sasl_io_config = io_create_parameters;
 	SASL_IO_INSTANCE* result;
@@ -336,7 +336,7 @@ void saslio_destroy(IO_HANDLE sasl_io)
 	}
 }
 
-int saslio_open(IO_HANDLE sasl_io)
+int saslio_open(IO_HANDLE sasl_io, IO_RECEIVE_CALLBACK receive_callback, void* context)
 {
 	int result = 0;
 	return result;

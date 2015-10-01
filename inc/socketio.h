@@ -17,9 +17,9 @@ typedef struct SOCKETIO_CONFIG_TAG
 	int port;
 } SOCKETIO_CONFIG;
 
-extern IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log);
+extern IO_HANDLE socketio_create(void* io_create_parameters, LOGGER_LOG logger_log);
 extern void socketio_destroy(IO_HANDLE socket_io);
-extern int socketio_open(IO_HANDLE socket_io);
+extern int socketio_open(IO_HANDLE socket_io, IO_RECEIVE_CALLBACK receive_callback, void* context);
 extern int socketio_close(IO_HANDLE socket_io);
 extern int socketio_send(IO_HANDLE socket_io, const void* buffer, size_t size);
 extern void socketio_dowork(IO_HANDLE socket_io);

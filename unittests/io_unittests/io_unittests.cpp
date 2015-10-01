@@ -343,11 +343,113 @@ TEST_FUNCTION(io_destroy_with_null_handle_does_nothing)
 	// assert
 }
 
+/* io_open */
+
+/* Tests_SRS_IO_01_019: [io_open shall call the specific concrete_io_open function specified in io_create.] */
+/* Tests_SRS_IO_01_020: [On success, io_open shall return 0.] */
+TEST_FUNCTION(io_open_calls_the_underlying_concrete_io_open_and_succeeds)
+{
+	// arrange
+	io_mocks mocks;
+	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL, NULL, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_io_open(TEST_CONCRETE_IO_HANDLE));
+
+	// act
+	int result = io_open(handle);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_IO_01_021: [If handle is NULL, io_open shall return a non-zero value.] */
+TEST_FUNCTION(io_open_with_NULL_handle_fails)
+{
+	// arrange
+	io_mocks mocks;
+
+	// act
+	int result = io_open(NULL);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_IO_01_022: [If the underlying concrete_io_open fails, io_open shall return a non-zero value.] */
+TEST_FUNCTION(when_the_concrete_io_open_fails_then_io_open_fails)
+{
+	// arrange
+	io_mocks mocks;
+	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL, NULL, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_io_open(TEST_CONCRETE_IO_HANDLE))
+		.SetReturn(1);
+
+	// act
+	int result = io_open(handle);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* io_close */
+
+/* Tests_SRS_IO_01_023: [io_close shall call the specific concrete_io_close function specified in io_create.] */
+/* Tests_SRS_IO_01_024: [On success, io_close shall return 0.] */
+TEST_FUNCTION(io_close_calls_the_underlying_concrete_io_close_and_succeeds)
+{
+	// arrange
+	io_mocks mocks;
+	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL, NULL, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_io_close(TEST_CONCRETE_IO_HANDLE));
+
+	// act
+	int result = io_close(handle);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_IO_01_025: [If handle is NULL, io_close shall return a non-zero value.] */
+TEST_FUNCTION(io_close_with_NULL_handle_fails)
+{
+	// arrange
+	io_mocks mocks;
+
+	// act
+	int result = io_close(NULL);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_IO_01_026: [If the underlying concrete_io_close fails, io_close shall return a non-zero value.] */
+TEST_FUNCTION(when_the_concrete_io_close_fails_then_io_close_fails)
+{
+	// arrange
+	io_mocks mocks;
+	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL, NULL, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_io_close(TEST_CONCRETE_IO_HANDLE))
+		.SetReturn(1);
+
+	// act
+	int result = io_close(handle);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
 /* io_send */
 
 /* Tests_SRS_IO_01_008: [io_send shall pass the sequence of bytes pointed to by buffer to the concrete IO implementation specified in io_create, by calling the concrete_io_send function while passing down the buffer and size arguments to it.] */
 /* Tests_SRS_IO_01_009: [On success, io_send shall return 0.] */
-TEST_FUNCTION(io_send_calls_the_underlying_concrete_io_send_an_succeeds)
+TEST_FUNCTION(io_send_calls_the_underlying_concrete_io_send_and_succeeds)
 {
 	// arrange
 	io_mocks mocks;

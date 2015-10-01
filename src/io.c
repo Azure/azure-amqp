@@ -62,6 +62,64 @@ void io_destroy(IO_HANDLE io)
 	}
 }
 
+int io_open(IO_HANDLE io)
+{
+	int result;
+
+	if (io == NULL)
+	{
+		/* Codes_SRS_IO_01_021: [If handle is NULL, io_open shall return a non-zero value.] */
+		result = __LINE__;
+	}
+	else
+	{
+		IO_INSTANCE* io_instance = (IO_INSTANCE*)io;
+
+		/* Codes_SRS_IO_01_019: [io_open shall call the specific concrete_io_open function specified in io_create.] */
+		if (io_instance->io_interface_description->concrete_io_open(io_instance->concrete_io_handle) != 0)
+		{
+			/* Codes_SRS_IO_01_022: [If the underlying concrete_io_open fails, io_open shall return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_IO_01_020: [On success, io_open shall return 0.] */
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
+int io_close(IO_HANDLE io)
+{
+	int result;
+
+	if (io == NULL)
+	{
+		/* Codes_SRS_IO_01_025: [If handle is NULL, io_close shall return a non-zero value.] */
+		result = __LINE__;
+	}
+	else
+	{
+		IO_INSTANCE* io_instance = (IO_INSTANCE*)io;
+
+		/* Codes_SRS_IO_01_023: [io_close shall call the specific concrete_io_close function specified in io_create.] */
+		if (io_instance->io_interface_description->concrete_io_close(io_instance->concrete_io_handle) != 0)
+		{
+			/* Codes_SRS_IO_01_026: [If the underlying concrete_io_close fails, io_close shall return a non-zero value.] */
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_IO_01_024: [On success, io_close shall return 0.] */
+			result = 0;
+		}
+	}
+
+	return result;
+}
+
 int io_send(IO_HANDLE io, const void* buffer, size_t size)
 {
 	int result;

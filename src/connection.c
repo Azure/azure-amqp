@@ -678,50 +678,65 @@ void connection_destroy(CONNECTION_HANDLE connection)
 void connection_dowork(CONNECTION_HANDLE connection)
 {
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+
+	/* Codes_SRS_CONNECTION_01_078: [If handle is NULL, connection_dowork shall do nothing.] */
 	if (connection_instance != NULL)
 	{
-		/* Codes_SRS_CONNECTION_01_084: [The connection_instance state machine implementing the protocol requirements shall be run as part of connection_dowork.] */
-		switch (connection_instance->connection_state)
+		/* Codes_SRS_CONNECTION_01_201: [The IO interface state shall be queried by using io_get_state.] */
+		IO_STATE io_state = io_get_state(connection_instance->io);
+
+		switch (io_state)
 		{
 		default:
+		case IO_STATE_ERROR:
 			break;
-
-		case CONNECTION_STATE_START:
-			if (io_get_state(connection_instance->io) == IO_STATE_READY)
+		case IO_STATE_NOT_READY:
+			break;
+		/* Codes_SRS_CONNECTION_01_200: [The connection state machine processing shall only be done when the IO interface state is ready.] */
+		case IO_STATE_READY:
+			/* Codes_SRS_CONNECTION_01_084: [The connection_instance state machine implementing the protocol requirements shall be run as part of connection_dowork.] */
+			switch (connection_instance->connection_state)
 			{
-				/* Codes_SRS_CONNECTION_01_086: [Prior to sending any frames on a connection_instance, each peer MUST start by sending a protocol header that indicates the protocol version used on the connection_instance.] */
-				/* Codes_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection_instance) MUST immediately send its outgoing protocol header on establishment of the TCP connection_instance.] */
-				if (send_header(connection_instance) != 0)
+			default:
+				break;
+
+			case CONNECTION_STATE_START:
+				if (io_state == IO_STATE_READY)
 				{
-					io_destroy(connection_instance->io);
-					connection_instance->io = NULL;
-					connection_instance->connection_state = CONNECTION_STATE_END;
+					/* Codes_SRS_CONNECTION_01_086: [Prior to sending any frames on a connection_instance, each peer MUST start by sending a protocol header that indicates the protocol version used on the connection_instance.] */
+					/* Codes_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection_instance) MUST immediately send its outgoing protocol header on establishment of the TCP connection_instance.] */
+					if (send_header(connection_instance) != 0)
+					{
+						io_destroy(connection_instance->io);
+						connection_instance->io = NULL;
+						connection_instance->connection_state = CONNECTION_STATE_END;
+					}
 				}
-			}
-			break;
+				break;
 
-		case CONNECTION_STATE_HDR_SENT:
-		case CONNECTION_STATE_OPEN_SENT:
-		case CONNECTION_STATE_OPENED:
-			break;
+			case CONNECTION_STATE_HDR_SENT:
+			case CONNECTION_STATE_OPEN_SENT:
+			case CONNECTION_STATE_OPENED:
+				break;
 
-		case CONNECTION_STATE_HDR_EXCH:
-			if (io_get_state(connection_instance->io) == IO_STATE_READY)
-			{
-				/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection_instance begins with an exchange of capabilities and limitations, including the maximum frame size.] */
-				/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection_instance and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
-				/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-				if (send_open_frame(connection) != 0)
+			case CONNECTION_STATE_HDR_EXCH:
+				if (io_get_state(connection_instance->io) == IO_STATE_READY)
 				{
-					io_destroy(connection_instance->io);
-					connection_instance->io = NULL;
-					connection_instance->connection_state = CONNECTION_STATE_END;
+					/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection_instance begins with an exchange of capabilities and limitations, including the maximum frame size.] */
+					/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection_instance and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+					/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
+					if (send_open_frame(connection) != 0)
+					{
+						io_destroy(connection_instance->io);
+						connection_instance->io = NULL;
+						connection_instance->connection_state = CONNECTION_STATE_END;
+					}
 				}
-			}
-			break;
+				break;
 
-		case CONNECTION_STATE_OPEN_RCVD:
-			break;
+			case CONNECTION_STATE_OPEN_RCVD:
+				break;
+			}
 		}
 
 		/* Codes_SRS_CONNECTION_01_076: [connection_dowork shall schedule the underlying IO interface to do its work by calling io_dowork.] */
@@ -805,6 +820,7 @@ ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOIN
 	return result;
 }
 
+/* Codes_SRS_CONNECTION_01_129: [connection_destroy_endpoint shall free all resources associated with an endpoint created by connection_create_endpoint.] */
 void connection_destroy_endpoint(ENDPOINT_HANDLE endpoint)
 {
 	if (endpoint != NULL)
@@ -821,6 +837,8 @@ void connection_destroy_endpoint(ENDPOINT_HANDLE endpoint)
 			}
 		}
 
+		/* Codes_SRS_CONNECTION_01_130: [The outgoing channel associated with the endpoint shall be released by removing the endpoint from the endpoint list.] */
+		/* Codes_SRS_CONNECTION_01_131: [Any incoming channel number associated with the endpoint shall be released.] */
 		if (i < connection_instance->endpoint_count)
 		{
 			(void)memmove(connection_instance->endpoints + i, connection_instance->endpoints + i + 1, sizeof(ENDPOINT_INSTANCE*) * (connection_instance->endpoint_count - i - 1));

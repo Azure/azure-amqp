@@ -45,6 +45,8 @@ static const IO_INTERFACE_DESCRIPTION sasl_io_interface_description =
 {
 	saslio_create,
 	saslio_destroy,
+	saslio_open,
+	saslio_close,
 	saslio_send,
 	saslio_dowork,
 	saslio_get_state
@@ -332,6 +334,18 @@ void saslio_destroy(IO_HANDLE sasl_io)
 		io_destroy(sasl_io_instance->socket_io);
 		amqpalloc_free(sasl_io);
 	}
+}
+
+int saslio_open(IO_HANDLE sasl_io)
+{
+	int result = 0;
+	return result;
+}
+
+int saslio_close(IO_HANDLE sasl_io)
+{
+	int result = 0;
+	return result;
 }
 
 int saslio_send(IO_HANDLE sasl_io, const void* buffer, size_t size)

@@ -19,6 +19,8 @@ typedef struct SOCKETIO_CONFIG_TAG
 
 extern IO_HANDLE socketio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log);
 extern void socketio_destroy(IO_HANDLE socket_io);
+extern int socketio_open(IO_HANDLE socket_io);
+extern int socketio_close(IO_HANDLE socket_io);
 extern int socketio_send(IO_HANDLE socket_io, const void* buffer, size_t size);
 extern void socketio_dowork(IO_HANDLE socket_io);
 extern IO_STATE socketio_get_state(IO_HANDLE socket_io);

@@ -19,6 +19,8 @@ typedef struct SASLIO_CONFIG_TAG
 
 extern IO_HANDLE saslio_create(void* io_create_parameters, IO_RECEIVE_CALLBACK receive_callback, void* context, LOGGER_LOG logger_log);
 extern void saslio_destroy(IO_HANDLE sasl_io);
+extern int saslio_open(IO_HANDLE sasl_io);
+extern int saslio_close(IO_HANDLE sasl_io);
 extern int saslio_send(IO_HANDLE sasl_io, const void* buffer, size_t size);
 extern void saslio_dowork(IO_HANDLE sasl_io);
 extern IO_STATE saslio_get_state(IO_HANDLE sasl_io);

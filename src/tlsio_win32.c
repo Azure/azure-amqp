@@ -43,6 +43,8 @@ static const IO_INTERFACE_DESCRIPTION tls_io_interface_description =
 {
 	tlsio_create,
 	tlsio_destroy,
+	tlsio_open,
+	tlsio_close,
 	tlsio_send,
 	tlsio_dowork,
 	tlsio_get_state
@@ -362,6 +364,18 @@ void tlsio_destroy(IO_HANDLE tls_io)
 		amqpalloc_free(tls_io_instance->host_name);
 		amqpalloc_free(tls_io);
 	}
+}
+
+int tlsio_open(IO_HANDLE tls_io)
+{
+	int result = 0;
+	return result;
+}
+
+int tlsio_close(IO_HANDLE tls_io)
+{
+	int result = 0;
+	return result;
 }
 
 int tlsio_send(IO_HANDLE tls_io, const void* buffer, size_t size)

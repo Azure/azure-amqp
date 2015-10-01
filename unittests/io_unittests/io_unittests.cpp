@@ -19,6 +19,10 @@ public:
 	MOCK_METHOD_END(CONCRETE_IO_HANDLE, TEST_CONCRETE_IO_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, test_io_destroy, CONCRETE_IO_HANDLE, handle)
 	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_1(, int, test_io_open, CONCRETE_IO_HANDLE, handle)
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_1(, int, test_io_close, CONCRETE_IO_HANDLE, handle)
+	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_3(, int, test_io_send, CONCRETE_IO_HANDLE, handle, const void*, buffer, size_t, size)
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_1(, void, test_io_dowork, CONCRETE_IO_HANDLE, handle)
@@ -32,6 +36,8 @@ extern "C"
 
 	DECLARE_GLOBAL_MOCK_METHOD_4(io_mocks, , CONCRETE_IO_HANDLE, test_io_create, void*, io_create_parameters, IO_RECEIVE_CALLBACK, receive_callback, void*, receive_callback_context, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , void, test_io_destroy, CONCRETE_IO_HANDLE, handle);
+	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , int, test_io_open, CONCRETE_IO_HANDLE, handle);
+	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , int, test_io_close, CONCRETE_IO_HANDLE, handle);
 	DECLARE_GLOBAL_MOCK_METHOD_3(io_mocks, , int, test_io_send, CONCRETE_IO_HANDLE, handle, const void*, buffer, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , void, test_io_dowork, CONCRETE_IO_HANDLE, handle);
 
@@ -53,6 +59,8 @@ const IO_INTERFACE_DESCRIPTION test_io_description =
 {
 	test_io_create,
 	test_io_destroy,
+	test_io_open,
+	test_io_close,
 	test_io_send,
 	test_io_dowork
 };
@@ -164,6 +172,8 @@ TEST_FUNCTION(when_concrete_io_create_is_NULL_then_io_create_fails)
 	{
 		NULL,
 		test_io_destroy,
+		test_io_open,
+		test_io_close,
 		test_io_send,
 		test_io_dowork
 	};
@@ -183,6 +193,52 @@ TEST_FUNCTION(when_concrete_io_destroy_is_NULL_then_io_create_fails)
 	const IO_INTERFACE_DESCRIPTION io_description_null =
 	{
 		test_io_create,
+		NULL,
+		test_io_open,
+		test_io_close,
+		test_io_send,
+		test_io_dowork
+	};
+
+	// act
+	IO_HANDLE result = io_create(&io_description_null, NULL, NULL, NULL, NULL);
+
+	// assert
+	ASSERT_IS_NULL(result);
+}
+
+/* Tests_SRS_IO_01_004: [If any io_interface_description member is NULL, io_create shall return NULL.] */
+TEST_FUNCTION(when_concrete_io_open_is_NULL_then_io_create_fails)
+{
+	// arrange
+	io_mocks mocks;
+	const IO_INTERFACE_DESCRIPTION io_description_null =
+	{
+		test_io_create,
+		test_io_destroy,
+		NULL,
+		test_io_close,
+		test_io_send,
+		test_io_dowork
+	};
+
+	// act
+	IO_HANDLE result = io_create(&io_description_null, NULL, NULL, NULL, NULL);
+
+	// assert
+	ASSERT_IS_NULL(result);
+}
+
+/* Tests_SRS_IO_01_004: [If any io_interface_description member is NULL, io_create shall return NULL.] */
+TEST_FUNCTION(when_concrete_io_close_is_NULL_then_io_create_fails)
+{
+	// arrange
+	io_mocks mocks;
+	const IO_INTERFACE_DESCRIPTION io_description_null =
+	{
+		test_io_create,
+		test_io_destroy,
+		test_io_open,
 		NULL,
 		test_io_send,
 		test_io_dowork
@@ -204,6 +260,8 @@ TEST_FUNCTION(when_concrete_io_send_is_NULL_then_io_create_fails)
 	{
 		test_io_create,
 		test_io_destroy,
+		test_io_open,
+		test_io_close,
 		NULL,
 		test_io_dowork
 	};
@@ -224,6 +282,8 @@ TEST_FUNCTION(when_concrete_io_dowork_is_NULL_then_io_create_fails)
 	{
 		test_io_create,
 		test_io_destroy,
+		test_io_open,
+		test_io_close,
 		test_io_send,
 		NULL
 	};

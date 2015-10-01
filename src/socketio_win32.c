@@ -19,6 +19,8 @@ static const IO_INTERFACE_DESCRIPTION socket_io_interface_description =
 {
 	socketio_create,
 	socketio_destroy,
+	socketio_open,
+	socketio_close,
 	socketio_send,
 	socketio_dowork,
 	socketio_get_state
@@ -94,6 +96,18 @@ void socketio_destroy(IO_HANDLE socket_io)
 		(void)closesocket(socket_io_data->socket);
 		amqpalloc_free(socket_io);
 	}
+}
+
+int socketio_open(IO_HANDLE socket_io)
+{
+	int result = 0;
+	return result;
+}
+
+int socketio_close(IO_HANDLE socket_io)
+{
+	int result = 0;
+	return result;
 }
 
 int socketio_send(IO_HANDLE socket_io, const void* buffer, size_t size)

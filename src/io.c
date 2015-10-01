@@ -17,6 +17,8 @@ IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, co
 		/* Codes_SRS_IO_01_004: [If any io_interface_description member is NULL, io_create shall return NULL.] */
 		(io_interface_description->concrete_io_create == NULL) ||
 		(io_interface_description->concrete_io_destroy == NULL) ||
+		(io_interface_description->concrete_io_open == NULL) ||
+		(io_interface_description->concrete_io_close == NULL) ||
 		(io_interface_description->concrete_io_send == NULL) ||
 		(io_interface_description->concrete_io_dowork == NULL))
 	{

@@ -300,7 +300,7 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 
 	// assert
 	ASSERT_IS_NOT_NULL(connection);
@@ -320,7 +320,7 @@ TEST_METHOD(when_allocating_memory_fails_then_connection_create_fails)
 		.SetReturn((void*)NULL);
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -339,7 +339,7 @@ TEST_METHOD(when_get_socketio_interface_description_fails_then_connection_create
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -361,7 +361,7 @@ TEST_METHOD(when_io_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -386,7 +386,7 @@ TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -414,7 +414,7 @@ TEST_METHOD(when_amqp_frame_codec_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -444,20 +444,33 @@ TEST_METHOD(when_allocating_memory_for_host_fails_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
 }
 
-/* Tests_SRS_CONNECTION_01_071: [If host is NULL, connection_create shall return NULL.] */
+/* Tests_SRS_CONNECTION_01_071: [If io or hostname is NULL, connection_create shall return NULL.] */
 TEST_METHOD(connection_create_with_NULL_host_fails)
 {
 	// arrange
 	connection_mocks mocks;
 
 	// act
-	CONNECTION_HANDLE connection = connection_create(NULL, 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, test_container_id);
+
+	// assert
+	ASSERT_IS_NULL(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_071: [If io or hostname is NULL, connection_create shall return NULL.] */
+TEST_METHOD(connection_create_with_NULL_io_fails)
+{
+	// arrange
+	connection_mocks mocks;
+
+	// act
+	CONNECTION_HANDLE connection = connection_create(NULL, "testhost", test_container_id);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -471,7 +484,7 @@ TEST_METHOD(connection_destroy_frees_resources)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_destroy(TEST_AMQP_FRAME_CODEC_HANDLE));
@@ -521,7 +534,7 @@ TEST_METHOD(connection_set_max_frame_size_with_valid_connection_succeeds)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 512));
@@ -543,7 +556,7 @@ TEST_METHOD(connection_set_max_frame_size_with_511_bytes_fails)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	// act
@@ -562,7 +575,7 @@ TEST_METHOD(when_setting_max_frame_size_on_frame_codec_fails_then_connection_set
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 512))
@@ -585,7 +598,7 @@ TEST_METHOD(connection_set_max_frame_size_with_511_bytes_fails_and_previous_valu
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	(void)connection_set_max_frame_size(connection, 1042);
 	mocks.ResetAllCalls();
 
@@ -609,7 +622,7 @@ TEST_METHOD(when_setting_max_frame_size_on_frame_codec_fails_then_connection_set
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	(void)connection_set_max_frame_size(connection, 1042);
 	mocks.ResetAllCalls();
 
@@ -651,7 +664,7 @@ TEST_METHOD(connection_get_max_frame_size_with_NULL_max_frame_size_fails)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	// act
@@ -672,7 +685,7 @@ TEST_METHOD(connection_get_max_frame_size_with_valid_arguments_succeeds)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 	uint32_t max_frame_size;
 
@@ -709,7 +722,7 @@ TEST_METHOD(connection_set_channel_max_with_valid_connection_succeeds)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	// act
@@ -744,7 +757,7 @@ TEST_METHOD(connection_get_channel_max_with_NULL_channel_max_argument_fails)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	// act
@@ -764,7 +777,7 @@ TEST_METHOD(connection_get_channel_max_with_valid_argument_succeeds)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	(void)connection_set_channel_max(connection, 12);
 	mocks.ResetAllCalls();
 	uint16_t channel_max;
@@ -788,7 +801,7 @@ TEST_METHOD(connection_get_channel_max_default_value_succeeds)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 	uint16_t channel_max;
 
@@ -825,7 +838,7 @@ TEST_METHOD(connection_set_idle_timeout_with_valid_connection_succeeds)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	// act
@@ -860,7 +873,7 @@ TEST_METHOD(connection_get_idle_timeout_with_NULL_idle_timeout_argument_fails)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	// act
@@ -880,7 +893,7 @@ TEST_METHOD(connection_get_idle_timeout_with_valid_argument_succeeds)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	(void)connection_set_idle_timeout(connection, 12);
 	mocks.ResetAllCalls();
 	milliseconds idle_timeout;
@@ -905,7 +918,7 @@ TEST_METHOD(connection_get_idle_timeout_default_value_succeeds)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 	milliseconds idle_timeout;
 
@@ -941,7 +954,7 @@ TEST_METHOD(connection_create_endpoint_with_NULL_frame_receive_callback_fails)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	// act
@@ -960,7 +973,7 @@ TEST_METHOD(connection_create_endpoint_with_NULL_frame_payload_bytes_received_ca
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	// act
@@ -981,7 +994,7 @@ TEST_METHOD(connection_create_endpoint_with_valid_arguments_succeeds)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
@@ -1004,7 +1017,7 @@ TEST_METHOD(when_allocating_memory_fails_connection_create_endpoint_fails)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
@@ -1026,7 +1039,7 @@ TEST_METHOD(when_realloc_for_the_endpoint_list_fails_connection_create_endpoint_
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
@@ -1050,7 +1063,7 @@ TEST_METHOD(connection_create_endpoint_with_valid_arguments_and_NULL_context_suc
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
@@ -1089,7 +1102,7 @@ TEST_METHOD(connection_destroy_endpoint_frees_the_resources_associated_with_the_
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_frame_payload_bytes_received_callback, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 
@@ -1113,7 +1126,7 @@ TEST_METHOD(when_reallocating_the_endpoints_list_fails_connection_destroy_endpoi
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_frame_payload_bytes_received_callback, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 
@@ -1161,7 +1174,7 @@ TEST_METHOD(connection_dowork_when_state_is_start_sends_the_AMQP_header_and_trig
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 
@@ -1186,7 +1199,7 @@ TEST_METHOD(when_io_is_not_ready_connection_dowork_does_not_process_connection_s
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE))
@@ -1209,7 +1222,7 @@ TEST_METHOD(when_io_is_in_error_connection_dowork_does_not_process_connection_st
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672, test_container_id);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE))

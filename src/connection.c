@@ -389,13 +389,14 @@ static void connection_frame_payload_bytes_received(void* context, const unsigne
 }
 
 /* Codes_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
-CONNECTION_HANDLE connection_create(const char* host, int port, const char* container_id)
+CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const char* container_id)
 {
 	CONNECTION_INSTANCE* result;
 
-	if (host == NULL)
+	if ((io == NULL) ||
+		(hostname == NULL))
 	{
-		/* Codes_SRS_CONNECTION_01_071: [If host is NULL, connection_create shall return NULL.] */
+		/* Codes_SRS_CONNECTION_01_071: [If io or hostname is NULL, connection_create shall return NULL.] */
 		result = NULL;
 	}
 	else
@@ -405,7 +406,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, const char* cont
 		if (result != NULL)
 		{
 			/* Codes_SRS_CONNECTION_01_069: [The io parameters shall be filled in with the host and port information passed to connection_create.] */
-			const TLSIO_CONFIG socket_io_config = { host, port };
+			const TLSIO_CONFIG socket_io_config = { hostname, 5672 };
 			const IO_INTERFACE_DESCRIPTION* io_interface_description;
 
 			/* Codes_SRS_CONNECTION_01_068: [connection_create shall pass to io_create the interface obtained by a call to socketio_get_interface_description.] */
@@ -461,7 +462,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, const char* cont
 							}
 							else
 							{
-								result->host_name = (char*)amqpalloc_malloc(strlen(host) + 1);
+								result->host_name = (char*)amqpalloc_malloc(strlen(hostname) + 1);
 								if (result->host_name == NULL)
 								{
 									/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
@@ -473,7 +474,7 @@ CONNECTION_HANDLE connection_create(const char* host, int port, const char* cont
 								}
 								else
 								{
-									strcpy(result->host_name, host);
+									strcpy(result->host_name, hostname);
 
 									result->open_performative = NULL;
 

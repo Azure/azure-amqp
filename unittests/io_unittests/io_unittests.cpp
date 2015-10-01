@@ -113,6 +113,10 @@ TEST_FUNCTION(io_create_with_all_args_except_interface_description_NULL_succeeds
 
 	// assert
 	ASSERT_IS_NOT_NULL(result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	io_destroy(result);
 }
 
 /* Tests_SRS_IO_01_002: [In order to instantiate the concrete IO implementation the function concrete_io_create from the io_interface_description shall be called, passing the io_create_parameters, receive_callback, receive_callback_context and logger_log arguments.] */
@@ -129,6 +133,10 @@ TEST_FUNCTION(io_create_passes_the_args_to_the_concrete_io_implementation)
 
 	// assert
 	ASSERT_IS_NOT_NULL(result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	io_destroy(result);
 }
 
 /* Tests_SRS_IO_01_016: [If the underlying concrete_io_create call fails, io_create shall return NULL.] */
@@ -361,6 +369,10 @@ TEST_FUNCTION(io_open_calls_the_underlying_concrete_io_open_and_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	io_destroy(handle);
 }
 
 /* Tests_SRS_IO_01_021: [If handle is NULL, io_open shall return a non-zero value.] */
@@ -392,6 +404,10 @@ TEST_FUNCTION(when_the_concrete_io_open_fails_then_io_open_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	io_destroy(handle);
 }
 
 /* io_close */
@@ -412,6 +428,10 @@ TEST_FUNCTION(io_close_calls_the_underlying_concrete_io_close_and_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	io_destroy(handle);
 }
 
 /* Tests_SRS_IO_01_025: [If handle is NULL, io_close shall return a non-zero value.] */
@@ -443,6 +463,10 @@ TEST_FUNCTION(when_the_concrete_io_close_fails_then_io_close_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	io_destroy(handle);
 }
 
 /* io_send */
@@ -464,6 +488,10 @@ TEST_FUNCTION(io_send_calls_the_underlying_concrete_io_send_and_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	io_destroy(handle);
 }
 
 /* Tests_SRS_IO_01_010: [If handle is NULL, io_send shall return a non-zero value.] */
@@ -498,6 +526,10 @@ TEST_FUNCTION(when_the_concrete_io_send_fails_then_io_send_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	io_destroy(handle);
 }
 
 /* Tests_SRS_IO_01_011: [No error check shall be performed on buffer and size.] */
@@ -515,6 +547,10 @@ TEST_FUNCTION(io_send_with_NULL_buffer_and_nonzero_length_passes_the_args_down_a
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	io_destroy(handle);
 }
 
 /* Tests_SRS_IO_01_011: [No error check shall be performed on buffer and size.] */
@@ -532,6 +568,10 @@ TEST_FUNCTION(io_send_with_NULL_buffer_and_zero_length_passes_the_args_down_and_
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	io_destroy(handle);
 }
 
 /* Tests_SRS_IO_01_011: [No error check shall be performed on buffer and size.] */
@@ -550,6 +590,10 @@ TEST_FUNCTION(io_send_with_non_NULL_buffer_and_zero_length_passes_the_args_down_
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	io_destroy(handle);
 }
 
 /* io_dowork */
@@ -569,7 +613,10 @@ TEST_FUNCTION(io_dowork_calls_the_concrete_dowork_and_succeeds)
 	io_dowork(handle);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	io_destroy(handle);
 }
 
 /* Tests_SRS_IO_01_018: [When the handle argument is NULL, io_dowork shall do nothing.] */

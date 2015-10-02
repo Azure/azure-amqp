@@ -61,8 +61,7 @@ static int send_header(CONNECTION_INSTANCE* connection_instance)
 	if (io_send(connection_instance->io, amqp_header, sizeof(amqp_header)) != 0)
 	{
 		/* Codes_SRS_CONNECTION_01_106: [When sending the protocol header fails, the connection shall be immediately closed.] */
-		io_destroy(connection_instance->io);
-		connection_instance->io = NULL;
+		io_close(connection_instance->io);
 
 		/* Codes_SRS_CONNECTION_01_057: [END In this state it is illegal for either endpoint to write anything more onto the connection. The connection can be safely closed and discarded.] */
 		connection_instance->connection_state = CONNECTION_STATE_END;
@@ -657,12 +656,17 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			/* Codes_SRS_CONNECTION_01_203: [If the io state is IO_STATE_NOT_OPEN, connection_dowork shall attempt to open the io by calling io_open.] */
 			if (io_open(connection_instance->io, connection_receive_callback, connection_instance) != 0)
 			{
-				connection_instance->connection_state = CONNECTION_STATE_END;
+				/* Codes_SRS_CONNECTION_01_204: [If io_open_fails, no more work shall be done by connection_dowork and the connection shall be consideren in the END state.] */
+				connection_instance->connection_state = CONNECTION_STATE_START;
 			}
+			break;
 
-			break;
 		case IO_STATE_ERROR:
+			/* Codes_SRS_CONNECTION_01_202: [If the io_get_state call returns IO_STATE_ERROR the connection shall be closed and the state set to END.] */
+			io_close(connection_instance->io);
+			connection_instance->connection_state = CONNECTION_STATE_END;
 			break;
+
 		case IO_STATE_NOT_READY:
 			break;
 		/* Codes_SRS_CONNECTION_01_200: [The connection state machine processing shall only be done when the IO interface state is ready.] */
@@ -678,12 +682,7 @@ void connection_dowork(CONNECTION_HANDLE connection)
 				{
 					/* Codes_SRS_CONNECTION_01_086: [Prior to sending any frames on a connection_instance, each peer MUST start by sending a protocol header that indicates the protocol version used on the connection_instance.] */
 					/* Codes_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection_instance) MUST immediately send its outgoing protocol header on establishment of the TCP connection_instance.] */
-					if (send_header(connection_instance) != 0)
-					{
-						io_destroy(connection_instance->io);
-						connection_instance->io = NULL;
-						connection_instance->connection_state = CONNECTION_STATE_END;
-					}
+					(void)send_header(connection_instance);
 				}
 				break;
 

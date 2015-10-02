@@ -1095,12 +1095,36 @@ TEST_METHOD(when_io_state_is_not_open_connection_dowork_when_state_is_start_send
 	connection_mocks mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
-	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE))
 		.SetReturn(IO_STATE_NOT_OPEN);
 	EXPECTED_CALL(mocks, io_open(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
+	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
+
+	// act
+	connection_dowork(connection);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_204: [If io_open_fails, no more work shall be done by connection_dowork and the connection shall be consideren in the END state.] */
+TEST_METHOD(when_io_open_fails_the_connection_state_shall_be_set_to_END)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE))
+		.SetReturn(IO_STATE_NOT_OPEN);
+	EXPECTED_CALL(mocks, io_open(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1)
+		.SetReturn(1);
 	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
 
 	// act
@@ -1170,7 +1194,7 @@ TEST_METHOD(when_io_is_not_ready_connection_dowork_does_not_process_connection_s
 }
 
 /* Tests_SRS_CONNECTION_01_200: [The connection state machine processing shall only be done when the IO interface state is ready.] */
-/* Tests_SRS_CONNECTION_01_202: [If the io_get_state call returns IO_STATE_ERROR the connection shall be closed if it was open.] */
+/* Tests_SRS_CONNECTION_01_202: [If the io_get_state call returns IO_STATE_ERROR the connection shall be closed and the state set to END.] */
 TEST_METHOD(when_io_is_in_error_connection_dowork_does_not_process_connection_states)
 {
 	// arrange
@@ -1180,6 +1204,7 @@ TEST_METHOD(when_io_is_in_error_connection_dowork_does_not_process_connection_st
 
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE))
 		.SetReturn(IO_STATE_ERROR);
+	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
 	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
 
 	// act
@@ -1192,23 +1217,53 @@ TEST_METHOD(when_io_is_in_error_connection_dowork_does_not_process_connection_st
 	connection_destroy(connection);
 }
 
-#if 0
+/* Tests_SRS_CONNECTION_01_200: [The connection state machine processing shall only be done when the IO interface state is ready.] */
+/* Tests_SRS_CONNECTION_01_202: [If the io_get_state call returns IO_STATE_ERROR the connection shall be closed and the state set to END.] */
+TEST_METHOD(when_io_is_in_error_connection_dowork_closes_the_io)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE))
+		.SetReturn(IO_STATE_NOT_OPEN);
+	EXPECTED_CALL(mocks, io_open(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
+
+	connection_dowork(connection);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE))
+		.SetReturn(IO_STATE_ERROR);
+	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
+	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
+
+	// act
+	connection_dowork(connection);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
 
 /* Tests_SRS_CONNECTION_01_057: [END In this state it is illegal for either endpoint to write anything more onto the connection. The connection can be safely closed and discarded.] */
 /* Tests_SRS_CONNECTION_01_106: [When sending the protocol header fails, the connection shall be immediately closed.] */
-/* Tests_SRS_CONNECTION_01_105: [When io_send fails, connection_dowork shall return a non-zero value.] */
 TEST_METHOD(when_sending_the_header_fails_connection_dowork_fails_and_io_is_destroyed)
 {
 	// arrange
 	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create("testhost", 5672);
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", "1234");
 	mocks.ResetAllCalls();
 	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE));
 	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, amqp_header, sizeof(amqp_header)))
 		.ValidateArgumentBuffer(2, amqp_header, sizeof(amqp_header))
 		.SetReturn(1);
 	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
+	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
 
 	// act
 	connection_dowork(connection);
@@ -1218,6 +1273,8 @@ TEST_METHOD(when_sending_the_header_fails_connection_dowork_fails_and_io_is_dest
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_END, connection_state);
 }
+
+#if 0
 
 /* Tests_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
 TEST_METHOD(when_protocol_headers_do_not_match_connection_gets_closed)

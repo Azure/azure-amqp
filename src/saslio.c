@@ -280,7 +280,7 @@ IO_HANDLE saslio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 		result = amqpalloc_malloc(sizeof(SASL_IO_INSTANCE));
 		if (result != NULL)
 		{
-			result->socket_io = io_create(sasl_io_config->socket_io_interface, sasl_io_config->socket_io_parameters, saslio_receive_bytes, result, logger_log);
+			result->socket_io = io_create(sasl_io_config->socket_io_interface, sasl_io_config->socket_io_parameters, logger_log);
 			if (result->socket_io == NULL)
 			{
 				amqpalloc_free(result);
@@ -309,8 +309,8 @@ IO_HANDLE saslio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 					{
 						result->receive_callback = NULL;
 						result->logger_log = logger_log;
-						result->receive_callback = receive_callback;
-						result->context = context;
+						result->receive_callback = NULL;
+						result->context = NULL;
 						result->header_bytes_received = 0;
 
 						result->sasl_io_state = SASL_IO_IDLE;
@@ -339,12 +339,52 @@ void saslio_destroy(IO_HANDLE sasl_io)
 int saslio_open(IO_HANDLE sasl_io, IO_RECEIVE_CALLBACK receive_callback, void* context)
 {
 	int result = 0;
+
+	if (sasl_io == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		SASL_IO_INSTANCE* sasl_io_instance = (SASL_IO_INSTANCE*)sasl_io;
+
+		sasl_io_instance->receive_callback = receive_callback;
+		sasl_io_instance->context = context;
+
+		if (io_open(sasl_io_instance->socket_io, saslio_receive_bytes, sasl_io_instance) != 0)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
+	}
+	
 	return result;
 }
 
 int saslio_close(IO_HANDLE sasl_io)
 {
 	int result = 0;
+
+	if (sasl_io == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		SASL_IO_INSTANCE* sasl_io_instance = (SASL_IO_INSTANCE*)sasl_io;
+		if (io_close(sasl_io_instance->socket_io) != 0)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
+	}
+
 	return result;
 }
 

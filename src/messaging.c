@@ -158,8 +158,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 
 		if (messaging->connection == NULL)
 		{
-			/* create IO */
-			IO_HANDLE io;
+			/* create io */
 			const TLSIO_CONFIG socket_io_config = { to, 5672 };
 			const IO_INTERFACE_DESCRIPTION* io_interface_description;
 
@@ -181,7 +180,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 				{
 					/* Codes_SRS_CONNECTION_01_067: [connection_create shall call io_create to create its TCP IO interface.] */
 					messaging->io = io_create(io_interface_description, &sasl_io_config, consolelogger_log);
-					connection = connection_create(io, to, "1234");
+					connection = connection_create(messaging->io, to, "1234");
 					messaging->connection = connection;
 				}
 			}

@@ -62,12 +62,16 @@ TYPED_MOCK_CLASS(connection_mocks, CGlobalMock)
 {
 public:
 	/* io mocks */
-	MOCK_STATIC_METHOD_5(, IO_HANDLE, io_create, const IO_INTERFACE_DESCRIPTION*, io_interface_description, const void*, io_create_parameters, IO_RECEIVE_CALLBACK, receive_callback, void*, receive_callback_context, LOGGER_LOG, logger_log)
-		io_receive_callback = receive_callback;
-		io_receive_callback_context = receive_callback_context;
+	MOCK_STATIC_METHOD_3(, IO_HANDLE, io_create, const IO_INTERFACE_DESCRIPTION*, io_interface_description, const void*, io_create_parameters, LOGGER_LOG, logger_log)
 	MOCK_METHOD_END(IO_HANDLE, TEST_IO_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, io_destroy, IO_HANDLE, io)
 	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_3(, int, io_open, IO_HANDLE, io, IO_RECEIVE_CALLBACK, receive_callback, void*, receive_callback_context)
+		io_receive_callback = receive_callback;
+		io_receive_callback_context = receive_callback_context;
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_1(, int, io_close, IO_HANDLE, io)
+	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_3(, int, io_send, IO_HANDLE, io, const void*, buffer, size_t, size)
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_1(, void, io_dowork, IO_HANDLE, io)
@@ -188,8 +192,10 @@ public:
 
 extern "C"
 {
-	DECLARE_GLOBAL_MOCK_METHOD_5(connection_mocks, , IO_HANDLE, io_create, const IO_INTERFACE_DESCRIPTION*, io_interface_description, const void*, io_create_parameters, IO_RECEIVE_CALLBACK, receive_callback, void*, context, LOGGER_LOG, logger_log);
+	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , IO_HANDLE, io_create, const IO_INTERFACE_DESCRIPTION*, io_interface_description, const void*, io_create_parameters, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, io_destroy, IO_HANDLE, io);
+	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , int, io_open, IO_HANDLE, io, IO_RECEIVE_CALLBACK, receive_callback, void*, receive_callback_context);
+	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , int, io_close, IO_HANDLE, io);
 	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , int, io_send, IO_HANDLE, io, const void*, buffer, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, io_dowork, IO_HANDLE, io);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , IO_STATE, io_get_state, IO_HANDLE, io);
@@ -291,7 +297,7 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
 	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
-	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
@@ -355,7 +361,7 @@ TEST_METHOD(when_io_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
 	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
-	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1)
 		.SetReturn((IO_HANDLE)NULL);
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
@@ -377,7 +383,7 @@ TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
 	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
-	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
 		.ValidateArgument(1)
@@ -402,7 +408,7 @@ TEST_METHOD(when_amqp_frame_codec_create_fails_then_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
 	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
-	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
@@ -430,7 +436,7 @@ TEST_METHOD(when_allocating_memory_for_host_fails_connection_create_fails)
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
 	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
-	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
 		.ValidateArgument(1);

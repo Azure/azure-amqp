@@ -34,8 +34,8 @@ IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, co
 			/* Codes_SRS_IO_01_001: [io_create shall return on success a non-NULL handle to a new IO interface.] */
 			io_instance->io_interface_description = io_interface_description;
 
-			/* Codes_SRS_IO_01_002: [In order to instantiate the concrete IO implementation the function concrete_io_create from the io_interface_description shall be called, passing the io_create_parameters, receive_callback, receive_callback_context and logger_log arguments.] */
-			io_instance->concrete_io_handle = io_instance->io_interface_description->concrete_io_create((void*)io_create_parameters, receive_callback, receive_callback_context, logger_log);
+			/* Codes_SRS_IO_01_002: [In order to instantiate the concrete IO implementation the function concrete_io_create from the io_interface_description shall be called, passing the io_create_parameters and logger_log arguments.] */
+			io_instance->concrete_io_handle = io_instance->io_interface_description->concrete_io_create((void*)io_create_parameters, logger_log);
 
 			/* Codes_SRS_IO_01_016: [If the underlying concrete_io_create call fails, io_create shall return NULL.] */
 			if (io_instance->concrete_io_handle == NULL)

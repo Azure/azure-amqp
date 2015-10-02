@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include "connection.h"
 #include "consolelogger.h"
@@ -45,6 +46,7 @@ typedef struct CONNECTION_DATA_TAG
 	uint32_t endpoint_count;
 	uint16_t frame_receive_channel;
 	char* host_name;
+	bool is_io_open;
 
 	/* options */
 	uint32_t max_frame_size;
@@ -189,8 +191,7 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 		if (b != amqp_header[connection_instance->header_bytes_received])
 		{
 			/* Codes_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
-			io_destroy(connection_instance->io);
-			connection_instance->io = NULL;
+			io_close(connection_instance->io);
 			connection_instance->connection_state = CONNECTION_STATE_END;
 			result = __LINE__;
 		}
@@ -458,6 +459,7 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 						result->header_bytes_received = 0;
 						result->endpoint_count = 0;
 						result->endpoints = NULL;
+						result->is_io_open = false;
 					}
 				}
 			}
@@ -646,6 +648,21 @@ void connection_dowork(CONNECTION_HANDLE connection)
 	/* Codes_SRS_CONNECTION_01_078: [If handle is NULL, connection_dowork shall do nothing.] */
 	if (connection_instance != NULL)
 	{
+		if (!connection_instance->is_io_open)
+		{
+			/* Codes_SRS_CONNECTION_01_203: [If the io has not been open before is IO_STATE_NOT_OPEN, connection_dowork shall attempt to open the io by calling io_open.] */
+			if (io_open(connection_instance->io, connection_receive_callback, connection_instance) != 0)
+			{
+				/* Codes_SRS_CONNECTION_01_204: [If io_open_fails, no more work shall be done by connection_dowork and the connection shall be consideren in the END state.] */
+				connection_instance->connection_state = CONNECTION_STATE_END;
+			}
+			else
+			{
+				connection_instance->connection_state = CONNECTION_STATE_START;
+				connection_instance->is_io_open = true;
+			}
+		}
+
 		/* Codes_SRS_CONNECTION_01_201: [The IO interface state shall be queried by using io_get_state.] */
 		IO_STATE io_state = io_get_state(connection_instance->io);
 
@@ -653,12 +670,6 @@ void connection_dowork(CONNECTION_HANDLE connection)
 		{
 		default:
 		case IO_STATE_NOT_OPEN:
-			/* Codes_SRS_CONNECTION_01_203: [If the io state is IO_STATE_NOT_OPEN, connection_dowork shall attempt to open the io by calling io_open.] */
-			if (io_open(connection_instance->io, connection_receive_callback, connection_instance) != 0)
-			{
-				/* Codes_SRS_CONNECTION_01_204: [If io_open_fails, no more work shall be done by connection_dowork and the connection shall be consideren in the END state.] */
-				connection_instance->connection_state = CONNECTION_STATE_START;
-			}
 			break;
 
 		case IO_STATE_ERROR:

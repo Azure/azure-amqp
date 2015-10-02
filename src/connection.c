@@ -46,6 +46,7 @@ typedef struct CONNECTION_DATA_TAG
 	uint32_t endpoint_count;
 	uint16_t frame_receive_channel;
 	char* host_name;
+	char* container_id;
 	bool is_io_open;
 
 	/* options */
@@ -86,8 +87,14 @@ static int send_header(CONNECTION_INSTANCE* connection_instance)
 static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 {
 	int result;
-	connection_instance->open_performative = open_create("123456");
+
+	/* Codes_SRS_CONNECTION_01_151: [Max_frame_size shall be passed down to the frame_codec when the Open frame is sent.] */
 	frame_codec_set_max_frame_size(connection_instance->frame_codec, connection_instance->max_frame_size);
+
+	/* Codes_SRS_CONNECTION_01_134: [The container id field shall be filled with the container id specified in connection_create.] */
+	connection_instance->open_performative = open_create(connection_instance->container_id);
+
+	/* Codes_SRS_CONNECTION_01_135: [If hostname has been specified by a call to connection_set_hostname, then that value shall be stamped in the open frame.] */
 	open_set_hostname(connection_instance->open_performative, connection_instance->host_name);
 	AMQP_VALUE open_performative_value = amqpvalue_create_open(connection_instance->open_performative);
 
@@ -97,10 +104,10 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 	}
 	else
 	{
-		/* handshake done, send open frame */
 		/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
 		/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
 		/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
+		/* Codes_SRS_CONNECTION_01_205: [Sending the AMQP OPEN frame shall be done by calling amqp_frame_codec_begin_encode_frame with channel number 0, the actual performative payload and 0 as payload_size.] */
 		if (amqp_frame_codec_begin_encode_frame(connection_instance->amqp_frame_codec, 0, open_performative_value, 0) != 0)
 		{
 			io_destroy(connection_instance->io);
@@ -229,7 +236,6 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 		break;
 
 	/* Codes_SRS_CONNECTION_01_040: [HDR RCVD In this state the connection header has been received from the peer but a connection header has not been sent.] */
-	/* receiving in HDR_RCVD could be because pipelined open, so the best we can do is to let the bytes flow */
 	case CONNECTION_STATE_HDR_RCVD:
 
 	/* Codes_SRS_CONNECTION_01_042: [HDR EXCH In this state the connection header has been sent to the peer and a connection header has been received from the peer.] */
@@ -443,23 +449,39 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 					{
 						strcpy(result->host_name, hostname);
 
-						result->open_performative = NULL;
+						result->container_id = (char*)amqpalloc_malloc(strlen(container_id) + 1);
+						if (result->container_id == NULL)
+						{
+							/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
+							amqpalloc_free(result->host_name);
+							amqp_frame_codec_destroy(result->amqp_frame_codec);
+							frame_codec_destroy(result->frame_codec);
+							io_destroy(result->io);
+							amqpalloc_free(result);
+							result = NULL;
+						}
+						else
+						{
+							strcpy(result->container_id, container_id);
 
-						/* Codes_SRS_CONNECTION_01_173: [<field name="max-frame-size" type="uint" default="4294967295"/>] */
-						result->max_frame_size = 4294967295;
-						/* Codes: [<field name="channel-max" type="ushort" default="65535"/>] */
-						result->channel_max = 65535;
+							result->open_performative = NULL;
 
-						/* Codes_SRS_CONNECTION_01_175: [<field name="idle-time-out" type="milliseconds"/>] */
-						/* Codes_SRS_CONNECTION_01_192: [A value of zero is the same as if it was not set (null).] */
-						result->idle_timeout = 0;
+							/* Codes_SRS_CONNECTION_01_173: [<field name="max-frame-size" type="uint" default="4294967295"/>] */
+							result->max_frame_size = 4294967295;
+							/* Codes: [<field name="channel-max" type="ushort" default="65535"/>] */
+							result->channel_max = 65535;
 
-						/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
-						result->connection_state = CONNECTION_STATE_START;
-						result->header_bytes_received = 0;
-						result->endpoint_count = 0;
-						result->endpoints = NULL;
-						result->is_io_open = false;
+							/* Codes_SRS_CONNECTION_01_175: [<field name="idle-time-out" type="milliseconds"/>] */
+							/* Codes_SRS_CONNECTION_01_192: [A value of zero is the same as if it was not set (null).] */
+							result->idle_timeout = 0;
+
+							/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
+							result->connection_state = CONNECTION_STATE_START;
+							result->header_bytes_received = 0;
+							result->endpoint_count = 0;
+							result->endpoints = NULL;
+							result->is_io_open = false;
+						}
 					}
 				}
 			}
@@ -485,21 +507,12 @@ int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_fra
 	{
 		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
 
-		/* Codes_SRS_CONNECTION_01_151: [When max_frame_size is set, it shall be passed down to the frame_codec by a call to frame_codec_set_max_frame_size.] */
-		if (frame_codec_set_max_frame_size(connection_instance->frame_codec, max_frame_size) != 0)
-		{
-			/* Codes_SRS_CONNECTION_01_152: [If frame_codec_set_max_frame_size fails then connection_set_max_frame_size shall fail and return a non-zero value.] */
-			result = __LINE__;
-		}
-		else
-		{
-			/* Codes_SRS_CONNECTION_01_148: [connection_set_max_frame_size shall set the max_frame_size associated with a connection.] */
-			/* Codes_SRS_CONNECTION_01_164: [If connection_set_max_frame_size fails, the previous max_frame_size setting shall be retained.] */
-			connection_instance->max_frame_size = max_frame_size;
+		/* Codes_SRS_CONNECTION_01_148: [connection_set_max_frame_size shall set the max_frame_size associated with a connection.] */
+		/* Codes_SRS_CONNECTION_01_164: [If connection_set_max_frame_size fails, the previous max_frame_size setting shall be retained.] */
+		connection_instance->max_frame_size = max_frame_size;
 
-			/* Codes_SRS_CONNECTION_01_149: [On success connection_set_max_frame_size shall return 0.] */
-			result = 0;
-		}
+		/* Codes_SRS_CONNECTION_01_149: [On success connection_set_max_frame_size shall return 0.] */
+		result = 0;
 	}
 
 	return result;

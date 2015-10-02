@@ -12,6 +12,7 @@
 
 /* Requirements implictly tested */
 /* Tests_SRS_CONNECTION_01_088: [Any data appearing beyond the protocol header MUST match the version indicated by the protocol header.] */
+/* Tests_SRS_CONNECTION_01_039: [START In this state a connection exists, but nothing has been sent or received. This is the state an implementation would be in immediately after performing a socket connect or socket accept.] */
 
 #define TEST_IO_HANDLE					(IO_HANDLE)0x4242
 #define TEST_FRAME_CODEC_HANDLE			(FRAME_CODEC_HANDLE)0x4243
@@ -279,6 +280,7 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 
 	// act
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
@@ -353,7 +355,7 @@ TEST_METHOD(when_amqp_frame_codec_create_fails_then_connection_create_fails)
 }
 
 /* Tests_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
-TEST_METHOD(when_allocating_memory_for_host_fails_connection_create_fails)
+TEST_METHOD(when_allocating_memory_for_hostname_fails_connection_create_fails)
 {
 	// arrange
 	connection_mocks mocks;
@@ -366,6 +368,34 @@ TEST_METHOD(when_allocating_memory_for_host_fails_connection_create_fails)
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
 		.SetReturn((void*)NULL);
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_destroy(TEST_AMQP_FRAME_CODEC_HANDLE));
+	STRICT_EXPECTED_CALL(mocks, frame_codec_destroy(TEST_FRAME_CODEC_HANDLE));
+	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+
+	// assert
+	ASSERT_IS_NULL(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
+TEST_METHOD(when_allocating_memory_for_container_id_fails_connection_create_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	SOCKETIO_CONFIG config = { "testhost", 5672 };
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
+		.SetReturn((void*)NULL);
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_destroy(TEST_AMQP_FRAME_CODEC_HANDLE));
 	STRICT_EXPECTED_CALL(mocks, frame_codec_destroy(TEST_FRAME_CODEC_HANDLE));
 	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
@@ -456,7 +486,6 @@ TEST_METHOD(connection_set_max_frame_size_with_NULL_connection_fails)
 }
 
 /* Tests_SRS_CONNECTION_01_148: [connection_set_max_frame_size shall set the max_frame_size associated with a connection.] */
-/* Tests_SRS_CONNECTION_01_151: [When max_frame_size is set, it shall be passed down to the frame_codec by a call to frame_codec_set_max_frame_size.] */
 /* Tests_SRS_CONNECTION_01_149: [On success connection_set_max_frame_size shall return 0.] */
 TEST_METHOD(connection_set_max_frame_size_with_valid_connection_succeeds)
 {
@@ -464,8 +493,6 @@ TEST_METHOD(connection_set_max_frame_size_with_valid_connection_succeeds)
 	connection_mocks mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	mocks.ResetAllCalls();
-
-	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 512));
 
 	// act
 	int result = connection_set_max_frame_size(connection, 512);
@@ -498,28 +525,6 @@ TEST_METHOD(connection_set_max_frame_size_with_511_bytes_fails)
 	connection_destroy(connection);
 }
 
-/* Tests_SRS_CONNECTION_01_152: [If frame_codec_set_max_frame_size fails then connection_set_max_frame_size shall fail and return a non-zero value.] */
-TEST_METHOD(when_setting_max_frame_size_on_frame_codec_fails_then_connection_set_max_frame_size_fails)
-{
-	// arrange
-	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	mocks.ResetAllCalls();
-
-	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 512))
-		.SetReturn(1);
-
-	// act
-	int result = connection_set_max_frame_size(connection, 512);
-
-	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
-	mocks.AssertActualAndExpectedCalls();
-
-	// cleanup
-	connection_destroy(connection);
-}
-
 /* Tests_SRS_CONNECTION_01_164: [If connection_set_max_frame_size fails, the previous max_frame_size setting shall be retained.] */
 /* Tests_SRS_CONNECTION_01_167: [Both peers MUST accept frames of up to 512 (MIN-MAX-FRAME-SIZE) octets.] */
 TEST_METHOD(connection_set_max_frame_size_with_511_bytes_fails_and_previous_value_is_kept)
@@ -532,33 +537,6 @@ TEST_METHOD(connection_set_max_frame_size_with_511_bytes_fails_and_previous_valu
 
 	// act
 	int result = connection_set_max_frame_size(connection, 511);
-
-	// assert
-	mocks.AssertActualAndExpectedCalls();
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
-	uint32_t max_frame_size;
-	(void)connection_get_max_frame_size(connection, &max_frame_size);
-	ASSERT_ARE_EQUAL(uint32_t, 1042, max_frame_size);
-
-	// cleanup
-	connection_destroy(connection);
-}
-
-/* Tests_SRS_CONNECTION_01_164: [If connection_set_max_frame_size fails, the previous max_frame_size setting shall be retained.] */
-/* Tests_SRS_CONNECTION_01_152: [If frame_codec_set_max_frame_size fails then connection_set_max_frame_size shall fail and return a non-zero value.] */
-TEST_METHOD(when_setting_max_frame_size_on_frame_codec_fails_then_connection_set_max_frame_size_fails_and_previous_value_is_kept)
-{
-	// arrange
-	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	(void)connection_set_max_frame_size(connection, 1042);
-	mocks.ResetAllCalls();
-
-	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 512))
-		.SetReturn(1);
-
-	// act
-	int result = connection_set_max_frame_size(connection, 512);
 
 	// assert
 	mocks.AssertActualAndExpectedCalls();
@@ -1278,6 +1256,10 @@ TEST_METHOD(when_sending_the_header_fails_connection_dowork_fails_and_io_is_dest
 	CONNECTION_STATE connection_state;
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_END, connection_state);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
 }
 
 /* Tests_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
@@ -1299,6 +1281,10 @@ TEST_METHOD(when_protocol_headers_do_not_match_connection_gets_closed)
 	CONNECTION_STATE connection_state;
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_END, connection_state);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
 }
 
 /* Tests_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
@@ -1320,6 +1306,10 @@ TEST_METHOD(when_protocol_header_first_byte_does_not_match_connection_gets_close
 	CONNECTION_STATE connection_state;
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_END, connection_state);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
 }
 
 /* Tests_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
@@ -1341,10 +1331,14 @@ TEST_METHOD(when_protocol_header_last_byte_does_not_match_connection_gets_closed
 	CONNECTION_STATE connection_state;
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_END, connection_state);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
 }
 
 /* Tests_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
-TEST_METHOD(when_protocol_header_first_byte_matches_but_only_1st_byte_received_no_io_destroy_is_done)
+TEST_METHOD(when_protocol_header_first_byte_matches_but_only_1st_byte_received_no_io_close_is_done)
 {
 	// arrange
 	connection_mocks mocks;
@@ -1360,6 +1354,43 @@ TEST_METHOD(when_protocol_header_first_byte_matches_but_only_1st_byte_received_n
 	CONNECTION_STATE connection_state;
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_HDR_SENT, connection_state);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_134: [The container id field shall be filled with the container id specified in connection_create.] */
+/* Tests_SRS_CONNECTION_01_135: [If hostname has been specified by a call to connection_set_hostname, then that value shall be stamped in the open frame.] */
+/* Tests_SRS_CONNECTION_01_205: [Sending the AMQP OPEN frame shall be done by calling amqp_frame_codec_begin_encode_frame with channel number 0, the actual performative payload and 0 as payload_size.] */
+/* Tests_SRS_CONNECTION_01_151: [Max_frame_size shall be passed down to the frame_codec when the Open frame is sent.] */
+TEST_METHOD(when_the_header_is_received_an_open_frame_is_sent_out)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
+	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_hostname(test_open_handle, "testhost"));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_open(test_open_handle));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_open_amqp_value, 0));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_open_amqp_value));
+
+	// act
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
 }
 
 END_TEST_SUITE(connection_unittests)

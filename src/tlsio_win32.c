@@ -37,6 +37,7 @@ typedef struct TLS_IO_INSTANCE_TAG
 	size_t buffer_size;
 	size_t needed_bytes;
 	size_t consumed_bytes;
+	IO_STATE io_state;
 } TLS_IO_INSTANCE;
 
 static const IO_INTERFACE_DESCRIPTION tls_io_interface_description =
@@ -170,6 +171,7 @@ static void tlsio_receive_bytes(void* context, const void* buffer, size_t size)
 					else
 					{
 						tls_io_instance->tls_state = TLS_STATE_HANDSHAKE_DONE;
+						tls_io_instance->io_state = IO_STATE_READY;
 					}
 
 					break;
@@ -271,6 +273,7 @@ static void tlsio_receive_bytes(void* context, const void* buffer, size_t size)
 						else
 						{
 							tls_io_instance->tls_state = TLS_STATE_HANDSHAKE_DONE;
+							tls_io_instance->io_state = IO_STATE_READY;
 						}
 					}
 					break;
@@ -327,7 +330,7 @@ IO_HANDLE tlsio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 				}
 				else
 				{
-					result->socket_io = io_create(socket_io_interface, &socketio_config, NULL);
+					result->socket_io = io_create(socket_io_interface, &socketio_config, logger_log);
 					if (result->socket_io == NULL)
 					{
 						amqpalloc_free(result->host_name);
@@ -341,6 +344,7 @@ IO_HANDLE tlsio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 						result->buffer_size = 0;
 						result->consumed_bytes = 0;
 						result->tls_state = TLS_STATE_HANDSHAKE_NOT_STARTED;
+						result->io_state = IO_STATE_NOT_OPEN;
 					}
 				}
 			}
@@ -368,13 +372,33 @@ void tlsio_destroy(IO_HANDLE tls_io)
 
 int tlsio_open(IO_HANDLE tls_io, IO_RECEIVE_CALLBACK receive_callback, void* context)
 {
-	int result = 0;
+	int result;
 
-	TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
-	tls_io_instance->receive_callback = receive_callback;
-	tls_io_instance->context = context;
+	if (tls_io == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
 
-	io_open(tls_io_instance->socket_io, receive_callback, context);
+		if (tls_io_instance->io_state == IO_STATE_NOT_OPEN)
+		{
+			tls_io_instance->receive_callback = receive_callback;
+			tls_io_instance->context = context;
+
+			if (io_open(tls_io_instance->socket_io, tlsio_receive_bytes, tls_io_instance) != 0)
+			{
+				tls_io_instance->io_state = IO_STATE_ERROR;
+				result = __LINE__;
+			}
+			else
+			{
+				tls_io_instance->io_state = IO_STATE_NOT_READY;
+				result = 0;
+			}
+		}
+	}
 
 	return result;
 }
@@ -383,8 +407,16 @@ int tlsio_close(IO_HANDLE tls_io)
 {
 	int result = 0;
 
-	TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
-	io_close(tls_io_instance->socket_io);
+	if (tls_io == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
+		(void)io_close(tls_io_instance->socket_io);
+		tls_io_instance->io_state = IO_STATE_NOT_OPEN;
+	}
 
 	return result;
 }
@@ -403,7 +435,11 @@ int tlsio_send(IO_HANDLE tls_io, const void* buffer, size_t size)
 	else
 	{
 		TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
-		if (tls_io_instance->tls_state == TLS_STATE_HANDSHAKE_DONE)
+		if (tls_io_instance->io_state != IO_STATE_READY)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			SecBuffer security_buffers[4];
 			unsigned char out_buffer[1024];
@@ -465,82 +501,85 @@ void tlsio_dowork(IO_HANDLE tls_io)
 	{
 		TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
 
-		switch (tls_io_instance->tls_state)
+		if (tls_io_instance->io_state == IO_STATE_NOT_READY)
 		{
-		default:
-			break;
-		case TLS_STATE_HANDSHAKE_NOT_STARTED:
-		{
-			SecBuffer init_security_buffers[2];
-			ULONG context_attributes;
-			SECURITY_STATUS status;
-			SCHANNEL_CRED auth_data;
-
-			auth_data.dwVersion = SCHANNEL_CRED_VERSION;
-			auth_data.cCreds = 0;
-			auth_data.paCred = NULL;
-			auth_data.hRootStore = NULL;
-			auth_data.cSupportedAlgs = 0;
-			auth_data.palgSupportedAlgs = NULL;
-			auth_data.grbitEnabledProtocols = 0;
-			auth_data.dwMinimumCipherStrength = 0;
-			auth_data.dwMaximumCipherStrength = 0;
-			auth_data.dwSessionLifespan = 0;
-			auth_data.dwFlags = SCH_USE_STRONG_CRYPTO;
-			auth_data.dwCredFormat = 0;
-
-			status = AcquireCredentialsHandle(NULL, UNISP_NAME, SECPKG_CRED_OUTBOUND, NULL,
-				&auth_data, NULL, NULL, &tls_io_instance->credential_handle, NULL);
-			if (status != SEC_E_OK)
+			switch (tls_io_instance->tls_state)
 			{
-				tls_io_instance->tls_state = TLS_STATE_ERROR;
-			}
-			else
+			default:
+				break;
+			case TLS_STATE_HANDSHAKE_NOT_STARTED:
 			{
-				init_security_buffers[0].cbBuffer = 0;
-				init_security_buffers[0].BufferType = SECBUFFER_TOKEN;
-				init_security_buffers[0].pvBuffer = NULL;
-				init_security_buffers[1].cbBuffer = 0;
-				init_security_buffers[1].BufferType = SECBUFFER_EMPTY;
-				init_security_buffers[1].pvBuffer = 0;
+				SecBuffer init_security_buffers[2];
+				ULONG context_attributes;
+				SECURITY_STATUS status;
+				SCHANNEL_CRED auth_data;
 
-				SecBufferDesc security_buffers_desc;
-				security_buffers_desc.cBuffers = 2;
-				security_buffers_desc.pBuffers = init_security_buffers;
-				security_buffers_desc.ulVersion = SECBUFFER_VERSION;
+				auth_data.dwVersion = SCHANNEL_CRED_VERSION;
+				auth_data.cCreds = 0;
+				auth_data.paCred = NULL;
+				auth_data.hRootStore = NULL;
+				auth_data.cSupportedAlgs = 0;
+				auth_data.palgSupportedAlgs = NULL;
+				auth_data.grbitEnabledProtocols = 0;
+				auth_data.dwMinimumCipherStrength = 0;
+				auth_data.dwMaximumCipherStrength = 0;
+				auth_data.dwSessionLifespan = 0;
+				auth_data.dwFlags = SCH_USE_STRONG_CRYPTO;
+				auth_data.dwCredFormat = 0;
 
-				status = InitializeSecurityContext(&tls_io_instance->credential_handle,
-					NULL, (SEC_CHAR*)tls_io_instance->host_name, ISC_REQ_EXTENDED_ERROR | ISC_REQ_STREAM | ISC_REQ_ALLOCATE_MEMORY | ISC_REQ_USE_SUPPLIED_CREDS, 0, 0, NULL, 0,
-					&tls_io_instance->security_context, &security_buffers_desc,
-					&context_attributes, NULL);
-
-				if ((status == SEC_I_COMPLETE_NEEDED) || (status == SEC_I_CONTINUE_NEEDED) || (status == SEC_I_COMPLETE_AND_CONTINUE))
+				status = AcquireCredentialsHandle(NULL, UNISP_NAME, SECPKG_CRED_OUTBOUND, NULL,
+					&auth_data, NULL, NULL, &tls_io_instance->credential_handle, NULL);
+				if (status != SEC_E_OK)
 				{
-					if (io_send(tls_io_instance->socket_io, init_security_buffers[0].pvBuffer, init_security_buffers[0].cbBuffer) != 0)
+					tls_io_instance->tls_state = TLS_STATE_ERROR;
+				}
+				else
+				{
+					init_security_buffers[0].cbBuffer = 0;
+					init_security_buffers[0].BufferType = SECBUFFER_TOKEN;
+					init_security_buffers[0].pvBuffer = NULL;
+					init_security_buffers[1].cbBuffer = 0;
+					init_security_buffers[1].BufferType = SECBUFFER_EMPTY;
+					init_security_buffers[1].pvBuffer = 0;
+
+					SecBufferDesc security_buffers_desc;
+					security_buffers_desc.cBuffers = 2;
+					security_buffers_desc.pBuffers = init_security_buffers;
+					security_buffers_desc.ulVersion = SECBUFFER_VERSION;
+
+					status = InitializeSecurityContext(&tls_io_instance->credential_handle,
+						NULL, (SEC_CHAR*)tls_io_instance->host_name, ISC_REQ_EXTENDED_ERROR | ISC_REQ_STREAM | ISC_REQ_ALLOCATE_MEMORY | ISC_REQ_USE_SUPPLIED_CREDS, 0, 0, NULL, 0,
+						&tls_io_instance->security_context, &security_buffers_desc,
+						&context_attributes, NULL);
+
+					if ((status == SEC_I_COMPLETE_NEEDED) || (status == SEC_I_CONTINUE_NEEDED) || (status == SEC_I_COMPLETE_AND_CONTINUE))
 					{
-						FreeCredentialHandle(&tls_io_instance->credential_handle);
-						tls_io_instance->tls_state = TLS_STATE_ERROR;
-					}
-					else
-					{
-						/* set the needed bytes to 1, to get on the next byte how many we actually need */
-						tls_io_instance->needed_bytes = 1;
-						tls_io_instance->consumed_bytes = tls_io_instance->needed_bytes;
-						if (resize_receive_buffer(tls_io_instance, tls_io_instance->needed_bytes + tls_io_instance->received_byte_count) != 0)
+						if (io_send(tls_io_instance->socket_io, init_security_buffers[0].pvBuffer, init_security_buffers[0].cbBuffer) != 0)
 						{
 							FreeCredentialHandle(&tls_io_instance->credential_handle);
 							tls_io_instance->tls_state = TLS_STATE_ERROR;
 						}
 						else
 						{
-							tls_io_instance->tls_state = TLS_STATE_HANDSHAKE_CLIENT_HELLO_SENT;
+							/* set the needed bytes to 1, to get on the next byte how many we actually need */
+							tls_io_instance->needed_bytes = 1;
+							tls_io_instance->consumed_bytes = tls_io_instance->needed_bytes;
+							if (resize_receive_buffer(tls_io_instance, tls_io_instance->needed_bytes + tls_io_instance->received_byte_count) != 0)
+							{
+								FreeCredentialHandle(&tls_io_instance->credential_handle);
+								tls_io_instance->tls_state = TLS_STATE_ERROR;
+							}
+							else
+							{
+								tls_io_instance->tls_state = TLS_STATE_HANDSHAKE_CLIENT_HELLO_SENT;
+							}
 						}
 					}
 				}
-			}
 
-			break;
-		}
+				break;
+			}
+			}
 		}
 
 		io_dowork(tls_io_instance->socket_io);
@@ -558,7 +597,7 @@ IO_STATE tlsio_get_state(IO_HANDLE tls_io)
 	else
 	{
 		TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
-		result = (tls_io_instance->tls_state == TLS_STATE_HANDSHAKE_DONE) ? IO_STATE_READY : IO_STATE_NOT_READY;
+		result = tls_io_instance->io_state;
 	}
 
 	return result;

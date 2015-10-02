@@ -39,6 +39,7 @@ typedef struct SASL_IO_INSTANCE_TAG
 	size_t header_bytes_received;
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec;
 	FRAME_CODEC_HANDLE frame_codec;
+	IO_STATE io_state;
 } SASL_IO_INSTANCE;
 
 static const IO_INTERFACE_DESCRIPTION sasl_io_interface_description =
@@ -260,6 +261,7 @@ static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 		if (sasl_io->sasl_client_negotiation_state != SASL_CLIENT_NEGOTIATION_ERROR)
 		{
 			sasl_io->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD;
+			sasl_io->io_state = IO_STATE_READY;
 		}
 
 		break;
@@ -315,6 +317,7 @@ IO_HANDLE saslio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 
 						result->sasl_io_state = SASL_IO_IDLE;
 						result->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_NOT_STARTED;
+						result->io_state = IO_STATE_NOT_OPEN;
 					}
 				}
 			}
@@ -357,6 +360,7 @@ int saslio_open(IO_HANDLE sasl_io, IO_RECEIVE_CALLBACK receive_callback, void* c
 		}
 		else
 		{
+			sasl_io_instance->io_state = IO_STATE_NOT_READY;
 			result = 0;
 		}
 	}
@@ -381,6 +385,7 @@ int saslio_close(IO_HANDLE sasl_io)
 		}
 		else
 		{
+			sasl_io_instance->io_state = IO_STATE_NOT_OPEN;
 			result = 0;
 		}
 	}
@@ -402,7 +407,7 @@ int saslio_send(IO_HANDLE sasl_io, const void* buffer, size_t size)
 	else
 	{
 		SASL_IO_INSTANCE* sasl_io_instance = (SASL_IO_INSTANCE*)sasl_io;
-		if (sasl_io_instance->sasl_client_negotiation_state != SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD)
+		if (sasl_io_instance->io_state != IO_STATE_READY)
 		{
 			result = __LINE__;
 		}
@@ -507,24 +512,7 @@ IO_STATE saslio_get_state(IO_HANDLE sasl_io)
 	else
 	{
 		SASL_IO_INSTANCE* sasl_io_instance = (SASL_IO_INSTANCE*)sasl_io;
-		switch (sasl_io_instance->sasl_client_negotiation_state)
-		{
-		default:
-			result = IO_STATE_ERROR;
-			break;
-
-		case SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD:
-			result = IO_STATE_READY;
-			break;
-
-		case SASL_CLIENT_NEGOTIATION_NOT_STARTED:
-		case SASL_CLIENT_NEGOTIATION_MECH_RCVD:
-		case SASL_CLIENT_NEGOTIATION_INIT_SENT:
-		case SASL_CLIENT_NEGOTIATION_CHALLENGE_RCVD:
-		case SASL_CLIENT_NEGOTIATION_RESPONSE_SENT:
-			result = IO_STATE_NOT_READY;
-			break;
-		}
+		result = sasl_io_instance->io_state;
 	}
 
 	return result;

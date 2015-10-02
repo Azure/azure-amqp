@@ -382,7 +382,11 @@ int tlsio_open(IO_HANDLE tls_io, IO_RECEIVE_CALLBACK receive_callback, void* con
 	{
 		TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
 
-		if (tls_io_instance->io_state == IO_STATE_NOT_OPEN)
+		if (tls_io_instance->io_state != IO_STATE_NOT_OPEN)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			tls_io_instance->receive_callback = receive_callback;
 			tls_io_instance->context = context;

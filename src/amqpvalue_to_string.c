@@ -132,7 +132,7 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			else
 			{
 				unsigned long uint_value = value;
-				if ((sprintf(str_value, "%ul", uint_value) < 0) ||
+				if ((sprintf(str_value, "%lu", uint_value) < 0) ||
 					(string_concat(&result, str_value) != 0))
 				{
 					amqpalloc_free(result);
@@ -153,7 +153,7 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			else
 			{
 				unsigned long long uint_value = value;
-				if ((sprintf(str_value, "%ull", uint_value) < 0) ||
+				if ((sprintf(str_value, "%llu", uint_value) < 0) ||
 					(string_concat(&result, str_value) != 0))
 				{
 					amqpalloc_free(result);
@@ -275,7 +275,7 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			}
 			else
 			{
-				uint64_t i;
+				size_t i;
 				for (i = 0; i < count; i++)
 				{
 					AMQP_VALUE item = amqpvalue_get_list_item(amqp_value, i);

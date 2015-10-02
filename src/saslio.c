@@ -106,6 +106,7 @@ static int saslio_receive_byte(SASL_IO_INSTANCE* sasl_io, unsigned char b)
 		case SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD:
 			/* simply pass bytes to the upper layer */
 			sasl_io->receive_callback(sasl_io->context, &b, 1);
+			result = 0;
 			break;
 		}
 

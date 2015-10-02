@@ -302,7 +302,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 
 	case AMQP_OPEN:
 		LOG(consolelogger_log, 0, "<- [OPEN] ");
-		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
+		//LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 
 		switch (connection->connection_state)
 		{

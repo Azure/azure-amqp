@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 		messaging = messaging_create();
 		uint32_t i;
 
-		for (i = 0; i < 100; i++)
+		for (i = 0; i < 1; i++)
 		{
 			message = message_create();
 			message_set_to(message, "pupupupu.servicebus.windows.net");

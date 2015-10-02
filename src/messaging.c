@@ -159,7 +159,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 		if (messaging->connection == NULL)
 		{
 			/* create io */
-			const TLSIO_CONFIG socket_io_config = { to, 5672 };
+			const TLSIO_CONFIG socket_io_config = { to, 5671 };
 			const IO_INTERFACE_DESCRIPTION* io_interface_description;
 
 			io_interface_description = tlsio_get_interface_description();
@@ -178,7 +178,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 				}
 				else
 				{
-					messaging->io = io_create(io_interface_description, &sasl_io_config, consolelogger_log);
+					messaging->io = io_create(io_interface_description, &sasl_io_config, NULL);
 					connection = connection_create(messaging->io, to, "1234");
 					messaging->connection = connection;
 				}

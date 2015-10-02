@@ -1364,6 +1364,7 @@ TEST_METHOD(when_protocol_header_first_byte_matches_but_only_1st_byte_received_n
 /* Tests_SRS_CONNECTION_01_135: [If hostname has been specified by a call to connection_set_hostname, then that value shall be stamped in the open frame.] */
 /* Tests_SRS_CONNECTION_01_205: [Sending the AMQP OPEN frame shall be done by calling amqp_frame_codec_begin_encode_frame with channel number 0, the actual performative payload and 0 as payload_size.] */
 /* Tests_SRS_CONNECTION_01_151: [Max_frame_size shall be passed down to the frame_codec when the Open frame is sent.] */
+/* Tests_SRS_CONNECTION_01_138: [If no max_frame_size value has been specified, no value shall be stamped in the open frame (no call to open_set_max_frame_size shall be made).] */
 TEST_METHOD(when_the_header_is_received_an_open_frame_is_sent_out)
 {
 	// arrange
@@ -1381,7 +1382,157 @@ TEST_METHOD(when_the_header_is_received_an_open_frame_is_sent_out)
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_hostname(test_open_handle, "testhost"));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_open(test_open_handle));
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_open_amqp_value, 0));
+	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_open_amqp_value));
+
+	// act
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_207: [If frame_codec_set_max_frame_size fails the connection shall be closed.] */
+TEST_METHOD(when_setting_the_max_frame_size_fails_the_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295))
+		.SetReturn(1);
+	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
+
+	// act
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and setto the END state.] */
+TEST_METHOD(when_open_create_fails_the_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
+	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"))
+		.SetReturn((OPEN_HANDLE)NULL);
+	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
+
+	// act
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and setto the END state.] */
+TEST_METHOD(when_open_set_hostname_fails_the_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
+	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_hostname(test_open_handle, "testhost"))
+		.SetReturn(1);
+	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
+	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
+
+	// act
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and setto the END state.] */
+TEST_METHOD(when_amqpvalue_create_open_fails_the_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
+	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_hostname(test_open_handle, "testhost"));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_open(test_open_handle))
+		.SetReturn((AMQP_VALUE)NULL);
+	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
+	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
+
+	// act
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_206: [If sending the frame fails, the connection shall be closed and state set to END.] */
+TEST_METHOD(when_amqp_frame_codec_begin_encode_frame_fails_the_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
+	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_hostname(test_open_handle, "testhost"));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_open(test_open_handle));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_open_amqp_value, 0))
+		.SetReturn(1);
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_open_amqp_value));
+	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
+	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
 
 	// act
 	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));

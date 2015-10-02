@@ -89,42 +89,72 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 	int result;
 
 	/* Codes_SRS_CONNECTION_01_151: [Max_frame_size shall be passed down to the frame_codec when the Open frame is sent.] */
-	frame_codec_set_max_frame_size(connection_instance->frame_codec, connection_instance->max_frame_size);
-
-	/* Codes_SRS_CONNECTION_01_134: [The container id field shall be filled with the container id specified in connection_create.] */
-	connection_instance->open_performative = open_create(connection_instance->container_id);
-
-	/* Codes_SRS_CONNECTION_01_135: [If hostname has been specified by a call to connection_set_hostname, then that value shall be stamped in the open frame.] */
-	open_set_hostname(connection_instance->open_performative, connection_instance->host_name);
-	AMQP_VALUE open_performative_value = amqpvalue_create_open(connection_instance->open_performative);
-
-	if (open_performative_value == NULL)
+	if (frame_codec_set_max_frame_size(connection_instance->frame_codec, connection_instance->max_frame_size) != 0)
 	{
+		/* Codes_SRS_CONNECTION_01_207: [If frame_codec_set_max_frame_size fails the connection shall be closed.] */
+		io_close(connection_instance->io);
+		connection_instance->connection_state = CONNECTION_STATE_END;
 		result = __LINE__;
 	}
 	else
 	{
-		/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
-		/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
-		/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-		/* Codes_SRS_CONNECTION_01_205: [Sending the AMQP OPEN frame shall be done by calling amqp_frame_codec_begin_encode_frame with channel number 0, the actual performative payload and 0 as payload_size.] */
-		if (amqp_frame_codec_begin_encode_frame(connection_instance->amqp_frame_codec, 0, open_performative_value, 0) != 0)
+		/* Codes_SRS_CONNECTION_01_134: [The container id field shall be filled with the container id specified in connection_create.] */
+		connection_instance->open_performative = open_create(connection_instance->container_id);
+		if (connection_instance->open_performative == NULL)
 		{
-			io_destroy(connection_instance->io);
-			connection_instance->io = NULL;
+			/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and setto the END state.] */
+			io_close(connection_instance->io);
 			connection_instance->connection_state = CONNECTION_STATE_END;
 			result = __LINE__;
 		}
 		else
 		{
-			LOG(consolelogger_log, LOG_LINE, "-> [OPEN]");
+			/* Codes_SRS_CONNECTION_01_135: [If hostname has been specified by a call to connection_set_hostname, then that value shall be stamped in the open frame.] */
+			if (open_set_hostname(connection_instance->open_performative, connection_instance->host_name) != 0)
+			{
+				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and setto the END state.] */
+				io_close(connection_instance->io);
+				connection_instance->connection_state = CONNECTION_STATE_END;
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE open_performative_value = amqpvalue_create_open(connection_instance->open_performative);
+				if (open_performative_value == NULL)
+				{
+					/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and setto the END state.] */
+					io_close(connection_instance->io);
+					connection_instance->connection_state = CONNECTION_STATE_END;
+					result = __LINE__;
+				}
+				else
+				{
+					/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
+					/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+					/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
+					/* Codes_SRS_CONNECTION_01_205: [Sending the AMQP OPEN frame shall be done by calling amqp_frame_codec_begin_encode_frame with channel number 0, the actual performative payload and 0 as payload_size.] */
+					if (amqp_frame_codec_begin_encode_frame(connection_instance->amqp_frame_codec, 0, open_performative_value, 0) != 0)
+					{
+						/* Codes_SRS_CONNECTION_01_206: [If sending the frame fails, the connection shall be closed and state set to END.] */
+						io_close(connection_instance->io);
+						connection_instance->connection_state = CONNECTION_STATE_END;
+						result = __LINE__;
+					}
+					else
+					{
+						LOG(consolelogger_log, LOG_LINE, "-> [OPEN]");
 
-			/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
-			connection_instance->connection_state = CONNECTION_STATE_OPEN_SENT;
-			result = 0;
+						/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
+						connection_instance->connection_state = CONNECTION_STATE_OPEN_SENT;
+						result = 0;
+					}
+
+					amqpvalue_destroy(open_performative_value);
+				}
+			}
+
+			open_destroy(connection_instance->open_performative);
 		}
-
-		amqpvalue_destroy(open_performative_value);
 	}
 
 	return result;

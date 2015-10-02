@@ -79,18 +79,6 @@ public:
 	MOCK_STATIC_METHOD_1(, IO_STATE, io_get_state, IO_HANDLE, io)
 	MOCK_METHOD_END(IO_STATE, IO_STATE_READY);
 
-	/* socketio mocks */
-	MOCK_STATIC_METHOD_0(, const IO_INTERFACE_DESCRIPTION*, socketio_get_interface_description)
-	MOCK_METHOD_END(const IO_INTERFACE_DESCRIPTION*, &test_io_interface_description);
-
-	/* tlsio mocks */
-	MOCK_STATIC_METHOD_0(, const IO_INTERFACE_DESCRIPTION*, tlsio_get_interface_description)
-	MOCK_METHOD_END(const IO_INTERFACE_DESCRIPTION*, &test_io_interface_description);
-
-	/* saslio mocks */
-	MOCK_STATIC_METHOD_0(, const IO_INTERFACE_DESCRIPTION*, saslio_get_interface_description)
-	MOCK_METHOD_END(const IO_INTERFACE_DESCRIPTION*, &test_io_interface_description);
-
 	/* amqpalloc mocks */
 	MOCK_STATIC_METHOD_1(, void*, amqpalloc_malloc, size_t, size)
 	MOCK_METHOD_END(void*, malloc(size));
@@ -200,12 +188,6 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, io_dowork, IO_HANDLE, io);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , IO_STATE, io_get_state, IO_HANDLE, io);
 
-	DECLARE_GLOBAL_MOCK_METHOD_0(connection_mocks, , const IO_INTERFACE_DESCRIPTION*, socketio_get_interface_description);
-
-	DECLARE_GLOBAL_MOCK_METHOD_0(connection_mocks, , const IO_INTERFACE_DESCRIPTION*, tlsio_get_interface_description);
-
-	DECLARE_GLOBAL_MOCK_METHOD_0(connection_mocks, , const IO_INTERFACE_DESCRIPTION*, saslio_get_interface_description);
-
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void*, amqpalloc_malloc, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , void*, amqpalloc_realloc, void*, ptr, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, amqpalloc_free, void*, ptr);
@@ -281,9 +263,6 @@ TEST_FUNCTION_CLEANUP(method_cleanup)
 /* connection_create */
 
 /* Tests_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
-/* Tests_SRS_CONNECTION_01_067: [connection_create shall call io_create to create its TCP IO interface.] */
-/* Tests_SRS_CONNECTION_01_068: [connection_create shall pass to io_create the interface obtained by a call to socketio_get_interface_description.] */
-/* Tests_SRS_CONNECTION_01_069: [The socket_io parameters shall be filled in with the host and port information passed to connection_create.] */
 /* Tests_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
 /* Tests_SRS_CONNECTION_01_107: [connection_create shall create an amqp_frame_codec instance by calling amqp_frame_codec_create.] */
 /* Tests_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
@@ -295,10 +274,6 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
-	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
-	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
@@ -332,47 +307,6 @@ TEST_METHOD(when_allocating_memory_fails_then_connection_create_fails)
 	ASSERT_IS_NULL(connection);
 }
 
-/* Tests_SRS_CONNECTION_01_124: [If getting the io interface information (by calling socketio_get_interface_description) fails, connection_create shall return NULL.] */
-TEST_METHOD(when_get_socketio_interface_description_fails_then_connection_create_fails)
-{
-	// arrange
-	connection_mocks mocks;
-	SOCKETIO_CONFIG config = { "testhost", 5672 };
-
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description())
-		.SetReturn((IO_INTERFACE_DESCRIPTION*)NULL);
-	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
-
-	// act
-	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-
-	// assert
-	ASSERT_IS_NULL(connection);
-}
-
-/* Tests_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
-TEST_METHOD(when_io_create_fails_then_connection_create_fails)
-{
-	// arrange
-	connection_mocks mocks;
-	SOCKETIO_CONFIG config = { "testhost", 5672 };
-
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
-	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
-	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-		.ValidateArgument(1)
-		.SetReturn((IO_HANDLE)NULL);
-	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
-
-	// act
-	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-
-	// assert
-	ASSERT_IS_NULL(connection);
-}
-
 /* Tests_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
 TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 {
@@ -381,10 +315,6 @@ TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
-	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
-	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
 		.ValidateArgument(1)
 		.SetReturn((FRAME_CODEC_HANDLE)NULL);
@@ -406,10 +336,6 @@ TEST_METHOD(when_amqp_frame_codec_create_fails_then_connection_create_fails)
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
-	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
-	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
@@ -434,10 +360,6 @@ TEST_METHOD(when_allocating_memory_for_host_fails_connection_create_fails)
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	STRICT_EXPECTED_CALL(mocks, tlsio_get_interface_description());
-	STRICT_EXPECTED_CALL(mocks, saslio_get_interface_description());
-	EXPECTED_CALL(mocks, io_create(&test_io_interface_description, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
@@ -1164,6 +1086,31 @@ TEST_METHOD(connection_dowork_with_NULL_handle_does_nothing)
 
 	// assert
 	// no explicit assert, uMock checks the calls
+}
+
+/* Tests_SRS_CONNECTION_01_203: [If the io state is IO_STATE_NOT_OPEN, connection_dowork shall attempt to open the io by calling io_open.] */
+TEST_METHOD(when_io_state_is_not_open_connection_dowork_when_state_is_start_sends_the_AMQP_header_and_triggers_io_dowork)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE))
+		.SetReturn(IO_STATE_NOT_OPEN);
+	EXPECTED_CALL(mocks, io_open(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
+
+	// act
+	connection_dowork(connection);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
 }
 
 /* Tests_SRS_CONNECTION_01_076: [connection_dowork shall schedule the underlying IO interface to do its work by calling io_dowork.] */

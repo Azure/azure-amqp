@@ -15,6 +15,7 @@ extern "C" {
 
 	typedef enum IO_STATE_TAG
 	{
+		IO_STATE_NOT_OPEN,
 		IO_STATE_NOT_READY,
 		IO_STATE_READY,
 		IO_STATE_ERROR

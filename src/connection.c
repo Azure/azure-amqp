@@ -405,96 +405,60 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 		/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
 		if (result != NULL)
 		{
-			/* Codes_SRS_CONNECTION_01_069: [The io parameters shall be filled in with the host and port information passed to connection_create.] */
-			const TLSIO_CONFIG socket_io_config = { hostname, 5672 };
-			const IO_INTERFACE_DESCRIPTION* io_interface_description;
+			result->io = io;
 
-			/* Codes_SRS_CONNECTION_01_068: [connection_create shall pass to io_create the interface obtained by a call to socketio_get_interface_description.] */
-			io_interface_description = tlsio_get_interface_description();
-			if (io_interface_description == NULL)
+			/* Codes_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
+			result->frame_codec = frame_codec_create(result->io, consolelogger_log);
+			if (result->frame_codec == NULL)
 			{
-				/* Codes_SRS_CONNECTION_01_124: [If getting the io interface information (by calling socketio_get_interface_description) fails, connection_create shall return NULL.] */
+				/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
+				io_destroy(result->io);
 				amqpalloc_free(result);
 				result = NULL;
 			}
 			else
 			{
-				SASLIO_CONFIG sasl_io_config = { io_interface_description, &socket_io_config };
-
-				io_interface_description = saslio_get_interface_description();
-				if (io_interface_description == NULL)
+				result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, connection_frame_payload_bytes_received, result);
+				if (result->amqp_frame_codec == NULL)
 				{
-					/* Codes_SRS_CONNECTION_01_124: [If getting the io interface information (by calling socketio_get_interface_description) fails, connection_create shall return NULL.] */
+					/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */
+					frame_codec_destroy(result->frame_codec);
+					io_destroy(result->io);
 					amqpalloc_free(result);
 					result = NULL;
 				}
 				else
 				{
-					/* Codes_SRS_CONNECTION_01_067: [connection_create shall call io_create to create its TCP IO interface.] */
-					result->io = io_create(io_interface_description, &sasl_io_config, connection_receive_callback, result, consolelogger_log);
-					if (result->io == NULL)
+					result->host_name = (char*)amqpalloc_malloc(strlen(hostname) + 1);
+					if (result->host_name == NULL)
 					{
-						/* Codes_SRS_CONNECTION_01_070: [If io_create fails then connection_create shall return NULL.] */
+						/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
+						amqp_frame_codec_destroy(result->amqp_frame_codec);
+						frame_codec_destroy(result->frame_codec);
+						io_destroy(result->io);
 						amqpalloc_free(result);
 						result = NULL;
 					}
 					else
 					{
-						/* Codes_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
-						result->frame_codec = frame_codec_create(result->io, consolelogger_log);
-						if (result->frame_codec == NULL)
-						{
-							/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
-							io_destroy(result->io);
-							amqpalloc_free(result);
-							result = NULL;
-						}
-						else
-						{
-							result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, connection_frame_payload_bytes_received, result);
-							if (result->amqp_frame_codec == NULL)
-							{
-								/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */
-								frame_codec_destroy(result->frame_codec);
-								io_destroy(result->io);
-								amqpalloc_free(result);
-								result = NULL;
-							}
-							else
-							{
-								result->host_name = (char*)amqpalloc_malloc(strlen(hostname) + 1);
-								if (result->host_name == NULL)
-								{
-									/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
-									amqp_frame_codec_destroy(result->amqp_frame_codec);
-									frame_codec_destroy(result->frame_codec);
-									io_destroy(result->io);
-									amqpalloc_free(result);
-									result = NULL;
-								}
-								else
-								{
-									strcpy(result->host_name, hostname);
+						strcpy(result->host_name, hostname);
 
-									result->open_performative = NULL;
+						result->open_performative = NULL;
 
-									/* Codes_SRS_CONNECTION_01_173: [<field name="max-frame-size" type="uint" default="4294967295"/>] */
-									result->max_frame_size = 4294967295;
-									/* Codes: [<field name="channel-max" type="ushort" default="65535"/>] */
-									result->channel_max = 65535;
+						/* Codes_SRS_CONNECTION_01_173: [<field name="max-frame-size" type="uint" default="4294967295"/>] */
+						result->max_frame_size = 4294967295;
+						/* Codes: [<field name="channel-max" type="ushort" default="65535"/>] */
+						result->channel_max = 65535;
 
-									/* Codes_SRS_CONNECTION_01_175: [<field name="idle-time-out" type="milliseconds"/>] */
-									/* Codes_SRS_CONNECTION_01_192: [A value of zero is the same as if it was not set (null).] */
-									result->idle_timeout = 0;
+						/* Codes_SRS_CONNECTION_01_175: [<field name="idle-time-out" type="milliseconds"/>] */
+						/* Codes_SRS_CONNECTION_01_192: [A value of zero is the same as if it was not set (null).] */
+						result->idle_timeout = 0;
 
-									/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
-									result->connection_state = CONNECTION_STATE_START;
-									result->header_bytes_received = 0;
-									result->endpoint_count = 0;
-									result->endpoints = NULL;
-								}
-							}
-						}
+						/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
+						result->connection_state = CONNECTION_STATE_START;
+						result->header_bytes_received = 0;
+						result->endpoint_count = 0;
+						result->endpoints = NULL;
 					}
 				}
 			}
@@ -689,6 +653,14 @@ void connection_dowork(CONNECTION_HANDLE connection)
 		switch (io_state)
 		{
 		default:
+		case IO_STATE_NOT_OPEN:
+			/* Codes_SRS_CONNECTION_01_203: [If the io state is IO_STATE_NOT_OPEN, connection_dowork shall attempt to open the io by calling io_open.] */
+			if (io_open(connection_instance->io, connection_receive_callback, connection_instance) != 0)
+			{
+				connection_instance->connection_state = CONNECTION_STATE_END;
+			}
+
+			break;
 		case IO_STATE_ERROR:
 			break;
 		case IO_STATE_NOT_READY:

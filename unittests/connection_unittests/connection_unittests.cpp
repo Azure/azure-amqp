@@ -577,6 +577,32 @@ TEST_METHOD(connection_set_max_frame_size_with_511_bytes_fails_and_previous_valu
 	connection_destroy(connection);
 }
 
+/* Tests_SRS_CONNECTION_01_157: [If connection_set_max_frame_size is called after the initial Open frame has been sent, it shall fail and return a non-zero value.] */
+TEST_METHOD(set_max_frame_size_after_open_is_sent_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	// act
+	int result = connection_set_max_frame_size(connection, 1024);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
 /* connection_get_max_frame_size */
 
 /* Tests_SRS_CONNECTION_01_170: [If connection or max_frame_size is NULL, connection_get_max_frame_size shall fail and return a non-zero value.] */
@@ -664,6 +690,32 @@ TEST_METHOD(connection_set_channel_max_with_valid_connection_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_156: [If connection_set_channel_max is called after the initial Open frame has been sent, it shall fail and return a non-zero value.] */
+TEST_METHOD(set_channel_max_after_open_is_sent_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	// act
+	int result = connection_set_channel_max(connection, 1024);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -780,6 +832,32 @@ TEST_METHOD(connection_set_idle_timeout_with_valid_connection_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_158: [If connection_set_idle_timeout is called after the initial Open frame has been sent, it shall fail and return a non-zero value.] */
+TEST_METHOD(set_idle_timeout_after_open_is_sent_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	// act
+	int result = connection_set_idle_timeout(connection, 1000);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -1572,7 +1650,7 @@ TEST_METHOD(when_amqp_frame_codec_begin_encode_frame_fails_the_connection_is_clo
 	connection_destroy(connection);
 }
 
-/* tESTS_SRS_CONNECTION_01_136: [If no hostname value has been specified, no value shall be stamped in the open frame (no call to open_set_hostname shall be made).] */
+/* Tests_SRS_CONNECTION_01_136: [If no hostname value has been specified, no value shall be stamped in the open frame (no call to open_set_hostname shall be made).] */
 TEST_METHOD(when_no_hostname_is_specified_no_hostname_is_stamped_on_the_open_frame)
 {
 	// arrange

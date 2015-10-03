@@ -548,12 +548,20 @@ int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_fra
 	{
 		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
 
-		/* Codes_SRS_CONNECTION_01_148: [connection_set_max_frame_size shall set the max_frame_size associated with a connection.] */
-		/* Codes_SRS_CONNECTION_01_164: [If connection_set_max_frame_size fails, the previous max_frame_size setting shall be retained.] */
-		connection_instance->max_frame_size = max_frame_size;
+		/* Codes_SRS_CONNECTION_01_157: [If connection_set_max_frame_size is called after the initial Open frame has been sent, it shall fail and return a non-zero value.] */
+		if (connection_instance->connection_state != CONNECTION_STATE_START)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_CONNECTION_01_148: [connection_set_max_frame_size shall set the max_frame_size associated with a connection.] */
+			/* Codes_SRS_CONNECTION_01_164: [If connection_set_max_frame_size fails, the previous max_frame_size setting shall be retained.] */
+			connection_instance->max_frame_size = max_frame_size;
 
-		/* Codes_SRS_CONNECTION_01_149: [On success connection_set_max_frame_size shall return 0.] */
-		result = 0;
+			/* Codes_SRS_CONNECTION_01_149: [On success connection_set_max_frame_size shall return 0.] */
+			result = 0;
+		}
 	}
 
 	return result;
@@ -596,12 +604,20 @@ int connection_set_channel_max(CONNECTION_HANDLE connection, uint16_t channel_ma
 	{
 		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
 
-		/* Codes_SRS_CONNECTION_01_153: [connection_set_channel_max shall set the channel_max associated with a connection.] */
-		/* Codes_SRS_CONNECTION_01_165: [If connection_set_channel_max fails, the previous channel_max setting shall be retained.] */
-		connection_instance->channel_max = channel_max;
+		/* Codes_SRS_CONNECTION_01_156: [If connection_set_channel_max is called after the initial Open frame has been sent, it shall fail and return a non-zero value.] */
+		if (connection_instance->connection_state != CONNECTION_STATE_START)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_CONNECTION_01_153: [connection_set_channel_max shall set the channel_max associated with a connection.] */
+			/* Codes_SRS_CONNECTION_01_165: [If connection_set_channel_max fails, the previous channel_max setting shall be retained.] */
+			connection_instance->channel_max = channel_max;
 
-		/* Codes_SRS_CONNECTION_01_154: [On success connection_set_channel_max shall return 0.] */
-		result = 0;
+			/* Codes_SRS_CONNECTION_01_154: [On success connection_set_channel_max shall return 0.] */
+			result = 0;
+		}
 	}
 
 	return result;
@@ -644,12 +660,20 @@ int connection_set_idle_timeout(CONNECTION_HANDLE connection, milliseconds idle_
 	{
 		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
 
-		/* Codes_SRS_CONNECTION_01_159: [connection_set_idle_timeout shall set the idle_timeout associated with a connection.] */
-		/* Codes_SRS_CONNECTION_01_166: [If connection_set_idle_timeout fails, the previous idle_timeout setting shall be retained.] */
-		connection_instance->idle_timeout = idle_timeout;
+		/* Codes_SRS_CONNECTION_01_158: [If connection_set_idle_timeout is called after the initial Open frame has been sent, it shall fail and return a non-zero value.] */
+		if (connection_instance->connection_state != CONNECTION_STATE_START)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_CONNECTION_01_159: [connection_set_idle_timeout shall set the idle_timeout associated with a connection.] */
+			/* Codes_SRS_CONNECTION_01_166: [If connection_set_idle_timeout fails, the previous idle_timeout setting shall be retained.] */
+			connection_instance->idle_timeout = idle_timeout;
 
-		/* Codes_SRS_CONNECTION_01_160: [On success connection_set_idle_timeout shall return 0.] */
-		result = 0;
+			/* Codes_SRS_CONNECTION_01_160: [On success connection_set_idle_timeout shall return 0.] */
+			result = 0;
+		}
 	}
 
 	return result;

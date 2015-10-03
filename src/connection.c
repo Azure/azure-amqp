@@ -193,12 +193,10 @@ static int send_close_frame(CONNECTION_INSTANCE* connection_instance)
 	int result;
 	CLOSE_HANDLE close_performative;
 
+	/* Codes_SRS_CONNECTION_01_217: [The CLOSE frame shall be constructed by using close_create.] */
 	close_performative = close_create();
 	if (close_performative == NULL)
 	{
-		/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed, the connection shall be closed and set to the END state.] */
-		io_close(connection_instance->io);
-		connection_instance->connection_state = CONNECTION_STATE_END;
 		result = __LINE__;
 	}
 	else
@@ -206,9 +204,6 @@ static int send_close_frame(CONNECTION_INSTANCE* connection_instance)
 		AMQP_VALUE close_performative_value = amqpvalue_create_close(close_performative);
 		if (close_performative_value == NULL)
 		{
-			/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed, the connection shall be closed and set to the END state.] */
-			io_close(connection_instance->io);
-			connection_instance->connection_state = CONNECTION_STATE_END;
 			result = __LINE__;
 		}
 		else
@@ -216,9 +211,6 @@ static int send_close_frame(CONNECTION_INSTANCE* connection_instance)
 			/* Codes_SRS_CONNECTION_01_215: [Sending the AMQP CLOSE frame shall be done by calling amqp_frame_codec_begin_encode_frame with channel number 0, the actual performative payload and 0 as payload_size.] */
 			if (amqp_frame_codec_begin_encode_frame(connection_instance->amqp_frame_codec, 0, close_performative_value, 0) != 0)
 			{
-				/* Codes_SRS_CONNECTION_01_216: [If sending the frame fails, the connection shall be closed and state set to END.] */
-				io_close(connection_instance->io);
-				connection_instance->connection_state = CONNECTION_STATE_END;
 				result = __LINE__;
 			}
 			else
@@ -361,7 +353,7 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 		{
 			if (send_close_frame(connection_instance) != 0)
 			{
-				/* Codes_SRS_CONNECTION_01_216: [If sending the frame fails, the connection shall be closed and state set to END.] */
+				/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
 				io_close(connection_instance->io);
 				connection_instance->connection_state = CONNECTION_STATE_END;
 			}

@@ -34,6 +34,30 @@ static void* io_receive_callback_context;
 static uint64_t performative_ulong;
 static const void** list_items = NULL;
 static size_t list_item_count = 0;
+unsigned char* frame_codec_bytes = NULL;
+size_t frame_codec_byte_count = 0;
+
+void stringify_bytes(const unsigned char* bytes, size_t byte_count, char* output_string)
+{
+	size_t i;
+	size_t pos = 0;
+
+	output_string[pos++] = '[';
+	for (i = 0; i < byte_count; i++)
+	{
+		(void)sprintf(&output_string[pos], "0x%02X", bytes[i]);
+		if (i < byte_count - 1)
+		{
+			strcat(output_string, ",");
+		}
+		pos = strlen(output_string);
+	}
+	output_string[pos++] = ']';
+	output_string[pos++] = '\0';
+}
+
+static char expected_stringified_io[8192];
+static char actual_stringified_io[8192];
 
 std::ostream& operator<<(std::ostream& left, const delivery_tag& delivery)
 {
@@ -95,6 +119,13 @@ public:
 	MOCK_STATIC_METHOD_1(, void, frame_codec_destroy, FRAME_CODEC_HANDLE, frame_codec)
 	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_3(, int, frame_codec_receive_bytes, FRAME_CODEC_HANDLE, frame_codec, const unsigned char*, buffer, size_t, size)
+		unsigned char* new_frame_codec_bytes = (unsigned char*)realloc(frame_codec_bytes, frame_codec_byte_count + size);
+		if (new_frame_codec_bytes != NULL)
+		{
+			frame_codec_bytes = new_frame_codec_bytes;
+			memcpy(frame_codec_bytes + frame_codec_byte_count, buffer, size);
+			frame_codec_byte_count += size;
+		}
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_2(, int, frame_codec_set_max_frame_size, FRAME_CODEC_HANDLE, frame_codec, uint32_t, max_frame_size)
 	MOCK_METHOD_END(int, 0);
@@ -250,11 +281,14 @@ TEST_FUNCTION_INITIALIZE(method_init)
 	{
 		ASSERT_FAIL("Could not acquire test serialization mutex.");
 	}
+	frame_codec_bytes = NULL;
+	frame_codec_byte_count = 0;
 	performative_ulong = 0x10;
 }
 
 TEST_FUNCTION_CLEANUP(method_cleanup)
 {
+	free(frame_codec_bytes);
 	if (!MicroMockReleaseMutex(test_serialize_mutex))
 	{
 		ASSERT_FAIL("Could not release test serialization mutex.");
@@ -1879,6 +1913,111 @@ TEST_METHOD(when_setting_the_idle_timeout_on_the_open_frame_fails_then_connectio
 
 	// act
 	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_212: [After the initial handshake has been done all bytes received from the io instance shall be passed to the frame_codec for decoding by calling frame_codec_receive_bytes.] */
+TEST_METHOD(when_1_byte_is_received_from_the_io_it_is_passed_to_the_frame_codec)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, frame_codec_receive_bytes(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, frame_codec_receive_bytes(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1)
+		.IgnoreAllCalls();
+
+	// act
+	unsigned char byte = 42;
+	io_receive_callback(io_receive_callback_context, &byte, 1);
+
+	// assert
+	stringify_bytes(&byte, 1, expected_stringified_io);
+	stringify_bytes(frame_codec_bytes, frame_codec_byte_count, actual_stringified_io);
+	ASSERT_ARE_EQUAL(char_ptr, expected_stringified_io, actual_stringified_io);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_212: [After the initial handshake has been done all bytes received from the io instance shall be passed to the frame_codec for decoding by calling frame_codec_receive_bytes.] */
+TEST_METHOD(when_2_bytes_are_received_from_the_io_it_is_passed_to_the_frame_codec)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, frame_codec_receive_bytes(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, frame_codec_receive_bytes(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1)
+		.IgnoreAllCalls();
+
+	// act
+	unsigned char bytes[] = { 42, 43 };
+	io_receive_callback(io_receive_callback_context, bytes, sizeof(bytes));
+
+	// assert
+	stringify_bytes(bytes, sizeof(bytes), expected_stringified_io);
+	stringify_bytes(frame_codec_bytes, frame_codec_byte_count, actual_stringified_io);
+	ASSERT_ARE_EQUAL(char_ptr, expected_stringified_io, actual_stringified_io);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_213: [When passing the bytes to frame_codec fails, a CLOSE frame shall be sent and the state shall be set to DISCARDING.]  */
+TEST_METHOD(when_giving_the_bytes_to_frame_codec_fails_the_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, frame_codec_receive_bytes(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1)
+		.SetReturn(1);
+	STRICT_EXPECTED_CALL(definition_mocks, close_create());
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_close(test_close_handle));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_close_amqp_value, 0));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_close_amqp_value));
+	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
+
+	// act
+	unsigned char bytes[] = { 42, 43 };
+	io_receive_callback(io_receive_callback_context, bytes, sizeof(bytes));
 
 	// assert
 	mocks.AssertActualAndExpectedCalls();

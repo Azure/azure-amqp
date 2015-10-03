@@ -189,6 +189,54 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 	return result;
 }
 
+static int send_close_frame(CONNECTION_INSTANCE* connection_instance)
+{
+	int result;
+	CLOSE_HANDLE close_performative;
+
+	close_performative = close_create();
+	if (close_performative == NULL)
+	{
+		/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed, the connection shall be closed and set to the END state.] */
+		io_close(connection_instance->io);
+		connection_instance->connection_state = CONNECTION_STATE_END;
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE close_performative_value = amqpvalue_create_close(close_performative);
+		if (close_performative_value == NULL)
+		{
+			/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed, the connection shall be closed and set to the END state.] */
+			io_close(connection_instance->io);
+			connection_instance->connection_state = CONNECTION_STATE_END;
+			result = __LINE__;
+		}
+		else
+		{
+			/* Codes_SRS_CONNECTION_01_215: [Sending the AMQP CLOSE frame shall be done by calling amqp_frame_codec_begin_encode_frame with channel number 0, the actual performative payload and 0 as payload_size.] */
+			if (amqp_frame_codec_begin_encode_frame(connection_instance->amqp_frame_codec, 0, close_performative_value, 0) != 0)
+			{
+				/* Codes_SRS_CONNECTION_01_216: [If sending the frame fails, the connection shall be closed and state set to END.] */
+				io_close(connection_instance->io);
+				connection_instance->connection_state = CONNECTION_STATE_END;
+				result = __LINE__;
+			}
+			else
+			{
+				LOG(consolelogger_log, LOG_LINE, "-> [CLOSE]");
+				result = 0;
+			}
+
+			amqpvalue_destroy(close_performative_value);
+		}
+
+		close_destroy(close_performative);
+	}
+
+	return result;
+}
+
 static ENDPOINT_INSTANCE* find_session_endpoint_by_outgoing_channel(CONNECTION_INSTANCE* connection, uint16_t outgoing_channel)
 {
 	uint32_t i;
@@ -303,32 +351,34 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 
 	/* Codes_SRS_CONNECTION_01_045: [OPEN RCVD In this state the connection headers have been exchanged. An open frame has been received from the peer but an open frame has not been sent.] */
 	case CONNECTION_STATE_OPEN_RCVD:
-	{
-		/* receiving in OPEN_RCVD is not good, as we did not send out an OPEN frame */
-		/* normally this would never happen, but in case it does, we should close the connection */
-		CLOSE_HANDLE close_performative = close_create();
-		AMQP_VALUE close_performative_value = amqpvalue_create_close(close_performative);
-		if (amqp_frame_codec_begin_encode_frame(connection_instance->amqp_frame_codec, 0, close_performative_value, 0) != 0)
-		{
-			io_destroy(connection_instance->io);
-			connection_instance->io = NULL;
-			connection_instance->connection_state = CONNECTION_STATE_END;
-		}
-		else
-		{
-			/* Codes_SRS_CONNECTION_01_055: [DISCARDING The DISCARDING state is a variant of the CLOSE SENT state where the close is triggered by an error.] */
-			connection_instance->connection_state = CONNECTION_STATE_DISCARDING;
-		}
-		result = __LINE__;
-		break;
-	}
 
 	/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
 	case CONNECTION_STATE_OPEN_SENT:
 
 	/* Codes_SRS_CONNECTION_01_048: [OPENED In this state the connection header and the open frame have been both sent and received.] */
 	case CONNECTION_STATE_OPENED:
-		result = frame_codec_receive_bytes(connection_instance->frame_codec, &b, 1);
+		/* Codes_SRS_CONNECTION_01_212: [After the initial handshake has been done all bytes received from the io instance shall be passed to the frame_codec for decoding by calling frame_codec_receive_bytes.] */
+		if (frame_codec_receive_bytes(connection_instance->frame_codec, &b, 1) != 0)
+		{
+			if (send_close_frame(connection_instance) != 0)
+			{
+				/* Codes_SRS_CONNECTION_01_216: [If sending the frame fails, the connection shall be closed and state set to END.] */
+				io_close(connection_instance->io);
+				connection_instance->connection_state = CONNECTION_STATE_END;
+			}
+			else
+			{
+				/* Codes_SRS_CONNECTION_01_213: [When passing the bytes to frame_codec fails, a CLOSE frame shall be sent and the state shall be set to DISCARDING.] */
+				connection_instance->connection_state = CONNECTION_STATE_DISCARDING;
+			}
+
+			result = __LINE__;
+		}
+		else
+		{
+			result = 0;
+		}
+
 		break;
 	}
 

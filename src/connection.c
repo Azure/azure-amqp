@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 #include "connection.h"
 #include "consolelogger.h"
@@ -47,12 +46,15 @@ typedef struct CONNECTION_DATA_TAG
 	uint16_t frame_receive_channel;
 	char* host_name;
 	char* container_id;
-	bool is_io_open;
 
 	/* options */
 	uint32_t max_frame_size;
 	uint16_t channel_max;
 	milliseconds idle_timeout;
+
+	int max_frame_size_specified : 1;
+	int channel_max_specified : 1;
+	int is_io_open : 1;
 } CONNECTION_INSTANCE;
 
 static int send_header(CONNECTION_INSTANCE* connection_instance)
@@ -88,10 +90,10 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 {
 	int result;
 
-	/* Codes_SRS_CONNECTION_01_151: [Max_frame_size shall be passed down to the frame_codec when the Open frame is sent.] */
+	/* Codes_SRS_CONNECTION_01_151: [The connection max_frame_size setting shall be passed down to the frame_codec when the Open frame is sent.] */
 	if (frame_codec_set_max_frame_size(connection_instance->frame_codec, connection_instance->max_frame_size) != 0)
 	{
-		/* Codes_SRS_CONNECTION_01_207: [If frame_codec_set_max_frame_size fails the connection shall be closed.] */
+		/* Codes_SRS_CONNECTION_01_207: [If frame_codec_set_max_frame_size fails the connection shall be closed and the state set to END.] */
 		io_close(connection_instance->io);
 		connection_instance->connection_state = CONNECTION_STATE_END;
 		result = __LINE__;
@@ -102,18 +104,39 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 		connection_instance->open_performative = open_create(connection_instance->container_id);
 		if (connection_instance->open_performative == NULL)
 		{
-			/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and setto the END state.] */
+			/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 			io_close(connection_instance->io);
 			connection_instance->connection_state = CONNECTION_STATE_END;
 			result = __LINE__;
 		}
 		else
 		{
-			/* Codes_SRS_CONNECTION_01_135: [If hostname has been specified by a call to connection_set_hostname, then that value shall be stamped in the open frame.] */
-			if ((connection_instance->host_name != NULL) &&
+			/* Codes_SRS_CONNECTION_01_138: [If no max_frame_size value has been specified, no value shall be stamped in the open frame (no call to open_set_max_frame_size shall be made).] */
+			if ((connection_instance->max_frame_size_specified) &&
+				/* Codes_SRS_CONNECTION_01_137: [If max_frame_size has been specified by a call to connection_set_max_frame, then that value shall be stamped in the open frame.] */
+				(open_set_max_frame_size(connection_instance->open_performative, connection_instance->max_frame_size) != 0))
+			{
+				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
+				io_close(connection_instance->io);
+				connection_instance->connection_state = CONNECTION_STATE_END;
+				result = __LINE__;
+			}
+			/* Codes_SRS_CONNECTION_01_140: [If no channel_max value has been specified, no value shall be stamped in the open frame (no call to open_set_channel_max shall be made).] */
+			else if ((connection_instance->channel_max_specified) &&
+				/* Codes_SRS_CONNECTION_01_139: [If channel_max has been specified by a call to connection_set_channel_max, then that value shall be stamped in the open frame.] */
+				(open_set_channel_max(connection_instance->open_performative, connection_instance->channel_max) != 0))
+			{
+				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
+				io_close(connection_instance->io);
+				connection_instance->connection_state = CONNECTION_STATE_END;
+				result = __LINE__;
+			}
+			/* Codes_SRS_CONNECTION_01_136: [If no hostname value has been specified, no value shall be stamped in the open frame (no call to open_set_hostname shall be made).] */
+			else if ((connection_instance->host_name != NULL) &&
+				/* Codes_SRS_CONNECTION_01_135: [If hostname has been specified by a call to connection_set_hostname, then that value shall be stamped in the open frame.] */
 				(open_set_hostname(connection_instance->open_performative, connection_instance->host_name) != 0))
 			{
-				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and setto the END state.] */
+				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 				io_close(connection_instance->io);
 				connection_instance->connection_state = CONNECTION_STATE_END;
 				result = __LINE__;
@@ -123,7 +146,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 				AMQP_VALUE open_performative_value = amqpvalue_create_open(connection_instance->open_performative);
 				if (open_performative_value == NULL)
 				{
-					/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and setto the END state.] */
+					/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 					io_close(connection_instance->io);
 					connection_instance->connection_state = CONNECTION_STATE_END;
 					result = __LINE__;
@@ -521,7 +544,11 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 							result->header_bytes_received = 0;
 							result->endpoint_count = 0;
 							result->endpoints = NULL;
-							result->is_io_open = false;
+							result->is_io_open = 0;
+
+							/* Mark that settings have not yet been set by the user */
+							result->max_frame_size_specified = 0;
+							result->channel_max_specified = 0;
 						}
 					}
 				}
@@ -558,6 +585,7 @@ int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_fra
 			/* Codes_SRS_CONNECTION_01_148: [connection_set_max_frame_size shall set the max_frame_size associated with a connection.] */
 			/* Codes_SRS_CONNECTION_01_164: [If connection_set_max_frame_size fails, the previous max_frame_size setting shall be retained.] */
 			connection_instance->max_frame_size = max_frame_size;
+			connection_instance->max_frame_size_specified = 1;
 
 			/* Codes_SRS_CONNECTION_01_149: [On success connection_set_max_frame_size shall return 0.] */
 			result = 0;
@@ -614,6 +642,7 @@ int connection_set_channel_max(CONNECTION_HANDLE connection, uint16_t channel_ma
 			/* Codes_SRS_CONNECTION_01_153: [connection_set_channel_max shall set the channel_max associated with a connection.] */
 			/* Codes_SRS_CONNECTION_01_165: [If connection_set_channel_max fails, the previous channel_max setting shall be retained.] */
 			connection_instance->channel_max = channel_max;
+			connection_instance->channel_max_specified = 1;
 
 			/* Codes_SRS_CONNECTION_01_154: [On success connection_set_channel_max shall return 0.] */
 			result = 0;
@@ -737,7 +766,7 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			else
 			{
 				connection_instance->connection_state = CONNECTION_STATE_START;
-				connection_instance->is_io_open = true;
+				connection_instance->is_io_open = 1;
 			}
 		}
 

@@ -36,7 +36,6 @@ typedef struct ENDPOINT_INSTANCE_TAG
 typedef struct CONNECTION_DATA_TAG
 {
 	IO_HANDLE io;
-	OPEN_HANDLE open_performative;
 	size_t header_bytes_received;
 	CONNECTION_STATE connection_state;
 	FRAME_CODEC_HANDLE frame_codec;
@@ -100,8 +99,8 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 	else
 	{
 		/* Codes_SRS_CONNECTION_01_134: [The container id field shall be filled with the container id specified in connection_create.] */
-		connection_instance->open_performative = open_create(connection_instance->container_id);
-		if (connection_instance->open_performative == NULL)
+		OPEN_HANDLE open_performative = open_create(connection_instance->container_id);
+		if (open_performative == NULL)
 		{
 			/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 			io_close(connection_instance->io);
@@ -111,7 +110,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 		else
 		{
 			/* Codes_SRS_CONNECTION_01_137: [The max_frame_size connection setting shall be set in the open frame by using open_set_max_frame_size.] */
-			if (open_set_max_frame_size(connection_instance->open_performative, connection_instance->max_frame_size) != 0)
+			if (open_set_max_frame_size(open_performative, connection_instance->max_frame_size) != 0)
 			{
 				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 				io_close(connection_instance->io);
@@ -119,7 +118,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 				result = __LINE__;
 			}
 			/* Codes_SRS_CONNECTION_01_139: [The channel_max connection setting shall be set in the open frame by using open_set_channel_max.] */
-			else if (open_set_channel_max(connection_instance->open_performative, connection_instance->channel_max) != 0)
+			else if (open_set_channel_max(open_performative, connection_instance->channel_max) != 0)
 			{
 				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 				io_close(connection_instance->io);
@@ -129,7 +128,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 			/* Codes_SRS_CONNECTION_01_142: [If no idle_timeout value has been specified, no value shall be stamped in the open frame (no call to open_set_idle_time_out shall be made).] */
 			else if ((connection_instance->idle_timeout_specified) &&
 				/* Codes_SRS_CONNECTION_01_141: [If idle_timeout has been specified by a call to connection_set_idle_timeout, then that value shall be stamped in the open frame.] */
-				(open_set_idle_time_out(connection_instance->open_performative, connection_instance->idle_timeout) != 0))
+				(open_set_idle_time_out(open_performative, connection_instance->idle_timeout) != 0))
 			{
 				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 				io_close(connection_instance->io);
@@ -139,7 +138,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 			/* Codes_SRS_CONNECTION_01_136: [If no hostname value has been specified, no value shall be stamped in the open frame (no call to open_set_hostname shall be made).] */
 			else if ((connection_instance->host_name != NULL) &&
 				/* Codes_SRS_CONNECTION_01_135: [If hostname has been specified by a call to connection_set_hostname, then that value shall be stamped in the open frame.] */
-				(open_set_hostname(connection_instance->open_performative, connection_instance->host_name) != 0))
+				(open_set_hostname(open_performative, connection_instance->host_name) != 0))
 			{
 				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 				io_close(connection_instance->io);
@@ -148,7 +147,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 			}
 			else
 			{
-				AMQP_VALUE open_performative_value = amqpvalue_create_open(connection_instance->open_performative);
+				AMQP_VALUE open_performative_value = amqpvalue_create_open(open_performative);
 				if (open_performative_value == NULL)
 				{
 					/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
@@ -182,7 +181,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 				}
 			}
 
-			open_destroy(connection_instance->open_performative);
+			open_destroy(open_performative);
 		}
 	}
 
@@ -582,8 +581,6 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 						else
 						{
 							strcpy(result->container_id, container_id);
-
-							result->open_performative = NULL;
 
 							/* Codes_SRS_CONNECTION_01_173: [<field name="max-frame-size" type="uint" default="4294967295"/>] */
 							result->max_frame_size = 4294967295;

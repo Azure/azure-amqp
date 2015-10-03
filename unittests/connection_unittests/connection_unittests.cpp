@@ -1469,10 +1469,9 @@ TEST_METHOD(when_protocol_header_first_byte_matches_but_only_1st_byte_received_n
 /* Tests_SRS_CONNECTION_01_134: [The container id field shall be filled with the container id specified in connection_create.] */
 /* Tests_SRS_CONNECTION_01_135: [If hostname has been specified by a call to connection_set_hostname, then that value shall be stamped in the open frame.] */
 /* Tests_SRS_CONNECTION_01_205: [Sending the AMQP OPEN frame shall be done by calling amqp_frame_codec_begin_encode_frame with channel number 0, the actual performative payload and 0 as payload_size.] */
-/* Tests_SRS_CONNECTION_01_138: [If no max_frame_size value has been specified, no value shall be stamped in the open frame (no call to open_set_max_frame_size shall be made).] */
-/* Tests_SRS_CONNECTION_01_140: [If no channel_max value has been specified, no value shall be stamped in the open frame (no call to open_set_channel_max shall be made).] */
-/* Tests_SRS_CONNECTION_01_142: [If no idle_timeout value has been specified, no value shall be stamped in the open frame (no call to open_set_idle_time_out shall be made).] */
 /* Tests_SRS_CONNECTION_01_151: [The connection max_frame_size setting shall be passed down to the frame_codec when the Open frame is sent.] */
+/* Tests_SRS_CONNECTION_01_137: [The max_frame_size connection setting shall be set in the open frame by using open_set_max_frame_size.] */
+/* Tests_SRS_CONNECTION_01_139: [The channel_max connection setting shall be set in the open frame by using open_set_channel_max.] */
 TEST_METHOD(when_the_header_is_received_an_open_frame_is_sent_out)
 {
 	// arrange
@@ -1488,6 +1487,8 @@ TEST_METHOD(when_the_header_is_received_an_open_frame_is_sent_out)
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_hostname(test_open_handle, "testhost"));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_max_frame_size(test_open_handle, 4294967295));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_channel_max(test_open_handle, 65535));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_open(test_open_handle));
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_open_amqp_value, 0));
 	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
@@ -1573,6 +1574,8 @@ TEST_METHOD(when_open_set_hostname_fails_the_connection_is_closed)
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_max_frame_size(test_open_handle, 4294967295));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_channel_max(test_open_handle, 65535));
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_hostname(test_open_handle, "testhost"))
 		.SetReturn(1);
 	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
@@ -1604,6 +1607,8 @@ TEST_METHOD(when_amqpvalue_create_open_fails_the_connection_is_closed)
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_hostname(test_open_handle, "testhost"));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_max_frame_size(test_open_handle, 4294967295));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_channel_max(test_open_handle, 65535));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_open(test_open_handle))
 		.SetReturn((AMQP_VALUE)NULL);
 	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
@@ -1635,6 +1640,8 @@ TEST_METHOD(when_amqp_frame_codec_begin_encode_frame_fails_the_connection_is_clo
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_hostname(test_open_handle, "testhost"));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_max_frame_size(test_open_handle, 4294967295));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_channel_max(test_open_handle, 65535));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_open(test_open_handle));
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_open_amqp_value, 0))
 		.SetReturn(1);
@@ -1667,6 +1674,8 @@ TEST_METHOD(when_no_hostname_is_specified_no_hostname_is_stamped_on_the_open_fra
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_max_frame_size(test_open_handle, 4294967295));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_channel_max(test_open_handle, 65535));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_open(test_open_handle));
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_open_amqp_value, 0));
 	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
@@ -1682,7 +1691,7 @@ TEST_METHOD(when_no_hostname_is_specified_no_hostname_is_stamped_on_the_open_fra
 	connection_destroy(connection);
 }
 
-/* Tests_SRS_CONNECTION_01_137: [If max_frame_size has been specified by a call to connection_set_max_frame, then that value shall be stamped in the open frame.] */
+/* Tests_SRS_CONNECTION_01_137: [The max_frame_size connection setting shall be set in the open frame by using open_set_max_frame_size.] */
 TEST_METHOD(when_max_frame_size_has_been_specified_it_shall_be_set_in_the_open_frame)
 {
 	// arrange
@@ -1699,6 +1708,7 @@ TEST_METHOD(when_max_frame_size_has_been_specified_it_shall_be_set_in_the_open_f
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 1024));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_max_frame_size(test_open_handle, 1024));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_channel_max(test_open_handle, 65535));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_open(test_open_handle));
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_open_amqp_value, 0));
 	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
@@ -1745,7 +1755,7 @@ TEST_METHOD(when_setting_the_max_frame_size_on_the_open_frame_fails_then_connect
 	connection_destroy(connection);
 }
 
-/* Tests_SRS_CONNECTION_01_139: [If channel_max has been specified by a call to connection_set_channel_max, then that value shall be stamped in the open frame.] */
+/* Tests_SRS_CONNECTION_01_139: [The channel_max connection setting shall be set in the open frame by using open_set_channel_max.]  */
 TEST_METHOD(when_channel_max_has_been_specified_it_shall_be_set_in_the_open_frame)
 {
 	// arrange
@@ -1761,6 +1771,7 @@ TEST_METHOD(when_channel_max_has_been_specified_it_shall_be_set_in_the_open_fram
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_max_frame_size(test_open_handle, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_channel_max(test_open_handle, 1024));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_open(test_open_handle));
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_open_amqp_value, 0));
@@ -1793,6 +1804,7 @@ TEST_METHOD(when_setting_the_channel_max_on_the_open_frame_fails_then_connection
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_max_frame_size(test_open_handle, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_channel_max(test_open_handle, 1024))
 		.SetReturn(1);
 	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
@@ -1824,6 +1836,8 @@ TEST_METHOD(when_idle_timeout_has_been_specified_it_shall_be_set_in_the_open_fra
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_max_frame_size(test_open_handle, 4294967295));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_channel_max(test_open_handle, 65535));
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_idle_time_out(test_open_handle, 1000));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_open(test_open_handle));
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_open_amqp_value, 0));
@@ -1856,6 +1870,8 @@ TEST_METHOD(when_setting_the_idle_timeout_on_the_open_frame_fails_then_connectio
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_max_frame_size(test_open_handle, 4294967295));
+	STRICT_EXPECTED_CALL(definition_mocks, open_set_channel_max(test_open_handle, 65535));
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_idle_time_out(test_open_handle, 1000))
 		.SetReturn(1);
 	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));

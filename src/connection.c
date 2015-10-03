@@ -52,8 +52,6 @@ typedef struct CONNECTION_DATA_TAG
 	uint16_t channel_max;
 	milliseconds idle_timeout;
 
-	unsigned int max_frame_size_specified : 1;
-	unsigned int channel_max_specified : 1;
 	unsigned int is_io_open : 1;
 	unsigned int idle_timeout_specified : 1;
 } CONNECTION_INSTANCE;
@@ -112,20 +110,16 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 		}
 		else
 		{
-			/* Codes_SRS_CONNECTION_01_138: [If no max_frame_size value has been specified, no value shall be stamped in the open frame (no call to open_set_max_frame_size shall be made).] */
-			if ((connection_instance->max_frame_size_specified) &&
-				/* Codes_SRS_CONNECTION_01_137: [If max_frame_size has been specified by a call to connection_set_max_frame, then that value shall be stamped in the open frame.] */
-				(open_set_max_frame_size(connection_instance->open_performative, connection_instance->max_frame_size) != 0))
+			/* Codes_SRS_CONNECTION_01_137: [The max_frame_size connection setting shall be set in the open frame by using open_set_max_frame_size.] */
+			if (open_set_max_frame_size(connection_instance->open_performative, connection_instance->max_frame_size) != 0)
 			{
 				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 				io_close(connection_instance->io);
 				connection_instance->connection_state = CONNECTION_STATE_END;
 				result = __LINE__;
 			}
-			/* Codes_SRS_CONNECTION_01_140: [If no channel_max value has been specified, no value shall be stamped in the open frame (no call to open_set_channel_max shall be made).] */
-			else if ((connection_instance->channel_max_specified) &&
-				/* Codes_SRS_CONNECTION_01_139: [If channel_max has been specified by a call to connection_set_channel_max, then that value shall be stamped in the open frame.] */
-				(open_set_channel_max(connection_instance->open_performative, connection_instance->channel_max) != 0))
+			/* Codes_SRS_CONNECTION_01_139: [The channel_max connection setting shall be set in the open frame by using open_set_channel_max.] */
+			else if (open_set_channel_max(connection_instance->open_performative, connection_instance->channel_max) != 0)
 			{
 				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 				io_close(connection_instance->io);
@@ -558,8 +552,6 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 							result->is_io_open = 0;
 
 							/* Mark that settings have not yet been set by the user */
-							result->max_frame_size_specified = 0;
-							result->channel_max_specified = 0;
 							result->idle_timeout_specified = 0;
 						}
 					}
@@ -597,7 +589,6 @@ int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_fra
 			/* Codes_SRS_CONNECTION_01_148: [connection_set_max_frame_size shall set the max_frame_size associated with a connection.] */
 			/* Codes_SRS_CONNECTION_01_164: [If connection_set_max_frame_size fails, the previous max_frame_size setting shall be retained.] */
 			connection_instance->max_frame_size = max_frame_size;
-			connection_instance->max_frame_size_specified = 1;
 
 			/* Codes_SRS_CONNECTION_01_149: [On success connection_set_max_frame_size shall return 0.] */
 			result = 0;
@@ -654,7 +645,6 @@ int connection_set_channel_max(CONNECTION_HANDLE connection, uint16_t channel_ma
 			/* Codes_SRS_CONNECTION_01_153: [connection_set_channel_max shall set the channel_max associated with a connection.] */
 			/* Codes_SRS_CONNECTION_01_165: [If connection_set_channel_max fails, the previous channel_max setting shall be retained.] */
 			connection_instance->channel_max = channel_max;
-			connection_instance->channel_max_specified = 1;
 
 			/* Codes_SRS_CONNECTION_01_154: [On success connection_set_channel_max shall return 0.] */
 			result = 0;

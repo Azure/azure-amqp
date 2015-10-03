@@ -1994,7 +1994,8 @@ TEST_METHOD(when_2_bytes_are_received_from_the_io_it_is_passed_to_the_frame_code
 /* Tests_SRS_CONNECTION_01_213: [When passing the bytes to frame_codec fails, a CLOSE frame shall be sent and the state shall be set to DISCARDING.]  */
 /* Tests_SRS_CONNECTION_01_217: [The CLOSE frame shall be constructed by using close_create.] */
 /* Tests_SRS_CONNECTION_01_215: [Sending the AMQP CLOSE frame shall be done by calling amqp_frame_codec_begin_encode_frame with channel number 0, the actual performative payload and 0 as payload_size.] */
-TEST_METHOD(when_giving_the_bytes_to_frame_codec_fails_the_connection_is_closed)
+/* Tests_SRS_CONNECTION_01_218: [The error amqp:internal-error shall be set in the error.condition field of the CLOSE frame.] */
+TEST_METHOD(when_giving_the_bytes_to_frame_codec_fails_the_connection_is_closed_with_internal_error)
 {
 	// arrange
 	connection_mocks mocks;
@@ -2012,10 +2013,15 @@ TEST_METHOD(when_giving_the_bytes_to_frame_codec_fails_the_connection_is_closed)
 		.ValidateArgument(1)
 		.SetReturn(1);
 	STRICT_EXPECTED_CALL(definition_mocks, close_create());
+	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:internal-error"));
+	STRICT_EXPECTED_CALL(definition_mocks, error_set_description(test_error_handle, IGNORED_PTR_ARG));
+	STRICT_EXPECTED_CALL(definition_mocks, close_set_error(test_close_handle, test_error_handle));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_close(test_close_handle));
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_close_amqp_value, 0));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_close_amqp_value));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_error_amqp_value));
 	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_close_handle));
 
 	// act
 	unsigned char bytes[] = { 42, 43 };

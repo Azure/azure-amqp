@@ -52,9 +52,10 @@ typedef struct CONNECTION_DATA_TAG
 	uint16_t channel_max;
 	milliseconds idle_timeout;
 
-	int max_frame_size_specified : 1;
-	int channel_max_specified : 1;
-	int is_io_open : 1;
+	unsigned int max_frame_size_specified : 1;
+	unsigned int channel_max_specified : 1;
+	unsigned int is_io_open : 1;
+	unsigned int idle_timeout_specified : 1;
 } CONNECTION_INSTANCE;
 
 static int send_header(CONNECTION_INSTANCE* connection_instance)
@@ -125,6 +126,16 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 			else if ((connection_instance->channel_max_specified) &&
 				/* Codes_SRS_CONNECTION_01_139: [If channel_max has been specified by a call to connection_set_channel_max, then that value shall be stamped in the open frame.] */
 				(open_set_channel_max(connection_instance->open_performative, connection_instance->channel_max) != 0))
+			{
+				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
+				io_close(connection_instance->io);
+				connection_instance->connection_state = CONNECTION_STATE_END;
+				result = __LINE__;
+			}
+			/* Codes_SRS_CONNECTION_01_142: [If no idle_timeout value has been specified, no value shall be stamped in the open frame (no call to open_set_idle_time_out shall be made).] */
+			else if ((connection_instance->idle_timeout_specified) &&
+				/* Codes_SRS_CONNECTION_01_141: [If idle_timeout has been specified by a call to connection_set_idle_timeout, then that value shall be stamped in the open frame.] */
+				(open_set_idle_time_out(connection_instance->open_performative, connection_instance->idle_timeout) != 0))
 			{
 				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 				io_close(connection_instance->io);
@@ -549,6 +560,7 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 							/* Mark that settings have not yet been set by the user */
 							result->max_frame_size_specified = 0;
 							result->channel_max_specified = 0;
+							result->idle_timeout_specified = 0;
 						}
 					}
 				}
@@ -699,6 +711,7 @@ int connection_set_idle_timeout(CONNECTION_HANDLE connection, milliseconds idle_
 			/* Codes_SRS_CONNECTION_01_159: [connection_set_idle_timeout shall set the idle_timeout associated with a connection.] */
 			/* Codes_SRS_CONNECTION_01_166: [If connection_set_idle_timeout fails, the previous idle_timeout setting shall be retained.] */
 			connection_instance->idle_timeout = idle_timeout;
+			connection_instance->idle_timeout_specified = true;
 
 			/* Codes_SRS_CONNECTION_01_160: [On success connection_set_idle_timeout shall return 0.] */
 			result = 0;

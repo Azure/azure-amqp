@@ -110,7 +110,8 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 		else
 		{
 			/* Codes_SRS_CONNECTION_01_135: [If hostname has been specified by a call to connection_set_hostname, then that value shall be stamped in the open frame.] */
-			if (open_set_hostname(connection_instance->open_performative, connection_instance->host_name) != 0)
+			if ((connection_instance->host_name != NULL) &&
+				(open_set_hostname(connection_instance->open_performative, connection_instance->host_name) != 0))
 			{
 				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and setto the END state.] */
 				io_close(connection_instance->io);
@@ -430,9 +431,9 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 	CONNECTION_INSTANCE* result;
 
 	if ((io == NULL) ||
-		(hostname == NULL))
+		(container_id == NULL))
 	{
-		/* Codes_SRS_CONNECTION_01_071: [If io or hostname is NULL, connection_create shall return NULL.] */
+		/* Codes_SRS_CONNECTION_01_071: [If io or container_id is NULL, connection_create shall return NULL.] */
 		result = NULL;
 	}
 	else
@@ -465,20 +466,30 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 				}
 				else
 				{
-					result->host_name = (char*)amqpalloc_malloc(strlen(hostname) + 1);
-					if (result->host_name == NULL)
+					if (hostname != NULL)
 					{
-						/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
-						amqp_frame_codec_destroy(result->amqp_frame_codec);
-						frame_codec_destroy(result->frame_codec);
-						io_destroy(result->io);
-						amqpalloc_free(result);
-						result = NULL;
+						result->host_name = (char*)amqpalloc_malloc(strlen(hostname) + 1);
+						if (result->host_name == NULL)
+						{
+							/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
+							amqp_frame_codec_destroy(result->amqp_frame_codec);
+							frame_codec_destroy(result->frame_codec);
+							io_destroy(result->io);
+							amqpalloc_free(result);
+							result = NULL;
+						}
+						else
+						{
+							strcpy(result->host_name, hostname);
+						}
 					}
 					else
 					{
-						strcpy(result->host_name, hostname);
+						result->host_name = NULL;
+					}
 
+					if (result != NULL)
+					{
 						result->container_id = (char*)amqpalloc_malloc(strlen(container_id) + 1);
 						if (result->container_id == NULL)
 						{

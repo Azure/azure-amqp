@@ -292,6 +292,34 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_START, connection_state);
 }
 
+/* Tests_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
+/* Tests_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
+/* Tests_SRS_CONNECTION_01_107: [connection_create shall create an amqp_frame_codec instance by calling amqp_frame_codec_create.] */
+/* Tests_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
+TEST_METHOD(connection_create_with_valid_args_but_NULL_host_name_succeeds)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
+	SOCKETIO_CONFIG config = { "testhost", 5672 };
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
+	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+	// act
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, test_container_id);
+
+	// assert
+	ASSERT_IS_NOT_NULL(connection);
+	CONNECTION_STATE connection_state;
+	(void)connection_get_state(connection, &connection_state);
+	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_START, connection_state);
+}
+
 /* Tests_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
 TEST_METHOD(when_allocating_memory_fails_then_connection_create_fails)
 {
@@ -408,20 +436,7 @@ TEST_METHOD(when_allocating_memory_for_container_id_fails_connection_create_fail
 	ASSERT_IS_NULL(connection);
 }
 
-/* Tests_SRS_CONNECTION_01_071: [If io or hostname is NULL, connection_create shall return NULL.] */
-TEST_METHOD(connection_create_with_NULL_host_fails)
-{
-	// arrange
-	connection_mocks mocks;
-
-	// act
-	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, test_container_id);
-
-	// assert
-	ASSERT_IS_NULL(connection);
-}
-
-/* Tests_SRS_CONNECTION_01_071: [If io or hostname is NULL, connection_create shall return NULL.] */
+/* Tests_SRS_CONNECTION_01_071: [If io or container_id is NULL, connection_create shall return NULL.] */
 TEST_METHOD(connection_create_with_NULL_io_fails)
 {
 	// arrange
@@ -429,6 +444,19 @@ TEST_METHOD(connection_create_with_NULL_io_fails)
 
 	// act
 	CONNECTION_HANDLE connection = connection_create(NULL, "testhost", test_container_id);
+
+	// assert
+	ASSERT_IS_NULL(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_071: [If io or container_id is NULL, connection_create shall return NULL.] */
+TEST_METHOD(connection_create_with_NULL_container_id_fails)
+{
+	// arrange
+	connection_mocks mocks;
+
+	// act
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", NULL);
 
 	// assert
 	ASSERT_IS_NULL(connection);
@@ -1527,6 +1555,38 @@ TEST_METHOD(when_amqp_frame_codec_begin_encode_frame_fails_the_connection_is_clo
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_hostname(test_open_handle, "testhost"));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_open(test_open_handle));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_open_amqp_value, 0))
+		.SetReturn(1);
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_open_amqp_value));
+	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
+	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
+
+	// act
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* tESTS_SRS_CONNECTION_01_136: [If no hostname value has been specified, no value shall be stamped in the open frame (no call to open_set_hostname shall be made).] */
+TEST_METHOD(when_no_hostname_is_specified_no_hostname_is_stamped_on_the_open_frame)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	mocks.ResetAllCalls();
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
+	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_open(test_open_handle));
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_open_amqp_value, 0))
 		.SetReturn(1);

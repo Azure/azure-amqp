@@ -2014,14 +2014,14 @@ TEST_METHOD(when_giving_the_bytes_to_frame_codec_fails_the_connection_is_closed_
 		.SetReturn(1);
 	STRICT_EXPECTED_CALL(definition_mocks, close_create());
 	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:internal-error"));
-	STRICT_EXPECTED_CALL(definition_mocks, error_set_description(test_error_handle, IGNORED_PTR_ARG));
+	STRICT_EXPECTED_CALL(definition_mocks, error_set_description(test_error_handle, IGNORED_PTR_ARG))
+		.IgnoreArgument(2);
 	STRICT_EXPECTED_CALL(definition_mocks, close_set_error(test_close_handle, test_error_handle));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_close(test_close_handle));
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_close_amqp_value, 0));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_close_amqp_value));
-	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_error_amqp_value));
 	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
-	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_close_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_error_handle));
 
 	// act
 	unsigned char bytes[] = { 42, 43 };
@@ -2052,9 +2052,13 @@ TEST_METHOD(when_creating_a_close_frame_fails_then_connection_is_closed)
 	EXPECTED_CALL(mocks, frame_codec_receive_bytes(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1)
 		.SetReturn(1);
+	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:internal-error"));
+	STRICT_EXPECTED_CALL(definition_mocks, error_set_description(test_error_handle, IGNORED_PTR_ARG))
+		.IgnoreArgument(2);
 	STRICT_EXPECTED_CALL(definition_mocks, close_create())
 		.SetReturn((CLOSE_HANDLE)NULL);
 	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
+	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_error_handle));
 
 	// act
 	unsigned char bytes[] = { 42, 43 };
@@ -2085,11 +2089,16 @@ TEST_METHOD(when_creating_the_amqp_value_for_the_close_performative_fails_then_c
 	EXPECTED_CALL(mocks, frame_codec_receive_bytes(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1)
 		.SetReturn(1);
+	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:internal-error"));
+	STRICT_EXPECTED_CALL(definition_mocks, error_set_description(test_error_handle, IGNORED_PTR_ARG))
+		.IgnoreArgument(2);
 	STRICT_EXPECTED_CALL(definition_mocks, close_create());
+	STRICT_EXPECTED_CALL(definition_mocks, close_set_error(test_close_handle, test_error_handle));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_close(test_close_handle))
 		.SetReturn((AMQP_VALUE)NULL);
 	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
 	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
+	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_error_handle));
 
 	// act
 	unsigned char bytes[] = { 42, 43 };
@@ -2120,13 +2129,128 @@ TEST_METHOD(when_sending_the_close_frame_fails_then_connection_is_closed)
 	EXPECTED_CALL(mocks, frame_codec_receive_bytes(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1)
 		.SetReturn(1);
+	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:internal-error"));
+	STRICT_EXPECTED_CALL(definition_mocks, error_set_description(test_error_handle, IGNORED_PTR_ARG))
+		.IgnoreArgument(2);
 	STRICT_EXPECTED_CALL(definition_mocks, close_create());
+	STRICT_EXPECTED_CALL(definition_mocks, close_set_error(test_close_handle, test_error_handle));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_close(test_close_handle));
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_close_amqp_value, 0))
 		.SetReturn(1);
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_close_amqp_value));
 	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
 	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
+	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_error_handle));
+
+	// act
+	unsigned char bytes[] = { 42, 43 };
+	io_receive_callback(io_receive_callback_context, bytes, sizeof(bytes));
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
+TEST_METHOD(when_creating_the_error_object_fails_the_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, frame_codec_receive_bytes(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1)
+		.SetReturn(1);
+	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:internal-error"))
+		.SetReturn((ERROR_HANDLE)NULL);
+	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
+
+	// act
+	unsigned char bytes[] = { 42, 43 };
+	io_receive_callback(io_receive_callback_context, bytes, sizeof(bytes));
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
+TEST_METHOD(when_setting_the_error_description_on_the_error_handle_fails_the_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, frame_codec_receive_bytes(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1)
+		.SetReturn(1);
+	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:internal-error"));
+	STRICT_EXPECTED_CALL(definition_mocks, error_set_description(test_error_handle, IGNORED_PTR_ARG))
+		.IgnoreArgument(2)
+		.SetReturn(1);
+	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
+	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_error_handle));
+
+	// act
+	unsigned char bytes[] = { 42, 43 };
+	io_receive_callback(io_receive_callback_context, bytes, sizeof(bytes));
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
+/* Tests_SRS_CONNECTION_01_218: [The error amqp:internal-error shall be set in the error.condition field of the CLOSE frame.] */
+/* Tests_SRS_CONNECTION_01_219: [The error description shall be set to an implementation defined string.] */
+TEST_METHOD(when_setting_the_error_on_the_close_frame_fails_the_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, frame_codec_receive_bytes(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1)
+		.SetReturn(1);
+	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:internal-error"));
+	STRICT_EXPECTED_CALL(definition_mocks, error_set_description(test_error_handle, IGNORED_PTR_ARG))
+		.IgnoreArgument(2);
+	STRICT_EXPECTED_CALL(definition_mocks, close_create());
+	STRICT_EXPECTED_CALL(definition_mocks, close_set_error(test_close_handle, test_error_handle))
+		.SetReturn(1);
+	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
+	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_error_handle));
 
 	// act
 	unsigned char bytes[] = { 42, 43 };

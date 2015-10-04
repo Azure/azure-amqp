@@ -188,7 +188,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 	return result;
 }
 
-static int send_close_frame(CONNECTION_INSTANCE* connection_instance)
+static int send_close_frame(CONNECTION_INSTANCE* connection_instance, ERROR_HANDLE error_handle)
 {
 	int result;
 	CLOSE_HANDLE close_performative;
@@ -201,25 +201,32 @@ static int send_close_frame(CONNECTION_INSTANCE* connection_instance)
 	}
 	else
 	{
-		AMQP_VALUE close_performative_value = amqpvalue_create_close(close_performative);
-		if (close_performative_value == NULL)
+		if (close_set_error(close_performative, error_handle) != 0)
 		{
 			result = __LINE__;
 		}
 		else
 		{
-			/* Codes_SRS_CONNECTION_01_215: [Sending the AMQP CLOSE frame shall be done by calling amqp_frame_codec_begin_encode_frame with channel number 0, the actual performative payload and 0 as payload_size.] */
-			if (amqp_frame_codec_begin_encode_frame(connection_instance->amqp_frame_codec, 0, close_performative_value, 0) != 0)
+			AMQP_VALUE close_performative_value = amqpvalue_create_close(close_performative);
+			if (close_performative_value == NULL)
 			{
 				result = __LINE__;
 			}
 			else
 			{
-				LOG(consolelogger_log, LOG_LINE, "-> [CLOSE]");
-				result = 0;
-			}
+				/* Codes_SRS_CONNECTION_01_215: [Sending the AMQP CLOSE frame shall be done by calling amqp_frame_codec_begin_encode_frame with channel number 0, the actual performative payload and 0 as payload_size.] */
+				if (amqp_frame_codec_begin_encode_frame(connection_instance->amqp_frame_codec, 0, close_performative_value, 0) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					LOG(consolelogger_log, LOG_LINE, "-> [CLOSE]");
+					result = 0;
+				}
 
-			amqpvalue_destroy(close_performative_value);
+				amqpvalue_destroy(close_performative_value);
+			}
 		}
 
 		close_destroy(close_performative);
@@ -351,16 +358,31 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 		/* Codes_SRS_CONNECTION_01_212: [After the initial handshake has been done all bytes received from the io instance shall be passed to the frame_codec for decoding by calling frame_codec_receive_bytes.] */
 		if (frame_codec_receive_bytes(connection_instance->frame_codec, &b, 1) != 0)
 		{
-			if (send_close_frame(connection_instance) != 0)
+			/* Codes_SRS_CONNECTION_01_218: [The error amqp:internal-error shall be set in the error.condition field of the CLOSE frame.] */
+			ERROR_HANDLE error_handle = error_create("amqp:internal-error");
+			if (error_handle == NULL)
 			{
 				/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
-				io_close(connection_instance->io);
+				(void)io_close(connection_instance->io);
 				connection_instance->connection_state = CONNECTION_STATE_END;
 			}
 			else
 			{
-				/* Codes_SRS_CONNECTION_01_213: [When passing the bytes to frame_codec fails, a CLOSE frame shall be sent and the state shall be set to DISCARDING.] */
-				connection_instance->connection_state = CONNECTION_STATE_DISCARDING;
+				/* Codes_SRS_CONNECTION_01_219: [The error description shall be set to an implementation defined string.] */
+				if ((error_set_description(error_handle, "connection_byte_received::frame_codec_receive_bytes failed") != 0) ||
+					(send_close_frame(connection_instance, error_handle) != 0))
+				{
+					/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
+					(void)io_close(connection_instance->io);
+					connection_instance->connection_state = CONNECTION_STATE_END;
+				}
+				else
+				{
+					/* Codes_SRS_CONNECTION_01_213: [When passing the bytes to frame_codec fails, a CLOSE frame shall be sent and the state shall be set to DISCARDING.] */
+					connection_instance->connection_state = CONNECTION_STATE_DISCARDING;
+				}
+
+				error_destroy(error_handle);
 			}
 
 			result = __LINE__;

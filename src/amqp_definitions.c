@@ -3,6 +3,7 @@
 #include "amqpvalue.h"
 #include "amqp_definitions.h"
 #include <stdlib.h>
+#include <stdbool.h>
 
 /* error */
 
@@ -61,6 +62,24 @@
 		{
 			ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)error;
 			result = amqpvalue_clone(error_instance->composite_value);
+		}
+
+		return result;
+	}
+
+	bool is_error_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 29))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
 		}
 
 		return result;
@@ -253,6 +272,24 @@
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
 			result = amqpvalue_clone(open_instance->composite_value);
+		}
+
+		return result;
+	}
+
+	bool is_open_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 16))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
 		}
 
 		return result;
@@ -772,6 +809,24 @@
 		return result;
 	}
 
+	bool is_begin_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 17))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
+		}
+
+		return result;
+	}
+
 	int begin_get_remote_channel(BEGIN_HANDLE begin, uint16_t* remote_channel_value)
 	{
 		int result;
@@ -1188,6 +1243,24 @@
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			result = amqpvalue_clone(attach_instance->composite_value);
+		}
+
+		return result;
+	}
+
+	bool is_attach_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 18))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
 		}
 
 		return result;
@@ -1872,6 +1945,24 @@
 		return result;
 	}
 
+	bool is_flow_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 19))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
+		}
+
+		return result;
+	}
+
 	int flow_get_next_incoming_id(FLOW_HANDLE flow, transfer_number* next_incoming_id_value)
 	{
 		int result;
@@ -2403,6 +2494,24 @@
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
 			result = amqpvalue_clone(transfer_instance->composite_value);
+		}
+
+		return result;
+	}
+
+	bool is_transfer_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 20))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
 		}
 
 		return result;
@@ -2951,6 +3060,24 @@
 		return result;
 	}
 
+	bool is_disposition_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 21))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
+		}
+
+		return result;
+	}
+
 	int disposition_get_role(DISPOSITION_HANDLE disposition, role* role_value)
 	{
 		int result;
@@ -3272,6 +3399,24 @@
 		return result;
 	}
 
+	bool is_detach_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 22))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
+		}
+
+		return result;
+	}
+
 	int detach_get_handle(DETACH_HANDLE detach, handle* handle_value)
 	{
 		int result;
@@ -3451,6 +3596,24 @@
 		return result;
 	}
 
+	bool is_end_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 23))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
+		}
+
+		return result;
+	}
+
 	int end_get_error(END_HANDLE end, ERROR_HANDLE* error_value)
 	{
 		int result;
@@ -3539,6 +3702,24 @@
 		{
 			CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)close;
 			result = amqpvalue_clone(close_instance->composite_value);
+		}
+
+		return result;
+	}
+
+	bool is_close_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 24))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
 		}
 
 		return result;
@@ -3650,6 +3831,24 @@
 		return result;
 	}
 
+	bool is_sasl_mechanisms_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 64))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
+		}
+
+		return result;
+	}
+
 	int sasl_mechanisms_get_sasl_server_mechanisms(SASL_MECHANISMS_HANDLE sasl_mechanisms, const char** sasl_server_mechanisms_value)
 	{
 		int result;
@@ -3751,6 +3950,24 @@
 		{
 			SASL_INIT_INSTANCE* sasl_init_instance = (SASL_INIT_INSTANCE*)sasl_init;
 			result = amqpvalue_clone(sasl_init_instance->composite_value);
+		}
+
+		return result;
+	}
+
+	bool is_sasl_init_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 65))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
 		}
 
 		return result;
@@ -3948,6 +4165,24 @@
 		return result;
 	}
 
+	bool is_sasl_challenge_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 66))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
+		}
+
+		return result;
+	}
+
 	int sasl_challenge_get_challenge(SASL_CHALLENGE_HANDLE sasl_challenge, amqp_binary* challenge_value)
 	{
 		int result;
@@ -4054,6 +4289,24 @@
 		return result;
 	}
 
+	bool is_sasl_response_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 67))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
+		}
+
+		return result;
+	}
+
 	int sasl_response_get_response(SASL_RESPONSE_HANDLE sasl_response, amqp_binary* response_value)
 	{
 		int result;
@@ -4155,6 +4408,24 @@
 		{
 			SASL_OUTCOME_INSTANCE* sasl_outcome_instance = (SASL_OUTCOME_INSTANCE*)sasl_outcome;
 			result = amqpvalue_clone(sasl_outcome_instance->composite_value);
+		}
+
+		return result;
+	}
+
+	bool is_sasl_outcome_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 68))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
 		}
 
 		return result;
@@ -4291,6 +4562,24 @@
 		{
 			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
 			result = amqpvalue_clone(source_instance->composite_value);
+		}
+
+		return result;
+	}
+
+	bool is_source_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 40))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
 		}
 
 		return result;
@@ -4819,6 +5108,24 @@
 		return result;
 	}
 
+	bool is_target_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 41))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
+		}
+
+		return result;
+	}
+
 	int target_get_address(TARGET_HANDLE target, AMQP_VALUE* address_value)
 	{
 		int result;
@@ -5165,6 +5472,24 @@
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
 			result = amqpvalue_clone(properties_instance->composite_value);
+		}
+
+		return result;
+	}
+
+	bool is_properties_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 115))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
 		}
 
 		return result;

@@ -36,7 +36,7 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 
 	case SASL_FRAME_DECODE_FRAME:
 	{
-		AMQP_VALUE descriptor = amqpvalue_get_descriptor(decoded_value);
+		AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(decoded_value);
 
 		if ((descriptor == NULL) ||
 			(amqpvalue_get_ulong(descriptor, &performative_descriptor_ulong) != 0) ||
@@ -198,7 +198,7 @@ int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, cons
 		AMQP_VALUE descriptor;
 		uint64_t performative_ulong;
 
-		if (((descriptor = amqpvalue_get_descriptor(sasl_frame)) == NULL) ||
+		if (((descriptor = amqpvalue_get_inplace_descriptor(sasl_frame)) == NULL) ||
 			(amqpvalue_get_ulong(descriptor, &performative_ulong) != 0) ||
 			(performative_ulong < SASL_MECHANISMS) ||
 			(performative_ulong > SASL_OUTCOME))

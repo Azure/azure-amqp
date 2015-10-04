@@ -35,7 +35,7 @@ typedef struct LINK_INSTANCE_TAG
 static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size)
 {
 	LINK_INSTANCE* link = (LINK_INSTANCE*)context;
-	AMQP_VALUE descriptor = amqpvalue_get_descriptor(performative);
+	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
 	uint64_t performative_ulong;
 	amqpvalue_get_ulong(descriptor, &performative_ulong);
 	switch (performative_ulong)

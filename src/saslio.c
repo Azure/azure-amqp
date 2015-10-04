@@ -226,7 +226,7 @@ static int send_sasl_init(SASL_IO_INSTANCE* sasl_io)
 static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 {
 	SASL_IO_INSTANCE* sasl_io = (SASL_IO_INSTANCE*)context;
-	AMQP_VALUE descriptor = amqpvalue_get_descriptor(sasl_frame);
+	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(sasl_frame);
 	uint64_t sasl_frame_code_ulong;
 
 	amqpvalue_get_ulong(descriptor, &sasl_frame_code_ulong);

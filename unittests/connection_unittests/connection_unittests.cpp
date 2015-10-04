@@ -22,6 +22,7 @@
 #define TEST_DESCRIBED_AMQP_VALUE		(AMQP_VALUE)0x4247
 #define TEST_AMQP_OPEN_FRAME_HANDLE		(AMQP_OPEN_FRAME_HANDLE)0x4245
 #define TEST_LIST_HANDLE				(LIST_HANDLE)0x4246
+#define TEST_OPEN_PERFORMATIVE			(AMQP_VALUE)0x4301
 
 #define TEST_CONTEXT					(void*)(0x4242)
 
@@ -36,6 +37,10 @@ static const void** list_items = NULL;
 static size_t list_item_count = 0;
 unsigned char* frame_codec_bytes = NULL;
 size_t frame_codec_byte_count = 0;
+static AMQP_FRAME_RECEIVED_CALLBACK amqp_frame_received_callback;
+static AMQP_EMPTY_FRAME_RECEIVED_CALLBACK amqp_empty_frame_received_callback;
+static AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK amqp_payload_bytes_received_callback;
+static void* amqp_frame_received_callback_context;
 
 void stringify_bytes(const unsigned char* bytes, size_t byte_count, char* output_string)
 {
@@ -132,6 +137,10 @@ public:
 
 	/* amqp_frame_codec */
 	MOCK_STATIC_METHOD_5(, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec_create, FRAME_CODEC_HANDLE, frame_codec, AMQP_FRAME_RECEIVED_CALLBACK, frame_received_callback, AMQP_EMPTY_FRAME_RECEIVED_CALLBACK, empty_frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK, payload_bytes_received_callback, void*, frame_received_callback_context)
+		amqp_frame_received_callback = frame_received_callback;
+		amqp_empty_frame_received_callback = empty_frame_received_callback;
+		amqp_payload_bytes_received_callback = payload_bytes_received_callback;
+		amqp_frame_received_callback_context = frame_received_callback_context;
 	MOCK_METHOD_END(AMQP_FRAME_CODEC_HANDLE, TEST_AMQP_FRAME_CODEC_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, amqp_frame_codec_destroy, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec)
 	MOCK_VOID_METHOD_END();
@@ -144,7 +153,7 @@ public:
 	MOCK_STATIC_METHOD_2(, int, amqpvalue_get_ulong, AMQP_VALUE, value, uint64_t*, ulong_value)
 		*ulong_value = performative_ulong;
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_get_descriptor, AMQP_VALUE, value)
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_get_inplace_descriptor, AMQP_VALUE, value)
 	MOCK_METHOD_END(AMQP_VALUE, TEST_DESCRIPTOR_AMQP_VALUE);
 
     MOCK_STATIC_METHOD_1(, void, amqpvalue_destroy, AMQP_VALUE, value)
@@ -235,7 +244,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , int, amqp_frame_codec_encode_payload_bytes, AMQP_FRAME_CODEC_HANDLE, amqp_frame_codec, const unsigned char*, bytes, uint32_t, count);
 
 	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , int, amqpvalue_get_ulong, AMQP_VALUE, value, uint64_t*, ulong_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , AMQP_VALUE, amqpvalue_get_descriptor, AMQP_VALUE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , AMQP_VALUE, amqpvalue_get_inplace_descriptor, AMQP_VALUE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , int, amqpvalue_get_string, AMQP_VALUE, value, const char**, string_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , AMQP_VALUE, amqpvalue_get_list_item, AMQP_VALUE, value, size_t, index);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , AMQP_VALUE, amqpvalue_get_described_value, AMQP_VALUE, value);
@@ -2284,6 +2293,34 @@ TEST_METHOD(when_one_extra_byte_is_received_with_the_header_the_extra_byte_is_pa
 	ASSERT_ARE_EQUAL(char_ptr, expected_stringified_io, actual_stringified_io);
 	mocks.SetPerformAutomaticCallComparison(AUTOMATIC_CALL_COMPARISON_OFF);
 	definition_mocks.SetPerformAutomaticCallComparison(AUTOMATIC_CALL_COMPARISON_OFF);
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_143: [If any of the values in the received open frame are invalid then the connection shall be closed.] */
+TEST_METHOD(when_an_open_frame_with_max_frame_size_511_is_received_the_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
+	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+
+	// act
+	amqp_frame_received_callback(amqp_frame_received_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
 	connection_destroy(connection);

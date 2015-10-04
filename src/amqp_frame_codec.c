@@ -55,7 +55,7 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 
 	case AMQP_FRAME_DECODE_FRAME_PERFORMATIVE:
 	{
-		AMQP_VALUE descriptor = amqpvalue_get_descriptor(decoded_value);
+		AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(decoded_value);
 
 		/* Codes_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
 		if ((descriptor == NULL) ||
@@ -82,6 +82,7 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 				amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_FRAME_HEADER;
 			}
 		}
+
 		break;
 	}
 	}
@@ -301,7 +302,7 @@ int amqp_frame_codec_begin_encode_frame(AMQP_FRAME_CODEC_HANDLE amqp_frame_codec
 		AMQP_VALUE descriptor;
 		uint64_t performative_ulong;
 
-		if (((descriptor = amqpvalue_get_descriptor(performative)) == NULL) ||
+		if (((descriptor = amqpvalue_get_inplace_descriptor(performative)) == NULL) ||
 			(amqpvalue_get_ulong(descriptor, &performative_ulong) != 0) ||
 			/* Codes_SRS_AMQP_FRAME_CODEC_01_008: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
 			(performative_ulong < AMQP_OPEN) ||

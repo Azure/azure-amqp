@@ -10,6 +10,7 @@
 #include "amqpvalue.h"
 #include "amqp_definitions.h"
 #include <stdlib.h>
+#include <stdbool.h>
 
 <#	foreach (section section in amqp.Items.Where(item => item is section)) #>
 <#	{ #>
@@ -20,6 +21,7 @@
 <#			string type_name = type.name.ToLower().Replace('-', '_'); #>
 <#			if (type.@class == typeClass.composite) #>
 <#			{ #>
+<#				var descriptor = type.Items.Where(item => item is descriptor).First() as descriptor; #>
 /* <#=		type.name #> */
 
 	typedef struct <#= type_name.ToUpper() #>_INSTANCE_TAG
@@ -95,6 +97,24 @@
 		{
 			<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)<#= type_name #>;
 			result = amqpvalue_clone(<#= type_name #>_instance->composite_value);
+		}
+
+		return result;
+	}
+
+	bool is_<#= type_name #>_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == <#= Program.GetDescriptorCode(descriptor).ToString() #>))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
 		}
 
 		return result;

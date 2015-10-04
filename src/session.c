@@ -122,7 +122,7 @@ static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_incoming_handle(SESSION_INS
 static void session_frame_received(void* context, AMQP_VALUE performative, uint32_t payload_size)
 {
 	SESSION_INSTANCE* session = (SESSION_INSTANCE*)context;
-	AMQP_VALUE descriptor = amqpvalue_get_descriptor(performative);
+	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
 	uint64_t performative_ulong;
 
 	amqpvalue_get_ulong(descriptor, &performative_ulong);

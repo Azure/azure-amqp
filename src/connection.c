@@ -418,17 +418,11 @@ static void connection_empty_frame_received(void* context, uint16_t channel)
 static void connection_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t payload_size)
 {
 	CONNECTION_INSTANCE* connection = (CONNECTION_INSTANCE*)context;
-	AMQP_VALUE descriptor = amqpvalue_get_descriptor(performative);
+	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
 	uint64_t performative_ulong;
 
-	amqpvalue_get_ulong(descriptor, &performative_ulong);
-	switch (performative_ulong)
+	if (is_open_type_by_descriptor(descriptor))
 	{
-	default:
-		LOG(consolelogger_log, LOG_LINE, "Bad performative: %02x", performative);
-		break;
-
-	case AMQP_OPEN:
 		LOG(consolelogger_log, 0, "<- [OPEN] ");
 		//LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 
@@ -448,57 +442,67 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 
 			break;
 		}
-		break;
-
-	case AMQP_CLOSE:
-	{
-		const char* error = NULL;
-		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
-		AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 0);
-		AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
-		AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
-		amqpvalue_get_string(error_description_value, &error);
-
-		LOG(consolelogger_log, LOG_LINE, "<- [CLOSE:%s]", error);
-		break;
 	}
-
-	case AMQP_BEGIN:
+	else
 	{
-		ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_outgoing_channel(connection, 0);
-		if (session_endpoint == NULL)
+		amqpvalue_get_ulong(descriptor, &performative_ulong);
+
+		switch (performative_ulong)
 		{
-			/* error */
-		}
-		else
+		default:
+			LOG(consolelogger_log, LOG_LINE, "Bad performative: %02x", performative);
+			break;
+
+		case AMQP_CLOSE:
 		{
-			session_endpoint->incoming_channel = channel;
-			session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size);
+			const char* error = NULL;
+			AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+			AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 0);
+			AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
+			AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
+			amqpvalue_get_string(error_description_value, &error);
+
+			LOG(consolelogger_log, LOG_LINE, "<- [CLOSE:%s]", error);
+			break;
 		}
 
-		break;
-	}
+		case AMQP_BEGIN:
+		{
+			ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_outgoing_channel(connection, 0);
+			if (session_endpoint == NULL)
+			{
+				/* error */
+			}
+			else
+			{
+				session_endpoint->incoming_channel = channel;
+				session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size);
+			}
 
-	case AMQP_FLOW:
-	case AMQP_TRANSFER:
-	case AMQP_DISPOSITION:
-	case AMQP_END:
-	case AMQP_ATTACH:
-	case AMQP_DETACH:
-	{
-		ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_incoming_channel(connection, channel);
-		if (session_endpoint == NULL)
-		{
-			/* error */
-		}
-		else
-		{
-			session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size);
-			connection->frame_receive_channel = channel;
+			break;
 		}
 
-		break;
-	}
+		case AMQP_FLOW:
+		case AMQP_TRANSFER:
+		case AMQP_DISPOSITION:
+		case AMQP_END:
+		case AMQP_ATTACH:
+		case AMQP_DETACH:
+		{
+			ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_incoming_channel(connection, channel);
+			if (session_endpoint == NULL)
+			{
+				/* error */
+			}
+			else
+			{
+				session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size);
+				connection->frame_receive_channel = channel;
+			}
+
+			break;
+		}
+		}
 	}
 }
 

@@ -92,7 +92,7 @@ extern "C" {
 	extern int amqpvalue_decode_bytes(AMQPVALUE_DECODER_HANDLE handle, const unsigned char* buffer, size_t size);
 
 	/* misc for now */
-	extern AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value);
+	extern AMQP_VALUE amqpvalue_get_inplace_descriptor(AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_get_described_value(AMQP_VALUE value);
 
 	extern AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size);

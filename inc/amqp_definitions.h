@@ -118,6 +118,7 @@ extern "C" {
 
 	extern ERROR_HANDLE error_create(const char* condition_value);
 	extern void error_destroy(ERROR_HANDLE error);
+	extern bool is_error_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_error(ERROR_HANDLE error);
 
 	extern int error_get_condition(ERROR_HANDLE error, const char** condition_value);
@@ -186,6 +187,7 @@ extern "C" {
 
 	extern OPEN_HANDLE open_create(const char* container_id_value);
 	extern void open_destroy(OPEN_HANDLE open);
+	extern bool is_open_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_open(OPEN_HANDLE open);
 
 	extern int open_get_container_id(OPEN_HANDLE open, const char** container_id_value);
@@ -215,6 +217,7 @@ extern "C" {
 
 	extern BEGIN_HANDLE begin_create(uint16_t remote_channel_value, transfer_number next_outgoing_id_value, uint32_t incoming_window_value, uint32_t outgoing_window_value);
 	extern void begin_destroy(BEGIN_HANDLE begin);
+	extern bool is_begin_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_begin(BEGIN_HANDLE begin);
 
 	extern int begin_get_remote_channel(BEGIN_HANDLE begin, uint16_t* remote_channel_value);
@@ -240,6 +243,7 @@ extern "C" {
 
 	extern ATTACH_HANDLE attach_create(const char* name_value, handle handle_value, role role_value);
 	extern void attach_destroy(ATTACH_HANDLE attach);
+	extern bool is_attach_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_attach(ATTACH_HANDLE attach);
 
 	extern int attach_get_name(ATTACH_HANDLE attach, const char** name_value);
@@ -277,6 +281,7 @@ extern "C" {
 
 	extern FLOW_HANDLE flow_create(uint32_t incoming_window_value, transfer_number next_outgoing_id_value, uint32_t outgoing_window_value);
 	extern void flow_destroy(FLOW_HANDLE flow);
+	extern bool is_flow_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_flow(FLOW_HANDLE flow);
 
 	extern int flow_get_next_incoming_id(FLOW_HANDLE flow, transfer_number* next_incoming_id_value);
@@ -308,6 +313,7 @@ extern "C" {
 
 	extern TRANSFER_HANDLE transfer_create(handle handle_value);
 	extern void transfer_destroy(TRANSFER_HANDLE transfer);
+	extern bool is_transfer_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_transfer(TRANSFER_HANDLE transfer);
 
 	extern int transfer_get_handle(TRANSFER_HANDLE transfer, handle* handle_value);
@@ -339,6 +345,7 @@ extern "C" {
 
 	extern DISPOSITION_HANDLE disposition_create(role role_value, delivery_number first_value);
 	extern void disposition_destroy(DISPOSITION_HANDLE disposition);
+	extern bool is_disposition_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_disposition(DISPOSITION_HANDLE disposition);
 
 	extern int disposition_get_role(DISPOSITION_HANDLE disposition, role* role_value);
@@ -360,6 +367,7 @@ extern "C" {
 
 	extern DETACH_HANDLE detach_create(handle handle_value);
 	extern void detach_destroy(DETACH_HANDLE detach);
+	extern bool is_detach_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_detach(DETACH_HANDLE detach);
 
 	extern int detach_get_handle(DETACH_HANDLE detach, handle* handle_value);
@@ -375,6 +383,7 @@ extern "C" {
 
 	extern END_HANDLE end_create(void);
 	extern void end_destroy(END_HANDLE end);
+	extern bool is_end_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_end(END_HANDLE end);
 
 	extern int end_get_error(END_HANDLE end, ERROR_HANDLE* error_value);
@@ -386,6 +395,7 @@ extern "C" {
 
 	extern CLOSE_HANDLE close_create(void);
 	extern void close_destroy(CLOSE_HANDLE close);
+	extern bool is_close_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_close(CLOSE_HANDLE close);
 
 	extern int close_get_error(CLOSE_HANDLE close, ERROR_HANDLE* error_value);
@@ -409,6 +419,7 @@ extern "C" {
 
 	extern SASL_MECHANISMS_HANDLE sasl_mechanisms_create(const char* sasl_server_mechanisms_value);
 	extern void sasl_mechanisms_destroy(SASL_MECHANISMS_HANDLE sasl_mechanisms);
+	extern bool is_sasl_mechanisms_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_sasl_mechanisms(SASL_MECHANISMS_HANDLE sasl_mechanisms);
 
 	extern int sasl_mechanisms_get_sasl_server_mechanisms(SASL_MECHANISMS_HANDLE sasl_mechanisms, const char** sasl_server_mechanisms_value);
@@ -420,6 +431,7 @@ extern "C" {
 
 	extern SASL_INIT_HANDLE sasl_init_create(const char* mechanism_value);
 	extern void sasl_init_destroy(SASL_INIT_HANDLE sasl_init);
+	extern bool is_sasl_init_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_sasl_init(SASL_INIT_HANDLE sasl_init);
 
 	extern int sasl_init_get_mechanism(SASL_INIT_HANDLE sasl_init, const char** mechanism_value);
@@ -435,6 +447,7 @@ extern "C" {
 
 	extern SASL_CHALLENGE_HANDLE sasl_challenge_create(amqp_binary challenge_value);
 	extern void sasl_challenge_destroy(SASL_CHALLENGE_HANDLE sasl_challenge);
+	extern bool is_sasl_challenge_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_sasl_challenge(SASL_CHALLENGE_HANDLE sasl_challenge);
 
 	extern int sasl_challenge_get_challenge(SASL_CHALLENGE_HANDLE sasl_challenge, amqp_binary* challenge_value);
@@ -446,6 +459,7 @@ extern "C" {
 
 	extern SASL_RESPONSE_HANDLE sasl_response_create(amqp_binary response_value);
 	extern void sasl_response_destroy(SASL_RESPONSE_HANDLE sasl_response);
+	extern bool is_sasl_response_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_sasl_response(SASL_RESPONSE_HANDLE sasl_response);
 
 	extern int sasl_response_get_response(SASL_RESPONSE_HANDLE sasl_response, amqp_binary* response_value);
@@ -457,6 +471,7 @@ extern "C" {
 
 	extern SASL_OUTCOME_HANDLE sasl_outcome_create(sasl_code code_value);
 	extern void sasl_outcome_destroy(SASL_OUTCOME_HANDLE sasl_outcome);
+	extern bool is_sasl_outcome_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_sasl_outcome(SASL_OUTCOME_HANDLE sasl_outcome);
 
 	extern int sasl_outcome_get_code(SASL_OUTCOME_HANDLE sasl_outcome, sasl_code* code_value);
@@ -505,6 +520,7 @@ extern "C" {
 
 	extern SOURCE_HANDLE source_create(void);
 	extern void source_destroy(SOURCE_HANDLE source);
+	extern bool is_source_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_source(SOURCE_HANDLE source);
 
 	extern int source_get_address(SOURCE_HANDLE source, AMQP_VALUE* address_value);
@@ -536,6 +552,7 @@ extern "C" {
 
 	extern TARGET_HANDLE target_create(void);
 	extern void target_destroy(TARGET_HANDLE target);
+	extern bool is_target_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_target(TARGET_HANDLE target);
 
 	extern int target_get_address(TARGET_HANDLE target, AMQP_VALUE* address_value);
@@ -559,6 +576,7 @@ extern "C" {
 
 	extern PROPERTIES_HANDLE properties_create(void);
 	extern void properties_destroy(PROPERTIES_HANDLE properties);
+	extern bool is_properties_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_properties(PROPERTIES_HANDLE properties);
 
 	extern int properties_get_message_id(PROPERTIES_HANDLE properties, AMQP_VALUE* message_id_value);

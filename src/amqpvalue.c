@@ -5017,7 +5017,7 @@ int amqpvalue_decode_bytes(AMQPVALUE_DECODER_HANDLE handle, const unsigned char*
 	return result;
 }
 
-AMQP_VALUE amqpvalue_get_descriptor(AMQP_VALUE value)
+AMQP_VALUE amqpvalue_get_inplace_descriptor(AMQP_VALUE value)
 {
 	AMQP_VALUE result;
 

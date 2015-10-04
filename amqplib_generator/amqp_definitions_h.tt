@@ -37,6 +37,7 @@ extern "C" {
 <#				string arg_list = Program.GetMandatoryArgList(type); #>
 	extern <#= type_name.ToUpper() #>_HANDLE <#= type_name #>_create(<#= arg_list #>);
 	extern void <#= type_name #>_destroy(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>);
+	extern bool is_<#= type_name #>_type_by_descriptor(AMQP_VALUE descriptor);
 	extern AMQP_VALUE amqpvalue_create_<#= type_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>);
 
 <#				foreach (field field in type.Items.Where(item => item is field)) #>

@@ -2263,4 +2263,30 @@ TEST_METHOD(when_setting_the_error_on_the_close_frame_fails_the_connection_is_cl
 	connection_destroy(connection);
 }
 
+/* Tests_SRS_CONNECTION_01_212: [After the initial handshake has been done all bytes received from the io instance shall be passed to the frame_codec for decoding by calling frame_codec_receive_bytes.] */
+TEST_METHOD(when_one_extra_byte_is_received_with_the_header_the_extra_byte_is_passed_to_the_frame_codec)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char in_bytes[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0, 42 };
+
+	// act
+	io_receive_callback(io_receive_callback_context, in_bytes, sizeof(in_bytes));
+
+	// assert
+	stringify_bytes(&in_bytes[sizeof(in_bytes) - 1], 1, expected_stringified_io);
+	stringify_bytes(frame_codec_bytes, frame_codec_byte_count, actual_stringified_io);
+	ASSERT_ARE_EQUAL(char_ptr, expected_stringified_io, actual_stringified_io);
+	mocks.SetPerformAutomaticCallComparison(AUTOMATIC_CALL_COMPARISON_OFF);
+	definition_mocks.SetPerformAutomaticCallComparison(AUTOMATIC_CALL_COMPARISON_OFF);
+
+	// cleanup
+	connection_destroy(connection);
+}
+
 END_TEST_SUITE(connection_unittests)

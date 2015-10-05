@@ -2316,6 +2316,8 @@ TEST_METHOD(when_an_open_frame_with_max_frame_size_511_is_received_the_connectio
 
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_get_open(TEST_OPEN_PERFORMATIVE, IGNORED_PTR_ARG))
+		.IgnoreArgument(2).SetReturn(1);
 
 	/* we expect to close because of bad OPEN */
 	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:invalid-field"));

@@ -235,6 +235,35 @@ static int send_close_frame(CONNECTION_INSTANCE* connection_instance, ERROR_HAND
 	return result;
 }
 
+static void close_connection_with_error(CONNECTION_INSTANCE* connection_instance, const char* condition_value, const char* description)
+{
+	ERROR_HANDLE error_handle = error_create(condition_value);
+	if (error_handle == NULL)
+	{
+		/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
+		(void)io_close(connection_instance->io);
+		connection_instance->connection_state = CONNECTION_STATE_END;
+	}
+	else
+	{
+		/* Codes_SRS_CONNECTION_01_219: [The error description shall be set to an implementation defined string.] */
+		if ((error_set_description(error_handle, description) != 0) ||
+			(send_close_frame(connection_instance, error_handle) != 0))
+		{
+			/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
+			(void)io_close(connection_instance->io);
+			connection_instance->connection_state = CONNECTION_STATE_END;
+		}
+		else
+		{
+			/* Codes_SRS_CONNECTION_01_213: [When passing the bytes to frame_codec fails, a CLOSE frame shall be sent and the state shall be set to DISCARDING.] */
+			connection_instance->connection_state = CONNECTION_STATE_DISCARDING;
+		}
+
+		error_destroy(error_handle);
+	}
+}
+
 static ENDPOINT_INSTANCE* find_session_endpoint_by_outgoing_channel(CONNECTION_INSTANCE* connection, uint16_t outgoing_channel)
 {
 	uint32_t i;
@@ -359,32 +388,8 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 		if (frame_codec_receive_bytes(connection_instance->frame_codec, &b, 1) != 0)
 		{
 			/* Codes_SRS_CONNECTION_01_218: [The error amqp:internal-error shall be set in the error.condition field of the CLOSE frame.] */
-			ERROR_HANDLE error_handle = error_create("amqp:internal-error");
-			if (error_handle == NULL)
-			{
-				/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
-				(void)io_close(connection_instance->io);
-				connection_instance->connection_state = CONNECTION_STATE_END;
-			}
-			else
-			{
-				/* Codes_SRS_CONNECTION_01_219: [The error description shall be set to an implementation defined string.] */
-				if ((error_set_description(error_handle, "connection_byte_received::frame_codec_receive_bytes failed") != 0) ||
-					(send_close_frame(connection_instance, error_handle) != 0))
-				{
-					/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
-					(void)io_close(connection_instance->io);
-					connection_instance->connection_state = CONNECTION_STATE_END;
-				}
-				else
-				{
-					/* Codes_SRS_CONNECTION_01_213: [When passing the bytes to frame_codec fails, a CLOSE frame shall be sent and the state shall be set to DISCARDING.] */
-					connection_instance->connection_state = CONNECTION_STATE_DISCARDING;
-				}
-
-				error_destroy(error_handle);
-			}
-
+			/* Codes_SRS_CONNECTION_01_219: [The error description shall be set to an implementation defined string.] */
+			close_connection_with_error(connection_instance, "amqp:internal-error", "connection_byte_received::frame_codec_receive_bytes failed");
 			result = __LINE__;
 		}
 		else
@@ -417,25 +422,33 @@ static void connection_empty_frame_received(void* context, uint16_t channel)
 
 static void connection_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t payload_size)
 {
-	CONNECTION_INSTANCE* connection = (CONNECTION_INSTANCE*)context;
+	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)context;
 	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
 	uint64_t performative_ulong;
 
 	if (is_open_type_by_descriptor(descriptor))
 	{
+		OPEN_HANDLE open_handle;
+		if (amqpvalue_get_open(performative, &open_handle) != 0)
+		{
+			/* Codes_SRS_CONNECTION_01_143: [If any of the values in the received open frame are invalid then the connection shall be closed.] */
+			/* Codes_SRS_CONNECTION_01_220: [The error amqp:invalid-field shall be set in the error.condition field of the CLOSE frame.] */
+			close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_frame_received::failed parsing OPEN frame");
+		}
+
 		LOG(consolelogger_log, 0, "<- [OPEN] ");
 		//LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 
-		if ((connection->connection_state == CONNECTION_STATE_OPEN_SENT) ||
-			(connection->connection_state == CONNECTION_STATE_HDR_EXCH))
+		if ((connection_instance->connection_state == CONNECTION_STATE_OPEN_SENT) ||
+			(connection_instance->connection_state == CONNECTION_STATE_HDR_EXCH))
 		{
-			if (connection->connection_state == CONNECTION_STATE_OPEN_SENT)
+			if (connection_instance->connection_state == CONNECTION_STATE_OPEN_SENT)
 			{
-				connection->connection_state = CONNECTION_STATE_OPENED;
+				connection_instance->connection_state = CONNECTION_STATE_OPENED;
 			}
 			else
 			{
-				connection->connection_state = CONNECTION_STATE_OPEN_RCVD;
+				connection_instance->connection_state = CONNECTION_STATE_OPEN_RCVD;
 			}
 		}
 		else
@@ -468,7 +481,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 
 		case AMQP_BEGIN:
 		{
-			ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_outgoing_channel(connection, 0);
+			ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_outgoing_channel(connection_instance, 0);
 			if (session_endpoint == NULL)
 			{
 				/* error */
@@ -489,7 +502,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 		case AMQP_ATTACH:
 		case AMQP_DETACH:
 		{
-			ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_incoming_channel(connection, channel);
+			ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_incoming_channel(connection_instance, channel);
 			if (session_endpoint == NULL)
 			{
 				/* error */
@@ -497,7 +510,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 			else
 			{
 				session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size);
-				connection->frame_receive_channel = channel;
+				connection_instance->frame_receive_channel = channel;
 			}
 
 			break;

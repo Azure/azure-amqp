@@ -13,6 +13,7 @@
 /* Requirements implictly tested */
 /* Tests_SRS_CONNECTION_01_088: [Any data appearing beyond the protocol header MUST match the version indicated by the protocol header.] */
 /* Tests_SRS_CONNECTION_01_039: [START In this state a connection exists, but nothing has been sent or received. This is the state an implementation would be in immediately after performing a socket connect or socket accept.] */
+/* Tests_SRS_CONNECTION_01_015: [Implementations SHOULD NOT expect to be able to reuse open TCP sockets after close performatives have been exchanged.] */
 
 #define TEST_IO_HANDLE					(IO_HANDLE)0x4242
 #define TEST_FRAME_CODEC_HANDLE			(FRAME_CODEC_HANDLE)0x4243
@@ -1516,6 +1517,7 @@ TEST_METHOD(when_protocol_header_first_byte_matches_but_only_1st_byte_received_n
 /* Tests_SRS_CONNECTION_01_137: [The max_frame_size connection setting shall be set in the open frame by using open_set_max_frame_size.] */
 /* Tests_SRS_CONNECTION_01_139: [The channel_max connection setting shall be set in the open frame by using open_set_channel_max.] */
 /* Tests_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+/* Tests_SRS_CONNECTION_01_002: [Each AMQP connection begins with an exchange of capabilities and limitations, including the maximum frame size.] */
 /* Tests_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
 /* Tests_SRS_CONNECTION_01_006: [The open frame can only be sent on channel 0.] */
 TEST_METHOD(when_the_header_is_received_an_open_frame_is_sent_out)
@@ -2007,6 +2009,7 @@ TEST_METHOD(when_2_bytes_are_received_from_the_io_it_is_passed_to_the_frame_code
 /* Tests_SRS_CONNECTION_01_217: [The CLOSE frame shall be constructed by using close_create.] */
 /* Tests_SRS_CONNECTION_01_215: [Sending the AMQP CLOSE frame shall be done by calling amqp_frame_codec_begin_encode_frame with channel number 0, the actual performative payload and 0 as payload_size.] */
 /* Tests_SRS_CONNECTION_01_218: [The error amqp:internal-error shall be set in the error.condition field of the CLOSE frame.] */
+/* Tests_SRS_CONNECTION_01_013: [However, implementations SHOULD send it on channel 0] */
 TEST_METHOD(when_giving_the_bytes_to_frame_codec_fails_the_connection_is_closed_with_internal_error)
 {
 	// arrange

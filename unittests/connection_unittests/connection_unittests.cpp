@@ -1515,6 +1515,9 @@ TEST_METHOD(when_protocol_header_first_byte_matches_but_only_1st_byte_received_n
 /* Tests_SRS_CONNECTION_01_151: [The connection max_frame_size setting shall be passed down to the frame_codec when the Open frame is sent.] */
 /* Tests_SRS_CONNECTION_01_137: [The max_frame_size connection setting shall be set in the open frame by using open_set_max_frame_size.] */
 /* Tests_SRS_CONNECTION_01_139: [The channel_max connection setting shall be set in the open frame by using open_set_channel_max.] */
+/* Tests_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+/* Tests_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
+/* Tests_SRS_CONNECTION_01_006: [The open frame can only be sent on channel 0.] */
 TEST_METHOD(when_the_header_is_received_an_open_frame_is_sent_out)
 {
 	// arrange
@@ -2427,6 +2430,47 @@ TEST_METHOD(when_an_open_frame_with_max_frame_size_511_is_received_the_connectio
 
 	// act
 	amqp_frame_received_callback(amqp_frame_received_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_006: [The open frame can only be sent on channel 0.] */
+/* Tests_SRS_CONNECTION_01_222: [If an Open frame is received in a manner violating the ISO specification, the connection shall be closed with condition amqp:not-allowed and description being an implementation defined string.] */
+TEST_METHOD(when_an_open_frame_is_received_on_channel_1_the_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
+	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+
+	/* we expect to close because of bad OPEN */
+	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:not-allowed"));
+	STRICT_EXPECTED_CALL(definition_mocks, error_set_description(test_error_handle, IGNORED_PTR_ARG))
+		.IgnoreArgument(2);
+	STRICT_EXPECTED_CALL(definition_mocks, close_create());
+	STRICT_EXPECTED_CALL(definition_mocks, close_set_error(test_close_handle, test_error_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_close(test_close_handle));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_close_amqp_value, 0));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_close_amqp_value));
+	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_error_handle));
+
+	// act
+	amqp_frame_received_callback(amqp_frame_received_callback_context, 1, TEST_OPEN_PERFORMATIVE, 0);
 
 	// assert
 	mocks.AssertActualAndExpectedCalls();

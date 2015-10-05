@@ -162,6 +162,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 					/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
 					/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
 					/* Codes_SRS_CONNECTION_01_205: [Sending the AMQP OPEN frame shall be done by calling amqp_frame_codec_begin_encode_frame with channel number 0, the actual performative payload and 0 as payload_size.] */
+					/* Codes_SRS_CONNECTION_01_006: [The open frame can only be sent on channel 0.] */
 					if (amqp_frame_codec_begin_encode_frame(connection_instance->amqp_frame_codec, 0, open_performative_value, 0) != 0)
 					{
 						/* Codes_SRS_CONNECTION_01_206: [If sending the frame fails, the connection shall be closed and state set to END.] */
@@ -431,6 +432,13 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 	{
 		LOG(consolelogger_log, 0, "<- [OPEN] ");
 		//LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
+
+		if (channel != 0)
+		{
+			/* Codes_SRS_CONNECTION_01_006: [The open frame can only be sent on channel 0.] */
+			/* Codes_SRS_CONNECTION_01_222: [If an Open frame is received in a manner violating the ISO specification, the connection shall be closed with condition amqp:not-allowed and description being an implementation defined string.] */
+			close_connection_with_error(connection_instance, "amqp:not-allowed", "OPEN frame received on a channel that is not 0");
+		}
 
 		if ((connection_instance->connection_state == CONNECTION_STATE_OPEN_SENT) ||
 			(connection_instance->connection_state == CONNECTION_STATE_HDR_EXCH))

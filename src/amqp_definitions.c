@@ -12,6 +12,22 @@
 		AMQP_VALUE composite_value;
 	} ERROR_INSTANCE;
 
+	static ERROR_HANDLE error_create_internal(void)
+	{
+		ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)malloc(sizeof(ERROR_INSTANCE));
+		if (error_instance != NULL)
+		{
+			error_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(29);
+			if (error_instance->composite_value == NULL)
+			{
+				free(error_instance);
+				error_instance = NULL;
+			}
+		}
+
+		return error_instance;
+	}
+
 	ERROR_HANDLE error_create(const char* condition_value)
 	{
 		ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)malloc(sizeof(ERROR_INSTANCE));
@@ -80,6 +96,83 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_error(AMQP_VALUE value, ERROR_HANDLE* ERROR_handle)
+	{
+		int result;
+		*ERROR_handle = error_create_internal();
+		if (*ERROR_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				error_destroy(*ERROR_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* condition */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						{
+							error_destroy(*ERROR_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							error_destroy(*ERROR_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* description */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						{
+							error_destroy(*ERROR_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* info */
+					item_value = amqpvalue_get_list_item(list_value, 2);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						fields field_name;
+						if (amqpvalue_get_fields(item_value, &field_name) != 0)
+						{
+							error_destroy(*ERROR_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
 		}
 
 		return result;
@@ -222,6 +315,22 @@
 		AMQP_VALUE composite_value;
 	} OPEN_INSTANCE;
 
+	static OPEN_HANDLE open_create_internal(void)
+	{
+		OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)malloc(sizeof(OPEN_INSTANCE));
+		if (open_instance != NULL)
+		{
+			open_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(16);
+			if (open_instance->composite_value == NULL)
+			{
+				free(open_instance);
+				open_instance = NULL;
+			}
+		}
+
+		return open_instance;
+	}
+
 	OPEN_HANDLE open_create(const char* container_id_value)
 	{
 		OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)malloc(sizeof(OPEN_INSTANCE));
@@ -290,6 +399,195 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_open(AMQP_VALUE value, OPEN_HANDLE* OPEN_handle)
+	{
+		int result;
+		*OPEN_handle = open_create_internal();
+		if (*OPEN_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				open_destroy(*OPEN_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* container-id */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						{
+							open_destroy(*OPEN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						{
+							open_destroy(*OPEN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* hostname */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						{
+							open_destroy(*OPEN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* max-frame-size */
+					item_value = amqpvalue_get_list_item(list_value, 2);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						uint32_t field_name;
+						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						{
+							open_destroy(*OPEN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* channel-max */
+					item_value = amqpvalue_get_list_item(list_value, 3);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						uint16_t field_name;
+						if (amqpvalue_get_ushort(item_value, &field_name) != 0)
+						{
+							open_destroy(*OPEN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* idle-time-out */
+					item_value = amqpvalue_get_list_item(list_value, 4);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						milliseconds field_name;
+						if (amqpvalue_get_milliseconds(item_value, &field_name) != 0)
+						{
+							open_destroy(*OPEN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* outgoing-locales */
+					item_value = amqpvalue_get_list_item(list_value, 5);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						ietf_language_tag field_name;
+						if (amqpvalue_get_ietf_language_tag(item_value, &field_name) != 0)
+						{
+							open_destroy(*OPEN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* incoming-locales */
+					item_value = amqpvalue_get_list_item(list_value, 6);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						ietf_language_tag field_name;
+						if (amqpvalue_get_ietf_language_tag(item_value, &field_name) != 0)
+						{
+							open_destroy(*OPEN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* offered-capabilities */
+					item_value = amqpvalue_get_list_item(list_value, 7);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							open_destroy(*OPEN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* desired-capabilities */
+					item_value = amqpvalue_get_list_item(list_value, 8);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							open_destroy(*OPEN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* properties */
+					item_value = amqpvalue_get_list_item(list_value, 9);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						fields field_name;
+						if (amqpvalue_get_fields(item_value, &field_name) != 0)
+						{
+							open_destroy(*OPEN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
 		}
 
 		return result;
@@ -733,6 +1031,22 @@
 		AMQP_VALUE composite_value;
 	} BEGIN_INSTANCE;
 
+	static BEGIN_HANDLE begin_create_internal(void)
+	{
+		BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)malloc(sizeof(BEGIN_INSTANCE));
+		if (begin_instance != NULL)
+		{
+			begin_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(17);
+			if (begin_instance->composite_value == NULL)
+			{
+				free(begin_instance);
+				begin_instance = NULL;
+			}
+		}
+
+		return begin_instance;
+	}
+
 	BEGIN_HANDLE begin_create(uint16_t remote_channel_value, transfer_number next_outgoing_id_value, uint32_t incoming_window_value, uint32_t outgoing_window_value)
 	{
 		BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)malloc(sizeof(BEGIN_INSTANCE));
@@ -822,6 +1136,175 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_begin(AMQP_VALUE value, BEGIN_HANDLE* BEGIN_handle)
+	{
+		int result;
+		*BEGIN_handle = begin_create_internal();
+		if (*BEGIN_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				begin_destroy(*BEGIN_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* remote-channel */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						{
+							begin_destroy(*BEGIN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						uint16_t field_name;
+						if (amqpvalue_get_ushort(item_value, &field_name) != 0)
+						{
+							begin_destroy(*BEGIN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* next-outgoing-id */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						{
+							begin_destroy(*BEGIN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						transfer_number field_name;
+						if (amqpvalue_get_transfer_number(item_value, &field_name) != 0)
+						{
+							begin_destroy(*BEGIN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* incoming-window */
+					item_value = amqpvalue_get_list_item(list_value, 2);
+					if (item_value == NULL)
+					{
+						{
+							begin_destroy(*BEGIN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						uint32_t field_name;
+						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						{
+							begin_destroy(*BEGIN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* outgoing-window */
+					item_value = amqpvalue_get_list_item(list_value, 3);
+					if (item_value == NULL)
+					{
+						{
+							begin_destroy(*BEGIN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						uint32_t field_name;
+						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						{
+							begin_destroy(*BEGIN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* handle-max */
+					item_value = amqpvalue_get_list_item(list_value, 4);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						handle field_name;
+						if (amqpvalue_get_handle(item_value, &field_name) != 0)
+						{
+							begin_destroy(*BEGIN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* offered-capabilities */
+					item_value = amqpvalue_get_list_item(list_value, 5);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							begin_destroy(*BEGIN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* desired-capabilities */
+					item_value = amqpvalue_get_list_item(list_value, 6);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							begin_destroy(*BEGIN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* properties */
+					item_value = amqpvalue_get_list_item(list_value, 7);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						fields field_name;
+						if (amqpvalue_get_fields(item_value, &field_name) != 0)
+						{
+							begin_destroy(*BEGIN_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
 		}
 
 		return result;
@@ -1179,6 +1662,22 @@
 		AMQP_VALUE composite_value;
 	} ATTACH_INSTANCE;
 
+	static ATTACH_HANDLE attach_create_internal(void)
+	{
+		ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)malloc(sizeof(ATTACH_INSTANCE));
+		if (attach_instance != NULL)
+		{
+			attach_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(18);
+			if (attach_instance->composite_value == NULL)
+			{
+				free(attach_instance);
+				attach_instance = NULL;
+			}
+		}
+
+		return attach_instance;
+	}
+
 	ATTACH_HANDLE attach_create(const char* name_value, handle handle_value, role role_value)
 	{
 		ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)malloc(sizeof(ATTACH_INSTANCE));
@@ -1261,6 +1760,253 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_attach(AMQP_VALUE value, ATTACH_HANDLE* ATTACH_handle)
+	{
+		int result;
+		*ATTACH_handle = attach_create_internal();
+		if (*ATTACH_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				attach_destroy(*ATTACH_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* name */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* handle */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						handle field_name;
+						if (amqpvalue_get_handle(item_value, &field_name) != 0)
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* role */
+					item_value = amqpvalue_get_list_item(list_value, 2);
+					if (item_value == NULL)
+					{
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						role field_name;
+						if (amqpvalue_get_role(item_value, &field_name) != 0)
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* snd-settle-mode */
+					item_value = amqpvalue_get_list_item(list_value, 3);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						sender_settle_mode field_name;
+						if (amqpvalue_get_sender_settle_mode(item_value, &field_name) != 0)
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* rcv-settle-mode */
+					item_value = amqpvalue_get_list_item(list_value, 4);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						receiver_settle_mode field_name;
+						if (amqpvalue_get_receiver_settle_mode(item_value, &field_name) != 0)
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* source */
+					item_value = amqpvalue_get_list_item(list_value, 5);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+					}
+					/* target */
+					item_value = amqpvalue_get_list_item(list_value, 6);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+					}
+					/* unsettled */
+					item_value = amqpvalue_get_list_item(list_value, 7);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						AMQP_VALUE field_name;
+						if (amqpvalue_get_map(item_value, &field_name) != 0)
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* incomplete-unsettled */
+					item_value = amqpvalue_get_list_item(list_value, 8);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool field_name;
+						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* initial-delivery-count */
+					item_value = amqpvalue_get_list_item(list_value, 9);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						sequence_no field_name;
+						if (amqpvalue_get_sequence_no(item_value, &field_name) != 0)
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* max-message-size */
+					item_value = amqpvalue_get_list_item(list_value, 10);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						uint64_t field_name;
+						if (amqpvalue_get_ulong(item_value, &field_name) != 0)
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* offered-capabilities */
+					item_value = amqpvalue_get_list_item(list_value, 11);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* desired-capabilities */
+					item_value = amqpvalue_get_list_item(list_value, 12);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* properties */
+					item_value = amqpvalue_get_list_item(list_value, 13);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						fields field_name;
+						if (amqpvalue_get_fields(item_value, &field_name) != 0)
+						{
+							attach_destroy(*ATTACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
 		}
 
 		return result;
@@ -1876,6 +2622,22 @@
 		AMQP_VALUE composite_value;
 	} FLOW_INSTANCE;
 
+	static FLOW_HANDLE flow_create_internal(void)
+	{
+		FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)malloc(sizeof(FLOW_INSTANCE));
+		if (flow_instance != NULL)
+		{
+			flow_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(19);
+			if (flow_instance->composite_value == NULL)
+			{
+				free(flow_instance);
+				flow_instance = NULL;
+			}
+		}
+
+		return flow_instance;
+	}
+
 	FLOW_HANDLE flow_create(uint32_t incoming_window_value, transfer_number next_outgoing_id_value, uint32_t outgoing_window_value)
 	{
 		FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)malloc(sizeof(FLOW_INSTANCE));
@@ -1958,6 +2720,219 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_flow(AMQP_VALUE value, FLOW_HANDLE* FLOW_handle)
+	{
+		int result;
+		*FLOW_handle = flow_create_internal();
+		if (*FLOW_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				flow_destroy(*FLOW_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* next-incoming-id */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						transfer_number field_name;
+						if (amqpvalue_get_transfer_number(item_value, &field_name) != 0)
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* incoming-window */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						uint32_t field_name;
+						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* next-outgoing-id */
+					item_value = amqpvalue_get_list_item(list_value, 2);
+					if (item_value == NULL)
+					{
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						transfer_number field_name;
+						if (amqpvalue_get_transfer_number(item_value, &field_name) != 0)
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* outgoing-window */
+					item_value = amqpvalue_get_list_item(list_value, 3);
+					if (item_value == NULL)
+					{
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						uint32_t field_name;
+						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* handle */
+					item_value = amqpvalue_get_list_item(list_value, 4);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						handle field_name;
+						if (amqpvalue_get_handle(item_value, &field_name) != 0)
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* delivery-count */
+					item_value = amqpvalue_get_list_item(list_value, 5);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						sequence_no field_name;
+						if (amqpvalue_get_sequence_no(item_value, &field_name) != 0)
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* link-credit */
+					item_value = amqpvalue_get_list_item(list_value, 6);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						uint32_t field_name;
+						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* available */
+					item_value = amqpvalue_get_list_item(list_value, 7);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						uint32_t field_name;
+						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* drain */
+					item_value = amqpvalue_get_list_item(list_value, 8);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool field_name;
+						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* echo */
+					item_value = amqpvalue_get_list_item(list_value, 9);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool field_name;
+						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* properties */
+					item_value = amqpvalue_get_list_item(list_value, 10);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						fields field_name;
+						if (amqpvalue_get_fields(item_value, &field_name) != 0)
+						{
+							flow_destroy(*FLOW_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
 		}
 
 		return result;
@@ -2444,6 +3419,22 @@
 		AMQP_VALUE composite_value;
 	} TRANSFER_INSTANCE;
 
+	static TRANSFER_HANDLE transfer_create_internal(void)
+	{
+		TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)malloc(sizeof(TRANSFER_INSTANCE));
+		if (transfer_instance != NULL)
+		{
+			transfer_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(20);
+			if (transfer_instance->composite_value == NULL)
+			{
+				free(transfer_instance);
+				transfer_instance = NULL;
+			}
+		}
+
+		return transfer_instance;
+	}
+
 	TRANSFER_HANDLE transfer_create(handle handle_value)
 	{
 		TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)malloc(sizeof(TRANSFER_INSTANCE));
@@ -2512,6 +3503,204 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_transfer(AMQP_VALUE value, TRANSFER_HANDLE* TRANSFER_handle)
+	{
+		int result;
+		*TRANSFER_handle = transfer_create_internal();
+		if (*TRANSFER_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				transfer_destroy(*TRANSFER_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* handle */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						{
+							transfer_destroy(*TRANSFER_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						handle field_name;
+						if (amqpvalue_get_handle(item_value, &field_name) != 0)
+						{
+							transfer_destroy(*TRANSFER_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* delivery-id */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						delivery_number field_name;
+						if (amqpvalue_get_delivery_number(item_value, &field_name) != 0)
+						{
+							transfer_destroy(*TRANSFER_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* delivery-tag */
+					item_value = amqpvalue_get_list_item(list_value, 2);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						delivery_tag field_name;
+						if (amqpvalue_get_delivery_tag(item_value, &field_name) != 0)
+						{
+							transfer_destroy(*TRANSFER_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* message-format */
+					item_value = amqpvalue_get_list_item(list_value, 3);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						message_format field_name;
+						if (amqpvalue_get_message_format(item_value, &field_name) != 0)
+						{
+							transfer_destroy(*TRANSFER_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* settled */
+					item_value = amqpvalue_get_list_item(list_value, 4);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool field_name;
+						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						{
+							transfer_destroy(*TRANSFER_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* more */
+					item_value = amqpvalue_get_list_item(list_value, 5);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool field_name;
+						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						{
+							transfer_destroy(*TRANSFER_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* rcv-settle-mode */
+					item_value = amqpvalue_get_list_item(list_value, 6);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						receiver_settle_mode field_name;
+						if (amqpvalue_get_receiver_settle_mode(item_value, &field_name) != 0)
+						{
+							transfer_destroy(*TRANSFER_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* state */
+					item_value = amqpvalue_get_list_item(list_value, 7);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+					}
+					/* resume */
+					item_value = amqpvalue_get_list_item(list_value, 8);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool field_name;
+						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						{
+							transfer_destroy(*TRANSFER_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* aborted */
+					item_value = amqpvalue_get_list_item(list_value, 9);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool field_name;
+						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						{
+							transfer_destroy(*TRANSFER_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* batchable */
+					item_value = amqpvalue_get_list_item(list_value, 10);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool field_name;
+						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						{
+							transfer_destroy(*TRANSFER_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
 		}
 
 		return result;
@@ -2998,6 +4187,22 @@
 		AMQP_VALUE composite_value;
 	} DISPOSITION_INSTANCE;
 
+	static DISPOSITION_HANDLE disposition_create_internal(void)
+	{
+		DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)malloc(sizeof(DISPOSITION_INSTANCE));
+		if (disposition_instance != NULL)
+		{
+			disposition_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(21);
+			if (disposition_instance->composite_value == NULL)
+			{
+				free(disposition_instance);
+				disposition_instance = NULL;
+			}
+		}
+
+		return disposition_instance;
+	}
+
 	DISPOSITION_HANDLE disposition_create(role role_value, delivery_number first_value)
 	{
 		DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)malloc(sizeof(DISPOSITION_INSTANCE));
@@ -3073,6 +4278,128 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_disposition(AMQP_VALUE value, DISPOSITION_HANDLE* DISPOSITION_handle)
+	{
+		int result;
+		*DISPOSITION_handle = disposition_create_internal();
+		if (*DISPOSITION_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				disposition_destroy(*DISPOSITION_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* role */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						{
+							disposition_destroy(*DISPOSITION_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						role field_name;
+						if (amqpvalue_get_role(item_value, &field_name) != 0)
+						{
+							disposition_destroy(*DISPOSITION_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* first */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						{
+							disposition_destroy(*DISPOSITION_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						delivery_number field_name;
+						if (amqpvalue_get_delivery_number(item_value, &field_name) != 0)
+						{
+							disposition_destroy(*DISPOSITION_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* last */
+					item_value = amqpvalue_get_list_item(list_value, 2);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						delivery_number field_name;
+						if (amqpvalue_get_delivery_number(item_value, &field_name) != 0)
+						{
+							disposition_destroy(*DISPOSITION_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* settled */
+					item_value = amqpvalue_get_list_item(list_value, 3);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool field_name;
+						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						{
+							disposition_destroy(*DISPOSITION_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* state */
+					item_value = amqpvalue_get_list_item(list_value, 4);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+					}
+					/* batchable */
+					item_value = amqpvalue_get_list_item(list_value, 5);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool field_name;
+						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						{
+							disposition_destroy(*DISPOSITION_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
 		}
 
 		return result;
@@ -3344,6 +4671,22 @@
 		AMQP_VALUE composite_value;
 	} DETACH_INSTANCE;
 
+	static DETACH_HANDLE detach_create_internal(void)
+	{
+		DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)malloc(sizeof(DETACH_INSTANCE));
+		if (detach_instance != NULL)
+		{
+			detach_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(22);
+			if (detach_instance->composite_value == NULL)
+			{
+				free(detach_instance);
+				detach_instance = NULL;
+			}
+		}
+
+		return detach_instance;
+	}
+
 	DETACH_HANDLE detach_create(handle handle_value)
 	{
 		DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)malloc(sizeof(DETACH_INSTANCE));
@@ -3412,6 +4755,83 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_detach(AMQP_VALUE value, DETACH_HANDLE* DETACH_handle)
+	{
+		int result;
+		*DETACH_handle = detach_create_internal();
+		if (*DETACH_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				detach_destroy(*DETACH_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* handle */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						{
+							detach_destroy(*DETACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						handle field_name;
+						if (amqpvalue_get_handle(item_value, &field_name) != 0)
+						{
+							detach_destroy(*DETACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* closed */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool field_name;
+						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						{
+							detach_destroy(*DETACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* error */
+					item_value = amqpvalue_get_list_item(list_value, 2);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						ERROR_HANDLE field_name;
+						if (amqpvalue_get_error(item_value, &field_name) != 0)
+						{
+							detach_destroy(*DETACH_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
 		}
 
 		return result;
@@ -3554,6 +4974,22 @@
 		AMQP_VALUE composite_value;
 	} END_INSTANCE;
 
+	static END_HANDLE end_create_internal(void)
+	{
+		END_INSTANCE* end_instance = (END_INSTANCE*)malloc(sizeof(END_INSTANCE));
+		if (end_instance != NULL)
+		{
+			end_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(23);
+			if (end_instance->composite_value == NULL)
+			{
+				free(end_instance);
+				end_instance = NULL;
+			}
+		}
+
+		return end_instance;
+	}
+
 	END_HANDLE end_create(void)
 	{
 		END_INSTANCE* end_instance = (END_INSTANCE*)malloc(sizeof(END_INSTANCE));
@@ -3614,6 +5050,47 @@
 		return result;
 	}
 
+
+	int amqpvalue_get_end(AMQP_VALUE value, END_HANDLE* END_handle)
+	{
+		int result;
+		*END_handle = end_create_internal();
+		if (*END_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				end_destroy(*END_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* error */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						ERROR_HANDLE field_name;
+						if (amqpvalue_get_error(item_value, &field_name) != 0)
+						{
+							end_destroy(*END_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
+		}
+
+		return result;
+	}
+
 	int end_get_error(END_HANDLE end, ERROR_HANDLE* error_value)
 	{
 		int result;
@@ -3664,6 +5141,22 @@
 	{
 		AMQP_VALUE composite_value;
 	} CLOSE_INSTANCE;
+
+	static CLOSE_HANDLE close_create_internal(void)
+	{
+		CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)malloc(sizeof(CLOSE_INSTANCE));
+		if (close_instance != NULL)
+		{
+			close_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(24);
+			if (close_instance->composite_value == NULL)
+			{
+				free(close_instance);
+				close_instance = NULL;
+			}
+		}
+
+		return close_instance;
+	}
 
 	CLOSE_HANDLE close_create(void)
 	{
@@ -3725,6 +5218,47 @@
 		return result;
 	}
 
+
+	int amqpvalue_get_close(AMQP_VALUE value, CLOSE_HANDLE* CLOSE_handle)
+	{
+		int result;
+		*CLOSE_handle = close_create_internal();
+		if (*CLOSE_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				close_destroy(*CLOSE_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* error */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						ERROR_HANDLE field_name;
+						if (amqpvalue_get_error(item_value, &field_name) != 0)
+						{
+							close_destroy(*CLOSE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
+		}
+
+		return result;
+	}
+
 	int close_get_error(CLOSE_HANDLE close, ERROR_HANDLE* error_value)
 	{
 		int result;
@@ -3775,6 +5309,22 @@
 	{
 		AMQP_VALUE composite_value;
 	} SASL_MECHANISMS_INSTANCE;
+
+	static SASL_MECHANISMS_HANDLE sasl_mechanisms_create_internal(void)
+	{
+		SASL_MECHANISMS_INSTANCE* sasl_mechanisms_instance = (SASL_MECHANISMS_INSTANCE*)malloc(sizeof(SASL_MECHANISMS_INSTANCE));
+		if (sasl_mechanisms_instance != NULL)
+		{
+			sasl_mechanisms_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(64);
+			if (sasl_mechanisms_instance->composite_value == NULL)
+			{
+				free(sasl_mechanisms_instance);
+				sasl_mechanisms_instance = NULL;
+			}
+		}
+
+		return sasl_mechanisms_instance;
+	}
 
 	SASL_MECHANISMS_HANDLE sasl_mechanisms_create(const char* sasl_server_mechanisms_value)
 	{
@@ -3849,6 +5399,51 @@
 		return result;
 	}
 
+
+	int amqpvalue_get_sasl_mechanisms(AMQP_VALUE value, SASL_MECHANISMS_HANDLE* SASL_MECHANISMS_handle)
+	{
+		int result;
+		*SASL_MECHANISMS_handle = sasl_mechanisms_create_internal();
+		if (*SASL_MECHANISMS_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				sasl_mechanisms_destroy(*SASL_MECHANISMS_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* sasl-server-mechanisms */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						{
+							sasl_mechanisms_destroy(*SASL_MECHANISMS_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							sasl_mechanisms_destroy(*SASL_MECHANISMS_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
+		}
+
+		return result;
+	}
+
 	int sasl_mechanisms_get_sasl_server_mechanisms(SASL_MECHANISMS_HANDLE sasl_mechanisms, const char** sasl_server_mechanisms_value)
 	{
 		int result;
@@ -3899,6 +5494,22 @@
 	{
 		AMQP_VALUE composite_value;
 	} SASL_INIT_INSTANCE;
+
+	static SASL_INIT_HANDLE sasl_init_create_internal(void)
+	{
+		SASL_INIT_INSTANCE* sasl_init_instance = (SASL_INIT_INSTANCE*)malloc(sizeof(SASL_INIT_INSTANCE));
+		if (sasl_init_instance != NULL)
+		{
+			sasl_init_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(65);
+			if (sasl_init_instance->composite_value == NULL)
+			{
+				free(sasl_init_instance);
+				sasl_init_instance = NULL;
+			}
+		}
+
+		return sasl_init_instance;
+	}
 
 	SASL_INIT_HANDLE sasl_init_create(const char* mechanism_value)
 	{
@@ -3968,6 +5579,83 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_sasl_init(AMQP_VALUE value, SASL_INIT_HANDLE* SASL_INIT_handle)
+	{
+		int result;
+		*SASL_INIT_handle = sasl_init_create_internal();
+		if (*SASL_INIT_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				sasl_init_destroy(*SASL_INIT_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* mechanism */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						{
+							sasl_init_destroy(*SASL_INIT_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							sasl_init_destroy(*SASL_INIT_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* initial-response */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						amqp_binary field_name;
+						if (amqpvalue_get_binary(item_value, &field_name) != 0)
+						{
+							sasl_init_destroy(*SASL_INIT_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* hostname */
+					item_value = amqpvalue_get_list_item(list_value, 2);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						{
+							sasl_init_destroy(*SASL_INIT_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
 		}
 
 		return result;
@@ -4110,6 +5798,22 @@
 		AMQP_VALUE composite_value;
 	} SASL_CHALLENGE_INSTANCE;
 
+	static SASL_CHALLENGE_HANDLE sasl_challenge_create_internal(void)
+	{
+		SASL_CHALLENGE_INSTANCE* sasl_challenge_instance = (SASL_CHALLENGE_INSTANCE*)malloc(sizeof(SASL_CHALLENGE_INSTANCE));
+		if (sasl_challenge_instance != NULL)
+		{
+			sasl_challenge_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(66);
+			if (sasl_challenge_instance->composite_value == NULL)
+			{
+				free(sasl_challenge_instance);
+				sasl_challenge_instance = NULL;
+			}
+		}
+
+		return sasl_challenge_instance;
+	}
+
 	SASL_CHALLENGE_HANDLE sasl_challenge_create(amqp_binary challenge_value)
 	{
 		SASL_CHALLENGE_INSTANCE* sasl_challenge_instance = (SASL_CHALLENGE_INSTANCE*)malloc(sizeof(SASL_CHALLENGE_INSTANCE));
@@ -4183,6 +5887,51 @@
 		return result;
 	}
 
+
+	int amqpvalue_get_sasl_challenge(AMQP_VALUE value, SASL_CHALLENGE_HANDLE* SASL_CHALLENGE_handle)
+	{
+		int result;
+		*SASL_CHALLENGE_handle = sasl_challenge_create_internal();
+		if (*SASL_CHALLENGE_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				sasl_challenge_destroy(*SASL_CHALLENGE_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* challenge */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						{
+							sasl_challenge_destroy(*SASL_CHALLENGE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						amqp_binary field_name;
+						if (amqpvalue_get_binary(item_value, &field_name) != 0)
+						{
+							sasl_challenge_destroy(*SASL_CHALLENGE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
+		}
+
+		return result;
+	}
+
 	int sasl_challenge_get_challenge(SASL_CHALLENGE_HANDLE sasl_challenge, amqp_binary* challenge_value)
 	{
 		int result;
@@ -4233,6 +5982,22 @@
 	{
 		AMQP_VALUE composite_value;
 	} SASL_RESPONSE_INSTANCE;
+
+	static SASL_RESPONSE_HANDLE sasl_response_create_internal(void)
+	{
+		SASL_RESPONSE_INSTANCE* sasl_response_instance = (SASL_RESPONSE_INSTANCE*)malloc(sizeof(SASL_RESPONSE_INSTANCE));
+		if (sasl_response_instance != NULL)
+		{
+			sasl_response_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(67);
+			if (sasl_response_instance->composite_value == NULL)
+			{
+				free(sasl_response_instance);
+				sasl_response_instance = NULL;
+			}
+		}
+
+		return sasl_response_instance;
+	}
 
 	SASL_RESPONSE_HANDLE sasl_response_create(amqp_binary response_value)
 	{
@@ -4307,6 +6072,51 @@
 		return result;
 	}
 
+
+	int amqpvalue_get_sasl_response(AMQP_VALUE value, SASL_RESPONSE_HANDLE* SASL_RESPONSE_handle)
+	{
+		int result;
+		*SASL_RESPONSE_handle = sasl_response_create_internal();
+		if (*SASL_RESPONSE_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				sasl_response_destroy(*SASL_RESPONSE_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* response */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						{
+							sasl_response_destroy(*SASL_RESPONSE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						amqp_binary field_name;
+						if (amqpvalue_get_binary(item_value, &field_name) != 0)
+						{
+							sasl_response_destroy(*SASL_RESPONSE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
+		}
+
+		return result;
+	}
+
 	int sasl_response_get_response(SASL_RESPONSE_HANDLE sasl_response, amqp_binary* response_value)
 	{
 		int result;
@@ -4357,6 +6167,22 @@
 	{
 		AMQP_VALUE composite_value;
 	} SASL_OUTCOME_INSTANCE;
+
+	static SASL_OUTCOME_HANDLE sasl_outcome_create_internal(void)
+	{
+		SASL_OUTCOME_INSTANCE* sasl_outcome_instance = (SASL_OUTCOME_INSTANCE*)malloc(sizeof(SASL_OUTCOME_INSTANCE));
+		if (sasl_outcome_instance != NULL)
+		{
+			sasl_outcome_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(68);
+			if (sasl_outcome_instance->composite_value == NULL)
+			{
+				free(sasl_outcome_instance);
+				sasl_outcome_instance = NULL;
+			}
+		}
+
+		return sasl_outcome_instance;
+	}
 
 	SASL_OUTCOME_HANDLE sasl_outcome_create(sasl_code code_value)
 	{
@@ -4426,6 +6252,67 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_sasl_outcome(AMQP_VALUE value, SASL_OUTCOME_HANDLE* SASL_OUTCOME_handle)
+	{
+		int result;
+		*SASL_OUTCOME_handle = sasl_outcome_create_internal();
+		if (*SASL_OUTCOME_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				sasl_outcome_destroy(*SASL_OUTCOME_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* code */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						{
+							sasl_outcome_destroy(*SASL_OUTCOME_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					else
+					{
+						sasl_code field_name;
+						if (amqpvalue_get_sasl_code(item_value, &field_name) != 0)
+						{
+							sasl_outcome_destroy(*SASL_OUTCOME_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* additional-data */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						amqp_binary field_name;
+						if (amqpvalue_get_binary(item_value, &field_name) != 0)
+						{
+							sasl_outcome_destroy(*SASL_OUTCOME_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
 		}
 
 		return result;
@@ -4525,6 +6412,22 @@
 		AMQP_VALUE composite_value;
 	} SOURCE_INSTANCE;
 
+	static SOURCE_HANDLE source_create_internal(void)
+	{
+		SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)malloc(sizeof(SOURCE_INSTANCE));
+		if (source_instance != NULL)
+		{
+			source_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(40);
+			if (source_instance->composite_value == NULL)
+			{
+				free(source_instance);
+				source_instance = NULL;
+			}
+		}
+
+		return source_instance;
+	}
+
 	SOURCE_HANDLE source_create(void)
 	{
 		SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)malloc(sizeof(SOURCE_INSTANCE));
@@ -4580,6 +6483,193 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_source(AMQP_VALUE value, SOURCE_HANDLE* SOURCE_handle)
+	{
+		int result;
+		*SOURCE_handle = source_create_internal();
+		if (*SOURCE_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				source_destroy(*SOURCE_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* address */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+					}
+					/* durable */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						terminus_durability field_name;
+						if (amqpvalue_get_terminus_durability(item_value, &field_name) != 0)
+						{
+							source_destroy(*SOURCE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* expiry-policy */
+					item_value = amqpvalue_get_list_item(list_value, 2);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						terminus_expiry_policy field_name;
+						if (amqpvalue_get_terminus_expiry_policy(item_value, &field_name) != 0)
+						{
+							source_destroy(*SOURCE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* timeout */
+					item_value = amqpvalue_get_list_item(list_value, 3);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						seconds field_name;
+						if (amqpvalue_get_seconds(item_value, &field_name) != 0)
+						{
+							source_destroy(*SOURCE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* dynamic */
+					item_value = amqpvalue_get_list_item(list_value, 4);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool field_name;
+						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						{
+							source_destroy(*SOURCE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* dynamic-node-properties */
+					item_value = amqpvalue_get_list_item(list_value, 5);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						node_properties field_name;
+						if (amqpvalue_get_node_properties(item_value, &field_name) != 0)
+						{
+							source_destroy(*SOURCE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* distribution-mode */
+					item_value = amqpvalue_get_list_item(list_value, 6);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							source_destroy(*SOURCE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* filter */
+					item_value = amqpvalue_get_list_item(list_value, 7);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						filter_set field_name;
+						if (amqpvalue_get_filter_set(item_value, &field_name) != 0)
+						{
+							source_destroy(*SOURCE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* default-outcome */
+					item_value = amqpvalue_get_list_item(list_value, 8);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+					}
+					/* outcomes */
+					item_value = amqpvalue_get_list_item(list_value, 9);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							source_destroy(*SOURCE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* capabilities */
+					item_value = amqpvalue_get_list_item(list_value, 10);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							source_destroy(*SOURCE_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
 		}
 
 		return result;
@@ -5066,6 +7156,22 @@
 		AMQP_VALUE composite_value;
 	} TARGET_INSTANCE;
 
+	static TARGET_HANDLE target_create_internal(void)
+	{
+		TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)malloc(sizeof(TARGET_INSTANCE));
+		if (target_instance != NULL)
+		{
+			target_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(41);
+			if (target_instance->composite_value == NULL)
+			{
+				free(target_instance);
+				target_instance = NULL;
+			}
+		}
+
+		return target_instance;
+	}
+
 	TARGET_HANDLE target_create(void)
 	{
 		TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)malloc(sizeof(TARGET_INSTANCE));
@@ -5121,6 +7227,136 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_target(AMQP_VALUE value, TARGET_HANDLE* TARGET_handle)
+	{
+		int result;
+		*TARGET_handle = target_create_internal();
+		if (*TARGET_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				target_destroy(*TARGET_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* address */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+					}
+					/* durable */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						terminus_durability field_name;
+						if (amqpvalue_get_terminus_durability(item_value, &field_name) != 0)
+						{
+							target_destroy(*TARGET_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* expiry-policy */
+					item_value = amqpvalue_get_list_item(list_value, 2);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						terminus_expiry_policy field_name;
+						if (amqpvalue_get_terminus_expiry_policy(item_value, &field_name) != 0)
+						{
+							target_destroy(*TARGET_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* timeout */
+					item_value = amqpvalue_get_list_item(list_value, 3);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						seconds field_name;
+						if (amqpvalue_get_seconds(item_value, &field_name) != 0)
+						{
+							target_destroy(*TARGET_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* dynamic */
+					item_value = amqpvalue_get_list_item(list_value, 4);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool field_name;
+						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						{
+							target_destroy(*TARGET_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* dynamic-node-properties */
+					item_value = amqpvalue_get_list_item(list_value, 5);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						node_properties field_name;
+						if (amqpvalue_get_node_properties(item_value, &field_name) != 0)
+						{
+							target_destroy(*TARGET_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* capabilities */
+					item_value = amqpvalue_get_list_item(list_value, 6);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							target_destroy(*TARGET_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
 		}
 
 		return result;
@@ -5435,6 +7671,22 @@
 		AMQP_VALUE composite_value;
 	} PROPERTIES_INSTANCE;
 
+	static PROPERTIES_HANDLE properties_create_internal(void)
+	{
+		PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)malloc(sizeof(PROPERTIES_INSTANCE));
+		if (properties_instance != NULL)
+		{
+			properties_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(115);
+			if (properties_instance->composite_value == NULL)
+			{
+				free(properties_instance);
+				properties_instance = NULL;
+			}
+		}
+
+		return properties_instance;
+	}
+
 	PROPERTIES_HANDLE properties_create(void)
 	{
 		PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)malloc(sizeof(PROPERTIES_INSTANCE));
@@ -5490,6 +7742,211 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_properties(AMQP_VALUE value, PROPERTIES_HANDLE* PROPERTIES_handle)
+	{
+		int result;
+		*PROPERTIES_handle = properties_create_internal();
+		if (*PROPERTIES_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				properties_destroy(*PROPERTIES_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* message-id */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+					}
+					/* user-id */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						amqp_binary field_name;
+						if (amqpvalue_get_binary(item_value, &field_name) != 0)
+						{
+							properties_destroy(*PROPERTIES_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* to */
+					item_value = amqpvalue_get_list_item(list_value, 2);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+					}
+					/* subject */
+					item_value = amqpvalue_get_list_item(list_value, 3);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						{
+							properties_destroy(*PROPERTIES_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* reply-to */
+					item_value = amqpvalue_get_list_item(list_value, 4);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+					}
+					/* correlation-id */
+					item_value = amqpvalue_get_list_item(list_value, 5);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+					}
+					/* content-type */
+					item_value = amqpvalue_get_list_item(list_value, 6);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							properties_destroy(*PROPERTIES_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* content-encoding */
+					item_value = amqpvalue_get_list_item(list_value, 7);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						{
+							properties_destroy(*PROPERTIES_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* absolute-expiry-time */
+					item_value = amqpvalue_get_list_item(list_value, 8);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						timestamp field_name;
+						if (amqpvalue_get_timestamp(item_value, &field_name) != 0)
+						{
+							properties_destroy(*PROPERTIES_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* creation-time */
+					item_value = amqpvalue_get_list_item(list_value, 9);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						timestamp field_name;
+						if (amqpvalue_get_timestamp(item_value, &field_name) != 0)
+						{
+							properties_destroy(*PROPERTIES_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* group-id */
+					item_value = amqpvalue_get_list_item(list_value, 10);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						{
+							properties_destroy(*PROPERTIES_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* group-sequence */
+					item_value = amqpvalue_get_list_item(list_value, 11);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						sequence_no field_name;
+						if (amqpvalue_get_sequence_no(item_value, &field_name) != 0)
+						{
+							properties_destroy(*PROPERTIES_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+					/* reply-to-group-id */
+					item_value = amqpvalue_get_list_item(list_value, 12);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						const char* field_name;
+						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						{
+							properties_destroy(*PROPERTIES_handle);
+							result = __LINE__;
+							break;
+						}
+					}
+				} while (0);
+			}
 		}
 
 		return result;

@@ -426,21 +426,21 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 		LOG(consolelogger_log, 0, "<- [OPEN] ");
 		//LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 
-		switch (connection->connection_state)
+		if ((connection->connection_state == CONNECTION_STATE_OPEN_SENT) ||
+			(connection->connection_state == CONNECTION_STATE_HDR_EXCH))
 		{
-		default:
-			break;
+			if (connection->connection_state == CONNECTION_STATE_OPEN_SENT)
+			{
+				connection->connection_state = CONNECTION_STATE_OPENED;
+			}
+			else
+			{
+				connection->connection_state = CONNECTION_STATE_OPEN_RCVD;
+			}
+		}
+		else
+		{
 
-		case CONNECTION_STATE_OPEN_SENT:
-			connection->connection_state = CONNECTION_STATE_OPENED;
-			break;
-
-		case CONNECTION_STATE_HDR_EXCH:
-			connection->connection_state = CONNECTION_STATE_OPEN_RCVD;
-
-			/* respond with an open here */
-
-			break;
 		}
 	}
 	else

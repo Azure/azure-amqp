@@ -70,6 +70,7 @@ extern "C" {
 	extern AMQP_VALUE amqpvalue_get_map_value(AMQP_VALUE map, AMQP_VALUE key);
 	extern int amqpvalue_get_map_pair_count(AMQP_VALUE map, uint32_t* pair_count);
 	extern int amqpvalue_get_map_key_value_pair(AMQP_VALUE map, uint32_t index, AMQP_VALUE* key, AMQP_VALUE* value);
+	extern int amqpvalue_get_map(AMQP_VALUE value, AMQP_VALUE* map_value);
 	extern AMQP_TYPE amqpvalue_get_type(AMQP_VALUE value);
 
 	extern void amqpvalue_destroy(AMQP_VALUE value);

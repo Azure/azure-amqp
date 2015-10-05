@@ -31,6 +31,22 @@
 
 <#				string arg_list = Program.GetMandatoryArgList(type); #>
 <#				field[] mandatory_args = Program.GetMandatoryArgs(type).ToArray(); #>
+	static <#= type_name.ToUpper() #>_HANDLE <#= type_name #>_create_internal(void)
+	{
+		<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)malloc(sizeof(<#= type_name.ToUpper() #>_INSTANCE));
+		if (<#= type_name #>_instance != NULL)
+		{
+			<#= type_name #>_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(<#= Program.GetDescriptorCode(Program.GetDescriptor(type)) #>);
+			if (<#= type_name #>_instance->composite_value == NULL)
+			{
+				free(<#= type_name #>_instance);
+				<#= type_name #>_instance = NULL;
+			}
+		}
+
+		return <#= type_name #>_instance;
+	}
+
 	<#= type_name.ToUpper() #>_HANDLE <#= type_name #>_create(<#= arg_list #>)
 	{
 		<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)malloc(sizeof(<#= type_name.ToUpper() #>_INSTANCE));
@@ -115,6 +131,73 @@
 		else
 		{
 			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_<#= type_name #>(AMQP_VALUE value, <#= type_name.ToUpper() #>_HANDLE* <#= type_name.ToUpper() #>_handle)
+	{
+		int result;
+		*<#= type_name.ToUpper() #>_handle = <#= type_name #>_create_internal();
+		if (*<#= type_name.ToUpper() #>_handle != NULL)
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				<#= type_name #>_destroy(*<#= type_name.ToUpper() #>_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+<#				int k = 0; #>
+<#				foreach (field field in type.Items.Where(item => item is field)) #>
+<#				{ #>
+<#					string field_name = field.name.ToLower().Replace('-', '_'); #>
+<#					string c_type = Program.GetCType(field.type).Replace('-', '_').Replace(':', '_'); #>
+<#					type field_type = Program.GetTypeByName(types, field.type); #>
+<#					if ((field_type != null) && (field_type.@class == typeClass.composite)) c_type = field_type.name.ToUpper().Replace('-', '_').Replace(':', '_') + "_HANDLE"; #>
+					/* <#= field.name #> */
+					item_value = amqpvalue_get_list_item(list_value, <#= k #>);
+					if (item_value == NULL)
+					{
+<# 					if (field.mandatory == "true") #>
+<# 					{ #>
+						{
+							<#= type_name #>_destroy(*<#= type_name.ToUpper() #>_handle);
+							result = __LINE__;
+							break;
+						}
+<# 					} #>
+<# 					else #>
+<# 					{ #>
+						/* do nothing */
+<# 					} #>
+					}
+					else
+					{
+<# if (field.type != "*") #>
+<# { #>
+						<#= c_type #> field_name;
+						if (amqpvalue_get_<#= field.type.ToLower().Replace('-', '_').Replace(':', '_') #>(item_value, &field_name) != 0)
+						{
+							<#= type_name #>_destroy(*<#= type_name.ToUpper() #>_handle);
+							result = __LINE__;
+							break;
+						}
+<# } #>
+<# else #>
+<# { #>
+<# } #>
+					}
+<#					k++; #>
+<#				} #>
+				} while (0);
+			}
 		}
 
 		return result;

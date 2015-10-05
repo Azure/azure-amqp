@@ -1575,6 +1575,39 @@ int amqpvalue_get_map_key_value_pair(AMQP_VALUE map, uint32_t index, AMQP_VALUE*
 	return result;
 }
 
+int amqpvalue_get_map(AMQP_VALUE value, AMQP_VALUE* map_value)
+{
+	int result;
+
+	if ((value == NULL) ||
+		(map_value == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if (value_data->type != AMQP_TYPE_MAP)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			map_value = amqpvalue_clone(value);
+			if (map_value == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
+		}
+	}
+
+	return result;
+}
+
 /* Codes_SRS_AMQPVALUE_01_206: [amqpvalue_are_equal shall return true if the contents of value1 and value2 are equal.] */
 bool amqpvalue_are_equal(AMQP_VALUE value1, AMQP_VALUE value2)
 {

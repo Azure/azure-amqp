@@ -57,6 +57,8 @@ public:
 	MOCK_METHOD_END(AMQP_VALUE, test_<#= type_name #>_amqp_value);
 	MOCK_STATIC_METHOD_1(, bool, is_<#= type_name #>_type_by_descriptor, AMQP_VALUE, value);
 	MOCK_METHOD_END(bool, true);
+	MOCK_STATIC_METHOD_2(, int, amqpvalue_get_<#= type_name #>, AMQP_VALUE, value, <#= type_name.ToUpper() #>_HANDLE*, <#= type_name.ToUpper() #>_handle);
+	MOCK_METHOD_END(int, 0);
 
 <#				foreach (field field in type.Items.Where(item => item is field)) #>
 <#				{ #>
@@ -92,6 +94,7 @@ public:
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, <#= type_name #>_destroy, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_<#= type_name #>, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_<#= type_name #>_type_by_descriptor, AMQP_VALUE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, amqpvalue_get_<#= type_name #>, AMQP_VALUE, value, <#= type_name.ToUpper() #>_HANDLE*, <#= type_name.ToUpper() #>_handle);
 
 <#				foreach (field field in type.Items.Where(item => item is field)) #>
 <#				{ #>

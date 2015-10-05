@@ -45,6 +45,7 @@ typedef struct CONNECTION_DATA_TAG
 	uint16_t frame_receive_channel;
 	char* host_name;
 	char* container_id;
+	uint32_t remote_max_frame_size;
 
 	/* options */
 	uint32_t max_frame_size;
@@ -428,27 +429,40 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 
 	if (is_open_type_by_descriptor(descriptor))
 	{
-		OPEN_HANDLE open_handle;
-		if (amqpvalue_get_open(performative, &open_handle) != 0)
-		{
-			/* Codes_SRS_CONNECTION_01_143: [If any of the values in the received open frame are invalid then the connection shall be closed.] */
-			/* Codes_SRS_CONNECTION_01_220: [The error amqp:invalid-field shall be set in the error.condition field of the CLOSE frame.] */
-			close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_frame_received::failed parsing OPEN frame");
-		}
-
 		LOG(consolelogger_log, 0, "<- [OPEN] ");
 		//LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 
 		if ((connection_instance->connection_state == CONNECTION_STATE_OPEN_SENT) ||
 			(connection_instance->connection_state == CONNECTION_STATE_HDR_EXCH))
 		{
-			if (connection_instance->connection_state == CONNECTION_STATE_OPEN_SENT)
+			OPEN_HANDLE open_handle;
+			if (amqpvalue_get_open(performative, &open_handle) != 0)
 			{
-				connection_instance->connection_state = CONNECTION_STATE_OPENED;
+				/* Codes_SRS_CONNECTION_01_143: [If any of the values in the received open frame are invalid then the connection shall be closed.] */
+				/* Codes_SRS_CONNECTION_01_220: [The error amqp:invalid-field shall be set in the error.condition field of the CLOSE frame.] */
+				close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_frame_received::failed parsing OPEN frame");
 			}
 			else
 			{
-				connection_instance->connection_state = CONNECTION_STATE_OPEN_RCVD;
+				if ((open_get_max_frame_size(open_handle, &connection_instance->remote_max_frame_size) != 0) ||
+					/* Codes_SRS_CONNECTION_01_167: [Both peers MUST accept frames of up to 512 (MIN-MAX-FRAME-SIZE) octets.] */
+					(connection_instance->remote_max_frame_size < 512))
+				{
+					/* Codes_SRS_CONNECTION_01_143: [If any of the values in the received open frame are invalid then the connection shall be closed.] */
+					/* Codes_SRS_CONNECTION_01_220: [The error amqp:invalid-field shall be set in the error.condition field of the CLOSE frame.] */
+					close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_frame_received::failed parsing OPEN frame");
+				}
+				else
+				{
+					if (connection_instance->connection_state == CONNECTION_STATE_OPEN_SENT)
+					{
+						connection_instance->connection_state = CONNECTION_STATE_OPENED;
+					}
+					else
+					{
+						connection_instance->connection_state = CONNECTION_STATE_OPEN_RCVD;
+					}
+				}
 			}
 		}
 		else
@@ -628,6 +642,7 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 							result->endpoint_count = 0;
 							result->endpoints = NULL;
 							result->is_io_open = 0;
+							result->remote_max_frame_size = 512;
 
 							/* Mark that settings have not yet been set by the user */
 							result->idle_timeout_specified = 0;

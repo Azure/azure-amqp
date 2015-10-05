@@ -2300,7 +2300,7 @@ TEST_METHOD(when_one_extra_byte_is_received_with_the_header_the_extra_byte_is_pa
 
 /* Tests_SRS_CONNECTION_01_143: [If any of the values in the received open frame are invalid then the connection shall be closed.] */
 /* Tests_SRS_CONNECTION_01_220: [The error amqp:invalid-field shall be set in the error.condition field of the CLOSE frame.] */
-TEST_METHOD(when_an_open_frame_with_max_frame_size_511_is_received_the_connection_is_closed)
+TEST_METHOD(when_an_open_frame_that_cannot_be_parsed_properly_is_received_the_connection_is_closed)
 {
 	// arrange
 	connection_mocks mocks;
@@ -2318,6 +2318,98 @@ TEST_METHOD(when_an_open_frame_with_max_frame_size_511_is_received_the_connectio
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_get_open(TEST_OPEN_PERFORMATIVE, IGNORED_PTR_ARG))
 		.IgnoreArgument(2).SetReturn(1);
+
+	/* we expect to close because of bad OPEN */
+	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:invalid-field"));
+	STRICT_EXPECTED_CALL(definition_mocks, error_set_description(test_error_handle, IGNORED_PTR_ARG))
+		.IgnoreArgument(2);
+	STRICT_EXPECTED_CALL(definition_mocks, close_create());
+	STRICT_EXPECTED_CALL(definition_mocks, close_set_error(test_close_handle, test_error_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_close(test_close_handle));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_close_amqp_value, 0));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_close_amqp_value));
+	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_error_handle));
+
+	// act
+	amqp_frame_received_callback(amqp_frame_received_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_143: [If any of the values in the received open frame are invalid then the connection shall be closed.] */
+/* Tests_SRS_CONNECTION_01_220: [The error amqp:invalid-field shall be set in the error.condition field of the CLOSE frame.] */
+TEST_METHOD(when_the_max_frame_size_cannot_be_retrieved_from_the_open_framethe_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
+	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_get_open(TEST_OPEN_PERFORMATIVE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &test_open_handle, sizeof(test_open_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, open_get_max_frame_size(test_open_handle, IGNORED_PTR_ARG))
+		.IgnoreArgument(2).SetReturn(1);
+
+	/* we expect to close because of bad OPEN */
+	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:invalid-field"));
+	STRICT_EXPECTED_CALL(definition_mocks, error_set_description(test_error_handle, IGNORED_PTR_ARG))
+		.IgnoreArgument(2);
+	STRICT_EXPECTED_CALL(definition_mocks, close_create());
+	STRICT_EXPECTED_CALL(definition_mocks, close_set_error(test_close_handle, test_error_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_close(test_close_handle));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_close_amqp_value, 0));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_close_amqp_value));
+	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_error_handle));
+
+	// act
+	amqp_frame_received_callback(amqp_frame_received_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_143: [If any of the values in the received open frame are invalid then the connection shall be closed.] */
+/* Tests_SRS_CONNECTION_01_220: [The error amqp:invalid-field shall be set in the error.condition field of the CLOSE frame.] */
+/* Tests_SRS_CONNECTION_01_167: [Both peers MUST accept frames of up to 512 (MIN-MAX-FRAME-SIZE) octets.] */
+TEST_METHOD(when_an_open_frame_with_max_frame_size_511_is_received_the_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
+	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_get_open(TEST_OPEN_PERFORMATIVE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &test_open_handle, sizeof(test_open_handle));
+	uint32_t remote_max_frame_size = 511;
+	STRICT_EXPECTED_CALL(definition_mocks, open_get_max_frame_size(test_open_handle, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &remote_max_frame_size, sizeof(remote_max_frame_size));
 
 	/* we expect to close because of bad OPEN */
 	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:invalid-field"));

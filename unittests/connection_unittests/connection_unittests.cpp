@@ -2375,6 +2375,7 @@ TEST_METHOD(when_the_max_frame_size_cannot_be_retrieved_from_the_open_framethe_c
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_close_amqp_value));
 	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
 	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_error_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
 
 	// act
 	amqp_frame_received_callback(amqp_frame_received_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0);
@@ -2422,6 +2423,7 @@ TEST_METHOD(when_an_open_frame_with_max_frame_size_511_is_received_the_connectio
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_close_amqp_value));
 	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
 	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_error_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
 
 	// act
 	amqp_frame_received_callback(amqp_frame_received_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0);

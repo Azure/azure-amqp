@@ -463,6 +463,8 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 						connection_instance->connection_state = CONNECTION_STATE_OPEN_RCVD;
 					}
 				}
+
+				open_destroy(open_handle);
 			}
 		}
 		else

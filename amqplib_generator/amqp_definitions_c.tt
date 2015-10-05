@@ -182,12 +182,24 @@
 					{
 <# if (field.type != "*") #>
 <# { #>
-						<#= c_type #> field_name;
-						if (amqpvalue_get_<#= field.type.ToLower().Replace('-', '_').Replace(':', '_') #>(item_value, &field_name) != 0)
+						<#= c_type #> <#= field_name #>;
+						if (amqpvalue_get_<#= field.type.ToLower().Replace('-', '_').Replace(':', '_') #>(item_value, &<#= field_name #>) != 0)
 						{
+<# 					if (field.mandatory == "true") #>
+<# 					{ #>
 							<#= type_name #>_destroy(*<#= type_name.ToUpper() #>_handle);
 							result = __LINE__;
 							break;
+<# 					} #>
+<# 					else #>
+<# 					{ #>
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								<#= type_name #>_destroy(*<#= type_name.ToUpper() #>_handle);
+								result = __LINE__;
+								break;
+							}
+<# 					} #>
 						}
 <# } #>
 <# else #>
@@ -196,6 +208,8 @@
 					}
 <#					k++; #>
 <#				} #>
+
+					result = 0;
 				} while (0);
 			}
 		}

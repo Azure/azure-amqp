@@ -131,8 +131,8 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* condition;
+						if (amqpvalue_get_symbol(item_value, &condition) != 0)
 						{
 							error_destroy(*ERROR_handle);
 							result = __LINE__;
@@ -147,12 +147,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						const char* description;
+						if (amqpvalue_get_string(item_value, &description) != 0)
 						{
-							error_destroy(*ERROR_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								error_destroy(*ERROR_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* info */
@@ -163,14 +166,19 @@
 					}
 					else
 					{
-						fields field_name;
-						if (amqpvalue_get_fields(item_value, &field_name) != 0)
+						fields info;
+						if (amqpvalue_get_fields(item_value, &info) != 0)
 						{
-							error_destroy(*ERROR_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								error_destroy(*ERROR_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -434,8 +442,8 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						const char* container_id;
+						if (amqpvalue_get_string(item_value, &container_id) != 0)
 						{
 							open_destroy(*OPEN_handle);
 							result = __LINE__;
@@ -450,12 +458,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						const char* hostname;
+						if (amqpvalue_get_string(item_value, &hostname) != 0)
 						{
-							open_destroy(*OPEN_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								open_destroy(*OPEN_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* max-frame-size */
@@ -466,12 +477,15 @@
 					}
 					else
 					{
-						uint32_t field_name;
-						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						uint32_t max_frame_size;
+						if (amqpvalue_get_uint(item_value, &max_frame_size) != 0)
 						{
-							open_destroy(*OPEN_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								open_destroy(*OPEN_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* channel-max */
@@ -482,12 +496,15 @@
 					}
 					else
 					{
-						uint16_t field_name;
-						if (amqpvalue_get_ushort(item_value, &field_name) != 0)
+						uint16_t channel_max;
+						if (amqpvalue_get_ushort(item_value, &channel_max) != 0)
 						{
-							open_destroy(*OPEN_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								open_destroy(*OPEN_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* idle-time-out */
@@ -498,12 +515,15 @@
 					}
 					else
 					{
-						milliseconds field_name;
-						if (amqpvalue_get_milliseconds(item_value, &field_name) != 0)
+						milliseconds idle_time_out;
+						if (amqpvalue_get_milliseconds(item_value, &idle_time_out) != 0)
 						{
-							open_destroy(*OPEN_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								open_destroy(*OPEN_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* outgoing-locales */
@@ -514,12 +534,15 @@
 					}
 					else
 					{
-						ietf_language_tag field_name;
-						if (amqpvalue_get_ietf_language_tag(item_value, &field_name) != 0)
+						ietf_language_tag outgoing_locales;
+						if (amqpvalue_get_ietf_language_tag(item_value, &outgoing_locales) != 0)
 						{
-							open_destroy(*OPEN_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								open_destroy(*OPEN_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* incoming-locales */
@@ -530,12 +553,15 @@
 					}
 					else
 					{
-						ietf_language_tag field_name;
-						if (amqpvalue_get_ietf_language_tag(item_value, &field_name) != 0)
+						ietf_language_tag incoming_locales;
+						if (amqpvalue_get_ietf_language_tag(item_value, &incoming_locales) != 0)
 						{
-							open_destroy(*OPEN_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								open_destroy(*OPEN_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* offered-capabilities */
@@ -546,12 +572,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* offered_capabilities;
+						if (amqpvalue_get_symbol(item_value, &offered_capabilities) != 0)
 						{
-							open_destroy(*OPEN_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								open_destroy(*OPEN_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* desired-capabilities */
@@ -562,12 +591,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* desired_capabilities;
+						if (amqpvalue_get_symbol(item_value, &desired_capabilities) != 0)
 						{
-							open_destroy(*OPEN_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								open_destroy(*OPEN_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* properties */
@@ -578,14 +610,19 @@
 					}
 					else
 					{
-						fields field_name;
-						if (amqpvalue_get_fields(item_value, &field_name) != 0)
+						fields properties;
+						if (amqpvalue_get_fields(item_value, &properties) != 0)
 						{
-							open_destroy(*OPEN_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								open_destroy(*OPEN_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -1171,8 +1208,8 @@
 					}
 					else
 					{
-						uint16_t field_name;
-						if (amqpvalue_get_ushort(item_value, &field_name) != 0)
+						uint16_t remote_channel;
+						if (amqpvalue_get_ushort(item_value, &remote_channel) != 0)
 						{
 							begin_destroy(*BEGIN_handle);
 							result = __LINE__;
@@ -1191,8 +1228,8 @@
 					}
 					else
 					{
-						transfer_number field_name;
-						if (amqpvalue_get_transfer_number(item_value, &field_name) != 0)
+						transfer_number next_outgoing_id;
+						if (amqpvalue_get_transfer_number(item_value, &next_outgoing_id) != 0)
 						{
 							begin_destroy(*BEGIN_handle);
 							result = __LINE__;
@@ -1211,8 +1248,8 @@
 					}
 					else
 					{
-						uint32_t field_name;
-						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						uint32_t incoming_window;
+						if (amqpvalue_get_uint(item_value, &incoming_window) != 0)
 						{
 							begin_destroy(*BEGIN_handle);
 							result = __LINE__;
@@ -1231,8 +1268,8 @@
 					}
 					else
 					{
-						uint32_t field_name;
-						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						uint32_t outgoing_window;
+						if (amqpvalue_get_uint(item_value, &outgoing_window) != 0)
 						{
 							begin_destroy(*BEGIN_handle);
 							result = __LINE__;
@@ -1247,12 +1284,15 @@
 					}
 					else
 					{
-						handle field_name;
-						if (amqpvalue_get_handle(item_value, &field_name) != 0)
+						handle handle_max;
+						if (amqpvalue_get_handle(item_value, &handle_max) != 0)
 						{
-							begin_destroy(*BEGIN_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								begin_destroy(*BEGIN_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* offered-capabilities */
@@ -1263,12 +1303,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* offered_capabilities;
+						if (amqpvalue_get_symbol(item_value, &offered_capabilities) != 0)
 						{
-							begin_destroy(*BEGIN_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								begin_destroy(*BEGIN_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* desired-capabilities */
@@ -1279,12 +1322,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* desired_capabilities;
+						if (amqpvalue_get_symbol(item_value, &desired_capabilities) != 0)
 						{
-							begin_destroy(*BEGIN_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								begin_destroy(*BEGIN_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* properties */
@@ -1295,14 +1341,19 @@
 					}
 					else
 					{
-						fields field_name;
-						if (amqpvalue_get_fields(item_value, &field_name) != 0)
+						fields properties;
+						if (amqpvalue_get_fields(item_value, &properties) != 0)
 						{
-							begin_destroy(*BEGIN_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								begin_destroy(*BEGIN_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -1795,8 +1846,8 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						const char* name;
+						if (amqpvalue_get_string(item_value, &name) != 0)
 						{
 							attach_destroy(*ATTACH_handle);
 							result = __LINE__;
@@ -1815,8 +1866,8 @@
 					}
 					else
 					{
-						handle field_name;
-						if (amqpvalue_get_handle(item_value, &field_name) != 0)
+						handle handle;
+						if (amqpvalue_get_handle(item_value, &handle) != 0)
 						{
 							attach_destroy(*ATTACH_handle);
 							result = __LINE__;
@@ -1835,8 +1886,8 @@
 					}
 					else
 					{
-						role field_name;
-						if (amqpvalue_get_role(item_value, &field_name) != 0)
+						role role;
+						if (amqpvalue_get_role(item_value, &role) != 0)
 						{
 							attach_destroy(*ATTACH_handle);
 							result = __LINE__;
@@ -1851,12 +1902,15 @@
 					}
 					else
 					{
-						sender_settle_mode field_name;
-						if (amqpvalue_get_sender_settle_mode(item_value, &field_name) != 0)
+						sender_settle_mode snd_settle_mode;
+						if (amqpvalue_get_sender_settle_mode(item_value, &snd_settle_mode) != 0)
 						{
-							attach_destroy(*ATTACH_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								attach_destroy(*ATTACH_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* rcv-settle-mode */
@@ -1867,12 +1921,15 @@
 					}
 					else
 					{
-						receiver_settle_mode field_name;
-						if (amqpvalue_get_receiver_settle_mode(item_value, &field_name) != 0)
+						receiver_settle_mode rcv_settle_mode;
+						if (amqpvalue_get_receiver_settle_mode(item_value, &rcv_settle_mode) != 0)
 						{
-							attach_destroy(*ATTACH_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								attach_destroy(*ATTACH_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* source */
@@ -1901,12 +1958,15 @@
 					}
 					else
 					{
-						AMQP_VALUE field_name;
-						if (amqpvalue_get_map(item_value, &field_name) != 0)
+						AMQP_VALUE unsettled;
+						if (amqpvalue_get_map(item_value, &unsettled) != 0)
 						{
-							attach_destroy(*ATTACH_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								attach_destroy(*ATTACH_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* incomplete-unsettled */
@@ -1917,12 +1977,15 @@
 					}
 					else
 					{
-						bool field_name;
-						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						bool incomplete_unsettled;
+						if (amqpvalue_get_boolean(item_value, &incomplete_unsettled) != 0)
 						{
-							attach_destroy(*ATTACH_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								attach_destroy(*ATTACH_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* initial-delivery-count */
@@ -1933,12 +1996,15 @@
 					}
 					else
 					{
-						sequence_no field_name;
-						if (amqpvalue_get_sequence_no(item_value, &field_name) != 0)
+						sequence_no initial_delivery_count;
+						if (amqpvalue_get_sequence_no(item_value, &initial_delivery_count) != 0)
 						{
-							attach_destroy(*ATTACH_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								attach_destroy(*ATTACH_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* max-message-size */
@@ -1949,12 +2015,15 @@
 					}
 					else
 					{
-						uint64_t field_name;
-						if (amqpvalue_get_ulong(item_value, &field_name) != 0)
+						uint64_t max_message_size;
+						if (amqpvalue_get_ulong(item_value, &max_message_size) != 0)
 						{
-							attach_destroy(*ATTACH_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								attach_destroy(*ATTACH_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* offered-capabilities */
@@ -1965,12 +2034,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* offered_capabilities;
+						if (amqpvalue_get_symbol(item_value, &offered_capabilities) != 0)
 						{
-							attach_destroy(*ATTACH_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								attach_destroy(*ATTACH_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* desired-capabilities */
@@ -1981,12 +2053,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* desired_capabilities;
+						if (amqpvalue_get_symbol(item_value, &desired_capabilities) != 0)
 						{
-							attach_destroy(*ATTACH_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								attach_destroy(*ATTACH_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* properties */
@@ -1997,14 +2072,19 @@
 					}
 					else
 					{
-						fields field_name;
-						if (amqpvalue_get_fields(item_value, &field_name) != 0)
+						fields properties;
+						if (amqpvalue_get_fields(item_value, &properties) != 0)
 						{
-							attach_destroy(*ATTACH_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								attach_destroy(*ATTACH_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -2751,12 +2831,15 @@
 					}
 					else
 					{
-						transfer_number field_name;
-						if (amqpvalue_get_transfer_number(item_value, &field_name) != 0)
+						transfer_number next_incoming_id;
+						if (amqpvalue_get_transfer_number(item_value, &next_incoming_id) != 0)
 						{
-							flow_destroy(*FLOW_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								flow_destroy(*FLOW_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* incoming-window */
@@ -2771,8 +2854,8 @@
 					}
 					else
 					{
-						uint32_t field_name;
-						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						uint32_t incoming_window;
+						if (amqpvalue_get_uint(item_value, &incoming_window) != 0)
 						{
 							flow_destroy(*FLOW_handle);
 							result = __LINE__;
@@ -2791,8 +2874,8 @@
 					}
 					else
 					{
-						transfer_number field_name;
-						if (amqpvalue_get_transfer_number(item_value, &field_name) != 0)
+						transfer_number next_outgoing_id;
+						if (amqpvalue_get_transfer_number(item_value, &next_outgoing_id) != 0)
 						{
 							flow_destroy(*FLOW_handle);
 							result = __LINE__;
@@ -2811,8 +2894,8 @@
 					}
 					else
 					{
-						uint32_t field_name;
-						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						uint32_t outgoing_window;
+						if (amqpvalue_get_uint(item_value, &outgoing_window) != 0)
 						{
 							flow_destroy(*FLOW_handle);
 							result = __LINE__;
@@ -2827,12 +2910,15 @@
 					}
 					else
 					{
-						handle field_name;
-						if (amqpvalue_get_handle(item_value, &field_name) != 0)
+						handle handle;
+						if (amqpvalue_get_handle(item_value, &handle) != 0)
 						{
-							flow_destroy(*FLOW_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								flow_destroy(*FLOW_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* delivery-count */
@@ -2843,12 +2929,15 @@
 					}
 					else
 					{
-						sequence_no field_name;
-						if (amqpvalue_get_sequence_no(item_value, &field_name) != 0)
+						sequence_no delivery_count;
+						if (amqpvalue_get_sequence_no(item_value, &delivery_count) != 0)
 						{
-							flow_destroy(*FLOW_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								flow_destroy(*FLOW_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* link-credit */
@@ -2859,12 +2948,15 @@
 					}
 					else
 					{
-						uint32_t field_name;
-						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						uint32_t link_credit;
+						if (amqpvalue_get_uint(item_value, &link_credit) != 0)
 						{
-							flow_destroy(*FLOW_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								flow_destroy(*FLOW_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* available */
@@ -2875,12 +2967,15 @@
 					}
 					else
 					{
-						uint32_t field_name;
-						if (amqpvalue_get_uint(item_value, &field_name) != 0)
+						uint32_t available;
+						if (amqpvalue_get_uint(item_value, &available) != 0)
 						{
-							flow_destroy(*FLOW_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								flow_destroy(*FLOW_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* drain */
@@ -2891,12 +2986,15 @@
 					}
 					else
 					{
-						bool field_name;
-						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						bool drain;
+						if (amqpvalue_get_boolean(item_value, &drain) != 0)
 						{
-							flow_destroy(*FLOW_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								flow_destroy(*FLOW_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* echo */
@@ -2907,12 +3005,15 @@
 					}
 					else
 					{
-						bool field_name;
-						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						bool echo;
+						if (amqpvalue_get_boolean(item_value, &echo) != 0)
 						{
-							flow_destroy(*FLOW_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								flow_destroy(*FLOW_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* properties */
@@ -2923,14 +3024,19 @@
 					}
 					else
 					{
-						fields field_name;
-						if (amqpvalue_get_fields(item_value, &field_name) != 0)
+						fields properties;
+						if (amqpvalue_get_fields(item_value, &properties) != 0)
 						{
-							flow_destroy(*FLOW_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								flow_destroy(*FLOW_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -3538,8 +3644,8 @@
 					}
 					else
 					{
-						handle field_name;
-						if (amqpvalue_get_handle(item_value, &field_name) != 0)
+						handle handle;
+						if (amqpvalue_get_handle(item_value, &handle) != 0)
 						{
 							transfer_destroy(*TRANSFER_handle);
 							result = __LINE__;
@@ -3554,12 +3660,15 @@
 					}
 					else
 					{
-						delivery_number field_name;
-						if (amqpvalue_get_delivery_number(item_value, &field_name) != 0)
+						delivery_number delivery_id;
+						if (amqpvalue_get_delivery_number(item_value, &delivery_id) != 0)
 						{
-							transfer_destroy(*TRANSFER_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								transfer_destroy(*TRANSFER_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* delivery-tag */
@@ -3570,12 +3679,15 @@
 					}
 					else
 					{
-						delivery_tag field_name;
-						if (amqpvalue_get_delivery_tag(item_value, &field_name) != 0)
+						delivery_tag delivery_tag;
+						if (amqpvalue_get_delivery_tag(item_value, &delivery_tag) != 0)
 						{
-							transfer_destroy(*TRANSFER_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								transfer_destroy(*TRANSFER_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* message-format */
@@ -3586,12 +3698,15 @@
 					}
 					else
 					{
-						message_format field_name;
-						if (amqpvalue_get_message_format(item_value, &field_name) != 0)
+						message_format message_format;
+						if (amqpvalue_get_message_format(item_value, &message_format) != 0)
 						{
-							transfer_destroy(*TRANSFER_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								transfer_destroy(*TRANSFER_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* settled */
@@ -3602,12 +3717,15 @@
 					}
 					else
 					{
-						bool field_name;
-						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						bool settled;
+						if (amqpvalue_get_boolean(item_value, &settled) != 0)
 						{
-							transfer_destroy(*TRANSFER_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								transfer_destroy(*TRANSFER_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* more */
@@ -3618,12 +3736,15 @@
 					}
 					else
 					{
-						bool field_name;
-						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						bool more;
+						if (amqpvalue_get_boolean(item_value, &more) != 0)
 						{
-							transfer_destroy(*TRANSFER_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								transfer_destroy(*TRANSFER_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* rcv-settle-mode */
@@ -3634,12 +3755,15 @@
 					}
 					else
 					{
-						receiver_settle_mode field_name;
-						if (amqpvalue_get_receiver_settle_mode(item_value, &field_name) != 0)
+						receiver_settle_mode rcv_settle_mode;
+						if (amqpvalue_get_receiver_settle_mode(item_value, &rcv_settle_mode) != 0)
 						{
-							transfer_destroy(*TRANSFER_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								transfer_destroy(*TRANSFER_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* state */
@@ -3659,12 +3783,15 @@
 					}
 					else
 					{
-						bool field_name;
-						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						bool resume;
+						if (amqpvalue_get_boolean(item_value, &resume) != 0)
 						{
-							transfer_destroy(*TRANSFER_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								transfer_destroy(*TRANSFER_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* aborted */
@@ -3675,12 +3802,15 @@
 					}
 					else
 					{
-						bool field_name;
-						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						bool aborted;
+						if (amqpvalue_get_boolean(item_value, &aborted) != 0)
 						{
-							transfer_destroy(*TRANSFER_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								transfer_destroy(*TRANSFER_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* batchable */
@@ -3691,14 +3821,19 @@
 					}
 					else
 					{
-						bool field_name;
-						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						bool batchable;
+						if (amqpvalue_get_boolean(item_value, &batchable) != 0)
 						{
-							transfer_destroy(*TRANSFER_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								transfer_destroy(*TRANSFER_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -4313,8 +4448,8 @@
 					}
 					else
 					{
-						role field_name;
-						if (amqpvalue_get_role(item_value, &field_name) != 0)
+						role role;
+						if (amqpvalue_get_role(item_value, &role) != 0)
 						{
 							disposition_destroy(*DISPOSITION_handle);
 							result = __LINE__;
@@ -4333,8 +4468,8 @@
 					}
 					else
 					{
-						delivery_number field_name;
-						if (amqpvalue_get_delivery_number(item_value, &field_name) != 0)
+						delivery_number first;
+						if (amqpvalue_get_delivery_number(item_value, &first) != 0)
 						{
 							disposition_destroy(*DISPOSITION_handle);
 							result = __LINE__;
@@ -4349,12 +4484,15 @@
 					}
 					else
 					{
-						delivery_number field_name;
-						if (amqpvalue_get_delivery_number(item_value, &field_name) != 0)
+						delivery_number last;
+						if (amqpvalue_get_delivery_number(item_value, &last) != 0)
 						{
-							disposition_destroy(*DISPOSITION_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								disposition_destroy(*DISPOSITION_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* settled */
@@ -4365,12 +4503,15 @@
 					}
 					else
 					{
-						bool field_name;
-						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						bool settled;
+						if (amqpvalue_get_boolean(item_value, &settled) != 0)
 						{
-							disposition_destroy(*DISPOSITION_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								disposition_destroy(*DISPOSITION_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* state */
@@ -4390,14 +4531,19 @@
 					}
 					else
 					{
-						bool field_name;
-						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						bool batchable;
+						if (amqpvalue_get_boolean(item_value, &batchable) != 0)
 						{
-							disposition_destroy(*DISPOSITION_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								disposition_destroy(*DISPOSITION_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -4790,8 +4936,8 @@
 					}
 					else
 					{
-						handle field_name;
-						if (amqpvalue_get_handle(item_value, &field_name) != 0)
+						handle handle;
+						if (amqpvalue_get_handle(item_value, &handle) != 0)
 						{
 							detach_destroy(*DETACH_handle);
 							result = __LINE__;
@@ -4806,12 +4952,15 @@
 					}
 					else
 					{
-						bool field_name;
-						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						bool closed;
+						if (amqpvalue_get_boolean(item_value, &closed) != 0)
 						{
-							detach_destroy(*DETACH_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								detach_destroy(*DETACH_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* error */
@@ -4822,14 +4971,19 @@
 					}
 					else
 					{
-						ERROR_HANDLE field_name;
-						if (amqpvalue_get_error(item_value, &field_name) != 0)
+						ERROR_HANDLE error;
+						if (amqpvalue_get_error(item_value, &error) != 0)
 						{
-							detach_destroy(*DETACH_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								detach_destroy(*DETACH_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -5076,14 +5230,19 @@
 					}
 					else
 					{
-						ERROR_HANDLE field_name;
-						if (amqpvalue_get_error(item_value, &field_name) != 0)
+						ERROR_HANDLE error;
+						if (amqpvalue_get_error(item_value, &error) != 0)
 						{
-							end_destroy(*END_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								end_destroy(*END_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -5244,14 +5403,19 @@
 					}
 					else
 					{
-						ERROR_HANDLE field_name;
-						if (amqpvalue_get_error(item_value, &field_name) != 0)
+						ERROR_HANDLE error;
+						if (amqpvalue_get_error(item_value, &error) != 0)
 						{
-							close_destroy(*CLOSE_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								close_destroy(*CLOSE_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -5429,14 +5593,16 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* sasl_server_mechanisms;
+						if (amqpvalue_get_symbol(item_value, &sasl_server_mechanisms) != 0)
 						{
 							sasl_mechanisms_destroy(*SASL_MECHANISMS_handle);
 							result = __LINE__;
 							break;
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -5614,8 +5780,8 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* mechanism;
+						if (amqpvalue_get_symbol(item_value, &mechanism) != 0)
 						{
 							sasl_init_destroy(*SASL_INIT_handle);
 							result = __LINE__;
@@ -5630,12 +5796,15 @@
 					}
 					else
 					{
-						amqp_binary field_name;
-						if (amqpvalue_get_binary(item_value, &field_name) != 0)
+						amqp_binary initial_response;
+						if (amqpvalue_get_binary(item_value, &initial_response) != 0)
 						{
-							sasl_init_destroy(*SASL_INIT_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								sasl_init_destroy(*SASL_INIT_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* hostname */
@@ -5646,14 +5815,19 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						const char* hostname;
+						if (amqpvalue_get_string(item_value, &hostname) != 0)
 						{
-							sasl_init_destroy(*SASL_INIT_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								sasl_init_destroy(*SASL_INIT_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -5917,14 +6091,16 @@
 					}
 					else
 					{
-						amqp_binary field_name;
-						if (amqpvalue_get_binary(item_value, &field_name) != 0)
+						amqp_binary challenge;
+						if (amqpvalue_get_binary(item_value, &challenge) != 0)
 						{
 							sasl_challenge_destroy(*SASL_CHALLENGE_handle);
 							result = __LINE__;
 							break;
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -6102,14 +6278,16 @@
 					}
 					else
 					{
-						amqp_binary field_name;
-						if (amqpvalue_get_binary(item_value, &field_name) != 0)
+						amqp_binary response;
+						if (amqpvalue_get_binary(item_value, &response) != 0)
 						{
 							sasl_response_destroy(*SASL_RESPONSE_handle);
 							result = __LINE__;
 							break;
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -6287,8 +6465,8 @@
 					}
 					else
 					{
-						sasl_code field_name;
-						if (amqpvalue_get_sasl_code(item_value, &field_name) != 0)
+						sasl_code code;
+						if (amqpvalue_get_sasl_code(item_value, &code) != 0)
 						{
 							sasl_outcome_destroy(*SASL_OUTCOME_handle);
 							result = __LINE__;
@@ -6303,14 +6481,19 @@
 					}
 					else
 					{
-						amqp_binary field_name;
-						if (amqpvalue_get_binary(item_value, &field_name) != 0)
+						amqp_binary additional_data;
+						if (amqpvalue_get_binary(item_value, &additional_data) != 0)
 						{
-							sasl_outcome_destroy(*SASL_OUTCOME_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								sasl_outcome_destroy(*SASL_OUTCOME_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -6523,12 +6706,15 @@
 					}
 					else
 					{
-						terminus_durability field_name;
-						if (amqpvalue_get_terminus_durability(item_value, &field_name) != 0)
+						terminus_durability durable;
+						if (amqpvalue_get_terminus_durability(item_value, &durable) != 0)
 						{
-							source_destroy(*SOURCE_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								source_destroy(*SOURCE_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* expiry-policy */
@@ -6539,12 +6725,15 @@
 					}
 					else
 					{
-						terminus_expiry_policy field_name;
-						if (amqpvalue_get_terminus_expiry_policy(item_value, &field_name) != 0)
+						terminus_expiry_policy expiry_policy;
+						if (amqpvalue_get_terminus_expiry_policy(item_value, &expiry_policy) != 0)
 						{
-							source_destroy(*SOURCE_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								source_destroy(*SOURCE_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* timeout */
@@ -6555,12 +6744,15 @@
 					}
 					else
 					{
-						seconds field_name;
-						if (amqpvalue_get_seconds(item_value, &field_name) != 0)
+						seconds timeout;
+						if (amqpvalue_get_seconds(item_value, &timeout) != 0)
 						{
-							source_destroy(*SOURCE_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								source_destroy(*SOURCE_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* dynamic */
@@ -6571,12 +6763,15 @@
 					}
 					else
 					{
-						bool field_name;
-						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						bool dynamic;
+						if (amqpvalue_get_boolean(item_value, &dynamic) != 0)
 						{
-							source_destroy(*SOURCE_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								source_destroy(*SOURCE_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* dynamic-node-properties */
@@ -6587,12 +6782,15 @@
 					}
 					else
 					{
-						node_properties field_name;
-						if (amqpvalue_get_node_properties(item_value, &field_name) != 0)
+						node_properties dynamic_node_properties;
+						if (amqpvalue_get_node_properties(item_value, &dynamic_node_properties) != 0)
 						{
-							source_destroy(*SOURCE_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								source_destroy(*SOURCE_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* distribution-mode */
@@ -6603,12 +6801,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* distribution_mode;
+						if (amqpvalue_get_symbol(item_value, &distribution_mode) != 0)
 						{
-							source_destroy(*SOURCE_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								source_destroy(*SOURCE_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* filter */
@@ -6619,12 +6820,15 @@
 					}
 					else
 					{
-						filter_set field_name;
-						if (amqpvalue_get_filter_set(item_value, &field_name) != 0)
+						filter_set filter;
+						if (amqpvalue_get_filter_set(item_value, &filter) != 0)
 						{
-							source_destroy(*SOURCE_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								source_destroy(*SOURCE_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* default-outcome */
@@ -6644,12 +6848,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* outcomes;
+						if (amqpvalue_get_symbol(item_value, &outcomes) != 0)
 						{
-							source_destroy(*SOURCE_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								source_destroy(*SOURCE_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* capabilities */
@@ -6660,14 +6867,19 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* capabilities;
+						if (amqpvalue_get_symbol(item_value, &capabilities) != 0)
 						{
-							source_destroy(*SOURCE_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								source_destroy(*SOURCE_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -7267,12 +7479,15 @@
 					}
 					else
 					{
-						terminus_durability field_name;
-						if (amqpvalue_get_terminus_durability(item_value, &field_name) != 0)
+						terminus_durability durable;
+						if (amqpvalue_get_terminus_durability(item_value, &durable) != 0)
 						{
-							target_destroy(*TARGET_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								target_destroy(*TARGET_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* expiry-policy */
@@ -7283,12 +7498,15 @@
 					}
 					else
 					{
-						terminus_expiry_policy field_name;
-						if (amqpvalue_get_terminus_expiry_policy(item_value, &field_name) != 0)
+						terminus_expiry_policy expiry_policy;
+						if (amqpvalue_get_terminus_expiry_policy(item_value, &expiry_policy) != 0)
 						{
-							target_destroy(*TARGET_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								target_destroy(*TARGET_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* timeout */
@@ -7299,12 +7517,15 @@
 					}
 					else
 					{
-						seconds field_name;
-						if (amqpvalue_get_seconds(item_value, &field_name) != 0)
+						seconds timeout;
+						if (amqpvalue_get_seconds(item_value, &timeout) != 0)
 						{
-							target_destroy(*TARGET_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								target_destroy(*TARGET_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* dynamic */
@@ -7315,12 +7536,15 @@
 					}
 					else
 					{
-						bool field_name;
-						if (amqpvalue_get_boolean(item_value, &field_name) != 0)
+						bool dynamic;
+						if (amqpvalue_get_boolean(item_value, &dynamic) != 0)
 						{
-							target_destroy(*TARGET_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								target_destroy(*TARGET_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* dynamic-node-properties */
@@ -7331,12 +7555,15 @@
 					}
 					else
 					{
-						node_properties field_name;
-						if (amqpvalue_get_node_properties(item_value, &field_name) != 0)
+						node_properties dynamic_node_properties;
+						if (amqpvalue_get_node_properties(item_value, &dynamic_node_properties) != 0)
 						{
-							target_destroy(*TARGET_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								target_destroy(*TARGET_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* capabilities */
@@ -7347,14 +7574,19 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* capabilities;
+						if (amqpvalue_get_symbol(item_value, &capabilities) != 0)
 						{
-							target_destroy(*TARGET_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								target_destroy(*TARGET_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}
@@ -7782,12 +8014,15 @@
 					}
 					else
 					{
-						amqp_binary field_name;
-						if (amqpvalue_get_binary(item_value, &field_name) != 0)
+						amqp_binary user_id;
+						if (amqpvalue_get_binary(item_value, &user_id) != 0)
 						{
-							properties_destroy(*PROPERTIES_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								properties_destroy(*PROPERTIES_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* to */
@@ -7807,12 +8042,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						const char* subject;
+						if (amqpvalue_get_string(item_value, &subject) != 0)
 						{
-							properties_destroy(*PROPERTIES_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								properties_destroy(*PROPERTIES_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* reply-to */
@@ -7841,12 +8079,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* content_type;
+						if (amqpvalue_get_symbol(item_value, &content_type) != 0)
 						{
-							properties_destroy(*PROPERTIES_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								properties_destroy(*PROPERTIES_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* content-encoding */
@@ -7857,12 +8098,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_symbol(item_value, &field_name) != 0)
+						const char* content_encoding;
+						if (amqpvalue_get_symbol(item_value, &content_encoding) != 0)
 						{
-							properties_destroy(*PROPERTIES_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								properties_destroy(*PROPERTIES_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* absolute-expiry-time */
@@ -7873,12 +8117,15 @@
 					}
 					else
 					{
-						timestamp field_name;
-						if (amqpvalue_get_timestamp(item_value, &field_name) != 0)
+						timestamp absolute_expiry_time;
+						if (amqpvalue_get_timestamp(item_value, &absolute_expiry_time) != 0)
 						{
-							properties_destroy(*PROPERTIES_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								properties_destroy(*PROPERTIES_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* creation-time */
@@ -7889,12 +8136,15 @@
 					}
 					else
 					{
-						timestamp field_name;
-						if (amqpvalue_get_timestamp(item_value, &field_name) != 0)
+						timestamp creation_time;
+						if (amqpvalue_get_timestamp(item_value, &creation_time) != 0)
 						{
-							properties_destroy(*PROPERTIES_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								properties_destroy(*PROPERTIES_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* group-id */
@@ -7905,12 +8155,15 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						const char* group_id;
+						if (amqpvalue_get_string(item_value, &group_id) != 0)
 						{
-							properties_destroy(*PROPERTIES_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								properties_destroy(*PROPERTIES_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* group-sequence */
@@ -7921,12 +8174,15 @@
 					}
 					else
 					{
-						sequence_no field_name;
-						if (amqpvalue_get_sequence_no(item_value, &field_name) != 0)
+						sequence_no group_sequence;
+						if (amqpvalue_get_sequence_no(item_value, &group_sequence) != 0)
 						{
-							properties_destroy(*PROPERTIES_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								properties_destroy(*PROPERTIES_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
 					/* reply-to-group-id */
@@ -7937,14 +8193,19 @@
 					}
 					else
 					{
-						const char* field_name;
-						if (amqpvalue_get_string(item_value, &field_name) != 0)
+						const char* reply_to_group_id;
+						if (amqpvalue_get_string(item_value, &reply_to_group_id) != 0)
 						{
-							properties_destroy(*PROPERTIES_handle);
-							result = __LINE__;
-							break;
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								properties_destroy(*PROPERTIES_handle);
+								result = __LINE__;
+								break;
+							}
 						}
 					}
+
+					result = 0;
 				} while (0);
 			}
 		}

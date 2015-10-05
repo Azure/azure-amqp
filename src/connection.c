@@ -427,36 +427,34 @@ static void connection_empty_frame_received(void* context, uint16_t channel)
 static void connection_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t payload_size)
 {
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)context;
-	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
-	uint64_t performative_ulong;
 
-	if (is_open_type_by_descriptor(descriptor))
+	if (performative == NULL)
 	{
-		LOG(consolelogger_log, 0, "<- [OPEN] ");
-		//LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
+		/* Codes_SRS_CONNECTION_01_223: [If the frame_received_callback is called with a NULL performative then the connection shall be closed with the error condition amqp:internal-error and an implementation defined error description.] */
+		close_connection_with_error(connection_instance, "amqp:internal-error", "connection_frame_received::NULL performative");
+	}
+	else
+	{
+		AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
+		uint64_t performative_ulong;
 
-		if (channel != 0)
+		if (is_open_type_by_descriptor(descriptor))
 		{
-			/* Codes_SRS_CONNECTION_01_006: [The open frame can only be sent on channel 0.] */
-			/* Codes_SRS_CONNECTION_01_222: [If an Open frame is received in a manner violating the ISO specification, the connection shall be closed with condition amqp:not-allowed and description being an implementation defined string.] */
-			close_connection_with_error(connection_instance, "amqp:not-allowed", "OPEN frame received on a channel that is not 0");
-		}
+			LOG(consolelogger_log, 0, "<- [OPEN] ");
+			//LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 
-		if ((connection_instance->connection_state == CONNECTION_STATE_OPEN_SENT) ||
-			(connection_instance->connection_state == CONNECTION_STATE_HDR_EXCH))
-		{
-			OPEN_HANDLE open_handle;
-			if (amqpvalue_get_open(performative, &open_handle) != 0)
+			if (channel != 0)
 			{
-				/* Codes_SRS_CONNECTION_01_143: [If any of the values in the received open frame are invalid then the connection shall be closed.] */
-				/* Codes_SRS_CONNECTION_01_220: [The error amqp:invalid-field shall be set in the error.condition field of the CLOSE frame.] */
-				close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_frame_received::failed parsing OPEN frame");
+				/* Codes_SRS_CONNECTION_01_006: [The open frame can only be sent on channel 0.] */
+				/* Codes_SRS_CONNECTION_01_222: [If an Open frame is received in a manner violating the ISO specification, the connection shall be closed with condition amqp:not-allowed and description being an implementation defined string.] */
+				close_connection_with_error(connection_instance, "amqp:not-allowed", "OPEN frame received on a channel that is not 0");
 			}
-			else
+
+			if ((connection_instance->connection_state == CONNECTION_STATE_OPEN_SENT) ||
+				(connection_instance->connection_state == CONNECTION_STATE_HDR_EXCH))
 			{
-				if ((open_get_max_frame_size(open_handle, &connection_instance->remote_max_frame_size) != 0) ||
-					/* Codes_SRS_CONNECTION_01_167: [Both peers MUST accept frames of up to 512 (MIN-MAX-FRAME-SIZE) octets.] */
-					(connection_instance->remote_max_frame_size < 512))
+				OPEN_HANDLE open_handle;
+				if (amqpvalue_get_open(performative, &open_handle) != 0)
 				{
 					/* Codes_SRS_CONNECTION_01_143: [If any of the values in the received open frame are invalid then the connection shall be closed.] */
 					/* Codes_SRS_CONNECTION_01_220: [The error amqp:invalid-field shall be set in the error.condition field of the CLOSE frame.] */
@@ -464,83 +462,94 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 				}
 				else
 				{
-					if (connection_instance->connection_state == CONNECTION_STATE_OPEN_SENT)
+					if ((open_get_max_frame_size(open_handle, &connection_instance->remote_max_frame_size) != 0) ||
+						/* Codes_SRS_CONNECTION_01_167: [Both peers MUST accept frames of up to 512 (MIN-MAX-FRAME-SIZE) octets.] */
+						(connection_instance->remote_max_frame_size < 512))
 					{
-						connection_instance->connection_state = CONNECTION_STATE_OPENED;
+						/* Codes_SRS_CONNECTION_01_143: [If any of the values in the received open frame are invalid then the connection shall be closed.] */
+						/* Codes_SRS_CONNECTION_01_220: [The error amqp:invalid-field shall be set in the error.condition field of the CLOSE frame.] */
+						close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_frame_received::failed parsing OPEN frame");
 					}
 					else
 					{
-						connection_instance->connection_state = CONNECTION_STATE_OPEN_RCVD;
+						if (connection_instance->connection_state == CONNECTION_STATE_OPEN_SENT)
+						{
+							connection_instance->connection_state = CONNECTION_STATE_OPENED;
+						}
+						else
+						{
+							connection_instance->connection_state = CONNECTION_STATE_OPEN_RCVD;
+						}
 					}
-				}
 
-				open_destroy(open_handle);
+					open_destroy(open_handle);
+				}
+			}
+			else
+			{
+
 			}
 		}
 		else
 		{
+			amqpvalue_get_ulong(descriptor, &performative_ulong);
 
-		}
-	}
-	else
-	{
-		amqpvalue_get_ulong(descriptor, &performative_ulong);
-
-		switch (performative_ulong)
-		{
-		default:
-			LOG(consolelogger_log, LOG_LINE, "Bad performative: %02x", performative);
-			break;
-
-		case AMQP_CLOSE:
-		{
-			const char* error = NULL;
-			AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
-			AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 0);
-			AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
-			AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
-			amqpvalue_get_string(error_description_value, &error);
-
-			LOG(consolelogger_log, LOG_LINE, "<- [CLOSE:%s]", error);
-			break;
-		}
-
-		case AMQP_BEGIN:
-		{
-			ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_outgoing_channel(connection_instance, 0);
-			if (session_endpoint == NULL)
+			switch (performative_ulong)
 			{
-				/* error */
-			}
-			else
+			default:
+				LOG(consolelogger_log, LOG_LINE, "Bad performative: %02x", performative);
+				break;
+
+			case AMQP_CLOSE:
 			{
-				session_endpoint->incoming_channel = channel;
-				session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size);
+				const char* error = NULL;
+				AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+				AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 0);
+				AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
+				AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
+				amqpvalue_get_string(error_description_value, &error);
+
+				LOG(consolelogger_log, LOG_LINE, "<- [CLOSE:%s]", error);
+				break;
 			}
 
-			break;
-		}
+			case AMQP_BEGIN:
+			{
+				ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_outgoing_channel(connection_instance, 0);
+				if (session_endpoint == NULL)
+				{
+					/* error */
+				}
+				else
+				{
+					session_endpoint->incoming_channel = channel;
+					session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size);
+				}
 
-		case AMQP_FLOW:
-		case AMQP_TRANSFER:
-		case AMQP_DISPOSITION:
-		case AMQP_END:
-		case AMQP_ATTACH:
-		case AMQP_DETACH:
-		{
-			ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_incoming_channel(connection_instance, channel);
-			if (session_endpoint == NULL)
-			{
-				/* error */
-			}
-			else
-			{
-				session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size);
-				connection_instance->frame_receive_channel = channel;
+				break;
 			}
 
-			break;
-		}
+			case AMQP_FLOW:
+			case AMQP_TRANSFER:
+			case AMQP_DISPOSITION:
+			case AMQP_END:
+			case AMQP_ATTACH:
+			case AMQP_DETACH:
+			{
+				ENDPOINT_INSTANCE* session_endpoint = find_session_endpoint_by_incoming_channel(connection_instance, channel);
+				if (session_endpoint == NULL)
+				{
+					/* error */
+				}
+				else
+				{
+					session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size);
+					connection_instance->frame_receive_channel = channel;
+				}
+
+				break;
+			}
+			}
 		}
 	}
 }

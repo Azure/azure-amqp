@@ -2482,4 +2482,41 @@ TEST_METHOD(when_an_open_frame_is_received_on_channel_1_the_connection_is_closed
 	connection_destroy(connection);
 }
 
+/* Tests_SRS_CONNECTION_01_223: [If the frame_received_callback is called with a NULL performative then the connection shall be closed with the error condition amqp:internal-error and an implementation defined error description.] */
+TEST_METHOD(when_the_frame_received_callback_is_called_with_a_NULL_performative_the_connection_is_closed)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	/* we expect to close because of bad OPEN */
+	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:internal-error"));
+	STRICT_EXPECTED_CALL(definition_mocks, error_set_description(test_error_handle, IGNORED_PTR_ARG))
+		.IgnoreArgument(2);
+	STRICT_EXPECTED_CALL(definition_mocks, close_create());
+	STRICT_EXPECTED_CALL(definition_mocks, close_set_error(test_close_handle, test_error_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_close(test_close_handle));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_close_amqp_value, 0));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_close_amqp_value));
+	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
+	STRICT_EXPECTED_CALL(definition_mocks, error_destroy(test_error_handle));
+
+	// act
+	amqp_frame_received_callback(amqp_frame_received_callback_context, 1, NULL, 0);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
 END_TEST_SUITE(connection_unittests)

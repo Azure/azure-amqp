@@ -2587,8 +2587,6 @@ TEST_METHOD(when_an_open_frame_is_indicated_as_received_after_a_close_frame_was_
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
-	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
-	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
 
 	// act

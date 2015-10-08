@@ -27,13 +27,12 @@ extern "C" {
 #define FRAME_TYPE_SASL	(uint8_t)0x01
 
 	typedef void* FRAME_CODEC_HANDLE;
-	typedef int(*FRAME_BEGIN_CALLBACK)(void* context, uint32_t frame_body_size, const unsigned char* type_specific, uint32_t type_specific_size);
-	typedef int(*FRAME_BODY_BYTES_RECEIVED_CALLBACK)(void* context, const unsigned char* frame_body_bytes, uint32_t frame_body_bytes_size);
+	typedef int(*FRAME_RECEIVED_CALLBACK)(void* context, const unsigned char* type_specific, uint32_t type_specific_size, const unsigned char* frame_body, uint32_t frame_body_size);
 
 	extern FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log);
 	extern void frame_codec_destroy(FRAME_CODEC_HANDLE frame_codec);
 	extern int frame_codec_set_max_frame_size(FRAME_CODEC_HANDLE frame_codec, uint32_t max_frame_size);
-	extern int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_BEGIN_CALLBACK frame_begin_callback, FRAME_BODY_BYTES_RECEIVED_CALLBACK frame_body_bytes_received_callback, void* callback_context);
+	extern int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_RECEIVED_CALLBACK frame_begin_callback, void* callback_context);
 	extern int frame_codec_unsubscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type);
 	extern int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned char* buffer, size_t size);
 	extern int frame_codec_begin_encode_frame(FRAME_CODEC_HANDLE frame_codec, uint8_t type, uint32_t frame_body_size, const unsigned char* type_specific_bytes, uint32_t type_specific_size);

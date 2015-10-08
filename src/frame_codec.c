@@ -32,8 +32,7 @@ typedef enum ENCODE_FRAME_STATE_TAG
 typedef struct SUBSCRIPTION_TAG
 {
 	uint8_t frame_type;
-	FRAME_BEGIN_CALLBACK frame_begin_callback;
-	FRAME_BODY_BYTES_RECEIVED_CALLBACK frame_body_bytes_received_callback;
+	FRAME_RECEIVED_CALLBACK frame_received_callback;
 	void* callback_context;
 } SUBSCRIPTION;
 
@@ -333,20 +332,20 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 
 				if (frame_codec_data->receive_frame_pos == type_specific_size)
 				{
-					if (frame_codec_data->receive_frame_subscription != NULL)
-					{
-						/* Codes_SRS_FRAME_CODEC_01_031: [When a frame header is successfully decoded it shall be indicated to the upper layer by invoking the frame_begin_callback passed to frame_codec_data_subscribe.] */
-						/* Codes_SRS_FRAME_CODEC_01_032: [Besides passing the frame information, the callback_context value passed to frame_codec_data_subscribe shall be passed to the frame_begin_callback function.] */
-						/* Codes_SRS_FRAME_CODEC_01_005: [This is an extension point defined for future expansion.] */
-						/* Codes_SRS_FRAME_CODEC_01_006: [The treatment of this area depends on the frame type.] */
-						frame_codec_data->receive_frame_subscription->frame_begin_callback(frame_codec_data->receive_frame_subscription->callback_context, frame_codec_data->receive_frame_size - frame_codec_data->receive_frame_doff * 4, frame_codec_data->receive_frame_type_specific, type_specific_size);
-						amqpalloc_free(frame_codec_data->receive_frame_type_specific);
-						frame_codec_data->receive_frame_type_specific = NULL;
-					}
-
 					/* Codes_SRS_FRAME_CODEC_01_085: [If the frame body is empty, no call to frame_body_bytes_received_callback shall be made.] */
 					if (frame_codec_data->receive_frame_size == FRAME_HEADER_SIZE)
 					{
+						if (frame_codec_data->receive_frame_subscription != NULL)
+						{
+							/* Codes_SRS_FRAME_CODEC_01_031: [When a frame header is successfully decoded it shall be indicated to the upper layer by invoking the frame_received_callback passed to frame_codec_data_subscribe.] */
+							/* Codes_SRS_FRAME_CODEC_01_032: [Besides passing the frame information, the callback_context value passed to frame_codec_data_subscribe shall be passed to the frame_received_callback function.] */
+							/* Codes_SRS_FRAME_CODEC_01_005: [This is an extension point defined for future expansion.] */
+							/* Codes_SRS_FRAME_CODEC_01_006: [The treatment of this area depends on the frame type.] */
+							frame_codec_data->receive_frame_subscription->frame_received_callback(frame_codec_data->receive_frame_subscription->callback_context, frame_codec_data->receive_frame_size - frame_codec_data->receive_frame_doff * 4, frame_codec_data->receive_frame_type_specific, type_specific_size);
+							amqpalloc_free(frame_codec_data->receive_frame_type_specific);
+							frame_codec_data->receive_frame_type_specific = NULL;
+						}
+
 						frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
 						frame_codec_data->receive_frame_size = 0;
 					}
@@ -366,7 +365,6 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 			{
 				uint32_t frame_body_size = frame_codec_data->receive_frame_size - (frame_codec_data->receive_frame_doff * 4);
 				uint32_t to_notify = frame_body_size;
-				FRAME_BODY_BYTES_RECEIVED_CALLBACK frame_body_bytes_received_callback = NULL;
 
 				if (to_notify > size)
 				{
@@ -378,7 +376,7 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 					/* Codes_SRS_FRAME_CODEC_01_083: [The frame body bytes shall be passed to the frame_body_bytes_received_callback function that was given to frame_codec_data_subscribe.] */
 					/* Codes_SRS_FRAME_CODEC_01_084: [The bytes shall be passed to frame_body_bytes_received_callback as they arrive, not waiting for all frame body bytes to be received.] */
 					/* Codes_SRS_FRAME_CODEC_01_086: [Besides passing the frame information, the callback_context value passed to frame_codec_data_subscribe shall be passed to the frame_body_bytes_received_callback function.] */
-					frame_codec_data->receive_frame_subscription->frame_body_bytes_received_callback(frame_codec_data->receive_frame_subscription->callback_context, buffer, to_notify);
+					frame_codec_data->receive_frame_subscription->frame_received_callback(frame_codec_data->receive_frame_subscription->callback_context, buffer, to_notify);
 				}
 
 				buffer += to_notify;
@@ -387,6 +385,17 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 
 				if (frame_codec_data->receive_frame_pos == frame_body_size)
 				{
+					if (frame_codec_data->receive_frame_subscription != NULL)
+					{
+						/* Codes_SRS_FRAME_CODEC_01_031: [When a frame header is successfully decoded it shall be indicated to the upper layer by invoking the frame_received_callback passed to frame_codec_data_subscribe.] */
+						/* Codes_SRS_FRAME_CODEC_01_032: [Besides passing the frame information, the callback_context value passed to frame_codec_data_subscribe shall be passed to the frame_received_callback function.] */
+						/* Codes_SRS_FRAME_CODEC_01_005: [This is an extension point defined for future expansion.] */
+						/* Codes_SRS_FRAME_CODEC_01_006: [The treatment of this area depends on the frame type.] */
+						frame_codec_data->receive_frame_subscription->frame_received_callback(frame_codec_data->receive_frame_subscription->callback_context, frame_codec_data->receive_frame_type_specific, type_specific_size, frame_codec_data->frame_body, frame_body_size);
+						amqpalloc_free(frame_codec_data->receive_frame_type_specific);
+						frame_codec_data->receive_frame_type_specific = NULL;
+					}
+
 					frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
 					frame_codec_data->receive_frame_pos = 0;
 					frame_codec_data->receive_frame_size = 0;
@@ -403,13 +412,13 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 }
 
 /* Codes_SRS_FRAME_CODEC_01_033: [frame_codec_subscribe subscribes for a certain type of frame received by the frame_codec instance identified by frame_codec.] */
-int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_BEGIN_CALLBACK frame_begin_callback, FRAME_BODY_BYTES_RECEIVED_CALLBACK frame_body_bytes_received_callback, void* callback_context)
+int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_RECEIVED_CALLBACK frame_received_callback, FRAME_BODY_BYTES_RECEIVED_CALLBACK frame_body_bytes_received_callback, void* callback_context)
 {
 	int result;
 
-	/* Codes_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_begin_callback or frame_body_bytes_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
+	/* Codes_SRS_FRAME_CODEC_01_034: [If any of the frame_codec, frame_received_callback or frame_body_bytes_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
 	if ((frame_codec == NULL) ||
-		(frame_begin_callback == NULL) ||
+		(frame_received_callback == NULL) ||
 		(frame_body_bytes_received_callback == NULL))
 	{
 		result = __LINE__;
@@ -425,8 +434,7 @@ int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_BE
 		if (subscription != NULL)
 		{
 			/* a subscription was found */
-			subscription->frame_begin_callback = frame_begin_callback;
-			subscription->frame_body_bytes_received_callback = frame_body_bytes_received_callback;
+			subscription->frame_received_callback = frame_received_callback;
 			subscription->callback_context = callback_context;
 
 			/* Codes_SRS_FRAME_CODEC_01_087: [On success, frame_codec_subscribe shall return zero.] */
@@ -443,7 +451,7 @@ int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_BE
 			}
 			else
 			{
-				subscription->frame_begin_callback = frame_begin_callback;
+				subscription->frame_received_callback = frame_received_callback;
 				subscription->frame_body_bytes_received_callback = frame_body_bytes_received_callback;
 				subscription->callback_context = callback_context;
 				subscription->frame_type = type;

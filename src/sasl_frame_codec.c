@@ -63,7 +63,7 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 	}
 }
 
-static int frame_begin(void* context, uint32_t decode_frame_body_size, const unsigned char* type_specific, uint32_t type_specific_size)
+static int frame_received(void* context, uint32_t decode_frame_body_size, const unsigned char* type_specific, uint32_t type_specific_size)
 {
 	int result;
 	SASL_FRAME_CODEC_INSTANCE* sasl_frame_codec_instance = (SASL_FRAME_CODEC_INSTANCE*)context;
@@ -165,7 +165,7 @@ SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			}
 			else
 			{
-				if (frame_codec_subscribe(frame_codec, 1, frame_begin, frame_body_bytes_received, result) != 0)
+				if (frame_codec_subscribe(frame_codec, 1, frame_received, result) != 0)
 				{
 					amqpvalue_decoder_destroy(result->decoder);
 					amqpalloc_free(result);

@@ -246,7 +246,7 @@ TEST_FUNCTION(amqp_frame_codec_create_with_valid_args_and_NULL_context_succeeds)
 	ASSERT_IS_NOT_NULL(amqp_frame_codec);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback or empty_frame_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
 TEST_FUNCTION(amqp_frame_codec_create_with_NULL_frame_codec_fails)
 {
 	// arrange
@@ -259,7 +259,7 @@ TEST_FUNCTION(amqp_frame_codec_create_with_NULL_frame_codec_fails)
 	ASSERT_IS_NULL(amqp_frame_codec);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback or empty_frame_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
 TEST_FUNCTION(amqp_frame_codec_create_with_NULL_frame_received_callback_fails)
 {
 	// arrange
@@ -272,7 +272,7 @@ TEST_FUNCTION(amqp_frame_codec_create_with_NULL_frame_received_callback_fails)
 	ASSERT_IS_NULL(amqp_frame_codec);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback or empty_frame_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
 TEST_FUNCTION(amqp_frame_codec_create_with_NULL_empty_frame_received_callback_fails)
 {
 	// arrange

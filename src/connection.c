@@ -204,7 +204,9 @@ static int send_close_frame(CONNECTION_INSTANCE* connection_instance, ERROR_HAND
 	}
 	else
 	{
-		if (close_set_error(close_performative, error_handle) != 0)
+		if ((error_handle != NULL) &&
+			/* Codes_SRS_CONNECTION_01_238: [If set, this field indicates that the connection is being closed due to an error condition.] */
+			(close_set_error(close_performative, error_handle) != 0))
 		{
 			result = __LINE__;
 		}
@@ -346,7 +348,10 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 			if (connection_instance->header_bytes_received == sizeof(amqp_header))
 			{
 				LOG(consolelogger_log, LOG_LINE, "<- Header (AMQP 0.1.0.0)");
-				connection_instance->connection_state = CONNECTION_STATE_HDR_EXCH;
+				if (send_open_frame(connection_instance) != 0)
+				{
+					connection_instance->connection_state = CONNECTION_STATE_END;
+				}
 			}
 
 			result = 0;
@@ -435,8 +440,13 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 						close_connection_with_error(connection_instance, "amqp:not-allowed", "OPEN frame received on a channel that is not 0");
 					}
 
-					if ((connection_instance->connection_state == CONNECTION_STATE_OPEN_SENT) ||
-						(connection_instance->connection_state == CONNECTION_STATE_HDR_EXCH))
+					if (connection_instance->connection_state == CONNECTION_STATE_OPENED)
+					{
+						/* Codes_SRS_CONNECTION_01_239: [If an Open frame is received in the Opened state the connection shall be closed with condition amqp:illegal-state and description being an implementation defined string.] */
+						close_connection_with_error(connection_instance, "amqp:illegal-state", "OPEN frame received in the OPENED state");
+					}
+					else if ((connection_instance->connection_state == CONNECTION_STATE_OPEN_SENT) ||
+							 (connection_instance->connection_state == CONNECTION_STATE_HDR_EXCH))
 					{
 						OPEN_HANDLE open_handle;
 						if (amqpvalue_get_open(performative, &open_handle) != 0)
@@ -463,7 +473,14 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 								}
 								else
 								{
-									connection_instance->connection_state = CONNECTION_STATE_OPEN_RCVD;
+									if (send_open_frame(connection_instance) != 0)
+									{
+										connection_instance->connection_state = CONNECTION_STATE_END;
+									}
+									else
+									{
+										connection_instance->connection_state = CONNECTION_STATE_OPENED;
+									}
 								}
 							}
 
@@ -479,7 +496,10 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 				{
 					/* Codes_SRS_CONNECTION_01_225: [HDR_RCVD HDR OPEN] */
 					if ((connection_instance->connection_state == CONNECTION_STATE_HDR_RCVD) ||
-						(connection_instance->connection_state == CONNECTION_STATE_HDR_EXCH))
+						/* Codes_SRS_CONNECTION_01_227: [HDR_EXCH OPEN OPEN] */
+						(connection_instance->connection_state == CONNECTION_STATE_HDR_EXCH) ||
+						/* Codes_SRS_CONNECTION_01_228: [OPEN_RCVD OPEN *] */
+						(connection_instance->connection_state == CONNECTION_STATE_OPEN_RCVD))
 					{
 						io_close(connection_instance->io);
 					}
@@ -496,7 +516,17 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 						else
 						{
 							close_destroy(close_handle);
-							connection_instance->connection_state = CONNECTION_STATE_CLOSE_RCVD;
+
+							if (send_close_frame(connection_instance, NULL) != 0)
+							{
+								/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
+								(void)io_close(connection_instance->io);
+								connection_instance->connection_state = CONNECTION_STATE_END;
+							}
+							else
+							{
+								connection_instance->connection_state = CONNECTION_STATE_CLOSE_SENT;
+							}
 						}
 					}
 				}
@@ -561,6 +591,8 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 		case CONNECTION_STATE_OC_PIPE:
 		/* Codes_SRS_CONNECTION_01_234: [CLOSE_RCVD * - TCP Close for Read] */
 		case CONNECTION_STATE_CLOSE_RCVD:
+		/* Codes_SRS_CONNECTION_01_235: [CLOSE_SENT - * TCP Close for Write] */
+		case CONNECTION_STATE_CLOSE_SENT:
 		/* Codes_SRS_CONNECTION_01_237: [END - - TCP Close] */
 		case CONNECTION_STATE_END:
 			io_close(connection_instance->io);

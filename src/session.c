@@ -11,7 +11,6 @@ typedef struct LINK_ENDPOINT_INSTANCE_TAG
 	handle incoming_handle;
 	handle outgoing_handle;
 	ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback;
-	ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback;
 	void* frame_received_callback_context;
 	SESSION_HANDLE session;
 } LINK_ENDPOINT_INSTANCE;
@@ -19,7 +18,6 @@ typedef struct LINK_ENDPOINT_INSTANCE_TAG
 typedef struct SESSION_INSTANCE_TAG
 {
 	ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback;
-	ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback;
 	void* frame_received_callback_context;
 	SESSION_STATE session_state;
 	CONNECTION_HANDLE connection;
@@ -119,7 +117,7 @@ static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_incoming_handle(SESSION_INS
 	return result;
 }
 
-static void session_frame_received(void* context, AMQP_VALUE performative, uint32_t payload_size)
+static void session_frame_received(void* context, AMQP_VALUE performative, uint32_t payload_size, const unsigned char* payload_bytes)
 {
 	SESSION_INSTANCE* session = (SESSION_INSTANCE*)context;
 	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
@@ -151,7 +149,7 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 		else
 		{
 			link_endpoint->incoming_handle = 0;
-			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size);
+			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size, payload_bytes);
 		}
 
 		break;
@@ -171,7 +169,7 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 		else
 		{
 			link_endpoint->incoming_handle = 0;
-			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size);
+			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size, payload_bytes);
 		}
 
 		break;
@@ -193,7 +191,7 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 			else
 			{
 				link_endpoint->incoming_handle = 0;
-				link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size);
+				link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size, payload_bytes);
 			}
 		}
 
@@ -215,7 +213,7 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 		else
 		{
 			link_endpoint->incoming_handle = 0;
-			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size);
+			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size, payload_bytes);
 		}
 
 		LOG(consolelogger_log, LOG_LINE, "<- [TRANSFER]");
@@ -228,7 +226,7 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 		for (i = 0; i < session->link_endpoint_count; i++)
 		{
 			LINK_ENDPOINT_INSTANCE* link_endpoint = &session->link_endpoints[i];
-			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size);
+			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size, payload_bytes);
 		}
 
 		break;
@@ -271,7 +269,7 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 		result->link_endpoints = NULL;
 		result->link_endpoint_count = 0;
 		result->delivery_id = 0;
-		result->endpoint = connection_create_endpoint(connection, session_frame_received, session_frame_payload_bytes_received, result);
+		result->endpoint = connection_create_endpoint(connection, session_frame_received, result);
 
 		result->handle_max = 4294967295;
 	}
@@ -430,7 +428,7 @@ int session_encode_payload_bytes(SESSION_HANDLE session, const unsigned char* by
 	return result;
 }
 
-LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context)
+LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context)
 {
 	LINK_ENDPOINT_INSTANCE* result;
 
@@ -452,7 +450,6 @@ LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const 
 		session_instance->link_endpoints = amqpalloc_realloc(session_instance->link_endpoints, sizeof(LINK_ENDPOINT_INSTANCE) * (session_instance->link_endpoint_count + 1));
 
 		session_instance->link_endpoints[session_instance->link_endpoint_count].frame_received_callback = frame_received_callback;
-		session_instance->link_endpoints[session_instance->link_endpoint_count].frame_payload_bytes_received_callback = frame_payload_bytes_received_callback;
 		session_instance->link_endpoints[session_instance->link_endpoint_count].frame_received_callback_context = context;
 		session_instance->link_endpoints[session_instance->link_endpoint_count].outgoing_handle = selected_handle;
 		session_instance->link_endpoints[session_instance->link_endpoint_count].name = amqpalloc_malloc(strlen(name) + 1);

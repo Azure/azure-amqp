@@ -29,7 +29,6 @@ typedef struct AMQP_FRAME_CODEC_INSTANCE_TAG
 	/* decode */
 	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
 	AMQP_EMPTY_FRAME_RECEIVED_CALLBACK empty_frame_received_callback;
-	AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK payload_bytes_received_callback;
 	void* callback_context;
 	uint32_t decode_frame_body_size;
 	uint32_t decode_frame_body_pos;
@@ -71,7 +70,7 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 			/* Codes_SRS_AMQP_FRAME_CODEC_01_054: [Once the performative is decoded, the callback frame_received_callback shall be called.] */
 			/* Codes_SRS_AMQP_FRAME_CODEC_01_055: [The decoded channel and performative shall be passed to frame_received_callback.] */
 			/* Codes_SRS_AMQP_FRAME_CODEC_01_056: [The AMQP frame payload size passed to frame_received_callback shall be computed from the frame payload size received from frame_codec and substracting the performative size.] */
-			amqp_frame_codec_instance->frame_received_callback(amqp_frame_codec_instance->callback_context, amqp_frame_codec_instance->channel, decoded_value, amqp_frame_codec_instance->decode_frame_body_size - amqp_frame_codec_instance->decode_frame_body_pos);
+			amqp_frame_codec_instance->frame_received_callback(amqp_frame_codec_instance->callback_context, amqp_frame_codec_instance->channel, decoded_value, amqp_frame_codec_instance->decode_frame_body_size - amqp_frame_codec_instance->decode_frame_body_pos, NULL);
 
 			if (amqp_frame_codec_instance->decode_frame_body_size > amqp_frame_codec_instance->decode_frame_body_pos)
 			{
@@ -189,7 +188,7 @@ static int frame_body_bytes_received(void* context, const unsigned char* frame_b
 			{
 				/* Codes_SRS_AMQP_FRAME_CODEC_01_004: [The remaining bytes in the frame body form the payload for that frame.] */
 				uint32_t to_indicate = frame_body_bytes_size;
-				amqp_frame_codec_instance->payload_bytes_received_callback(amqp_frame_codec_instance->callback_context, frame_body_bytes, frame_body_bytes_size);
+				amqp_frame_codec_instance->frame_received_callback(amqp_frame_codec_instance->callback_context, 1, NULL, frame_body_bytes, frame_body_bytes_size);
 
 				amqp_frame_codec_instance->decode_frame_body_pos += frame_body_bytes_size;
 				frame_body_bytes_size = 0;
@@ -214,16 +213,14 @@ static int frame_body_bytes_received(void* context, const unsigned char* frame_b
 
 /* Codes_SRS_AMQP_FRAME_CODEC_01_011: [amqp_frame_codec_create shall create an instance of an amqp_frame_codec and return a non-NULL handle to it.] */
 AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback,
-	AMQP_EMPTY_FRAME_RECEIVED_CALLBACK empty_frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK payload_bytes_received_callback,
-	void* frame_received_callback_context)
+	AMQP_EMPTY_FRAME_RECEIVED_CALLBACK empty_frame_received_callback, void* frame_received_callback_context)
 {
 	AMQP_FRAME_CODEC_INSTANCE* result;
 
-	/* Codes_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
+	/* Codes_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback or empty_frame_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
 	if ((frame_codec == NULL) ||
 		(frame_received_callback == NULL) ||
-		(empty_frame_received_callback == NULL) ||
-		(payload_bytes_received_callback == NULL))
+		(empty_frame_received_callback == NULL))
 	{
 		result = NULL;
 	}
@@ -236,7 +233,6 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			result->frame_codec = frame_codec;
 			result->frame_received_callback = frame_received_callback;
 			result->empty_frame_received_callback = empty_frame_received_callback;
-			result->payload_bytes_received_callback = payload_bytes_received_callback;
 			result->callback_context = frame_received_callback_context;
 			result->decode_state = AMQP_FRAME_DECODE_FRAME_HEADER;
 			result->encode_state = AMQP_FRAME_ENCODE_FRAME_HEADER;

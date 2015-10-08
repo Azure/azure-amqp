@@ -32,7 +32,7 @@ typedef struct LINK_INSTANCE_TAG
 	uint32_t delivery_tag_no;
 } LINK_INSTANCE;
 
-static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size)
+static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size, const unsigned char* payload_bytes)
 {
 	LINK_INSTANCE* link = (LINK_INSTANCE*)context;
 	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
@@ -156,7 +156,7 @@ static int encode_bytes(void* context, const void* bytes, size_t length)
 	return 0;
 }
 
-LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target, AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback, AMQP_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback)
+LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target, AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback)
 {
 	LINK_INSTANCE* result = amqpalloc_malloc(sizeof(LINK_INSTANCE));
 	if (result != NULL)
@@ -179,7 +179,7 @@ LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE sou
 		else
 		{
 			(void)strcpy(result->name, name);
-			result->link_endpoint = session_create_link_endpoint(session, name, link_frame_received, link_frame_payload_bytes_received, result);
+			result->link_endpoint = session_create_link_endpoint(session, name, link_frame_received, result);
 		}
 	}
 

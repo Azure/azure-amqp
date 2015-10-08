@@ -29,7 +29,6 @@ typedef struct ENDPOINT_INSTANCE_TAG
 	uint16_t incoming_channel;
 	uint16_t outgoing_channel;
 	ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback;
-	ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback;
 	void* frame_received_callback_context;
 	CONNECTION_HANDLE connection;
 } ENDPOINT_INSTANCE;
@@ -43,7 +42,6 @@ typedef struct CONNECTION_DATA_TAG
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec;
 	ENDPOINT_INSTANCE** endpoints;
 	uint32_t endpoint_count;
-	uint16_t frame_receive_channel;
 	char* host_name;
 	char* container_id;
 	uint32_t remote_max_frame_size;
@@ -411,7 +409,7 @@ static void connection_empty_frame_received(void* context, uint16_t channel)
 {
 }
 
-static void connection_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t payload_size)
+static void connection_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t payload_size, const unsigned char* payload_bytes)
 {
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)context;
 
@@ -559,7 +557,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 						else
 						{
 							session_endpoint->incoming_channel = channel;
-							session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size);
+							session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size, payload_bytes);
 						}
 
 						break;
@@ -579,8 +577,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 						}
 						else
 						{
-							session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size);
-							connection_instance->frame_receive_channel = channel;
+							session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size, payload_bytes);
 						}
 
 						break;
@@ -605,20 +602,6 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 			io_close(connection_instance->io);
 			break;
 		}
-	}
-}
-
-static void connection_frame_payload_bytes_received(void* context, const unsigned char* payload_bytes, uint32_t byte_count)
-{
-	CONNECTION_INSTANCE* connection_instance = context;
-	ENDPOINT_INSTANCE* endpoint_instance = find_session_endpoint_by_incoming_channel(connection_instance, connection_instance->frame_receive_channel);
-	if (endpoint_instance == NULL)
-	{
-		/* error */
-	}
-	else
-	{
-		endpoint_instance->frame_payload_bytes_received_callback(context, payload_bytes, byte_count);
 	}
 }
 
@@ -652,7 +635,7 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 			}
 			else
 			{
-				result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, connection_frame_payload_bytes_received, result);
+				result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, result);
 				if (result->amqp_frame_codec == NULL)
 				{
 					/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */
@@ -1018,15 +1001,14 @@ int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connect
 	return result;
 }
 
-ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, ENDPOINT_FRAME_PAYLOAD_BYTES_RECEIVED_CALLBACK frame_payload_bytes_received_callback, void* context)
+ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context)
 {
 	ENDPOINT_INSTANCE* result;
 
-	/* Codes_SRS_CONNECTION_01_113: [If connection, frame_received_callback or frame_payload_bytes_received_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
+	/* Codes_SRS_CONNECTION_01_113: [If connection or frame_received_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
 	/* Codes_SRS_CONNECTION_01_193: [The context argument shall be allowed to be NULL.] */
 	if ((connection == NULL) ||
-		(frame_received_callback == NULL) ||
-		(frame_payload_bytes_received_callback == NULL))
+		(frame_received_callback == NULL))
 	{
 		result = NULL;
 	}
@@ -1049,7 +1031,6 @@ ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOIN
 			ENDPOINT_INSTANCE** new_endpoints;
 
 			result->frame_received_callback = frame_received_callback;
-			result->frame_payload_bytes_received_callback = frame_payload_bytes_received_callback;
 			result->frame_received_callback_context = context;
 			result->outgoing_channel = channel_no;
 			result->connection = connection;

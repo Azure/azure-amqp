@@ -263,6 +263,8 @@ static void close_connection_with_error(CONNECTION_INSTANCE* connection_instance
 		else
 		{
 			/* Codes_SRS_CONNECTION_01_213: [When passing the bytes to frame_codec fails, a CLOSE frame shall be sent and the state shall be set to DISCARDING.] */
+			/* Codes_SRS_CONNECTION_01_055: [DISCARDING The DISCARDING state is a variant of the CLOSE SENT state where the close is triggered by an error.] */
+			/* Codes_SRS_CONNECTION_01_010: [After writing this frame the peer SHOULD continue to read from the connection until it receives the partner’s close frame ] */
 			connection_instance->connection_state = CONNECTION_STATE_DISCARDING;
 		}
 
@@ -494,12 +496,18 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 				}
 				else if (is_close_type_by_descriptor(descriptor))
 				{
+					/* Codes_SRS_CONNECTION_01_012: [A close frame MAY be received on any channel up to the maximum channel number negotiated in open.] */
+
 					/* Codes_SRS_CONNECTION_01_225: [HDR_RCVD HDR OPEN] */
 					if ((connection_instance->connection_state == CONNECTION_STATE_HDR_RCVD) ||
 						/* Codes_SRS_CONNECTION_01_227: [HDR_EXCH OPEN OPEN] */
 						(connection_instance->connection_state == CONNECTION_STATE_HDR_EXCH) ||
 						/* Codes_SRS_CONNECTION_01_228: [OPEN_RCVD OPEN *] */
-						(connection_instance->connection_state == CONNECTION_STATE_OPEN_RCVD))
+						(connection_instance->connection_state == CONNECTION_STATE_OPEN_RCVD) ||
+						/* Codes_SRS_CONNECTION_01_235: [CLOSE_SENT - * TCP Close for Write] */
+						(connection_instance->connection_state == CONNECTION_STATE_CLOSE_SENT) ||
+						/* Codes_SRS_CONNECTION_01_236: [DISCARDING - * TCP Close for Write] */
+						(connection_instance->connection_state == CONNECTION_STATE_DISCARDING))
 					{
 						io_close(connection_instance->io);
 					}
@@ -525,6 +533,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 							}
 							else
 							{
+								/* Codes_SRS_CONNECTION_01_010: [After writing this frame the peer SHOULD continue to read from the connection until it receives the partner’s close frame ] */
 								connection_instance->connection_state = CONNECTION_STATE_CLOSE_SENT;
 							}
 						}
@@ -591,8 +600,6 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 		case CONNECTION_STATE_OC_PIPE:
 		/* Codes_SRS_CONNECTION_01_234: [CLOSE_RCVD * - TCP Close for Read] */
 		case CONNECTION_STATE_CLOSE_RCVD:
-		/* Codes_SRS_CONNECTION_01_235: [CLOSE_SENT - * TCP Close for Write] */
-		case CONNECTION_STATE_CLOSE_SENT:
 		/* Codes_SRS_CONNECTION_01_237: [END - - TCP Close] */
 		case CONNECTION_STATE_END:
 			io_close(connection_instance->io);
@@ -722,6 +729,22 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 	}
 
 	return result;
+}
+
+void connection_destroy(CONNECTION_HANDLE connection)
+{
+	/* Codes_SRS_CONNECTION_01_079: [If handle is NULL, connection_destroy shall do nothing.] */
+	if (connection != NULL)
+	{
+		/* Codes_SRS_CONNECTION_01_073: [connection_destroy shall free all resources associated with a connection.] */
+		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+		amqp_frame_codec_destroy(connection_instance->amqp_frame_codec);
+		frame_codec_destroy(connection_instance->frame_codec);
+
+		/* Codes_SRS_CONNECTION_01_074: [connection_destroy shall close the socket connection.] */
+		io_destroy(connection_instance->io);
+		amqpalloc_free(connection_instance);
+	}
 }
 
 int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_frame_size)
@@ -894,22 +917,6 @@ int connection_get_idle_timeout(CONNECTION_HANDLE connection, milliseconds* idle
 	}
 
 	return result;
-}
-
-void connection_destroy(CONNECTION_HANDLE connection)
-{
-	/* Codes_SRS_CONNECTION_01_079: [If handle is NULL, connection_destroy shall do nothing.] */
-	if (connection != NULL)
-	{
-		/* Codes_SRS_CONNECTION_01_073: [connection_destroy shall free all resources associated with a connection.] */
-		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-		amqp_frame_codec_destroy(connection_instance->amqp_frame_codec);
-		frame_codec_destroy(connection_instance->frame_codec);
-
-		/* Codes_SRS_CONNECTION_01_074: [connection_destroy shall close the socket connection.] */
-		io_destroy(connection_instance->io);
-		amqpalloc_free(connection_instance);
-	}
 }
 
 void connection_dowork(CONNECTION_HANDLE connection)

@@ -346,30 +346,10 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 			if (connection_instance->header_bytes_received == sizeof(amqp_header))
 			{
 				LOG(consolelogger_log, LOG_LINE, "<- Header (AMQP 0.1.0.0)");
+				connection_instance->connection_state = CONNECTION_STATE_HDR_EXCH;
+			}
 
-				if (connection_instance->connection_state == CONNECTION_STATE_START)
-				{
-					if (send_header(connection_instance) != 0)
-					{
-						io_destroy(connection_instance->io);
-						connection_instance->io = NULL;
-						connection_instance->connection_state = CONNECTION_STATE_END;
-						result = __LINE__;
-					}
-					else
-					{
-						result = send_open_frame(connection_instance);
-					}
-				}
-				else
-				{
-					result = send_open_frame(connection_instance);
-				}
-			}
-			else
-			{
-				result = 0;
-			}
+			result = 0;
 		}
 		break;
 
@@ -497,18 +477,27 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 				}
 				else if (is_close_type_by_descriptor(descriptor))
 				{
-					CLOSE_HANDLE close_handle;
-
-					LOG(consolelogger_log, LOG_LINE, "<- [CLOSE]");
-					//LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
-					if (amqpvalue_get_close(performative, &close_handle) != 0)
+					/* Codes_SRS_CONNECTION_01_225: [HDR_RCVD HDR OPEN] */
+					if ((connection_instance->connection_state == CONNECTION_STATE_HDR_RCVD) ||
+						(connection_instance->connection_state == CONNECTION_STATE_HDR_EXCH))
 					{
-						close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_frame_received::failed parsing CLOSE frame");
+						io_close(connection_instance->io);
 					}
 					else
 					{
-						close_destroy(close_handle);
-						connection_instance->connection_state = CONNECTION_STATE_CLOSE_RCVD;
+						CLOSE_HANDLE close_handle;
+
+						LOG(consolelogger_log, LOG_LINE, "<- [CLOSE]");
+						//LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
+						if (amqpvalue_get_close(performative, &close_handle) != 0)
+						{
+							close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_frame_received::failed parsing CLOSE frame");
+						}
+						else
+						{
+							close_destroy(close_handle);
+							connection_instance->connection_state = CONNECTION_STATE_CLOSE_RCVD;
+						}
 					}
 				}
 				else
@@ -953,17 +942,12 @@ void connection_dowork(CONNECTION_HANDLE connection)
 				break;
 
 			case CONNECTION_STATE_HDR_EXCH:
-				if (io_get_state(connection_instance->io) == IO_STATE_READY)
+				/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection_instance begins with an exchange of capabilities and limitations, including the maximum frame size.] */
+				/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection_instance and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
+				/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
+				if (send_open_frame(connection) != 0)
 				{
-					/* Codes_SRS_CONNECTION_01_002: [Each AMQP connection_instance begins with an exchange of capabilities and limitations, including the maximum frame size.] */
-					/* Codes_SRS_CONNECTION_01_004: [After establishing or accepting a TCP connection_instance and sending the protocol header, each peer MUST send an open frame before sending any other frames.] */
-					/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
-					if (send_open_frame(connection) != 0)
-					{
-						io_destroy(connection_instance->io);
-						connection_instance->io = NULL;
-						connection_instance->connection_state = CONNECTION_STATE_END;
-					}
+					connection_instance->connection_state = CONNECTION_STATE_END;
 				}
 				break;
 

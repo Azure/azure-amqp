@@ -63,7 +63,7 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 	}
 }
 
-static int frame_received(void* context, uint32_t decode_frame_body_size, const unsigned char* type_specific, uint32_t type_specific_size)
+static int frame_received(void* context, const unsigned char* type_specific, uint32_t type_specific_size, const unsigned char* frame_body, uint32_t decode_frame_body_size)
 {
 	int result;
 	SASL_FRAME_CODEC_INSTANCE* sasl_frame_codec_instance = (SASL_FRAME_CODEC_INSTANCE*)context;

@@ -214,7 +214,7 @@ TEST_FUNCTION(amqp_frame_codec_create_with_valid_args_succeeds)
 
 	EXPECTED_CALL(mocks, amqpvalue_decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, frame_codec_subscribe(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-		.IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5);
+		.IgnoreArgument(3).IgnoreArgument(4);
 
 	// act
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, TEST_CONTEXT);
@@ -235,7 +235,7 @@ TEST_FUNCTION(amqp_frame_codec_create_with_valid_args_and_NULL_context_succeeds)
 
 	EXPECTED_CALL(mocks, amqpvalue_decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, frame_codec_subscribe(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-		.IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5);
+		.IgnoreArgument(3).IgnoreArgument(4);
 
 	// act
 	AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, NULL);
@@ -293,7 +293,7 @@ TEST_FUNCTION(when_frame_codec_subscribe_fails_then_amqp_frame_codec_create_fail
 
 	EXPECTED_CALL(mocks, amqpvalue_decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
 	STRICT_EXPECTED_CALL(mocks, frame_codec_subscribe(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-		.IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+		.IgnoreArgument(3).IgnoreArgument(4)
 		.SetReturn(1);
 
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_decoder_destroy(TEST_DECODER_HANDLE));

@@ -66,11 +66,7 @@ public:
 	/* frame received callback */
 	MOCK_STATIC_METHOD_5(, int, frame_received_callback_1, void*, context, const unsigned char*, type_specific, uint32_t, type_specific_size, const unsigned char*, frame_body, uint32_t, frame_body_size)
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_3(, int, frame_body_bytes_received_callback_1, void*, context, const unsigned char*, frame_body_bytes, uint32_t, frame_body_bytes_size)
-	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_5(, int, frame_received_callback_2, void*, context, const unsigned char*, type_specific, uint32_t, type_specific_size, const unsigned char*, frame_body, uint32_t, frame_body_size)
-	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_3(, int, frame_body_bytes_received_callback_2, void*, context, const unsigned char*, frame_body_bytes, uint32_t, frame_body_bytes_size)
 	MOCK_METHOD_END(int, 0);
 
 	/* list mocks */
@@ -124,9 +120,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, amqpalloc_free, void*, ptr);
 
 	DECLARE_GLOBAL_MOCK_METHOD_5(frame_codec_mocks, , int, frame_received_callback_1, void*, context, const unsigned char*, type_specific, uint32_t, type_specific_size, const unsigned char*, frame_body, uint32_t, frame_body_size);
-	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , int, frame_body_bytes_received_callback_1, void*, context, const unsigned char*, frame_body_bytes, uint32_t, frame_body_bytes_size);
 	DECLARE_GLOBAL_MOCK_METHOD_5(frame_codec_mocks, , int, frame_received_callback_2, void*, context, const unsigned char*, type_specific, uint32_t, type_specific_size, const unsigned char*, frame_body, uint32_t, frame_body_size);
-	DECLARE_GLOBAL_MOCK_METHOD_3(frame_codec_mocks, , int, frame_body_bytes_received_callback_2, void*, context, const unsigned char*, frame_body_bytes, uint32_t, frame_body_bytes_size);
 
 	DECLARE_GLOBAL_MOCK_METHOD_0(frame_codec_mocks, , LIST_HANDLE, list_create);
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, list_destroy, LIST_HANDLE, list);
@@ -611,7 +605,7 @@ TEST_FUNCTION(setting_a_new_max_frame_while_the_frame_size_is_being_received_mak
 /* frame_codec_receive_bytes */
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
-/* Tests_SRS_FRAME_CODEC_01_031: [When a frame header is successfully decoded it shall be indicated to the upper layer by invoking the frame_received_callback_1 passed to frame_codec_subscribe.] */
+/* Tests_SRS_FRAME_CODEC_01_031: [When a complete frame is successfully decoded it shall be indicated to the upper layer by invoking the frame_received_callback passed to frame_codec_subscribe.] */
 /* Tests_SRS_FRAME_CODEC_01_032: [Besides passing the frame information, the callback_context value passed to frame_codec_subscribe shall be passed to the frame_received_callback_1 function.] */
 /* Tests_SRS_FRAME_CODEC_01_001: [Frames are divided into three distinct areas: a fixed width frame header, a variable width extended header, and a variable width frame body.] */
 /* Tests_SRS_FRAME_CODEC_01_002: [frame header The frame header is a fixed size (8 byte) structure that precedes each frame.] */
@@ -625,8 +619,8 @@ TEST_FUNCTION(setting_a_new_max_frame_while_the_frame_size_is_being_received_mak
 /* Tests_SRS_FRAME_CODEC_01_013: [The value of the data offset is an unsigned, 8-bit integer specifying a count of 4-byte words.] */
 /* Tests_SRS_FRAME_CODEC_01_015: [TYPE Byte 5 of the frame header is a type code.] */
 /* Tests_SRS_FRAME_CODEC_01_028: [The sequence of bytes shall be decoded according to the AMQP ISO.] */
-/* Tests_SRS_FRAME_CODEC_01_085: [If the frame body is empty, no call to frame_body_bytes_received_callback_1 shall be made.] */
 /* Tests_SRS_FRAME_CODEC_01_035: [After successfully registering a callback for a certain frame type, when subsequently that frame type is received the callbacks shall be invoked, passing to it the received frame and the callback_context value. */
+/* Tests_SRS_FRAME_CODEC_01_100: [If the frame body size is 0, the frame_body pointer shall be NULL.] */
 TEST_FUNCTION(frame_codec_receive_bytes_decodes_one_empty_frame)
 {
 	// arrange
@@ -1033,7 +1027,7 @@ TEST_FUNCTION(after_a_frame_decode_error_occurs_due_to_bad_doff_size_a_subsequen
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
-/* Tests_SRS_FRAME_CODEC_01_083: [The frame body bytes shall be passed to the frame_body_bytes_received_callback_1 function that was given to frame_codec_subscribe.] */
+/* Tests_SRS_FRAME_CODEC_01_031: [When a complete frame is successfully decoded it shall be indicated to the upper layer by invoking the frame_received_callback passed to frame_codec_subscribe.] */
 /* Tests_SRS_FRAME_CODEC_01_086: [Besides passing the frame information, the callback_context value passed to frame_codec_subscribe shall be passed to the frame_body_bytes_received_callback_1 function.] */
 TEST_FUNCTION(receiving_a_frame_with_1_byte_frame_body_succeeds)
 {
@@ -1110,55 +1104,7 @@ TEST_FUNCTION(when_allocating_type_specific_data_fails_a_subsequent_decode_Call_
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_FRAME_CODEC_01_084: [The bytes shall be passed to frame_body_bytes_received_callback_1 as they arrive, not waiting for all frame body bytes to be received.] */
-TEST_FUNCTION(a_frame_with_2_bytes_received_in_2_frame_codec_receive_bytes_calls_passes_the_bytes_as_they_arrive)
-{
-	// arrange
-	frame_codec_mocks mocks;
-	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	(void)frame_codec_subscribe(frame_codec, 0, frame_received_callback_1, frame_codec);
-	mocks.ResetAllCalls();
-	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x0A, 0x02, 0x00, 0x01, 0x02, 0x42, 0x43 };
-	frame_codec_receive_bytes(frame_codec, frame, sizeof(frame) - 2);
-	mocks.ResetAllCalls();
-
-	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback_1(frame_codec, IGNORED_PTR_ARG, 1))
-		.ValidateArgumentBuffer(2, &frame[sizeof(frame) - 2], 1);
-	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback_1(frame_codec, IGNORED_PTR_ARG, 1))
-		.ValidateArgumentBuffer(2, &frame[sizeof(frame) - 1], 1);
-
-	(void)frame_codec_receive_bytes(frame_codec, &frame[sizeof(frame) - 2], 1);
-
-	// act
-	(void)frame_codec_receive_bytes(frame_codec, &frame[sizeof(frame) - 1], 1);
-
-	// assert
-	// uMock checks the calls
-}
-
-/* Tests_SRS_FRAME_CODEC_01_084: [The bytes shall be passed to frame_body_bytes_received_callback_1 as they arrive, not waiting for all frame body bytes to be received.] */
-TEST_FUNCTION(a_frame_with_2_bytes_received_in_1_frame_codec_receive_bytes_call_passes_the_bytes_as_they_arrive)
-{
-	// arrange
-	frame_codec_mocks mocks;
-	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, consolelogger_log);
-	(void)frame_codec_subscribe(frame_codec, 0, frame_received_callback_1, frame_codec);
-	mocks.ResetAllCalls();
-	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x0A, 0x02, 0x00, 0x01, 0x02, 0x42, 0x43 };
-	frame_codec_receive_bytes(frame_codec, frame, sizeof(frame) - 2);
-	mocks.ResetAllCalls();
-
-	STRICT_EXPECTED_CALL(mocks, frame_body_bytes_received_callback_1(frame_codec, IGNORED_PTR_ARG, 2))
-		.ValidateArgumentBuffer(2, &frame[sizeof(frame) - 2], 2);
-
-	// act
-	(void)frame_codec_receive_bytes(frame_codec, &frame[sizeof(frame) - 2], 2);
-
-	// assert
-	// uMock checks the calls
-}
-
-/* Tests_SRS_FRAME_CODEC_01_084: [The bytes shall be passed to frame_body_bytes_received_callback_1 as they arrive, not waiting for all frame body bytes to be received.] */
+/* Tests_SRS_FRAME_CODEC_01_031: [When a complete frame is successfully decoded it shall be indicated to the upper layer by invoking the frame_received_callback passed to frame_codec_subscribe.] */
 TEST_FUNCTION(a_frame_with_2_bytes_received_together_with_the_header_passes_the_bytes_in_one_call)
 {
 	// arrange
@@ -1173,7 +1119,7 @@ TEST_FUNCTION(a_frame_with_2_bytes_received_together_with_the_header_passes_the_
 		.ValidateArgumentBuffer(3, &frame[5], 1);
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(2));
+	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(sizeof(frame)));
 	STRICT_EXPECTED_CALL(mocks, frame_received_callback_1(frame_codec, IGNORED_PTR_ARG, 2, IGNORED_PTR_ARG, 2))
 		.ValidateArgumentBuffer(2, &frame[6], 2)
 		.ValidateArgumentBuffer(4, &frame[sizeof(frame) - 2], 2);
@@ -1819,7 +1765,7 @@ TEST_FUNCTION(when_frame_codec_is_NULL_frame_codec_begin_encode_frame_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_091: [If the argument type_specific_size is greater than 0 and type_specific_bytes is NULL, frame_codec_begin_encode_frame shall return a non-zero value.] */
-TEST_FUNCTION(when_type_specific_size_is_positive_and_type_speific_bytes_is_NULL_frame_codec_begin_encode_frame_fails)
+TEST_FUNCTION(when_type_specific_size_is_positive_and_type_specific_bytes_is_NULL_frame_codec_begin_encode_frame_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;

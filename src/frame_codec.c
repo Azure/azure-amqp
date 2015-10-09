@@ -334,15 +334,15 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 
 				if (frame_codec_data->receive_frame_pos == type_specific_size)
 				{
-					/* Codes_SRS_FRAME_CODEC_01_085: [If the frame body is empty, no call to frame_body_bytes_received_callback shall be made.] */
 					if (frame_codec_data->receive_frame_size == FRAME_HEADER_SIZE)
 					{
 						if (frame_codec_data->receive_frame_subscription != NULL)
 						{
-							/* Codes_SRS_FRAME_CODEC_01_031: [When a frame header is successfully decoded it shall be indicated to the upper layer by invoking the frame_received_callback passed to frame_codec_data_subscribe.] */
+							/* Codes_SRS_FRAME_CODEC_01_031: [When a complete frame is successfully decoded it shall be indicated to the upper layer by invoking the frame_received_callback passed to frame_codec_subscribe.] */
 							/* Codes_SRS_FRAME_CODEC_01_032: [Besides passing the frame information, the callback_context value passed to frame_codec_data_subscribe shall be passed to the frame_received_callback function.] */
 							/* Codes_SRS_FRAME_CODEC_01_005: [This is an extension point defined for future expansion.] */
 							/* Codes_SRS_FRAME_CODEC_01_006: [The treatment of this area depends on the frame type.] */
+							/* Codes_SRS_FRAME_CODEC_01_100: [If the frame body size is 0, the frame_body pointer shall be NULL.] */
 							frame_codec_data->receive_frame_subscription->frame_received_callback(frame_codec_data->receive_frame_subscription->callback_context, frame_codec_data->receive_frame_type_specific, type_specific_size, NULL, 0);
 							amqpalloc_free(frame_codec_data->receive_frame_type_specific);
 							frame_codec_data->receive_frame_type_specific = NULL;
@@ -381,7 +381,7 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 				{
 					if (frame_codec_data->receive_frame_subscription != NULL)
 					{
-						/* Codes_SRS_FRAME_CODEC_01_031: [When a frame header is successfully decoded it shall be indicated to the upper layer by invoking the frame_received_callback passed to frame_codec_data_subscribe.] */
+						/* Codes_SRS_FRAME_CODEC_01_031: [When a complete frame is successfully decoded it shall be indicated to the upper layer by invoking the frame_received_callback passed to frame_codec_subscribe.] */
 						/* Codes_SRS_FRAME_CODEC_01_032: [Besides passing the frame information, the callback_context value passed to frame_codec_data_subscribe shall be passed to the frame_received_callback function.] */
 						/* Codes_SRS_FRAME_CODEC_01_005: [This is an extension point defined for future expansion.] */
 						/* Codes_SRS_FRAME_CODEC_01_006: [The treatment of this area depends on the frame type.] */

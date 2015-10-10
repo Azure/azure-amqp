@@ -133,7 +133,7 @@ static void delivery_settled_callback(void* context, delivery_number delivery_no
 	(void)printf("delivery callback %u\r\n", delivery_no);
 }
 
-static void messaging_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t frame_payload_size, const unsigned char* payload_bytes)
+static void messaging_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, const unsigned char* payload_bytes, uint32_t frame_payload_size)
 {
 }
 

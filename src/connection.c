@@ -409,7 +409,7 @@ static void connection_empty_frame_received(void* context, uint16_t channel)
 {
 }
 
-static void connection_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, uint32_t payload_size, const unsigned char* payload_bytes)
+static void connection_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, const unsigned char* payload_bytes, uint32_t payload_size)
 {
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)context;
 

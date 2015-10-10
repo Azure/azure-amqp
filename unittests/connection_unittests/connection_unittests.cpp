@@ -2518,7 +2518,7 @@ TEST_METHOD(when_an_open_frame_is_indicated_as_received_before_even_opening_the_
 	unsigned char payload_bytes[] = { 0x42 };
 
 	// act
-	amqp_frame_received_callback(amqp_frame_received_callback_context, 0, TEST_OPEN_PERFORMATIVE, sizeof(payload_bytes), payload_bytes);
+	amqp_frame_received_callback(amqp_frame_received_callback_context, 0, TEST_OPEN_PERFORMATIVE, payload_bytes, sizeof(payload_bytes));
 
 	// assert
 	mocks.AssertActualAndExpectedCalls();
@@ -2996,7 +2996,7 @@ TEST_METHOD(when_a_CLOSE_frame_with_1_byte_payload_is_received_it_is_still_valid
 	unsigned char payload_bytes[] = { 0x42 };
 
 	// act
-	amqp_frame_received_callback(amqp_frame_received_callback_context, 1, TEST_CLOSE_PERFORMATIVE, sizeof(payload_bytes), payload_bytes);
+	amqp_frame_received_callback(amqp_frame_received_callback_context, 1, TEST_CLOSE_PERFORMATIVE, payload_bytes, sizeof(payload_bytes));
 
 	// assert
 	mocks.AssertActualAndExpectedCalls();

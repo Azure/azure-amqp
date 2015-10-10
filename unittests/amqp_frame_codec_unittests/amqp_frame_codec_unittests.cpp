@@ -78,8 +78,8 @@ public:
 	MOCK_METHOD_END(FRAME_CODEC_HANDLE, TEST_FRAME_CODEC_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, frame_codec_destroy, FRAME_CODEC_HANDLE, frame_codec);
 	MOCK_VOID_METHOD_END();
-	MOCK_STATIC_METHOD_4(, int, frame_codec_subscribe, FRAME_CODEC_HANDLE, frame_codec, uint8_t, type, FRAME_RECEIVED_CALLBACK, frame_begin_callback, void*, callback_context);
-		saved_frame_received_callback = frame_begin_callback;
+	MOCK_STATIC_METHOD_4(, int, frame_codec_subscribe, FRAME_CODEC_HANDLE, frame_codec, uint8_t, type, FRAME_RECEIVED_CALLBACK, frame_received_callback, void*, callback_context);
+		saved_frame_received_callback = frame_received_callback;
 		saved_callback_context = callback_context;
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_2(, int, frame_codec_unsubscribe, FRAME_CODEC_HANDLE, frame_codec, uint8_t, type);
@@ -124,7 +124,7 @@ public:
 	/* callbacks */
 	MOCK_STATIC_METHOD_2(, void, amqp_empty_frame_received_callback_1, void*, context, uint16_t, channel);
 	MOCK_VOID_METHOD_END();
-	MOCK_STATIC_METHOD_5(, void, amqp_frame_received_callback_1, void*, context, uint16_t, channel, AMQP_VALUE, performative, uint32_t, frame_payload_size, const unsigned char*, payload_bytes);
+	MOCK_STATIC_METHOD_5(, void, amqp_frame_received_callback_1, void*, context, uint16_t, channel, AMQP_VALUE, performative, const unsigned char*, payload_bytes, uint32_t, frame_payload_size);
 	MOCK_VOID_METHOD_END();
 };
 
@@ -141,7 +141,7 @@ extern "C"
 
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_frame_codec_mocks, , FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_frame_codec_mocks, , void, frame_codec_destroy, FRAME_CODEC_HANDLE, frame_codec);
-	DECLARE_GLOBAL_MOCK_METHOD_4(amqp_frame_codec_mocks, , int, frame_codec_subscribe, FRAME_CODEC_HANDLE, frame_codec, uint8_t, type, FRAME_RECEIVED_CALLBACK, frame_begin_callback, void*, callback_context);
+	DECLARE_GLOBAL_MOCK_METHOD_4(amqp_frame_codec_mocks, , int, frame_codec_subscribe, FRAME_CODEC_HANDLE, frame_codec, uint8_t, type, FRAME_RECEIVED_CALLBACK, frame_received_callback, void*, callback_context);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_frame_codec_mocks, , int, frame_codec_unsubscribe, FRAME_CODEC_HANDLE, frame_codec, uint8_t, type);
 	DECLARE_GLOBAL_MOCK_METHOD_5(amqp_frame_codec_mocks, , int, frame_codec_begin_encode_frame, FRAME_CODEC_HANDLE, frame_codec, uint8_t, type, uint32_t, frame_body_size, const unsigned char*, type_specific_bytes, uint32_t, type_specific_size);
 	DECLARE_GLOBAL_MOCK_METHOD_3(amqp_frame_codec_mocks, , int, frame_codec_encode_frame_bytes, FRAME_CODEC_HANDLE, frame_codec, const unsigned char*, bytes, size_t, length);
@@ -154,7 +154,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_3(amqp_frame_codec_mocks, , int, amqpvalue_encode, AMQP_VALUE, value, AMQPVALUE_ENCODER_OUTPUT, encoder_output, void*, context);
 
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_frame_codec_mocks, , void, amqp_empty_frame_received_callback_1, void*, context, uint16_t, channel);
-	DECLARE_GLOBAL_MOCK_METHOD_5(amqp_frame_codec_mocks, , void, amqp_frame_received_callback_1, void*, context, uint16_t, channel, AMQP_VALUE, performative, uint32_t, frame_payload_size, const unsigned char*, payload_bytes);
+	DECLARE_GLOBAL_MOCK_METHOD_5(amqp_frame_codec_mocks, , void, amqp_frame_received_callback_1, void*, context, uint16_t, channel, AMQP_VALUE, performative, const unsigned char*, payload_bytes, uint32_t, frame_payload_size);
 
 	extern void consolelogger_log(char* format, ...)
 	{

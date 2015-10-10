@@ -649,8 +649,8 @@ TEST_FUNCTION(frame_codec_receive_bytes_decodes_one_empty_frame)
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
-#if 0
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
+/* Tests_SRS_FRAME_CODEC_01_029: [The sequence of bytes does not have to be a complete frame, frame_codec shall be responsible for maintaining decoding state between frame_codec_receive_bytes calls.] */
 TEST_FUNCTION(frame_codec_receive_bytes_with_not_enough_bytes_for_a_frame_does_not_trigger_callback)
 {
 	// arrange
@@ -771,7 +771,7 @@ TEST_FUNCTION(when_frame_codec_receive_the_frame_bytes_in_1_byte_per_call_a_succ
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 	STRICT_EXPECTED_CALL(mocks, frame_received_callback_1(frame_codec, IGNORED_PTR_ARG, 2, IGNORED_PTR_ARG, 0))
-		.ValidateArgumentBuffer(3, &frame[6], 2)
+		.ValidateArgumentBuffer(2, &frame[6], 2)
 		.IgnoreArgument(4);
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
@@ -1030,6 +1030,8 @@ TEST_FUNCTION(after_a_frame_decode_error_occurs_due_to_bad_doff_size_a_subsequen
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
 /* Tests_SRS_FRAME_CODEC_01_031: [When a complete frame is successfully decoded it shall be indicated to the upper layer by invoking the frame_received_callback passed to frame_codec_subscribe.] */
+/* Tests_SRS_FRAME_CODEC_01_099: [A pointer to the frame_body bytes shall also be passed to the frame_received_callback.] */
+/* Tests_SRS_FRAME_CODEC_01_102: [frame_codec_receive_bytes shall allocate memory to hold the frame_body bytes.] */
 TEST_FUNCTION(receiving_a_frame_with_1_byte_frame_body_succeeds)
 {
 	// arrange
@@ -1057,7 +1059,7 @@ TEST_FUNCTION(receiving_a_frame_with_1_byte_frame_body_succeeds)
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_FRAME_CODEC_01_030: [If a decoding error occurs, frame_codec_receive_bytes shall return a non-zero value.] */
+/* Tests_SRS_FRAME_CODEC_01_101: [If the memory for the frame_body bytes cannot be allocated, frame_codec_receive_bytes shall fail and return a non-zero value.] */
 TEST_FUNCTION(when_allocating_type_specific_data_fails_frame_codec_receive_bytes_fails)
 {
 	// arrange
@@ -1083,6 +1085,7 @@ TEST_FUNCTION(when_allocating_type_specific_data_fails_frame_codec_receive_bytes
 }
 
 /* Tests_SRS_FRAME_CODEC_01_030: [If a decoding error occurs, frame_codec_receive_bytes shall return a non-zero value.] */
+/* Tests_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
 TEST_FUNCTION(when_allocating_type_specific_data_fails_a_subsequent_decode_Call_fails)
 {
 	// arrange
@@ -1120,7 +1123,7 @@ TEST_FUNCTION(a_frame_with_2_bytes_received_together_with_the_header_passes_the_
 		.ValidateArgumentBuffer(3, &frame[5], 1);
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 	STRICT_EXPECTED_CALL(mocks, frame_received_callback_1(frame_codec, IGNORED_PTR_ARG, 2, IGNORED_PTR_ARG, 2))
 		.ValidateArgumentBuffer(2, &frame[6], 2)
 		.ValidateArgumentBuffer(4, &frame[sizeof(frame) - 2], 2);
@@ -2302,6 +2305,5 @@ TEST_FUNCTION(when_encoding_frame_body_bytes_fails_subsequent_frame_encoding_att
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
-#endif
 
 END_TEST_SUITE(frame_codec_unittests)

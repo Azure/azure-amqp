@@ -280,10 +280,13 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 					else
 					{
 						frame_codec_data->receive_frame_pos = 0;
+
+						/* Codes_SRS_FRAME_CODEC_01_102: [frame_codec_receive_bytes shall allocate memory to hold the frame_body bytes.] */
 						frame_codec_data->receive_frame_bytes = (unsigned char*)amqpalloc_malloc(frame_codec_data->receive_frame_size - 6);
-						/* Codes_SRS_FRAME_CODEC_01_030: [If a decoding error occurs, frame_codec_data_receive_bytes shall return a non-zero value.] */
 						if (frame_codec_data->receive_frame_bytes == NULL)
 						{
+							/* Codes_SRS_FRAME_CODEC_01_101: [If the memory for the frame_body bytes cannot be allocated, frame_codec_receive_bytes shall fail and return a non-zero value.] */
+							/* Codes_SRS_FRAME_CODEC_01_030: [If a decoding error occurs, frame_codec_data_receive_bytes shall return a non-zero value.] */
 							/* Codes_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
 							frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
 							result = __LINE__;
@@ -385,6 +388,7 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 						/* Codes_SRS_FRAME_CODEC_01_032: [Besides passing the frame information, the callback_context value passed to frame_codec_data_subscribe shall be passed to the frame_received_callback function.] */
 						/* Codes_SRS_FRAME_CODEC_01_005: [This is an extension point defined for future expansion.] */
 						/* Codes_SRS_FRAME_CODEC_01_006: [The treatment of this area depends on the frame type.] */
+						/* Codes_SRS_FRAME_CODEC_01_099: [A pointer to the frame_body bytes shall also be passed to the frame_received_callback.] */
 						frame_codec_data->receive_frame_subscription->frame_received_callback(frame_codec_data->receive_frame_subscription->callback_context, frame_codec_data->receive_frame_bytes, frame_codec_data->type_specific_size, frame_codec_data->receive_frame_bytes + frame_codec_data->type_specific_size, frame_body_size);
 						amqpalloc_free(frame_codec_data->receive_frame_bytes);
 						frame_codec_data->receive_frame_bytes = NULL;

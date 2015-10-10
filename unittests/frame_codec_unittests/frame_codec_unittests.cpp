@@ -522,7 +522,8 @@ TEST_FUNCTION(attempting_to_set_a_max_frame_size_lower_than_the_size_of_the_curr
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
-TEST_FUNCTION(attempting_to_set_a_max_frame_size_when_the_decoder_is_in_error_succeeds)
+/* Tests_SRS_FRAME_CODEC_01_098: [Setting a frame size on a frame_codec that had an encode error shall fail.] */
+TEST_FUNCTION(attempting_to_set_a_max_frame_size_when_the_decoder_is_in_error_fails)
 {
 	// arrange
 	frame_codec_mocks mocks;

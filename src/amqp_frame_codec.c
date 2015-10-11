@@ -28,8 +28,6 @@ typedef struct AMQP_FRAME_CODEC_INSTANCE_TAG
 	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
 	AMQP_EMPTY_FRAME_RECEIVED_CALLBACK empty_frame_received_callback;
 	void* callback_context;
-	uint32_t decode_frame_body_size;
-	uint16_t channel;
 	AMQPVALUE_DECODER_HANDLE decoder;
 	AMQP_FRAME_DECODE_STATE decode_state;
 	AMQP_VALUE decoded_performative;
@@ -65,6 +63,7 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 {
 	int result;
 	AMQP_FRAME_CODEC_INSTANCE* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_INSTANCE*)context;
+	uint16_t channel;
 
 	switch (amqp_frame_codec_instance->decode_state)
 	{
@@ -83,17 +82,15 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 		}
 		else
 		{
-			amqp_frame_codec_instance->decode_frame_body_size = frame_body_size;
-
 			/* Codes_SRS_AMQP_FRAME_CODEC_01_001: [Bytes 6 and 7 of an AMQP frame contain the channel number ] */
-			amqp_frame_codec_instance->channel = ((uint16_t)type_specific[0]) << 8;
-			amqp_frame_codec_instance->channel += type_specific[1];
+			channel = ((uint16_t)type_specific[0]) << 8;
+			channel += type_specific[1];
 
 			if (frame_body_size == 0)
 			{
 				/* Codes_SRS_AMQP_FRAME_CODEC_01_048: [When a frame header is received from frame_codec and the frame payload size is 0, empty_frame_received_callback shall be invoked, while passing the channel number as argument.] */
 				/* Codes_SRS_AMQP_FRAME_CODEC_01_007: [An AMQP frame with no body MAY be used to generate artificial traffic as needed to satisfy any negotiated idle timeout interval ] */
-				amqp_frame_codec_instance->empty_frame_received_callback(amqp_frame_codec_instance->callback_context, amqp_frame_codec_instance->channel);
+				amqp_frame_codec_instance->empty_frame_received_callback(amqp_frame_codec_instance->callback_context, channel);
 				result = 0;
 			}
 			else
@@ -129,7 +126,7 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 					/* Codes_SRS_AMQP_FRAME_CODEC_01_067: [When the performative is decoded, the rest of the frame_bytes shall not be given to the AMQP decoder, but they shall be buffered so that later they are given to the frame_received callback.] */
 					/* Codes_SRS_AMQP_FRAME_CODEC_01_054: [Once the performative is decoded and all frame payload bytes are received, the callback frame_received_callback shall be called.] */
 					/* Codes_SRS_AMQP_FRAME_CODEC_01_068: [A pointer to all the payload bytes shall also be passed to frame_received_callback.] */
-					amqp_frame_codec_instance->frame_received_callback(amqp_frame_codec_instance->callback_context, amqp_frame_codec_instance->channel, amqp_frame_codec_instance->decoded_performative, frame_body, frame_body_size);
+					amqp_frame_codec_instance->frame_received_callback(amqp_frame_codec_instance->callback_context, channel, amqp_frame_codec_instance->decoded_performative, frame_body, frame_body_size);
 					result = 0;
 				}
 			}

@@ -12,12 +12,6 @@ typedef enum SASL_FRAME_DECODE_STATE_TAG
 	SASL_FRAME_DECODE_ERROR
 } SASL_FRAME_DECODE_STATE;
 
-typedef enum SASL_FRAME_ENCODE_STATE_TAG
-{
-	SASL_FRAME_ENCODE_FRAME,
-	SASL_FRAME_ENCODE_ERROR
-} SASL_FRAME_ENCODE_STATE;
-
 typedef struct SASL_FRAME_CODEC_INSTANCE_TAG
 {
 	FRAME_CODEC_HANDLE frame_codec;
@@ -28,9 +22,6 @@ typedef struct SASL_FRAME_CODEC_INSTANCE_TAG
 	AMQPVALUE_DECODER_HANDLE decoder;
 	SASL_FRAME_DECODE_STATE decode_state;
 	AMQP_VALUE decoded_performative;
-
-	/* encode */
-	SASL_FRAME_ENCODE_STATE encode_state;
 } SASL_FRAME_CODEC_INSTANCE;
 
 static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
@@ -129,7 +120,6 @@ SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			result->frame_received_callback = frame_received_callback;
 			result->callback_context = frame_received_callback_context;
 			result->decode_state = SASL_FRAME_DECODE_FRAME;
-			result->encode_state = SASL_FRAME_ENCODE_FRAME;
 
 			/* Codes_SRS_SASL_FRAME_CODEC_01_022: [amqp_frame_codec_create shall create a decoder to be used for decoding SASL values.] */
 			result->decoder = amqpvalue_decoder_create(amqp_value_decoded, result);
@@ -173,6 +163,7 @@ void sasl_frame_codec_destroy(SASL_FRAME_CODEC_HANDLE sasl_frame_codec)
 	}
 }
 
+/* Codes_SRS_SASL_FRAME_CODEC_01_029: [sasl_frame_codec_encode_frame shall encode the frame header and AMQP value in a SASL frame and on success it shall return 0.] */
 int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, const AMQP_VALUE performative)
 {
 	int result;
@@ -180,8 +171,7 @@ int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, cons
 	SASL_FRAME_CODEC_INSTANCE* sasl_frame_codec_instance = (SASL_FRAME_CODEC_INSTANCE*)sasl_frame_codec;
 
 	if ((sasl_frame_codec == NULL) ||
-		(performative == NULL) ||
-		(sasl_frame_codec_instance->encode_state != SASL_FRAME_ENCODE_FRAME))
+		(performative == NULL))
 	{
 		result = __LINE__;
 	}
@@ -192,31 +182,39 @@ int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, cons
 
 		if (((descriptor = amqpvalue_get_inplace_descriptor(performative)) == NULL) ||
 			(amqpvalue_get_ulong(descriptor, &sasl_frame_descriptor_ulong) != 0) ||
+			/* Codes_SRS_SASL_FRAME_CODEC_01_047: [The frame body of a SASL frame MUST contain exactly one AMQP type, whose type encoding MUST have provides=“sasl-frame”.] */
 			(sasl_frame_descriptor_ulong < SASL_MECHANISMS) ||
 			(sasl_frame_descriptor_ulong > SASL_OUTCOME))
 		{
+			/* Codes_SRS_SASL_FRAME_CODEC_01_034: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
 			result = __LINE__;
 		}
+		/* Codes_SRS_SASL_FRAME_CODEC_01_032: [The payload frame size shall be computed based on the encoded size of the sasl_frame and its fields.] */
+		/* Codes_SRS_SASL_FRAME_CODEC_01_033: [The encoded size of the sasl_frame and its fields shall be obtained by calling amqpvalue_get_encoded_size.] */
 		else if (amqpvalue_get_encoded_size(performative, &amqp_frame_payload_size) != 0)
 		{
+			/* Codes_SRS_SASL_FRAME_CODEC_01_034: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
 			result = __LINE__;
 		}
 		else
 		{
+			/* Codes_SRS_SASL_FRAME_CODEC_01_031: [sasl_frame_codec_encode_frame shall encode the frame header by using frame_codec_begin_encode_frame.] */
 			if (frame_codec_begin_encode_frame(sasl_frame_codec_instance->frame_codec, FRAME_TYPE_SASL, amqp_frame_payload_size, NULL, 0) != 0)
 			{
+				/* Codes_SRS_SASL_FRAME_CODEC_01_034: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
 				result = __LINE__;
 			}
 			else
 			{
+				/* Codes_SRS_SASL_FRAME_CODEC_01_035: [Encoding of the sasl_frame and its fields shall be done by calling amqpvalue_encode.] */
+				/* Codes_SRS_SASL_FRAME_CODEC_01_036: [The encode result for the sasl_frame and its fields shall be given to frame_codec by calling frame_codec_encode_frame_bytes.] */
 				if (amqpvalue_encode(performative, frame_codec_encode_frame_bytes, sasl_frame_codec_instance->frame_codec) != 0)
 				{
+					/* Codes_SRS_SASL_FRAME_CODEC_01_034: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
 					result = __LINE__;
 				}
 				else
 				{
-					sasl_frame_codec_instance->encode_state = SASL_FRAME_ENCODE_FRAME;
-
 					result = 0;
 				}
 			}

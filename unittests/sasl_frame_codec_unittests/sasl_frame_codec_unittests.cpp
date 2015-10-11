@@ -421,168 +421,114 @@ TEST_FUNCTION(encoding_the_beginning_of_a_frame_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
 }
 
-#if 0
-/* Tests_SRS_AMQP_FRAME_CODEC_01_005: [Bytes 6 and 7 of an AMQP frame contain the channel number ] */
-TEST_FUNCTION(using_channel_no_0x4243_passes_the_channel_number_as_type_specific_bytes)
-{
-	// arrange
-	// arrange
-	sasl_frame_codec_mocks mocks;
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	mocks.ResetAllCalls();
-
-	size_t performative_size = 2;
-	uint16_t channel = 0x4243;
-	unsigned char channel_bytes[] = { 0x42, 0x43 };
-	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
-	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
-		.IgnoreArgument(2);
-	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_encoded_size(TEST_AMQP_VALUE, IGNORED_PTR_ARG))
-		.CopyOutArgumentBuffer(2, &performative_size, sizeof(performative_size));
-	STRICT_EXPECTED_CALL(mocks, frame_codec_begin_encode_frame(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, performative_size, channel_bytes, sizeof(channel_bytes)))
-		.ValidateArgumentBuffer(4, &channel_bytes, sizeof(channel_bytes));
-	EXPECTED_CALL(mocks, amqpvalue_encode(TEST_AMQP_VALUE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-		.ValidateArgument(1);
-	STRICT_EXPECTED_CALL(mocks, frame_codec_encode_frame_bytes(TEST_FRAME_CODEC_HANDLE, test_encoded_bytes, sizeof(test_encoded_bytes)))
-		.ValidateArgumentBuffer(2, &test_encoded_bytes, sizeof(test_encoded_bytes));
-
-	// act
-	int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 0);
-
-	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
-}
-
-/* Tests_SRS_AMQP_FRAME_CODEC_01_026: [The payload frame size shall be computed based on the encoded size of the performative and its fields plus the payload_size argument.] */
-TEST_FUNCTION(encoding_the_beginning_of_a_frame_with_1_byte_payload_computes_correct_payload_size)
-{
-	// arrange
-	sasl_frame_codec_mocks mocks;
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	mocks.ResetAllCalls();
-
-	size_t performative_size = 2;
-	uint16_t channel = 0;
-	unsigned char channel_bytes[] = { 0, 0 };
-	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
-	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
-		.IgnoreArgument(2);
-	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_encoded_size(TEST_AMQP_VALUE, IGNORED_PTR_ARG))
-		.CopyOutArgumentBuffer(2, &performative_size, sizeof(performative_size));
-	STRICT_EXPECTED_CALL(mocks, frame_codec_begin_encode_frame(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, performative_size + 1, channel_bytes, sizeof(channel_bytes)))
-		.ValidateArgumentBuffer(4, &channel_bytes, sizeof(channel_bytes));
-	EXPECTED_CALL(mocks, amqpvalue_encode(TEST_AMQP_VALUE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-		.ValidateArgument(1);
-	STRICT_EXPECTED_CALL(mocks, frame_codec_encode_frame_bytes(TEST_FRAME_CODEC_HANDLE, test_encoded_bytes, sizeof(test_encoded_bytes)))
-		.ValidateArgumentBuffer(2, &test_encoded_bytes, sizeof(test_encoded_bytes));
-
-	// act
-	int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 1);
-
-	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
-}
-
-/* Tests_SRS_AMQP_FRAME_CODEC_01_024: [If frame_codec or performative_fields is NULL, sasl_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
-TEST_FUNCTION(sasl_frame_codec_begin_encode_frame_with_NULL_sasl_frame_codec_fails)
+/* Tests_SRS_SASL_FRAME_CODEC_01_030: [If frame_codec or sasl_frame_fields is NULL, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
+TEST_FUNCTION(sasl_frame_codec_encode_frame_with_NULL_sasl_frame_codec_fails)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
 
 	// act
-	int result = sasl_frame_codec_begin_encode_frame(NULL, 0, TEST_AMQP_VALUE, 1);
+	int result = sasl_frame_codec_encode_frame(NULL, TEST_AMQP_VALUE);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_024: [If frame_codec or performative_fields is NULL, sasl_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
-TEST_FUNCTION(sasl_frame_codec_begin_encode_frame_with_NULL_performative_value_fails)
+/* Tests_SRS_SASL_FRAME_CODEC_01_030: [If frame_codec or sasl_frame_fields is NULL, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
+TEST_FUNCTION(sasl_frame_codec_encode_frame_with_NULL_performative_value_fails)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 
 	// act
-	int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, NULL, 1);
+	int result = sasl_frame_codec_encode_frame(sasl_frame_codec, NULL);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, sasl_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
-TEST_FUNCTION(when_amqpvalue_get_encoded_size_fails_then_sasl_frame_codec_begin_encode_frame_fails)
+/* Tests_SRS_SASL_FRAME_CODEC_01_034: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
+TEST_FUNCTION(when_amqpvalue_get_encoded_size_fails_then_sasl_frame_codec_encode_frame_fails)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 
-	size_t performative_size = 2;
-	uint16_t channel = 0;
-	unsigned char channel_bytes[] = { 0, 0 };
+	size_t sasl_frame_value_size = 2;
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
 		.IgnoreArgument(2);
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_encoded_size(TEST_AMQP_VALUE, IGNORED_PTR_ARG))
-		.CopyOutArgumentBuffer(2, &performative_size, sizeof(performative_size))
+		.IgnoreArgument(2)
 		.SetReturn(1);
 
 	// act
-	int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 1);
+	int result = sasl_frame_codec_encode_frame(sasl_frame_codec, TEST_AMQP_VALUE);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, sasl_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
-TEST_FUNCTION(when_frame_codec_begin_encode_frame_fails_then_sasl_frame_codec_begin_encode_frame_fails)
+/* Tests_SRS_SASL_FRAME_CODEC_01_034: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
+TEST_FUNCTION(when_frame_codec_begin_encode_frame_fails_then_sasl_frame_codec_encode_frame_fails)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 
-	size_t performative_size = 2;
-	uint16_t channel = 0;
-	unsigned char channel_bytes[] = { 0, 0 };
+	size_t sasl_frame_value_size = 2;
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
 		.IgnoreArgument(2);
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_encoded_size(TEST_AMQP_VALUE, IGNORED_PTR_ARG))
-		.CopyOutArgumentBuffer(2, &performative_size, sizeof(performative_size));
-	STRICT_EXPECTED_CALL(mocks, frame_codec_begin_encode_frame(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, performative_size + 1, channel_bytes, sizeof(channel_bytes)))
-		.ValidateArgumentBuffer(4, &channel_bytes, sizeof(channel_bytes))
+		.CopyOutArgumentBuffer(2, &sasl_frame_value_size, sizeof(sasl_frame_value_size));
+	STRICT_EXPECTED_CALL(mocks, frame_codec_begin_encode_frame(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_SASL, sasl_frame_value_size, NULL, 0))
 		.SetReturn(1);
 
 	// act
-	int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 1);
+	int result = sasl_frame_codec_encode_frame(sasl_frame_codec, TEST_AMQP_VALUE);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, sasl_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
-TEST_FUNCTION(when_amqpvalue_encode_fails_then_sasl_frame_codec_begin_encode_frame_fails)
+/* Tests_SRS_SASL_FRAME_CODEC_01_034: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
+TEST_FUNCTION(when_amqpvalue_encode_fails_then_sasl_frame_codec_encode_frame_fails)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 
-	size_t performative_size = 2;
-	uint16_t channel = 0;
-	unsigned char channel_bytes[] = { 0, 0 };
+	size_t sasl_frame_value_size = 2;
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
 		.IgnoreArgument(2);
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_encoded_size(TEST_AMQP_VALUE, IGNORED_PTR_ARG))
-		.CopyOutArgumentBuffer(2, &performative_size, sizeof(performative_size));
-	STRICT_EXPECTED_CALL(mocks, frame_codec_begin_encode_frame(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, performative_size + 1, channel_bytes, sizeof(channel_bytes)))
-		.ValidateArgumentBuffer(4, &channel_bytes, sizeof(channel_bytes));
+		.CopyOutArgumentBuffer(2, &sasl_frame_value_size, sizeof(sasl_frame_value_size));
+	STRICT_EXPECTED_CALL(mocks, frame_codec_begin_encode_frame(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_SASL, sasl_frame_value_size, NULL, 0));
 	EXPECTED_CALL(mocks, amqpvalue_encode(TEST_AMQP_VALUE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1)
 		.SetReturn(1);
@@ -590,51 +536,58 @@ TEST_FUNCTION(when_amqpvalue_encode_fails_then_sasl_frame_codec_begin_encode_fra
 		.ValidateArgumentBuffer(2, &test_encoded_bytes, sizeof(test_encoded_bytes));
 
 	// act
-	int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 1);
+	int result = sasl_frame_codec_encode_frame(sasl_frame_codec, TEST_AMQP_VALUE);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_008: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
-/* Tests_SRS_AMQP_FRAME_CODEC_01_008: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_047: [The frame body of a SASL frame MUST contain exactly one AMQP type, whose type encoding MUST have provides=“sasl-frame”.] */
 TEST_FUNCTION(amqp_performatives_are_encoded_successfully)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 	size_t i;
-	uint64_t valid_performatives[] = { 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
+	uint64_t valid_sasl_frame_descriptor_ulongs[] = { SASL_MECHANISMS, SASL_INIT, SASL_CHALLENGE, SASL_RESPONSE, SASL_OUTCOME };
 
-	for (i = 0; i < sizeof(valid_performatives) / sizeof(valid_performatives[0]); i++)
+	for (i = 0; i < sizeof(valid_sasl_frame_descriptor_ulongs) / sizeof(valid_sasl_frame_descriptor_ulongs[0]); i++)
 	{
+		mocks.ResetAllCalls();
+
 		size_t performative_size = 2;
-		uint16_t channel = 0;
-		unsigned char channel_bytes[] = { 0, 0 };
-		performative_ulong = valid_performatives[i];
+		sasl_frame_descriptor_ulong = valid_sasl_frame_descriptor_ulongs[i];
 		STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
 		STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
-			.IgnoreArgument(2);
+			.CopyOutArgumentBuffer(2, &sasl_frame_descriptor_ulong, sizeof(sasl_frame_descriptor_ulong));
 		STRICT_EXPECTED_CALL(mocks, amqpvalue_get_encoded_size(TEST_AMQP_VALUE, IGNORED_PTR_ARG))
 			.CopyOutArgumentBuffer(2, &performative_size, sizeof(performative_size));
-		STRICT_EXPECTED_CALL(mocks, frame_codec_begin_encode_frame(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, performative_size, channel_bytes, sizeof(channel_bytes)))
-			.ValidateArgumentBuffer(4, &channel_bytes, sizeof(channel_bytes));
+		STRICT_EXPECTED_CALL(mocks, frame_codec_begin_encode_frame(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_SASL, performative_size, NULL, 0));
 		EXPECTED_CALL(mocks, amqpvalue_encode(TEST_AMQP_VALUE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 			.ValidateArgument(1);
 		STRICT_EXPECTED_CALL(mocks, frame_codec_encode_frame_bytes(TEST_FRAME_CODEC_HANDLE, test_encoded_bytes, sizeof(test_encoded_bytes)))
 			.ValidateArgumentBuffer(2, &test_encoded_bytes, sizeof(test_encoded_bytes));
 
 		// act
-		int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 0);
+		int result = sasl_frame_codec_encode_frame(sasl_frame_codec, TEST_AMQP_VALUE);
 
 		// assert
 		ASSERT_ARE_EQUAL(int, 0, result);
+		mocks.AssertActualAndExpectedCalls();
 	}
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, sasl_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
-TEST_FUNCTION(when_getting_the_descriptor_fails_then_sasl_frame_codec_begin_encode_frame_fails)
+#if 0
+/* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
+TEST_FUNCTION(when_getting_the_descriptor_fails_then_sasl_frame_codec_encode_frame_fails)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
@@ -646,14 +599,14 @@ TEST_FUNCTION(when_getting_the_descriptor_fails_then_sasl_frame_codec_begin_enco
 		.SetReturn((AMQP_VALUE)NULL);
 
 	// act
-	int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 0);
+	int result = sasl_frame_codec_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 0);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, sasl_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
-TEST_FUNCTION(when_getting_the_ulong_value_of_the_descriptor_fails_then_sasl_frame_codec_begin_encode_frame_fails)
+/* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
+TEST_FUNCTION(when_getting_the_ulong_value_of_the_descriptor_fails_then_sasl_frame_codec_encode_frame_fails)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
@@ -667,15 +620,15 @@ TEST_FUNCTION(when_getting_the_ulong_value_of_the_descriptor_fails_then_sasl_fra
 		.SetReturn(1);
 
 	// act
-	int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 0);
+	int result = sasl_frame_codec_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 0);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, sasl_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
 /* Tests_SRS_AMQP_FRAME_CODEC_01_008: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
-TEST_FUNCTION(when_performative_ulong_is_0x09_sasl_frame_codec_begin_encode_frame_fails)
+TEST_FUNCTION(when_performative_ulong_is_0x09_sasl_frame_codec_encode_frame_fails)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
@@ -689,15 +642,15 @@ TEST_FUNCTION(when_performative_ulong_is_0x09_sasl_frame_codec_begin_encode_fram
 		.IgnoreArgument(2);
 
 	// act
-	int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 0);
+	int result = sasl_frame_codec_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 0);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, sasl_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
 /* Tests_SRS_AMQP_FRAME_CODEC_01_008: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
-TEST_FUNCTION(when_performative_ulong_is_0x19_sasl_frame_codec_begin_encode_frame_fails)
+TEST_FUNCTION(when_performative_ulong_is_0x19_sasl_frame_codec_encode_frame_fails)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
@@ -711,7 +664,7 @@ TEST_FUNCTION(when_performative_ulong_is_0x19_sasl_frame_codec_begin_encode_fram
 		.IgnoreArgument(2);
 
 	// act
-	int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 0);
+	int result = sasl_frame_codec_encode_frame(sasl_frame_codec, channel, TEST_AMQP_VALUE, 0);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
@@ -719,10 +672,10 @@ TEST_FUNCTION(when_performative_ulong_is_0x19_sasl_frame_codec_begin_encode_fram
 
 /* sasl_frame_codec_encode_payload_bytes */
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_031: [sasl_frame_codec_encode_payload_bytes shall encode the bytes for a frame that was begun with sasl_frame_codec_begin_encode_frame.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_031: [sasl_frame_codec_encode_payload_bytes shall encode the bytes for a frame that was begun with sasl_frame_codec_encode_frame.] */
 /* Tests_SRS_AMQP_FRAME_CODEC_01_032: [On success sasl_frame_codec_encode_payload_bytes shall return 0.] */
 /* Tests_SRS_AMQP_FRAME_CODEC_01_037: [The bytes shall be passed to frame codec by a call to frame_codec_encode_frame_bytes.] */
-/* Tests_SRS_AMQP_FRAME_CODEC_01_023: [sasl_frame_codec_begin_encode_frame shall not encode the frame payload bytes, but switch to a state where it expects the bytes to be passed by using sasl_frame_codec_encode_payload_bytes.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_023: [sasl_frame_codec_encode_frame shall not encode the frame payload bytes, but switch to a state where it expects the bytes to be passed by using sasl_frame_codec_encode_payload_bytes.] */
 /* Tests_SRS_AMQP_FRAME_CODEC_01_009: [The remaining bytes in the frame body form the payload for that frame.] */
 TEST_FUNCTION(sasl_frame_codec_encode_payload_bytes_encodes_the_bytes)
 {
@@ -730,7 +683,7 @@ TEST_FUNCTION(sasl_frame_codec_encode_payload_bytes_encodes_the_bytes)
 	sasl_frame_codec_mocks mocks;
 	unsigned char payload_bytes[] = { 0x42 };
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	(void)sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
+	(void)sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_encode_frame_bytes(TEST_FRAME_CODEC_HANDLE, payload_bytes, sizeof(payload_bytes)))
@@ -764,7 +717,7 @@ TEST_FUNCTION(when_bytes_is_NULL_sasl_frame_codec_encode_payload_bytes_fails)
 	sasl_frame_codec_mocks mocks;
 	unsigned char payload_bytes[] = { 0x42 };
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	(void)sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
+	(void)sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
 	mocks.ResetAllCalls();
 
 	// act
@@ -781,7 +734,7 @@ TEST_FUNCTION(when_count_is_zero_sasl_frame_codec_encode_payload_bytes_fails)
 	sasl_frame_codec_mocks mocks;
 	unsigned char payload_bytes[] = { 0x42 };
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	(void)sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
+	(void)sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
 	mocks.ResetAllCalls();
 
 	// act
@@ -814,7 +767,7 @@ TEST_FUNCTION(sasl_frame_codec_encode_payload_bytes_without_starting_a_frame_enc
 	sasl_frame_codec_mocks mocks;
 	unsigned char payload_bytes[] = { 0x42 };
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	(void)sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
+	(void)sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
 	(void)sasl_frame_codec_encode_payload_bytes(sasl_frame_codec, payload_bytes, sizeof(payload_bytes));
 	mocks.ResetAllCalls();
 
@@ -832,7 +785,7 @@ TEST_FUNCTION(sasl_frame_codec_encode_payload_bytes_with_too_many_bytes_fails)
 	sasl_frame_codec_mocks mocks;
 	unsigned char payload_bytes[] = { 0x42 };
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	(void)sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
+	(void)sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
 	mocks.ResetAllCalls();
 
 	// act
@@ -849,7 +802,7 @@ TEST_FUNCTION(sasl_frame_codec_encode_payload_bytes_when_payload_bytes_was_zero_
 	sasl_frame_codec_mocks mocks;
 	unsigned char payload_bytes[] = { 0x42 };
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	(void)sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, 0);
+	(void)sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, 0);
 	mocks.ResetAllCalls();
 
 	// act
@@ -866,7 +819,7 @@ TEST_FUNCTION(after_sasl_frame_codec_encode_payload_bytes_beginning_a_new_frame_
 	sasl_frame_codec_mocks mocks;
 	unsigned char payload_bytes[] = { 0x42 };
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	(void)sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, 0);
+	(void)sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, 0);
 	(void)sasl_frame_codec_encode_payload_bytes(sasl_frame_codec, payload_bytes, sizeof(payload_bytes));
 	mocks.ResetAllCalls();
 
@@ -886,13 +839,13 @@ TEST_FUNCTION(after_sasl_frame_codec_encode_payload_bytes_beginning_a_new_frame_
 		.ValidateArgumentBuffer(2, &test_encoded_bytes, sizeof(test_encoded_bytes));
 
 	// act
-	int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, 1);
+	int result = sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, 1);
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_035: [sasl_frame_codec shall maintain the number of bytes needed to be sent as the payload for the frame started with sasl_frame_codec_begin_encode_frame.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_035: [sasl_frame_codec shall maintain the number of bytes needed to be sent as the payload for the frame started with sasl_frame_codec_encode_frame.] */
 /* Tests_SRS_AMQP_FRAME_CODEC_01_039: [The frame payload bytes for one frame shall be allowed to be given by multiple calls to sasl_frame_codec_encode_payload_bytes.] */
 TEST_FUNCTION(sending_the_1st_byte_of_a_payload_succeeds)
 {
@@ -900,7 +853,7 @@ TEST_FUNCTION(sending_the_1st_byte_of_a_payload_succeeds)
 	sasl_frame_codec_mocks mocks;
 	unsigned char payload_bytes[] = { 0x42, 0x43 };
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	(void)sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
+	(void)sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_encode_frame_bytes(TEST_FRAME_CODEC_HANDLE, payload_bytes, 1))
@@ -913,7 +866,7 @@ TEST_FUNCTION(sending_the_1st_byte_of_a_payload_succeeds)
 	ASSERT_ARE_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_035: [sasl_frame_codec shall maintain the number of bytes needed to be sent as the payload for the frame started with sasl_frame_codec_begin_encode_frame.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_035: [sasl_frame_codec shall maintain the number of bytes needed to be sent as the payload for the frame started with sasl_frame_codec_encode_frame.] */
 /* Tests_SRS_AMQP_FRAME_CODEC_01_039: [The frame payload bytes for one frame shall be allowed to be given by multiple calls to sasl_frame_codec_encode_payload_bytes.] */
 TEST_FUNCTION(sending_the_2nd_byte_of_a_payload_succeeds)
 {
@@ -921,7 +874,7 @@ TEST_FUNCTION(sending_the_2nd_byte_of_a_payload_succeeds)
 	sasl_frame_codec_mocks mocks;
 	unsigned char payload_bytes[] = { 0x42, 0x43 };
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	(void)sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
+	(void)sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
 	(void)sasl_frame_codec_encode_payload_bytes(sasl_frame_codec, payload_bytes, 1);
 	mocks.ResetAllCalls();
 
@@ -942,7 +895,7 @@ TEST_FUNCTION(when_giving_the_data_to_frame_codec_fails_then_sasl_frame_codec_en
 	sasl_frame_codec_mocks mocks;
 	unsigned char payload_bytes[] = { 0x42, 0x43 };
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	(void)sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
+	(void)sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_encode_frame_bytes(TEST_FRAME_CODEC_HANDLE, payload_bytes, 2))
@@ -952,7 +905,7 @@ TEST_FUNCTION(when_giving_the_data_to_frame_codec_fails_then_sasl_frame_codec_en
 	(void)sasl_frame_codec_encode_payload_bytes(sasl_frame_codec, payload_bytes, 2);
 
 	// act
-	int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
+	int result = sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
@@ -965,7 +918,7 @@ TEST_FUNCTION(when_giving_the_data_to_frame_codec_fails_subsequent_encode_attemp
 	sasl_frame_codec_mocks mocks;
 	unsigned char payload_bytes[] = { 0x42, 0x43 };
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	(void)sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
+	(void)sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_encode_frame_bytes(TEST_FRAME_CODEC_HANDLE, payload_bytes, 2))
@@ -975,7 +928,7 @@ TEST_FUNCTION(when_giving_the_data_to_frame_codec_fails_subsequent_encode_attemp
 	(void)sasl_frame_codec_encode_payload_bytes(sasl_frame_codec, payload_bytes, 2);
 
 	// act
-	int result = sasl_frame_codec_begin_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
+	int result = sasl_frame_codec_encode_frame(sasl_frame_codec, 0, TEST_AMQP_VALUE, sizeof(payload_bytes));
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);

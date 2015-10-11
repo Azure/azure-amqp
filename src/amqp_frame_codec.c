@@ -173,7 +173,7 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			else
 			{
 				/* Codes_SRS_AMQP_FRAME_CODEC_01_013: [amqp_frame_codec_create shall subscribe for AMQP frames with the given frame_codec.] */
-				if (frame_codec_subscribe(frame_codec, 0, frame_received, result) != 0)
+				if (frame_codec_subscribe(frame_codec, FRAME_TYPE_AMQP, frame_received, result) != 0)
 				{
 					/* Codes_SRS_AMQP_FRAME_CODEC_01_014: [If subscribing for AMQP frames fails, amqp_frame_codec_create shall fail and return NULL.] */
 					amqpvalue_decoder_destroy(result->decoder);

@@ -2968,6 +2968,7 @@ TEST_METHOD(when_a_CLOSE_frame_is_received_on_channel_1_it_is_still_valid)
 	connection_destroy(connection);
 }
 
+#if 0
 /* Tests_SRS_CONNECTION_01_012: [A close frame MAY be received on any channel up to the maximum channel number negotiated in open.] */
 TEST_METHOD(when_a_CLOSE_frame_with_1_byte_payload_is_received_it_is_still_valid)
 {
@@ -3004,5 +3005,6 @@ TEST_METHOD(when_a_CLOSE_frame_with_1_byte_payload_is_received_it_is_still_valid
 	// cleanup
 	connection_destroy(connection);
 }
+#endif
 
 END_TEST_SUITE(connection_unittests)

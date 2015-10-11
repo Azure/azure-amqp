@@ -137,7 +137,7 @@ SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			}
 			else
 			{
-				if (frame_codec_subscribe(frame_codec, 0, frame_received, result) != 0)
+				if (frame_codec_subscribe(frame_codec, FRAME_TYPE_SASL, frame_received, result) != 0)
 				{
 					amqpvalue_decoder_destroy(result->decoder);
 					amqpalloc_free(result);

@@ -9,9 +9,7 @@
 
 typedef enum AMQP_FRAME_DECODE_STATE_TAG
 {
-	AMQP_FRAME_DECODE_FRAME_HEADER,
-	AMQP_FRAME_DECODE_FRAME_PERFORMATIVE,
-	AMQP_FRAME_DECODE_FRAME_PAYLOAD,
+	AMQP_FRAME_DECODE_FRAME,
 	AMQP_FRAME_DECODE_ERROR
 } AMQP_FRAME_DECODE_STATE;
 
@@ -31,10 +29,10 @@ typedef struct AMQP_FRAME_CODEC_INSTANCE_TAG
 	AMQP_EMPTY_FRAME_RECEIVED_CALLBACK empty_frame_received_callback;
 	void* callback_context;
 	uint32_t decode_frame_body_size;
-	uint32_t decode_frame_body_pos;
 	uint16_t channel;
 	AMQPVALUE_DECODER_HANDLE decoder;
 	AMQP_FRAME_DECODE_STATE decode_state;
+	AMQP_VALUE decoded_performative;
 
 	/* encode */
 	AMQP_FRAME_ENCODE_STATE encode_state;
@@ -45,45 +43,21 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 {
 	AMQP_FRAME_CODEC_INSTANCE* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_INSTANCE*)context;
 	uint64_t performative_descriptor_ulong;
+	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(decoded_value);
 
-	switch (amqp_frame_codec_instance->decode_state)
+	/* Codes_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
+	if ((descriptor == NULL) ||
+		(amqpvalue_get_ulong(descriptor, &performative_descriptor_ulong) != 0) ||
+		/* Codes_SRS_AMQP_FRAME_CODEC_01_003: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
+		(performative_descriptor_ulong < AMQP_OPEN) ||
+		(performative_descriptor_ulong > AMQP_CLOSE))
 	{
-	default:
-		amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_ERROR;
-		break;
-
-	case AMQP_FRAME_DECODE_FRAME_PERFORMATIVE:
-	{
-		AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(decoded_value);
-
 		/* Codes_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
-		if ((descriptor == NULL) ||
-			(amqpvalue_get_ulong(descriptor, &performative_descriptor_ulong) != 0) ||
-			/* Codes_SRS_AMQP_FRAME_CODEC_01_003: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
-			(performative_descriptor_ulong < AMQP_OPEN) ||
-			(performative_descriptor_ulong > AMQP_CLOSE))
-		{
-			amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_ERROR;
-		}
-		else
-		{
-			/* Codes_SRS_AMQP_FRAME_CODEC_01_054: [Once the performative is decoded, the callback frame_received_callback shall be called.] */
-			/* Codes_SRS_AMQP_FRAME_CODEC_01_055: [The decoded channel and performative shall be passed to frame_received_callback.] */
-			/* Codes_SRS_AMQP_FRAME_CODEC_01_056: [The AMQP frame payload size passed to frame_received_callback shall be computed from the frame payload size received from frame_codec and substracting the performative size.] */
-			amqp_frame_codec_instance->frame_received_callback(amqp_frame_codec_instance->callback_context, amqp_frame_codec_instance->channel, decoded_value, NULL, amqp_frame_codec_instance->decode_frame_body_size - amqp_frame_codec_instance->decode_frame_body_pos);
-
-			if (amqp_frame_codec_instance->decode_frame_body_size > amqp_frame_codec_instance->decode_frame_body_pos)
-			{
-				amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_FRAME_PAYLOAD;
-			}
-			else
-			{
-				amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_FRAME_HEADER;
-			}
-		}
-
-		break;
+		amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_ERROR;
 	}
+	else
+	{
+		amqp_frame_codec_instance->decoded_performative = decoded_value;
 	}
 }
 
@@ -92,20 +66,15 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 	int result;
 	AMQP_FRAME_CODEC_INSTANCE* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_INSTANCE*)context;
 
-	(void)frame_body;
-
 	switch (amqp_frame_codec_instance->decode_state)
 	{
 	default:
 	/* Codes_SRS_AMQP_FRAME_CODEC_01_050: [All subsequent decoding shall fail and no AMQP frames shall be indicated from that point on to the consumers of amqp_frame_codec.] */
 	case AMQP_FRAME_DECODE_ERROR:
-	/* Codes_SRS_AMQP_FRAME_CODEC_01_059: [If the decoding of an AMQP frame is incomplete, but a new one is started, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
-	case AMQP_FRAME_DECODE_FRAME_PERFORMATIVE:
-	case AMQP_FRAME_DECODE_FRAME_PAYLOAD:
 		result = __LINE__;
 		break;
 
-	case AMQP_FRAME_DECODE_FRAME_HEADER:
+	case AMQP_FRAME_DECODE_FRAME:
 		/* Codes_SRS_AMQP_FRAME_CODEC_01_049: [If not enough type specific bytes are received to decode the channel number, the decoding shall stop with an error.] */
 		if (type_specific_size < 2)
 		{
@@ -115,7 +84,6 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 		else
 		{
 			amqp_frame_codec_instance->decode_frame_body_size = frame_body_size;
-			amqp_frame_codec_instance->decode_frame_body_pos = 0;
 
 			/* Codes_SRS_AMQP_FRAME_CODEC_01_001: [Bytes 6 and 7 of an AMQP frame contain the channel number ] */
 			amqp_frame_codec_instance->channel = ((uint16_t)type_specific[0]) << 8;
@@ -131,83 +99,42 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 			else
 			{
 				/* Codes_SRS_AMQP_FRAME_CODEC_01_051: [If the frame payload is greater than 0, amqp_frame_codec shall decode the performative as a described AMQP type.] */
-				amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_FRAME_PERFORMATIVE;
-				result = 0;
-			}
-		}
-		break;
-	}
+				/* Codes_SRS_AMQP_FRAME_CODEC_01_002: [The frame body is defined as a performative followed by an opaque payload.] */
+				amqp_frame_codec_instance->decoded_performative = NULL;
 
-	return result;
-}
+				while ((frame_body_size > 0) &&
+					   (amqp_frame_codec_instance->decoded_performative == NULL) &&
+					   (amqp_frame_codec_instance->decode_state != AMQP_FRAME_DECODE_ERROR))
+				{
+					/* Codes_SRS_AMQP_FRAME_CODEC_01_052: [Decoding the performative shall be done by feeding the bytes to the decoder create in amqp_frame_codec_create.] */
+					if (amqpvalue_decode_bytes(amqp_frame_codec_instance->decoder, frame_body, 1) != 0)
+					{
+						/* Codes_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
+						amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_ERROR;
+					}
+					else
+					{
+						frame_body_size--;
+						frame_body++;
+					}
+				}
 
-static int frame_body_bytes_received(void* context, const unsigned char* frame_body_bytes, uint32_t frame_body_bytes_size)
-{
-	int result;
-	AMQP_FRAME_CODEC_INSTANCE* amqp_frame_codec_instance = (AMQP_FRAME_CODEC_INSTANCE*)context;
-
-	/* Codes_SRS_AMQP_FRAME_CODEC_01_058: [If more bytes than expected are indicated, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
-	if (amqp_frame_codec_instance->decode_frame_body_size - amqp_frame_codec_instance->decode_frame_body_pos < frame_body_bytes_size)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		/* Codes_SRS_AMQP_FRAME_CODEC_01_002: [The frame body is defined as a performative followed by an opaque payload.] */
-		/* Codes_SRS_AMQP_FRAME_CODEC_01_057: [The bytes of an AMQP frame shall be allowed to be indicated by the frame_codec layer in multiple calls.] */
-		while (frame_body_bytes_size > 0)
-		{
-			switch (amqp_frame_codec_instance->decode_state)
-			{
-			default:
-			case AMQP_FRAME_DECODE_ERROR:
-				result = __LINE__;
-				break;
-
-			case AMQP_FRAME_DECODE_FRAME_HEADER:
-				/* Codes_SRS_AMQP_FRAME_CODEC_01_059: [If the decoding of an AMQP frame is incomplete, but a new one is started, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
-				amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_ERROR;
-				result = __LINE__;
-				break;
-
-			case AMQP_FRAME_DECODE_FRAME_PERFORMATIVE:
-				/* Codes_SRS_AMQP_FRAME_CODEC_01_052: [Decoding the performative shall be done by feeding the bytes to the decoder create in amqp_frame_codec_create.] */
-				amqp_frame_codec_instance->decode_frame_body_pos++;
-				if ((amqpvalue_decode_bytes(amqp_frame_codec_instance->decoder, frame_body_bytes, 1) != 0) ||
-					(amqp_frame_codec_instance->decode_state == AMQP_FRAME_DECODE_ERROR))
+				if (amqp_frame_codec_instance->decode_state == AMQP_FRAME_DECODE_ERROR)
 				{
 					result = __LINE__;
 				}
 				else
 				{
-					frame_body_bytes_size--;
-					frame_body_bytes++;
+					/* Codes_SRS_AMQP_FRAME_CODEC_01_004: [The remaining bytes in the frame body form the payload for that frame.] */
+					/* Codes_SRS_AMQP_FRAME_CODEC_01_067: [When the performative is decoded, the rest of the frame_bytes shall not be given to the AMQP decoder, but they shall be buffered so that later they are given to the frame_received callback.] */
+					/* Codes_SRS_AMQP_FRAME_CODEC_01_054: [Once the performative is decoded and all frame payload bytes are received, the callback frame_received_callback shall be called.] */
+					/* Codes_SRS_AMQP_FRAME_CODEC_01_068: [A pointer to all the payload bytes shall also be passed to frame_received_callback.] */
+					amqp_frame_codec_instance->frame_received_callback(amqp_frame_codec_instance->callback_context, amqp_frame_codec_instance->channel, amqp_frame_codec_instance->decoded_performative, frame_body, frame_body_size);
 					result = 0;
 				}
-				break;
-
-			case AMQP_FRAME_DECODE_FRAME_PAYLOAD:
-			{
-				/* Codes_SRS_AMQP_FRAME_CODEC_01_004: [The remaining bytes in the frame body form the payload for that frame.] */
-				uint32_t to_indicate = frame_body_bytes_size;
-				amqp_frame_codec_instance->frame_received_callback(amqp_frame_codec_instance->callback_context, 1, NULL, frame_body_bytes, frame_body_bytes_size);
-
-				amqp_frame_codec_instance->decode_frame_body_pos += frame_body_bytes_size;
-				frame_body_bytes_size = 0;
-				if (amqp_frame_codec_instance->decode_frame_body_pos == amqp_frame_codec_instance->decode_frame_body_size)
-				{
-					amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_FRAME_HEADER;
-				}
-				result = 0;
-				break;
-			}
-			}
-
-			if (result != 0)
-			{
-				break;
 			}
 		}
+		break;
 	}
 
 	return result;
@@ -236,7 +163,7 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			result->frame_received_callback = frame_received_callback;
 			result->empty_frame_received_callback = empty_frame_received_callback;
 			result->callback_context = frame_received_callback_context;
-			result->decode_state = AMQP_FRAME_DECODE_FRAME_HEADER;
+			result->decode_state = AMQP_FRAME_DECODE_FRAME;
 			result->encode_state = AMQP_FRAME_ENCODE_FRAME_HEADER;
 
 			/* Codes_SRS_AMQP_FRAME_CODEC_01_018: [amqp_frame_codec_create shall create a decoder to be used for decoding AMQP values.] */

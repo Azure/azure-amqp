@@ -18,12 +18,11 @@ extern "C" {
 #define SASL_OUTCOME		(uint64_t)0x44
 
 typedef void* SASL_FRAME_CODEC_HANDLE;
-typedef void(*SASL_FRAME_RECEIVED_CALLBACK)(void* context, AMQP_VALUE sasl_frame);
+typedef void(*SASL_FRAME_RECEIVED_CALLBACK)(void* context, AMQP_VALUE performative);
 
-extern SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, SASL_FRAME_RECEIVED_CALLBACK frame_received_callback,
-	void* frame_received_callback_context);
-extern void sasl_frame_codec_destroy(SASL_FRAME_CODEC_HANDLE sasl_frame_codec);
-extern int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, const AMQP_VALUE sasl_frame);
+extern SASL_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, SASL_FRAME_RECEIVED_CALLBACK frame_received_callback, void* frame_received_callback_context);
+extern void amqp_frame_codec_destroy(SASL_FRAME_CODEC_HANDLE amqp_frame_codec);
+extern int amqp_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE amqp_frame_codec, const AMQP_VALUE performative);
 
 #ifdef __cplusplus
 }

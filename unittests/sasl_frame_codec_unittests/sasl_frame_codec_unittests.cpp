@@ -13,7 +13,11 @@
 #define TEST_AMQP_VALUE					(AMQP_VALUE)0x4246
 #define TEST_CONTEXT					(void*)0x4247
 
-static const unsigned char test_encoded_bytes[2] = { 0x42, 0x43 };
+#define TEST_MIX_MAX_FRAME_SIZE			512
+
+static const unsigned char default_test_encoded_bytes[2] = { 0x42, 0x43 };
+static const unsigned char* test_encoded_bytes;
+static size_t test_encoded_bytes_size;
 
 static FRAME_RECEIVED_CALLBACK saved_frame_begin_callback;
 static void* saved_callback_context;
@@ -117,7 +121,7 @@ public:
 	MOCK_STATIC_METHOD_2(, int, amqpvalue_get_encoded_size, AMQP_VALUE, value, size_t*, encoded_size);
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_3(, int, amqpvalue_encode, AMQP_VALUE, value, AMQPVALUE_ENCODER_OUTPUT, encoder_output, void*, context);
-		encoder_output(context, test_encoded_bytes, sizeof(test_encoded_bytes));
+		encoder_output(context, test_encoded_bytes, test_encoded_bytes_size);
 	MOCK_METHOD_END(int, 0);
 
 	/* callbacks */
@@ -180,6 +184,8 @@ TEST_FUNCTION_INITIALIZE(method_init)
 		ASSERT_FAIL("Could not acquire test serialization mutex.");
 	}
 
+	test_encoded_bytes = default_test_encoded_bytes;
+	test_encoded_bytes_size = sizeof(default_test_encoded_bytes);
 	sasl_frame_descriptor_ulong = SASL_MECHANISMS;
 }
 
@@ -396,6 +402,10 @@ TEST_FUNCTION(sasl_frame_codec_destroy_with_NULL_handle_does_nothing)
 /* Tests_SRS_SASL_FRAME_CODEC_01_033: [The encoded size of the sasl_frame and its fields shall be obtained by calling amqpvalue_get_encoded_size.] */
 /* Tests_SRS_SASL_FRAME_CODEC_01_035: [Encoding of the sasl_frame and its fields shall be done by calling amqpvalue_encode.] */
 /* Tests_SRS_SASL_FRAME_CODEC_01_036: [The encode result for the sasl_frame and its fields shall be given to frame_codec by calling frame_codec_encode_frame_bytes.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_012: [Bytes 6 and 7 of the header are ignored.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_013: [Implementations SHOULD set these to 0x00.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_014: [The extended header is ignored.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_015: [Implementations SHOULD therefore set DOFF to 0x02.] */
 TEST_FUNCTION(encoding_the_beginning_of_a_frame_succeeds)
 {
 	// arrange
@@ -547,7 +557,7 @@ TEST_FUNCTION(when_amqpvalue_encode_fails_then_sasl_frame_codec_encode_frame_fai
 }
 
 /* Tests_SRS_SASL_FRAME_CODEC_01_047: [The frame body of a SASL frame MUST contain exactly one AMQP type, whose type encoding MUST have provides=“sasl-frame”.] */
-TEST_FUNCTION(amqp_performatives_are_encoded_successfully)
+TEST_FUNCTION(sasl_frame_values_are_encoded_successfully)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
@@ -580,6 +590,45 @@ TEST_FUNCTION(amqp_performatives_are_encoded_successfully)
 		ASSERT_ARE_EQUAL(int, 0, result);
 		mocks.AssertActualAndExpectedCalls();
 	}
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
+}
+
+/* Tests_SRS_SASL_FRAME_CODEC_01_011: [A SASL frame has a type code of 0x01.] */
+TEST_FUNCTION(the_SASL_frame_type_is_according_to_ISO)
+{
+	// arrange
+	// act
+
+	// assert
+	ASSERT_ARE_EQUAL(int, (int)1, FRAME_TYPE_SASL);
+}
+
+/* Tests_SRS_SASL_FRAME_CODEC_01_016: [The maximum size of a SASL frame is defined by MIN-MAX-FRAME-SIZE.] */
+TEST_FUNCTION(when_encoding_a_sasl_frame_value_that_makes_the_frame_exceed_the_allowed_size_sasl_frame_codec_encode_frame_fails)
+{
+	// arrange
+	sasl_frame_codec_mocks mocks;
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+
+	unsigned char encoded_bytes[TEST_MIX_MAX_FRAME_SIZE - 8 + 1] = { 0 };
+	test_encoded_bytes = encoded_bytes;
+	test_encoded_bytes_size = sizeof(encoded_bytes);
+	size_t sasl_frame_value_size = test_encoded_bytes_size;
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
+		.IgnoreArgument(2);
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_encoded_size(TEST_AMQP_VALUE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &sasl_frame_value_size, sizeof(sasl_frame_value_size));
+
+	// act
+	int result = sasl_frame_codec_encode_frame(sasl_frame_codec, TEST_AMQP_VALUE);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
 	sasl_frame_codec_destroy(sasl_frame_codec);

@@ -6,6 +6,12 @@
 #include "amqpalloc.h"
 #include "amqpvalue.h"
 
+/* Requirements implemented by design or by other modules */
+/* Codes_SRS_SASL_FRAME_CODEC_01_011: [A SASL frame has a type code of 0x01.] */
+/* Codes_SRS_SASL_FRAME_CODEC_01_016: [The maximum size of a SASL frame is defined by MIN-MAX-FRAME-SIZE.] */
+
+#define MIX_MAX_FRAME_SIZE 512
+
 typedef enum SASL_FRAME_DECODE_STATE_TAG
 {
 	SASL_FRAME_DECODE_FRAME,
@@ -69,6 +75,7 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 
 			sasl_frame_codec_instance->decoded_performative = NULL;
 
+			/* Codes_SRS_SASL_FRAME_CODEC_01_048: [Receipt of an empty frame is an irrecoverable error.] */
 			while ((frame_body_size > 0) &&
 				(sasl_frame_codec_instance->decoded_performative == NULL) &&
 				(sasl_frame_codec_instance->decode_state != SASL_FRAME_DECODE_ERROR))
@@ -191,7 +198,9 @@ int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, cons
 		}
 		/* Codes_SRS_SASL_FRAME_CODEC_01_032: [The payload frame size shall be computed based on the encoded size of the sasl_frame and its fields.] */
 		/* Codes_SRS_SASL_FRAME_CODEC_01_033: [The encoded size of the sasl_frame and its fields shall be obtained by calling amqpvalue_get_encoded_size.] */
-		else if (amqpvalue_get_encoded_size(performative, &amqp_frame_payload_size) != 0)
+		else if ((amqpvalue_get_encoded_size(performative, &amqp_frame_payload_size) != 0) ||
+			/* Codes_SRS_SASL_FRAME_CODEC_01_016: [The maximum size of a SASL frame is defined by MIN-MAX-FRAME-SIZE.] */
+			(amqp_frame_payload_size > MIX_MAX_FRAME_SIZE - 8))
 		{
 			/* Codes_SRS_SASL_FRAME_CODEC_01_034: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
 			result = __LINE__;
@@ -199,6 +208,10 @@ int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, cons
 		else
 		{
 			/* Codes_SRS_SASL_FRAME_CODEC_01_031: [sasl_frame_codec_encode_frame shall encode the frame header by using frame_codec_begin_encode_frame.] */
+			/* Codes_SRS_SASL_FRAME_CODEC_01_012: [Bytes 6 and 7 of the header are ignored.] */
+			/* Codes_SRS_SASL_FRAME_CODEC_01_013: [Implementations SHOULD set these to 0x00.] */
+			/* Codes_SRS_SASL_FRAME_CODEC_01_014: [The extended header is ignored.] */
+			/* Codes_SRS_SASL_FRAME_CODEC_01_015: [Implementations SHOULD therefore set DOFF to 0x02.] */
 			if (frame_codec_begin_encode_frame(sasl_frame_codec_instance->frame_codec, FRAME_TYPE_SASL, amqp_frame_payload_size, NULL, 0) != 0)
 			{
 				/* Codes_SRS_SASL_FRAME_CODEC_01_034: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */

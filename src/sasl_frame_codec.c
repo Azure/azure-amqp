@@ -158,10 +158,16 @@ SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 
 void sasl_frame_codec_destroy(SASL_FRAME_CODEC_HANDLE sasl_frame_codec)
 {
+	/* Codes_SRS_SASL_FRAME_CODEC_01_026: [If sasl_frame_codec is NULL, sasl_frame_codec_destroy shall do nothing.] */
 	if (sasl_frame_codec != NULL)
 	{
+		/* Codes_SRS_SASL_FRAME_CODEC_01_025: [sasl_frame_codec_destroy shall free all resources associated with the sasl_frame_codec instance.] */
 		SASL_FRAME_CODEC_INSTANCE* sasl_frame_codec_instance = (SASL_FRAME_CODEC_INSTANCE*)sasl_frame_codec;
+
+		/* Codes_SRS_SASL_FRAME_CODEC_01_027: [sasl_frame_codec_destroy shall unsubscribe from receiving SASL frames from the frame_codec that was passed to sasl_frame_codec_create.] */
 		(void)frame_codec_unsubscribe(sasl_frame_codec_instance->frame_codec, FRAME_TYPE_SASL);
+
+		/* Codes_SRS_SASL_FRAME_CODEC_01_028: [The decoder created in sasl_frame_codec_create shall be destroyed by sasl_frame_codec_destroy.] */
 		amqpvalue_decoder_destroy(sasl_frame_codec_instance->decoder);
 		amqpalloc_free(sasl_frame_codec_instance);
 	}
@@ -182,12 +188,12 @@ int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, cons
 	else
 	{
 		AMQP_VALUE descriptor;
-		uint64_t performative_ulong;
+		uint64_t sasl_frame_descriptor_ulong;
 
 		if (((descriptor = amqpvalue_get_inplace_descriptor(performative)) == NULL) ||
-			(amqpvalue_get_ulong(descriptor, &performative_ulong) != 0) ||
-			(performative_ulong < SASL_MECHANISMS) ||
-			(performative_ulong > SASL_OUTCOME))
+			(amqpvalue_get_ulong(descriptor, &sasl_frame_descriptor_ulong) != 0) ||
+			(sasl_frame_descriptor_ulong < SASL_MECHANISMS) ||
+			(sasl_frame_descriptor_ulong > SASL_OUTCOME))
 		{
 			result = __LINE__;
 		}

@@ -184,7 +184,8 @@ TEST_FUNCTION_INITIALIZE(method_init)
 	{
 		ASSERT_FAIL("Could not acquire test serialization mutex.");
 	}
-	performative_ulong = 0x10;
+
+	performative_ulong = AMQP_OPEN;
 }
 
 TEST_FUNCTION_CLEANUP(method_cleanup)

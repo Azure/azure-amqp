@@ -216,126 +216,104 @@ TEST_FUNCTION(sasl_frame_codec_create_with_valid_args_succeeds)
 
 	// assert
 	ASSERT_IS_NOT_NULL(sasl_frame_codec);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
 }
 
-#if 0
-/* Tests_SRS_AMQP_FRAME_CODEC_01_011: [sasl_frame_codec_create shall create an instance of an sasl_frame_codec and return a non-NULL handle to it.] */
-/* Tests_SRS_AMQP_FRAME_CODEC_01_013: [sasl_frame_codec_create shall subscribe for AMQP frames with the given frame_codec.] */
-/* Tests_SRS_AMQP_FRAME_CODEC_01_018: [sasl_frame_codec_create shall create a decoder to be used for decoding AMQP values.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_018: [sasl_frame_codec_create shall create an instance of an sasl_frame_codec and return a non-NULL handle to it.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_020: [sasl_frame_codec_create shall subscribe for SASL frames with the given frame_codec.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_022: [sasl_frame_codec_create shall create a decoder to be used for decoding SASL values.] */
 TEST_FUNCTION(sasl_frame_codec_create_with_valid_args_and_NULL_context_succeeds)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-
 	EXPECTED_CALL(mocks, amqpvalue_decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(mocks, frame_codec_subscribe(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-		.IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5);
+	STRICT_EXPECTED_CALL(mocks, frame_codec_subscribe(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_SASL, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(3).IgnoreArgument(4);
 
 	// act
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, NULL);
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, NULL);
 
 	// assert
 	ASSERT_IS_NOT_NULL(sasl_frame_codec);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, sasl_frame_codec_create shall return NULL.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_019: [If any of the arguments frame_codec or frame_received_callback is NULL, sasl_frame_codec_create shall return NULL.] */
 TEST_FUNCTION(sasl_frame_codec_create_with_NULL_frame_codec_fails)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
 
 	// act
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(NULL, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(NULL, amqp_frame_received_callback_1, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NULL(sasl_frame_codec);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, sasl_frame_codec_create shall return NULL.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_019: [If any of the arguments frame_codec or frame_received_callback is NULL, sasl_frame_codec_create shall return NULL.] */
 TEST_FUNCTION(sasl_frame_codec_create_with_NULL_frame_received_callback_fails)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
 
 	// act
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, NULL, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, NULL, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NULL(sasl_frame_codec);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, sasl_frame_codec_create shall return NULL.] */
-TEST_FUNCTION(sasl_frame_codec_create_with_NULL_empty_frame_received_callback_fails)
-{
-	// arrange
-	sasl_frame_codec_mocks mocks;
-
-	// act
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, NULL, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-
-	// assert
-	ASSERT_IS_NULL(sasl_frame_codec);
-}
-
-/* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, empty_frame_received_callback or payload_bytes_received_callback is NULL, sasl_frame_codec_create shall return NULL.] */
-TEST_FUNCTION(sasl_frame_codec_create_with_NULL_frame_payload_bytes_received_callback_fails)
-{
-	// arrange
-	sasl_frame_codec_mocks mocks;
-
-	// act
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, NULL, TEST_CONTEXT);
-
-	// assert
-	ASSERT_IS_NULL(sasl_frame_codec);
-}
-
-/* Tests_SRS_AMQP_FRAME_CODEC_01_014: [If subscribing for AMQP frames fails, sasl_frame_codec_create shall fail and return NULL.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_021: [If subscribing for SASL frames fails, sasl_frame_codec_create shall fail and return NULL.] */
 TEST_FUNCTION(when_frame_codec_subscribe_fails_then_sasl_frame_codec_create_fails)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-
 	EXPECTED_CALL(mocks, amqpvalue_decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(mocks, frame_codec_subscribe(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_AMQP, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-		.IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+	STRICT_EXPECTED_CALL(mocks, frame_codec_subscribe(TEST_FRAME_CODEC_HANDLE, FRAME_TYPE_SASL, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.IgnoreArgument(3).IgnoreArgument(4)
 		.SetReturn(1);
 
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_decoder_destroy(TEST_DECODER_HANDLE));
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NULL(sasl_frame_codec);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_019: [If creating the decoder fails, sasl_frame_codec_create shall fail and return NULL.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_023: [If creating the decoder fails, sasl_frame_codec_create shall fail and return NULL.] */
 TEST_FUNCTION(when_creating_the_decoder_fails_then_sasl_frame_codec_create_fails)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-
 	EXPECTED_CALL(mocks, amqpvalue_decoder_create(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.SetReturn((AMQPVALUE_DECODER_HANDLE)NULL);
 
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NULL(sasl_frame_codec);
 }
 
-/* Tests_SRS_AMQP_FRAME_CODEC_01_020: [If allocating memory for the new sasl_frame_codec fails, then sasl_frame_codec_create shall fail and return NULL.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_024: [If allocating memory for the new sasl_frame_codec fails, then sasl_frame_codec_create shall fail and return NULL.]  */
 TEST_FUNCTION(when_allocating_memory_for_sasl_frame_codec_fails_then_sasl_frame_codec_create_fails)
 {
 	// arrange
@@ -345,12 +323,13 @@ TEST_FUNCTION(when_allocating_memory_for_sasl_frame_codec_fails_then_sasl_frame_
 		.SetReturn((void*)NULL);
 
 	// act
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NULL(sasl_frame_codec);
 }
 
+#if 0
 /* sasl_frame_codec_destroy */
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_015: [sasl_frame_codec_destroy shall free all resources associated with the sasl_frame_codec instance.] */

@@ -113,6 +113,7 @@ SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 {
 	SASL_FRAME_CODEC_INSTANCE* result;
 
+	/* Codes_SRS_SASL_FRAME_CODEC_01_019: [If any of the arguments frame_codec or frame_received_callback is NULL, sasl_frame_codec_create shall return NULL.] */
 	if ((frame_codec == NULL) ||
 		(frame_received_callback == NULL))
 	{
@@ -120,6 +121,7 @@ SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 	}
 	else
 	{
+		/* Codes_SRS_SASL_FRAME_CODEC_01_018: [sasl_frame_codec_create shall create an instance of an sasl_frame_codec and return a non-NULL handle to it.] */
 		result = (SASL_FRAME_CODEC_INSTANCE*)amqpalloc_malloc(sizeof(SASL_FRAME_CODEC_INSTANCE));
 		if (result != NULL)
 		{
@@ -129,16 +131,20 @@ SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			result->decode_state = SASL_FRAME_DECODE_FRAME;
 			result->encode_state = SASL_FRAME_ENCODE_FRAME;
 
+			/* Codes_SRS_SASL_FRAME_CODEC_01_022: [amqp_frame_codec_create shall create a decoder to be used for decoding SASL values.] */
 			result->decoder = amqpvalue_decoder_create(amqp_value_decoded, result);
 			if (result->decoder == NULL)
 			{
+				/* Codes_SRS_SASL_FRAME_CODEC_01_023: [If creating the decoder fails, sasl_frame_codec_create shall fail and return NULL.] */
 				amqpalloc_free(result);
 				result = NULL;
 			}
 			else
 			{
+				/* Codes_SRS_SASL_FRAME_CODEC_01_020: [sasl_frame_codec_create shall subscribe for SASL frames with the given frame_codec.] */
 				if (frame_codec_subscribe(frame_codec, FRAME_TYPE_SASL, frame_received, result) != 0)
 				{
+					/* Codes_SRS_SASL_FRAME_CODEC_01_021: [If subscribing for SASL frames fails, sasl_frame_codec_create shall fail and return NULL.] */
 					amqpvalue_decoder_destroy(result->decoder);
 					amqpalloc_free(result);
 					result = NULL;

@@ -223,6 +223,10 @@ TEST_FUNCTION(amqp_frame_codec_create_with_valid_args_succeeds)
 
 	// assert
 	ASSERT_IS_NOT_NULL(amqp_frame_codec);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_011: [amqp_frame_codec_create shall create an instance of an amqp_frame_codec and return a non-NULL handle to it.] */
@@ -244,6 +248,10 @@ TEST_FUNCTION(amqp_frame_codec_create_with_valid_args_and_NULL_context_succeeds)
 
 	// assert
 	ASSERT_IS_NOT_NULL(amqp_frame_codec);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback or empty_frame_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
@@ -440,6 +448,10 @@ TEST_FUNCTION(encoding_the_beginning_of_a_frame_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_005: [Bytes 6 and 7 of an AMQP frame contain the channel number ] */
@@ -471,6 +483,10 @@ TEST_FUNCTION(using_channel_no_0x4243_passes_the_channel_number_as_type_specific
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_026: [The payload frame size shall be computed based on the encoded size of the performative and its fields plus the payload_size argument.] */
@@ -501,6 +517,10 @@ TEST_FUNCTION(encoding_the_beginning_of_a_frame_with_1_byte_payload_computes_cor
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_024: [If frame_codec or performative_fields is NULL, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
@@ -529,6 +549,10 @@ TEST_FUNCTION(amqp_frame_codec_begin_encode_frame_with_NULL_performative_value_f
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
@@ -554,6 +578,10 @@ TEST_FUNCTION(when_amqpvalue_get_encoded_size_fails_then_amqp_frame_codec_begin_
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
@@ -581,6 +609,10 @@ TEST_FUNCTION(when_frame_codec_begin_encode_frame_fails_then_amqp_frame_codec_be
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
@@ -612,6 +644,10 @@ TEST_FUNCTION(when_amqpvalue_encode_fails_then_amqp_frame_codec_begin_encode_fra
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_008: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
@@ -627,6 +663,8 @@ TEST_FUNCTION(amqp_performatives_are_encoded_successfully)
 
 	for (i = 0; i < sizeof(valid_performatives) / sizeof(valid_performatives[0]); i++)
 	{
+		mocks.ResetAllCalls();
+
 		size_t performative_size = 2;
 		uint16_t channel = 0;
 		unsigned char channel_bytes[] = { 0, 0 };
@@ -648,7 +686,11 @@ TEST_FUNCTION(amqp_performatives_are_encoded_successfully)
 
 		// assert
 		ASSERT_ARE_EQUAL(int, 0, result);
+		mocks.AssertActualAndExpectedCalls();
 	}
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
@@ -668,6 +710,10 @@ TEST_FUNCTION(when_getting_the_descriptor_fails_then_amqp_frame_codec_begin_enco
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
@@ -689,6 +735,10 @@ TEST_FUNCTION(when_getting_the_ulong_value_of_the_descriptor_fails_then_amqp_fra
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
@@ -711,6 +761,10 @@ TEST_FUNCTION(when_performative_ulong_is_0x09_amqp_frame_codec_begin_encode_fram
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_029: [If any error occurs during encoding, amqp_frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
@@ -733,6 +787,10 @@ TEST_FUNCTION(when_performative_ulong_is_0x19_amqp_frame_codec_begin_encode_fram
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* amqp_frame_codec_encode_payload_bytes */
@@ -759,6 +817,10 @@ TEST_FUNCTION(amqp_frame_codec_encode_payload_bytes_encodes_the_bytes)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_033: [If amqp_frame_codec or bytes is NULL, amqp_frame_codec_encode_payload_bytes shall fail and return a non-zero value.] */
@@ -790,6 +852,10 @@ TEST_FUNCTION(when_bytes_is_NULL_amqp_frame_codec_encode_payload_bytes_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_034: [If count is 0, amqp_frame_codec_encode_payload_bytes shall fail and return a non-zero value.] */
@@ -807,6 +873,10 @@ TEST_FUNCTION(when_count_is_zero_amqp_frame_codec_encode_payload_bytes_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_047: [If amqp_frame_codec_encode_payload_bytes is called without starting a frame encode, amqp_frame_codec_encode_payload_bytes shall fail and return a non-zero value.] */
@@ -823,6 +893,10 @@ TEST_FUNCTION(amqp_frame_codec_encode_payload_bytes_without_starting_a_frame_enc
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_041: [If all bytes for the frame payload were given and amqp_frame_codec_encode_payload_bytes is called again, it shall return a non-zero value, but subsequent encoding attempts shall succeed.] */
@@ -841,6 +915,10 @@ TEST_FUNCTION(amqp_frame_codec_encode_payload_bytes_without_starting_a_frame_enc
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_036: [If count is greater than the number of bytes still left to be encoded, amqp_frame_codec_encode_payload_bytes shall fail and return a non-zero value.] */
@@ -858,6 +936,10 @@ TEST_FUNCTION(amqp_frame_codec_encode_payload_bytes_with_too_many_bytes_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_036: [If count is greater than the number of bytes still left to be encoded, amqp_frame_codec_encode_payload_bytes shall fail and return a non-zero value.] */
@@ -875,6 +957,10 @@ TEST_FUNCTION(amqp_frame_codec_encode_payload_bytes_when_payload_bytes_was_zero_
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests__SRS_AMQP_FRAME_CODEC_01_036: [If count is greater than the number of bytes still left to be encoded, amqp_frame_codec_encode_payload_bytes shall fail and return a non-zero value.] */
@@ -908,6 +994,10 @@ TEST_FUNCTION(after_amqp_frame_codec_encode_payload_bytes_beginning_a_new_frame_
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_035: [amqp_frame_codec shall maintain the number of bytes needed to be sent as the payload for the frame started with amqp_frame_codec_begin_encode_frame.] */
@@ -929,6 +1019,10 @@ TEST_FUNCTION(sending_the_1st_byte_of_a_payload_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_035: [amqp_frame_codec shall maintain the number of bytes needed to be sent as the payload for the frame started with amqp_frame_codec_begin_encode_frame.] */
@@ -951,6 +1045,10 @@ TEST_FUNCTION(sending_the_2nd_byte_of_a_payload_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_040: [In case encoding fails due to inability to give the data to the frame_codec, any subsequent attempt to begin encoding a frame shall fail.] */
@@ -974,6 +1072,10 @@ TEST_FUNCTION(when_giving_the_data_to_frame_codec_fails_then_amqp_frame_codec_en
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_040: [In case encoding fails due to inability to give the data to the frame_codec, any subsequent attempt to begin encoding a frame shall fail.] */
@@ -997,6 +1099,10 @@ TEST_FUNCTION(when_giving_the_data_to_frame_codec_fails_subsequent_encode_attemp
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_040: [In case encoding fails due to inability to give the data to the frame_codec, any subsequent attempt to begin encoding a frame shall fail.] */
@@ -1027,6 +1133,10 @@ TEST_FUNCTION(when_beginning_the_frame_fails_encoding_payload_bytes_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* amqp_frame_codec_encode_empty_frame */
@@ -1053,6 +1163,10 @@ TEST_FUNCTION(encoding_of_an_empty_frame_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_045: [If amqp_frame_codec is NULL, amqp_frame_codec_encode_empty_frame shall fail and return a non-zero value.] */
@@ -1069,6 +1183,10 @@ TEST_FUNCTION(amqp_frame_codec_encode_empty_frame_with_NULL_amqp_frame_codec_fai
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_046: [If encoding fails in any way, amqp_frame_codec_encode_empty_frame shall fail and return a non-zero value.]  */
@@ -1091,6 +1209,10 @@ TEST_FUNCTION(when_frame_codec_begin_frame_fails_then_amqp_frame_codec_encode_em
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Receive frames */
@@ -1112,7 +1234,10 @@ TEST_FUNCTION(when_an_empty_frame_is_decoded_the_empty_frame_callback_is_called)
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), NULL, 0);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_048: [When a frame header is received from frame_codec and the frame payload size is 0, empty_frame_received_callback shall be invoked, while passing the channel number as argument.] */
@@ -1132,7 +1257,10 @@ TEST_FUNCTION(when_an_empty_frame_is_decoded_the_empty_frame_callback_is_called_
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), NULL, 0);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_049: [If not enough type specific bytes are received to decode the channel number, the decoding shall stop with an error.] */
@@ -1149,7 +1277,10 @@ TEST_FUNCTION(when_an_empty_frame_with_only_1_byte_of_type_specific_data_is_rece
 	saved_frame_received_callback(saved_callback_context, channel_bytes, 1, NULL, 0);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_050: [All subsequent decoding shall fail and no AMQP frames shall be indicated from that point on to the consumers of amqp_frame_codec.] */
@@ -1166,7 +1297,10 @@ TEST_FUNCTION(when_an_empty_frame_with_only_1_byte_of_type_specific_data_is_rece
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), NULL, 0);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_052: [Decoding the performative shall be done by feeding the bytes to the decoder create in amqp_frame_codec_create.] */
@@ -1196,6 +1330,10 @@ TEST_FUNCTION(when_all_performative_bytes_are_received_and_AMQP_frame_payload_is
 	stringify_bytes(test_performative, sizeof(test_performative), expected_stringified_io);
 	stringify_bytes(performative_decoded_bytes, performative_decoded_byte_count, actual_stringified_io);
 	ASSERT_ARE_EQUAL(char_ptr, expected_stringified_io, actual_stringified_io);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_002: [The frame body is defined as a performative followed by an opaque payload.] */
@@ -1224,7 +1362,10 @@ TEST_FUNCTION(amqp_frame_with_1_payload_bytes_are_reported_via_the_amqp_frame_pa
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 1);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_002: [The frame body is defined as a performative followed by an opaque payload.] */
@@ -1253,7 +1394,10 @@ TEST_FUNCTION(amqp_frame_with_2_payload_bytes_are_reported_via_the_amqp_frame_pa
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_002: [The frame body is defined as a performative followed by an opaque payload.] */
@@ -1280,7 +1424,10 @@ TEST_FUNCTION(after_decoding_succesfully_a_second_frame_can_be_decoded)
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_003: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
@@ -1313,6 +1460,9 @@ TEST_FUNCTION(valid_performative_codes_trigger_callbacks)
 		// assert
 		mocks.AssertActualAndExpectedCalls();
 	}
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_003: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
@@ -1335,7 +1485,10 @@ TEST_FUNCTION(performative_0x09_can_not_be_decoded)
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_003: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
@@ -1358,7 +1511,10 @@ TEST_FUNCTION(performative_0x19_can_not_be_decoded)
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
@@ -1379,7 +1535,10 @@ TEST_FUNCTION(when_amqp_value_decoding_for_the_performative_fails_decoder_fails)
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
@@ -1402,7 +1561,10 @@ TEST_FUNCTION(when_second_amqp_value_decoding_for_the_performative_fails_decoder
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
@@ -1424,7 +1586,10 @@ TEST_FUNCTION(when_getting_the_descriptor_fails_decoder_fails)
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
@@ -1448,7 +1613,10 @@ TEST_FUNCTION(when_getting_the_ulong_value_of_the_descriptor_fails_decoder_fails
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
@@ -1471,7 +1639,10 @@ TEST_FUNCTION(when_amqp_value_decoding_fails_subsequent_decoding_fails_even_if_t
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	// uMock checks the calls
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	amqp_frame_codec_destroy(amqp_frame_codec);
 }
 
 END_TEST_SUITE(amqp_frame_codec_unittests)

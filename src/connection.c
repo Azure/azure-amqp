@@ -495,6 +495,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 				else if (is_close_type_by_descriptor(descriptor))
 				{
 					/* Codes_SRS_CONNECTION_01_012: [A close frame MAY be received on any channel up to the maximum channel number negotiated in open.] */
+					/* Codes_SRS_CONNECTION_01_242: [The connection module shall accept CLOSE frames even if they have extra payload bytes besides the Close performative.] */
 
 					/* Codes_SRS_CONNECTION_01_225: [HDR_RCVD HDR OPEN] */
 					if ((connection_instance->connection_state == CONNECTION_STATE_HDR_RCVD) ||

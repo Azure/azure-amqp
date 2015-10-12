@@ -2970,8 +2970,7 @@ TEST_METHOD(when_a_CLOSE_frame_is_received_on_channel_1_it_is_still_valid)
 	connection_destroy(connection);
 }
 
-#if 0
-/* Tests_SRS_CONNECTION_01_012: [A close frame MAY be received on any channel up to the maximum channel number negotiated in open.] */
+/* Tests_SRS_CONNECTION_01_242: [The connection module shall accept CLOSE frames even if they have extra payload bytes besides the Close performative.] */
 TEST_METHOD(when_a_CLOSE_frame_with_1_byte_payload_is_received_it_is_still_valid)
 {
 	// arrange
@@ -2996,6 +2995,12 @@ TEST_METHOD(when_a_CLOSE_frame_with_1_byte_payload_is_received_it_is_still_valid
 		.CopyOutArgumentBuffer(2, &received_test_close_handle, sizeof(received_test_close_handle));
 	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(received_test_close_handle));
 
+	STRICT_EXPECTED_CALL(definition_mocks, close_create());
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_close(test_close_handle));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, test_close_amqp_value, 0));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_close_amqp_value));
+	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
+
 	unsigned char payload_bytes[] = { 0x42 };
 
 	// act
@@ -3007,6 +3012,42 @@ TEST_METHOD(when_a_CLOSE_frame_with_1_byte_payload_is_received_it_is_still_valid
 	// cleanup
 	connection_destroy(connection);
 }
-#endif
+
+/* Tests_SRS_CONNECTION_01_242: [The connection module shall accept CLOSE frames even if they have extra payload bytes besides the Close performative.] */
+TEST_METHOD(when_an_OPEN_frame_with_1_byte_payload_is_received_it_is_still_valid)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, NULL, "1234");
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
+	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	CLOSE_HANDLE received_test_close_handle = (CLOSE_HANDLE)0x4000;
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_get_open(TEST_OPEN_PERFORMATIVE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &test_open_handle, sizeof(test_open_handle));
+	uint32_t remote_max_frame_size = 1024;
+	STRICT_EXPECTED_CALL(definition_mocks, open_get_max_frame_size(test_open_handle, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &remote_max_frame_size, sizeof(remote_max_frame_size));
+	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
+
+	unsigned char payload_bytes[] = { 0x42 };
+
+	// act
+	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, payload_bytes, sizeof(payload_bytes));
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
 
 END_TEST_SUITE(connection_unittests)

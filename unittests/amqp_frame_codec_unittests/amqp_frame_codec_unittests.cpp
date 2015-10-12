@@ -1109,10 +1109,10 @@ TEST_FUNCTION(when_an_empty_frame_is_decoded_the_empty_frame_callback_is_called)
 	unsigned char channel_bytes[] = { 0, 0 };
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), NULL, 0);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), NULL, 0);
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_048: [When a frame header is received from frame_codec and the frame payload size is 0, empty_frame_received_callback shall be invoked, while passing the channel number as argument.] */
@@ -1129,10 +1129,10 @@ TEST_FUNCTION(when_an_empty_frame_is_decoded_the_empty_frame_callback_is_called_
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), NULL, 0);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), NULL, 0);
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_049: [If not enough type specific bytes are received to decode the channel number, the decoding shall stop with an error.] */
@@ -1146,10 +1146,10 @@ TEST_FUNCTION(when_an_empty_frame_with_only_1_byte_of_type_specific_data_is_rece
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, 1, NULL, 0);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, 1, NULL, 0);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_050: [All subsequent decoding shall fail and no AMQP frames shall be indicated from that point on to the consumers of amqp_frame_codec.] */
@@ -1163,10 +1163,10 @@ TEST_FUNCTION(when_an_empty_frame_with_only_1_byte_of_type_specific_data_is_rece
 	mocks.ResetAllCalls();
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), NULL, 0);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), NULL, 0);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_052: [Decoding the performative shall be done by feeding the bytes to the decoder create in amqp_frame_codec_create.] */
@@ -1221,10 +1221,10 @@ TEST_FUNCTION(amqp_frame_with_1_payload_bytes_are_reported_via_the_amqp_frame_pa
 		.ValidateArgumentBuffer(4, test_frame_payload_bytes, 1);
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 1);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 1);
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_002: [The frame body is defined as a performative followed by an opaque payload.] */
@@ -1250,10 +1250,10 @@ TEST_FUNCTION(amqp_frame_with_2_payload_bytes_are_reported_via_the_amqp_frame_pa
 		.ValidateArgumentBuffer(4, test_frame_payload_bytes, 2);
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_002: [The frame body is defined as a performative followed by an opaque payload.] */
@@ -1277,10 +1277,10 @@ TEST_FUNCTION(after_decoding_succesfully_a_second_frame_can_be_decoded)
 		.ValidateArgumentBuffer(4, test_frame_payload_bytes, 2);
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_003: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
@@ -1308,10 +1308,9 @@ TEST_FUNCTION(valid_performative_codes_trigger_callbacks)
 			.ValidateArgumentBuffer(4, test_frame_payload_bytes, 2);
 
 		// act
-		int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
+		saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 		// assert
-		ASSERT_ARE_EQUAL(int, 0, result);
 		mocks.AssertActualAndExpectedCalls();
 	}
 }
@@ -1333,10 +1332,10 @@ TEST_FUNCTION(performative_0x09_can_not_be_decoded)
 		.CopyOutArgumentBuffer(2, &performative_ulong, sizeof(performative_ulong));
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_003: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
@@ -1356,10 +1355,10 @@ TEST_FUNCTION(performative_0x19_can_not_be_decoded)
 		.CopyOutArgumentBuffer(2, &performative_ulong, sizeof(performative_ulong));
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
@@ -1377,10 +1376,10 @@ TEST_FUNCTION(when_amqp_value_decoding_for_the_performative_fails_decoder_fails)
 		.SetReturn(1);
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
@@ -1400,10 +1399,10 @@ TEST_FUNCTION(when_second_amqp_value_decoding_for_the_performative_fails_decoder
 		.SetReturn(1);
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
@@ -1422,10 +1421,10 @@ TEST_FUNCTION(when_getting_the_descriptor_fails_decoder_fails)
 		.SetReturn((AMQP_VALUE)NULL);
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
@@ -1446,10 +1445,10 @@ TEST_FUNCTION(when_getting_the_ulong_value_of_the_descriptor_fails_decoder_fails
 		.SetReturn(1);
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
@@ -1469,10 +1468,10 @@ TEST_FUNCTION(when_amqp_value_decoding_fails_subsequent_decoding_fails_even_if_t
 	(void)saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// act
-	int result = saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
+	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	// uMock checks the calls
 }
 
 END_TEST_SUITE(amqp_frame_codec_unittests)

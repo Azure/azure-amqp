@@ -64,10 +64,10 @@ public:
 	MOCK_VOID_METHOD_END();
 
 	/* frame received callback */
-	MOCK_STATIC_METHOD_5(, int, frame_received_callback_1, void*, context, const unsigned char*, type_specific, uint32_t, type_specific_size, const unsigned char*, frame_body, uint32_t, frame_body_size)
-	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_5(, int, frame_received_callback_2, void*, context, const unsigned char*, type_specific, uint32_t, type_specific_size, const unsigned char*, frame_body, uint32_t, frame_body_size)
-	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_5(, void, frame_received_callback_1, void*, context, const unsigned char*, type_specific, uint32_t, type_specific_size, const unsigned char*, frame_body, uint32_t, frame_body_size)
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_5(, void, frame_received_callback_2, void*, context, const unsigned char*, type_specific, uint32_t, type_specific_size, const unsigned char*, frame_body, uint32_t, frame_body_size)
+	MOCK_VOID_METHOD_END();
 
 	/* list mocks */
 	MOCK_STATIC_METHOD_0(, LIST_HANDLE, list_create)
@@ -119,8 +119,8 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void*, amqpalloc_malloc, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, amqpalloc_free, void*, ptr);
 
-	DECLARE_GLOBAL_MOCK_METHOD_5(frame_codec_mocks, , int, frame_received_callback_1, void*, context, const unsigned char*, type_specific, uint32_t, type_specific_size, const unsigned char*, frame_body, uint32_t, frame_body_size);
-	DECLARE_GLOBAL_MOCK_METHOD_5(frame_codec_mocks, , int, frame_received_callback_2, void*, context, const unsigned char*, type_specific, uint32_t, type_specific_size, const unsigned char*, frame_body, uint32_t, frame_body_size);
+	DECLARE_GLOBAL_MOCK_METHOD_5(frame_codec_mocks, , void, frame_received_callback_1, void*, context, const unsigned char*, type_specific, uint32_t, type_specific_size, const unsigned char*, frame_body, uint32_t, frame_body_size);
+	DECLARE_GLOBAL_MOCK_METHOD_5(frame_codec_mocks, , void, frame_received_callback_2, void*, context, const unsigned char*, type_specific, uint32_t, type_specific_size, const unsigned char*, frame_body, uint32_t, frame_body_size);
 
 	DECLARE_GLOBAL_MOCK_METHOD_0(frame_codec_mocks, , LIST_HANDLE, list_create);
 	DECLARE_GLOBAL_MOCK_METHOD_1(frame_codec_mocks, , void, list_destroy, LIST_HANDLE, list);

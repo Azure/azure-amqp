@@ -814,10 +814,9 @@ TEST_FUNCTION(when_sasl_frame_bytes_are_received_it_is_decoded_and_indicated_as_
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(TEST_CONTEXT, TEST_AMQP_VALUE));
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value,  sizeof(test_sasl_frame_value));
+	saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value,  sizeof(test_sasl_frame_value));
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -843,10 +842,9 @@ TEST_FUNCTION(when_context_is_NULL_decoding_a_sasl_frame_still_succeeds)
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(NULL, TEST_AMQP_VALUE));
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+	saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -866,10 +864,9 @@ TEST_FUNCTION(when_amqpvalue_decode_bytes_fails_then_the_decoder_switches_to_an_
 		.ValidateArgument(1).SetReturn(1);
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+	saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -891,10 +888,9 @@ TEST_FUNCTION(when_the_second_call_for_amqpvalue_decode_bytes_fails_then_the_dec
 		.ValidateArgument(1).SetReturn(1);
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+	saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -916,10 +912,9 @@ TEST_FUNCTION(when_amqpvalue_get_inplace_descriptor_fails_then_the_decoder_switc
 		.SetReturn((AMQP_VALUE)NULL);
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+	saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -943,10 +938,9 @@ TEST_FUNCTION(when_some_extra_type_specific_bytes_are_passed_to_the_sasl_codec_t
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(NULL, TEST_AMQP_VALUE));
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, test_extra_bytes, sizeof(test_extra_bytes), test_sasl_frame_value, sizeof(test_sasl_frame_value));
+	saved_frame_begin_callback(saved_callback_context, test_extra_bytes, sizeof(test_extra_bytes), test_sasl_frame_value, sizeof(test_sasl_frame_value));
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -970,10 +964,9 @@ TEST_FUNCTION(when_type_specific_byte_count_is_more_than_2_the_sasl_frame_codec_
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(NULL, TEST_AMQP_VALUE));
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, test_extra_bytes, sizeof(test_extra_bytes), test_sasl_frame_value, sizeof(test_sasl_frame_value));
+	saved_frame_begin_callback(saved_callback_context, test_extra_bytes, sizeof(test_extra_bytes), test_sasl_frame_value, sizeof(test_sasl_frame_value));
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -991,10 +984,9 @@ TEST_FUNCTION(when_a_sasl_frame_of_513_bytes_is_received_decoding_fails)
 	unsigned char test_extra_bytes[2] = { 0x42, 0x43 };
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, test_extra_bytes, sizeof(test_extra_bytes), test_sasl_frame_value, TEST_MIX_MAX_FRAME_SIZE - 8 + 1);
+	saved_frame_begin_callback(saved_callback_context, test_extra_bytes, sizeof(test_extra_bytes), test_sasl_frame_value, TEST_MIX_MAX_FRAME_SIZE - 8 + 1);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -1012,10 +1004,9 @@ TEST_FUNCTION(when_a_sasl_frame_of_513_bytes_with_4_type_specific_bytes_is_recei
 	unsigned char test_extra_bytes[4] = { 0x42, 0x43 };
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, test_extra_bytes, sizeof(test_extra_bytes), test_sasl_frame_value, TEST_MIX_MAX_FRAME_SIZE - 10 + 1);
+	saved_frame_begin_callback(saved_callback_context, test_extra_bytes, sizeof(test_extra_bytes), test_sasl_frame_value, TEST_MIX_MAX_FRAME_SIZE - 10 + 1);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -1041,10 +1032,9 @@ TEST_FUNCTION(when_the_frame_size_is_exactly_MIN_MAX_FRAME_SIZE_decoding_succeed
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(NULL, TEST_AMQP_VALUE));
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, test_extra_bytes, sizeof(test_extra_bytes), big_frame, sizeof(big_frame));
+	saved_frame_begin_callback(saved_callback_context, test_extra_bytes, sizeof(test_extra_bytes), big_frame, sizeof(big_frame));
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -1068,10 +1058,9 @@ TEST_FUNCTION(when_not_all_bytes_are_used_for_decoding_in_a_SASL_frame_then_deco
 	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_mechanisms_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE)).IgnoreAllCalls();
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, test_extra_bytes, sizeof(test_extra_bytes), test_sasl_frame_value, sizeof(test_sasl_frame_value));
+	saved_frame_begin_callback(saved_callback_context, test_extra_bytes, sizeof(test_extra_bytes), test_sasl_frame_value, sizeof(test_sasl_frame_value));
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -1096,10 +1085,9 @@ TEST_FUNCTION(when_a_sasl_init_frame_is_received_decoding_it_succeeds)
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(NULL, TEST_AMQP_VALUE));
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+	saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -1126,10 +1114,9 @@ TEST_FUNCTION(when_a_sasl_challenge_frame_is_received_decoding_it_succeeds)
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(NULL, TEST_AMQP_VALUE));
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+	saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -1158,10 +1145,9 @@ TEST_FUNCTION(when_a_sasl_response_frame_is_received_decoding_it_succeeds)
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(NULL, TEST_AMQP_VALUE));
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+	saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -1192,10 +1178,9 @@ TEST_FUNCTION(when_a_sasl_outcome_frame_is_received_decoding_it_succeeds)
 	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(NULL, TEST_AMQP_VALUE));
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+	saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
 
 	// assert
-	ASSERT_ARE_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -1226,10 +1211,9 @@ TEST_FUNCTION(when_an_AMQP_value_that_is_not_a_sasl_frame_is_decoded_then_decodi
 		.SetReturn(false);
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+	saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -1246,10 +1230,9 @@ TEST_FUNCTION(when_an_empty_frame_is_received_decoding_fails)
 	mocks.ResetAllCalls();
 
 	// act
-	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, 0);
+	saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, 0);
 
 	// assert
-	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup

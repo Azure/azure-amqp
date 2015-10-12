@@ -62,21 +62,25 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 	int result;
 	SASL_FRAME_CODEC_INSTANCE* sasl_frame_codec_instance = (SASL_FRAME_CODEC_INSTANCE*)context;
 
-	switch (sasl_frame_codec_instance->decode_state)
-	{
-	default:
-	case SASL_FRAME_DECODE_ERROR:
-		result = __LINE__;
-		break;
+	/* Codes_SRS_SASL_FRAME_CODEC_01_006: [Bytes 6 and 7 of the header are ignored.] */
+	(void)type_specific;
+	/* Codes_SRS_SASL_FRAME_CODEC_01_007: [The extended header is ignored.] */
 
-	case SASL_FRAME_DECODE_FRAME:
-		if (type_specific_size > 2)
+	/* Codes_SRS_SASL_FRAME_CODEC_01_008: [The maximum size of a SASL frame is defined by MIN-MAX-FRAME-SIZE.] */
+	if (type_specific_size + frame_body_size + 6 > MIX_MAX_FRAME_SIZE)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		switch (sasl_frame_codec_instance->decode_state)
 		{
-			sasl_frame_codec_instance->decode_state = SASL_FRAME_DECODE_ERROR;
+		default:
+		case SASL_FRAME_DECODE_ERROR:
 			result = __LINE__;
-		}
-		else
-		{
+			break;
+
+		case SASL_FRAME_DECODE_FRAME:
 			sasl_frame_codec_instance->decoded_sasl_frame_value = NULL;
 
 			/* Codes_SRS_SASL_FRAME_CODEC_01_039: [sasl_frame_codec shall decode the sasl-frame value as a described type.] */
@@ -108,8 +112,8 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 				sasl_frame_codec_instance->frame_received_callback(sasl_frame_codec_instance->callback_context, sasl_frame_codec_instance->decoded_sasl_frame_value);
 				result = 0;
 			}
+			break;
 		}
-		break;
 	}
 
 	return result;
@@ -147,6 +151,7 @@ SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			else
 			{
 				/* Codes_SRS_SASL_FRAME_CODEC_01_020: [sasl_frame_codec_create shall subscribe for SASL frames with the given frame_codec.] */
+				/* Codes_SRS_SASL_FRAME_CODEC_01_001: [A SASL frame has a type code of 0x01.] */
 				if (frame_codec_subscribe(frame_codec, FRAME_TYPE_SASL, frame_received, result) != 0)
 				{
 					/* Codes_SRS_SASL_FRAME_CODEC_01_021: [If subscribing for SASL frames fails, sasl_frame_codec_create shall fail and return NULL.] */

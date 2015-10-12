@@ -128,13 +128,14 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 	return result;
 }
 
-SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, SASL_FRAME_RECEIVED_CALLBACK frame_received_callback, void* frame_received_callback_context)
+SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, SASL_FRAME_RECEIVED_CALLBACK frame_received_callback, SASL_FRAME_CODEC_ERROR_CALLBACK error_callback, void* callback_context)
 {
 	SASL_FRAME_CODEC_INSTANCE* result;
 
-	/* Codes_SRS_SASL_FRAME_CODEC_01_019: [If any of the arguments frame_codec or frame_received_callback is NULL, sasl_frame_codec_create shall return NULL.] */
+	/* Codes_SRS_SASL_FRAME_CODEC_01_019: [If any of the arguments frame_codec, frame_received_callback or error_callback is NULL, sasl_frame_codec_create shall return NULL.] */
 	if ((frame_codec == NULL) ||
-		(frame_received_callback == NULL))
+		(frame_received_callback == NULL) ||
+		(error_callback == NULL))
 	{
 		result = NULL;
 	}
@@ -146,7 +147,7 @@ SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 		{
 			result->frame_codec = frame_codec;
 			result->frame_received_callback = frame_received_callback;
-			result->callback_context = frame_received_callback_context;
+			result->callback_context = callback_context;
 			result->decode_state = SASL_FRAME_DECODE_FRAME;
 
 			/* Codes_SRS_SASL_FRAME_CODEC_01_022: [amqp_frame_codec_create shall create a decoder to be used for decoding SASL values.] */

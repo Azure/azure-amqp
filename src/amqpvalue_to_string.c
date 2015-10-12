@@ -6,6 +6,11 @@
 #include "amqpvalue.h"
 #include "amqpalloc.h"
 
+#if _WIN32
+/* The MS runtime does not have snprintf */
+#define snprintf _snprintf
+#endif
+
 static int string_concat(char** string, const char* to_concat)
 {
 	int result;
@@ -246,10 +251,150 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			}
 			break;
 		}
+		case AMQP_TYPE_FLOAT:
+		{
+			float float_value;
+			if (amqpvalue_get_float(amqp_value, &float_value) != 0)
+			{
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				char str_value[25];
+				if ((snprintf(str_value, sizeof(str_value), "%.02f", float_value) < 0) ||
+					(string_concat(&result, str_value) != 0))
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+				if (string_concat(&result, str_value) != 0)
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+			}
+			break;
+		}
+		case AMQP_TYPE_DOUBLE:
+		{
+			double double_value;
+			if (amqpvalue_get_double(amqp_value, &double_value) != 0)
+			{
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				char str_value[25];
+				if ((snprintf(str_value, sizeof(str_value), "%.02F", double_value) < 0) ||
+					(string_concat(&result, str_value) != 0))
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+				if (string_concat(&result, str_value) != 0)
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+			}
+			break;
+		}
+		case AMQP_TYPE_CHAR:
+		{
+			uint32_t char_code;
+			if (amqpvalue_get_char(amqp_value, &char_code) != 0)
+			{
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				char str_value[25];
+				if ((snprintf(str_value, sizeof(str_value), "U%02X%02X%02X%02X", char_code >> 24, (char_code >> 16) & 0xFF, (char_code >> 8) & 0xFF, char_code & 0xFF) < 0) ||
+					(string_concat(&result, str_value) != 0))
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+				if (string_concat(&result, str_value) != 0)
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+			}
+			break;
+		}
+		case AMQP_TYPE_TIMESTAMP:
+			break;
+		case AMQP_TYPE_UUID:
+			break;
+		case AMQP_TYPE_BINARY:
+		{
+			amqp_binary binary_value;
+			if (amqpvalue_get_binary(amqp_value, &binary_value) != 0)
+			{
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				if (string_concat(&result, "<") != 0)
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+				else
+				{
+					uint64_t i;
+
+					for (i = 0; i < binary_value.length; i++)
+					{
+						char str_value[4];
+						if ((snprintf(str_value, sizeof(str_value), "%s%02X", (i > 0) ? " " : "", ((unsigned char*)binary_value.bytes)[i]) < 0) ||
+							(string_concat(&result, str_value) != 0))
+						{
+							break;
+						}
+					}
+
+					if (i < binary_value.length)
+					{
+						amqpalloc_free(result);
+						result = NULL;
+					}
+					else if (string_concat(&result, ">") != 0)
+					{
+						amqpalloc_free(result);
+						result = NULL;
+					}
+				}
+			}
+			break;
+		}
 		case AMQP_TYPE_STRING:
 		{
 			const char* string_value;
 			if (amqpvalue_get_string(amqp_value, &string_value) != 0)
+			{
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				if (string_concat(&result, string_value) != 0)
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+			}
+			break;
+		}
+		case AMQP_TYPE_SYMBOL:
+		{
+			const char* string_value;
+			if (amqpvalue_get_symbol(amqp_value, &string_value) != 0)
 			{
 				amqpalloc_free(result);
 				result = NULL;
@@ -297,11 +442,13 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 							{
 								amqpalloc_free(result);
 								result = NULL;
+								break;
 							}
 							else if (string_concat(&result, item_string) != 0)
 							{
 								amqpalloc_free(result);
 								result = NULL;
+								break;
 							}
 
 							amqpalloc_free(item_string);
@@ -320,6 +467,82 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			}
 			break;
 		}
+		case AMQP_TYPE_MAP:
+		{
+			uint32_t count;
+			if ((amqpvalue_get_map_pair_count(amqp_value, &count) != 0) ||
+				(string_concat(&result, "{") != 0))
+			{
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				size_t i;
+				for (i = 0; i < count; i++)
+				{
+					AMQP_VALUE key;
+					AMQP_VALUE value;
+					if (amqpvalue_get_map_key_value_pair(amqp_value, i, &key, &value) != 0)
+					{
+						break;
+					}
+					else
+					{
+						char* key_string = amqpvalue_to_string(key);
+						if (key_string == NULL)
+						{
+							amqpvalue_destroy(key);
+							amqpvalue_destroy(value);
+							break;
+						}
+						else
+						{
+							char* value_string = amqpvalue_to_string(value);
+							if (key_string == NULL)
+							{
+								amqpalloc_free(key_string);
+								amqpvalue_destroy(key);
+								amqpvalue_destroy(value);
+								break;
+							}
+							else
+							{
+								if (((i > 0) && (string_concat(&result, ",") != 0)) ||
+									(string_concat(&result, "[") != 0) ||
+									(string_concat(&result, key_string) != 0) ||
+									(string_concat(&result, ":") != 0) ||
+									(string_concat(&result, value_string) != 0) ||
+									(string_concat(&result, "]") != 0))
+								{
+									amqpalloc_free(key_string);
+									amqpalloc_free(value_string);
+									amqpvalue_destroy(key);
+									amqpvalue_destroy(value);
+									break;
+								}
+
+								amqpalloc_free(value_string);
+							}
+
+							amqpalloc_free(key_string);
+						}
+
+						amqpvalue_destroy(key);
+						amqpvalue_destroy(value);
+					}
+				}
+
+				if ((i < count) ||
+					(string_concat(&result, "}") != 0))
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+			}
+			break;
+		}
+		case AMQP_TYPE_COMPOSITE:
 		case AMQP_TYPE_DESCRIBED:
 		{
 			AMQP_VALUE described_value = amqpvalue_get_described_value(amqp_value);

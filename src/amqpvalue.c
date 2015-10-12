@@ -5086,7 +5086,8 @@ AMQP_VALUE amqpvalue_get_described_value(AMQP_VALUE value)
 	else
 	{
 		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
-		if (value_data->type != AMQP_TYPE_DESCRIBED)
+		if ((value_data->type != AMQP_TYPE_DESCRIBED) &&
+			(value_data->type != AMQP_TYPE_COMPOSITE))
 		{
 			result = NULL;
 		}

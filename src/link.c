@@ -10,6 +10,7 @@
 #include "amqp_frame_codec.h"
 #include "consolelogger.h"
 #include "logger.h"
+#include "amqpvalue_to_string.h"
 
 typedef struct DELIVERY_INSTANCE_TAG
 {
@@ -42,6 +43,7 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 	{
 	case AMQP_ATTACH:
 		LOG(consolelogger_log, LOG_LINE, "<- [ATTACH]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 		if (link->link_state == LINK_STATE_HALF_ATTACHED)
 		{
 			link->link_state = LINK_STATE_ATTACHED;
@@ -85,7 +87,8 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 			}
 		}
 
-		LOG(consolelogger_log, LOG_LINE, "<- [DISPOSITION]");
+		LOG(consolelogger_log, 0, "<- [DISPOSITION]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 		break;
 	}
 
@@ -98,7 +101,8 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 		AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
 		amqpvalue_get_string(error_description_value, &error);
 
-		LOG(consolelogger_log, LOG_LINE, "<- [DETACH:%s]", error);
+		LOG(consolelogger_log, 0, "<- [DETACH]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 		break;
 	}
 	}
@@ -139,6 +143,9 @@ static int send_attach(LINK_INSTANCE* link, const char* name, handle handle, rol
 			}
 			else
 			{
+				LOG(consolelogger_log, 0, "-> [ATTACH]");
+				LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(attach_performative_value));
+
 				result = 0;
 			}
 
@@ -217,7 +224,6 @@ void link_dowork(LINK_HANDLE handle)
 			{
 				if (send_attach(link, link->name, 0, role_sender, sender_settle_mode_settled, receiver_settle_mode_first) == 0)
 				{
-					LOG(consolelogger_log, LOG_LINE, "-> [ATTACH]");
 					link->link_state = LINK_STATE_HALF_ATTACHED;
 				}
 			}
@@ -296,7 +302,8 @@ int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, D
 				link->pending_deliveries[link->pending_delivery_count].callback_context = callback_context;
 				link->pending_delivery_count++;
 
-				LOG(consolelogger_log, LOG_LINE, "-> [TRANSFER]");
+				LOG(consolelogger_log, 0, "-> [TRANSFER]");
+				LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(transfer_value));
 
 				result = 0;
 			}

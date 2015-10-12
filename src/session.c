@@ -4,6 +4,7 @@
 #include "amqpalloc.h"
 #include "consolelogger.h"
 #include "logger.h"
+#include "amqpvalue_to_string.h"
 
 typedef struct LINK_ENDPOINT_INSTANCE_TAG
 {
@@ -53,7 +54,8 @@ static int send_begin(ENDPOINT_HANDLE endpoint, transfer_number next_outgoing_id
 			}
 			else
 			{
-				LOG(consolelogger_log, LOG_LINE, "-> [BEGIN]");
+				LOG(consolelogger_log, 0, "-> [BEGIN]");
+				LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(begin_performative_value));
 
 				result = 0;
 			}
@@ -130,7 +132,8 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 		break;
 
 	case AMQP_BEGIN:
-		LOG(consolelogger_log, LOG_LINE, "<- [BEGIN]");
+		LOG(consolelogger_log, 0, "<- [BEGIN]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 		session->session_state = SESSION_STATE_MAPPED;
 		break;
 
@@ -195,7 +198,8 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 			}
 		}
 
-		LOG(consolelogger_log, LOG_LINE, "<- [FLOW]");
+		LOG(consolelogger_log, 0, "<- [FLOW]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 		break;
 	}
 
@@ -216,7 +220,8 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size, payload_bytes);
 		}
 
-		LOG(consolelogger_log, LOG_LINE, "<- [TRANSFER]");
+		LOG(consolelogger_log, 0, "<- [TRANSFER]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 		break;
 	}
 
@@ -248,7 +253,8 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 			error = NULL;
 		}
 
-		LOG(consolelogger_log, LOG_LINE, "<- [END:%s]", error);
+		LOG(consolelogger_log, 0, "<- [END]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 		break;
 	}
 	}

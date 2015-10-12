@@ -171,7 +171,8 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 					}
 					else
 					{
-						LOG(consolelogger_log, LOG_LINE, "-> [OPEN]");
+						LOG(consolelogger_log, 0, "-> [OPEN]");
+						LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(open_performative_value));
 
 						/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
 						connection_instance->connection_state = CONNECTION_STATE_OPEN_SENT;
@@ -225,7 +226,8 @@ static int send_close_frame(CONNECTION_INSTANCE* connection_instance, ERROR_HAND
 				}
 				else
 				{
-					LOG(consolelogger_log, LOG_LINE, "-> [CLOSE]");
+					LOG(consolelogger_log, 0, "-> [CLOSE]");
+					LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(close_performative_value));
 					result = 0;
 				}
 
@@ -431,7 +433,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 				if (is_open_type_by_descriptor(descriptor))
 				{
 					LOG(consolelogger_log, 0, "<- [OPEN] ");
-					//LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
+					LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 
 					if (channel != 0)
 					{
@@ -514,8 +516,8 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 					{
 						CLOSE_HANDLE close_handle;
 
-						LOG(consolelogger_log, LOG_LINE, "<- [CLOSE]");
-						//LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
+						LOG(consolelogger_log, 0, "<- [CLOSE]");
+						LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 
 						/* Codes_SRS_CONNECTION_01_012: [A close frame MAY be received on any channel up to the maximum channel number negotiated in open.] */
 						if ((channel > connection_instance->channel_max) ||

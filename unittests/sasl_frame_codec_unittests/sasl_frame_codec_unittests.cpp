@@ -441,12 +441,12 @@ TEST_FUNCTION(sasl_frame_codec_destroy_with_NULL_handle_does_nothing)
 
 /* sasl_frame_codec_encode_frame */
 
-/* Tests_SRS_SASL_FRAME_CODEC_01_029: [sasl_frame_codec_encode_frame shall encode the frame header and AMQP value in a SASL frame and on success it shall return 0.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_029: [sasl_frame_codec_encode_frame shall encode the frame header and sasl_frame_value AMQP value in a SASL frame and on success it shall return 0.] */
 /* Tests_SRS_SASL_FRAME_CODEC_01_031: [sasl_frame_codec_encode_frame shall encode the frame header by using frame_codec_begin_encode_frame.] */
-/* Tests_SRS_SASL_FRAME_CODEC_01_032: [The payload frame size shall be computed based on the encoded size of the sasl_frame and its fields.] */
-/* Tests_SRS_SASL_FRAME_CODEC_01_033: [The encoded size of the sasl_frame and its fields shall be obtained by calling amqpvalue_get_encoded_size.] */
-/* Tests_SRS_SASL_FRAME_CODEC_01_035: [Encoding of the sasl_frame and its fields shall be done by calling amqpvalue_encode.] */
-/* Tests_SRS_SASL_FRAME_CODEC_01_036: [The encode result for the sasl_frame and its fields shall be given to frame_codec by calling frame_codec_encode_frame_bytes.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_032: [The payload frame size shall be computed based on the encoded size of the sasl_frame_value and its fields.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_033: [The encoded size of the sasl_frame_value and its fields shall be obtained by calling amqpvalue_get_encoded_size.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_035: [Encoding of the sasl_frame_value and its fields shall be done by calling amqpvalue_encode.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_036: [The encode result for the sasl_frame_value and its fields shall be given to frame_codec by calling frame_codec_encode_frame_bytes.] */
 /* Tests_SRS_SASL_FRAME_CODEC_01_012: [Bytes 6 and 7 of the header are ignored.] */
 /* Tests_SRS_SASL_FRAME_CODEC_01_013: [Implementations SHOULD set these to 0x00.] */
 /* Tests_SRS_SASL_FRAME_CODEC_01_014: [The extended header is ignored.] */
@@ -482,7 +482,7 @@ TEST_FUNCTION(encoding_a_sasl_frame_succeeds)
 	sasl_frame_codec_destroy(sasl_frame_codec);
 }
 
-/* Tests_SRS_SASL_FRAME_CODEC_01_030: [If frame_codec or sasl_frame_fields is NULL, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_030: [If sasl_frame_codec or sasl_frame_value is NULL, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
 TEST_FUNCTION(sasl_frame_codec_encode_frame_with_NULL_sasl_frame_codec_fails)
 {
 	// arrange
@@ -495,7 +495,7 @@ TEST_FUNCTION(sasl_frame_codec_encode_frame_with_NULL_sasl_frame_codec_fails)
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_SASL_FRAME_CODEC_01_030: [If frame_codec or sasl_frame_fields is NULL, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_030: [If sasl_frame_codec or sasl_frame_value is NULL, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
 TEST_FUNCTION(sasl_frame_codec_encode_frame_with_NULL_performative_value_fails)
 {
 	// arrange

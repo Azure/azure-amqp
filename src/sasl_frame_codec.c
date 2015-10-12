@@ -207,15 +207,16 @@ void sasl_frame_codec_destroy(SASL_FRAME_CODEC_HANDLE sasl_frame_codec)
 	}
 }
 
-/* Codes_SRS_SASL_FRAME_CODEC_01_029: [sasl_frame_codec_encode_frame shall encode the frame header and AMQP value in a SASL frame and on success it shall return 0.] */
-int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, const AMQP_VALUE performative)
+/* Codes_SRS_SASL_FRAME_CODEC_01_029: [sasl_frame_codec_encode_frame shall encode the frame header and sasl_frame_value AMQP value in a SASL frame and on success it shall return 0.] */
+int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, const AMQP_VALUE sasl_frame_value)
 {
 	int result;
 	uint32_t amqp_frame_payload_size;
 	SASL_FRAME_CODEC_INSTANCE* sasl_frame_codec_instance = (SASL_FRAME_CODEC_INSTANCE*)sasl_frame_codec;
 
+	/* Codes_SRS_SASL_FRAME_CODEC_01_030: [If sasl_frame_codec or sasl_frame_value is NULL, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
 	if ((sasl_frame_codec == NULL) ||
-		(performative == NULL))
+		(sasl_frame_value == NULL))
 	{
 		result = __LINE__;
 	}
@@ -224,7 +225,7 @@ int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, cons
 		AMQP_VALUE descriptor;
 		uint64_t sasl_frame_descriptor_ulong;
 
-		if (((descriptor = amqpvalue_get_inplace_descriptor(performative)) == NULL) ||
+		if (((descriptor = amqpvalue_get_inplace_descriptor(sasl_frame_value)) == NULL) ||
 			(amqpvalue_get_ulong(descriptor, &sasl_frame_descriptor_ulong) != 0) ||
 			/* Codes_SRS_SASL_FRAME_CODEC_01_047: [The frame body of a SASL frame MUST contain exactly one AMQP type, whose type encoding MUST have provides=“sasl-frame”.] */
 			(sasl_frame_descriptor_ulong < SASL_MECHANISMS) ||
@@ -233,9 +234,9 @@ int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, cons
 			/* Codes_SRS_SASL_FRAME_CODEC_01_034: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
 			result = __LINE__;
 		}
-		/* Codes_SRS_SASL_FRAME_CODEC_01_032: [The payload frame size shall be computed based on the encoded size of the sasl_frame and its fields.] */
-		/* Codes_SRS_SASL_FRAME_CODEC_01_033: [The encoded size of the sasl_frame and its fields shall be obtained by calling amqpvalue_get_encoded_size.] */
-		else if ((amqpvalue_get_encoded_size(performative, &amqp_frame_payload_size) != 0) ||
+		/* Codes_SRS_SASL_FRAME_CODEC_01_032: [The payload frame size shall be computed based on the encoded size of the sasl_frame_value and its fields.] */
+		/* Codes_SRS_SASL_FRAME_CODEC_01_033: [The encoded size of the sasl_frame_value and its fields shall be obtained by calling amqpvalue_get_encoded_size.] */
+		else if ((amqpvalue_get_encoded_size(sasl_frame_value, &amqp_frame_payload_size) != 0) ||
 			/* Codes_SRS_SASL_FRAME_CODEC_01_016: [The maximum size of a SASL frame is defined by MIN-MAX-FRAME-SIZE.] */
 			(amqp_frame_payload_size > MIX_MAX_FRAME_SIZE - 8))
 		{
@@ -256,9 +257,9 @@ int sasl_frame_codec_encode_frame(SASL_FRAME_CODEC_HANDLE sasl_frame_codec, cons
 			}
 			else
 			{
-				/* Codes_SRS_SASL_FRAME_CODEC_01_035: [Encoding of the sasl_frame and its fields shall be done by calling amqpvalue_encode.] */
-				/* Codes_SRS_SASL_FRAME_CODEC_01_036: [The encode result for the sasl_frame and its fields shall be given to frame_codec by calling frame_codec_encode_frame_bytes.] */
-				if (amqpvalue_encode(performative, frame_codec_encode_frame_bytes, sasl_frame_codec_instance->frame_codec) != 0)
+				/* Codes_SRS_SASL_FRAME_CODEC_01_035: [Encoding of the sasl_frame_value and its fields shall be done by calling amqpvalue_encode.] */
+				/* Codes_SRS_SASL_FRAME_CODEC_01_036: [The encode result for the sasl_frame_value and its fields shall be given to frame_codec by calling frame_codec_encode_frame_bytes.] */
+				if (amqpvalue_encode(sasl_frame_value, frame_codec_encode_frame_bytes, sasl_frame_codec_instance->frame_codec) != 0)
 				{
 					/* Codes_SRS_SASL_FRAME_CODEC_01_034: [If any error occurs during encoding, sasl_frame_codec_encode_frame shall fail and return a non-zero value.] */
 					result = __LINE__;

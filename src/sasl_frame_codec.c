@@ -42,6 +42,7 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 	}
 	else
 	{
+		/* Codes_SRS_SASL_FRAME_CODEC_01_009: [The frame body of a SASL frame MUST contain exactly one AMQP type, whose type encoding MUST have provides=“sasl-frame”.] */
 		if (!is_sasl_mechanisms_type_by_descriptor(descriptor) &&
 			!is_sasl_init_type_by_descriptor(descriptor) &&
 			!is_sasl_challenge_type_by_descriptor(descriptor) &&
@@ -67,7 +68,9 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 	/* Codes_SRS_SASL_FRAME_CODEC_01_007: [The extended header is ignored.] */
 
 	/* Codes_SRS_SASL_FRAME_CODEC_01_008: [The maximum size of a SASL frame is defined by MIN-MAX-FRAME-SIZE.] */
-	if (type_specific_size + frame_body_size + 6 > MIX_MAX_FRAME_SIZE)
+	if ((type_specific_size + frame_body_size + 6 > MIX_MAX_FRAME_SIZE) ||
+		/* Codes_SRS_SASL_FRAME_CODEC_01_010: [Receipt of an empty frame is an irrecoverable error.] */
+		(frame_body_size == 0))
 	{
 		result = __LINE__;
 	}

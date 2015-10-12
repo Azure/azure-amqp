@@ -1078,4 +1078,182 @@ TEST_FUNCTION(when_not_all_bytes_are_used_for_decoding_in_a_SASL_frame_then_deco
 	sasl_frame_codec_destroy(sasl_frame_codec);
 }
 
+/* Tests_SRS_SASL_FRAME_CODEC_01_009: [The frame body of a SASL frame MUST contain exactly one AMQP type, whose type encoding MUST have provides=“sasl-frame”.] */
+TEST_FUNCTION(when_a_sasl_init_frame_is_received_decoding_it_succeeds)
+{
+	// arrange
+	sasl_frame_codec_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, NULL);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1).ExpectedTimesExactly(sizeof(test_sasl_frame_value));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_mechanisms_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_init_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(NULL, TEST_AMQP_VALUE));
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
+}
+
+/* Tests_SRS_SASL_FRAME_CODEC_01_009: [The frame body of a SASL frame MUST contain exactly one AMQP type, whose type encoding MUST have provides=“sasl-frame”.] */
+TEST_FUNCTION(when_a_sasl_challenge_frame_is_received_decoding_it_succeeds)
+{
+	// arrange
+	sasl_frame_codec_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, NULL);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1).ExpectedTimesExactly(sizeof(test_sasl_frame_value));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_mechanisms_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_init_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_challenge_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(NULL, TEST_AMQP_VALUE));
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
+}
+
+/* Tests_SRS_SASL_FRAME_CODEC_01_009: [The frame body of a SASL frame MUST contain exactly one AMQP type, whose type encoding MUST have provides=“sasl-frame”.] */
+TEST_FUNCTION(when_a_sasl_response_frame_is_received_decoding_it_succeeds)
+{
+	// arrange
+	sasl_frame_codec_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, NULL);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1).ExpectedTimesExactly(sizeof(test_sasl_frame_value));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_mechanisms_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_init_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_challenge_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_response_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(NULL, TEST_AMQP_VALUE));
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
+}
+
+/* Tests_SRS_SASL_FRAME_CODEC_01_009: [The frame body of a SASL frame MUST contain exactly one AMQP type, whose type encoding MUST have provides=“sasl-frame”.] */
+TEST_FUNCTION(when_a_sasl_outcome_frame_is_received_decoding_it_succeeds)
+{
+	// arrange
+	sasl_frame_codec_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, NULL);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1).ExpectedTimesExactly(sizeof(test_sasl_frame_value));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_mechanisms_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_init_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_challenge_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_response_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_outcome_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(NULL, TEST_AMQP_VALUE));
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
+}
+
+/* Tests_SRS_SASL_FRAME_CODEC_01_009: [The frame body of a SASL frame MUST contain exactly one AMQP type, whose type encoding MUST have provides=“sasl-frame”.] */
+TEST_FUNCTION(when_an_AMQP_value_that_is_not_a_sasl_frame_is_decoded_then_decoding_fails)
+{
+	// arrange
+	sasl_frame_codec_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, NULL);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1).ExpectedTimesExactly(sizeof(test_sasl_frame_value));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_mechanisms_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_init_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_challenge_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_response_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_outcome_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
+}
+
+/* Tests_SRS_SASL_FRAME_CODEC_01_010: [Receipt of an empty frame is an irrecoverable error.] */
+TEST_FUNCTION(when_an_empty_frame_is_received_decoding_fails)
+{
+	// arrange
+	sasl_frame_codec_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, NULL);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
+}
+
 END_TEST_SUITE(sasl_frame_codec_unittests)

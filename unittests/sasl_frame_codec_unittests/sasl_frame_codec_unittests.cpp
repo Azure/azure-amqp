@@ -797,11 +797,15 @@ TEST_FUNCTION(when_performative_bytes_are_expected_no_callback_is_triggered)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 
 	EXPECTED_CALL(mocks, amqpvalue_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1).ExpectedTimesExactly(sizeof(test_sasl_frame_value));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_mechanisms_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(TEST_CONTEXT, TEST_AMQP_VALUE));
 
 	// act
 	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value,  sizeof(test_sasl_frame_value));

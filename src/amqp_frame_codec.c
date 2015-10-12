@@ -127,7 +127,7 @@ static void frame_received(void* context, const unsigned char* type_specific, ui
 
 /* Codes_SRS_AMQP_FRAME_CODEC_01_011: [amqp_frame_codec_create shall create an instance of an amqp_frame_codec and return a non-NULL handle to it.] */
 AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback,
-	AMQP_EMPTY_FRAME_RECEIVED_CALLBACK empty_frame_received_callback, void* frame_received_callback_context)
+	AMQP_EMPTY_FRAME_RECEIVED_CALLBACK empty_frame_received_callback, AMQP_FRAME_CODEC_ERROR_CALLBACK amqp_frame_codec_error_callback, void* callback_context)
 {
 	AMQP_FRAME_CODEC_INSTANCE* result;
 
@@ -147,7 +147,7 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			result->frame_codec = frame_codec;
 			result->frame_received_callback = frame_received_callback;
 			result->empty_frame_received_callback = empty_frame_received_callback;
-			result->callback_context = frame_received_callback_context;
+			result->callback_context = callback_context;
 			result->decode_state = AMQP_FRAME_DECODE_FRAME;
 			result->encode_state = AMQP_FRAME_ENCODE_FRAME_HEADER;
 

@@ -605,7 +605,11 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 	}
 }
 
-static void frame_codec_decode_error(void* context)
+static void frame_codec_error(void* context)
+{
+}
+
+static void amqp_frame_codec_error(void* context)
 {
 }
 
@@ -629,7 +633,7 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 			result->io = io;
 
 			/* Codes_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
-			result->frame_codec = frame_codec_create(result->io, frame_codec_decode_error, result, consolelogger_log);
+			result->frame_codec = frame_codec_create(result->io, frame_codec_error, result, consolelogger_log);
 			if (result->frame_codec == NULL)
 			{
 				/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
@@ -639,7 +643,7 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 			}
 			else
 			{
-				result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, result);
+				result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, amqp_frame_codec_error, result);
 				if (result->amqp_frame_codec == NULL)
 				{
 					/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */

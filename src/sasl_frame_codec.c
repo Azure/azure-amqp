@@ -41,7 +41,7 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 	{
 		sasl_frame_codec_instance->decode_state = SASL_FRAME_DECODE_ERROR;
 
-		/* Codes_SRS_SASL_FRAME_CODEC_01_049: [If any error occurs while decoding a frame, the decoder shall call the error_callback and pass to it the callback_context, both of thosebeing the ones given to sasl_frame_codec_create.] */
+		/* Codes_SRS_SASL_FRAME_CODEC_01_049: [If any error occurs while decoding a frame, the decoder shall call the error_callback and pass to it the callback_context, both of those being the ones given to sasl_frame_codec_create.] */
 		sasl_frame_codec_instance->error_callback(sasl_frame_codec_instance->callback_context);
 	}
 	else
@@ -55,7 +55,7 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 		{
 			sasl_frame_codec_instance->decode_state = SASL_FRAME_DECODE_ERROR;
 
-			/* Codes_SRS_SASL_FRAME_CODEC_01_049: [If any error occurs while decoding a frame, the decoder shall call the error_callback and pass to it the callback_context, both of thosebeing the ones given to sasl_frame_codec_create.] */
+			/* Codes_SRS_SASL_FRAME_CODEC_01_049: [If any error occurs while decoding a frame, the decoder shall call the error_callback and pass to it the callback_context, both of those being the ones given to sasl_frame_codec_create.] */
 			sasl_frame_codec_instance->error_callback(sasl_frame_codec_instance->callback_context);
 		}
 		else
@@ -81,7 +81,7 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 	{
 		result = __LINE__;
 
-		/* Codes_SRS_SASL_FRAME_CODEC_01_049: [If any error occurs while decoding a frame, the decoder shall call the error_callback and pass to it the callback_context, both of thosebeing the ones given to sasl_frame_codec_create.] */
+		/* Codes_SRS_SASL_FRAME_CODEC_01_049: [If any error occurs while decoding a frame, the decoder shall call the error_callback and pass to it the callback_context, both of those being the ones given to sasl_frame_codec_create.] */
 		sasl_frame_codec_instance->error_callback(sasl_frame_codec_instance->callback_context);
 	}
 	else
@@ -119,7 +119,7 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 			{
 				sasl_frame_codec_instance->decode_state = SASL_FRAME_DECODE_ERROR;
 
-				/* Codes_SRS_SASL_FRAME_CODEC_01_049: [If any error occurs while decoding a frame, the decoder shall call the error_callback and pass to it the callback_context, both of thosebeing the ones given to sasl_frame_codec_create.] */
+				/* Codes_SRS_SASL_FRAME_CODEC_01_049: [If any error occurs while decoding a frame, the decoder shall call the error_callback and pass to it the callback_context, both of those being the ones given to sasl_frame_codec_create.] */
 				sasl_frame_codec_instance->error_callback(sasl_frame_codec_instance->callback_context);
 			}
 
@@ -164,7 +164,7 @@ SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			result->callback_context = callback_context;
 			result->decode_state = SASL_FRAME_DECODE_FRAME;
 
-			/* Codes_SRS_SASL_FRAME_CODEC_01_022: [amqp_frame_codec_create shall create a decoder to be used for decoding SASL values.] */
+			/* Codes_SRS_SASL_FRAME_CODEC_01_022: [sasl_frame_codec_create shall create a decoder to be used for decoding SASL values.] */
 			result->decoder = amqpvalue_decoder_create(amqp_value_decoded, result);
 			if (result->decoder == NULL)
 			{

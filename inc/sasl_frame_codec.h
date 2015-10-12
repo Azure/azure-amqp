@@ -18,7 +18,7 @@ extern "C" {
 #define SASL_OUTCOME		(uint64_t)0x44
 
 typedef void* SASL_FRAME_CODEC_HANDLE;
-typedef void(*SASL_FRAME_RECEIVED_CALLBACK)(void* context, AMQP_VALUE performative);
+typedef void(*SASL_FRAME_RECEIVED_CALLBACK)(void* context, AMQP_VALUE sasl_frame_value);
 typedef void(*SASL_FRAME_CODEC_ERROR_CALLBACK)(void* context);
 
 extern SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, SASL_FRAME_RECEIVED_CALLBACK frame_received_callback, SASL_FRAME_CODEC_ERROR_CALLBACK error_callback, void* callback_context);

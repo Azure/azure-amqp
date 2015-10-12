@@ -205,27 +205,20 @@ TEST_FUNCTION(frame_codec_create_with_valid_args_succeeds)
 	frame_codec_destroy(frame_codec);
 }
 
-/* Tests_SRS_FRAME_CODEC_01_104: [The frame_codec_error_callback and frame_codec_error_callback_context shall be allowed to be NULL.] */
+/* Tests_SRS_FRAME_CODEC_01_020: [If the io or frame_codec_error_callback argument is NULL, frame_codec_create shall return NULL.] */
 TEST_FUNCTION(frame_codec_create_with_NULL_frame_codec_decode_error_calback_succeeds)
 {
 	// arrange
 	frame_codec_mocks mocks;
 
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-	STRICT_EXPECTED_CALL(mocks, list_create());
-
 	// act
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, NULL, TEST_ERROR_CONTEXT, consolelogger_log);
 
 	// assert
-	ASSERT_IS_NOT_NULL(frame_codec);
-	mocks.AssertActualAndExpectedCalls();
-
-	// cleanup
-	frame_codec_destroy(frame_codec);
+	ASSERT_IS_NULL(frame_codec);
 }
 
-/* Tests_SRS_FRAME_CODEC_01_104: [The frame_codec_error_callback and frame_codec_error_callback_context shall be allowed to be NULL.] */
+/* Tests_SRS_FRAME_CODEC_01_104: [The frame_codec_error_callback_context shall be allowed to be NULL.] */
 TEST_FUNCTION(frame_codec_create_with_NULL_frame_codec_decode_error_calback_context_succeeds)
 {
 	// arrange
@@ -245,7 +238,7 @@ TEST_FUNCTION(frame_codec_create_with_NULL_frame_codec_decode_error_calback_cont
 	frame_codec_destroy(frame_codec);
 }
 
-/* Tests_SRS_FRAME_CODEC_01_020: [If the io argument is NULL, frame_codec_create shall return NULL.] */
+/* Tests_SRS_FRAME_CODEC_01_020: [If the io or frame_codec_error_callback argument is NULL, frame_codec_create shall return NULL.] */
 TEST_FUNCTION(when_io_is_NULL_frame_codec_create_fails)
 {
 	// arrange
@@ -323,6 +316,7 @@ TEST_FUNCTION(a_frame_of_exactly_max_frame_size_immediately_after_create_can_be_
 
 /* Tests_SRS_FRAME_CODEC_01_082: [The initial max_frame_size_shall be 512.] */
 /* Tests_SRS_FRAME_CODEC_01_096: [If a frame bigger than the current max frame size is received, frame_codec_receive_bytes shall fail and return a non-zero value.] */
+/* Tests_SRS_FRAME_CODEC_01_103: [Upon any decode error, if an error callback has been passed to frame_codec_create, then the error callback shall be called with the context argument being the frame_codec_error_callback_context argument passed to frame_codec_create.] */
 TEST_FUNCTION(receiving_a_frame_with_more_than_512_bytes_of_total_frame_size_immediately_after_create_fails)
 {
 	// arrange
@@ -331,6 +325,8 @@ TEST_FUNCTION(receiving_a_frame_with_more_than_512_bytes_of_total_frame_size_imm
 	(void)frame_codec_subscribe(frame_codec, 0, frame_received_callback_1, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x02, 0x01 };
+
+	STRICT_EXPECTED_CALL(mocks, test_frame_codec_decode_error(TEST_ERROR_CONTEXT));
 
 	// act
 	int result = frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));
@@ -502,6 +498,7 @@ TEST_FUNCTION(a_frame_of_exactly_max_frame_size_can_be_sent)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_096: [If a frame bigger than the current max frame size is received, frame_codec_receive_bytes shall fail and return a non-zero value.] */
+/* Tests_SRS_FRAME_CODEC_01_103: [Upon any decode error, if an error callback has been passed to frame_codec_create, then the error callback shall be called with the context argument being the frame_codec_error_callback_context argument passed to frame_codec_create.] */
 TEST_FUNCTION(receiving_a_frame_with_more_than_max_frame_size_bytes_of_total_frame_size_fails)
 {
 	// arrange
@@ -511,6 +508,8 @@ TEST_FUNCTION(receiving_a_frame_with_more_than_max_frame_size_bytes_of_total_fra
 	(void)frame_codec_subscribe(frame_codec, 0, frame_received_callback_1, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x04, 0x01 };
+
+	STRICT_EXPECTED_CALL(mocks, test_frame_codec_decode_error(TEST_ERROR_CONTEXT));
 
 	// act
 	int result = frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));
@@ -688,6 +687,7 @@ TEST_FUNCTION(setting_the_max_frame_size_on_a_codec_with_an_encode_error_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_079: [The new frame size shall take effect immediately, even for a frame that is being decoded at the time of the call.] */
+/* Tests_SRS_FRAME_CODEC_01_103: [Upon any decode error, if an error callback has been passed to frame_codec_create, then the error callback shall be called with the context argument being the frame_codec_error_callback_context argument passed to frame_codec_create.] */
 TEST_FUNCTION(setting_a_new_max_frame_while_the_frame_size_is_being_received_makes_the_new_frame_size_be_in_effect)
 {
 	// arrange
@@ -699,6 +699,8 @@ TEST_FUNCTION(setting_a_new_max_frame_while_the_frame_size_is_being_received_mak
 	mocks.ResetAllCalls();
 
 	(void)frame_codec_set_max_frame_size(frame_codec, 8);
+
+	STRICT_EXPECTED_CALL(mocks, test_frame_codec_decode_error(TEST_ERROR_CONTEXT));
 
 	// act
 	int result = frame_codec_receive_bytes(frame_codec, frame + 3, sizeof(frame) - 3);
@@ -1107,6 +1109,7 @@ TEST_FUNCTION(when_getting_the_list_item_value_fails_no_callback_is_invoked)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_010: [The frame is malformed if the size is less than the size of the frame header (8 bytes).] */
+/* Tests_SRS_FRAME_CODEC_01_103: [Upon any decode error, if an error callback has been passed to frame_codec_create, then the error callback shall be called with the context argument being the frame_codec_error_callback_context argument passed to frame_codec_create.] */
 TEST_FUNCTION(when_frame_size_is_bad_frame_codec_receive_bytes_fails)
 {
 	// arrange
@@ -1115,6 +1118,8 @@ TEST_FUNCTION(when_frame_size_is_bad_frame_codec_receive_bytes_fails)
 	(void)frame_codec_subscribe(frame_codec, 0, frame_received_callback_1, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x07, 0x02, 0x00, 0x01, 0x02 };
+
+	STRICT_EXPECTED_CALL(mocks, test_frame_codec_decode_error(TEST_ERROR_CONTEXT));
 
 	// act
 	int result = frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));
@@ -1128,6 +1133,7 @@ TEST_FUNCTION(when_frame_size_is_bad_frame_codec_receive_bytes_fails)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_014: [Due to the mandatory 8-byte frame header, the frame is malformed if the value is less than 2.] */
+/* Tests_SRS_FRAME_CODEC_01_103: [Upon any decode error, if an error callback has been passed to frame_codec_create, then the error callback shall be called with the context argument being the frame_codec_error_callback_context argument passed to frame_codec_create.] */
 TEST_FUNCTION(when_frame_size_has_a_bad_doff_frame_codec_receive_bytes_fails)
 {
 	// arrange
@@ -1136,6 +1142,8 @@ TEST_FUNCTION(when_frame_size_has_a_bad_doff_frame_codec_receive_bytes_fails)
 	(void)frame_codec_subscribe(frame_codec, 0, frame_received_callback_1, frame_codec);
 	mocks.ResetAllCalls();
 	unsigned char frame[] = { 0x00, 0x00, 0x00, 0x08, 0x01, 0x00, 0x01, 0x02 };
+
+	STRICT_EXPECTED_CALL(mocks, test_frame_codec_decode_error(TEST_ERROR_CONTEXT));
 
 	// act
 	int result = frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));
@@ -1155,11 +1163,11 @@ TEST_FUNCTION(after_a_frame_decode_error_occurs_due_to_frame_size_a_subsequent_d
 	frame_codec_mocks mocks;
 	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, test_frame_codec_decode_error, TEST_ERROR_CONTEXT, consolelogger_log);
 	(void)frame_codec_subscribe(frame_codec, 0, frame_received_callback_1, frame_codec);
-	mocks.ResetAllCalls();
 	unsigned char bad_frame[] = { 0x00, 0x00, 0x00, 0x07, 0x02, 0x00, 0x01, 0x02 };
 	unsigned char good_frame[] = { 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x01, 0x02 };
 
 	(void)frame_codec_receive_bytes(frame_codec, bad_frame, sizeof(bad_frame));
+	mocks.ResetAllCalls();
 
 	// act
 	int result = frame_codec_receive_bytes(frame_codec, good_frame, sizeof(good_frame));
@@ -1232,6 +1240,7 @@ TEST_FUNCTION(receiving_a_frame_with_1_byte_frame_body_succeeds)
 }
 
 /* Tests_SRS_FRAME_CODEC_01_101: [If the memory for the frame_body bytes cannot be allocated, frame_codec_receive_bytes shall fail and return a non-zero value.] */
+/* Tests_SRS_FRAME_CODEC_01_103: [Upon any decode error, if an error callback has been passed to frame_codec_create, then the error callback shall be called with the context argument being the frame_codec_error_callback_context argument passed to frame_codec_create.] */
 TEST_FUNCTION(when_allocating_type_specific_data_fails_frame_codec_receive_bytes_fails)
 {
 	// arrange
@@ -1248,6 +1257,8 @@ TEST_FUNCTION(when_allocating_type_specific_data_fails_frame_codec_receive_bytes
 	EXPECTED_CALL(mocks, list_item_get_value(IGNORED_PTR_ARG));
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 		.SetReturn((void*)NULL);
+
+	STRICT_EXPECTED_CALL(mocks, test_frame_codec_decode_error(TEST_ERROR_CONTEXT));
 
 	// act
 	int result = frame_codec_receive_bytes(frame_codec, frame, sizeof(frame));

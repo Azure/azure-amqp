@@ -86,9 +86,10 @@ FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, FRAME_CODEC_ERROR_CALLBACK f
 {
 	FRAME_CODEC_DATA* result;
 
-	/* Codes_SRS_FRAME_CODEC_01_020: [If the io argument is NULL, frame_codec_create shall return NULL.] */
-	/* Codes_SRS_FRAME_CODEC_01_104: [The frame_codec_error_callback and frame_codec_error_callback_context shall be allowed to be NULL.] */
-	if (io == NULL)
+	/* Codes_SRS_FRAME_CODEC_01_020: [If the io or frame_codec_error_callback argument is NULL, frame_codec_create shall return NULL.] */
+	/* Codes_SRS_FRAME_CODEC_01_104: [The frame_codec_error_callback_context shall be allowed to be NULL.] */
+	if ((io == NULL) ||
+		(frame_codec_error_callback == NULL))
 	{
 		result = NULL;
 	}
@@ -104,6 +105,7 @@ FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, FRAME_CODEC_ERROR_CALLBACK f
 			result->encode_frame_state = ENCODE_FRAME_STATE_FRAME_HEADER;
 			result->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
 			result->frame_codec_error_callback = frame_codec_error_callback;
+			result->frame_codec_error_callback_context = frame_codec_error_callback_context;
 			result->receive_frame_pos = 0;
 			result->receive_frame_size = 0;
 			result->receive_frame_bytes = NULL;
@@ -215,6 +217,9 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 					{
 						/* Codes_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
 						frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
+						/* Codes_SRS_FRAME_CODEC_01_103: [Upon any decode error, if an error callback has been passed to frame_codec_create, then the error callback shall be called with the context argument being the frame_codec_error_callback_context argument passed to frame_codec_create.] */
+						frame_codec_data->frame_codec_error_callback(frame_codec_data->frame_codec_error_callback_context);
+
 						result = __LINE__;
 					}
 					else
@@ -243,6 +248,10 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 				{
 					/* Codes_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
 					frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
+
+					/* Codes_SRS_FRAME_CODEC_01_103: [Upon any decode error, if an error callback has been passed to frame_codec_create, then the error callback shall be called with the context argument being the frame_codec_error_callback_context argument passed to frame_codec_create.] */
+					frame_codec_data->frame_codec_error_callback(frame_codec_data->frame_codec_error_callback_context);
+
 					result = __LINE__;
 				}
 				else
@@ -293,6 +302,10 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 							/* Codes_SRS_FRAME_CODEC_01_030: [If a decoding error occurs, frame_codec_data_receive_bytes shall return a non-zero value.] */
 							/* Codes_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
 							frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
+
+							/* Codes_SRS_FRAME_CODEC_01_103: [Upon any decode error, if an error callback has been passed to frame_codec_create, then the error callback shall be called with the context argument being the frame_codec_error_callback_context argument passed to frame_codec_create.] */
+							frame_codec_data->frame_codec_error_callback(frame_codec_data->frame_codec_error_callback_context);
+
 							result = __LINE__;
 							break;
 						}
@@ -316,19 +329,10 @@ int frame_codec_receive_bytes(FRAME_CODEC_HANDLE frame_codec, const unsigned cha
 
 				if (frame_codec_data->receive_frame_subscription != NULL)
 				{
-					if (memcpy(&frame_codec_data->receive_frame_bytes[frame_codec_data->receive_frame_pos], buffer, to_copy) == NULL)
-					{
-						/* Codes_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_data_receive_bytes shall fail.] */
-						frame_codec_data->receive_frame_state = RECEIVE_FRAME_STATE_ERROR;
-						result = __LINE__;
-						break;
-					}
-					else
-					{
-						frame_codec_data->receive_frame_pos += to_copy;
-						buffer += to_copy;
-						size -= to_copy;
-					}
+					(void)memcpy(&frame_codec_data->receive_frame_bytes[frame_codec_data->receive_frame_pos], buffer, to_copy);
+					frame_codec_data->receive_frame_pos += to_copy;
+					buffer += to_copy;
+					size -= to_copy;
 				}
 				else
 				{

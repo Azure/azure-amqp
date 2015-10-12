@@ -26,6 +26,7 @@ typedef struct AMQP_FRAME_CODEC_INSTANCE_TAG
 	/* decode */
 	AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback;
 	AMQP_EMPTY_FRAME_RECEIVED_CALLBACK empty_frame_received_callback;
+	AMQP_FRAME_CODEC_ERROR_CALLBACK error_callback;
 	void* callback_context;
 	AMQPVALUE_DECODER_HANDLE decoder;
 	AMQP_FRAME_DECODE_STATE decode_state;
@@ -75,6 +76,9 @@ static void frame_received(void* context, const unsigned char* type_specific, ui
 		if (type_specific_size < 2)
 		{
 			amqp_frame_codec_instance->decode_state = AMQP_FRAME_DECODE_ERROR;
+
+			/* Codes_SRS_AMQP_FRAME_CODEC_01_069: [If any error occurs while decoding a frame, the decoder shall indicate the error by calling the amqp_frame_codec_error_callback  and passing to it the callback context argument that was given in amqp_frame_codec_create.] */
+			amqp_frame_codec_instance->error_callback(amqp_frame_codec_instance->callback_context);
 		}
 		else
 		{
@@ -111,7 +115,12 @@ static void frame_received(void* context, const unsigned char* type_specific, ui
 					}
 				}
 
-				if (amqp_frame_codec_instance->decode_state != AMQP_FRAME_DECODE_ERROR)
+				if (amqp_frame_codec_instance->decode_state == AMQP_FRAME_DECODE_ERROR)
+				{
+					/* Codes_SRS_AMQP_FRAME_CODEC_01_069: [If any error occurs while decoding a frame, the decoder shall indicate the error by calling the amqp_frame_codec_error_callback  and passing to it the callback context argument that was given in amqp_frame_codec_create.] */
+					amqp_frame_codec_instance->error_callback(amqp_frame_codec_instance->callback_context);
+				}
+				else
 				{
 					/* Codes_SRS_AMQP_FRAME_CODEC_01_004: [The remaining bytes in the frame body form the payload for that frame.] */
 					/* Codes_SRS_AMQP_FRAME_CODEC_01_067: [When the performative is decoded, the rest of the frame_bytes shall not be given to the AMQP decoder, but they shall be buffered so that later they are given to the frame_received callback.] */
@@ -148,6 +157,7 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 			result->frame_codec = frame_codec;
 			result->frame_received_callback = frame_received_callback;
 			result->empty_frame_received_callback = empty_frame_received_callback;
+			result->error_callback = amqp_frame_codec_error_callback;
 			result->callback_context = callback_context;
 			result->decode_state = AMQP_FRAME_DECODE_FRAME;
 			result->encode_state = AMQP_FRAME_ENCODE_FRAME_HEADER;

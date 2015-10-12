@@ -1280,6 +1280,7 @@ TEST_FUNCTION(when_an_empty_frame_is_decoded_the_empty_frame_callback_is_called_
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_049: [If not enough type specific bytes are received to decode the channel number, the decoding shall stop with an error.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_069: [If any error occurs while decoding a frame, the decoder shall indicate the error by calling the amqp_frame_codec_error_callback  and passing to it the callback context argument that was given in amqp_frame_codec_create.] */
 TEST_FUNCTION(when_an_empty_frame_with_only_1_byte_of_type_specific_data_is_received_decoding_fails)
 {
 	// arrange
@@ -1288,6 +1289,8 @@ TEST_FUNCTION(when_an_empty_frame_with_only_1_byte_of_type_specific_data_is_rece
 	mocks.ResetAllCalls();
 
 	unsigned char channel_bytes[] = { 0x42, 0x43 };
+
+	STRICT_EXPECTED_CALL(mocks, test_amqp_frame_codec_error(TEST_CONTEXT));
 
 	// act
 	saved_frame_received_callback(saved_callback_context, channel_bytes, 1, NULL, 0);
@@ -1482,6 +1485,7 @@ TEST_FUNCTION(valid_performative_codes_trigger_callbacks)
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_003: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_069: [If any error occurs while decoding a frame, the decoder shall indicate the error by calling the amqp_frame_codec_error_callback  and passing to it the callback context argument that was given in amqp_frame_codec_create.] */
 TEST_FUNCTION(performative_0x09_can_not_be_decoded)
 {
 	// arrange
@@ -1497,6 +1501,8 @@ TEST_FUNCTION(performative_0x09_can_not_be_decoded)
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
 		.CopyOutArgumentBuffer(2, &performative_ulong, sizeof(performative_ulong));
 
+	STRICT_EXPECTED_CALL(mocks, test_amqp_frame_codec_error(TEST_CONTEXT));
+
 	// act
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
@@ -1508,6 +1514,7 @@ TEST_FUNCTION(performative_0x09_can_not_be_decoded)
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_003: [The performative MUST be one of those defined in section 2.7 and is encoded as a described type in the AMQP type system.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_069: [If any error occurs while decoding a frame, the decoder shall indicate the error by calling the amqp_frame_codec_error_callback  and passing to it the callback context argument that was given in amqp_frame_codec_create.] */
 TEST_FUNCTION(performative_0x19_can_not_be_decoded)
 {
 	// arrange
@@ -1523,6 +1530,8 @@ TEST_FUNCTION(performative_0x19_can_not_be_decoded)
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
 		.CopyOutArgumentBuffer(2, &performative_ulong, sizeof(performative_ulong));
 
+	STRICT_EXPECTED_CALL(mocks, test_amqp_frame_codec_error(TEST_CONTEXT));
+
 	// act
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
@@ -1534,6 +1543,7 @@ TEST_FUNCTION(performative_0x19_can_not_be_decoded)
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_069: [If any error occurs while decoding a frame, the decoder shall indicate the error by calling the amqp_frame_codec_error_callback  and passing to it the callback context argument that was given in amqp_frame_codec_create.] */
 TEST_FUNCTION(when_amqp_value_decoding_for_the_performative_fails_decoder_fails)
 {
 	// arrange
@@ -1547,6 +1557,8 @@ TEST_FUNCTION(when_amqp_value_decoding_for_the_performative_fails_decoder_fails)
 		.ValidateArgument(1)
 		.SetReturn(1);
 
+	STRICT_EXPECTED_CALL(mocks, test_amqp_frame_codec_error(TEST_CONTEXT));
+
 	// act
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
@@ -1558,6 +1570,7 @@ TEST_FUNCTION(when_amqp_value_decoding_for_the_performative_fails_decoder_fails)
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_069: [If any error occurs while decoding a frame, the decoder shall indicate the error by calling the amqp_frame_codec_error_callback  and passing to it the callback context argument that was given in amqp_frame_codec_create.] */
 TEST_FUNCTION(when_second_amqp_value_decoding_for_the_performative_fails_decoder_fails)
 {
 	// arrange
@@ -1573,6 +1586,8 @@ TEST_FUNCTION(when_second_amqp_value_decoding_for_the_performative_fails_decoder
 		.ValidateArgument(1)
 		.SetReturn(1);
 
+	STRICT_EXPECTED_CALL(mocks, test_amqp_frame_codec_error(TEST_CONTEXT));
+
 	// act
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
@@ -1584,6 +1599,7 @@ TEST_FUNCTION(when_second_amqp_value_decoding_for_the_performative_fails_decoder
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_069: [If any error occurs while decoding a frame, the decoder shall indicate the error by calling the amqp_frame_codec_error_callback  and passing to it the callback context argument that was given in amqp_frame_codec_create.] */
 TEST_FUNCTION(when_getting_the_descriptor_fails_decoder_fails)
 {
 	// arrange
@@ -1598,6 +1614,8 @@ TEST_FUNCTION(when_getting_the_descriptor_fails_decoder_fails)
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE))
 		.SetReturn((AMQP_VALUE)NULL);
 
+	STRICT_EXPECTED_CALL(mocks, test_amqp_frame_codec_error(TEST_CONTEXT));
+
 	// act
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
 
@@ -1609,6 +1627,7 @@ TEST_FUNCTION(when_getting_the_descriptor_fails_decoder_fails)
 }
 
 /* Tests_SRS_AMQP_FRAME_CODEC_01_060: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
+/* Tests_SRS_AMQP_FRAME_CODEC_01_069: [If any error occurs while decoding a frame, the decoder shall indicate the error by calling the amqp_frame_codec_error_callback  and passing to it the callback context argument that was given in amqp_frame_codec_create.] */
 TEST_FUNCTION(when_getting_the_ulong_value_of_the_descriptor_fails_decoder_fails)
 {
 	// arrange
@@ -1624,6 +1643,8 @@ TEST_FUNCTION(when_getting_the_ulong_value_of_the_descriptor_fails_decoder_fails
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_ulong(TEST_DESCRIPTOR_AMQP_VALUE, IGNORED_PTR_ARG))
 		.CopyOutArgumentBuffer(2, &performative_ulong, sizeof(performative_ulong))
 		.SetReturn(1);
+
+	STRICT_EXPECTED_CALL(mocks, test_amqp_frame_codec_error(TEST_CONTEXT));
 
 	// act
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
@@ -1650,6 +1671,7 @@ TEST_FUNCTION(when_amqp_value_decoding_fails_subsequent_decoding_fails_even_if_t
 		.SetReturn(1);
 
 	(void)saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);
+	mocks.ResetAllCalls();
 
 	// act
 	saved_frame_received_callback(saved_callback_context, channel_bytes, sizeof(channel_bytes), test_frame, sizeof(test_performative) + 2);

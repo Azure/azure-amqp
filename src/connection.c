@@ -516,7 +516,10 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 
 						LOG(consolelogger_log, LOG_LINE, "<- [CLOSE]");
 						//LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
-						if (amqpvalue_get_close(performative, &close_handle) != 0)
+
+						/* Codes_SRS_CONNECTION_01_012: [A close frame MAY be received on any channel up to the maximum channel number negotiated in open.] */
+						if ((channel > connection_instance->channel_max) ||
+							(amqpvalue_get_close(performative, &close_handle) != 0))
 						{
 							close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_frame_received::failed parsing CLOSE frame");
 						}

@@ -33,6 +33,7 @@
 #define TEST_OPEN_PERFORMATIVE			(AMQP_VALUE)0x4301
 #define TEST_CLOSE_PERFORMATIVE				(AMQP_VALUE)0x4302
 #define TEST_CLOSE_DESCRIPTOR_AMQP_VALUE	(AMQP_VALUE)0x4303
+#define TEST_BEGIN_PERFORMATIVE			(AMQP_VALUE)0x4304
 
 #define TEST_CONTEXT					(void*)(0x4242)
 
@@ -225,6 +226,8 @@ public:
 	/* frame received callback mocks */
 	MOCK_STATIC_METHOD_4(, void, test_frame_received_callback, void*, context, AMQP_VALUE, performative, uint32_t, frame_payload_size, const unsigned char*, payload_bytes)
 	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_4(, void, test_endpoint_frame_received, void*, context, AMQP_VALUE, performative, uint32_t, payload_size, const unsigned char*, payload_bytes)
+	MOCK_VOID_METHOD_END();
 };
 
 extern "C"
@@ -269,6 +272,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , int, list_remove_matching_item, LIST_HANDLE, handle, LIST_MATCH_FUNCTION, match_function, const void*, match_context);
 
 	DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , void, test_frame_received_callback, void*, context, AMQP_VALUE, performative, uint32_t, frame_payload_size, const unsigned char*, payload_bytes);
+	DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , void, test_endpoint_frame_received, void*, context, AMQP_VALUE, performative, uint32_t, payload_size, const unsigned char*, payload_bytes);
 
 	extern void consolelogger_log(char* format, ...)
 	{
@@ -990,197 +994,6 @@ TEST_METHOD(connection_get_idle_timeout_default_value_succeeds)
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
 	ASSERT_ARE_EQUAL(uint32_t, 0, (uint32_t)idle_timeout);
-	mocks.AssertActualAndExpectedCalls();
-
-	// cleanup
-	connection_destroy(connection);
-}
-
-/* connection_create_endpoint */
-
-/* Tests_SRS_CONNECTION_01_113: [If connection or frame_received_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
-TEST_METHOD(connection_create_endpoint_with_NULL_conneciton_fails)
-{
-	// arrange
-	connection_mocks mocks;
-
-	// act
-	ENDPOINT_HANDLE result = connection_create_endpoint(NULL, test_frame_received_callback, TEST_CONTEXT);
-
-	// assert
-	ASSERT_IS_NULL(result);
-}
-
-/* Tests_SRS_CONNECTION_01_113: [If connection or frame_received_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
-TEST_METHOD(connection_create_endpoint_with_NULL_frame_receive_callback_fails)
-{
-	// arrange
-	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	mocks.ResetAllCalls();
-
-	// act
-	ENDPOINT_HANDLE result = connection_create_endpoint(connection, NULL, TEST_CONTEXT);
-
-	// assert
-	ASSERT_IS_NULL(result);
-	mocks.AssertActualAndExpectedCalls();
-
-	// cleanup
-	connection_destroy(connection);
-}
-
-/* Tests_SRS_CONNECTION_01_112: [connection_create_endpoint shall create a new endpoint that can be used by a session.] */
-/* Tests_SRS_CONNECTION_01_127: [On success, connection_create_endpoint shall return a non-NULL handle to the newly created endpoint.] */
-/* Tests_SRS_CONNECTION_01_197: [The newly created endpoint shall be added to the endpoints list, so that it can be tracked.] */
-TEST_METHOD(connection_create_endpoint_with_valid_arguments_succeeds)
-{
-	// arrange
-	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	mocks.ResetAllCalls();
-
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
-
-	// act
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
-
-	// assert
-	ASSERT_IS_NOT_NULL(endpoint);
-	mocks.AssertActualAndExpectedCalls();
-
-	// cleanup
-	connection_destroy_endpoint(endpoint);
-	connection_destroy(connection);
-}
-
-/* Tests_SRS_CONNECTION_01_196: [If memory cannot be allocated for the new endpoint, connection_create_endpoint shall fail and return NULL.] */
-TEST_METHOD(when_allocating_memory_fails_connection_create_endpoint_fails)
-{
-	// arrange
-	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	mocks.ResetAllCalls();
-
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
-		.SetReturn((void*)NULL);
-
-	// act
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
-
-	// assert
-	ASSERT_IS_NULL(endpoint);
-	mocks.AssertActualAndExpectedCalls();
-
-	// cleanup
-	connection_destroy(connection);
-}
-
-/* Tests_SRS_CONNECTION_01_198: [If adding the endpoint to the endpoints list tracked by the connection fails, connection_create_endpoint shall fail and return NULL.] */
-TEST_METHOD(when_realloc_for_the_endpoint_list_fails_connection_create_endpoint_fails)
-{
-	// arrange
-	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	mocks.ResetAllCalls();
-
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG))
-		.SetReturn((void*)NULL);
-	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
-
-	// act
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
-
-	// assert
-	ASSERT_IS_NULL(endpoint);
-	mocks.AssertActualAndExpectedCalls();
-
-	// cleanup
-	connection_destroy(connection);
-}
-
-/* Tests_SRS_CONNECTION_01_193: [The context argument shall be allowed to be NULL.] */
-TEST_METHOD(connection_create_endpoint_with_valid_arguments_and_NULL_context_succeeds)
-{
-	// arrange
-	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	mocks.ResetAllCalls();
-
-	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
-
-	// act
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, NULL);
-
-	// assert
-	ASSERT_IS_NOT_NULL(endpoint);
-	mocks.AssertActualAndExpectedCalls();
-
-	// cleanup
-	connection_destroy_endpoint(endpoint);
-	connection_destroy(connection);
-}
-
-/* connection_destroy_endpoint */
-
-/* Tests_SRS_CONNECTION_01_199: [If endpoint is NULL, connection_destroy_endpoint shall do nothing.] */
-TEST_METHOD(connection_destroy_endpoint_with_NULL_argument_does_nothing)
-{
-	// arrange
-	connection_mocks mocks;
-
-	// act
-	connection_destroy_endpoint(NULL);
-
-	// assert
-	// no explicit assert, uMock checks the calls
-}
-
-/* Tests_SRS_CONNECTION_01_129: [connection_destroy_endpoint shall free all resources associated with an endpoint created by connection_create_endpoint.] */
-/* Tests_SRS_CONNECTION_01_130: [The outgoing channel associated with the endpoint shall be released by removing the endpoint from the endpoint list.] */
-TEST_METHOD(connection_destroy_endpoint_frees_the_resources_associated_with_the_endpoint)
-{
-	// arrange
-	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
-	mocks.ResetAllCalls();
-
-	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
-	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
-
-	// act
-	connection_destroy_endpoint(endpoint);
-
-	// assert
-	mocks.AssertActualAndExpectedCalls();
-
-	// cleanup
-	connection_destroy(connection);
-}
-
-/* Tests_SRS_CONNECTION_01_129: [connection_destroy_endpoint shall free all resources associated with an endpoint created by connection_create_endpoint.] */
-/* Tests_SRS_CONNECTION_01_130: [The outgoing channel associated with the endpoint shall be released by removing the endpoint from the endpoint list.] */
-/* Tests_SRS_CONNECTION_01_131: [Any incoming channel number associated with the endpoint shall be released.] */
-TEST_METHOD(when_reallocating_the_endpoints_list_fails_connection_destroy_endpoint_shall_still_free_all_resources)
-{
-	// arrange
-	connection_mocks mocks;
-	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
-	mocks.ResetAllCalls();
-
-	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG))
-		.SetReturn((void*)NULL);
-	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
-
-	// act
-	connection_destroy_endpoint(endpoint);
-
-	// assert
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
@@ -3090,6 +2903,233 @@ TEST_METHOD(when_a_CLOSE_FRAME_is_received_on_a_channel_higher_than_the_max_nego
 	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
+	connection_destroy(connection);
+}
+
+/* connection_create_endpoint */
+
+/* Tests_SRS_CONNECTION_01_113: [If connection or frame_received_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
+TEST_METHOD(connection_create_endpoint_with_NULL_conneciton_fails)
+{
+	// arrange
+	connection_mocks mocks;
+
+	// act
+	ENDPOINT_HANDLE result = connection_create_endpoint(NULL, test_frame_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(result);
+}
+
+/* Tests_SRS_CONNECTION_01_113: [If connection or frame_received_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
+TEST_METHOD(connection_create_endpoint_with_NULL_frame_receive_callback_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	mocks.ResetAllCalls();
+
+	// act
+	ENDPOINT_HANDLE result = connection_create_endpoint(connection, NULL, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_112: [connection_create_endpoint shall create a new endpoint that can be used by a session.] */
+/* Tests_SRS_CONNECTION_01_127: [On success, connection_create_endpoint shall return a non-NULL handle to the newly created endpoint.] */
+/* Tests_SRS_CONNECTION_01_197: [The newly created endpoint shall be added to the endpoints list, so that it can be tracked.] */
+TEST_METHOD(connection_create_endpoint_with_valid_arguments_succeeds)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+
+	// act
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NOT_NULL(endpoint);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_196: [If memory cannot be allocated for the new endpoint, connection_create_endpoint shall fail and return NULL.] */
+TEST_METHOD(when_allocating_memory_fails_connection_create_endpoint_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+		.SetReturn((void*)NULL);
+
+	// act
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(endpoint);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_198: [If adding the endpoint to the endpoints list tracked by the connection fails, connection_create_endpoint shall fail and return NULL.] */
+TEST_METHOD(when_realloc_for_the_endpoint_list_fails_connection_create_endpoint_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.SetReturn((void*)NULL);
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(endpoint);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_193: [The context argument shall be allowed to be NULL.] */
+TEST_METHOD(connection_create_endpoint_with_valid_arguments_and_NULL_context_succeeds)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+
+	// act
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, NULL);
+
+	// assert
+	ASSERT_IS_NOT_NULL(endpoint);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint);
+	connection_destroy(connection);
+}
+
+/* connection_destroy_endpoint */
+
+/* Tests_SRS_CONNECTION_01_199: [If endpoint is NULL, connection_destroy_endpoint shall do nothing.] */
+TEST_METHOD(connection_destroy_endpoint_with_NULL_argument_does_nothing)
+{
+	// arrange
+	connection_mocks mocks;
+
+	// act
+	connection_destroy_endpoint(NULL);
+
+	// assert
+	// no explicit assert, uMock checks the calls
+}
+
+/* Tests_SRS_CONNECTION_01_129: [connection_destroy_endpoint shall free all resources associated with an endpoint created by connection_create_endpoint.] */
+/* Tests_SRS_CONNECTION_01_130: [The outgoing channel associated with the endpoint shall be released by removing the endpoint from the endpoint list.] */
+TEST_METHOD(connection_destroy_endpoint_frees_the_resources_associated_with_the_endpoint)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	connection_destroy_endpoint(endpoint);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_129: [connection_destroy_endpoint shall free all resources associated with an endpoint created by connection_create_endpoint.] */
+/* Tests_SRS_CONNECTION_01_130: [The outgoing channel associated with the endpoint shall be released by removing the endpoint from the endpoint list.] */
+/* Tests_SRS_CONNECTION_01_131: [Any incoming channel number associated with the endpoint shall be released.] */
+TEST_METHOD(when_reallocating_the_endpoints_list_fails_connection_destroy_endpoint_shall_still_free_all_resources)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.SetReturn((void*)NULL);
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	connection_destroy_endpoint(endpoint);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* connection_begin_encode_frame */
+
+/* Tests_SRS_CONNECTION_01_249: [If endpoint or performative are NULL, connection_begin_encode_frame shall fail and return a non-zero value.] */
+TEST_METHOD(connection_begin_encode_frame_with_NULL_endpoint_fails)
+{
+	// arrange
+	connection_mocks mocks;
+
+	// act
+	int result = connection_begin_encode_frame(NULL, TEST_BEGIN_PERFORMATIVE, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_CONNECTION_01_249: [If endpoint or performative are NULL, connection_begin_encode_frame shall fail and return a non-zero value.] */
+TEST_METHOD(connection_begin_encode_frame_with_NULL_performative_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+
+	// act
+	int result = connection_begin_encode_frame(endpoint, NULL, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint);
 	connection_destroy(connection);
 }
 

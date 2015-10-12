@@ -1109,7 +1109,9 @@ int connection_begin_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE per
 {
 	int result;
 
-	if (endpoint == NULL)
+	/* Codes_SRS_CONNECTION_01_249: [If endpoint or performative are NULL, connection_begin_encode_frame shall fail and return a non-zero value.] */
+	if ((endpoint == NULL) ||
+		(performative == NULL))
 	{
 		result = __LINE__;
 	}

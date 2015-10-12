@@ -198,6 +198,30 @@ TEST_FUNCTION(frame_codec_create_with_valid_args_succeeds)
 
 	// assert
 	ASSERT_IS_NOT_NULL(frame_codec);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
+}
+
+/* Tests_SRS_FRAME_CODEC_01_104: [The frame_codec_error_callback shall be allowed to be NULL.] */
+TEST_FUNCTION(frame_codec_create_with_NULL_frame_codec_decode_error_calback_succeeds)
+{
+	// arrange
+	frame_codec_mocks mocks;
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	STRICT_EXPECTED_CALL(mocks, list_create());
+
+	// act
+	FRAME_CODEC_HANDLE frame_codec = frame_codec_create(TEST_IO_HANDLE, NULL, consolelogger_log);
+
+	// assert
+	ASSERT_IS_NOT_NULL(frame_codec);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_020: [If the io argument is NULL, frame_codec_create shall return NULL.] */
@@ -243,6 +267,10 @@ TEST_FUNCTION(sending_a_frame_with_more_than_512_bytes_of_total_frame_size_fails
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_082: [The initial max_frame_size_shall be 512.] */
@@ -266,6 +294,10 @@ TEST_FUNCTION(a_frame_of_exactly_max_frame_size_immediately_after_create_can_be_
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
 	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x02,0x00,0x02,0x00,0x00,0x00]", actual_stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_082: [The initial max_frame_size_shall be 512.] */
@@ -284,6 +316,10 @@ TEST_FUNCTION(receiving_a_frame_with_more_than_512_bytes_of_total_frame_size_imm
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_082: [The initial max_frame_size_shall be 512.] */
@@ -314,6 +350,10 @@ TEST_FUNCTION(receiving_a_frame_with_exactly_512_bytes_of_total_frame_size_immed
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* frame_codec_destroy */
@@ -387,6 +427,10 @@ TEST_FUNCTION(frame_codec_set_max_frame_size_with_8_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_075: [frame_codec_set_max_frame_size shall set the maximum frame size for a frame_codec.] */
@@ -403,6 +447,10 @@ TEST_FUNCTION(when_a_frame_bigger_than_max_frame_size_is_sent_frame_codec_begin_
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_075: [frame_codec_set_max_frame_size shall set the maximum frame size for a frame_codec.] */
@@ -426,6 +474,10 @@ TEST_FUNCTION(a_frame_of_exactly_max_frame_size_can_be_sent)
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
 	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x04,0x00,0x02,0x00,0x00,0x00]", actual_stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_096: [If a frame bigger than the current max frame size is received, frame_codec_receive_bytes shall fail and return a non-zero value.] */
@@ -444,6 +496,10 @@ TEST_FUNCTION(receiving_a_frame_with_more_than_max_frame_size_bytes_of_total_fra
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_096: [If a frame bigger than the current max frame size is received, frame_codec_receive_bytes shall fail and return a non-zero value.] */
@@ -474,6 +530,10 @@ TEST_FUNCTION(receiving_a_frame_with_exactly_max_frame_size_bytes_of_total_frame
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_077: [If frame_codec is NULL, frame_codec_set_max_frame_size shall return a non-zero value.] */
@@ -503,6 +563,10 @@ TEST_FUNCTION(when_frame_codec_is_too_small_then_frame_codec_set_max_frame_size_
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_081: [If a frame being decoded already has a size bigger than the max_frame_size argument then frame_codec_set_max_frame_size shall return a non-zero value and the previous frame size shall be kept.] */
@@ -523,6 +587,10 @@ TEST_FUNCTION(attempting_to_set_a_max_frame_size_lower_than_the_size_of_the_curr
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_098: [Setting a frame size on a frame_codec that had an encode error shall fail.] */
@@ -543,6 +611,10 @@ TEST_FUNCTION(attempting_to_set_a_max_frame_size_when_the_decoder_is_in_error_fa
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_097: [Setting a frame size on a frame_codec that had a decode error shall fail.] */
@@ -561,6 +633,10 @@ TEST_FUNCTION(setting_the_max_frame_size_on_a_codec_with_a_decode_error_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_097: [Setting a frame size on a frame_codec that had a decode error shall fail.] */
@@ -584,6 +660,10 @@ TEST_FUNCTION(setting_the_max_frame_size_on_a_codec_with_an_encode_error_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_079: [The new frame size shall take effect immediately, even for a frame that is being decoded at the time of the call.] */
@@ -604,6 +684,10 @@ TEST_FUNCTION(setting_a_new_max_frame_while_the_frame_size_is_being_received_mak
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* frame_codec_receive_bytes */
@@ -650,6 +734,10 @@ TEST_FUNCTION(frame_codec_receive_bytes_decodes_one_empty_frame)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
@@ -675,6 +763,10 @@ TEST_FUNCTION(frame_codec_receive_bytes_with_not_enough_bytes_for_a_frame_does_n
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_026: [If frame_codec or buffer are NULL, frame_codec_receive_bytes shall return a non-zero value.] */
@@ -705,6 +797,10 @@ TEST_FUNCTION(frame_codec_receive_bytes_with_NULL_buffer_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_027: [If size is zero, frame_codec_receive_bytes shall return a non-zero value.] */
@@ -722,6 +818,10 @@ TEST_FUNCTION(frame_codec_receive_bytes_with_zero_size_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_029: [The sequence of bytes does not have to be a complete frame, frame_codec shall be responsible for maintaining decoding state between frame_codec_receive_bytes calls.] */
@@ -754,6 +854,10 @@ TEST_FUNCTION(when_frame_codec_receive_1_byte_in_one_call_and_the_rest_of_the_fr
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_029: [The sequence of bytes does not have to be a complete frame, frame_codec shall be responsible for maintaining decoding state between frame_codec_receive_bytes calls.] */
@@ -788,6 +892,10 @@ TEST_FUNCTION(when_frame_codec_receive_the_frame_bytes_in_1_byte_per_call_a_succ
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_029: [The sequence of bytes does not have to be a complete frame, frame_codec shall be responsible for maintaining decoding state between frame_codec_receive_bytes calls.] */
@@ -818,6 +926,10 @@ TEST_FUNCTION(a_frame_codec_receive_bytes_call_with_bad_args_before_any_real_fra
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_029: [The sequence of bytes does not have to be a complete frame, frame_codec shall be responsible for maintaining decoding state between frame_codec_receive_bytes calls.] */
@@ -849,6 +961,10 @@ TEST_FUNCTION(a_frame_codec_receive_bytes_call_with_bad_args_in_the_middle_of_th
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
@@ -890,6 +1006,10 @@ TEST_FUNCTION(frame_codec_receive_bytes_decodes_2_empty_frames)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
@@ -932,6 +1052,10 @@ TEST_FUNCTION(a_call_to_frame_codec_receive_bytes_with_bad_args_between_2_frames
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
@@ -955,6 +1079,10 @@ TEST_FUNCTION(when_getting_the_list_item_value_fails_no_callback_is_invoked)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_010: [The frame is malformed if the size is less than the size of the frame header (8 bytes).] */
@@ -972,6 +1100,10 @@ TEST_FUNCTION(when_frame_size_is_bad_frame_codec_receive_bytes_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_014: [Due to the mandatory 8-byte frame header, the frame is malformed if the value is less than 2.] */
@@ -989,6 +1121,10 @@ TEST_FUNCTION(when_frame_size_has_a_bad_doff_frame_codec_receive_bytes_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_receive_bytes shall fail.] */
@@ -1009,6 +1145,10 @@ TEST_FUNCTION(after_a_frame_decode_error_occurs_due_to_frame_size_a_subsequent_d
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_074: [If a decoding error is detected, any subsequent calls on frame_codec_receive_bytes shall fail.] */
@@ -1029,6 +1169,10 @@ TEST_FUNCTION(after_a_frame_decode_error_occurs_due_to_bad_doff_size_a_subsequen
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.] */
@@ -1060,6 +1204,10 @@ TEST_FUNCTION(receiving_a_frame_with_1_byte_frame_body_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_101: [If the memory for the frame_body bytes cannot be allocated, frame_codec_receive_bytes shall fail and return a non-zero value.] */
@@ -1085,6 +1233,10 @@ TEST_FUNCTION(when_allocating_type_specific_data_fails_frame_codec_receive_bytes
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_030: [If a decoding error occurs, frame_codec_receive_bytes shall return a non-zero value.] */
@@ -1109,6 +1261,10 @@ TEST_FUNCTION(when_allocating_type_specific_data_fails_a_subsequent_decode_Call_
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_031: [When a complete frame is successfully decoded it shall be indicated to the upper layer by invoking the frame_received_callback passed to frame_codec_subscribe.] */
@@ -1137,6 +1293,10 @@ TEST_FUNCTION(a_frame_with_2_bytes_received_together_with_the_header_passes_the_
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.]  */
@@ -1176,6 +1336,10 @@ TEST_FUNCTION(two_empty_frames_received_in_the_same_call_yields_2_callbacks)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_025: [frame_codec_receive_bytes decodes a sequence of bytes into frames and on success it shall return zero.]  */
@@ -1215,6 +1379,10 @@ TEST_FUNCTION(two_frames_with_1_byte_each_received_in_the_same_call_yields_2_cal
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* frame_codec_subscribe */
@@ -1241,6 +1409,10 @@ TEST_FUNCTION(frame_codec_subscribe_with_valid_args_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_033: [frame_codec_subscribe subscribes for a certain type of frame received by the frame_codec instance identified by frame_codec.] */
@@ -1266,6 +1438,10 @@ TEST_FUNCTION(when_list_find_returns_NULL_a_new_subscription_is_created)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_034: [If any of the frame_codec or frame_received_callback arguments is NULL, frame_codec_subscribe shall return a non-zero value.] */
@@ -1294,6 +1470,10 @@ TEST_FUNCTION(when_frame_received_callback_is_NULL_frame_codec_subscribe_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_035: [After successfully registering a callback for a certain frame type, when subsequently that frame type is received the callbacks shall be invoked, passing to it the received frame and the callback_context value. */
@@ -1316,6 +1496,10 @@ TEST_FUNCTION(when_a_frame_type_that_has_no_subscribers_is_received_no_callback_
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_035: [After successfully registering a callback for a certain frame type, when subsequently that frame type is received the callbacks shall be invoked, passing to it the received frame and the callback_context value.] */
@@ -1336,6 +1520,10 @@ TEST_FUNCTION(when_no_subscribe_is_done_no_callback_is_called)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_035: [After successfully registering a callback for a certain frame type, when subsequently that frame type is received the callbacks shall be invoked, passing to it the received frame and the callback_context value.] */
@@ -1365,6 +1553,10 @@ TEST_FUNCTION(when_2_subscriptions_exist_and_first_one_matches_the_callback_is_i
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_035: [After successfully registering a callback for a certain frame type, when subsequently that frame type is received the callbacks shall be invoked, passing to it the received frame and the callback_context value.] */
@@ -1395,6 +1587,10 @@ TEST_FUNCTION(when_2_subscriptions_exist_and_second_one_matches_the_callback_is_
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_036: [Only one callback pair shall be allowed to be registered for a given frame type.] */
@@ -1417,6 +1613,10 @@ TEST_FUNCTION(when_frame_codec_subscribe_is_called_twice_for_the_same_frame_type
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_036: [Only one callback pair shall be allowed to be registered for a given frame type.] */
@@ -1447,6 +1647,10 @@ TEST_FUNCTION(the_callbacks_for_the_2nd_frame_codec_subscribe_for_the_same_frame
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_037: [If any failure occurs while performing the subscribe operation, frame_codec_subscribe shall return a non-zero value.] */
@@ -1469,6 +1673,10 @@ TEST_FUNCTION(when_allocating_memory_for_the_subscription_fails_frame_codec_subs
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_037: [If any failure occurs while performing the subscribe operation, frame_codec_subscribe shall return a non-zero value.] */
@@ -1494,6 +1702,10 @@ TEST_FUNCTION(when_adding_the_subscription_fails_then_frame_codec_subscribe_fail
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* frame_codec_unsubscribe */
@@ -1519,6 +1731,10 @@ TEST_FUNCTION(removing_an_existing_subscription_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
@@ -1541,6 +1757,10 @@ TEST_FUNCTION(removing_an_existing_subscription_does_not_trigger_callback_when_a
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_039: [If frame_codec is NULL, frame_codec_unsubscribe shall return a non-zero value.] */
@@ -1574,6 +1794,10 @@ TEST_FUNCTION(frame_codec_unsubscribe_with_no_subscribe_call_has_been_made_fails
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_041: [If any failure occurs while performing the unsubscribe operation, frame_codec_unsubscribe shall return a non-zero value.] */
@@ -1595,6 +1819,10 @@ TEST_FUNCTION(when_list_remove_matching_item_fails_then_frame_codec_unsubscribe_
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
@@ -1618,6 +1846,10 @@ TEST_FUNCTION(unsubscribe_one_of_2_subscriptions_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
@@ -1642,6 +1874,10 @@ TEST_FUNCTION(unsubscribe_2nd_out_of_2_subscriptions_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
@@ -1667,6 +1903,10 @@ TEST_FUNCTION(subscribe_unsubscribe_subscribe_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_038: [frame_codec_unsubscribe removes a previous subscription for frames of type type and on success it shall return 0.] */
@@ -1689,6 +1929,10 @@ TEST_FUNCTION(subscribe_unsubscribe_unsubscribe_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_016: [The type code indicates the format and purpose of the frame.] */
@@ -1756,6 +2000,10 @@ TEST_FUNCTION(frame_codec_begin_encode_frame_with_a_zero_frame_body_length_succe
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
 	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x00,0x08,0x02,0x00,0x00,0x00]", actual_stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_044: [If the argument frame_codec is NULL, frame_codec_begin_encode_frame shall return a non-zero value.] */
@@ -1784,6 +2032,10 @@ TEST_FUNCTION(when_type_specific_size_is_positive_and_type_specific_bytes_is_NUL
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_045: [If encoding the header fails (cannot be sent through the IO interface), frame_codec_begin_encode_frame shall return a non-zero value.] */
@@ -1802,6 +2054,10 @@ TEST_FUNCTION(when_io_send_fails_then_frame_codec_begin_encode_frame_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_092: [If type_specific_size is too big to allow encoding the frame according to the AMQP ISO then frame_codec_begin_encode_frame shall return a non-zero value.] */
@@ -1822,6 +2078,10 @@ TEST_FUNCTION(when_type_specific_size_is_too_big_then_frame_codec_begin_encode_f
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_092: [If type_specific_size is too big to allow encoding the frame according to the AMQP ISO then frame_codec_begin_encode_frame shall return a non-zero value.] */
@@ -1855,6 +2115,10 @@ TEST_FUNCTION(when_type_specific_size_is_max_allowed_then_frame_codec_begin_enco
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
 	ASSERT_ARE_EQUAL(char_ptr, expected_stringified_io, actual_stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_090: [If the type_specific_size – 2 does not divide by 4, frame_codec_begin_encode_frame shall pad the type_specific bytes with zeroes so that type specific data is according to the AMQP ISO.] */
@@ -1883,6 +2147,10 @@ TEST_FUNCTION(one_byte_of_padding_is_added_to_type_specific_data_to_make_the_fra
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
 	ASSERT_ARE_EQUAL(char_ptr, expected_stringified_io, actual_stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_090: [If the type_specific_size – 2 does not divide by 4, frame_codec_begin_encode_frame shall pad the type_specific bytes with zeroes so that type specific data is according to the AMQP ISO.] */
@@ -1913,6 +2181,10 @@ TEST_FUNCTION(no_bytes_of_padding_are_added_to_type_specific_data_when_enough_by
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
 	ASSERT_ARE_EQUAL(char_ptr, expected_stringified_io, actual_stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_069: [TYPE Byte 5 of the frame header is a type code.] */
@@ -1935,6 +2207,10 @@ TEST_FUNCTION(the_type_is_placed_in_the_underlying_frame)
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
 	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x00,0x08,0x02,0x42,0x00,0x00]", actual_stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_089: [If any IO calls fail then frame_codec_begin_encode_frame shall return a non-zero value.] */
@@ -1954,6 +2230,10 @@ TEST_FUNCTION(when_2nd_io_send_fails_frame_codec_begin_encode_frame_fails_too)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_089: [If any IO calls fail then frame_codec_begin_encode_frame shall return a non-zero value.] */
@@ -1975,6 +2255,10 @@ TEST_FUNCTION(when_3rd_io_send_fails_frame_codec_begin_encode_frame_fails_too)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_046: [Once encoding succeeds, all subsequent frame_codec_begin_encode_frame calls shall fail, until all the bytes of the frame have been encoded by using frame_codec_encode_frame_bytes.] */
@@ -1991,6 +2275,10 @@ TEST_FUNCTION(while_not_all_frame_body_bytes_were_encoded_frame_codec_begin_enco
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_093: [Once encoding has failed due to IO issues, all subsequent calls to frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
@@ -2012,6 +2300,10 @@ TEST_FUNCTION(after_an_io_failure_a_subsequent_call_to_frame_codec_begin_encode_
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_093: [Once encoding has failed due to IO issues, all subsequent calls to frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
@@ -2035,6 +2327,10 @@ TEST_FUNCTION(after_an_io_failure_with_2nd_io_send_call_a_subsequent_call_to_fra
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_093: [Once encoding has failed due to IO issues, all subsequent calls to frame_codec_begin_encode_frame shall fail and return a non-zero value.] */
@@ -2059,6 +2355,10 @@ TEST_FUNCTION(after_an_io_failure_with_3rd_io_send_call_a_subsequent_call_to_fra
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* frame_codec_encode_frame_bytes */
@@ -2083,6 +2383,10 @@ TEST_FUNCTION(frame_codec_encode_frame_bytes_with_1_encoded_byte_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_047: [frame_codec_encode_frame_bytes encodes the frame bytes for a frame encoding started with a frame_codec_start_encode_frame call.] */
@@ -2104,6 +2408,10 @@ TEST_FUNCTION(frame_codec_encode_frame_bytes_with_2_bytes_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_049: [If any of the frame_codec or bytes arguments is NULL, frame_codec_encode_frame_bytes shall return a non-zero value.] */
@@ -2134,6 +2442,10 @@ TEST_FUNCTION(frame_codec_encode_frame_bytes_with_NULL_bytes_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_050: [If the length argument is zero, frame_codec_encode_frame_bytes shall return a non-zero value.] */
@@ -2151,6 +2463,10 @@ TEST_FUNCTION(frame_codec_encode_frame_bytes_with_zero_length_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_053: [If length is bigger than the expected amount of bytes for the frame currently being encoded, then frame_codec_encode_frame_bytes shall return a non-zero value.] */
@@ -2168,6 +2484,10 @@ TEST_FUNCTION(when_more_bytes_are_passed_than_expected_frame_codec_encode_frame_
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_054: [If any encoding error (passing the data to the IO interface) occurs, frame_codec_encode_frame_bytes shall return a non-zero value.] */
@@ -2189,6 +2509,10 @@ TEST_FUNCTION(when_io_send_fails_then_frame_codec_encode_frame_bytes_fails)
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_051: [The total number of bytes to be encoded for a frame can be passed in multiple frame_codec_encode_frame_bytes calls.] */
@@ -2210,6 +2534,10 @@ TEST_FUNCTION(sending_only_1_byte_out_of_2_frame_body_bytes_succeeds)
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_051: [The total number of bytes to be encoded for a frame can be passed in multiple frame_codec_encode_frame_bytes calls.] */
@@ -2235,6 +2563,10 @@ TEST_FUNCTION(sending_2_bytes_1_by_1_via_frame_codec_encode_frame_bytes_succeeds
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_051: [The total number of bytes to be encoded for a frame can be passed in multiple frame_codec_encode_frame_bytes calls.] */
@@ -2258,6 +2590,10 @@ TEST_FUNCTION(sending_an_extra_byte_1_by_1_via_frame_codec_encode_frame_bytes_fa
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_051: [The total number of bytes to be encoded for a frame can be passed in multiple frame_codec_encode_frame_bytes calls.] */
@@ -2284,6 +2620,10 @@ TEST_FUNCTION(after_a_frame_is_completed_another_one_can_be_started)
 	stringify_bytes(sent_io_bytes, sent_io_byte_count, actual_stringified_io);
 	ASSERT_ARE_EQUAL(char_ptr, "[0x00,0x00,0x00,0x09,0x02,0x42,0x00,0x00,0x42,0x00,0x00,0x00,0x08,0x02,0x42,0x00,0x00]", actual_stringified_io);
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 /* Tests_SRS_FRAME_CODEC_01_094: [Once encoding has failed due to IO issues, all subsequent encoding calls to shall fail and return a non-zero value.] */
@@ -2307,6 +2647,10 @@ TEST_FUNCTION(when_encoding_frame_body_bytes_fails_subsequent_frame_encoding_att
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	frame_codec_destroy(frame_codec);
 }
 
 END_TEST_SUITE(frame_codec_unittests)

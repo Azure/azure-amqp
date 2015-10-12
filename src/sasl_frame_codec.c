@@ -79,11 +79,13 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 		{
 			sasl_frame_codec_instance->decoded_sasl_frame_value = NULL;
 
+			/* Codes_SRS_SASL_FRAME_CODEC_01_039: [sasl_frame_codec shall decode the sasl-frame value as a described type.] */
 			/* Codes_SRS_SASL_FRAME_CODEC_01_048: [Receipt of an empty frame is an irrecoverable error.] */
 			while ((frame_body_size > 0) &&
 				(sasl_frame_codec_instance->decoded_sasl_frame_value == NULL) &&
 				(sasl_frame_codec_instance->decode_state != SASL_FRAME_DECODE_ERROR))
 			{
+				/* Codes_SRS_SASL_FRAME_CODEC_01_040: [Decoding the sasl-frame type shall be done by feeding the bytes to the decoder create in sasl_frame_codec_create.] */
 				if (amqpvalue_decode_bytes(sasl_frame_codec_instance->decoder, frame_body, 1) != 0)
 				{
 					sasl_frame_codec_instance->decode_state = SASL_FRAME_DECODE_ERROR;
@@ -101,6 +103,8 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 			}
 			else
 			{
+				/* Codes_SRS_SASL_FRAME_CODEC_01_041: [Once the sasl frame is decoded, the callback frame_received_callback shall be called.] */
+				/* Codes_SRS_SASL_FRAME_CODEC_01_042: [The decoded sasl-frame value and the context passed in sasl_frame_codec_create shall be passed to frame_received_callback.] */
 				sasl_frame_codec_instance->frame_received_callback(sasl_frame_codec_instance->callback_context, sasl_frame_codec_instance->decoded_sasl_frame_value);
 				result = 0;
 			}

@@ -793,7 +793,10 @@ TEST_FUNCTION(when_the_sasl_frame_value_has_a_descriptor_ulong_higher_than_OUTCO
 /* Receive frames */
 
 /* Tests_SRS_SASL_FRAME_CODEC_01_039: [sasl_frame_codec shall decode the sasl-frame value as a described type.] */
-TEST_FUNCTION(when_performative_bytes_are_expected_no_callback_is_triggered)
+/* Tests_SRS_SASL_FRAME_CODEC_01_040: [Decoding the sasl-frame type shall be done by feeding the bytes to the decoder create in sasl_frame_codec_create.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_041: [Once the sasl frame is decoded, the callback frame_received_callback shall be called.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_042: [The decoded sasl-frame value and the context passed in sasl_frame_codec_create shall be passed to frame_received_callback.] */
+TEST_FUNCTION(when_sasl_frame_bytes_are_received_it_is_decoded_and_indicated_as_a_received_sasl_frame)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
@@ -818,27 +821,109 @@ TEST_FUNCTION(when_performative_bytes_are_expected_no_callback_is_triggered)
 	sasl_frame_codec_destroy(sasl_frame_codec);
 }
 
-#if 0
-/* Tests_SRS_AMQP_FRAME_CODEC_01_052: [Decoding the performative shall be done by feeding the bytes to the decoder create in sasl_frame_codec_create.] */
-TEST_FUNCTION(when_1_of_all_performative_bytes_is_received_no_callback_is_triggered)
+/* Tests_SRS_SASL_FRAME_CODEC_01_039: [sasl_frame_codec shall decode the sasl-frame value as a described type.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_040: [Decoding the sasl-frame type shall be done by feeding the bytes to the decoder create in sasl_frame_codec_create.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_041: [Once the sasl frame is decoded, the callback frame_received_callback shall be called.] */
+/* Tests_SRS_SASL_FRAME_CODEC_01_042: [The decoded sasl-frame value and the context passed in sasl_frame_codec_create shall be passed to frame_received_callback.] */
+TEST_FUNCTION(when_context_is_NULL_decoding_a_sasl_frame_still_succeeds)
 {
 	// arrange
 	sasl_frame_codec_mocks mocks;
-	unsigned char channel_bytes[] = { 0x42, 0x43 };
-	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, amqp_empty_frame_received_callback_1, amqp_frame_payload_bytes_received_callback_1, TEST_CONTEXT);
-	(void)saved_frame_begin_callback(saved_callback_context, sizeof(test_sasl_frame_value), channel_bytes, sizeof(channel_bytes));
+	amqp_definitions_mocks amqp_definitions_mocks;
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, NULL);
 	mocks.ResetAllCalls();
 
-	STRICT_EXPECTED_CALL(mocks, amqpvalue_decode_bytes(TEST_DECODER_HANDLE, test_sasl_frame_value, 1))
-		.ValidateArgumentBuffer(2, test_sasl_frame_value, 1);
+	EXPECTED_CALL(mocks, amqpvalue_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1).ExpectedTimesExactly(sizeof(test_sasl_frame_value));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_mechanisms_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_received_callback_1(NULL, TEST_AMQP_VALUE));
 
 	// act
-	int result = saved_frame_body_bytes_received_callback(saved_callback_context, test_sasl_frame_value, 1);
+	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
 }
 
+/* Tests_SRS_SASL_FRAME_CODEC_01_046: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
+TEST_FUNCTION(when_amqpvalue_decode_bytes_fails_then_the_decoder_switches_to_an_error_state)
+{
+	// arrange
+	sasl_frame_codec_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, NULL);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1).SetReturn(1);
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
+}
+
+/* Tests_SRS_SASL_FRAME_CODEC_01_046: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
+TEST_FUNCTION(when_the_second_call_for_amqpvalue_decode_bytes_fails_then_the_decoder_switches_to_an_error_state)
+{
+	// arrange
+	sasl_frame_codec_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, NULL);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, amqpvalue_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1).SetReturn(1);
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
+}
+
+/* Tests_SRS_SASL_FRAME_CODEC_01_046: [If any error occurs while decoding a frame, the decoder shall switch to an error state where decoding shall not be possible anymore.] */
+TEST_FUNCTION(when_amqpvalue_get_inplace_descriptor_fails_then_the_decoder_switches_to_an_error_state)
+{
+	// arrange
+	sasl_frame_codec_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, NULL);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1).ExpectedTimesExactly(sizeof(test_sasl_frame_value));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE))
+		.SetReturn((AMQP_VALUE)NULL);
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, NULL, 0, test_sasl_frame_value, sizeof(test_sasl_frame_value));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
+}
+
+#if 0
 /* Tests_SRS_AMQP_FRAME_CODEC_01_052: [Decoding the performative shall be done by feeding the bytes to the decoder create in sasl_frame_codec_create.] */
 /* Tests_SRS_AMQP_FRAME_CODEC_01_054: [Once the performative is decoded, the callback frame_received_callback shall be called.] */
 /* Tests_SRS_AMQP_FRAME_CODEC_01_055: [The decoded channel and performative shall be passed to frame_received_callback.]  */

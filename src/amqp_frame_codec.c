@@ -131,10 +131,11 @@ AMQP_FRAME_CODEC_HANDLE amqp_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 {
 	AMQP_FRAME_CODEC_INSTANCE* result;
 
-	/* Codes_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback or empty_frame_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
+	/* Codes_SRS_AMQP_FRAME_CODEC_01_012: [If any of the arguments frame_codec, frame_received_callback, amqp_frame_codec_error_callback or empty_frame_received_callback is NULL, amqp_frame_codec_create shall return NULL.] */
 	if ((frame_codec == NULL) ||
 		(frame_received_callback == NULL) ||
-		(empty_frame_received_callback == NULL))
+		(empty_frame_received_callback == NULL) ||
+		(amqp_frame_codec_error_callback == NULL))
 	{
 		result = NULL;
 	}

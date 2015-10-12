@@ -47,7 +47,7 @@ static int send_begin(ENDPOINT_HANDLE endpoint, transfer_number next_outgoing_id
 		}
 		else
 		{
-			if (connection_begin_encode_frame(endpoint, begin_performative_value, 0) != 0)
+			if (connection_encode_frame(endpoint, begin_performative_value, NULL, 0) != 0)
 			{
 				result = __LINE__;
 			}
@@ -340,7 +340,7 @@ int session_get_state(SESSION_HANDLE session, SESSION_STATE* session_state)
 	return result;
 }
 
-int session_begin_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performative, uint32_t payload_size)
+int session_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performative, PAYLOAD* payloads, size_t payload_count)
 {
 	int result;
 
@@ -352,7 +352,7 @@ int session_begin_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performa
 	{
 		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
 
-		if (connection_begin_encode_frame(session_instance->endpoint, performative, payload_size) != 0)
+		if (connection_encode_frame(session_instance->endpoint, performative, payloads, payload_count) != 0)
 		{
 			result = __LINE__;
 		}
@@ -365,7 +365,7 @@ int session_begin_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performa
 	return result;
 }
 
-int session_begin_transfer(SESSION_HANDLE session, TRANSFER_HANDLE transfer, uint32_t frame_size, delivery_number* delivery_id)
+int session_transfer(SESSION_HANDLE session, TRANSFER_HANDLE transfer, PAYLOAD* payloads, size_t payload_count, delivery_number* delivery_id)
 {
 	int result;
 
@@ -387,7 +387,7 @@ int session_begin_transfer(SESSION_HANDLE session, TRANSFER_HANDLE transfer, uin
 		}
 		else
 		{
-			if (connection_begin_encode_frame(session_instance->endpoint, transfer_value, frame_size) != 0)
+			if (connection_encode_frame(session_instance->endpoint, transfer_value, payloads, payload_count) != 0)
 			{
 				result = __LINE__;
 			}

@@ -12,6 +12,11 @@ extern "C" {
 
 	typedef void* CONNECTION_HANDLE;
 	typedef void* ENDPOINT_HANDLE;
+	typedef struct PAYLOAD_TAG
+	{
+		const unsigned char* bytes;
+		uint32_t length;
+	} PAYLOAD;
 
 	typedef enum CONNECTION_STATE_TAG
 	{
@@ -71,7 +76,7 @@ extern "C" {
 	extern void connection_dowork(CONNECTION_HANDLE connection);
 	extern ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context);
 	extern void connection_destroy_endpoint(ENDPOINT_HANDLE endpoint);
-	extern int connection_begin_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE performative, uint32_t payload_size);
+	extern int connection_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE performative, PAYLOAD* payloads, size_t payload_count);
 	extern int connection_encode_payload_bytes(ENDPOINT_HANDLE endpoint, const unsigned char* bytes, uint32_t count);
 	extern int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connection_state);
 

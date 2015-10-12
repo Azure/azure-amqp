@@ -1037,33 +1037,33 @@ ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOIN
 
 		/* Codes_SRS_CONNECTION_01_127: [On success, connection_create_endpoint shall return a non-NULL handle to the newly created endpoint.] */
 		result = amqpalloc_malloc(sizeof(ENDPOINT_INSTANCE));
-		/* Codes_SRS_CONNECTION_01_196: [If memory cannot be allocated for the new endpoint, connection_create_endpoint shall fail and return NULL.] */
-		if (result != NULL)
-		{
-			ENDPOINT_INSTANCE** new_endpoints;
+/* Codes_SRS_CONNECTION_01_196: [If memory cannot be allocated for the new endpoint, connection_create_endpoint shall fail and return NULL.] */
+if (result != NULL)
+{
+	ENDPOINT_INSTANCE** new_endpoints;
 
-			result->frame_received_callback = frame_received_callback;
-			result->frame_received_callback_context = context;
-			result->outgoing_channel = channel_no;
-			result->connection = connection;
+	result->frame_received_callback = frame_received_callback;
+	result->frame_received_callback_context = context;
+	result->outgoing_channel = channel_no;
+	result->connection = connection;
 
-			/* Codes_SRS_CONNECTION_01_197: [The newly created endpoint shall be added to the endpoints list, so that it can be tracked.] */
-			new_endpoints = (ENDPOINT_INSTANCE**)amqpalloc_realloc(connection_instance->endpoints, sizeof(ENDPOINT_INSTANCE*) * (connection_instance->endpoint_count + 1));
-			if (new_endpoints == NULL)
-			{
-				/* Tests_SRS_CONNECTION_01_198: [If adding the endpoint to the endpoints list tracked by the connection fails, connection_create_endpoint shall fail and return NULL.] */
-				amqpalloc_free(result);
-				result = NULL;
-			}
-			else
-			{
-				connection_instance->endpoints = new_endpoints;
-				connection_instance->endpoints[connection_instance->endpoint_count] = result;
-				connection_instance->endpoint_count++;
+	/* Codes_SRS_CONNECTION_01_197: [The newly created endpoint shall be added to the endpoints list, so that it can be tracked.] */
+	new_endpoints = (ENDPOINT_INSTANCE**)amqpalloc_realloc(connection_instance->endpoints, sizeof(ENDPOINT_INSTANCE*) * (connection_instance->endpoint_count + 1));
+	if (new_endpoints == NULL)
+	{
+		/* Tests_SRS_CONNECTION_01_198: [If adding the endpoint to the endpoints list tracked by the connection fails, connection_create_endpoint shall fail and return NULL.] */
+		amqpalloc_free(result);
+		result = NULL;
+	}
+	else
+	{
+		connection_instance->endpoints = new_endpoints;
+		connection_instance->endpoints[connection_instance->endpoint_count] = result;
+		connection_instance->endpoint_count++;
 
-				/* Codes_SRS_CONNECTION_01_112: [connection_create_endpoint shall create a new endpoint that can be used by a session.] */
-			}
-		}
+		/* Codes_SRS_CONNECTION_01_112: [connection_create_endpoint shall create a new endpoint that can be used by a session.] */
+	}
+}
 	}
 
 	return result;
@@ -1105,11 +1105,11 @@ void connection_destroy_endpoint(ENDPOINT_HANDLE endpoint)
 	}
 }
 
-int connection_begin_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE performative, uint32_t payload_size)
+int connection_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE performative, PAYLOAD* payloads, size_t payload_count)
 {
 	int result;
 
-	/* Codes_SRS_CONNECTION_01_249: [If endpoint or performative are NULL, connection_begin_encode_frame shall fail and return a non-zero value.] */
+	/* Codes_SRS_CONNECTION_01_249: [If endpoint or performative are NULL, connection_encode_frame shall fail and return a non-zero value.] */
 	if ((endpoint == NULL) ||
 		(performative == NULL))
 	{
@@ -1120,6 +1120,13 @@ int connection_begin_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE per
 		ENDPOINT_INSTANCE* endpoint_instance = (ENDPOINT_INSTANCE*)endpoint;
 		CONNECTION_INSTANCE* connection = endpoint_instance->connection;
 		AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = connection->amqp_frame_codec;
+		uint32_t payload_size = 0;
+		size_t i;
+
+		for (i = 0; i < payload_count; i++)
+		{
+			payload_size += payloads[i].length;
+		}
 
 		if (amqp_frame_codec_begin_encode_frame(amqp_frame_codec, endpoint_instance->outgoing_channel, performative, payload_size) != 0)
 		{
@@ -1127,7 +1134,22 @@ int connection_begin_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE per
 		}
 		else
 		{
-			result = 0;
+			for (i = 0; i < payload_count; i++)
+			{
+				if (amqp_frame_codec_encode_payload_bytes(amqp_frame_codec, payloads[i].bytes, payloads[i].length) != 0)
+				{
+					break;
+				}
+			}
+
+			if (i < payload_count)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				result = 0;
+			}
 		}
 	}
 

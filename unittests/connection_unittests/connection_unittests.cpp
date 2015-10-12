@@ -3097,22 +3097,22 @@ TEST_METHOD(when_reallocating_the_endpoints_list_fails_connection_destroy_endpoi
 	connection_destroy(connection);
 }
 
-/* connection_begin_encode_frame */
+/* connection_encode_frame */
 
-/* Tests_SRS_CONNECTION_01_249: [If endpoint or performative are NULL, connection_begin_encode_frame shall fail and return a non-zero value.] */
+/* Tests_SRS_CONNECTION_01_249: [If endpoint or performative are NULL, connection_encode_frame shall fail and return a non-zero value.] */
 TEST_METHOD(connection_begin_encode_frame_with_NULL_endpoint_fails)
 {
 	// arrange
 	connection_mocks mocks;
 
 	// act
-	int result = connection_begin_encode_frame(NULL, TEST_BEGIN_PERFORMATIVE, 0);
+	int result = connection_encode_frame(NULL, TEST_BEGIN_PERFORMATIVE, NULL, 0);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
 }
 
-/* Tests_SRS_CONNECTION_01_249: [If endpoint or performative are NULL, connection_begin_encode_frame shall fail and return a non-zero value.] */
+/* Tests_SRS_CONNECTION_01_249: [If endpoint or performative are NULL, connection_encode_frame shall fail and return a non-zero value.] */
 TEST_METHOD(connection_begin_encode_frame_with_NULL_performative_fails)
 {
 	// arrange
@@ -3122,7 +3122,7 @@ TEST_METHOD(connection_begin_encode_frame_with_NULL_performative_fails)
 	mocks.ResetAllCalls();
 
 	// act
-	int result = connection_begin_encode_frame(endpoint, NULL, 0);
+	int result = connection_encode_frame(endpoint, NULL, NULL, 0);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);

@@ -278,9 +278,12 @@ void messaging_dowork(MESSAGING_HANDLE handle)
 				for (i = 0; i < messaging->outgoing_message_count; i++)
 				{
 					AMQP_VALUE message_payload = message_get_body(messaging->outgoing_messages[i].message);
+					amqp_binary binary_value;
+					amqpvalue_get_binary(message_payload, &binary_value);
+					PAYLOAD payload = { binary_value.bytes, binary_value.length };
 					if (message_payload != NULL)
 					{
-						if (link_transfer(messaging->link, message_payload, delivery_settled_callback, messaging) == 0)
+						if (link_transfer(messaging->link, &payload, 1, delivery_settled_callback, messaging) == 0)
 						{
 							messaging->outgoing_messages[i].callback(MESSAGING_OK, messaging->outgoing_messages[i].context);
 						}

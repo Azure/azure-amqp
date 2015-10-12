@@ -133,7 +133,7 @@ static int send_attach(LINK_INSTANCE* link, const char* name, handle handle, rol
 		}
 		else
 		{
-			if (session_begin_encode_frame(link->session, attach_performative_value, 0) != 0)
+			if (session_encode_frame(link->session, attach_performative_value, NULL, 0) != 0)
 			{
 				result = __LINE__;
 			}
@@ -151,8 +151,9 @@ static int send_attach(LINK_INSTANCE* link, const char* name, handle handle, rol
 
 static int encode_bytes(void* context, const void* bytes, size_t length)
 {
-	SESSION_HANDLE session = context;
-	(void)session_encode_payload_bytes(session, bytes, length);
+	PAYLOAD* payload = (PAYLOAD*)context;
+	memcpy((unsigned char*)payload->bytes + payload->length, bytes, length);
+	payload->length += length;
 	return 0;
 }
 
@@ -243,7 +244,7 @@ int link_get_state(LINK_HANDLE handle, LINK_STATE* link_state)
 	return result;
 }
 
-int link_transfer(LINK_HANDLE handle, AMQP_VALUE payload_chunk, DELIVERY_SETTLED_CALLBACK delivery_settled_callback, void* callback_context)
+int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, DELIVERY_SETTLED_CALLBACK delivery_settled_callback, void* callback_context)
 {
 	int result;
 	LINK_INSTANCE* link = (LINK_INSTANCE*)handle;
@@ -275,13 +276,17 @@ int link_transfer(LINK_HANDLE handle, AMQP_VALUE payload_chunk, DELIVERY_SETTLED
 		{
 			size_t encoded_size;
 			AMQP_VALUE amqp_value_descriptor = amqpvalue_create_ulong(0x77);
-			AMQP_VALUE amqp_value = amqpvalue_create_described(amqpvalue_clone(amqp_value_descriptor), amqpvalue_clone(payload_chunk));
+			amqp_binary binary_value = { payloads[0].bytes, payloads[0].length };
+			AMQP_VALUE amqp_value = amqpvalue_create_described(amqpvalue_clone(amqp_value_descriptor), amqpvalue_create_binary(binary_value));
 			amqpvalue_get_encoded_size(amqp_value, &encoded_size);
+			void* data_bytes = amqpalloc_malloc(encoded_size);
+			PAYLOAD payload = { data_bytes, 0 };
+			(void)amqpvalue_encode(amqp_value, encode_bytes, &payload);
 
 			link->pending_deliveries = new_pending_deliveries;
-			
+
 			/* here we should feed data to the transfer frame */
-			if (session_begin_transfer(link->session, transfer, encoded_size, &link->pending_deliveries[link->pending_delivery_count].delivery_id) != 0)
+			if (session_transfer(link->session, transfer, &payload, 1, &link->pending_deliveries[link->pending_delivery_count].delivery_id) != 0)
 			{
 				result = __LINE__;
 			}
@@ -291,7 +296,6 @@ int link_transfer(LINK_HANDLE handle, AMQP_VALUE payload_chunk, DELIVERY_SETTLED
 				link->pending_deliveries[link->pending_delivery_count].callback_context = callback_context;
 				link->pending_delivery_count++;
 
-				amqpvalue_encode(amqp_value, encode_bytes, link->session);
 				LOG(consolelogger_log, LOG_LINE, "-> [TRANSFER]");
 
 				result = 0;

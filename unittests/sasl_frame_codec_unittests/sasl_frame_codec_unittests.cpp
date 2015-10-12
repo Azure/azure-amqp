@@ -1052,5 +1052,30 @@ TEST_FUNCTION(when_the_frame_size_is_exactly_MIN_MAX_FRAME_SIZE_decoding_succeed
 }
 
 /* Tests_SRS_SASL_FRAME_CODEC_01_009: [The frame body of a SASL frame MUST contain exactly one AMQP type, whose type encoding MUST have provides=“sasl-frame”.] */
+TEST_FUNCTION(when_not_all_bytes_are_used_for_decoding_in_a_SASL_frame_then_decoding_fails)
+{
+	// arrange
+	sasl_frame_codec_mocks mocks;
+	amqp_definitions_mocks amqp_definitions_mocks;
+	SASL_FRAME_CODEC_HANDLE sasl_frame_codec = sasl_frame_codec_create(TEST_FRAME_CODEC_HANDLE, amqp_frame_received_callback_1, NULL);
+	mocks.ResetAllCalls();
+	unsigned char test_extra_bytes[2] = { 0x42, 0x43 };
+
+	test_sasl_frame_value_size = sizeof(test_sasl_frame_value) - 1;
+	EXPECTED_CALL(mocks, amqpvalue_decode_bytes(TEST_DECODER_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.ValidateArgument(1).ExpectedTimesExactly(sizeof(test_sasl_frame_value) - 1);
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_AMQP_VALUE)).IgnoreAllCalls();
+	STRICT_EXPECTED_CALL(amqp_definitions_mocks, is_sasl_mechanisms_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE)).IgnoreAllCalls();
+
+	// act
+	int result = saved_frame_begin_callback(saved_callback_context, test_extra_bytes, sizeof(test_extra_bytes), test_sasl_frame_value, sizeof(test_sasl_frame_value));
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	sasl_frame_codec_destroy(sasl_frame_codec);
+}
 
 END_TEST_SUITE(sasl_frame_codec_unittests)

@@ -101,6 +101,12 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 				}
 			}
 
+			/* Codes_SRS_SASL_FRAME_CODEC_01_009: [The frame body of a SASL frame MUST contain exactly one AMQP type, whose type encoding MUST have provides=“sasl-frame”.] */
+			if (frame_body_size > 0)
+			{
+				sasl_frame_codec_instance->decode_state = SASL_FRAME_DECODE_ERROR;
+			}
+
 			if (sasl_frame_codec_instance->decode_state == SASL_FRAME_DECODE_ERROR)
 			{
 				result = __LINE__;

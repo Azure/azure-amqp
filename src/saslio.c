@@ -269,6 +269,10 @@ static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 	}
 }
 
+static void frame_codec_decode_error(void* context)
+{
+}
+
 IO_HANDLE saslio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 {
 	SASLIO_CONFIG* sasl_io_config = io_create_parameters;
@@ -291,7 +295,7 @@ IO_HANDLE saslio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 			}
 			else
 			{
-				result->frame_codec = frame_codec_create(result->socket_io, logger_log);
+				result->frame_codec = frame_codec_create(result->socket_io, frame_codec_decode_error, logger_log);
 				if (result->frame_codec == NULL)
 				{
 					io_destroy(result->socket_io);

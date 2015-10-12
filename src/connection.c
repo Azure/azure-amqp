@@ -605,6 +605,10 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 	}
 }
 
+static void frame_codec_decode_error(void* context)
+{
+}
+
 /* Codes_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
 CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const char* container_id)
 {
@@ -625,7 +629,7 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 			result->io = io;
 
 			/* Codes_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
-			result->frame_codec = frame_codec_create(result->io, consolelogger_log);
+			result->frame_codec = frame_codec_create(result->io, frame_codec_decode_error, consolelogger_log);
 			if (result->frame_codec == NULL)
 			{
 				/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */

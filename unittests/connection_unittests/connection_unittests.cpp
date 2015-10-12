@@ -128,7 +128,7 @@ public:
 	MOCK_VOID_METHOD_END();
 
 	/* frame_codec */
-	MOCK_STATIC_METHOD_2(, FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, LOGGER_LOG, logger_log)
+	MOCK_STATIC_METHOD_3(, FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, FRAME_CODEC_ERROR_CALLBACK, frame_codec_error_callback, LOGGER_LOG, logger_log)
 	MOCK_METHOD_END(FRAME_CODEC_HANDLE, TEST_FRAME_CODEC_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, frame_codec_destroy, FRAME_CODEC_HANDLE, frame_codec)
 	MOCK_VOID_METHOD_END();
@@ -239,7 +239,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , void*, amqpalloc_realloc, void*, ptr, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, amqpalloc_free, void*, ptr);
 
-	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, LOGGER_LOG, logger_log);
+	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , FRAME_CODEC_HANDLE, frame_codec_create, IO_HANDLE, io, FRAME_CODEC_ERROR_CALLBACK, frame_codec_error_callback, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(connection_mocks, , void, frame_codec_destroy, FRAME_CODEC_HANDLE, frame_codec);
 	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , int, frame_codec_receive_bytes, FRAME_CODEC_HANDLE, frame_codec, const unsigned char*, buffer, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , int, frame_codec_set_max_frame_size, FRAME_CODEC_HANDLE, frame_codec, uint32_t, max_frame_size);
@@ -323,7 +323,7 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
@@ -352,7 +352,7 @@ TEST_METHOD(connection_create_with_valid_args_but_NULL_host_name_succeeds)
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
@@ -393,7 +393,7 @@ TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1)
 		.SetReturn((FRAME_CODEC_HANDLE)NULL);
 	STRICT_EXPECTED_CALL(mocks, io_destroy(TEST_IO_HANDLE));
@@ -414,7 +414,7 @@ TEST_METHOD(when_amqp_frame_codec_create_fails_then_connection_create_fails)
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1)
@@ -438,7 +438,7 @@ TEST_METHOD(when_allocating_memory_for_hostname_fails_connection_create_fails)
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
@@ -464,7 +464,7 @@ TEST_METHOD(when_allocating_memory_for_container_id_fails_connection_create_fail
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
-	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqp_frame_codec_create(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);

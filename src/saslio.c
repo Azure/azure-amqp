@@ -295,7 +295,7 @@ IO_HANDLE saslio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 			}
 			else
 			{
-				result->frame_codec = frame_codec_create(result->socket_io, frame_codec_decode_error, logger_log);
+				result->frame_codec = frame_codec_create(result->socket_io, frame_codec_decode_error, result, logger_log);
 				if (result->frame_codec == NULL)
 				{
 					io_destroy(result->socket_io);

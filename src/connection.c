@@ -629,7 +629,7 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 			result->io = io;
 
 			/* Codes_SRS_CONNECTION_01_082: [connection_create shall allocate a new frame_codec instance to be used for frame encoding/decoding.] */
-			result->frame_codec = frame_codec_create(result->io, frame_codec_decode_error, consolelogger_log);
+			result->frame_codec = frame_codec_create(result->io, frame_codec_decode_error, result, consolelogger_log);
 			if (result->frame_codec == NULL)
 			{
 				/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */

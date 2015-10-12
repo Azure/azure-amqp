@@ -30,7 +30,7 @@ extern "C" {
 	typedef void(*FRAME_RECEIVED_CALLBACK)(void* context, const unsigned char* type_specific, uint32_t type_specific_size, const unsigned char* frame_body, uint32_t frame_body_size);
 	typedef void(*FRAME_CODEC_ERROR_CALLBACK)(void* context);
 
-	extern FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, FRAME_CODEC_ERROR_CALLBACK frame_codec_error_callback, LOGGER_LOG logger_log);
+	extern FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, FRAME_CODEC_ERROR_CALLBACK frame_codec_error_callback, void* frame_codec_error_callback_context, LOGGER_LOG logger_log);
 	extern void frame_codec_destroy(FRAME_CODEC_HANDLE frame_codec);
 	extern int frame_codec_set_max_frame_size(FRAME_CODEC_HANDLE frame_codec, uint32_t max_frame_size);
 	extern int frame_codec_subscribe(FRAME_CODEC_HANDLE frame_codec, uint8_t type, FRAME_RECEIVED_CALLBACK frame_received_callback, void* callback_context);

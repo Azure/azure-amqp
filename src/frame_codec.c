@@ -54,6 +54,8 @@ typedef struct FRAME_CODEC_DATA_TAG
 	uint8_t receive_frame_type;
 	SUBSCRIPTION* receive_frame_subscription;
 	unsigned char* receive_frame_bytes;
+	FRAME_CODEC_ERROR_CALLBACK frame_codec_error_callback;
+	void* frame_codec_error_callback_context;
 
 	/* encode frame */
 	ENCODE_FRAME_STATE encode_frame_state;
@@ -80,11 +82,12 @@ static bool find_subscription_by_frame_type(LIST_ITEM_HANDLE list_item, const vo
 	return result;
 }
 
-FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log)
+FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, FRAME_CODEC_ERROR_CALLBACK frame_codec_error_callback, void* frame_codec_error_callback_context, LOGGER_LOG logger_log)
 {
 	FRAME_CODEC_DATA* result;
 
 	/* Codes_SRS_FRAME_CODEC_01_020: [If the io argument is NULL, frame_codec_create shall return NULL.] */
+	/* Codes_SRS_FRAME_CODEC_01_104: [The frame_codec_error_callback and frame_codec_error_callback_context shall be allowed to be NULL.] */
 	if (io == NULL)
 	{
 		result = NULL;
@@ -100,6 +103,7 @@ FRAME_CODEC_HANDLE frame_codec_create(IO_HANDLE io, LOGGER_LOG logger_log)
 			result->logger_log = logger_log;
 			result->encode_frame_state = ENCODE_FRAME_STATE_FRAME_HEADER;
 			result->receive_frame_state = RECEIVE_FRAME_STATE_FRAME_SIZE;
+			result->frame_codec_error_callback = frame_codec_error_callback;
 			result->receive_frame_pos = 0;
 			result->receive_frame_size = 0;
 			result->receive_frame_bytes = NULL;

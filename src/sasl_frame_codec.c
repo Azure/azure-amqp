@@ -5,6 +5,7 @@
 #include "frame_codec.h"
 #include "amqpalloc.h"
 #include "amqpvalue.h"
+#include "amqp_definitions.h"
 
 /* Requirements implemented by design or by other modules */
 /* Codes_SRS_SASL_FRAME_CODEC_01_011: [A SASL frame has a type code of 0x01.] */
@@ -27,25 +28,32 @@ typedef struct SASL_FRAME_CODEC_INSTANCE_TAG
 	void* callback_context;
 	AMQPVALUE_DECODER_HANDLE decoder;
 	SASL_FRAME_DECODE_STATE decode_state;
-	AMQP_VALUE decoded_performative;
+	AMQP_VALUE decoded_sasl_frame_value;
 } SASL_FRAME_CODEC_INSTANCE;
 
 static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 {
 	SASL_FRAME_CODEC_INSTANCE* sasl_frame_codec_instance = (SASL_FRAME_CODEC_INSTANCE*)context;
-	uint64_t performative_descriptor_ulong;
 	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(decoded_value);
 
-	if ((descriptor == NULL) ||
-		(amqpvalue_get_ulong(descriptor, &performative_descriptor_ulong) != 0) ||
-		(performative_descriptor_ulong < SASL_MECHANISMS) ||
-		(performative_descriptor_ulong > SASL_OUTCOME))
+	if (descriptor == NULL)
 	{
 		sasl_frame_codec_instance->decode_state = SASL_FRAME_DECODE_ERROR;
 	}
 	else
 	{
-		sasl_frame_codec_instance->decoded_performative = decoded_value;
+		if (!is_sasl_mechanisms_type_by_descriptor(descriptor) &&
+			!is_sasl_init_type_by_descriptor(descriptor) &&
+			!is_sasl_challenge_type_by_descriptor(descriptor) &&
+			!is_sasl_response_type_by_descriptor(descriptor) &&
+			!is_sasl_outcome_type_by_descriptor(descriptor))
+		{
+			sasl_frame_codec_instance->decode_state = SASL_FRAME_DECODE_ERROR;
+		}
+		else
+		{
+			sasl_frame_codec_instance->decoded_sasl_frame_value = decoded_value;
+		}
 	}
 }
 
@@ -53,7 +61,6 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 {
 	int result;
 	SASL_FRAME_CODEC_INSTANCE* sasl_frame_codec_instance = (SASL_FRAME_CODEC_INSTANCE*)context;
-	uint16_t channel;
 
 	switch (sasl_frame_codec_instance->decode_state)
 	{
@@ -63,21 +70,18 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 		break;
 
 	case SASL_FRAME_DECODE_FRAME:
-		if (type_specific_size < 2)
+		if (type_specific_size > 2)
 		{
 			sasl_frame_codec_instance->decode_state = SASL_FRAME_DECODE_ERROR;
 			result = __LINE__;
 		}
 		else
 		{
-			channel = ((uint16_t)type_specific[0]) << 8;
-			channel += type_specific[1];
-
-			sasl_frame_codec_instance->decoded_performative = NULL;
+			sasl_frame_codec_instance->decoded_sasl_frame_value = NULL;
 
 			/* Codes_SRS_SASL_FRAME_CODEC_01_048: [Receipt of an empty frame is an irrecoverable error.] */
 			while ((frame_body_size > 0) &&
-				(sasl_frame_codec_instance->decoded_performative == NULL) &&
+				(sasl_frame_codec_instance->decoded_sasl_frame_value == NULL) &&
 				(sasl_frame_codec_instance->decode_state != SASL_FRAME_DECODE_ERROR))
 			{
 				if (amqpvalue_decode_bytes(sasl_frame_codec_instance->decoder, frame_body, 1) != 0)
@@ -97,7 +101,7 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 			}
 			else
 			{
-				sasl_frame_codec_instance->frame_received_callback(sasl_frame_codec_instance->callback_context, sasl_frame_codec_instance->decoded_performative);
+				sasl_frame_codec_instance->frame_received_callback(sasl_frame_codec_instance->callback_context, sasl_frame_codec_instance->decoded_sasl_frame_value);
 				result = 0;
 			}
 		}

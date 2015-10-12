@@ -25,6 +25,7 @@ typedef struct SASL_FRAME_CODEC_INSTANCE_TAG
 
 	/* decode */
 	SASL_FRAME_RECEIVED_CALLBACK frame_received_callback;
+	SASL_FRAME_CODEC_ERROR_CALLBACK error_callback;
 	void* callback_context;
 	AMQPVALUE_DECODER_HANDLE decoder;
 	SASL_FRAME_DECODE_STATE decode_state;
@@ -39,6 +40,9 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 	if (descriptor == NULL)
 	{
 		sasl_frame_codec_instance->decode_state = SASL_FRAME_DECODE_ERROR;
+
+		/* Codes_SRS_SASL_FRAME_CODEC_01_049: [If any error occurs while decoding a frame, the decoder shall call the error_callback and pass to it the callback_context, both of thosebeing the ones given to sasl_frame_codec_create.] */
+		sasl_frame_codec_instance->error_callback(sasl_frame_codec_instance->callback_context);
 	}
 	else
 	{
@@ -50,6 +54,9 @@ static void amqp_value_decoded(void* context, AMQP_VALUE decoded_value)
 			!is_sasl_outcome_type_by_descriptor(descriptor))
 		{
 			sasl_frame_codec_instance->decode_state = SASL_FRAME_DECODE_ERROR;
+
+			/* Codes_SRS_SASL_FRAME_CODEC_01_049: [If any error occurs while decoding a frame, the decoder shall call the error_callback and pass to it the callback_context, both of thosebeing the ones given to sasl_frame_codec_create.] */
+			sasl_frame_codec_instance->error_callback(sasl_frame_codec_instance->callback_context);
 		}
 		else
 		{
@@ -73,6 +80,9 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 		(frame_body_size == 0))
 	{
 		result = __LINE__;
+
+		/* Codes_SRS_SASL_FRAME_CODEC_01_049: [If any error occurs while decoding a frame, the decoder shall call the error_callback and pass to it the callback_context, both of thosebeing the ones given to sasl_frame_codec_create.] */
+		sasl_frame_codec_instance->error_callback(sasl_frame_codec_instance->callback_context);
 	}
 	else
 	{
@@ -108,6 +118,9 @@ static int frame_received(void* context, const unsigned char* type_specific, uin
 			if (frame_body_size > 0)
 			{
 				sasl_frame_codec_instance->decode_state = SASL_FRAME_DECODE_ERROR;
+
+				/* Codes_SRS_SASL_FRAME_CODEC_01_049: [If any error occurs while decoding a frame, the decoder shall call the error_callback and pass to it the callback_context, both of thosebeing the ones given to sasl_frame_codec_create.] */
+				sasl_frame_codec_instance->error_callback(sasl_frame_codec_instance->callback_context);
 			}
 
 			if (sasl_frame_codec_instance->decode_state == SASL_FRAME_DECODE_ERROR)
@@ -147,6 +160,7 @@ SASL_FRAME_CODEC_HANDLE sasl_frame_codec_create(FRAME_CODEC_HANDLE frame_codec, 
 		{
 			result->frame_codec = frame_codec;
 			result->frame_received_callback = frame_received_callback;
+			result->error_callback = error_callback;
 			result->callback_context = callback_context;
 			result->decode_state = SASL_FRAME_DECODE_FRAME;
 

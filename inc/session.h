@@ -25,8 +25,9 @@ extern "C" {
 	} SESSION_STATE;
 
 	extern SESSION_HANDLE session_create(CONNECTION_HANDLE connection);
+	extern void session_destroy(SESSION_HANDLE session);
 	extern void session_dowork(SESSION_HANDLE session);
-	extern int session_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performative, PAYLOAD* payload, size_t payload_count);
+	extern int session_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performative, PAYLOAD* payloads, size_t payload_count);
 	int session_transfer(SESSION_HANDLE session, TRANSFER_HANDLE transfer, PAYLOAD* payloads, size_t payload_count, delivery_number* delivery_id);
 	extern LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context);
 	extern void session_destroy_link_endpoint(LINK_ENDPOINT_HANDLE endpoint);

@@ -165,9 +165,40 @@ TEST_METHOD(session_create_with_valid_args_succeeds)
 
 	// assert
 	ASSERT_IS_NOT_NULL(session);
+	mocks.AssertActualAndExpectedCalls();
 
 	// cleanup
 	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_030: [session_create shall create a new session instance and return a non-NULL handle to it.] */
+/* Tests_SRS_SESSION_01_032: [session_create shall create a new session endpoint by calling connection_create_endpoint.] */
+TEST_METHOD(session_create_twice_on_the_same_connection_works)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, connection_create_endpoint(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, connection_create_endpoint(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+
+	// act
+	SESSION_HANDLE session1 = session_create(TEST_CONNECTION_HANDLE);
+	SESSION_HANDLE session2 = session_create(TEST_CONNECTION_HANDLE);
+
+	// assert
+	ASSERT_IS_NOT_NULL(session1);
+	ASSERT_IS_NOT_NULL(session2);
+	ASSERT_ARE_NOT_EQUAL(void_ptr, session1, session2);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy(session1);
+	session_destroy(session2);
 }
 
 /* Tests_SRS_SESSION_01_031: [If connection is NULL, session_create shall fail and return NULL.] */
@@ -179,6 +210,43 @@ TEST_METHOD(session_create_with_NULL_connection_fails)
 
 	// act
 	SESSION_HANDLE session = session_create(NULL);
+
+	// assert
+	ASSERT_IS_NULL(session);
+}
+
+/* Tests_SRS_SESSION_01_042: [If allocating memory for the session fails, session_create shall fail and return NULL.] */
+TEST_METHOD(when_allocating_memory_for_the_session_fails_session_create_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+		.SetReturn((void*)NULL);
+
+	// act
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+
+	// assert
+	ASSERT_IS_NULL(session);
+}
+
+/* Tests_SRS_SESSION_01_033: [If connection_create_endpoint fails, session_create shall fail and return NULL.] */
+TEST_METHOD(when_connection_create_endpoint_fails_session_create_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, connection_create_endpoint(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1)
+		.SetReturn((ENDPOINT_HANDLE)NULL);
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
 
 	// assert
 	ASSERT_IS_NULL(session);

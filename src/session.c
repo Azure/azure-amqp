@@ -278,6 +278,7 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 	{
 		/* Codes_SRS_SESSION_01_030: [session_create shall create a new session instance and return a non-NULL handle to it.] */
 		result = amqpalloc_malloc(sizeof(SESSION_INSTANCE));
+		/* Codes_SRS_SESSION_01_042: [If allocating memory for the session fails, session_create shall fail and return NULL.] */
 		if (result != NULL)
 		{
 			result->connection = connection;
@@ -285,11 +286,16 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 			result->link_endpoints = NULL;
 			result->link_endpoint_count = 0;
 			result->delivery_id = 0;
+			result->handle_max = 4294967295;
 
 			/* Codes_SRS_SESSION_01_032: [session_create shall create a new session endpoint by calling connection_create_endpoint.] */
 			result->endpoint = connection_create_endpoint(connection, session_frame_received, result);
-
-			result->handle_max = 4294967295;
+			if (result->endpoint == NULL)
+			{
+				/* Codes_SRS_SESSION_01_033: [If connection_create_endpoint fails, session_create shall fail and return NULL.] */
+				amqpalloc_free(result);
+				result = NULL;
+			}
 		}
 	}
 

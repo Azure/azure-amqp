@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 			size_t current_memory_used;
 			messaging_dowork(messaging);
 
-			current_memory_used = amqpalloc_get_current_memory_used();
+			current_memory_used = amqpalloc_get_maximum_memory_used();
 			
 			if (current_memory_used != last_memory_used)
 			{

@@ -14,6 +14,7 @@
 #define TEST_DESCRIBED_AMQP_VALUE		(AMQP_VALUE)0x4247
 #define TEST_LIST_ITEM_AMQP_VALUE		(AMQP_VALUE)0x4246
 #define TEST_DESCRIPTOR_AMQP_VALUE		(AMQP_VALUE)0x4245
+#define TEST_CONNECTION_HANDLE			(CONNECTION_HANDLE)0x4248
 
 std::ostream& operator<<(std::ostream& left, const delivery_tag& delivery)
 {
@@ -146,5 +147,27 @@ TEST_FUNCTION_CLEANUP(method_cleanup)
 }
 
 /* session_create */
+
+/* Tests_SRS_SESSION_01_030: [session_create shall create a new session instance and return a non-NULL handle to it.] */
+/* Tests_SRS_SESSION_01_032: [session_create shall create a new session endpoint by calling connection_create_endpoint.] */
+TEST_METHOD(session_create_with_valid_args_succeeds)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, connection_create_endpoint(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+		.ValidateArgument(1);
+
+	// act
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+
+	// assert
+	ASSERT_IS_NOT_NULL(session);
+
+	// cleanup
+	session_destroy(session);
+}
 
 END_TEST_SUITE(connection_unittests)

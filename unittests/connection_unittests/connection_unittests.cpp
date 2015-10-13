@@ -326,7 +326,6 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	// arrange
 	connection_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
-	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
@@ -355,7 +354,6 @@ TEST_METHOD(connection_create_with_valid_args_but_NULL_host_name_succeeds)
 	// arrange
 	connection_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
-	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
@@ -379,7 +377,6 @@ TEST_METHOD(when_allocating_memory_fails_then_connection_create_fails)
 {
 	// arrange
 	connection_mocks mocks;
-	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE))
 		.SetReturn((void*)NULL);
@@ -396,7 +393,6 @@ TEST_METHOD(when_frame_codec_create_fails_then_connection_create_fails)
 {
 	// arrange
 	connection_mocks mocks;
-	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
@@ -417,7 +413,6 @@ TEST_METHOD(when_amqp_frame_codec_create_fails_then_connection_create_fails)
 {
 	// arrange
 	connection_mocks mocks;
-	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
@@ -441,7 +436,6 @@ TEST_METHOD(when_allocating_memory_for_hostname_fails_connection_create_fails)
 {
 	// arrange
 	connection_mocks mocks;
-	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
@@ -467,7 +461,6 @@ TEST_METHOD(when_allocating_memory_for_container_id_fails_connection_create_fail
 {
 	// arrange
 	connection_mocks mocks;
-	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
 	EXPECTED_CALL(mocks, frame_codec_create(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))

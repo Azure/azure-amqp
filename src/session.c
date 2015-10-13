@@ -267,20 +267,30 @@ static void session_frame_payload_bytes_received(void* context, const unsigned c
 
 SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 {
-	/* Codes_SRS_SESSION_01_030: [session_create shall create a new session instance and return a non-NULL handle to it.] */
-	SESSION_INSTANCE* result = amqpalloc_malloc(sizeof(SESSION_INSTANCE));
-	if (result != NULL)
+	SESSION_INSTANCE* result;
+
+	if (connection == NULL)
 	{
-		result->connection = connection;
-		result->session_state = SESSION_STATE_UNMAPPED;
-		result->link_endpoints = NULL;
-		result->link_endpoint_count = 0;
-		result->delivery_id = 0;
+		/* Codes_SRS_SESSION_01_031: [If connection is NULL, session_create shall fail and return NULL.] */
+		result = NULL;
+	}
+	else
+	{
+		/* Codes_SRS_SESSION_01_030: [session_create shall create a new session instance and return a non-NULL handle to it.] */
+		result = amqpalloc_malloc(sizeof(SESSION_INSTANCE));
+		if (result != NULL)
+		{
+			result->connection = connection;
+			result->session_state = SESSION_STATE_UNMAPPED;
+			result->link_endpoints = NULL;
+			result->link_endpoint_count = 0;
+			result->delivery_id = 0;
 
-		/* Codes_SRS_SESSION_01_032: [session_create shall create a new session endpoint by calling connection_create_endpoint.] */
-		result->endpoint = connection_create_endpoint(connection, session_frame_received, result);
+			/* Codes_SRS_SESSION_01_032: [session_create shall create a new session endpoint by calling connection_create_endpoint.] */
+			result->endpoint = connection_create_endpoint(connection, session_frame_received, result);
 
-		result->handle_max = 4294967295;
+			result->handle_max = 4294967295;
+		}
 	}
 
 	return result;

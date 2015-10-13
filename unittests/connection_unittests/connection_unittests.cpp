@@ -343,6 +343,10 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 	CONNECTION_STATE connection_state;
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_START, connection_state);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
 }
 
 /* Tests_SRS_CONNECTION_01_001: [connection_create shall open a new connection to a specified host/port.] */
@@ -370,6 +374,10 @@ TEST_METHOD(connection_create_with_valid_args_but_NULL_host_name_succeeds)
 	CONNECTION_STATE connection_state;
 	(void)connection_get_state(connection, &connection_state);
 	ASSERT_ARE_EQUAL(int, (int)CONNECTION_STATE_START, connection_state);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
 }
 
 /* Tests_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */

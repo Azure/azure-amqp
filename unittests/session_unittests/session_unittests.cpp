@@ -170,4 +170,18 @@ TEST_METHOD(session_create_with_valid_args_succeeds)
 	session_destroy(session);
 }
 
+/* Tests_SRS_SESSION_01_031: [If connection is NULL, session_create shall fail and return NULL.] */
+TEST_METHOD(session_create_with_NULL_connection_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+
+	// act
+	SESSION_HANDLE session = session_create(NULL);
+
+	// assert
+	ASSERT_IS_NULL(session);
+}
+
 END_TEST_SUITE(connection_unittests)

@@ -108,11 +108,6 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 	}
 }
 
-static void link_frame_payload_bytes_received(void* context, const unsigned char* payload_bytes, uint32_t byte_count)
-{
-	LINK_INSTANCE* link = (LINK_INSTANCE*)context;
-}
-
 static int send_attach(LINK_INSTANCE* link, const char* name, handle handle, role role, sender_settle_mode snd_settle_mode, receiver_settle_mode rcv_settle_mode)
 {
 	int result;
@@ -137,7 +132,7 @@ static int send_attach(LINK_INSTANCE* link, const char* name, handle handle, rol
 		}
 		else
 		{
-			if (session_encode_frame(link->session, attach_performative_value, NULL, 0) != 0)
+			if (session_encode_frame(link->link_endpoint, attach_performative_value, NULL, 0) != 0)
 			{
 				result = __LINE__;
 			}
@@ -292,7 +287,7 @@ int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, D
 			link->pending_deliveries = new_pending_deliveries;
 
 			/* here we should feed data to the transfer frame */
-			if (session_transfer(link->session, transfer, &payload, 1, &link->pending_deliveries[link->pending_delivery_count].delivery_id) != 0)
+			if (session_transfer(link->link_endpoint, transfer, &payload, 1, &link->pending_deliveries[link->pending_delivery_count].delivery_id) != 0)
 			{
 				result = __LINE__;
 			}

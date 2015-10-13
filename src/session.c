@@ -346,17 +346,18 @@ int session_get_state(SESSION_HANDLE session, SESSION_STATE* session_state)
 	return result;
 }
 
-int session_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performative, PAYLOAD* payloads, size_t payload_count)
+int session_encode_frame(LINK_ENDPOINT_HANDLE link_endpoint, const AMQP_VALUE performative, PAYLOAD* payloads, size_t payload_count)
 {
 	int result;
 
-	if (session == NULL)
+	if (link_endpoint == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
+		LINK_ENDPOINT_INSTANCE* link_endpoint_instance = (LINK_ENDPOINT_INSTANCE*)link_endpoint;
+		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)link_endpoint_instance->session;
 
 		if (connection_encode_frame(session_instance->endpoint, performative, payloads, payload_count) != 0)
 		{
@@ -371,17 +372,18 @@ int session_encode_frame(SESSION_HANDLE session, const AMQP_VALUE performative, 
 	return result;
 }
 
-int session_transfer(SESSION_HANDLE session, TRANSFER_HANDLE transfer, PAYLOAD* payloads, size_t payload_count, delivery_number* delivery_id)
+int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfer, PAYLOAD* payloads, size_t payload_count, delivery_number* delivery_id)
 {
 	int result;
 
-	if (session == NULL)
+	if (link_endpoint == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
+		LINK_ENDPOINT_INSTANCE* link_endpoint_instance = (LINK_ENDPOINT_INSTANCE*)link_endpoint;
+		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)link_endpoint_instance->session;
 		AMQP_VALUE transfer_value;
 
 		*delivery_id = session_instance->delivery_id++;

@@ -1029,43 +1029,69 @@ ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOIN
 	else
 	{
 		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-		uint16_t channel_no = 0;
 
-		while (channel_no < connection_instance->channel_max)
+		/* Codes_SRS_CONNECTION_01_115: [If no more endpoints can be created due to all channels being used, connection_create_endpoint shall fail and return NULL.] */
+		if (connection_instance->endpoint_count >= connection_instance->channel_max)
 		{
-			break;
-			channel_no++;
+			result = NULL;
 		}
+		else
+		{
+			uint16_t channel_no = 0;
+			size_t i = 0;
 
-		/* Codes_SRS_CONNECTION_01_127: [On success, connection_create_endpoint shall return a non-NULL handle to the newly created endpoint.] */
-		result = amqpalloc_malloc(sizeof(ENDPOINT_INSTANCE));
-/* Codes_SRS_CONNECTION_01_196: [If memory cannot be allocated for the new endpoint, connection_create_endpoint shall fail and return NULL.] */
-if (result != NULL)
-{
-	ENDPOINT_INSTANCE** new_endpoints;
+			/* Codes_SRS_CONNECTION_01_128: [The lowest number outgoing channel shall be associated with the newly created endpoint.] */
+			for (i = 0; i < connection_instance->endpoint_count; i++)
+			{
+				if (connection_instance->endpoints[i]->outgoing_channel > channel_no)
+				{
+					/* found a gap in the sorted endpoint array */
+					break;
+				}
+				else
+				{
+					channel_no++;
+				}
+			}
 
-	result->frame_received_callback = frame_received_callback;
-	result->frame_received_callback_context = context;
-	result->outgoing_channel = channel_no;
-	result->connection = connection;
+			while (channel_no < connection_instance->channel_max)
+			{
+				break;
+				channel_no++;
+			}
 
-	/* Codes_SRS_CONNECTION_01_197: [The newly created endpoint shall be added to the endpoints list, so that it can be tracked.] */
-	new_endpoints = (ENDPOINT_INSTANCE**)amqpalloc_realloc(connection_instance->endpoints, sizeof(ENDPOINT_INSTANCE*) * (connection_instance->endpoint_count + 1));
-	if (new_endpoints == NULL)
-	{
-		/* Tests_SRS_CONNECTION_01_198: [If adding the endpoint to the endpoints list tracked by the connection fails, connection_create_endpoint shall fail and return NULL.] */
-		amqpalloc_free(result);
-		result = NULL;
-	}
-	else
-	{
-		connection_instance->endpoints = new_endpoints;
-		connection_instance->endpoints[connection_instance->endpoint_count] = result;
-		connection_instance->endpoint_count++;
+			/* Codes_SRS_CONNECTION_01_127: [On success, connection_create_endpoint shall return a non-NULL handle to the newly created endpoint.] */
+			result = amqpalloc_malloc(sizeof(ENDPOINT_INSTANCE));
+			/* Codes_SRS_CONNECTION_01_196: [If memory cannot be allocated for the new endpoint, connection_create_endpoint shall fail and return NULL.] */
+			if (result != NULL)
+			{
+				ENDPOINT_INSTANCE** new_endpoints;
 
-		/* Codes_SRS_CONNECTION_01_112: [connection_create_endpoint shall create a new endpoint that can be used by a session.] */
-	}
-}
+				result->frame_received_callback = frame_received_callback;
+				result->frame_received_callback_context = context;
+				result->outgoing_channel = channel_no;
+				result->connection = connection;
+
+				/* Codes_SRS_CONNECTION_01_197: [The newly created endpoint shall be added to the endpoints list, so that it can be tracked.] */
+				new_endpoints = (ENDPOINT_INSTANCE**)amqpalloc_realloc(connection_instance->endpoints, sizeof(ENDPOINT_INSTANCE*) * (connection_instance->endpoint_count + 1));
+				if (new_endpoints == NULL)
+				{
+					/* Tests_SRS_CONNECTION_01_198: [If adding the endpoint to the endpoints list tracked by the connection fails, connection_create_endpoint shall fail and return NULL.] */
+					amqpalloc_free(result);
+					result = NULL;
+				}
+				else
+				{
+					(void)memmove(&connection_instance->endpoints[channel_no + 1], &connection_instance->endpoints[channel_no], sizeof(ENDPOINT_INSTANCE*) * (connection_instance->endpoint_count - channel_no));
+
+					connection_instance->endpoints = new_endpoints;
+					connection_instance->endpoints[channel_no] = result;
+					connection_instance->endpoint_count++;
+
+					/* Codes_SRS_CONNECTION_01_112: [connection_create_endpoint shall create a new endpoint that can be used by a session.] */
+				}
+			}
+		}
 	}
 
 	return result;

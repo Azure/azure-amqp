@@ -3078,6 +3078,82 @@ TEST_METHOD(connection_create_endpoint_with_valid_arguments_and_NULL_context_suc
 	connection_destroy(connection);
 }
 
+/* Tests_SRS_CONNECTION_01_115: [If no more endpoints can be created due to all channels being used, connection_create_endpoint shall fail and return NULL.] */
+TEST_METHOD(when_no_more_channels_are_available_connection_create_endpoint_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	(void)connection_set_channel_max(connection, 0);
+	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	// act
+	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(endpoint1);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint0);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_115: [If no more endpoints can be created due to all channels being used, connection_create_endpoint shall fail and return NULL.] */
+TEST_METHOD(when_no_more_channels_are_available_after_create_destroy_and_create_again_connection_create_endpoint_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	(void)connection_set_channel_max(connection, 0);
+	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	connection_destroy_endpoint(endpoint0);
+	endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	// act
+	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(endpoint1);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint0);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_115: [If no more endpoints can be created due to all channels being used, connection_create_endpoint shall fail and return NULL.] */
+TEST_METHOD(when_no_more_channels_are_available_with_channel_max_1_connection_create_endpoint_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	(void)connection_set_channel_max(connection, 1);
+	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	// act
+	ENDPOINT_HANDLE endpoint2 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(endpoint1);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint0);
+	connection_destroy_endpoint(endpoint1);
+	connection_destroy(connection);
+}
+
 /* connection_destroy_endpoint */
 
 /* Tests_SRS_CONNECTION_01_199: [If endpoint is NULL, connection_destroy_endpoint shall do nothing.] */
@@ -3517,6 +3593,80 @@ TEST_METHOD(connection_encode_frame_after_close_has_been_received_fails)
 
 	// cleanup
 	connection_destroy_endpoint(endpoint);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_251: [The channel number passed to amqp_frame_codec_begin_encode_frame shall be the outgoing channel number associated with the endpoint by connection_create_endpoint.] */
+/* Tests_SRS_CONNECTION_01_128: [The lowest number outgoing channel shall be associated with the newly created endpoint.] */
+TEST_METHOD(connection_encode_frame_with_a_second_endpoint_sends_on_channel_1)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 1, TEST_BEGIN_PERFORMATIVE, 0));
+
+	// act
+	int result = connection_encode_frame(endpoint1, TEST_BEGIN_PERFORMATIVE, NULL, 0);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint0);
+	connection_destroy_endpoint(endpoint1);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_251: [The channel number passed to amqp_frame_codec_begin_encode_frame shall be the outgoing channel number associated with the endpoint by connection_create_endpoint.] */
+/* Tests_SRS_CONNECTION_01_128: [The lowest number outgoing channel shall be associated with the newly created endpoint.] */
+TEST_METHOD(when_an_endpoint_is_destroyed_and_a_new_one_is_created_the_channel_is_reused_on_the_new_endpoint)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	connection_destroy_endpoint(endpoint0);
+	endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, TEST_BEGIN_PERFORMATIVE, 0));
+
+	// act
+	int result = connection_encode_frame(endpoint0, TEST_BEGIN_PERFORMATIVE, NULL, 0);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint0);
+	connection_destroy_endpoint(endpoint1);
 	connection_destroy(connection);
 }
 

@@ -409,31 +409,6 @@ int session_transfer(SESSION_HANDLE session, TRANSFER_HANDLE transfer, PAYLOAD* 
 	return result;
 }
 
-int session_encode_payload_bytes(SESSION_HANDLE session, const unsigned char* bytes, uint32_t count)
-{
-	int result;
-
-	if (session == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
-
-		if (connection_encode_payload_bytes(session_instance->endpoint, bytes, count) != 0)
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			result = 0;
-		}
-	}
-
-	return result;
-}
-
 LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context)
 {
 	LINK_ENDPOINT_INSTANCE* result;

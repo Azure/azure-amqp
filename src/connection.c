@@ -1200,30 +1200,3 @@ int connection_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE performat
 
 	return result;
 }
-
-int connection_encode_payload_bytes(ENDPOINT_HANDLE endpoint, const unsigned char* bytes, uint32_t count)
-{
-	int result;
-
-	if (endpoint == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		ENDPOINT_INSTANCE* endpoint_instance = (ENDPOINT_INSTANCE*)endpoint;
-		CONNECTION_INSTANCE* connection = endpoint_instance->connection;
-		AMQP_FRAME_CODEC_HANDLE amqp_frame_codec = connection->amqp_frame_codec;
-
-		if (amqp_frame_codec_encode_payload_bytes(amqp_frame_codec, bytes, count) != 0)
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			result = 0;
-		}
-	}
-
-	return result;
-}

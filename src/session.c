@@ -304,14 +304,20 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 
 void session_destroy(SESSION_HANDLE session)
 {
+	/* Codes_SRS_SESSION_01_036: [If session is NULL, session_destroy shall do nothing.] */
 	if (session != NULL)
 	{
 		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
+
+		/* Codes_SRS_SESSION_01_034: [session_destroy shall free all resources allocated by session_create.] */
+		/* Codes_SRS_SESSION_01_035: [The endpoint created in session_create shall be freed by calling connection_destroy_endpoint.] */
+		connection_destroy_endpoint(session_instance->endpoint);
 		if (session_instance->link_endpoints != NULL)
 		{
-			free(session_instance->link_endpoints);
+			amqpalloc_free(session_instance->link_endpoints);
 		}
-		free(session);
+
+		amqpalloc_free(session);
 	}
 }
 

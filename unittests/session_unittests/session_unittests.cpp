@@ -252,4 +252,40 @@ TEST_METHOD(when_connection_create_endpoint_fails_session_create_fails)
 	ASSERT_IS_NULL(session);
 }
 
+/* session_destroy */
+
+/* Tests_SRS_SESSION_01_034: [session_destroy shall free all resources allocated by session_create.] */
+/* Tests_SRS_SESSION_01_035: [The endpoint created in session_create shall be freed by calling connection_destroy_endpoint.] */
+TEST_METHOD(when_session_destroy_is_called_then_the_underlying_endpoint_is_freed)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, connection_destroy_endpoint(TEST_ENDPOINT_HANDLE));
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	session_destroy(session);
+
+	// assert
+	// uMock checks the calls
+}
+
+/* Tests_SRS_SESSION_01_036: [If session is NULL, session_destroy shall do nothing.] */
+TEST_METHOD(session_destroy_with_NULL_session_does_nothing)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+
+	// act
+	session_destroy(NULL);
+
+	// assert
+	// uMock checks the calls
+}
+
 END_TEST_SUITE(connection_unittests)

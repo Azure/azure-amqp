@@ -1107,6 +1107,7 @@ void connection_destroy_endpoint(ENDPOINT_HANDLE endpoint)
 	}
 }
 
+/* Codes_SRS_CONNECTION_01_247: [connection_encode_frame shall send a frame for a certain endpoint.] */
 int connection_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE performative, PAYLOAD* payloads, size_t payload_count)
 {
 	int result;
@@ -1125,32 +1126,48 @@ int connection_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE performat
 		uint32_t payload_size = 0;
 		size_t i;
 
-		for (i = 0; i < payload_count; i++)
-		{
-			payload_size += payloads[i].length;
-		}
-
-		if (amqp_frame_codec_begin_encode_frame(amqp_frame_codec, endpoint_instance->outgoing_channel, performative, payload_size) != 0)
+		/* Codes_SRS_CONNECTION_01_254: [If connection_encode_frame is called before the connection is in the OPENED state, connection_encode_frame shall fail and return a non-zero value.] */
+		if (connection->connection_state != CONNECTION_STATE_OPENED)
 		{
 			result = __LINE__;
 		}
 		else
 		{
+			/* Codes_SRS_CONNECTION_01_255: [The payload size shall be computed based on all the payload chunks passed as argument in payloads.] */
 			for (i = 0; i < payload_count; i++)
 			{
-				if (amqp_frame_codec_encode_payload_bytes(amqp_frame_codec, payloads[i].bytes, payloads[i].length) != 0)
-				{
-					break;
-				}
+				payload_size += payloads[i].length;
 			}
 
-			if (i < payload_count)
+			/* Codes_SRS_CONNECTION_01_250: [connection_encode_frame shall initiate the frame send by calling amqp_frame_codec_begin_encode_frame.] */
+			/* Codes_SRS_CONNECTION_01_251: [The channel number passed to amqp_frame_codec_begin_encode_frame shall be the outgoing channel number associated with the endpoint by connection_create_endpoint.] */
+			/* Codes_SRS_CONNECTION_01_252: [The performative passed to amqp_frame_codec_begin_encode_frame shall be the performative argument of connection_encode_frame.] */
+			if (amqp_frame_codec_begin_encode_frame(amqp_frame_codec, endpoint_instance->outgoing_channel, performative, payload_size) != 0)
 			{
+				/* Codes_SRS_CONNECTION_01_253: [If amqp_frame_codec_begin_encode_frame or amqp_frame_codec_encode_payload_bytes fails, then connection_encode_frame shall fail and return a non-zero value.] */
 				result = __LINE__;
 			}
 			else
 			{
-				result = 0;
+				for (i = 0; i < payload_count; i++)
+				{
+					/* Codes_SRS_CONNECTION_01_256: [Each payload passed in the payloads array shall be passed to amqp_frame_codec by calling amqp_frame_codec_encode_payload_bytes.] */
+					if (amqp_frame_codec_encode_payload_bytes(amqp_frame_codec, payloads[i].bytes, payloads[i].length) != 0)
+					{
+						break;
+					}
+				}
+
+				if (i < payload_count)
+				{
+					/* Codes_SRS_CONNECTION_01_253: [If amqp_frame_codec_begin_encode_frame or amqp_frame_codec_encode_payload_bytes fails, then connection_encode_frame shall fail and return a non-zero value.] */
+					result = __LINE__;
+				}
+				else
+				{
+					/* Codes_SRS_CONNECTION_01_248: [On success it shall return 0.] */
+					result = 0;
+				}
 			}
 		}
 	}

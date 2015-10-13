@@ -325,7 +325,7 @@ TEST_METHOD(connection_create_with_valid_args_succeeds)
 {
 	// arrange
 	connection_mocks mocks;
-	amqp_definitions_mocks amqp_definitions_mocks;
+	amqp_definitions_mocks definition_mocks;
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
@@ -354,7 +354,7 @@ TEST_METHOD(connection_create_with_valid_args_but_NULL_host_name_succeeds)
 {
 	// arrange
 	connection_mocks mocks;
-	amqp_definitions_mocks amqp_definitions_mocks;
+	amqp_definitions_mocks definition_mocks;
 	SOCKETIO_CONFIG config = { "testhost", 5672 };
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORE));
@@ -1332,6 +1332,8 @@ TEST_METHOD(when_the_header_is_received_an_open_frame_is_sent_out)
 	mocks.ResetAllCalls();
 	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_hostname(test_open_handle, "testhost"));
@@ -1520,6 +1522,8 @@ TEST_METHOD(when_no_hostname_is_specified_no_hostname_is_stamped_on_the_open_fra
 	mocks.ResetAllCalls();
 	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_max_frame_size(test_open_handle, 4294967295));
@@ -1552,6 +1556,8 @@ TEST_METHOD(when_max_frame_size_has_been_specified_it_shall_be_set_in_the_open_f
 	connection_dowork(connection);
 	mocks.ResetAllCalls();
 	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 1024));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
@@ -1617,6 +1623,8 @@ TEST_METHOD(when_channel_max_has_been_specified_it_shall_be_set_in_the_open_fram
 	mocks.ResetAllCalls();
 	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
 
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
 	STRICT_EXPECTED_CALL(definition_mocks, open_set_max_frame_size(test_open_handle, 4294967295));
@@ -1681,6 +1689,8 @@ TEST_METHOD(when_idle_timeout_has_been_specified_it_shall_be_set_in_the_open_fra
 	connection_dowork(connection);
 	mocks.ResetAllCalls();
 	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, frame_codec_set_max_frame_size(TEST_FRAME_CODEC_HANDLE, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, open_create("1234"));
@@ -1824,6 +1834,8 @@ TEST_METHOD(when_giving_the_bytes_to_frame_codec_fails_the_connection_is_closed_
 	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	EXPECTED_CALL(mocks, frame_codec_receive_bytes(TEST_FRAME_CODEC_HANDLE, IGNORED_PTR_ARG, IGNORED_NUM_ARG))
 		.ValidateArgument(1)
@@ -2121,6 +2133,8 @@ TEST_METHOD(when_an_open_frame_that_cannot_be_parsed_properly_is_received_the_co
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_get_open(TEST_OPEN_PERFORMATIVE, IGNORED_PTR_ARG))
@@ -2163,6 +2177,8 @@ TEST_METHOD(when_the_max_frame_size_cannot_be_retrieved_from_the_open_framethe_c
 	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
@@ -2211,6 +2227,8 @@ TEST_METHOD(when_an_open_frame_with_max_frame_size_511_is_received_the_connectio
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_get_open(TEST_OPEN_PERFORMATIVE, IGNORED_PTR_ARG))
@@ -2258,6 +2276,8 @@ TEST_METHOD(when_an_open_frame_is_received_on_channel_1_the_connection_is_closed
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
 
@@ -2297,6 +2317,8 @@ TEST_METHOD(when_the_frame_received_callback_is_called_with_a_NULL_performative_
 	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	/* we expect to close because of bad OPEN */
 	STRICT_EXPECTED_CALL(definition_mocks, error_create("amqp:internal-error"));
@@ -2388,6 +2410,8 @@ TEST_METHOD(when_an_open_frame_is_indicated_as_received_after_a_close_frame_was_
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
 
@@ -2444,6 +2468,8 @@ TEST_METHOD(when_a_close_frame_is_received_in_OPEN_SENT_a_CLOSE_is_sent)
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_CLOSE_PERFORMATIVE))
 		.SetReturn(TEST_CLOSE_DESCRIPTOR_AMQP_VALUE);
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_CLOSE_DESCRIPTOR_AMQP_VALUE))
@@ -2487,6 +2513,8 @@ TEST_METHOD(when_a_close_frame_is_sent_as_response_to_a_close_frame_and_creating
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_CLOSE_PERFORMATIVE))
 		.SetReturn(TEST_CLOSE_DESCRIPTOR_AMQP_VALUE);
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_CLOSE_DESCRIPTOR_AMQP_VALUE))
@@ -2527,6 +2555,8 @@ TEST_METHOD(when_a_close_frame_is_sent_as_response_to_a_close_frame_and_creating
 	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_CLOSE_PERFORMATIVE))
 		.SetReturn(TEST_CLOSE_DESCRIPTOR_AMQP_VALUE);
@@ -2570,6 +2600,8 @@ TEST_METHOD(when_a_close_frame_is_sent_as_response_to_a_close_frame_and_sending_
 	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_CLOSE_PERFORMATIVE))
 		.SetReturn(TEST_CLOSE_DESCRIPTOR_AMQP_VALUE);
@@ -2653,6 +2685,8 @@ TEST_METHOD(when_an_open_frame_is_received_in_open_the_connection_shall_be_close
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
 
@@ -2693,6 +2727,8 @@ TEST_METHOD(when_an_open_frame_is_received_in_the_DISCARDING_state_the_connectio
 	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
@@ -2758,6 +2794,8 @@ TEST_METHOD(when_a_CLOSE_frame_is_received_on_channel_1_it_is_still_valid)
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_CLOSE_PERFORMATIVE));
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
 		.SetReturn(false);
@@ -2798,6 +2836,8 @@ TEST_METHOD(when_a_CLOSE_frame_with_1_byte_payload_is_received_it_is_still_valid
 	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_CLOSE_PERFORMATIVE));
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
@@ -2841,6 +2881,8 @@ TEST_METHOD(when_an_OPEN_frame_with_1_byte_payload_is_received_it_is_still_valid
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_OPEN_PERFORMATIVE));
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
 	CLOSE_HANDLE received_test_close_handle = (CLOSE_HANDLE)0x4000;
@@ -2879,6 +2921,8 @@ TEST_METHOD(when_a_CLOSE_FRAME_is_received_on_a_channel_higher_than_the_max_nego
 	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_CLOSE_PERFORMATIVE));
 	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
@@ -3100,7 +3144,7 @@ TEST_METHOD(when_reallocating_the_endpoints_list_fails_connection_destroy_endpoi
 /* connection_encode_frame */
 
 /* Tests_SRS_CONNECTION_01_249: [If endpoint or performative are NULL, connection_encode_frame shall fail and return a non-zero value.] */
-TEST_METHOD(connection_begin_encode_frame_with_NULL_endpoint_fails)
+TEST_METHOD(connection_encode_frame_with_NULL_endpoint_fails)
 {
 	// arrange
 	connection_mocks mocks;
@@ -3113,7 +3157,7 @@ TEST_METHOD(connection_begin_encode_frame_with_NULL_endpoint_fails)
 }
 
 /* Tests_SRS_CONNECTION_01_249: [If endpoint or performative are NULL, connection_encode_frame shall fail and return a non-zero value.] */
-TEST_METHOD(connection_begin_encode_frame_with_NULL_performative_fails)
+TEST_METHOD(connection_encode_frame_with_NULL_performative_fails)
 {
 	// arrange
 	connection_mocks mocks;
@@ -3123,6 +3167,349 @@ TEST_METHOD(connection_begin_encode_frame_with_NULL_performative_fails)
 
 	// act
 	int result = connection_encode_frame(endpoint, NULL, NULL, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_247: [connection_encode_frame shall send a frame for a certain endpoint.] */
+/* Tests_SRS_CONNECTION_01_248: [On success it shall return 0.] */
+/* Tests_SRS_CONNECTION_01_250: [connection_encode_frame shall initiate the frame send by calling amqp_frame_codec_begin_encode_frame.] */
+/* Tests_SRS_CONNECTION_01_251: [The channel number passed to amqp_frame_codec_begin_encode_frame shall be the outgoing channel number associated with the endpoint by connection_create_endpoint.] */
+/* Tests_SRS_CONNECTION_01_252: [The performative passed to amqp_frame_codec_begin_encode_frame shall be the performative argument of connection_encode_frame.] */
+/* Tests_SRS_CONNECTION_01_255: [The payload size shall be computed based on all the payload chunks passed as argument in payloads.] */
+TEST_METHOD(connection_encode_frame_sends_the_frame)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, TEST_BEGIN_PERFORMATIVE, 0));
+
+	// act
+	int result = connection_encode_frame(endpoint, TEST_BEGIN_PERFORMATIVE, NULL, 0);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_255: [The payload size shall be computed based on all the payload chunks passed as argument in payloads.] */
+/* Tests_SRS_CONNECTION_01_256: [Each payload passed in the payloads array shall be passed to amqp_frame_codec by calling amqp_frame_codec_encode_payload_bytes.] */
+TEST_METHOD(connection_encode_frame_with_1_payload_adds_the_bytes_to_the_frame_payload)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	unsigned char test_payload[] = { 0x42 };
+	PAYLOAD payload = { test_payload, sizeof(test_payload) };
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, TEST_BEGIN_PERFORMATIVE, sizeof(test_payload)));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_encode_payload_bytes(TEST_AMQP_FRAME_CODEC_HANDLE, test_payload, sizeof(test_payload)))
+		.ValidateArgumentBuffer(2, test_payload, sizeof(test_payload));
+
+	// act
+	int result = connection_encode_frame(endpoint, TEST_BEGIN_PERFORMATIVE, &payload, 1);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_255: [The payload size shall be computed based on all the payload chunks passed as argument in payloads.] */
+/* Tests_SRS_CONNECTION_01_256: [Each payload passed in the payloads array shall be passed to amqp_frame_codec by calling amqp_frame_codec_encode_payload_bytes.] */
+TEST_METHOD(connection_encode_frame_with_1_payload_of_2_bytes_adds_the_bytes_to_the_frame_payload)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	unsigned char test_payload[] = { 0x42, 0x43 };
+	PAYLOAD payload = { test_payload, sizeof(test_payload) };
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, TEST_BEGIN_PERFORMATIVE, sizeof(test_payload)));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_encode_payload_bytes(TEST_AMQP_FRAME_CODEC_HANDLE, test_payload, sizeof(test_payload)))
+		.ValidateArgumentBuffer(2, test_payload, sizeof(test_payload));
+
+	// act
+	int result = connection_encode_frame(endpoint, TEST_BEGIN_PERFORMATIVE, &payload, 1);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_255: [The payload size shall be computed based on all the payload chunks passed as argument in payloads.] */
+/* Tests_SRS_CONNECTION_01_256: [Each payload passed in the payloads array shall be passed to amqp_frame_codec by calling amqp_frame_codec_encode_payload_bytes.] */
+TEST_METHOD(connection_encode_frame_with_2_payloads_of_1_byte_rach_adds_the_bytes_to_the_frame_payload)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	unsigned char test_payload1[] = { 0x42 };
+	unsigned char test_payload2[] = { 0x43 };
+	PAYLOAD payloads[] = { { test_payload1, sizeof(test_payload1) }, { test_payload2, sizeof(test_payload2) } };
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, TEST_BEGIN_PERFORMATIVE, 2));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_encode_payload_bytes(TEST_AMQP_FRAME_CODEC_HANDLE, test_payload1, sizeof(test_payload1)))
+		.ValidateArgumentBuffer(2, test_payload1, sizeof(test_payload1));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_encode_payload_bytes(TEST_AMQP_FRAME_CODEC_HANDLE, test_payload2, sizeof(test_payload2)))
+		.ValidateArgumentBuffer(2, test_payload2, sizeof(test_payload2));
+
+	// act
+	int result = connection_encode_frame(endpoint, TEST_BEGIN_PERFORMATIVE, payloads, 2);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_253: [If amqp_frame_codec_begin_encode_frame or amqp_frame_codec_encode_payload_bytes fails, then connection_encode_frame shall fail and return a non-zero value.] */
+TEST_METHOD(when_amqp_frame_codec_begin_encode_frame_fails_then_connection_encode_frame_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	unsigned char test_payload1[] = { 0x42 };
+	unsigned char test_payload2[] = { 0x43 };
+	PAYLOAD payloads[] = { { test_payload1, sizeof(test_payload1) }, { test_payload2, sizeof(test_payload2) } };
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, TEST_BEGIN_PERFORMATIVE, 2))
+		.SetReturn(1);
+
+	// act
+	int result = connection_encode_frame(endpoint, TEST_BEGIN_PERFORMATIVE, payloads, 2);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_253: [If amqp_frame_codec_begin_encode_frame or amqp_frame_codec_encode_payload_bytes fails, then connection_encode_frame shall fail and return a non-zero value.] */
+TEST_METHOD(when_amqp_frame_codec_encode_payload_bytes_frame_fails_then_connection_encode_frame_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	unsigned char test_payload1[] = { 0x42 };
+	unsigned char test_payload2[] = { 0x43 };
+	PAYLOAD payloads[] = { { test_payload1, sizeof(test_payload1) }, { test_payload2, sizeof(test_payload2) } };
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, TEST_BEGIN_PERFORMATIVE, 2));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_encode_payload_bytes(TEST_AMQP_FRAME_CODEC_HANDLE, test_payload1, sizeof(test_payload1)))
+		.ValidateArgumentBuffer(2, test_payload1, sizeof(test_payload1))
+		.SetReturn(1);
+
+	// act
+	int result = connection_encode_frame(endpoint, TEST_BEGIN_PERFORMATIVE, payloads, 2);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_253: [If amqp_frame_codec_begin_encode_frame or amqp_frame_codec_encode_payload_bytes fails, then connection_encode_frame shall fail and return a non-zero value.] */
+TEST_METHOD(when_a_second_call_to_amqp_frame_codec_encode_payload_bytes_frame_fails_then_connection_encode_frame_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	unsigned char test_payload1[] = { 0x42 };
+	unsigned char test_payload2[] = { 0x43 };
+	PAYLOAD payloads[] = { { test_payload1, sizeof(test_payload1) }, { test_payload2, sizeof(test_payload2) } };
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_begin_encode_frame(TEST_AMQP_FRAME_CODEC_HANDLE, 0, TEST_BEGIN_PERFORMATIVE, 2));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_encode_payload_bytes(TEST_AMQP_FRAME_CODEC_HANDLE, test_payload1, sizeof(test_payload1)))
+		.ValidateArgumentBuffer(2, test_payload1, sizeof(test_payload1));
+	STRICT_EXPECTED_CALL(mocks, amqp_frame_codec_encode_payload_bytes(TEST_AMQP_FRAME_CODEC_HANDLE, test_payload2, sizeof(test_payload2)))
+		.ValidateArgumentBuffer(2, test_payload2, sizeof(test_payload2))
+		.SetReturn(1);
+
+	// act
+	int result = connection_encode_frame(endpoint, TEST_BEGIN_PERFORMATIVE, payloads, 2);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_254: [If connection_encode_frame is called before the connection is in the OPENED state, connection_encode_frame shall fail and return a non-zero value.] */
+TEST_METHOD(connection_encode_frame_when_connection_is_not_opened_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	// act
+	int result = connection_encode_frame(endpoint, TEST_BEGIN_PERFORMATIVE, NULL, 0);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy_endpoint(endpoint);
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_253: [If amqp_frame_codec_begin_encode_frame or amqp_frame_codec_encode_payload_bytes fails, then connection_encode_frame shall fail and return a non-zero value.] */
+TEST_METHOD(connection_encode_frame_after_close_has_been_received_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
+	connection_dowork(connection);
+	connection_dowork(connection);
+	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
+	io_receive_callback(io_receive_callback_context, amqp_header, sizeof(amqp_header));
+	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(definition_mocks, is_open_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE))
+		.SetReturn(false);
+
+	saved_frame_received_callback(saved_callback_context, 0, TEST_CLOSE_PERFORMATIVE, 0, NULL);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	unsigned char test_payload1[] = { 0x42 };
+	unsigned char test_payload2[] = { 0x43 };
+	PAYLOAD payloads[] = { { test_payload1, sizeof(test_payload1) }, { test_payload2, sizeof(test_payload2) } };
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	// act
+	int result = connection_encode_frame(endpoint, TEST_BEGIN_PERFORMATIVE, payloads, 2);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);

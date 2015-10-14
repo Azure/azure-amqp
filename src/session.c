@@ -260,11 +260,6 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 	}
 }
 
-static void session_frame_payload_bytes_received(void* context, const unsigned char* payload_bytes, uint32_t byte_count)
-{
-	SESSION_INSTANCE* session = (SESSION_INSTANCE*)context;
-}
-
 SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 {
 	SESSION_INSTANCE* result;

@@ -656,4 +656,38 @@ TEST_METHOD(when_connection_encode_frame_then_session_encode_frame_fails)
 	session_destroy(session);
 }
 
+/* session_transfer */
+
+/* Tests_SRS_SESSION_01_051: [session_transfer shall send a transfer frame with the performative indicated in the transfer argument.] */
+/* Tests_SRS_SESSION_01_053: [On success, session_transfer shall return 0.] */
+/* Tests_SRS_SESSION_01_055: [The encoding of the frame shall be done by calling connection_encode_frame and passing as arguments: the connection handle associated with the session, the transfer performative and the payload chunks passed to session_transfer.] */
+/* Tests_SRS_SESSION_01_057: [The delivery ids shall be assigned starting at 0.] */
+TEST_METHOD(session_trnsfer_sends_the_frame_to_the_connection)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle));
+	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_transfer_amqp_value, NULL, 0));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_transfer_amqp_value));
+
+	// act
+	delivery_number delivery_id;
+	int result = session_transfer(link_endpoint, test_transfer_handle, NULL, 0, &delivery_id);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
 END_TEST_SUITE(connection_unittests)

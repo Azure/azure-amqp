@@ -80,7 +80,7 @@ public:
 	MOCK_METHOD_END(char*, NULL);
 
 	/* connection mocks */
-	MOCK_STATIC_METHOD_3(, ENDPOINT_HANDLE, connection_create_endpoint, CONNECTION_HANDLE, connection, ENDPOINT_FRAME_RECEIVED_CALLBACK, frame_received_callback, void*, context)
+	MOCK_STATIC_METHOD_4(, ENDPOINT_HANDLE, connection_create_endpoint, CONNECTION_HANDLE, connection, ENDPOINT_FRAME_RECEIVED_CALLBACK, frame_received_callback, CONNECTION_STATE_CHANGED_CALLBACK, connection_state_changed_callback, void*, context)
 	MOCK_METHOD_END(ENDPOINT_HANDLE, TEST_ENDPOINT_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, connection_destroy_endpoint, ENDPOINT_HANDLE, endpoint)
 	MOCK_VOID_METHOD_END();
@@ -109,7 +109,7 @@ extern "C"
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , char*, amqpvalue_to_string, AMQP_VALUE, amqp_value)
 
-	DECLARE_GLOBAL_MOCK_METHOD_3(session_mocks, , ENDPOINT_HANDLE, connection_create_endpoint, CONNECTION_HANDLE, connection, ENDPOINT_FRAME_RECEIVED_CALLBACK, frame_received_callback, void*, context);
+	DECLARE_GLOBAL_MOCK_METHOD_4(session_mocks, , ENDPOINT_HANDLE, connection_create_endpoint, CONNECTION_HANDLE, connection, ENDPOINT_FRAME_RECEIVED_CALLBACK, frame_received_callback, CONNECTION_STATE_CHANGED_CALLBACK, connection_state_changed_callback, void*, context);
 	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , void, connection_destroy_endpoint, ENDPOINT_HANDLE, endpoint);
 	DECLARE_GLOBAL_MOCK_METHOD_4(session_mocks, , int, connection_encode_frame, ENDPOINT_HANDLE, endpoint, const AMQP_VALUE, performative, PAYLOAD*, payloads, size_t, payload_count)
 	DECLARE_GLOBAL_MOCK_METHOD_2(session_mocks, , int, connection_get_state, CONNECTION_HANDLE, connection, CONNECTION_STATE*, connection_state);
@@ -164,7 +164,7 @@ TEST_METHOD(session_create_with_valid_args_succeeds)
 	amqp_definitions_mocks definition_mocks;
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-	EXPECTED_CALL(mocks, connection_create_endpoint(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, connection_create_endpoint(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 
 	// act
@@ -187,10 +187,10 @@ TEST_METHOD(session_create_twice_on_the_same_connection_works)
 	amqp_definitions_mocks definition_mocks;
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-	EXPECTED_CALL(mocks, connection_create_endpoint(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, connection_create_endpoint(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-	EXPECTED_CALL(mocks, connection_create_endpoint(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, connection_create_endpoint(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 
 	// act
@@ -247,7 +247,7 @@ TEST_METHOD(when_connection_create_endpoint_fails_session_create_fails)
 	amqp_definitions_mocks definition_mocks;
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
-	EXPECTED_CALL(mocks, connection_create_endpoint(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+	EXPECTED_CALL(mocks, connection_create_endpoint(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1)
 		.SetReturn((ENDPOINT_HANDLE)NULL);
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));

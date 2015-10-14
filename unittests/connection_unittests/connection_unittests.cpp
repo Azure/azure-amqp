@@ -226,6 +226,8 @@ public:
 	/* frame received callback mocks */
 	MOCK_STATIC_METHOD_4(, void, test_frame_received_callback, void*, context, AMQP_VALUE, performative, uint32_t, frame_payload_size, const unsigned char*, payload_bytes)
 	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_2(, void, test_connection_state_changed_callback, void*, context, CONNECTION_STATE, connection_state)
+	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_4(, void, test_endpoint_frame_received, void*, context, AMQP_VALUE, performative, uint32_t, payload_size, const unsigned char*, payload_bytes)
 	MOCK_VOID_METHOD_END();
 };
@@ -272,6 +274,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , int, list_remove_matching_item, LIST_HANDLE, handle, LIST_MATCH_FUNCTION, match_function, const void*, match_context);
 
 	DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , void, test_frame_received_callback, void*, context, AMQP_VALUE, performative, uint32_t, frame_payload_size, const unsigned char*, payload_bytes);
+	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , void, test_connection_state_changed_callback, void*, context, CONNECTION_STATE, connection_state);
 	DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , void, test_endpoint_frame_received, void*, context, AMQP_VALUE, performative, uint32_t, payload_size, const unsigned char*, payload_bytes);
 
 	extern void consolelogger_log(char* format, ...)
@@ -2953,20 +2956,20 @@ TEST_METHOD(when_a_CLOSE_FRAME_is_received_on_a_channel_higher_than_the_max_nego
 
 /* connection_create_endpoint */
 
-/* Tests_SRS_CONNECTION_01_113: [If connection or frame_received_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
+/* Tests_SRS_CONNECTION_01_113: [If connection, frame_received_callback or connection_state_changed_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
 TEST_METHOD(connection_create_endpoint_with_NULL_conneciton_fails)
 {
 	// arrange
 	connection_mocks mocks;
 
 	// act
-	ENDPOINT_HANDLE result = connection_create_endpoint(NULL, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE result = connection_create_endpoint(NULL, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NULL(result);
 }
 
-/* Tests_SRS_CONNECTION_01_113: [If connection or frame_received_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
+/* Tests_SRS_CONNECTION_01_113: [If connection, frame_received_callback or connection_state_changed_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
 TEST_METHOD(connection_create_endpoint_with_NULL_frame_receive_callback_fails)
 {
 	// arrange
@@ -2975,7 +2978,26 @@ TEST_METHOD(connection_create_endpoint_with_NULL_frame_receive_callback_fails)
 	mocks.ResetAllCalls();
 
 	// act
-	ENDPOINT_HANDLE result = connection_create_endpoint(connection, NULL, TEST_CONTEXT);
+	ENDPOINT_HANDLE result = connection_create_endpoint(connection, NULL, test_connection_state_changed_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(result);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	connection_destroy(connection);
+}
+
+/* Tests_SRS_CONNECTION_01_113: [If connection, frame_received_callback or connection_state_changed_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
+TEST_METHOD(connection_create_endpoint_with_NULL_connection_state_changed_callback_fails)
+{
+	// arrange
+	connection_mocks mocks;
+	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
+	mocks.ResetAllCalls();
+
+	// act
+	ENDPOINT_HANDLE result = connection_create_endpoint(connection, test_frame_received_callback, NULL, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NULL(result);
@@ -2999,7 +3021,7 @@ TEST_METHOD(connection_create_endpoint_with_valid_arguments_succeeds)
 	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
 
 	// act
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NOT_NULL(endpoint);
@@ -3022,7 +3044,7 @@ TEST_METHOD(when_allocating_memory_fails_connection_create_endpoint_fails)
 		.SetReturn((void*)NULL);
 
 	// act
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NULL(endpoint);
@@ -3046,7 +3068,7 @@ TEST_METHOD(when_realloc_for_the_endpoint_list_fails_connection_create_endpoint_
 	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
 
 	// act
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NULL(endpoint);
@@ -3068,7 +3090,7 @@ TEST_METHOD(connection_create_endpoint_with_valid_arguments_and_NULL_context_suc
 	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
 
 	// act
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, NULL);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, NULL);
 
 	// assert
 	ASSERT_IS_NOT_NULL(endpoint);
@@ -3087,12 +3109,12 @@ TEST_METHOD(when_no_more_channels_are_available_connection_create_endpoint_fails
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	(void)connection_set_channel_max(connection, 0);
-	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
 	// act
-	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NULL(endpoint1);
@@ -3111,14 +3133,14 @@ TEST_METHOD(when_no_more_channels_are_available_after_create_destroy_and_create_
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	(void)connection_set_channel_max(connection, 0);
-	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	connection_destroy_endpoint(endpoint0);
-	endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
 	// act
-	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NULL(endpoint1);
@@ -3137,13 +3159,13 @@ TEST_METHOD(when_no_more_channels_are_available_with_channel_max_1_connection_cr
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	(void)connection_set_channel_max(connection, 1);
-	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
-	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
 	// act
-	ENDPOINT_HANDLE endpoint2 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint2 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NULL(endpoint1);
@@ -3177,7 +3199,7 @@ TEST_METHOD(connection_destroy_endpoint_frees_the_resources_associated_with_the_
 	// arrange
 	connection_mocks mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 
 	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
@@ -3201,7 +3223,7 @@ TEST_METHOD(when_reallocating_the_endpoints_list_fails_connection_destroy_endpoi
 	// arrange
 	connection_mocks mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 
 	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG))
@@ -3226,9 +3248,9 @@ TEST_METHOD(when_an_endpoint_is_released_another_one_can_be_created_in_its_place
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
 	(void)connection_set_channel_max(connection, 2);
-	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
-	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
-	ENDPOINT_HANDLE endpoint2 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint2 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	connection_destroy_endpoint(endpoint1);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
@@ -3237,7 +3259,7 @@ TEST_METHOD(when_an_endpoint_is_released_another_one_can_be_created_in_its_place
 	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
 
 	// act
-	endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 
 	// assert
 	ASSERT_IS_NOT_NULL(endpoint1);
@@ -3271,7 +3293,7 @@ TEST_METHOD(connection_encode_frame_with_NULL_performative_fails)
 	// arrange
 	connection_mocks mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 
 	// act
@@ -3298,7 +3320,7 @@ TEST_METHOD(connection_encode_frame_sends_the_frame)
 	connection_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
 	connection_dowork(connection);
 	connection_dowork(connection);
@@ -3332,7 +3354,7 @@ TEST_METHOD(connection_encode_frame_with_1_payload_adds_the_bytes_to_the_frame_p
 	connection_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
 	connection_dowork(connection);
 	connection_dowork(connection);
@@ -3371,7 +3393,7 @@ TEST_METHOD(connection_encode_frame_with_1_payload_of_2_bytes_adds_the_bytes_to_
 	connection_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
 	connection_dowork(connection);
 	connection_dowork(connection);
@@ -3410,7 +3432,7 @@ TEST_METHOD(connection_encode_frame_with_2_payloads_of_1_byte_rach_adds_the_byte
 	connection_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
 	connection_dowork(connection);
 	connection_dowork(connection);
@@ -3451,7 +3473,7 @@ TEST_METHOD(when_amqp_frame_codec_begin_encode_frame_fails_then_connection_encod
 	connection_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
 	connection_dowork(connection);
 	connection_dowork(connection);
@@ -3489,7 +3511,7 @@ TEST_METHOD(when_amqp_frame_codec_encode_payload_bytes_frame_fails_then_connecti
 	connection_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
 	connection_dowork(connection);
 	connection_dowork(connection);
@@ -3529,7 +3551,7 @@ TEST_METHOD(when_a_second_call_to_amqp_frame_codec_encode_payload_bytes_frame_fa
 	connection_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
 	connection_dowork(connection);
 	connection_dowork(connection);
@@ -3571,7 +3593,7 @@ TEST_METHOD(connection_encode_frame_when_connection_is_not_opened_fails)
 	connection_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
@@ -3594,7 +3616,7 @@ TEST_METHOD(connection_encode_frame_after_close_has_been_received_fails)
 	connection_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
 	connection_dowork(connection);
 	connection_dowork(connection);
@@ -3637,8 +3659,8 @@ TEST_METHOD(connection_encode_frame_with_a_second_endpoint_sends_on_channel_1)
 	connection_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
-	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
 	connection_dowork(connection);
 	connection_dowork(connection);
@@ -3673,10 +3695,10 @@ TEST_METHOD(when_an_endpoint_is_destroyed_and_a_new_one_is_created_the_channel_i
 	connection_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
 	CONNECTION_HANDLE connection = connection_create(TEST_IO_HANDLE, "testhost", test_container_id);
-	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
-	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
+	ENDPOINT_HANDLE endpoint1 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	connection_destroy_endpoint(endpoint0);
-	endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, TEST_CONTEXT);
+	endpoint0 = connection_create_endpoint(connection, test_frame_received_callback, test_connection_state_changed_callback, TEST_CONTEXT);
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE)).SetReturn(IO_STATE_NOT_OPEN);
 	connection_dowork(connection);
 	connection_dowork(connection);

@@ -119,7 +119,12 @@ static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_incoming_handle(SESSION_INS
 	return result;
 }
 
-static void session_frame_received(void* context, AMQP_VALUE performative, uint32_t payload_size, const unsigned char* payload_bytes)
+static void on_connection_state_changed(void* context, CONNECTION_STATE new_connection_state)
+{
+	SESSION_INSTANCE* session = (SESSION_INSTANCE*)context;
+}
+
+static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t payload_size, const unsigned char* payload_bytes)
 {
 	SESSION_INSTANCE* session = (SESSION_INSTANCE*)context;
 	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
@@ -286,7 +291,7 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 			result->delivery_id = 0;
 
 			/* Codes_SRS_SESSION_01_032: [session_create shall create a new session endpoint by calling connection_create_endpoint.] */
-			result->endpoint = connection_create_endpoint(connection, session_frame_received, result);
+			result->endpoint = connection_create_endpoint(connection, on_frame_received, on_connection_state_changed, result);
 			if (result->endpoint == NULL)
 			{
 				/* Codes_SRS_SESSION_01_033: [If connection_create_endpoint fails, session_create shall fail and return NULL.] */

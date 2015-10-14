@@ -1015,14 +1015,15 @@ int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connect
 	return result;
 }
 
-ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context)
+ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, CONNECTION_STATE_CHANGED_CALLBACK connection_state_changed_callback, void* context)
 {
 	ENDPOINT_INSTANCE* result;
 
-	/* Codes_SRS_CONNECTION_01_113: [If connection or frame_received_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
+	/* Codes_SRS_CONNECTION_01_113: [If connection, frame_received_callback or connection_state_changed_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
 	/* Codes_SRS_CONNECTION_01_193: [The context argument shall be allowed to be NULL.] */
 	if ((connection == NULL) ||
-		(frame_received_callback == NULL))
+		(frame_received_callback == NULL) ||
+		(connection_state_changed_callback == NULL))
 	{
 		result = NULL;
 	}

@@ -690,4 +690,128 @@ TEST_METHOD(session_trnsfer_sends_the_frame_to_the_connection)
 	session_destroy(session);
 }
 
+/* Tests_SRS_SESSION_01_054: [If link_endpoint or transfer is NULL, session_transfer shall fail and return a non-zero value.] */
+TEST_METHOD(session_transfer_with_NULL_transfer_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, NULL);
+	mocks.ResetAllCalls();
+
+	// act
+	delivery_number delivery_id;
+	int result = session_transfer(link_endpoint, NULL, NULL, 0, &delivery_id);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_054: [If link_endpoint or transfer is NULL, session_transfer shall fail and return a non-zero value.] */
+TEST_METHOD(session_transfer_with_NULL_link_endpoint_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+
+	// act
+	delivery_number delivery_id;
+	int result = session_transfer(NULL, test_transfer_handle, NULL, 0, &delivery_id);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_SESSION_01_058: [When any other error occurs, session_transfer shall fail and return a non-zero value.] */
+TEST_METHOD(when_transfer_set_delivery_id_fails_then_session_transfer_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0))
+		.SetReturn(1);
+
+	// act
+	delivery_number delivery_id;
+	int result = session_transfer(link_endpoint, test_transfer_handle, NULL, 0, &delivery_id);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_058: [When any other error occurs, session_transfer shall fail and return a non-zero value.] */
+TEST_METHOD(when_amqpvalue_create_transfer_fails_then_session_transfer_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle))
+		.SetReturn((AMQP_VALUE)NULL);
+
+	// act
+	delivery_number delivery_id;
+	int result = session_transfer(link_endpoint, test_transfer_handle, NULL, 0, &delivery_id);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_056: [If connection_encode_frame fails then session_transfer shall fail and return a non-zero value.] */
+TEST_METHOD(when_connection_encode_frame_fails_then_session_transfer_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle));
+	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_transfer_amqp_value, NULL, 0))
+		.SetReturn(1);
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_transfer_amqp_value));
+
+	// act
+	delivery_number delivery_id;
+	int result = session_transfer(link_endpoint, test_transfer_handle, NULL, 0, &delivery_id);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
 END_TEST_SUITE(connection_unittests)

@@ -23,7 +23,7 @@ typedef struct SESSION_INSTANCE_TAG
 	SESSION_STATE session_state;
 	CONNECTION_HANDLE connection;
 	ENDPOINT_HANDLE endpoint;
-	LINK_ENDPOINT_INSTANCE* link_endpoints;
+	LINK_ENDPOINT_INSTANCE** link_endpoints;
 	uint32_t link_endpoint_count;
 	delivery_number delivery_id;
 
@@ -75,7 +75,7 @@ static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_name(SESSION_INSTANCE* sess
 	for (i = 0; i < session->link_endpoint_count; i++)
 	{
 		/* what do we compare with ? */
-		if (strcmp(session->link_endpoints[i].name, name) == 0)
+		if (strcmp(session->link_endpoints[i]->name, name) == 0)
 		{
 			break;
 		}
@@ -87,7 +87,7 @@ static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_name(SESSION_INSTANCE* sess
 	}
 	else
 	{
-		result = &session->link_endpoints[i];
+		result = session->link_endpoints[i];
 	}
 
 	return result;
@@ -101,7 +101,7 @@ static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_incoming_handle(SESSION_INS
 	for (i = 0; i < session->link_endpoint_count; i++)
 	{
 		/* what do we compare with ? */
-		if (session->link_endpoints[i].incoming_handle == incoming_handle)
+		if (session->link_endpoints[i]->incoming_handle == incoming_handle)
 		{
 			break;
 		}
@@ -113,7 +113,7 @@ static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_incoming_handle(SESSION_INS
 	}
 	else
 	{
-		result = &session->link_endpoints[i];
+		result = session->link_endpoints[i];
 	}
 
 	return result;
@@ -230,7 +230,7 @@ static void session_frame_received(void* context, AMQP_VALUE performative, uint3
 		uint32_t i;
 		for (i = 0; i < session->link_endpoint_count; i++)
 		{
-			LINK_ENDPOINT_INSTANCE* link_endpoint = &session->link_endpoints[i];
+			LINK_ENDPOINT_INSTANCE* link_endpoint = session->link_endpoints[i];
 			link_endpoint->frame_received_callback(link_endpoint->frame_received_callback_context, performative, payload_size, payload_bytes);
 		}
 
@@ -321,6 +321,119 @@ void session_destroy(SESSION_HANDLE session)
 	}
 }
 
+LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context)
+{
+	LINK_ENDPOINT_INSTANCE* result;
+
+	/* Codes_SRS_SESSION_01_044: [If session, name or frame_received_callback is NULL, session_create_link_endpoint shall fail and return NULL.] */
+	if ((session == NULL) ||
+		(name == NULL) ||
+		(frame_received_callback == NULL))
+	{
+		result = NULL;
+	}
+	else
+	{
+		/* Codes_SRS_SESSION_01_043: [session_create_link_endpoint shall create a link endpoint associated with a given session and return a non-NULL handle to it.] */
+		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
+
+		result = (LINK_ENDPOINT_INSTANCE*)amqpalloc_malloc(sizeof(LINK_ENDPOINT_INSTANCE));
+		/* Codes_SRS_SESSION_01_045: [If allocating memory for the link endpoint fails, session_create_link_endpoint shall fail and return NULL.] */
+		if (result != NULL)
+		{
+			/* Codes_SRS_SESSION_01_046: [An unused handle shall be assigned to the link endpoint.] */
+			handle selected_handle = 0;
+			while (selected_handle < session_instance->handle_max)
+			{
+				break;
+				selected_handle++;
+			}
+
+			result->frame_received_callback = frame_received_callback;
+			result->frame_received_callback_context = context;
+			result->outgoing_handle = selected_handle;
+			result->name = amqpalloc_malloc(strlen(name) + 1);
+			if (result->name == NULL)
+			{
+				/* Codes_SRS_SESSION_01_045: [If allocating memory for the link endpoint fails, session_create_link_endpoint shall fail and return NULL.] */
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				LINK_ENDPOINT_INSTANCE** new_link_endpoints;
+				strcpy(result->name, name);
+				result->session = session;
+
+				new_link_endpoints = amqpalloc_realloc(session_instance->link_endpoints, sizeof(LINK_ENDPOINT_INSTANCE*) * (session_instance->link_endpoint_count + 1));
+				if (new_link_endpoints == NULL)
+				{
+					/* Codes_SRS_SESSION_01_045: [If allocating memory for the link endpoint fails, session_create_link_endpoint shall fail and return NULL.] */
+					amqpalloc_free(result);
+					result = NULL;
+				}
+				else
+				{
+					session_instance->link_endpoints = new_link_endpoints;
+					session_instance->link_endpoints[session_instance->link_endpoint_count] = result;
+					session_instance->link_endpoint_count++;
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
+void session_destroy_link_endpoint(LINK_ENDPOINT_HANDLE endpoint)
+{
+	/* Codes_SRS_SESSION_01_050: [If endpoint is NULL, session_destroy_link_endpoint shall do nothing.] */
+	if (endpoint != NULL)
+	{
+		LINK_ENDPOINT_INSTANCE* endpoint_instance = (LINK_ENDPOINT_INSTANCE*)endpoint;
+		SESSION_INSTANCE* session_instance = endpoint_instance->session;
+		uint64_t i;
+
+		/* Codes_SRS_SESSION_01_049: [session_destroy_link_endpoint shall free all resources associated with the endpoint.] */
+		for (i = 0; i < session_instance->link_endpoint_count; i++)
+		{
+			if (session_instance->link_endpoints[i] == endpoint)
+			{
+				break;
+			}
+		}
+
+		if (i < session_instance->link_endpoint_count)
+		{
+			LINK_ENDPOINT_INSTANCE** new_endpoints;
+
+			(void)memmove(&session_instance->link_endpoints[i], &session_instance->link_endpoints[i + 1], (session_instance->link_endpoint_count - (uint32_t)i - 1) * sizeof(LINK_ENDPOINT_INSTANCE*));
+			session_instance->link_endpoint_count--;
+
+			if (session_instance->link_endpoint_count == 0)
+			{
+				amqpalloc_free(session_instance->link_endpoints);
+				session_instance->link_endpoints = NULL;
+			}
+			else
+			{
+				new_endpoints = (LINK_ENDPOINT_INSTANCE**)amqpalloc_realloc(session_instance->link_endpoints, sizeof(LINK_ENDPOINT_INSTANCE*) * session_instance->link_endpoint_count);
+				if (new_endpoints != NULL)
+				{
+					session_instance->link_endpoints = new_endpoints;
+				}
+			}
+		}
+
+		if (endpoint_instance->name != NULL)
+		{
+			amqpalloc_free(endpoint_instance->name);
+		}
+
+		amqpalloc_free(endpoint_instance);
+	}
+}
+
 void session_dowork(SESSION_HANDLE session)
 {
 	SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
@@ -371,11 +484,14 @@ int session_get_state(SESSION_HANDLE session, SESSION_STATE* session_state)
 	return result;
 }
 
+/* Codes_SRS_SESSION_01_037: [session_encode_frame shall encode an AMQP frame.] */
 int session_encode_frame(LINK_ENDPOINT_HANDLE link_endpoint, const AMQP_VALUE performative, PAYLOAD* payloads, size_t payload_count)
 {
 	int result;
 
-	if (link_endpoint == NULL)
+	/* Codes_SRS_SESSION_01_040: [If link_endpoint or performative is NULL, session_encode_frame shall fail and return a non-zero value.] */
+	if ((link_endpoint == NULL) ||
+		(performative == NULL))
 	{
 		result = __LINE__;
 	}
@@ -384,12 +500,15 @@ int session_encode_frame(LINK_ENDPOINT_HANDLE link_endpoint, const AMQP_VALUE pe
 		LINK_ENDPOINT_INSTANCE* link_endpoint_instance = (LINK_ENDPOINT_INSTANCE*)link_endpoint;
 		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)link_endpoint_instance->session;
 
+		/* Codes_SRS_SESSION_01_039: [The encoding shall be done by passing the performative and the payloads to the connection_encode_frame function.] */
 		if (connection_encode_frame(session_instance->endpoint, performative, payloads, payload_count) != 0)
 		{
+			/* Codes_SRS_SESSION_01_041: [If connection_encode_frame fails, session_encode_frame shall fail and return a non-zero value.] */
 			result = __LINE__;
 		}
 		else
 		{
+			/* Codes_SRS_SESSION_01_038: [On success it shall return 0.] */
 			result = 0;
 		}
 	}
@@ -434,54 +553,4 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 	}
 
 	return result;
-}
-
-LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context)
-{
-	LINK_ENDPOINT_INSTANCE* result;
-
-	if (session == NULL)
-	{
-		result = NULL;
-	}
-	else
-	{
-		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
-		handle selected_handle = 0;
-
-		while (selected_handle < session_instance->handle_max)
-		{
-			break;
-			selected_handle++;
-		}
-
-		session_instance->link_endpoints = amqpalloc_realloc(session_instance->link_endpoints, sizeof(LINK_ENDPOINT_INSTANCE) * (session_instance->link_endpoint_count + 1));
-
-		session_instance->link_endpoints[session_instance->link_endpoint_count].frame_received_callback = frame_received_callback;
-		session_instance->link_endpoints[session_instance->link_endpoint_count].frame_received_callback_context = context;
-		session_instance->link_endpoints[session_instance->link_endpoint_count].outgoing_handle = selected_handle;
-		session_instance->link_endpoints[session_instance->link_endpoint_count].name = amqpalloc_malloc(strlen(name) + 1);
-		strcpy(session_instance->link_endpoints[session_instance->link_endpoint_count].name, name);
-		session_instance->link_endpoints[session_instance->link_endpoint_count].session = session;
-
-		result = &session_instance->link_endpoints[session_instance->link_endpoint_count];
-
-		session_instance->link_endpoint_count++;
-	}
-
-	return result;
-}
-
-void session_destroy_link_endpoint(LINK_ENDPOINT_HANDLE endpoint)
-{
-	if (endpoint != NULL)
-	{
-		LINK_ENDPOINT_INSTANCE* endpoint_instance = (LINK_ENDPOINT_INSTANCE*)endpoint;
-		if (endpoint_instance->name != NULL)
-		{
-			amqpalloc_free(endpoint_instance->name);
-		}
-
-		amqpalloc_free(endpoint_instance);
-	}
 }

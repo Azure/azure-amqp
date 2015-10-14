@@ -15,6 +15,8 @@
 #define TEST_LIST_ITEM_AMQP_VALUE		(AMQP_VALUE)0x4246
 #define TEST_DESCRIPTOR_AMQP_VALUE		(AMQP_VALUE)0x4245
 #define TEST_CONNECTION_HANDLE			(CONNECTION_HANDLE)0x4248
+#define TEST_CONTEXT					(void*)0x4444
+#define TEST_ATTACH_PERFORMATIVE		(AMQP_VALUE)0x5000
 
 std::ostream& operator<<(std::ostream& left, const delivery_tag& delivery)
 {
@@ -86,6 +88,9 @@ public:
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_2(, int, connection_get_state, CONNECTION_HANDLE, connection, CONNECTION_STATE*, connection_state)
 	MOCK_METHOD_END(int, 0);
+
+	MOCK_STATIC_METHOD_4(, void, test_frame_received_callback, void*, context, AMQP_VALUE, performative, uint32_t, frame_payload_size, const unsigned char*, payload_bytes)
+	MOCK_VOID_METHOD_END();
 };
 
 extern "C"
@@ -108,6 +113,8 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , void, connection_destroy_endpoint, ENDPOINT_HANDLE, endpoint);
 	DECLARE_GLOBAL_MOCK_METHOD_4(session_mocks, , int, connection_encode_frame, ENDPOINT_HANDLE, endpoint, const AMQP_VALUE, performative, PAYLOAD*, payloads, size_t, payload_count)
 	DECLARE_GLOBAL_MOCK_METHOD_2(session_mocks, , int, connection_get_state, CONNECTION_HANDLE, connection, CONNECTION_STATE*, connection_state);
+
+	DECLARE_GLOBAL_MOCK_METHOD_4(session_mocks, , void, test_frame_received_callback, void*, context, AMQP_VALUE, performative, uint32_t, frame_payload_size, const unsigned char*, payload_bytes);
 
 	extern void consolelogger_log(char* format, ...)
 	{
@@ -286,6 +293,367 @@ TEST_METHOD(session_destroy_with_NULL_session_does_nothing)
 
 	// assert
 	// uMock checks the calls
+}
+
+/* session_create_link_endpoint */
+
+/* Tests_SRS_SESSION_01_043: [session_create_link_endpoint shall create a link endpoint associated with a given session and return a non-NULL handle to it.] */
+/* Tests_SRS_SESSION_01_046: [An unused handle shall be assigned to the link endpoint.] */
+TEST_METHOD(session_create_link_endpoint_creates_a_link_endpoint)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+
+	// act
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, NULL);
+
+	// assert
+	ASSERT_IS_NOT_NULL(link_endpoint);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_044: [If session, name or frame_received_callback is NULL, session_create_link_endpoint shall fail and return NULL.] */
+TEST_METHOD(session_create_with_NULL_session_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+
+	// act
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(NULL, "1", test_frame_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(link_endpoint);
+}
+
+/* Tests_SRS_SESSION_01_044: [If session, name or frame_received_callback is NULL, session_create_link_endpoint shall fail and return NULL.] */
+TEST_METHOD(session_create_with_NULL_name_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	mocks.ResetAllCalls();
+
+	// act
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, NULL, test_frame_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(link_endpoint);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_044: [If session, name or frame_received_callback is NULL, session_create_link_endpoint shall fail and return NULL.] */
+TEST_METHOD(session_create_with_NULL_frame_received_callback_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	mocks.ResetAllCalls();
+
+	// act
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", NULL, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(link_endpoint);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_045: [If allocating memory for the link endpoint fails, session_create_link_endpoint shall fail and return NULL.] */
+TEST_METHOD(when_allocating_memory_for_the_link_endpoint_fails_then_session_create_link_endpoint_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+		.SetReturn((void*)NULL);
+
+	// act
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(link_endpoint);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_045: [If allocating memory for the link endpoint fails, session_create_link_endpoint shall fail and return NULL.] */
+TEST_METHOD(when_allocating_the_link_name_fails_then_session_create_link_endpoint_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+		.SetReturn((void*)NULL);
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(link_endpoint);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_045: [If allocating memory for the link endpoint fails, session_create_link_endpoint shall fail and return NULL.] */
+TEST_METHOD(when_reallocating_the_endpoint_array_for_the_link_endpoint_fails_then_session_create_link_endpoint_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG))
+		.SetReturn((void*)NULL);
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, TEST_CONTEXT);
+
+	// assert
+	ASSERT_IS_NULL(link_endpoint);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy(session);
+}
+
+/* session_destroy_link_endpoint */
+
+/* Tests_SRS_SESSION_01_050: [If endpoint is NULL, session_destroy_link_endpoint shall do nothing.] */
+TEST_METHOD(session_destroy_link_endpoint_with_NULL_handle_does_nothing)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+
+	// act
+	session_destroy_link_endpoint(NULL);
+
+	// assert
+	// uMock checks the calls
+}
+
+/* Tests_SRS_SESSION_01_049: [session_destroy_link_endpoint shall free all resources associated with the endpoint.] */
+TEST_METHOD(session_destroy_link_endpoint_frees_the_resources)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, NULL);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_PTR_ARG));
+
+	// act
+	session_destroy_link_endpoint(link_endpoint);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_049: [session_destroy_link_endpoint shall free all resources associated with the endpoint.] */
+TEST_METHOD(session_destroy_link_endpoint_when_2_endpoints_are_there_frees_the_resources)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint1 = session_create_link_endpoint(session, "1", test_frame_received_callback, NULL);
+	LINK_ENDPOINT_HANDLE link_endpoint2 = session_create_link_endpoint(session, "1", test_frame_received_callback, NULL);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_free(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_realloc(IGNORED_PTR_ARG, IGNORED_NUM_ARG));
+
+	// act
+	session_destroy_link_endpoint(link_endpoint1);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint2);
+	session_destroy(session);
+}
+
+/* session_encode_frame */
+
+/* Tests_SRS_SESSION_01_037: [session_encode_frame shall encode an AMQP frame.] */
+/* Tests_SRS_SESSION_01_038: [On success it shall return 0.] */
+/* Tests_SRS_SESSION_01_039: [The encoding shall be done by passing the performative and the payloads to the connection_encode_frame function.] */
+TEST_METHOD(session_encode_frame_encodes_the_frame_by_giving_it_to_the_connection)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, NULL);
+	mocks.ResetAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, TEST_ATTACH_PERFORMATIVE, NULL, 0));
+
+	// act
+	int result = session_encode_frame(link_endpoint, TEST_ATTACH_PERFORMATIVE, NULL, 0);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_037: [session_encode_frame shall encode an AMQP frame.] */
+/* Tests_SRS_SESSION_01_038: [On success it shall return 0.] */
+/* Tests_SRS_SESSION_01_039: [The encoding shall be done by passing the performative and the payloads to the connection_encode_frame function.] */
+TEST_METHOD(session_encode_frame_passes_the_paylaod_to_the_connection_encode_frame_function)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, NULL);
+	mocks.ResetAllCalls();
+
+	unsigned char payload_bytes[] = { 0x42 };
+	PAYLOAD payload = { payload_bytes, sizeof(payload_bytes) };
+
+	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, TEST_ATTACH_PERFORMATIVE, &payload, 1));
+
+	// act
+	int result = session_encode_frame(link_endpoint, TEST_ATTACH_PERFORMATIVE, &payload, 1);
+
+	// assert
+	ASSERT_ARE_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_040: [If link_endpoint or performative is NULL, session_encode_frame shall fail and return a non-zero value.] */
+TEST_METHOD(session_encode_frame_with_NULL_performative_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, NULL);
+	mocks.ResetAllCalls();
+
+	unsigned char payload_bytes[] = { 0x42 };
+	PAYLOAD payload = { payload_bytes, sizeof(payload_bytes) };
+
+	// act
+	int result = session_encode_frame(link_endpoint, NULL, &payload, 1);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_040: [If link_endpoint or performative is NULL, session_encode_frame shall fail and return a non-zero value.] */
+TEST_METHOD(session_encode_frame_with_NULL_link_endpoint_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+
+	unsigned char payload_bytes[] = { 0x42 };
+	PAYLOAD payload = { payload_bytes, sizeof(payload_bytes) };
+
+	// act
+	int result = session_encode_frame(NULL, TEST_ATTACH_PERFORMATIVE, &payload, 1);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+}
+
+/* Tests_SRS_SESSION_01_041: [If connection_encode_frame fails, session_encode_frame shall fail and return a non-zero value.] */
+TEST_METHOD(when_connection_encode_frame_then_session_encode_frame_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, NULL);
+	mocks.ResetAllCalls();
+
+	unsigned char payload_bytes[] = { 0x42 };
+	PAYLOAD payload = { payload_bytes, sizeof(payload_bytes) };
+
+	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, TEST_ATTACH_PERFORMATIVE, &payload, 1))
+		.SetReturn(1);
+
+	// act
+	int result = session_encode_frame(link_endpoint, TEST_ATTACH_PERFORMATIVE, &payload, 1);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
 }
 
 END_TEST_SUITE(connection_unittests)

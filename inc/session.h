@@ -32,7 +32,7 @@ extern "C" {
 	extern LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, LINK_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context);
 	extern void session_destroy_link_endpoint(LINK_ENDPOINT_HANDLE endpoint);
 	extern int session_encode_frame(LINK_ENDPOINT_HANDLE link_endpoint, const AMQP_VALUE performative, PAYLOAD* payloads, size_t payload_count);
-	int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfer, PAYLOAD* payloads, size_t payload_count, delivery_number* delivery_id);
+	extern int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfer, PAYLOAD* payloads, size_t payload_count, delivery_number* delivery_id);
 	extern int session_get_state(SESSION_HANDLE session, SESSION_STATE* session_state);
 
 #ifdef __cplusplus

@@ -30,7 +30,7 @@
 	} <#= type_name.ToUpper() #>_INSTANCE;
 
 <#				string arg_list = Program.GetMandatoryArgList(type); #>
-<#				field[] mandatory_args = Program.GetMandatoryArgs(type).ToArray(); #>
+<#				KeyValuePair<field, int>[] mandatory_args = Program.GetMandatoryArgs(type).ToArray(); #>
 	static <#= type_name.ToUpper() #>_HANDLE <#= type_name #>_create_internal(void)
 	{
 		<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)malloc(sizeof(<#= type_name.ToUpper() #>_INSTANCE));
@@ -64,17 +64,17 @@
 			{
 <#					for (int i = 0; i < mandatory_args.Count(); i++) #>
 <#					{ #>
-<#						string mandatory_arg_name = mandatory_args[i].name.ToLower().Replace('-', '_').Replace(':', '_'); #>
+<#						string mandatory_arg_name = mandatory_args[i].Key.name.ToLower().Replace('-', '_').Replace(':', '_'); #>
 				AMQP_VALUE <#= mandatory_arg_name #>_amqp_value;
 <#					} #>
 				int result = 0;
 
 <#					for (int i = 0; i < mandatory_args.Count(); i++) #>
 <#					{ #>
-<#						string mandatory_arg_type = Program.GetCType(mandatory_args[i].type.ToLower()).Replace('-', '_').Replace(':', '_'); #>
-<#						string mandatory_arg_name = mandatory_args[i].name.ToLower().Replace('-', '_').Replace(':', '_'); #>
-				<#= mandatory_arg_name #>_amqp_value = amqpvalue_create_<#= mandatory_args[i].type.ToLower().Replace('-', '_').Replace(':', '_') #>(<#= mandatory_args[i].name.ToLower().Replace('-', '_').Replace(':', '_') #>_value);
-				if ((result == 0) && (amqpvalue_set_composite_item(<#= type_name #>_instance->composite_value, <#= i #>, <#= mandatory_arg_name #>_amqp_value) != 0))
+<#						string mandatory_arg_type = Program.GetCType(mandatory_args[i].Key.type.ToLower()).Replace('-', '_').Replace(':', '_'); #>
+<#						string mandatory_arg_name = mandatory_args[i].Key.name.ToLower().Replace('-', '_').Replace(':', '_'); #>
+				<#= mandatory_arg_name #>_amqp_value = amqpvalue_create_<#= mandatory_args[i].Key.type.ToLower().Replace('-', '_').Replace(':', '_') #>(<#= mandatory_args[i].Key.name.ToLower().Replace('-', '_').Replace(':', '_') #>_value);
+				if ((result == 0) && (amqpvalue_set_composite_item(<#= type_name #>_instance->composite_value, <#= mandatory_args[i].Value #>, <#= mandatory_arg_name #>_amqp_value) != 0))
 				{
 					result = __LINE__;
 				}
@@ -82,7 +82,7 @@
 
 <#					for (int i = 0; i < mandatory_args.Count(); i++) #>
 <#					{ #>
-<#						string mandatory_arg_name = mandatory_args[i].name.ToLower().Replace('-', '_').Replace(':', '_'); #>
+<#						string mandatory_arg_name = mandatory_args[i].Key.name.ToLower().Replace('-', '_').Replace(':', '_'); #>
 				amqpvalue_destroy(<#= mandatory_arg_name #>_amqp_value);
 <#					} #>
 			}

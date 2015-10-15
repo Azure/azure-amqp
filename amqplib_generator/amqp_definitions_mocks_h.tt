@@ -25,7 +25,7 @@
 <#			if (type.@class == typeClass.composite) #>
 <#			{ #>
 <#				string arg_list = Program.GetMandatoryArgListMock(type); #>
-<#				ICollection<field> args = Program.GetMandatoryArgs(type); #>
+<#				ICollection<KeyValuePair<field, int>> args = Program.GetMandatoryArgs(type); #>
 static const <#= type_name.ToUpper() #>_HANDLE test_<#= type_name #>_handle = (<#= type_name.ToUpper() #>_HANDLE)<#= 0x4242 + i #>;
 static const AMQP_VALUE test_<#= type_name #>_amqp_value = (AMQP_VALUE)<#= 0x4243 + i #>;
 <#				i++; #>
@@ -48,7 +48,7 @@ public:
 <#			if (type.@class == typeClass.composite) #>
 <#			{ #>
 <#				string arg_list = Program.GetMandatoryArgListMock(type); #>
-<#				ICollection<field> args = Program.GetMandatoryArgs(type); #>
+<#				ICollection<KeyValuePair<field, int>> args = Program.GetMandatoryArgs(type); #>
 	MOCK_STATIC_METHOD_<#= args.Count() #>(,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_create<#= arg_list #>);
 	MOCK_METHOD_END(<#= type_name.ToUpper() #>_HANDLE, test_<#= type_name #>_handle);
 	MOCK_STATIC_METHOD_1(, void, <#= type_name #>_destroy, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
@@ -89,7 +89,7 @@ public:
 <#			if (type.@class == typeClass.composite) #>
 <#			{ #>
 <#				string arg_list = Program.GetMandatoryArgListMock(type); #>
-<#				ICollection<field> args = Program.GetMandatoryArgs(type); #>
+<#				ICollection<KeyValuePair<field, int>> args = Program.GetMandatoryArgs(type); #>
 	DECLARE_GLOBAL_MOCK_METHOD_<#= args.Count() #>(amqp_definitions_mocks, ,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_create<#= arg_list #>);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, <#= type_name #>_destroy, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_<#= type_name #>, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);

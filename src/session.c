@@ -47,7 +47,7 @@ static void session_set_state(SESSION_INSTANCE* session_instance, SESSION_STATE 
 static int send_begin(ENDPOINT_HANDLE endpoint, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
 {
 	int result;
-	BEGIN_HANDLE begin = begin_create(1, next_outgoing_id, incoming_window, outgoing_window);
+	BEGIN_HANDLE begin = begin_create(next_outgoing_id, incoming_window, outgoing_window);
 
 	if (begin == NULL)
 	{

@@ -128,7 +128,7 @@ namespace amqplib_generator
             #line hidden
             
             #line 33 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
-				field[] mandatory_args = Program.GetMandatoryArgs(type).ToArray(); 
+				KeyValuePair<field, int>[] mandatory_args = Program.GetMandatoryArgs(type).ToArray(); 
             
             #line default
             #line hidden
@@ -342,7 +342,7 @@ namespace amqplib_generator
             #line hidden
             
             #line 67 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
-						string mandatory_arg_name = mandatory_args[i].name.ToLower().Replace('-', '_').Replace(':', '_'); 
+						string mandatory_arg_name = mandatory_args[i].Key.name.ToLower().Replace('-', '_').Replace(':', '_'); 
             
             #line default
             #line hidden
@@ -375,13 +375,13 @@ namespace amqplib_generator
             #line hidden
             
             #line 74 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
-						string mandatory_arg_type = Program.GetCType(mandatory_args[i].type.ToLower()).Replace('-', '_').Replace(':', '_'); 
+						string mandatory_arg_type = Program.GetCType(mandatory_args[i].Key.type.ToLower()).Replace('-', '_').Replace(':', '_'); 
             
             #line default
             #line hidden
             
             #line 75 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
-						string mandatory_arg_name = mandatory_args[i].name.ToLower().Replace('-', '_').Replace(':', '_'); 
+						string mandatory_arg_name = mandatory_args[i].Key.name.ToLower().Replace('-', '_').Replace(':', '_'); 
             
             #line default
             #line hidden
@@ -395,14 +395,14 @@ namespace amqplib_generator
             this.Write("_amqp_value = amqpvalue_create_");
             
             #line 76 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(mandatory_args[i].type.ToLower().Replace('-', '_').Replace(':', '_')));
+            this.Write(this.ToStringHelper.ToStringWithCulture(mandatory_args[i].Key.type.ToLower().Replace('-', '_').Replace(':', '_')));
             
             #line default
             #line hidden
             this.Write("(");
             
             #line 76 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(mandatory_args[i].name.ToLower().Replace('-', '_').Replace(':', '_')));
+            this.Write(this.ToStringHelper.ToStringWithCulture(mandatory_args[i].Key.name.ToLower().Replace('-', '_').Replace(':', '_')));
             
             #line default
             #line hidden
@@ -416,7 +416,7 @@ namespace amqplib_generator
             this.Write("_instance->composite_value, ");
             
             #line 77 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(i));
+            this.Write(this.ToStringHelper.ToStringWithCulture(mandatory_args[i].Value));
             
             #line default
             #line hidden
@@ -449,7 +449,7 @@ namespace amqplib_generator
             #line hidden
             
             #line 85 "D:\AMQPLib\amqplib_generator\amqp_definitions_c.tt"
-						string mandatory_arg_name = mandatory_args[i].name.ToLower().Replace('-', '_').Replace(':', '_'); 
+						string mandatory_arg_name = mandatory_args[i].Key.name.ToLower().Replace('-', '_').Replace(':', '_'); 
             
             #line default
             #line hidden

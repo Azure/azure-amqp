@@ -836,7 +836,7 @@ TEST_METHOD(connection_state_changed_callback_with_OPENED_triggers_sending_the_B
 
 	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
-	STRICT_EXPECTED_CALL(definition_mocks, begin_create(1, 0, 2000, 200));
+	STRICT_EXPECTED_CALL(definition_mocks, begin_create(0, 2000, 200));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_begin(test_begin_handle));
 	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_begin_amqp_value, NULL, 0));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_begin_amqp_value));

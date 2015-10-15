@@ -79,13 +79,7 @@
     </type>
     <type name="begin" class="composite" source="list" provides="frame">
       <descriptor name="amqp:begin:list" code="0x00000000:0x00000011"/>
-      
-      
-      <!-- This should not be mandatory per ISO -->
-      <field name="remote-channel" type="ushort" mandatory="true"/>
-      
-            
-      
+      <field name="remote-channel" type="ushort"/>
       <field name="next-outgoing-id" type="transfer-number" mandatory="true"/>
       <field name="incoming-window" type="uint" mandatory="true"/>
       <field name="outgoing-window" type="uint" mandatory="true"/>

@@ -114,7 +114,7 @@ namespace amqplib_generator
             #line hidden
             
             #line 28 "D:\AMQPLib\amqplib_generator\amqp_definitions_mocks_h.tt"
-				ICollection<field> args = Program.GetMandatoryArgs(type); 
+				ICollection<KeyValuePair<field, int>> args = Program.GetMandatoryArgs(type); 
             
             #line default
             #line hidden
@@ -256,7 +256,7 @@ namespace amqplib_generator
             #line hidden
             
             #line 51 "D:\AMQPLib\amqplib_generator\amqp_definitions_mocks_h.tt"
-				ICollection<field> args = Program.GetMandatoryArgs(type); 
+				ICollection<KeyValuePair<field, int>> args = Program.GetMandatoryArgs(type); 
             
             #line default
             #line hidden
@@ -599,7 +599,7 @@ namespace amqplib_generator
             #line hidden
             
             #line 92 "D:\AMQPLib\amqplib_generator\amqp_definitions_mocks_h.tt"
-				ICollection<field> args = Program.GetMandatoryArgs(type); 
+				ICollection<KeyValuePair<field, int>> args = Program.GetMandatoryArgs(type); 
             
             #line default
             #line hidden

@@ -150,10 +150,22 @@ namespace amqplib_generator
             return result;
         }
 
-        public static ICollection<field> GetMandatoryArgs(type type)
+        public static ICollection<KeyValuePair<field, int>> GetMandatoryArgs(type type)
         {
-            List<field> mandatory_args = new List<field>();
-            mandatory_args.AddRange(type.Items.Where(item => (item is field) && ((item as field).mandatory == "true")).Cast<field>());
+            List<KeyValuePair<field, int>> mandatory_args = new List<KeyValuePair<field, int>>();
+            int fieldCount = 0;
+            for (int i = 0; i < type.Items.Length; i++)
+            {
+                if (type.Items[i] is field)
+                {
+                    if ((type.Items[i] as field).mandatory == "true")
+                    {
+                        mandatory_args.Add(new KeyValuePair<field, int>(type.Items[i] as field, fieldCount));
+                    }
+
+                    fieldCount++;
+                }
+            }
             return mandatory_args;
         }
 

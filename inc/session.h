@@ -25,10 +25,11 @@ extern "C" {
 	} SESSION_STATE;
 
 	typedef void(*LINK_ENDPOINT_FRAME_RECEIVED_CALLBACK)(void* context, AMQP_VALUE performative, uint32_t frame_payload_size, const unsigned char* payload_bytes);
+	typedef void(*ON_SESSION_STATE_CHANGED)(void* context, SESSION_STATE new_session_state, SESSION_STATE previous_session_state);
 
 	extern SESSION_HANDLE session_create(CONNECTION_HANDLE connection);
 	extern void session_destroy(SESSION_HANDLE session);
-	extern LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, LINK_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context);
+	extern LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, LINK_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, ON_SESSION_STATE_CHANGED on_session_state_changed, void* context);
 	extern void session_destroy_link_endpoint(LINK_ENDPOINT_HANDLE endpoint);
 	extern int session_encode_frame(LINK_ENDPOINT_HANDLE link_endpoint, const AMQP_VALUE performative, PAYLOAD* payloads, size_t payload_count);
 	extern int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfer, PAYLOAD* payloads, size_t payload_count, delivery_number* delivery_id);

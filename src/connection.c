@@ -61,14 +61,15 @@ static void connection_set_state(CONNECTION_INSTANCE* connection_instance, CONNE
 {
 	uint64_t i;
 
+	CONNECTION_STATE previous_state = connection_instance->connection_state;
+	connection_instance->connection_state = connection_state;
+
 	/* Codes_SRS_CONNECTION_01_260: [Each endpoint’s connection_state_changed_callback shall be called.] */
 	for (i = 0; i < connection_instance->endpoint_count; i++)
 	{
 		/* Codes_SRS_CONNECTION_01_259: [The callback_context passed in connection_create_endpoint.] */
-		connection_instance->endpoints[i]->connection_state_changed_callback(connection_instance->endpoints[i]->callback_context, connection_state, connection_instance->connection_state);
+		connection_instance->endpoints[i]->connection_state_changed_callback(connection_instance->endpoints[i]->callback_context, connection_state, previous_state);
 	}
-
-	connection_instance->connection_state = connection_state;
 }
 
 static int send_header(CONNECTION_INSTANCE* connection_instance)

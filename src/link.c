@@ -108,6 +108,11 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 	}
 }
 
+static void on_session_state_changed(void* context, SESSION_STATE new_session_state, SESSION_STATE previous_session_state)
+{
+
+}
+
 static int send_attach(LINK_INSTANCE* link, const char* name, handle handle, role role, sender_settle_mode snd_settle_mode, receiver_settle_mode rcv_settle_mode)
 {
 	int result;
@@ -182,7 +187,7 @@ LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE sou
 		else
 		{
 			(void)strcpy(result->name, name);
-			result->link_endpoint = session_create_link_endpoint(session, name, link_frame_received, result);
+			result->link_endpoint = session_create_link_endpoint(session, name, link_frame_received, on_session_state_changed, result);
 		}
 	}
 

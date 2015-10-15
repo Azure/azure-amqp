@@ -121,7 +121,14 @@ static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_incoming_handle(SESSION_INS
 
 static void on_connection_state_changed(void* context, CONNECTION_STATE new_connection_state)
 {
-	SESSION_INSTANCE* session = (SESSION_INSTANCE*)context;
+	SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)context;
+	if (new_connection_state == CONNECTION_STATE_OPENED)
+	{
+		if (send_begin(session_instance->endpoint, 0, 2000, 200) == 0)
+		{
+			session_instance->session_state = SESSION_STATE_BEGIN_SENT;
+		}
+	}
 }
 
 static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t payload_size, const unsigned char* payload_bytes)
@@ -433,38 +440,6 @@ void session_destroy_link_endpoint(LINK_ENDPOINT_HANDLE endpoint)
 		}
 
 		amqpalloc_free(endpoint_instance);
-	}
-}
-
-void session_dowork(SESSION_HANDLE session)
-{
-	SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
-	switch (session_instance->session_state)
-	{
-	default:
-		break;
-
-	case SESSION_STATE_BEGIN_SENT:
-	case SESSION_STATE_MAPPED:
-		break;
-
-	case SESSION_STATE_UNMAPPED:
-	{
-		CONNECTION_STATE connection_state;
-
-		if (connection_get_state(session_instance->connection, &connection_state) == 0)
-		{
-			if (connection_state == CONNECTION_STATE_OPENED)
-			{
-				if (send_begin(session_instance->endpoint, 0, 2000, 200) == 0)
-				{
-					session_instance->session_state = SESSION_STATE_BEGIN_SENT;
-				}
-			}
-		}
-
-		break;
-	}
 	}
 }
 

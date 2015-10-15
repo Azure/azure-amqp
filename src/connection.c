@@ -29,7 +29,8 @@ typedef struct ENDPOINT_INSTANCE_TAG
 	uint16_t incoming_channel;
 	uint16_t outgoing_channel;
 	ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback;
-	void* frame_received_callback_context;
+	CONNECTION_STATE_CHANGED_CALLBACK connection_state_changed_callback;
+	void* callback_context;
 	CONNECTION_HANDLE connection;
 } ENDPOINT_INSTANCE;
 
@@ -55,6 +56,20 @@ typedef struct CONNECTION_DATA_TAG
 	unsigned int idle_timeout_specified : 1;
 } CONNECTION_INSTANCE;
 
+/* Codes_SRS_CONNECTION_01_258: [connection_state_changed_callback shall be invoked whenever the connection state changes.]*/
+static void connection_set_state(CONNECTION_INSTANCE* connection_instance, CONNECTION_STATE connection_state)
+{
+	uint64_t i;
+	connection_instance->connection_state = connection_state;
+
+	/* Codes_SRS_CONNECTION_01_260: [Each endpoint’s connection_state_changed_callback shall be called.] */
+	for (i = 0; i < connection_instance->endpoint_count; i++)
+	{
+		/* Codes_SRS_CONNECTION_01_259: [The callback_context passed in connection_create_endpoint.] */
+		connection_instance->endpoints[i]->connection_state_changed_callback(connection_instance->endpoints[i]->callback_context, connection_state);
+	}
+}
+
 static int send_header(CONNECTION_INSTANCE* connection_instance)
 {
 	int result;
@@ -67,7 +82,7 @@ static int send_header(CONNECTION_INSTANCE* connection_instance)
 		io_close(connection_instance->io);
 
 		/* Codes_SRS_CONNECTION_01_057: [END In this state it is illegal for either endpoint to write anything more onto the connection. The connection can be safely closed and discarded.] */
-		connection_instance->connection_state = CONNECTION_STATE_END;
+		connection_set_state(connection_instance, CONNECTION_STATE_END);
 
 		/* Codes_SRS_CONNECTION_01_105: [When io_send fails, connection_dowork shall return a non-zero value.] */
 		result = __LINE__;
@@ -77,7 +92,7 @@ static int send_header(CONNECTION_INSTANCE* connection_instance)
 		LOG(consolelogger_log, LOG_LINE, "-> Header (AMQP 0.1.0.0)");
 
 		/* Codes_SRS_CONNECTION_01_041: [HDR SENT In this state the connection header has been sent to the peer but no connection header has been received.] */
-		connection_instance->connection_state = CONNECTION_STATE_HDR_SENT;
+		connection_set_state(connection_instance, CONNECTION_STATE_HDR_SENT);
 		result = 0;
 	}
 
@@ -93,7 +108,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 	{
 		/* Codes_SRS_CONNECTION_01_207: [If frame_codec_set_max_frame_size fails the connection shall be closed and the state set to END.] */
 		io_close(connection_instance->io);
-		connection_instance->connection_state = CONNECTION_STATE_END;
+		connection_set_state(connection_instance, CONNECTION_STATE_END);
 		result = __LINE__;
 	}
 	else
@@ -104,7 +119,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 		{
 			/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 			io_close(connection_instance->io);
-			connection_instance->connection_state = CONNECTION_STATE_END;
+			connection_set_state(connection_instance, CONNECTION_STATE_END);
 			result = __LINE__;
 		}
 		else
@@ -114,7 +129,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 			{
 				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 				io_close(connection_instance->io);
-				connection_instance->connection_state = CONNECTION_STATE_END;
+				connection_set_state(connection_instance, CONNECTION_STATE_END);
 				result = __LINE__;
 			}
 			/* Codes_SRS_CONNECTION_01_139: [The channel_max connection setting shall be set in the open frame by using open_set_channel_max.] */
@@ -122,7 +137,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 			{
 				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 				io_close(connection_instance->io);
-				connection_instance->connection_state = CONNECTION_STATE_END;
+				connection_set_state(connection_instance, CONNECTION_STATE_END);
 				result = __LINE__;
 			}
 			/* Codes_SRS_CONNECTION_01_142: [If no idle_timeout value has been specified, no value shall be stamped in the open frame (no call to open_set_idle_time_out shall be made).] */
@@ -132,7 +147,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 			{
 				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 				io_close(connection_instance->io);
-				connection_instance->connection_state = CONNECTION_STATE_END;
+				connection_set_state(connection_instance, CONNECTION_STATE_END);
 				result = __LINE__;
 			}
 			/* Codes_SRS_CONNECTION_01_136: [If no hostname value has been specified, no value shall be stamped in the open frame (no call to open_set_hostname shall be made).] */
@@ -142,7 +157,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 			{
 				/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 				io_close(connection_instance->io);
-				connection_instance->connection_state = CONNECTION_STATE_END;
+				connection_set_state(connection_instance, CONNECTION_STATE_END);
 				result = __LINE__;
 			}
 			else
@@ -152,7 +167,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 				{
 					/* Codes_SRS_CONNECTION_01_208: [If the open frame cannot be constructed, the connection shall be closed and set to the END state.] */
 					io_close(connection_instance->io);
-					connection_instance->connection_state = CONNECTION_STATE_END;
+					connection_set_state(connection_instance, CONNECTION_STATE_END);
 					result = __LINE__;
 				}
 				else
@@ -166,7 +181,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 					{
 						/* Codes_SRS_CONNECTION_01_206: [If sending the frame fails, the connection shall be closed and state set to END.] */
 						io_close(connection_instance->io);
-						connection_instance->connection_state = CONNECTION_STATE_END;
+						connection_set_state(connection_instance, CONNECTION_STATE_END);
 						result = __LINE__;
 					}
 					else
@@ -175,7 +190,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 						LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(open_performative_value));
 
 						/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
-						connection_instance->connection_state = CONNECTION_STATE_OPEN_SENT;
+						connection_set_state(connection_instance, CONNECTION_STATE_OPEN_SENT);
 						result = 0;
 					}
 
@@ -248,7 +263,7 @@ static void close_connection_with_error(CONNECTION_INSTANCE* connection_instance
 	{
 		/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
 		(void)io_close(connection_instance->io);
-		connection_instance->connection_state = CONNECTION_STATE_END;
+		connection_set_state(connection_instance, CONNECTION_STATE_END);
 	}
 	else
 	{
@@ -258,14 +273,14 @@ static void close_connection_with_error(CONNECTION_INSTANCE* connection_instance
 		{
 			/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
 			(void)io_close(connection_instance->io);
-			connection_instance->connection_state = CONNECTION_STATE_END;
+			connection_set_state(connection_instance, CONNECTION_STATE_END);
 		}
 		else
 		{
 			/* Codes_SRS_CONNECTION_01_213: [When passing the bytes to frame_codec fails, a CLOSE frame shall be sent and the state shall be set to DISCARDING.] */
 			/* Codes_SRS_CONNECTION_01_055: [DISCARDING The DISCARDING state is a variant of the CLOSE SENT state where the close is triggered by an error.] */
 			/* Codes_SRS_CONNECTION_01_010: [After writing this frame the peer SHOULD continue to read from the connection until it receives the partner’s close frame ] */
-			connection_instance->connection_state = CONNECTION_STATE_DISCARDING;
+			connection_set_state(connection_instance, CONNECTION_STATE_DISCARDING);
 		}
 
 		error_destroy(error_handle);
@@ -341,7 +356,7 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 		{
 			/* Codes_SRS_CONNECTION_01_089: [If the incoming and outgoing protocol headers do not match, both peers MUST close their outgoing stream] */
 			io_close(connection_instance->io);
-			connection_instance->connection_state = CONNECTION_STATE_END;
+			connection_set_state(connection_instance, CONNECTION_STATE_END);
 			result = __LINE__;
 		}
 		else
@@ -350,9 +365,12 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 			if (connection_instance->header_bytes_received == sizeof(amqp_header))
 			{
 				LOG(consolelogger_log, LOG_LINE, "<- Header (AMQP 0.1.0.0)");
+
+				connection_set_state(connection_instance, CONNECTION_STATE_HDR_EXCH);
+
 				if (send_open_frame(connection_instance) != 0)
 				{
-					connection_instance->connection_state = CONNECTION_STATE_END;
+					connection_set_state(connection_instance, CONNECTION_STATE_END);
 				}
 			}
 
@@ -471,17 +489,17 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 							{
 								if (connection_instance->connection_state == CONNECTION_STATE_OPEN_SENT)
 								{
-									connection_instance->connection_state = CONNECTION_STATE_OPENED;
+									connection_set_state(connection_instance, CONNECTION_STATE_OPENED);
 								}
 								else
 								{
 									if (send_open_frame(connection_instance) != 0)
 									{
-										connection_instance->connection_state = CONNECTION_STATE_END;
+										connection_set_state(connection_instance, CONNECTION_STATE_END);
 									}
 									else
 									{
-										connection_instance->connection_state = CONNECTION_STATE_OPENED;
+										connection_set_state(connection_instance, CONNECTION_STATE_OPENED);
 									}
 								}
 							}
@@ -529,17 +547,13 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 						{
 							close_destroy(close_handle);
 
-							if (send_close_frame(connection_instance, NULL) != 0)
-							{
-								/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
-								(void)io_close(connection_instance->io);
-								connection_instance->connection_state = CONNECTION_STATE_END;
-							}
-							else
-							{
-								/* Codes_SRS_CONNECTION_01_010: [After writing this frame the peer SHOULD continue to read from the connection until it receives the partner’s close frame ] */
-								connection_instance->connection_state = CONNECTION_STATE_CLOSE_SENT;
-							}
+							connection_set_state(connection_instance, CONNECTION_STATE_CLOSE_RCVD);
+
+							(void)send_close_frame(connection_instance, NULL);
+							/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
+							(void)io_close(connection_instance->io);
+
+							connection_set_state(connection_instance, CONNECTION_STATE_END);
 						}
 					}
 				}
@@ -563,7 +577,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 						else
 						{
 							session_endpoint->incoming_channel = channel;
-							session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size, payload_bytes);
+							session_endpoint->frame_received_callback(session_endpoint->callback_context, performative, payload_size, payload_bytes);
 						}
 
 						break;
@@ -583,7 +597,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 						}
 						else
 						{
-							session_endpoint->frame_received_callback(session_endpoint->frame_received_callback_context, performative, payload_size, payload_bytes);
+							session_endpoint->frame_received_callback(session_endpoint->callback_context, performative, payload_size, payload_bytes);
 						}
 
 						break;
@@ -708,8 +722,6 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 							/* Codes_SRS_CONNECTION_01_192: [A value of zero is the same as if it was not set (null).] */
 							result->idle_timeout = 0;
 
-							/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
-							result->connection_state = CONNECTION_STATE_START;
 							result->header_bytes_received = 0;
 							result->endpoint_count = 0;
 							result->endpoints = NULL;
@@ -718,6 +730,9 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 
 							/* Mark that settings have not yet been set by the user */
 							result->idle_timeout_specified = 0;
+
+							/* Codes_SRS_CONNECTION_01_072: [When connection_create succeeds, the state of the connection shall be CONNECTION_STATE_START.] */
+							connection_set_state(result, CONNECTION_STATE_START);
 						}
 					}
 				}
@@ -929,11 +944,11 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			if (io_open(connection_instance->io, connection_receive_callback, connection_instance) != 0)
 			{
 				/* Codes_SRS_CONNECTION_01_204: [If io_open_fails, no more work shall be done by connection_dowork and the connection shall be consideren in the END state.] */
-				connection_instance->connection_state = CONNECTION_STATE_END;
+				connection_set_state(connection_instance, CONNECTION_STATE_END);
 			}
 			else
 			{
-				connection_instance->connection_state = CONNECTION_STATE_START;
+				connection_set_state(connection_instance, CONNECTION_STATE_START);
 				connection_instance->is_io_open = 1;
 			}
 		}
@@ -950,7 +965,7 @@ void connection_dowork(CONNECTION_HANDLE connection)
 		case IO_STATE_ERROR:
 			/* Codes_SRS_CONNECTION_01_202: [If the io_get_state call returns IO_STATE_ERROR the connection shall be closed and the state set to END.] */
 			io_close(connection_instance->io);
-			connection_instance->connection_state = CONNECTION_STATE_END;
+			connection_set_state(connection_instance, CONNECTION_STATE_END);
 			break;
 
 		case IO_STATE_NOT_READY:
@@ -983,7 +998,7 @@ void connection_dowork(CONNECTION_HANDLE connection)
 				/* Codes_SRS_CONNECTION_01_005: [The open frame describes the capabilities and limits of that peer.] */
 				if (send_open_frame(connection) != 0)
 				{
-					connection_instance->connection_state = CONNECTION_STATE_END;
+					connection_set_state(connection_instance, CONNECTION_STATE_END);
 				}
 				break;
 
@@ -995,24 +1010,6 @@ void connection_dowork(CONNECTION_HANDLE connection)
 		/* Codes_SRS_CONNECTION_01_076: [connection_dowork shall schedule the underlying IO interface to do its work by calling io_dowork.] */
 		io_dowork(connection_instance->io);
 	}
-}
-
-int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connection_state)
-{
-	int result;
-	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
-
-	if (connection_instance == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		*connection_state = connection_instance->connection_state;
-		result = 0;
-	}
-
-	return result;
 }
 
 ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, CONNECTION_STATE_CHANGED_CALLBACK connection_state_changed_callback, void* context)
@@ -1038,27 +1035,16 @@ ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOIN
 		}
 		else
 		{
-			uint16_t channel_no = 0;
-			size_t i = 0;
+			uint32_t i = 0;
 
 			/* Codes_SRS_CONNECTION_01_128: [The lowest number outgoing channel shall be associated with the newly created endpoint.] */
 			for (i = 0; i < connection_instance->endpoint_count; i++)
 			{
-				if (connection_instance->endpoints[i]->outgoing_channel > channel_no)
+				if (connection_instance->endpoints[i]->outgoing_channel > i)
 				{
 					/* found a gap in the sorted endpoint array */
 					break;
 				}
-				else
-				{
-					channel_no++;
-				}
-			}
-
-			while (channel_no < connection_instance->channel_max)
-			{
-				break;
-				channel_no++;
 			}
 
 			/* Codes_SRS_CONNECTION_01_127: [On success, connection_create_endpoint shall return a non-NULL handle to the newly created endpoint.] */
@@ -1069,8 +1055,9 @@ ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOIN
 				ENDPOINT_INSTANCE** new_endpoints;
 
 				result->frame_received_callback = frame_received_callback;
-				result->frame_received_callback_context = context;
-				result->outgoing_channel = channel_no;
+				result->connection_state_changed_callback = connection_state_changed_callback;
+				result->callback_context = context;
+				result->outgoing_channel = i;
 				result->connection = connection;
 
 				/* Codes_SRS_CONNECTION_01_197: [The newly created endpoint shall be added to the endpoints list, so that it can be tracked.] */
@@ -1083,10 +1070,14 @@ ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOIN
 				}
 				else
 				{
-					(void)memmove(&connection_instance->endpoints[channel_no + 1], &connection_instance->endpoints[channel_no], sizeof(ENDPOINT_INSTANCE*) * (connection_instance->endpoint_count - channel_no));
-
 					connection_instance->endpoints = new_endpoints;
-					connection_instance->endpoints[channel_no] = result;
+
+					if (i < connection_instance->endpoint_count)
+					{
+						(void)memmove(&connection_instance->endpoints[i + 1], &connection_instance->endpoints[i], sizeof(ENDPOINT_INSTANCE*) * (connection_instance->endpoint_count - i));
+					}
+
+					connection_instance->endpoints[i] = result;
 					connection_instance->endpoint_count++;
 
 					/* Codes_SRS_CONNECTION_01_112: [connection_create_endpoint shall create a new endpoint that can be used by a session.] */

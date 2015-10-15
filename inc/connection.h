@@ -78,7 +78,6 @@ extern "C" {
 	extern ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, CONNECTION_STATE_CHANGED_CALLBACK connection_state_changed_callback, void* context);
 	extern void connection_destroy_endpoint(ENDPOINT_HANDLE endpoint);
 	extern int connection_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE performative, PAYLOAD* payloads, size_t payload_count);
-	extern int connection_get_state(CONNECTION_HANDLE connection, CONNECTION_STATE* connection_state);
 
 #ifdef __cplusplus
 }

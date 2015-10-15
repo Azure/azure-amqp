@@ -28,7 +28,6 @@ extern "C" {
 
 	extern SESSION_HANDLE session_create(CONNECTION_HANDLE connection);
 	extern void session_destroy(SESSION_HANDLE session);
-	extern void session_dowork(SESSION_HANDLE session);
 	extern LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, LINK_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, void* context);
 	extern void session_destroy_link_endpoint(LINK_ENDPOINT_HANDLE endpoint);
 	extern int session_encode_frame(LINK_ENDPOINT_HANDLE link_endpoint, const AMQP_VALUE performative, PAYLOAD* payloads, size_t payload_count);

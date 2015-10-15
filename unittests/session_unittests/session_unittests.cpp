@@ -855,4 +855,79 @@ TEST_METHOD(connection_state_changed_callback_with_OPENED_triggers_sending_the_B
 	session_destroy(session);
 }
 
+/* Tests_SRS_SESSION_01_060: [If the previous connection state is not OPENED and the new connection state is OPENED, the BEGIN frame shall be sent out and the state shall be switched to BEGIN_SENT.] */
+TEST_METHOD(connection_state_changed_callback_and_new_state_is_not_OPENED_does_not_trigger_sending_the_BEGIN_frame)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
+	mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	// act
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPEN_SENT, CONNECTION_STATE_START);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_060: [If the previous connection state is not OPENED and the new connection state is OPENED, the BEGIN frame shall be sent out and the state shall be switched to BEGIN_SENT.] */
+TEST_METHOD(connection_state_changed_callback_and_from_OPENED_to_OPENED_does_not_trigger_sending_the_BEGIN_frame)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	// act
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPENED);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_060: [If the previous connection state is not OPENED and the new connection state is OPENED, the BEGIN frame shall be sent out and the state shall be switched to BEGIN_SENT.] */
+TEST_METHOD(connection_state_changed_callback_to_OPENED_twice_only_triggers_sending_the_BEGIN_frame_once)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	// act
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
 END_TEST_SUITE(connection_unittests)

@@ -136,7 +136,9 @@ static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_incoming_handle(SESSION_INS
 static void on_connection_state_changed(void* context, CONNECTION_STATE new_connection_state, CONNECTION_STATE previous_connection_state)
 {
 	SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)context;
-	if (new_connection_state == CONNECTION_STATE_OPENED)
+
+	/* Codes_SRS_SESSION_01_060: [If the previous connection state is not OPENED and the new connection state is OPENED, the BEGIN frame shall be sent out and the state shall be switched to BEGIN_SENT.] */
+	if ((new_connection_state == CONNECTION_STATE_OPENED) && (previous_connection_state != CONNECTION_STATE_OPENED) && (session_instance->session_state == SESSION_STATE_UNMAPPED))
 	{
 		if (send_begin(session_instance->endpoint, 0, 2000, 200) == 0)
 		{

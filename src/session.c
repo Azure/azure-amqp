@@ -119,7 +119,7 @@ static LINK_ENDPOINT_INSTANCE* find_link_endpoint_by_incoming_handle(SESSION_INS
 	return result;
 }
 
-static void on_connection_state_changed(void* context, CONNECTION_STATE new_connection_state)
+static void on_connection_state_changed(void* context, CONNECTION_STATE new_connection_state, CONNECTION_STATE previous_connection_state)
 {
 	SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)context;
 	if (new_connection_state == CONNECTION_STATE_OPENED)

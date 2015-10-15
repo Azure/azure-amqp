@@ -64,7 +64,7 @@ extern "C" {
 	} CONNECTION_STATE;
 
 	typedef void(*ENDPOINT_FRAME_RECEIVED_CALLBACK)(void* context, AMQP_VALUE performative, uint32_t frame_payload_size, const unsigned char* payload_bytes);
-	typedef void(*CONNECTION_STATE_CHANGED_CALLBACK)(void* context, CONNECTION_STATE new_connection_state);
+	typedef void(*CONNECTION_STATE_CHANGED_CALLBACK)(void* context, CONNECTION_STATE new_connection_state, CONNECTION_STATE previous_connection_state);
 
 	extern CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const char* container_id);
 	extern int connection_set_max_frame_size(CONNECTION_HANDLE connection, uint32_t max_frame_size);

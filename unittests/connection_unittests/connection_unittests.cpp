@@ -227,7 +227,7 @@ public:
 	/* frame received callback mocks */
 	MOCK_STATIC_METHOD_4(, void, test_frame_received_callback, void*, context, AMQP_VALUE, performative, uint32_t, frame_payload_size, const unsigned char*, payload_bytes)
 	MOCK_VOID_METHOD_END();
-	MOCK_STATIC_METHOD_2(, void, test_connection_state_changed_callback, void*, context, CONNECTION_STATE, connection_state)
+	MOCK_STATIC_METHOD_3(, void, test_connection_state_changed_callback, void*, context, CONNECTION_STATE, new_connection_state, CONNECTION_STATE, previous_connection_state)
 	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_4(, void, test_endpoint_frame_received, void*, context, AMQP_VALUE, performative, uint32_t, payload_size, const unsigned char*, payload_bytes)
 	MOCK_VOID_METHOD_END();
@@ -275,7 +275,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , int, list_remove_matching_item, LIST_HANDLE, handle, LIST_MATCH_FUNCTION, match_function, const void*, match_context);
 
 	DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , void, test_frame_received_callback, void*, context, AMQP_VALUE, performative, uint32_t, frame_payload_size, const unsigned char*, payload_bytes);
-	DECLARE_GLOBAL_MOCK_METHOD_2(connection_mocks, , void, test_connection_state_changed_callback, void*, context, CONNECTION_STATE, connection_state);
+	DECLARE_GLOBAL_MOCK_METHOD_3(connection_mocks, , void, test_connection_state_changed_callback, void*, context, CONNECTION_STATE, new_connection_state, CONNECTION_STATE, previous_connection_state);
 	DECLARE_GLOBAL_MOCK_METHOD_4(connection_mocks, , void, test_endpoint_frame_received, void*, context, AMQP_VALUE, performative, uint32_t, payload_size, const unsigned char*, payload_bytes);
 
 	extern void consolelogger_log(char* format, ...)
@@ -3655,8 +3655,8 @@ TEST_METHOD(when_state_changes_to_HDR_SENT_all_endpoints_are_notified)
 	EXPECTED_CALL(mocks, io_send(IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_NUM_ARG)).IgnoreAllCalls();
 	EXPECTED_CALL(mocks, io_dowork(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
-	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(TEST_CONTEXT, CONNECTION_STATE_HDR_SENT));
-	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(NULL, CONNECTION_STATE_HDR_SENT));
+	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(TEST_CONTEXT, CONNECTION_STATE_HDR_SENT, CONNECTION_STATE_START));
+	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(NULL, CONNECTION_STATE_HDR_SENT, CONNECTION_STATE_START));
 
 	// act
 	connection_dowork(connection);
@@ -3699,10 +3699,10 @@ TEST_METHOD(when_state_changes_to_HDR_EXCH_and_HDR_OPEN_SENT_all_endpoints_are_n
 	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_open_amqp_value));
 
-	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(TEST_CONTEXT, CONNECTION_STATE_HDR_EXCH));
-	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(NULL, CONNECTION_STATE_HDR_EXCH));
-	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(TEST_CONTEXT, CONNECTION_STATE_OPEN_SENT));
-	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(NULL, CONNECTION_STATE_OPEN_SENT));
+	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(TEST_CONTEXT, CONNECTION_STATE_HDR_EXCH, CONNECTION_STATE_HDR_SENT));
+	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(NULL, CONNECTION_STATE_HDR_EXCH, CONNECTION_STATE_HDR_SENT));
+	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(TEST_CONTEXT, CONNECTION_STATE_OPEN_SENT, CONNECTION_STATE_HDR_EXCH));
+	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(NULL, CONNECTION_STATE_OPEN_SENT, CONNECTION_STATE_HDR_EXCH));
 
 	// act
 	const unsigned char amqp_header[] = { 'A', 'M', 'Q', 'P', 0, 1, 0, 0 };
@@ -3746,8 +3746,8 @@ TEST_METHOD(when_state_changes_to_OPENED_all_endpoints_are_notified)
 		.IgnoreArgument(2);
 	STRICT_EXPECTED_CALL(definition_mocks, open_destroy(test_open_handle));
 
-	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(TEST_CONTEXT, CONNECTION_STATE_OPENED));
-	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(NULL, CONNECTION_STATE_OPENED));
+	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(TEST_CONTEXT, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT));
+	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(NULL, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT));
 
 	// act
 	saved_frame_received_callback(saved_callback_context, 0, TEST_OPEN_PERFORMATIVE, 0, NULL);
@@ -3801,10 +3801,10 @@ TEST_METHOD(when_state_changes_to_CLOSE_RCVD_and_END_SENT_all_endpoints_are_noti
 	STRICT_EXPECTED_CALL(definition_mocks, close_destroy(test_close_handle));
 	STRICT_EXPECTED_CALL(mocks, io_close(TEST_IO_HANDLE));
 
-	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(TEST_CONTEXT, CONNECTION_STATE_CLOSE_RCVD));
-	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(NULL, CONNECTION_STATE_CLOSE_RCVD));
-	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(TEST_CONTEXT, CONNECTION_STATE_END));
-	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(NULL, CONNECTION_STATE_END));
+	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(TEST_CONTEXT, CONNECTION_STATE_CLOSE_RCVD, CONNECTION_STATE_OPENED));
+	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(NULL, CONNECTION_STATE_CLOSE_RCVD, CONNECTION_STATE_OPENED));
+	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(TEST_CONTEXT, CONNECTION_STATE_END, CONNECTION_STATE_CLOSE_RCVD));
+	STRICT_EXPECTED_CALL(mocks, test_connection_state_changed_callback(NULL, CONNECTION_STATE_END, CONNECTION_STATE_CLOSE_RCVD));
 
 	// act
 	saved_frame_received_callback(saved_callback_context, 0, TEST_CLOSE_PERFORMATIVE, 0, NULL);

@@ -22,7 +22,6 @@ typedef void(*DELIVERY_SETTLED_CALLBACK)(void* context, delivery_number delivery
 
 extern LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target, AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback);
 extern void link_destroy(LINK_HANDLE handle);
-extern void link_dowork(LINK_HANDLE handle);
 extern int link_get_state(LINK_HANDLE handle, LINK_STATE* link_state);
 extern int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, DELIVERY_SETTLED_CALLBACK delivery_settled_callback, void* callback_context);
 

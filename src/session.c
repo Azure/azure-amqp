@@ -31,6 +31,19 @@ typedef struct SESSION_INSTANCE_TAG
 	uint32_t handle_max;
 } SESSION_INSTANCE;
 
+static void session_set_state(SESSION_INSTANCE* session_instance, SESSION_STATE session_state)
+{
+	uint64_t i;
+
+	SESSION_STATE previous_state = session_instance->session_state;
+	session_instance->session_state = session_state;
+
+	for (i = 0; i < session_instance->link_endpoint_count; i++)
+	{
+		session_instance->link_endpoints[i]->on_session_state_changed(session_instance->link_endpoints[i]->callback_context, session_state, previous_state);
+	}
+}
+
 static int send_begin(ENDPOINT_HANDLE endpoint, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
 {
 	int result;
@@ -127,14 +140,14 @@ static void on_connection_state_changed(void* context, CONNECTION_STATE new_conn
 	{
 		if (send_begin(session_instance->endpoint, 0, 2000, 200) == 0)
 		{
-			session_instance->session_state = SESSION_STATE_BEGIN_SENT;
+			session_set_state(session_instance, SESSION_STATE_BEGIN_SENT);
 		}
 	}
 }
 
 static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t payload_size, const unsigned char* payload_bytes)
 {
-	SESSION_INSTANCE* session = (SESSION_INSTANCE*)context;
+	SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)context;
 	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
 	uint64_t performative_ulong;
 
@@ -147,7 +160,7 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 	case AMQP_BEGIN:
 		LOG(consolelogger_log, 0, "<- [BEGIN]");
 		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
-		session->session_state = SESSION_STATE_MAPPED;
+		session_set_state(session_instance, SESSION_STATE_MAPPED);
 		break;
 
 	case AMQP_ATTACH:
@@ -157,7 +170,7 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 		AMQP_VALUE name_value = amqpvalue_get_list_item(described_value, 0);
 		amqpvalue_get_string(name_value, &name);
 
-		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_name(session, name);
+		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_name(session_instance, name);
 		if (link_endpoint == NULL)
 		{
 			/* error */
@@ -177,7 +190,7 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
 		AMQP_VALUE handle_value = amqpvalue_get_list_item(described_value, 0);
 		amqpvalue_get_uint(handle_value, &remote_handle);
-		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session, remote_handle);
+		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session_instance, remote_handle);
 		if (link_endpoint == NULL)
 		{
 			/* error */
@@ -199,7 +212,7 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 		if ((handle_value != NULL) &&
 			(amqpvalue_get_uint(handle_value, &remote_handle) == 0))
 		{
-			LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session, remote_handle);
+			LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session_instance, remote_handle);
 			if (link_endpoint == NULL)
 			{
 				/* error */
@@ -222,7 +235,7 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
 		AMQP_VALUE handle_value = amqpvalue_get_list_item(described_value, 0);
 		amqpvalue_get_uint(handle_value, &remote_handle);
-		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session, remote_handle);
+		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session_instance, remote_handle);
 		if (link_endpoint == NULL)
 		{
 			/* error */
@@ -241,9 +254,9 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 	case AMQP_DISPOSITION:
 	{
 		uint32_t i;
-		for (i = 0; i < session->link_endpoint_count; i++)
+		for (i = 0; i < session_instance->link_endpoint_count; i++)
 		{
-			LINK_ENDPOINT_INSTANCE* link_endpoint = session->link_endpoints[i];
+			LINK_ENDPOINT_INSTANCE* link_endpoint = session_instance->link_endpoints[i];
 			link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
 		}
 
@@ -290,7 +303,6 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 		if (result != NULL)
 		{
 			result->connection = connection;
-			result->session_state = SESSION_STATE_UNMAPPED;
 			result->link_endpoints = NULL;
 			result->link_endpoint_count = 0;
 			result->handle_max = 4294967295;
@@ -305,6 +317,10 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 				/* Codes_SRS_SESSION_01_033: [If connection_create_endpoint fails, session_create shall fail and return NULL.] */
 				amqpalloc_free(result);
 				result = NULL;
+			}
+			else
+			{
+				session_set_state(result, SESSION_STATE_UNMAPPED);
 			}
 		}
 	}
@@ -443,24 +459,6 @@ void session_destroy_link_endpoint(LINK_ENDPOINT_HANDLE endpoint)
 
 		amqpalloc_free(endpoint_instance);
 	}
-}
-
-int session_get_state(SESSION_HANDLE session, SESSION_STATE* session_state)
-{
-	int result;
-
-	if (session == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)session;
-		*session_state = session_instance->session_state;
-		result = 0;
-	}
-
-	return result;
 }
 
 /* Codes_SRS_SESSION_01_037: [session_encode_frame shall encode an AMQP frame.] */

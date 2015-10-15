@@ -108,11 +108,6 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 	}
 }
 
-static void on_session_state_changed(void* context, SESSION_STATE new_session_state, SESSION_STATE previous_session_state)
-{
-
-}
-
 static int send_attach(LINK_INSTANCE* link, const char* name, handle handle, role role, sender_settle_mode snd_settle_mode, receiver_settle_mode rcv_settle_mode)
 {
 	int result;
@@ -154,6 +149,21 @@ static int send_attach(LINK_INSTANCE* link, const char* name, handle handle, rol
 	}
 
 	return result;
+}
+
+static void on_session_state_changed(void* context, SESSION_STATE new_session_state, SESSION_STATE previous_session_state)
+{
+	LINK_INSTANCE* link_instance = (LINK_INSTANCE*)context;
+	if (new_session_state == SESSION_STATE_MAPPED)
+	{
+		if (link_instance->link_state == LINK_STATE_DETACHED)
+		{
+			if (send_attach(link_instance, link_instance->name, 0, role_sender, sender_settle_mode_settled, receiver_settle_mode_first) == 0)
+			{
+				link_instance->link_state = LINK_STATE_HALF_ATTACHED;
+			}
+		}
+	}
 }
 
 static int encode_bytes(void* context, const void* bytes, size_t length)
@@ -208,26 +218,6 @@ void link_destroy(LINK_HANDLE handle)
 		}
 
 		amqpalloc_free(handle);
-	}
-}
-
-void link_dowork(LINK_HANDLE handle)
-{
-	LINK_INSTANCE* link = (LINK_INSTANCE*)handle;
-	SESSION_STATE session_state;
-
-	if (session_get_state(link->session, &session_state) == 0)
-	{
-		if (session_state == SESSION_STATE_MAPPED)
-		{
-			if (link->link_state == LINK_STATE_DETACHED)
-			{
-				if (send_attach(link, link->name, 0, role_sender, sender_settle_mode_settled, receiver_settle_mode_first) == 0)
-				{
-					link->link_state = LINK_STATE_HALF_ATTACHED;
-				}
-			}
-		}
 	}
 }
 

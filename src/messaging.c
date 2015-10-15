@@ -298,10 +298,5 @@ void messaging_dowork(MESSAGING_HANDLE handle)
 		{
 			connection_dowork(messaging->connection);
 		}
-
-		if (messaging->link != NULL)
-		{
-			link_dowork(messaging->link);
-		}
 	}
 }

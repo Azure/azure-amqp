@@ -841,7 +841,7 @@ TEST_METHOD(connection_state_changed_callback_with_OPENED_triggers_sending_the_B
 	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_begin_amqp_value, NULL, 0));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_begin_amqp_value));
 
-	//STRICT_EXPECTED_CALL(mocks, test_on_session_state_changed(NULL, SESSION_STATE_BEGIN_SENT, SESSION_STATE_UNMAPPED));
+	STRICT_EXPECTED_CALL(mocks, test_on_session_state_changed(NULL, SESSION_STATE_BEGIN_SENT, SESSION_STATE_UNMAPPED));
 
 	// act
 	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);

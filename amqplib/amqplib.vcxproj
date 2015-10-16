@@ -28,6 +28,7 @@
     <ClInclude Include="..\inc\amqp_types.h" />
     <ClInclude Include="..\inc\connection.h" />
     <ClInclude Include="..\inc\consolelogger.h" />
+    <ClInclude Include="..\inc\delivery_queue.h" />
     <ClInclude Include="..\inc\frame_codec.h" />
     <ClInclude Include="..\inc\io.h" />
     <ClInclude Include="..\inc\link.h" />

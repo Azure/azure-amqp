@@ -22,6 +22,7 @@
 static ENDPOINT_FRAME_RECEIVED_CALLBACK saved_frame_received_callback;
 static CONNECTION_STATE_CHANGED_CALLBACK saved_connection_state_changed_callback;
 static void* saved_callback_context;
+static uint32_t remote_max_frame_size = 512;
 
 std::ostream& operator<<(std::ostream& left, const delivery_tag& delivery)
 {
@@ -94,7 +95,7 @@ public:
 	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_4(, int, connection_encode_frame, ENDPOINT_HANDLE, endpoint, const AMQP_VALUE, performative, PAYLOAD*, payloads, size_t, payload_count)
 	MOCK_METHOD_END(int, 0);
-	MOCK_STATIC_METHOD_2(, int, connection_get_state, CONNECTION_HANDLE, connection, CONNECTION_STATE*, connection_state)
+	MOCK_STATIC_METHOD_2(, int, connection_get_remote_max_frame_size, CONNECTION_HANDLE, connection, uint32_t*, remote_max_frame_size)
 	MOCK_METHOD_END(int, 0);
 
 	MOCK_STATIC_METHOD_4(, void, test_frame_received_callback, void*, context, AMQP_VALUE, performative, uint32_t, frame_payload_size, const unsigned char*, payload_bytes)
@@ -122,7 +123,7 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_4(session_mocks, , ENDPOINT_HANDLE, connection_create_endpoint, CONNECTION_HANDLE, connection, ENDPOINT_FRAME_RECEIVED_CALLBACK, frame_received_callback, CONNECTION_STATE_CHANGED_CALLBACK, connection_state_changed_callback, void*, context);
 	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , void, connection_destroy_endpoint, ENDPOINT_HANDLE, endpoint);
 	DECLARE_GLOBAL_MOCK_METHOD_4(session_mocks, , int, connection_encode_frame, ENDPOINT_HANDLE, endpoint, const AMQP_VALUE, performative, PAYLOAD*, payloads, size_t, payload_count)
-	DECLARE_GLOBAL_MOCK_METHOD_2(session_mocks, , int, connection_get_state, CONNECTION_HANDLE, connection, CONNECTION_STATE*, connection_state);
+	DECLARE_GLOBAL_MOCK_METHOD_2(session_mocks, , int, connection_get_remote_max_frame_size, CONNECTION_HANDLE, connection, uint32_t*, remote_max_frame_size);
 
 	DECLARE_GLOBAL_MOCK_METHOD_4(session_mocks, , void, test_frame_received_callback, void*, context, AMQP_VALUE, performative, uint32_t, frame_payload_size, const unsigned char*, payload_bytes);
 	DECLARE_GLOBAL_MOCK_METHOD_3(session_mocks, , void, test_on_session_state_changed, void*, context, SESSION_STATE, new_session_state, SESSION_STATE, previous_session_state);
@@ -673,7 +674,7 @@ TEST_METHOD(when_connection_encode_frame_then_session_encode_frame_fails)
 /* Tests_SRS_SESSION_01_053: [On success, session_transfer shall return 0.] */
 /* Tests_SRS_SESSION_01_055: [The encoding of the frame shall be done by calling connection_encode_frame and passing as arguments: the connection handle associated with the session, the transfer performative and the payload chunks passed to session_transfer.] */
 /* Tests_SRS_SESSION_01_057: [The delivery ids shall be assigned starting at 0.] */
-TEST_METHOD(session_trnsfer_sends_the_frame_to_the_connection)
+TEST_METHOD(session_transfer_sends_the_frame_to_the_connection)
 {
 	// arrange
 	session_mocks mocks;
@@ -689,6 +690,8 @@ TEST_METHOD(session_trnsfer_sends_the_frame_to_the_connection)
 
 	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle));
+	STRICT_EXPECTED_CALL(mocks, connection_get_remote_max_frame_size(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &remote_max_frame_size, sizeof(remote_max_frame_size));
 	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_transfer_amqp_value, NULL, 0));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_transfer_amqp_value));
 
@@ -793,6 +796,8 @@ TEST_METHOD(when_amqpvalue_create_transfer_fails_then_session_transfer_fails)
 	definition_mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
+	STRICT_EXPECTED_CALL(mocks, connection_get_remote_max_frame_size(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &remote_max_frame_size, sizeof(remote_max_frame_size));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle))
 		.SetReturn((AMQP_VALUE)NULL);
 
@@ -826,6 +831,8 @@ TEST_METHOD(when_connection_encode_frame_fails_then_session_transfer_fails)
 	definition_mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
+	STRICT_EXPECTED_CALL(mocks, connection_get_remote_max_frame_size(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &remote_max_frame_size, sizeof(remote_max_frame_size));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle));
 	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_transfer_amqp_value, NULL, 0))
 		.SetReturn(1);
@@ -883,10 +890,12 @@ TEST_METHOD(connection_state_changed_callback_with_OPENED_triggers_sending_the_B
 
 	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
-	STRICT_EXPECTED_CALL(definition_mocks, begin_create(0, 2000, 200));
+	STRICT_EXPECTED_CALL(definition_mocks, begin_create(0, 1, 1));
+	STRICT_EXPECTED_CALL(definition_mocks, begin_set_handle_max(test_begin_handle, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_begin(test_begin_handle));
 	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_begin_amqp_value, NULL, 0));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_begin_amqp_value));
+	STRICT_EXPECTED_CALL(definition_mocks, begin_destroy(test_begin_handle));
 
 	STRICT_EXPECTED_CALL(mocks, test_on_session_state_changed(NULL, SESSION_STATE_BEGIN_SENT, SESSION_STATE_UNMAPPED));
 
@@ -1089,11 +1098,15 @@ TEST_METHOD(when_2_transfers_happen_on_2_different_endpoints_2_different_deliver
 
 	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle));
+	STRICT_EXPECTED_CALL(mocks, connection_get_remote_max_frame_size(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &remote_max_frame_size, sizeof(remote_max_frame_size));
 	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_transfer_amqp_value, NULL, 0));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_transfer_amqp_value));
 
 	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 1));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle));
+	STRICT_EXPECTED_CALL(mocks, connection_get_remote_max_frame_size(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &remote_max_frame_size, sizeof(remote_max_frame_size));
 	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_transfer_amqp_value, NULL, 0));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_transfer_amqp_value));
 
@@ -1116,7 +1129,7 @@ TEST_METHOD(when_2_transfers_happen_on_2_different_endpoints_2_different_deliver
 }
 
 /* Tests_SRS_SESSION_01_018: [is incremented after each successive transfer according to RFC-1982 [RFC1982] serial number arithmetic.] */
-TEST_METHOD(when_if_secding_the_frame_to_the_connection_fails_the_next_outgoing_id_is_not_incremented)
+TEST_METHOD(when_if_sending_the_frame_to_the_connection_fails_the_next_outgoing_id_is_not_incremented)
 {
 	// arrange
 	session_mocks mocks;
@@ -1134,12 +1147,16 @@ TEST_METHOD(when_if_secding_the_frame_to_the_connection_fails_the_next_outgoing_
 	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
+	STRICT_EXPECTED_CALL(mocks, connection_get_remote_max_frame_size(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &remote_max_frame_size, sizeof(remote_max_frame_size));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle));
 	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_transfer_amqp_value, NULL, 0))
 		.SetReturn(1);
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_transfer_amqp_value));
 
 	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
+	STRICT_EXPECTED_CALL(mocks, connection_get_remote_max_frame_size(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG))
+		.CopyOutArgumentBuffer(2, &remote_max_frame_size, sizeof(remote_max_frame_size));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle));
 	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_transfer_amqp_value, NULL, 0));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_transfer_amqp_value));

@@ -933,6 +933,23 @@ int connection_get_idle_timeout(CONNECTION_HANDLE connection, milliseconds* idle
 	return result;
 }
 
+int connection_get_remote_max_frame_size(CONNECTION_HANDLE connection, uint32_t* remote_max_frame_size)
+{
+	int result;
+
+	if ((connection == NULL) ||
+		(remote_max_frame_size == NULL))
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		result = 0;
+	}
+
+	return result;
+}
+
 void connection_dowork(CONNECTION_HANDLE connection)
 {
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;

@@ -609,21 +609,26 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 			}
 			else
 			{
-				uint32_t available_frame_size;
-				if (connection_get_remote_max_frame_size(session_instance->connection, &available_frame_size) != 0)
+				transfer_value = amqpvalue_create_transfer(transfer);
+				if (transfer_value == NULL)
 				{
+					/* Codes_SRS_SESSION_01_058: [When any other error occurs, session_transfer shall fail and return a non-zero value.] */
 					result = __LINE__;
 				}
 				else
 				{
-					transfer_value = amqpvalue_create_transfer(transfer);
-					if (transfer_value == NULL)
+					uint32_t available_frame_size;
+					size_t encoded_size;
+
+					if ((connection_get_remote_max_frame_size(session_instance->connection, &available_frame_size) != 0) ||
+						(amqpvalue_get_encoded_size(transfer_value, &encoded_size) != 0))
 					{
-						/* Codes_SRS_SESSION_01_058: [When any other error occurs, session_transfer shall fail and return a non-zero value.] */
 						result = __LINE__;
 					}
 					else
 					{
+						available_frame_size -= encoded_size;
+
 						/* Codes_SRS_SESSION_01_055: [The encoding of the frame shall be done by calling connection_encode_frame and passing as arguments: the connection handle associated with the session, the transfer performative and the payload chunks passed to session_transfer.] */
 						if (connection_encode_frame(session_instance->endpoint, transfer_value, payloads, payload_count) != 0)
 						{
@@ -638,9 +643,9 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 							/* Codes_SRS_SESSION_01_053: [On success, session_transfer shall return 0.] */
 							result = 0;
 						}
-
-						amqpvalue_destroy(transfer_value);
 					}
+
+					amqpvalue_destroy(transfer_value);
 				}
 			}
 		}

@@ -944,6 +944,8 @@ int connection_get_remote_max_frame_size(CONNECTION_HANDLE connection, uint32_t*
 	}
 	else
 	{
+		*remote_max_frame_size = 0;
+
 		result = 0;
 	}
 

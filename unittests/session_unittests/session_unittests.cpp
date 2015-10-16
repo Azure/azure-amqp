@@ -17,7 +17,9 @@
 #define TEST_CONNECTION_HANDLE			(CONNECTION_HANDLE)0x4248
 #define TEST_CONTEXT					(void*)0x4444
 #define TEST_ATTACH_PERFORMATIVE		(AMQP_VALUE)0x5000
+#define TEST_BEGIN_PERFORMATIVE			(AMQP_VALUE)0x5001
 
+static ENDPOINT_FRAME_RECEIVED_CALLBACK saved_frame_received_callback;
 static CONNECTION_STATE_CHANGED_CALLBACK saved_connection_state_changed_callback;
 static void* saved_callback_context;
 
@@ -84,6 +86,7 @@ public:
 
 	/* connection mocks */
 	MOCK_STATIC_METHOD_4(, ENDPOINT_HANDLE, connection_create_endpoint, CONNECTION_HANDLE, connection, ENDPOINT_FRAME_RECEIVED_CALLBACK, frame_received_callback, CONNECTION_STATE_CHANGED_CALLBACK, connection_state_changed_callback, void*, context)
+		saved_frame_received_callback = frame_received_callback;
 		saved_connection_state_changed_callback = connection_state_changed_callback;
 		saved_callback_context = context;
 	MOCK_METHOD_END(ENDPOINT_HANDLE, TEST_ENDPOINT_HANDLE);
@@ -920,6 +923,91 @@ TEST_METHOD(connection_state_changed_callback_to_OPENED_twice_only_triggers_send
 
 	// act
 	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
+/* Tests_-SRS_SESSION_01_061: [If the previous connection state is OPENED and the new connection state is not OPENED anymore, the state shall be switched to DISCARDING.] */
+TEST_METHOD(connection_state_changed_callback_to_different_than_OPENED_when_in_UNMAPPED_sets_the_session_state_to_END)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_on_session_state_changed(NULL, SESSION_STATE_DISCARDING, SESSION_STATE_UNMAPPED));
+
+	// act
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_CLOSE_RCVD, CONNECTION_STATE_OPENED);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
+/* Tests_-SRS_SESSION_01_061: [If the previous connection state is OPENED and the new connection state is not OPENED anymore, the state shall be switched to DISCARDING.] */
+TEST_METHOD(connection_state_changed_callback_to_different_than_OPENED_when_in_BEGIN_SENT_sets_the_session_state_to_END)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_on_session_state_changed(NULL, SESSION_STATE_DISCARDING, SESSION_STATE_BEGIN_SENT));
+
+	// act
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_CLOSE_RCVD, CONNECTION_STATE_OPENED);
+
+	// assert
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
+/* Tests_-SRS_SESSION_01_061: [If the previous connection state is OPENED and the new connection state is not OPENED anymore, the state shall be switched to DISCARDING.] */
+TEST_METHOD(connection_state_changed_callback_to_different_than_OPENED_when_in_MAPPED_sets_the_session_state_to_END)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);
+	STRICT_EXPECTED_CALL(definition_mocks, is_begin_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	saved_frame_received_callback(saved_callback_context, TEST_BEGIN_PERFORMATIVE, NULL, 0);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	STRICT_EXPECTED_CALL(mocks, test_on_session_state_changed(NULL, SESSION_STATE_DISCARDING, SESSION_STATE_MAPPED));
+
+	// act
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_CLOSE_RCVD, CONNECTION_STATE_OPENED);
 
 	// assert
 	mocks.AssertActualAndExpectedCalls();

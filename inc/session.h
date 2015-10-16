@@ -28,6 +28,12 @@ extern "C" {
 	typedef void(*ON_SESSION_STATE_CHANGED)(void* context, SESSION_STATE new_session_state, SESSION_STATE previous_session_state);
 
 	extern SESSION_HANDLE session_create(CONNECTION_HANDLE connection);
+	extern int session_set_incoming_window(SESSION_HANDLE session, uint32_t incoming_window);
+	extern int session_get_incoming_window(SESSION_HANDLE session, uint32_t* incoming_window);
+	extern int session_set_outgoing_window(SESSION_HANDLE session, uint32_t outgoing_window);
+	extern int session_get_outgoing_window(SESSION_HANDLE session, uint32_t* outgoing_window);
+	extern int session_set_handle_max(SESSION_HANDLE session, handle handle_max);
+	extern int session_get_handle_max(SESSION_HANDLE session, handle* handle_max);
 	extern void session_destroy(SESSION_HANDLE session);
 	extern LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, LINK_ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, ON_SESSION_STATE_CHANGED on_session_state_changed, void* context);
 	extern void session_destroy_link_endpoint(LINK_ENDPOINT_HANDLE endpoint);

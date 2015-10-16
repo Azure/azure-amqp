@@ -316,6 +316,36 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 	return result;
 }
 
+int session_set_incoming_window(SESSION_HANDLE session, uint32_t incoming_window)
+{
+	return 0;
+}
+
+int session_get_incoming_window(SESSION_HANDLE session, uint32_t* incoming_window)
+{
+	return 0;
+}
+
+int session_set_outgoing_window(SESSION_HANDLE session, uint32_t outgoing_window)
+{
+	return 0;
+}
+
+int session_get_outgoing_window(SESSION_HANDLE session, uint32_t* outgoing_window)
+{
+	return 0;
+}
+
+int session_set_handle_max(SESSION_HANDLE session, handle handle_max)
+{
+	return 0;
+}
+
+int session_get_handle_max(SESSION_HANDLE session, handle* handle_max)
+{
+	return 0;
+}
+
 void session_destroy(SESSION_HANDLE session)
 {
 	/* Codes_SRS_SESSION_01_036: [If session is NULL, session_destroy shall do nothing.] */

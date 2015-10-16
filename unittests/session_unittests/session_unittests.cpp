@@ -680,7 +680,12 @@ TEST_METHOD(session_trnsfer_sends_the_frame_to_the_connection)
 	amqp_definitions_mocks definition_mocks;
 	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
 	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_BEGIN_PERFORMATIVE));
+	STRICT_EXPECTED_CALL(definition_mocks, is_begin_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	saved_frame_received_callback(saved_callback_context, TEST_BEGIN_PERFORMATIVE, NULL, 0);
 	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle));
@@ -748,7 +753,12 @@ TEST_METHOD(when_transfer_set_delivery_id_fails_then_session_transfer_fails)
 	amqp_definitions_mocks definition_mocks;
 	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
 	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_BEGIN_PERFORMATIVE));
+	STRICT_EXPECTED_CALL(definition_mocks, is_begin_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	saved_frame_received_callback(saved_callback_context, TEST_BEGIN_PERFORMATIVE, NULL, 0);
 	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0))
 		.SetReturn(1);
@@ -775,7 +785,12 @@ TEST_METHOD(when_amqpvalue_create_transfer_fails_then_session_transfer_fails)
 	amqp_definitions_mocks definition_mocks;
 	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
 	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_BEGIN_PERFORMATIVE));
+	STRICT_EXPECTED_CALL(definition_mocks, is_begin_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	saved_frame_received_callback(saved_callback_context, TEST_BEGIN_PERFORMATIVE, NULL, 0);
 	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle))
@@ -803,13 +818,42 @@ TEST_METHOD(when_connection_encode_frame_fails_then_session_transfer_fails)
 	amqp_definitions_mocks definition_mocks;
 	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
 	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_BEGIN_PERFORMATIVE));
+	STRICT_EXPECTED_CALL(definition_mocks, is_begin_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	saved_frame_received_callback(saved_callback_context, TEST_BEGIN_PERFORMATIVE, NULL, 0);
 	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle));
 	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_transfer_amqp_value, NULL, 0))
 		.SetReturn(1);
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_transfer_amqp_value));
+
+	// act
+	delivery_number delivery_id;
+	int result = session_transfer(link_endpoint, test_transfer_handle, NULL, 0, &delivery_id);
+
+	// assert
+	ASSERT_ARE_NOT_EQUAL(int, 0, result);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint);
+	session_destroy(session);
+}
+
+/* Tests_SRS_SESSION_01_059: [When session_transfer is called while the session is not in the MAPPED state, session_transfer shall fail and return a non-zero value.] */
+TEST_METHOD(when_session_is_not_MAPPED_the_transfer_fails)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
+	mocks.ResetAllCalls();
 
 	// act
 	delivery_number delivery_id;
@@ -997,6 +1041,7 @@ TEST_METHOD(connection_state_changed_callback_to_different_than_OPENED_when_in_M
 	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
 	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
 	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_BEGIN_PERFORMATIVE));
 	STRICT_EXPECTED_CALL(definition_mocks, is_begin_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
 	saved_frame_received_callback(saved_callback_context, TEST_BEGIN_PERFORMATIVE, NULL, 0);
 	mocks.ResetAllCalls();
@@ -1017,5 +1062,11 @@ TEST_METHOD(connection_state_changed_callback_to_different_than_OPENED_when_in_M
 	session_destroy_link_endpoint(link_endpoint);
 	session_destroy(session);
 }
+
+/* Session flow control */
+
+/* Tests_SRS_SESSION_01_012: [The session endpoint assigns each outgoing transfer frame an implicit transfer-id from a session scoped sequence.] */
+
+
 
 END_TEST_SUITE(connection_unittests)

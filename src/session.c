@@ -156,7 +156,6 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 {
 	SESSION_INSTANCE* session_instance = (SESSION_INSTANCE*)context;
 	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
-	uint64_t performative_ulong;
 
 	if (is_begin_type_by_descriptor(descriptor))
 	{
@@ -164,41 +163,49 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 		session_set_state(session_instance, SESSION_STATE_MAPPED);
 	}
-	else
+	else if (is_attach_type_by_descriptor(descriptor))
 	{
-		amqpvalue_get_ulong(descriptor, &performative_ulong);
-		switch (performative_ulong)
+		const char* name = NULL;
+		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+		AMQP_VALUE name_value = amqpvalue_get_list_item(described_value, 0);
+		amqpvalue_get_string(name_value, &name);
+
+		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_name(session_instance, name);
+		if (link_endpoint == NULL)
 		{
-		default:
-			break;
-
-		case AMQP_ATTACH:
-		{
-			const char* name = NULL;
-			AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
-			AMQP_VALUE name_value = amqpvalue_get_list_item(described_value, 0);
-			amqpvalue_get_string(name_value, &name);
-
-			LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_name(session_instance, name);
-			if (link_endpoint == NULL)
-			{
-				/* error */
-			}
-			else
-			{
-				link_endpoint->incoming_handle = 0;
-				link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
-			}
-
-			break;
+			/* error */
 		}
-
-		case AMQP_DETACH:
+		else
 		{
-			uint32_t remote_handle;
-			AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
-			AMQP_VALUE handle_value = amqpvalue_get_list_item(described_value, 0);
-			amqpvalue_get_uint(handle_value, &remote_handle);
+			link_endpoint->incoming_handle = 0;
+			link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
+		}
+	}
+	else if (is_detach_type_by_descriptor(descriptor))
+	{
+		uint32_t remote_handle;
+		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+		AMQP_VALUE handle_value = amqpvalue_get_list_item(described_value, 0);
+		amqpvalue_get_uint(handle_value, &remote_handle);
+		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session_instance, remote_handle);
+		if (link_endpoint == NULL)
+		{
+			/* error */
+		}
+		else
+		{
+			link_endpoint->incoming_handle = 0;
+			link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
+		}
+	}
+	else if (is_flow_type_by_descriptor(descriptor))
+	{
+		uint32_t remote_handle;
+		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+		AMQP_VALUE handle_value = amqpvalue_get_list_item(described_value, 5);
+		if ((handle_value != NULL) &&
+			(amqpvalue_get_uint(handle_value, &remote_handle) == 0))
+		{
 			LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session_instance, remote_handle);
 			if (link_endpoint == NULL)
 			{
@@ -209,90 +216,58 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 				link_endpoint->incoming_handle = 0;
 				link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
 			}
-
-			break;
 		}
 
-		case AMQP_FLOW:
+		LOG(consolelogger_log, 0, "<- [FLOW]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
+	}
+	else if (is_transfer_type_by_descriptor(descriptor))
+	{
+		uint32_t remote_handle;
+		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+		AMQP_VALUE handle_value = amqpvalue_get_list_item(described_value, 0);
+		amqpvalue_get_uint(handle_value, &remote_handle);
+		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session_instance, remote_handle);
+		if (link_endpoint == NULL)
 		{
-			uint32_t remote_handle;
-			AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
-			AMQP_VALUE handle_value = amqpvalue_get_list_item(described_value, 5);
-			if ((handle_value != NULL) &&
-				(amqpvalue_get_uint(handle_value, &remote_handle) == 0))
-			{
-				LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session_instance, remote_handle);
-				if (link_endpoint == NULL)
-				{
-					/* error */
-				}
-				else
-				{
-					link_endpoint->incoming_handle = 0;
-					link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
-				}
-			}
-
-			LOG(consolelogger_log, 0, "<- [FLOW]");
-			LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
-			break;
+			/* error */
 		}
-
-		case AMQP_TRANSFER:
+		else
 		{
-			uint32_t remote_handle;
-			AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
-			AMQP_VALUE handle_value = amqpvalue_get_list_item(described_value, 0);
-			amqpvalue_get_uint(handle_value, &remote_handle);
-			LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session_instance, remote_handle);
-			if (link_endpoint == NULL)
-			{
-				/* error */
-			}
-			else
-			{
-				link_endpoint->incoming_handle = 0;
-				link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
-			}
-
-			LOG(consolelogger_log, 0, "<- [TRANSFER]");
-			LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
-			break;
+			link_endpoint->incoming_handle = 0;
+			link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
 		}
 
-		case AMQP_DISPOSITION:
+		LOG(consolelogger_log, 0, "<- [TRANSFER]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
+	}
+	else if (is_disposition_type_by_descriptor(descriptor))
+	{
+		uint32_t i;
+		for (i = 0; i < session_instance->link_endpoint_count; i++)
 		{
-			uint32_t i;
-			for (i = 0; i < session_instance->link_endpoint_count; i++)
-			{
-				LINK_ENDPOINT_INSTANCE* link_endpoint = session_instance->link_endpoints[i];
-				link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
-			}
-
-			break;
+			LINK_ENDPOINT_INSTANCE* link_endpoint = session_instance->link_endpoints[i];
+			link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
 		}
-
-		case AMQP_END:
+	}
+	else if (is_end_type_by_descriptor(descriptor))
+	{
+		const char* error = NULL;
+		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
+		AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 0);
+		AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
+		AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
+		if (error_description_value != NULL)
 		{
-			const char* error = NULL;
-			AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
-			AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 0);
-			AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
-			AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
-			if (error_description_value != NULL)
-			{
-				amqpvalue_get_string(error_description_value, &error);
-			}
-			else
-			{
-				error = NULL;
-			}
+			amqpvalue_get_string(error_description_value, &error);
+		}
+		else
+		{
+			error = NULL;
+		}
 
-			LOG(consolelogger_log, 0, "<- [END]");
-			LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
-			break;
-		}
-		}
+		LOG(consolelogger_log, 0, "<- [END]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 	}
 }
 

@@ -49,10 +49,10 @@ static void session_set_state(SESSION_INSTANCE* session_instance, SESSION_STATE 
 	}
 }
 
-static int send_begin(ENDPOINT_HANDLE endpoint, transfer_number next_outgoing_id, uint32_t incoming_window, uint32_t outgoing_window)
+static int send_begin(SESSION_INSTANCE* session_instance)
 {
 	int result;
-	BEGIN_HANDLE begin = begin_create(next_outgoing_id, incoming_window, outgoing_window);
+	BEGIN_HANDLE begin = begin_create(session_instance->next_outgoing_id, session_instance->incoming_window, session_instance->outgoing_window);
 
 	if (begin == NULL)
 	{
@@ -60,27 +60,36 @@ static int send_begin(ENDPOINT_HANDLE endpoint, transfer_number next_outgoing_id
 	}
 	else
 	{
-		AMQP_VALUE begin_performative_value = amqpvalue_create_begin(begin);
-		if (begin_performative_value == NULL)
+		if (begin_set_handle_max(begin, session_instance->handle_max) != 0)
 		{
 			result = __LINE__;
 		}
 		else
 		{
-			if (connection_encode_frame(endpoint, begin_performative_value, NULL, 0) != 0)
+			AMQP_VALUE begin_performative_value = amqpvalue_create_begin(begin);
+			if (begin_performative_value == NULL)
 			{
 				result = __LINE__;
 			}
 			else
 			{
-				LOG(consolelogger_log, 0, "-> [BEGIN]");
-				LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(begin_performative_value));
+				if (connection_encode_frame(session_instance->endpoint, begin_performative_value, NULL, 0) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					LOG(consolelogger_log, 0, "-> [BEGIN]");
+					LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(begin_performative_value));
 
-				result = 0;
+					result = 0;
+				}
+
+				amqpvalue_destroy(begin_performative_value);
 			}
-
-			amqpvalue_destroy(begin_performative_value);
 		}
+
+		begin_destroy(begin);
 	}
 
 	return result;
@@ -145,7 +154,7 @@ static void on_connection_state_changed(void* context, CONNECTION_STATE new_conn
 	/* Codes_SRS_SESSION_01_060: [If the previous connection state is not OPENED and the new connection state is OPENED, the BEGIN frame shall be sent out and the state shall be switched to BEGIN_SENT.] */
 	if ((new_connection_state == CONNECTION_STATE_OPENED) && (previous_connection_state != CONNECTION_STATE_OPENED) && (session_instance->session_state == SESSION_STATE_UNMAPPED))
 	{
-		if (send_begin(session_instance->endpoint, 0, 2000, 200) == 0)
+		if (send_begin(session_instance) == 0)
 		{
 			session_set_state(session_instance, SESSION_STATE_BEGIN_SENT);
 		}

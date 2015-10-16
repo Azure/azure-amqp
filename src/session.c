@@ -503,6 +503,8 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 		{
 			AMQP_VALUE transfer_value;
 
+			/* Codes_SRS_SESSION_01_012: [The session endpoint assigns each outgoing transfer frame an implicit transfer-id from a session scoped sequence.] */
+			/* Codes_SRS_SESSION_01_027: [sending a transfer Upon sending a transfer, the sending endpoint will increment its next-outgoing-id] */
 			*delivery_id = session_instance->delivery_id++;
 			if (transfer_set_delivery_id(transfer, *delivery_id) != 0)
 			{

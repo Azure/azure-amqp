@@ -1066,7 +1066,51 @@ TEST_METHOD(connection_state_changed_callback_to_different_than_OPENED_when_in_M
 /* Session flow control */
 
 /* Tests_SRS_SESSION_01_012: [The session endpoint assigns each outgoing transfer frame an implicit transfer-id from a session scoped sequence.] */
+/* Tests_SRS_SESSION_01_027: [sending a transfer Upon sending a transfer, the sending endpoint will increment its next-outgoing-id] */
+TEST_METHOD(when_2_transfers_happen_on_2_different_endpoints_2_different_delivery_ids_are_assigned)
+{
+	// arrange
+	session_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	SESSION_HANDLE session = session_create(TEST_CONNECTION_HANDLE);
+	LINK_ENDPOINT_HANDLE link_endpoint0 = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
+	LINK_ENDPOINT_HANDLE link_endpoint1 = session_create_link_endpoint(session, "2", test_frame_received_callback, test_on_session_state_changed, NULL);
+	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_get_inplace_descriptor(TEST_BEGIN_PERFORMATIVE));
+	STRICT_EXPECTED_CALL(definition_mocks, is_begin_type_by_descriptor(TEST_DESCRIPTOR_AMQP_VALUE));
+	saved_frame_received_callback(saved_callback_context, TEST_BEGIN_PERFORMATIVE, NULL, 0);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
 
+	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
+
+	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle));
+	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_transfer_amqp_value, NULL, 0));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_transfer_amqp_value));
+
+	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 1));
+	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle));
+	STRICT_EXPECTED_CALL(mocks, connection_encode_frame(TEST_ENDPOINT_HANDLE, test_transfer_amqp_value, NULL, 0));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_destroy(test_transfer_amqp_value));
+
+	// act
+	delivery_number delivery_id0;
+	(void)session_transfer(link_endpoint0, test_transfer_handle, NULL, 0, &delivery_id0);
+	delivery_number delivery_id1;
+	(void)session_transfer(link_endpoint0, test_transfer_handle, NULL, 0, &delivery_id1);
+
+	// assert
+	ASSERT_ARE_EQUAL(delivery_number, 0, delivery_id0);
+	ASSERT_ARE_EQUAL(delivery_number, 1, delivery_id1);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	session_destroy_link_endpoint(link_endpoint0);
+	session_destroy_link_endpoint(link_endpoint1);
+	session_destroy(session);
+}
 
 
 END_TEST_SUITE(connection_unittests)

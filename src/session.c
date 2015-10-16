@@ -26,7 +26,9 @@ typedef struct SESSION_INSTANCE_TAG
 	ENDPOINT_HANDLE endpoint;
 	LINK_ENDPOINT_INSTANCE** link_endpoints;
 	uint32_t link_endpoint_count;
-	delivery_number delivery_id;
+
+	/* Codes_SRS_SESSION_01_016: [next-outgoing-id The next-outgoing-id is the transfer-id to assign to the next transfer frame.] */
+	delivery_number next_outgoing_id;
 
 	uint32_t handle_max;
 } SESSION_INSTANCE;
@@ -293,7 +295,8 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 			result->handle_max = 4294967295;
 
 			/* Codes_SRS_SESSION_01_057: [The delivery ids shall be assigned starting at 0.] */
-			result->delivery_id = 0;
+			/* Codes_SRS_SESSION_01_017: [The nextoutgoing-id MAY be initialized to an arbitrary value ] */
+			result->next_outgoing_id = 0;
 
 			/* Codes_SRS_SESSION_01_032: [session_create shall create a new session endpoint by calling connection_create_endpoint.] */
 			result->endpoint = connection_create_endpoint(connection, on_frame_received, on_connection_state_changed, result);
@@ -505,7 +508,7 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 
 			/* Codes_SRS_SESSION_01_012: [The session endpoint assigns each outgoing transfer frame an implicit transfer-id from a session scoped sequence.] */
 			/* Codes_SRS_SESSION_01_027: [sending a transfer Upon sending a transfer, the sending endpoint will increment its next-outgoing-id] */
-			*delivery_id = session_instance->delivery_id++;
+			*delivery_id = session_instance->next_outgoing_id;
 			if (transfer_set_delivery_id(transfer, *delivery_id) != 0)
 			{
 				/* Codes_SRS_SESSION_01_058: [When any other error occurs, session_transfer shall fail and return a non-zero value.] */
@@ -529,6 +532,9 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 					}
 					else
 					{
+						/* Codes_SRS_SESSION_01_018: [is incremented after each successive transfer according to RFC-1982 [RFC1982] serial number arithmetic.] */
+						session_instance->next_outgoing_id++;
+
 						/* Codes_SRS_SESSION_01_053: [On success, session_transfer shall return 0.] */
 						result = 0;
 					}

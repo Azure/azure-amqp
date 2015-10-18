@@ -427,11 +427,11 @@ static void connection_receive_callback(void* context, const void* buffer, size_
 	}
 }
 
-static void connection_empty_frame_received(void* context, uint16_t channel)
+static void on_empty_amqp_frame_received(void* context, uint16_t channel)
 {
 }
 
-static void connection_endpoint_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, const unsigned char* payload_bytes, uint32_t payload_size)
+static void on_amqp_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, const unsigned char* payload_bytes, uint32_t payload_size)
 {
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)context;
 
@@ -665,7 +665,7 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 			}
 			else
 			{
-				result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_endpoint_frame_received, connection_empty_frame_received, amqp_frame_codec_error, result);
+				result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, on_amqp_frame_received, on_empty_amqp_frame_received, amqp_frame_codec_error, result);
 				if (result->amqp_frame_codec == NULL)
 				{
 					/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */

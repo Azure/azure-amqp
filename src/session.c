@@ -329,7 +329,7 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 			else
 			{
 				result->delivery_queue = deliveryqueue_create();
-				if (result->delivery_queue != NULL)
+				if (result->delivery_queue == NULL)
 				{
 					connection_destroy_endpoint(result->endpoint);
 					amqpalloc_free(result);

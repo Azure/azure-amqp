@@ -15,7 +15,7 @@
 typedef struct DELIVERY_INSTANCE_TAG
 {
 	delivery_number delivery_id;
-	DELIVERY_SETTLED_CALLBACK delivery_settled_callback;
+	ON_DELIVERY_SETTLED on_delivery_settled;
 	void* callback_context;
 } DELIVERY_INSTANCE;
 
@@ -76,7 +76,7 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 			if ((link->pending_deliveries[i].delivery_id >= first) &&
 				(link->pending_deliveries[i].delivery_id <= last))
 			{
-				link->pending_deliveries[i].delivery_settled_callback(link->pending_deliveries[i].callback_context, link->pending_deliveries[i].delivery_id);
+				link->pending_deliveries[i].on_delivery_settled(link->pending_deliveries[i].callback_context, link->pending_deliveries[i].delivery_id);
 				if (link->pending_delivery_count - i > 1)
 				{
 					memmove(&link->pending_deliveries[i], &link->pending_deliveries[i + 1], sizeof(DELIVERY_INSTANCE) * (link->pending_delivery_count - i - 1));
@@ -174,7 +174,7 @@ static int encode_bytes(void* context, const void* bytes, size_t length)
 	return 0;
 }
 
-LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target, AMQP_FRAME_RECEIVED_CALLBACK frame_received_callback)
+LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target, ON_TRANSFER_RECEIVED on_transfer_received, void* callback_context)
 {
 	LINK_INSTANCE* result = amqpalloc_malloc(sizeof(LINK_INSTANCE));
 	if (result != NULL)
@@ -240,7 +240,7 @@ int link_get_state(LINK_HANDLE handle, LINK_STATE* link_state)
 	return result;
 }
 
-int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, DELIVERY_SETTLED_CALLBACK delivery_settled_callback, void* callback_context)
+int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, ON_DELIVERY_SETTLED on_delivery_settled, void* callback_context)
 {
 	int result;
 	LINK_INSTANCE* link = (LINK_INSTANCE*)handle;
@@ -288,7 +288,7 @@ int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, D
 			}
 			else
 			{
-				link->pending_deliveries[link->pending_delivery_count].delivery_settled_callback = delivery_settled_callback;
+				link->pending_deliveries[link->pending_delivery_count].on_delivery_settled = on_delivery_settled;
 				link->pending_deliveries[link->pending_delivery_count].callback_context = callback_context;
 				link->pending_delivery_count++;
 

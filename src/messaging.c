@@ -133,14 +133,9 @@ static void delivery_settled_callback(void* context, delivery_number delivery_no
 	(void)printf("delivery callback %u\r\n", delivery_no);
 }
 
-static void messaging_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, const unsigned char* payload_bytes, uint32_t frame_payload_size)
+static void on_transfer_received(void* context, TRANSFER_HANDLE transfer, uint32_t payoad_size, const unsigned char* payload_bytes)
 {
 }
-
-static void messaging_frame_payload_bytes_received(void* context, const unsigned char* payload_bytes, uint32_t byte_count)
-{
-}
-
 
 int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND_COMPLETE_CALLBACK callback, const void* callback_context)
 {
@@ -223,7 +218,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 
 				if (messaging->link == NULL)
 				{
-					messaging->link = link_create(messaging->session, "voodoo", source_value, target_value, messaging_frame_received);
+					messaging->link = link_create(messaging->session, "voodoo", source_value, target_value, on_transfer_received, messaging);
 					if (messaging->link == NULL)
 					{
 						result = __LINE__;

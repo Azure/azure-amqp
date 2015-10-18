@@ -28,8 +28,8 @@ typedef struct ENDPOINT_INSTANCE_TAG
 {
 	uint16_t incoming_channel;
 	uint16_t outgoing_channel;
-	ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback;
-	CONNECTION_STATE_CHANGED_CALLBACK connection_state_changed_callback;
+	ON_ENDPOINT_FRAME_RECEIVED on_endpoint_frame_received;
+	ON_CONNECTION_STATE_CHANGED on_connection_state_changed;
 	void* callback_context;
 	CONNECTION_HANDLE connection;
 } ENDPOINT_INSTANCE;
@@ -56,7 +56,7 @@ typedef struct CONNECTION_DATA_TAG
 	unsigned int idle_timeout_specified : 1;
 } CONNECTION_INSTANCE;
 
-/* Codes_SRS_CONNECTION_01_258: [connection_state_changed_callback shall be invoked whenever the connection state changes.]*/
+/* Codes_SRS_CONNECTION_01_258: [on_connection_state_changed shall be invoked whenever the connection state changes.]*/
 static void connection_set_state(CONNECTION_INSTANCE* connection_instance, CONNECTION_STATE connection_state)
 {
 	uint64_t i;
@@ -64,11 +64,11 @@ static void connection_set_state(CONNECTION_INSTANCE* connection_instance, CONNE
 	CONNECTION_STATE previous_state = connection_instance->connection_state;
 	connection_instance->connection_state = connection_state;
 
-	/* Codes_SRS_CONNECTION_01_260: [Each endpoint’s connection_state_changed_callback shall be called.] */
+	/* Codes_SRS_CONNECTION_01_260: [Each endpoint’s on_connection_state_changed shall be called.] */
 	for (i = 0; i < connection_instance->endpoint_count; i++)
 	{
 		/* Codes_SRS_CONNECTION_01_259: [The callback_context passed in connection_create_endpoint.] */
-		connection_instance->endpoints[i]->connection_state_changed_callback(connection_instance->endpoints[i]->callback_context, connection_state, previous_state);
+		connection_instance->endpoints[i]->on_connection_state_changed(connection_instance->endpoints[i]->callback_context, connection_state, previous_state);
 	}
 }
 
@@ -431,7 +431,7 @@ static void connection_empty_frame_received(void* context, uint16_t channel)
 {
 }
 
-static void connection_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, const unsigned char* payload_bytes, uint32_t payload_size)
+static void connection_endpoint_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, const unsigned char* payload_bytes, uint32_t payload_size)
 {
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)context;
 
@@ -442,8 +442,8 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 		default:
 			if (performative == NULL)
 			{
-				/* Codes_SRS_CONNECTION_01_223: [If the frame_received_callback is called with a NULL performative then the connection shall be closed with the error condition amqp:internal-error and an implementation defined error description.] */
-				close_connection_with_error(connection_instance, "amqp:internal-error", "connection_frame_received::NULL performative");
+				/* Codes_SRS_CONNECTION_01_223: [If the on_endpoint_frame_received is called with a NULL performative then the connection shall be closed with the error condition amqp:internal-error and an implementation defined error description.] */
+				close_connection_with_error(connection_instance, "amqp:internal-error", "connection_endpoint_frame_received::NULL performative");
 			}
 			else
 			{
@@ -475,7 +475,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 						{
 							/* Codes_SRS_CONNECTION_01_143: [If any of the values in the received open frame are invalid then the connection shall be closed.] */
 							/* Codes_SRS_CONNECTION_01_220: [The error amqp:invalid-field shall be set in the error.condition field of the CLOSE frame.] */
-							close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_frame_received::failed parsing OPEN frame");
+							close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_endpoint_frame_received::failed parsing OPEN frame");
 						}
 						else
 						{
@@ -485,7 +485,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 							{
 								/* Codes_SRS_CONNECTION_01_143: [If any of the values in the received open frame are invalid then the connection shall be closed.] */
 								/* Codes_SRS_CONNECTION_01_220: [The error amqp:invalid-field shall be set in the error.condition field of the CLOSE frame.] */
-								close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_frame_received::failed parsing OPEN frame");
+								close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_endpoint_frame_received::failed parsing OPEN frame");
 							}
 							else
 							{
@@ -543,7 +543,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 						if ((channel > connection_instance->channel_max) ||
 							(amqpvalue_get_close(performative, &close_handle) != 0))
 						{
-							close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_frame_received::failed parsing CLOSE frame");
+							close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_endpoint_frame_received::failed parsing CLOSE frame");
 						}
 						else
 						{
@@ -579,7 +579,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 						else
 						{
 							session_endpoint->incoming_channel = channel;
-							session_endpoint->frame_received_callback(session_endpoint->callback_context, performative, payload_size, payload_bytes);
+							session_endpoint->on_endpoint_frame_received(session_endpoint->callback_context, performative, payload_size, payload_bytes);
 						}
 
 						break;
@@ -599,7 +599,7 @@ static void connection_frame_received(void* context, uint16_t channel, AMQP_VALU
 						}
 						else
 						{
-							session_endpoint->frame_received_callback(session_endpoint->callback_context, performative, payload_size, payload_bytes);
+							session_endpoint->on_endpoint_frame_received(session_endpoint->callback_context, performative, payload_size, payload_bytes);
 						}
 
 						break;
@@ -665,7 +665,7 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 			}
 			else
 			{
-				result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_frame_received, connection_empty_frame_received, amqp_frame_codec_error, result);
+				result->amqp_frame_codec = amqp_frame_codec_create(result->frame_codec, connection_endpoint_frame_received, connection_empty_frame_received, amqp_frame_codec_error, result);
 				if (result->amqp_frame_codec == NULL)
 				{
 					/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */
@@ -1033,15 +1033,15 @@ void connection_dowork(CONNECTION_HANDLE connection)
 	}
 }
 
-ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, CONNECTION_STATE_CHANGED_CALLBACK connection_state_changed_callback, void* context)
+ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ON_ENDPOINT_FRAME_RECEIVED on_endpoint_frame_received, ON_CONNECTION_STATE_CHANGED on_connection_state_changed, void* context)
 {
 	ENDPOINT_INSTANCE* result;
 
-	/* Codes_SRS_CONNECTION_01_113: [If connection, frame_received_callback or connection_state_changed_callback is NULL, connection_create_endpoint shall fail and return NULL.] */
+	/* Codes_SRS_CONNECTION_01_113: [If connection, on_endpoint_frame_received or on_connection_state_changed is NULL, connection_create_endpoint shall fail and return NULL.] */
 	/* Codes_SRS_CONNECTION_01_193: [The context argument shall be allowed to be NULL.] */
 	if ((connection == NULL) ||
-		(frame_received_callback == NULL) ||
-		(connection_state_changed_callback == NULL))
+		(on_endpoint_frame_received == NULL) ||
+		(on_connection_state_changed == NULL))
 	{
 		result = NULL;
 	}
@@ -1075,8 +1075,8 @@ ENDPOINT_HANDLE connection_create_endpoint(CONNECTION_HANDLE connection, ENDPOIN
 			{
 				ENDPOINT_INSTANCE** new_endpoints;
 
-				result->frame_received_callback = frame_received_callback;
-				result->connection_state_changed_callback = connection_state_changed_callback;
+				result->on_endpoint_frame_received = on_endpoint_frame_received;
+				result->on_connection_state_changed = on_connection_state_changed;
 				result->callback_context = context;
 				result->outgoing_channel = i;
 				result->connection = connection;

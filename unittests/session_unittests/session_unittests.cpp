@@ -20,8 +20,8 @@
 #define TEST_ATTACH_PERFORMATIVE		(AMQP_VALUE)0x5000
 #define TEST_BEGIN_PERFORMATIVE			(AMQP_VALUE)0x5001
 
-static ENDPOINT_FRAME_RECEIVED_CALLBACK saved_frame_received_callback;
-static CONNECTION_STATE_CHANGED_CALLBACK saved_connection_state_changed_callback;
+static ON_ENDPOINT_FRAME_RECEIVED saved_frame_received_callback;
+static ON_CONNECTION_STATE_CHANGED saved_connection_state_changed_callback;
 static void* saved_callback_context;
 static uint32_t remote_max_frame_size = 512;
 
@@ -95,9 +95,9 @@ public:
 	MOCK_METHOD_END(char*, NULL);
 
 	/* connection mocks */
-	MOCK_STATIC_METHOD_4(, ENDPOINT_HANDLE, connection_create_endpoint, CONNECTION_HANDLE, connection, ENDPOINT_FRAME_RECEIVED_CALLBACK, frame_received_callback, CONNECTION_STATE_CHANGED_CALLBACK, connection_state_changed_callback, void*, context)
+	MOCK_STATIC_METHOD_4(, ENDPOINT_HANDLE, connection_create_endpoint, CONNECTION_HANDLE, connection, ON_ENDPOINT_FRAME_RECEIVED, frame_received_callback, ON_CONNECTION_STATE_CHANGED, on_connection_state_changed, void*, context)
 		saved_frame_received_callback = frame_received_callback;
-		saved_connection_state_changed_callback = connection_state_changed_callback;
+		saved_connection_state_changed_callback = on_connection_state_changed;
 		saved_callback_context = context;
 	MOCK_METHOD_END(ENDPOINT_HANDLE, TEST_ENDPOINT_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, connection_destroy_endpoint, ENDPOINT_HANDLE, endpoint)
@@ -133,7 +133,7 @@ extern "C"
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , char*, amqpvalue_to_string, AMQP_VALUE, amqp_value)
 
-	DECLARE_GLOBAL_MOCK_METHOD_4(session_mocks, , ENDPOINT_HANDLE, connection_create_endpoint, CONNECTION_HANDLE, connection, ENDPOINT_FRAME_RECEIVED_CALLBACK, frame_received_callback, CONNECTION_STATE_CHANGED_CALLBACK, connection_state_changed_callback, void*, context);
+	DECLARE_GLOBAL_MOCK_METHOD_4(session_mocks, , ENDPOINT_HANDLE, connection_create_endpoint, CONNECTION_HANDLE, connection, ON_ENDPOINT_FRAME_RECEIVED, frame_received_callback, ON_CONNECTION_STATE_CHANGED, on_connection_state_changed, void*, context);
 	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , void, connection_destroy_endpoint, ENDPOINT_HANDLE, endpoint);
 	DECLARE_GLOBAL_MOCK_METHOD_4(session_mocks, , int, connection_encode_frame, ENDPOINT_HANDLE, endpoint, const AMQP_VALUE, performative, PAYLOAD*, payloads, size_t, payload_count)
 	DECLARE_GLOBAL_MOCK_METHOD_2(session_mocks, , int, connection_get_remote_max_frame_size, CONNECTION_HANDLE, connection, uint32_t*, remote_max_frame_size);
@@ -889,7 +889,7 @@ TEST_METHOD(when_session_is_not_MAPPED_the_transfer_fails)
 	session_destroy(session);
 }
 
-/* connection_state_changed_callback */
+/* on_connection_state_changed */
 
 /* Tests_SRS_SESSION_01_060: [If the previous connection state is not OPENED and the new connection state is OPENED, the BEGIN frame shall be sent out and the state shall be switched to BEGIN_SENT.] */
 TEST_METHOD(connection_state_changed_callback_with_OPENED_triggers_sending_the_BEGIN_frame)

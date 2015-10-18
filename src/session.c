@@ -12,7 +12,7 @@ typedef struct LINK_ENDPOINT_INSTANCE_TAG
 	char* name;
 	handle incoming_handle;
 	handle outgoing_handle;
-	ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback;
+	ON_ENDPOINT_FRAME_RECEIVED frame_received_callback;
 	ON_SESSION_STATE_CHANGED on_session_state_changed;
 	void* callback_context;
 	SESSION_HANDLE session;
@@ -20,7 +20,7 @@ typedef struct LINK_ENDPOINT_INSTANCE_TAG
 
 typedef struct SESSION_INSTANCE_TAG
 {
-	ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback;
+	ON_ENDPOINT_FRAME_RECEIVED frame_received_callback;
 	void* frame_received_callback_context;
 	SESSION_STATE session_state;
 	CONNECTION_HANDLE connection;
@@ -441,7 +441,7 @@ void session_destroy(SESSION_HANDLE session)
 	}
 }
 
-LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, ENDPOINT_FRAME_RECEIVED_CALLBACK frame_received_callback, ON_SESSION_STATE_CHANGED on_session_state_changed, void* context)
+LINK_ENDPOINT_HANDLE session_create_link_endpoint(SESSION_HANDLE session, const char* name, ON_ENDPOINT_FRAME_RECEIVED frame_received_callback, ON_SESSION_STATE_CHANGED on_session_state_changed, void* context)
 {
 	LINK_ENDPOINT_INSTANCE* result;
 

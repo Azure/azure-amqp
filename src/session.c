@@ -5,6 +5,7 @@
 #include "consolelogger.h"
 #include "logger.h"
 #include "amqpvalue_to_string.h"
+#include "delivery_queue.h"
 
 typedef struct LINK_ENDPOINT_INSTANCE_TAG
 {
@@ -26,6 +27,7 @@ typedef struct SESSION_INSTANCE_TAG
 	ENDPOINT_HANDLE endpoint;
 	LINK_ENDPOINT_INSTANCE** link_endpoints;
 	uint32_t link_endpoint_count;
+	DELIVERY_QUEUE_HANDLE delivery_queue;
 
 	/* Codes_SRS_SESSION_01_016: [next-outgoing-id The next-outgoing-id is the transfer-id to assign to the next transfer frame.] */
 	delivery_number next_outgoing_id;
@@ -326,7 +328,17 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 			}
 			else
 			{
-				session_set_state(result, SESSION_STATE_UNMAPPED);
+				result->delivery_queue = deliveryqueue_create();
+				if (result->delivery_queue != NULL)
+				{
+					connection_destroy_endpoint(result->endpoint);
+					amqpalloc_free(result);
+					result = NULL;
+				}
+				else
+				{
+					session_set_state(result, SESSION_STATE_UNMAPPED);
+				}
 			}
 		}
 	}
@@ -419,6 +431,7 @@ void session_destroy(SESSION_HANDLE session)
 		/* Codes_SRS_SESSION_01_034: [session_destroy shall free all resources allocated by session_create.] */
 		/* Codes_SRS_SESSION_01_035: [The endpoint created in session_create shall be freed by calling connection_destroy_endpoint.] */
 		connection_destroy_endpoint(session_instance->endpoint);
+		deliveryqueue_destroy(session_instance->delivery_queue);
 		if (session_instance->link_endpoints != NULL)
 		{
 			amqpalloc_free(session_instance->link_endpoints);

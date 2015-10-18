@@ -8,13 +8,14 @@
 #include "amqp_frame_codec.h"
 #include "amqp_definitions.h"
 #include "amqp_definitions_mocks.h"
-#include "list.h"
+#include "delivery_queue.h"
 
 #define TEST_ENDPOINT_HANDLE			(ENDPOINT_HANDLE)0x4242
 #define TEST_DESCRIBED_AMQP_VALUE		(AMQP_VALUE)0x4247
 #define TEST_LIST_ITEM_AMQP_VALUE		(AMQP_VALUE)0x4246
 #define TEST_DESCRIPTOR_AMQP_VALUE		(AMQP_VALUE)0x4245
 #define TEST_CONNECTION_HANDLE			(CONNECTION_HANDLE)0x4248
+#define TEST_DELIVERY_QUEUE_HANDLE		(DELIVERY_QUEUE_HANDLE)0x4249
 #define TEST_CONTEXT					(void*)0x4444
 #define TEST_ATTACH_PERFORMATIVE		(AMQP_VALUE)0x5000
 #define TEST_BEGIN_PERFORMATIVE			(AMQP_VALUE)0x5001
@@ -83,6 +84,12 @@ public:
 	MOCK_STATIC_METHOD_2(, int, amqpvalue_get_encoded_size, AMQP_VALUE, value, size_t*, encoded_size)
 	MOCK_METHOD_END(int, 0);
 
+	/* delivery_queue mocks */
+	MOCK_STATIC_METHOD_0(, DELIVERY_QUEUE_HANDLE, deliveryqueue_create)
+	MOCK_METHOD_END(DELIVERY_QUEUE_HANDLE, TEST_DELIVERY_QUEUE_HANDLE);
+	MOCK_STATIC_METHOD_1(, void, deliveryqueue_destroy, DELIVERY_QUEUE_HANDLE, delivery_queue)
+	MOCK_VOID_METHOD_END();
+
 	/* amqpvalue_to_string mocks */
 	MOCK_STATIC_METHOD_1(, char*, amqpvalue_to_string, AMQP_VALUE, amqp_value)
 	MOCK_METHOD_END(char*, NULL);
@@ -120,6 +127,9 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , AMQP_VALUE, amqpvalue_get_described_value, AMQP_VALUE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , void, amqpvalue_destroy, AMQP_VALUE, amqp_value)
 	DECLARE_GLOBAL_MOCK_METHOD_2(session_mocks, , int, amqpvalue_get_encoded_size, AMQP_VALUE, value, size_t*, encoded_size);
+
+	DECLARE_GLOBAL_MOCK_METHOD_0(session_mocks, , DELIVERY_QUEUE_HANDLE, deliveryqueue_create);
+	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , void, deliveryqueue_destroy, DELIVERY_QUEUE_HANDLE, delivery_queue);
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , char*, amqpvalue_to_string, AMQP_VALUE, amqp_value)
 

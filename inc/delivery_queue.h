@@ -14,7 +14,7 @@ extern "C" {
 
 	extern DELIVERY_QUEUE_HANDLE deliveryqueue_create(void);
 	extern void deliveryqueue_destroy(DELIVERY_QUEUE_HANDLE delivery_queue);
-	extern int delivery_queue_transfer(DELIVERY_QUEUE_HANDLE delivery_queue, TRANSFER_HANDLE transfer, PAYLOAD* payloads, size_t payload_count);
+	extern int deliveryqueue_transfer(DELIVERY_QUEUE_HANDLE delivery_queue, TRANSFER_HANDLE transfer, PAYLOAD* payloads, size_t payload_count);
 
 #ifdef __cplusplus
 }

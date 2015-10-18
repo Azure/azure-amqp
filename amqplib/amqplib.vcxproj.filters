@@ -78,9 +78,6 @@
     <ClInclude Include="..\inc\amqpvalue_to_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\inc\delivery_queue.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\socketio_win32.c">
@@ -141,9 +138,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\amqpvalue_to_string.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\delivery_queue.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

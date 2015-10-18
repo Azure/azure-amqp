@@ -5,7 +5,12 @@
 #include "consolelogger.h"
 #include "logger.h"
 #include "amqpvalue_to_string.h"
-#include "delivery_queue.h"
+
+typedef struct DELIVERY_TAG
+{
+	TRANSFER_HANDLE transfer;
+	PAYLOAD payload;
+} DELIVERY;
 
 typedef struct LINK_ENDPOINT_INSTANCE_TAG
 {
@@ -27,7 +32,8 @@ typedef struct SESSION_INSTANCE_TAG
 	ENDPOINT_HANDLE endpoint;
 	LINK_ENDPOINT_INSTANCE** link_endpoints;
 	uint32_t link_endpoint_count;
-	DELIVERY_QUEUE_HANDLE delivery_queue;
+	size_t delivery_count;
+
 
 	/* Codes_SRS_SESSION_01_016: [next-outgoing-id The next-outgoing-id is the transfer-id to assign to the next transfer frame.] */
 	delivery_number next_outgoing_id;
@@ -328,17 +334,7 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 			}
 			else
 			{
-				result->delivery_queue = deliveryqueue_create();
-				if (result->delivery_queue == NULL)
-				{
-					connection_destroy_endpoint(result->endpoint);
-					amqpalloc_free(result);
-					result = NULL;
-				}
-				else
-				{
-					session_set_state(result, SESSION_STATE_UNMAPPED);
-				}
+				session_set_state(result, SESSION_STATE_UNMAPPED);
 			}
 		}
 	}
@@ -431,7 +427,6 @@ void session_destroy(SESSION_HANDLE session)
 		/* Codes_SRS_SESSION_01_034: [session_destroy shall free all resources allocated by session_create.] */
 		/* Codes_SRS_SESSION_01_035: [The endpoint created in session_create shall be freed by calling connection_destroy_endpoint.] */
 		connection_destroy_endpoint(session_instance->endpoint);
-		deliveryqueue_destroy(session_instance->delivery_queue);
 		if (session_instance->link_endpoints != NULL)
 		{
 			amqpalloc_free(session_instance->link_endpoints);
@@ -640,21 +635,37 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 					}
 					else
 					{
-						available_frame_size -= encoded_size;
+						uint32_t payload_size = 0;
+						size_t i;
 
-						/* Codes_SRS_SESSION_01_055: [The encoding of the frame shall be done by calling connection_encode_frame and passing as arguments: the connection handle associated with the session, the transfer performative and the payload chunks passed to session_transfer.] */
-						if (connection_encode_frame(session_instance->endpoint, transfer_value, payloads, payload_count) != 0)
+						for (i = 0; i < payload_count; i++)
 						{
-							/* Codes_SRS_SESSION_01_056: [If connection_encode_frame fails then session_transfer shall fail and return a non-zero value.] */
-							result = __LINE__;
+							payload_size += payloads[i].length;
+						}
+
+						available_frame_size -= encoded_size;
+						available_frame_size -= 8;
+
+						if (available_frame_size >= payload_size)
+						{
+							/* Codes_SRS_SESSION_01_055: [The encoding of the frame shall be done by calling connection_encode_frame and passing as arguments: the connection handle associated with the session, the transfer performative and the payload chunks passed to session_transfer.] */
+							if (connection_encode_frame(session_instance->endpoint, transfer_value, payloads, payload_count) != 0)
+							{
+								/* Codes_SRS_SESSION_01_056: [If connection_encode_frame fails then session_transfer shall fail and return a non-zero value.] */
+								result = __LINE__;
+							}
+							else
+							{
+								/* Codes_SRS_SESSION_01_018: [is incremented after each successive transfer according to RFC-1982 [RFC1982] serial number arithmetic.] */
+								session_instance->next_outgoing_id++;
+
+								/* Codes_SRS_SESSION_01_053: [On success, session_transfer shall return 0.] */
+								result = 0;
+							}
 						}
 						else
 						{
-							/* Codes_SRS_SESSION_01_018: [is incremented after each successive transfer according to RFC-1982 [RFC1982] serial number arithmetic.] */
-							session_instance->next_outgoing_id++;
 
-							/* Codes_SRS_SESSION_01_053: [On success, session_transfer shall return 0.] */
-							result = 0;
 						}
 					}
 

@@ -134,6 +134,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* description */
 					item_value = amqpvalue_get_list_item(list_value, 1);
@@ -153,6 +155,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* info */
 					item_value = amqpvalue_get_list_item(list_value, 2);
@@ -172,6 +176,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					error_instance->composite_value = amqpvalue_clone(value);
@@ -494,6 +500,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* hostname */
 					item_value = amqpvalue_get_list_item(list_value, 1);
@@ -513,6 +521,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* max-frame-size */
 					item_value = amqpvalue_get_list_item(list_value, 2);
@@ -532,6 +542,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* channel-max */
 					item_value = amqpvalue_get_list_item(list_value, 3);
@@ -551,6 +563,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* idle-time-out */
 					item_value = amqpvalue_get_list_item(list_value, 4);
@@ -570,6 +584,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* outgoing-locales */
 					item_value = amqpvalue_get_list_item(list_value, 5);
@@ -589,6 +605,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* incoming-locales */
 					item_value = amqpvalue_get_list_item(list_value, 6);
@@ -608,6 +626,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* offered-capabilities */
 					item_value = amqpvalue_get_list_item(list_value, 7);
@@ -627,6 +647,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* desired-capabilities */
 					item_value = amqpvalue_get_list_item(list_value, 8);
@@ -646,6 +668,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* properties */
 					item_value = amqpvalue_get_list_item(list_value, 9);
@@ -665,6 +689,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					open_instance->composite_value = amqpvalue_clone(value);
@@ -1420,6 +1446,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* next-outgoing-id */
 					item_value = amqpvalue_get_list_item(list_value, 1);
@@ -1440,6 +1468,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* incoming-window */
 					item_value = amqpvalue_get_list_item(list_value, 2);
@@ -1460,6 +1490,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* outgoing-window */
 					item_value = amqpvalue_get_list_item(list_value, 3);
@@ -1480,6 +1512,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* handle-max */
 					item_value = amqpvalue_get_list_item(list_value, 4);
@@ -1499,6 +1533,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* offered-capabilities */
 					item_value = amqpvalue_get_list_item(list_value, 5);
@@ -1518,6 +1554,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* desired-capabilities */
 					item_value = amqpvalue_get_list_item(list_value, 6);
@@ -1537,6 +1575,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* properties */
 					item_value = amqpvalue_get_list_item(list_value, 7);
@@ -1556,6 +1596,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					begin_instance->composite_value = amqpvalue_clone(value);
@@ -2192,6 +2234,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* handle */
 					item_value = amqpvalue_get_list_item(list_value, 1);
@@ -2212,6 +2256,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* role */
 					item_value = amqpvalue_get_list_item(list_value, 2);
@@ -2232,6 +2278,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* snd-settle-mode */
 					item_value = amqpvalue_get_list_item(list_value, 3);
@@ -2251,6 +2299,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* rcv-settle-mode */
 					item_value = amqpvalue_get_list_item(list_value, 4);
@@ -2270,6 +2320,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* source */
 					item_value = amqpvalue_get_list_item(list_value, 5);
@@ -2307,6 +2359,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* incomplete-unsettled */
 					item_value = amqpvalue_get_list_item(list_value, 8);
@@ -2326,6 +2380,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* initial-delivery-count */
 					item_value = amqpvalue_get_list_item(list_value, 9);
@@ -2345,6 +2401,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* max-message-size */
 					item_value = amqpvalue_get_list_item(list_value, 10);
@@ -2364,6 +2422,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* offered-capabilities */
 					item_value = amqpvalue_get_list_item(list_value, 11);
@@ -2383,6 +2443,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* desired-capabilities */
 					item_value = amqpvalue_get_list_item(list_value, 12);
@@ -2402,6 +2464,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* properties */
 					item_value = amqpvalue_get_list_item(list_value, 13);
@@ -2421,6 +2485,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					attach_instance->composite_value = amqpvalue_clone(value);
@@ -3398,6 +3464,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* incoming-window */
 					item_value = amqpvalue_get_list_item(list_value, 1);
@@ -3418,6 +3486,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* next-outgoing-id */
 					item_value = amqpvalue_get_list_item(list_value, 2);
@@ -3438,6 +3508,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* outgoing-window */
 					item_value = amqpvalue_get_list_item(list_value, 3);
@@ -3458,6 +3530,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* handle */
 					item_value = amqpvalue_get_list_item(list_value, 4);
@@ -3477,6 +3551,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* delivery-count */
 					item_value = amqpvalue_get_list_item(list_value, 5);
@@ -3496,6 +3572,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* link-credit */
 					item_value = amqpvalue_get_list_item(list_value, 6);
@@ -3515,6 +3593,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* available */
 					item_value = amqpvalue_get_list_item(list_value, 7);
@@ -3534,6 +3614,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* drain */
 					item_value = amqpvalue_get_list_item(list_value, 8);
@@ -3553,6 +3635,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* echo */
 					item_value = amqpvalue_get_list_item(list_value, 9);
@@ -3572,6 +3656,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* properties */
 					item_value = amqpvalue_get_list_item(list_value, 10);
@@ -3591,6 +3677,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					flow_instance->composite_value = amqpvalue_clone(value);
@@ -4393,6 +4481,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* delivery-id */
 					item_value = amqpvalue_get_list_item(list_value, 1);
@@ -4412,6 +4502,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* delivery-tag */
 					item_value = amqpvalue_get_list_item(list_value, 2);
@@ -4431,6 +4523,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* message-format */
 					item_value = amqpvalue_get_list_item(list_value, 3);
@@ -4450,6 +4544,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* settled */
 					item_value = amqpvalue_get_list_item(list_value, 4);
@@ -4469,6 +4565,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* more */
 					item_value = amqpvalue_get_list_item(list_value, 5);
@@ -4488,6 +4586,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* rcv-settle-mode */
 					item_value = amqpvalue_get_list_item(list_value, 6);
@@ -4507,6 +4607,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* state */
 					item_value = amqpvalue_get_list_item(list_value, 7);
@@ -4535,6 +4637,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* aborted */
 					item_value = amqpvalue_get_list_item(list_value, 9);
@@ -4554,6 +4658,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* batchable */
 					item_value = amqpvalue_get_list_item(list_value, 10);
@@ -4573,6 +4679,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					transfer_instance->composite_value = amqpvalue_clone(value);
@@ -5373,6 +5481,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* first */
 					item_value = amqpvalue_get_list_item(list_value, 1);
@@ -5393,6 +5503,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* last */
 					item_value = amqpvalue_get_list_item(list_value, 2);
@@ -5412,6 +5524,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* settled */
 					item_value = amqpvalue_get_list_item(list_value, 3);
@@ -5431,6 +5545,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* state */
 					item_value = amqpvalue_get_list_item(list_value, 4);
@@ -5459,6 +5575,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					disposition_instance->composite_value = amqpvalue_clone(value);
@@ -5952,6 +6070,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* closed */
 					item_value = amqpvalue_get_list_item(list_value, 1);
@@ -5971,6 +6091,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* error */
 					item_value = amqpvalue_get_list_item(list_value, 2);
@@ -5990,6 +6112,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					detach_instance->composite_value = amqpvalue_clone(value);
@@ -6298,6 +6422,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					end_instance->composite_value = amqpvalue_clone(value);
@@ -6486,6 +6612,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					close_instance->composite_value = amqpvalue_clone(value);
@@ -6688,6 +6816,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					sasl_mechanisms_instance->composite_value = amqpvalue_clone(value);
@@ -6890,6 +7020,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* initial-response */
 					item_value = amqpvalue_get_list_item(list_value, 1);
@@ -6909,6 +7041,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* hostname */
 					item_value = amqpvalue_get_list_item(list_value, 2);
@@ -6928,6 +7062,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					sasl_init_instance->composite_value = amqpvalue_clone(value);
@@ -7250,6 +7386,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					sasl_challenge_instance->composite_value = amqpvalue_clone(value);
@@ -7452,6 +7590,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					sasl_response_instance->composite_value = amqpvalue_clone(value);
@@ -7654,6 +7794,8 @@
 							result = __LINE__;
 							break;
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* additional-data */
 					item_value = amqpvalue_get_list_item(list_value, 1);
@@ -7673,6 +7815,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					sasl_outcome_instance->composite_value = amqpvalue_clone(value);
@@ -7930,6 +8074,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* expiry-policy */
 					item_value = amqpvalue_get_list_item(list_value, 2);
@@ -7949,6 +8095,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* timeout */
 					item_value = amqpvalue_get_list_item(list_value, 3);
@@ -7968,6 +8116,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* dynamic */
 					item_value = amqpvalue_get_list_item(list_value, 4);
@@ -7987,6 +8137,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* dynamic-node-properties */
 					item_value = amqpvalue_get_list_item(list_value, 5);
@@ -8006,6 +8158,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* distribution-mode */
 					item_value = amqpvalue_get_list_item(list_value, 6);
@@ -8025,6 +8179,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* filter */
 					item_value = amqpvalue_get_list_item(list_value, 7);
@@ -8044,6 +8200,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* default-outcome */
 					item_value = amqpvalue_get_list_item(list_value, 8);
@@ -8072,6 +8230,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* capabilities */
 					item_value = amqpvalue_get_list_item(list_value, 10);
@@ -8091,6 +8251,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					source_instance->composite_value = amqpvalue_clone(value);
@@ -8870,6 +9032,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* expiry-policy */
 					item_value = amqpvalue_get_list_item(list_value, 2);
@@ -8889,6 +9053,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* timeout */
 					item_value = amqpvalue_get_list_item(list_value, 3);
@@ -8908,6 +9074,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* dynamic */
 					item_value = amqpvalue_get_list_item(list_value, 4);
@@ -8927,6 +9095,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* dynamic-node-properties */
 					item_value = amqpvalue_get_list_item(list_value, 5);
@@ -8946,6 +9116,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* capabilities */
 					item_value = amqpvalue_get_list_item(list_value, 6);
@@ -8965,6 +9137,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					target_instance->composite_value = amqpvalue_clone(value);
@@ -9513,6 +9687,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* to */
 					item_value = amqpvalue_get_list_item(list_value, 2);
@@ -9541,6 +9717,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* reply-to */
 					item_value = amqpvalue_get_list_item(list_value, 4);
@@ -9578,6 +9756,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* content-encoding */
 					item_value = amqpvalue_get_list_item(list_value, 7);
@@ -9597,6 +9777,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* absolute-expiry-time */
 					item_value = amqpvalue_get_list_item(list_value, 8);
@@ -9616,6 +9798,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* creation-time */
 					item_value = amqpvalue_get_list_item(list_value, 9);
@@ -9635,6 +9819,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* group-id */
 					item_value = amqpvalue_get_list_item(list_value, 10);
@@ -9654,6 +9840,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* group-sequence */
 					item_value = amqpvalue_get_list_item(list_value, 11);
@@ -9673,6 +9861,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 					/* reply-to-group-id */
 					item_value = amqpvalue_get_list_item(list_value, 12);
@@ -9692,6 +9882,8 @@
 								break;
 							}
 						}
+
+						amqpvalue_destroy(item_value);
 					}
 
 					properties_instance->composite_value = amqpvalue_clone(value);

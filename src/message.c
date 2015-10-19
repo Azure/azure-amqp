@@ -6,7 +6,8 @@
 typedef struct MESSAGE_DATA_TAG
 {
 	AMQP_VALUE to;
-	AMQP_VALUE body;
+	unsigned char* body_data_section_bytes;
+	size_t body_data_section_length;
 } MESSAGE_DATA;
 
 MESSAGE_HANDLE message_create(void)
@@ -15,7 +16,8 @@ MESSAGE_HANDLE message_create(void)
 	if (result != NULL)
 	{
 		result->to = NULL;
-		result->body = NULL;
+		result->body_data_section_bytes = NULL;
+		result->body_data_section_length = 0;
 	}
 
 	return result;
@@ -28,7 +30,7 @@ void message_destroy(MESSAGE_HANDLE handle)
 	{
 		MESSAGE_DATA* message = (MESSAGE_DATA*)handle;
 		amqpvalue_destroy(message->to);
-		amqpvalue_destroy(message->body);
+		amqpalloc_free(message->body_data_section_bytes);
 		amqpalloc_free(handle);
 	}
 }
@@ -78,7 +80,7 @@ const char* message_get_to(MESSAGE_HANDLE handle)
 	return result;
 }
 
-int message_set_body(MESSAGE_HANDLE handle, AMQP_VALUE body)
+int message_set_body_amqp_data(MESSAGE_HANDLE handle, BINARY_DATA binary_data)
 {
 	int result;
 
@@ -89,26 +91,30 @@ int message_set_body(MESSAGE_HANDLE handle, AMQP_VALUE body)
 	}
 	else
 	{
-		message->body = body;
+		message->body_data_section_bytes = (unsigned char*)malloc(binary_data.length);
+		message->body_data_section_length = binary_data.length;
 		result = 0;
 	}
 
 	return result;
 }
 
-AMQP_VALUE message_get_body(MESSAGE_HANDLE handle)
+int message_get_body_amqp_data(MESSAGE_HANDLE handle, BINARY_DATA* binary_data)
 {
-	AMQP_VALUE result;
+	int result;
 
 	MESSAGE_DATA* message = (MESSAGE_DATA*)handle;
-	if (message == NULL)
+	if ((message == NULL) ||
+		(binary_data == NULL))
 	{
-		result = NULL;
+		result = __LINE__;
 	}
 	else
 	{
-		result = message->body;
-		message->body = NULL;
+		binary_data->bytes = message->body_data_section_bytes;
+		binary_data->length = message->body_data_section_length;
+
+		result = 0;
 	}
 
 	return result;

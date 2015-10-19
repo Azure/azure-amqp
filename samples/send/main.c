@@ -33,8 +33,8 @@ int main(int argc, char** argv)
 		MESSAGING_HANDLE messaging;
 		MESSAGE_HANDLE message;
 		size_t last_memory_used = 0;
-		unsigned char muie[250000] = { 'm', 'u', 'i', 'e' };
-		amqp_binary body = { muie, sizeof(muie) };
+		unsigned char muie[4] = { 'm', 'u', 'i', 'e' };
+		BINARY_DATA binary_data = { muie, sizeof(muie) };
 
 		messaging = messaging_create();
 		uint32_t i;
@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 		{
 			message = message_create();
 			message_set_to(message, "pupupupu.servicebus.windows.net");
-			message_set_body(message, amqpvalue_create_binary(body));
+			message_set_body_amqp_data(message, binary_data);
 
 			(void)messaging_send(messaging, message, message_send_callback, NULL);
 		}

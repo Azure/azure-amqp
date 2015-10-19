@@ -16,6 +16,8 @@ typedef struct SOCKET_IO_INSTANCE_TAG
 	char* hostname;
 	int port;
 	IO_STATE io_state;
+	unsigned char* pending_send_bytes;
+	size_t pending_send_byte_count;
 } SOCKET_IO_INSTANCE;
 
 static const IO_INTERFACE_DESCRIPTION socket_io_interface_description = 
@@ -58,6 +60,8 @@ IO_HANDLE socketio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 				result->receive_callback = NULL;
 				result->socket = INVALID_SOCKET;
 				result->context = NULL;
+				result->pending_send_byte_count = 0;
+				result->pending_send_bytes = NULL;
 				result->io_state = IO_STATE_NOT_OPEN;
 			}
 		}
@@ -185,7 +189,29 @@ int socketio_send(IO_HANDLE socket_io, const void* buffer, size_t size)
 			int send_result = send(socket_io_instance->socket, buffer, size, 0);
 			if (send_result != size)
 			{
-				result = __LINE__;
+				int last_error = WSAGetLastError();
+
+				if (last_error != WSAEWOULDBLOCK)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					/* queue data */
+					unsigned char* new_pending_send_bytes = amqpalloc_realloc(socket_io_instance->pending_send_bytes, socket_io_instance->pending_send_byte_count + size);
+					if (new_pending_send_bytes == NULL)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						socket_io_instance->pending_send_bytes = new_pending_send_bytes;
+						(void)memcpy(socket_io_instance->pending_send_bytes + socket_io_instance->pending_send_byte_count, buffer, size);
+						socket_io_instance->pending_send_byte_count += size;
+
+						result = 0;
+					}
+				}
 			}
 			else
 			{
@@ -212,6 +238,29 @@ void socketio_dowork(IO_HANDLE socket_io)
 		{
 			unsigned char c;
 			int received = 1;
+
+			if (socket_io_instance->pending_send_byte_count > 0)
+			{
+				int send_result = send(socket_io_instance->socket, socket_io_instance->pending_send_bytes, socket_io_instance->pending_send_byte_count, 0);
+				if (send_result != socket_io_instance->pending_send_byte_count)
+				{
+					int last_error = WSAGetLastError();
+					if (last_error != WSAEWOULDBLOCK)
+					{
+						/* error */
+					}
+					else
+					{
+						/* simply wait */
+					}
+				}
+				else
+				{
+					amqpalloc_free(socket_io_instance->pending_send_bytes);
+					socket_io_instance->pending_send_bytes = NULL;
+					socket_io_instance->pending_send_byte_count = 0;
+				}
+			}
 
 			while (received > 0)
 			{

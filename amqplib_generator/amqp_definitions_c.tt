@@ -36,12 +36,7 @@
 		<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)malloc(sizeof(<#= type_name.ToUpper() #>_INSTANCE));
 		if (<#= type_name #>_instance != NULL)
 		{
-			<#= type_name #>_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(<#= Program.GetDescriptorCode(Program.GetDescriptor(type)) #>);
-			if (<#= type_name #>_instance->composite_value == NULL)
-			{
-				free(<#= type_name #>_instance);
-				<#= type_name #>_instance = NULL;
-			}
+			<#= type_name #>_instance->composite_value = NULL;
 		}
 
 		return <#= type_name #>_instance;
@@ -137,16 +132,17 @@
 	}
 
 
-	int amqpvalue_get_<#= type_name #>(AMQP_VALUE value, <#= type_name.ToUpper() #>_HANDLE* <#= type_name.ToUpper() #>_handle)
+	int amqpvalue_get_<#= type_name #>(AMQP_VALUE value, <#= type_name.ToUpper() #>_HANDLE* <#= type_name.ToLower() #>_handle)
 	{
 		int result;
-		*<#= type_name.ToUpper() #>_handle = <#= type_name #>_create_internal();
-		if (*<#= type_name.ToUpper() #>_handle != NULL)
+		<#= type_name.ToUpper() #>_INSTANCE* <#= type_name.ToLower() #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)<#= type_name #>_create_internal();
+		*<#= type_name.ToLower() #>_handle = <#= type_name.ToLower() #>_instance;
+		if (*<#= type_name.ToLower() #>_handle != NULL)
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
 			{
-				<#= type_name #>_destroy(*<#= type_name.ToUpper() #>_handle);
+				<#= type_name #>_destroy(*<#= type_name.ToLower() #>_handle);
 				result = __LINE__;
 			}
 			else
@@ -168,7 +164,7 @@
 <# 					if (field.mandatory == "true") #>
 <# 					{ #>
 						{
-							<#= type_name #>_destroy(*<#= type_name.ToUpper() #>_handle);
+							<#= type_name #>_destroy(*<#= type_name.ToLower() #>_handle);
 							result = __LINE__;
 							break;
 						}
@@ -187,7 +183,7 @@
 						{
 <# 					if (field.mandatory == "true") #>
 <# 					{ #>
-							<#= type_name #>_destroy(*<#= type_name.ToUpper() #>_handle);
+							<#= type_name #>_destroy(*<#= type_name.ToLower() #>_handle);
 							result = __LINE__;
 							break;
 <# 					} #>
@@ -195,7 +191,7 @@
 <# 					{ #>
 							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
 							{
-								<#= type_name #>_destroy(*<#= type_name.ToUpper() #>_handle);
+								<#= type_name #>_destroy(*<#= type_name.ToLower() #>_handle);
 								result = __LINE__;
 								break;
 							}
@@ -208,6 +204,8 @@
 					}
 <#					k++; #>
 <#				} #>
+
+					<#= type_name.ToLower() #>_instance->composite_value = amqpvalue_clone(value);
 
 					result = 0;
 				} while (0);
@@ -235,7 +233,31 @@
 		else
 		{
 			<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)<#= type_name #>;
-			result = 0;
+			AMQP_VALUE item_value = amqpvalue_get_composite_item(<#= type_name #>_instance->composite_value, <#= j #>);
+			if (item_value == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+<#						if (field.type.Replace('-', '_').Replace(':', '_') == "*") #>
+<#						{ #>
+				*<#= field_name #>_value = item_value;
+<#						} #>
+<#						else #>
+<#						{ #>
+				if (amqpvalue_get_<#= field.type.Replace('-', '_').Replace(':', '_') #>(item_value, <#= field_name #>_value) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+
+				amqpvalue_destroy(item_value);
+<#						} #>
+			}
 		}
 
 		return result;

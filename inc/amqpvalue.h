@@ -98,6 +98,7 @@ extern "C" {
 
 	extern AMQP_VALUE amqpvalue_create_composite(AMQP_VALUE descriptor, uint32_t list_size);
 	extern int amqpvalue_set_composite_item(AMQP_VALUE value, size_t index, AMQP_VALUE item_value);
+	extern AMQP_VALUE amqpvalue_get_composite_item(AMQP_VALUE value, size_t index);
 	extern AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor);
 

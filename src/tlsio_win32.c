@@ -425,7 +425,7 @@ int tlsio_close(IO_HANDLE tls_io)
 	return result;
 }
 
-int tlsio_send(IO_HANDLE tls_io, const void* buffer, size_t size)
+int send_chunk(IO_HANDLE tls_io, const void* buffer, size_t size)
 {
 	int result;
 
@@ -446,7 +446,7 @@ int tlsio_send(IO_HANDLE tls_io, const void* buffer, size_t size)
 		else
 		{
 			SecBuffer security_buffers[4];
-			unsigned char out_buffer[1024];
+			unsigned char out_buffer[65536];
 			SecBufferDesc security_buffers_desc;
 			SecPkgContext_StreamSizes  sizes;
 
@@ -494,6 +494,39 @@ int tlsio_send(IO_HANDLE tls_io, const void* buffer, size_t size)
 				}
 			}
 		}
+	}
+
+	return result;
+}
+
+int tlsio_send(IO_HANDLE tls_io, const void* buffer, size_t size)
+{
+	int result;
+
+	while (size > 0)
+	{
+		size_t to_send = 16 * 1024;
+		if (to_send > size)
+		{
+			to_send = size;
+		}
+
+		if (send_chunk(tls_io, buffer, to_send) != 0)
+		{
+			break;
+		}
+
+		size -= to_send;
+		buffer = ((const unsigned char*)buffer) + to_send;
+	}
+
+	if (size > 0)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		result = 0;
 	}
 
 	return result;

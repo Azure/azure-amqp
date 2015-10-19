@@ -292,9 +292,6 @@ int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, O
 				link->pending_deliveries[link->pending_delivery_count].callback_context = callback_context;
 				link->pending_delivery_count++;
 
-				LOG(consolelogger_log, 0, "-> [TRANSFER]");
-				LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(transfer_value));
-
 				result = 0;
 			}
 

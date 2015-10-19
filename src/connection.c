@@ -540,22 +540,30 @@ static void on_amqp_frame_received(void* context, uint16_t channel, AMQP_VALUE p
 						LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 
 						/* Codes_SRS_CONNECTION_01_012: [A close frame MAY be received on any channel up to the maximum channel number negotiated in open.] */
-						if ((channel > connection_instance->channel_max) ||
-							(amqpvalue_get_close(performative, &close_handle) != 0))
+						if (channel > connection_instance->channel_max)
 						{
 							close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_endpoint_frame_received::failed parsing CLOSE frame");
 						}
 						else
 						{
+							if (amqpvalue_get_close(performative, &close_handle) != 0)
+							{
+								close_connection_with_error(connection_instance, "amqp:invalid-field", "connection_endpoint_frame_received::failed parsing CLOSE frame");
+							}
+							else
+							{
+								close_destroy(close_handle);
+
+								connection_set_state(connection_instance, CONNECTION_STATE_CLOSE_RCVD);
+
+								(void)send_close_frame(connection_instance, NULL);
+								/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
+								(void)io_close(connection_instance->io);
+
+								connection_set_state(connection_instance, CONNECTION_STATE_END);
+							}
+
 							close_destroy(close_handle);
-
-							connection_set_state(connection_instance, CONNECTION_STATE_CLOSE_RCVD);
-
-							(void)send_close_frame(connection_instance, NULL);
-							/* Codes_SRS_CONNECTION_01_214: [If the close frame cannot be constructed or sent, the connection shall be closed and set to the END state.] */
-							(void)io_close(connection_instance->io);
-
-							connection_set_state(connection_instance, CONNECTION_STATE_END);
 						}
 					}
 				}
@@ -944,7 +952,9 @@ int connection_get_remote_max_frame_size(CONNECTION_HANDLE connection, uint32_t*
 	}
 	else
 	{
-		*remote_max_frame_size = 0;
+		CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)connection;
+
+		*remote_max_frame_size = connection_instance->remote_max_frame_size;
 
 		result = 0;
 	}

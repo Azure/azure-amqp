@@ -6,11 +6,12 @@
 #include "logger.h"
 #include "amqpvalue_to_string.h"
 
-typedef struct DELIVERY_TAG
+typedef struct PENDING_TRANSFER_TAG
 {
-	TRANSFER_HANDLE transfer;
-	PAYLOAD payload;
-} DELIVERY;
+	AMQP_VALUE transfer_amqp_value;
+	unsigned char* payload_bytes;
+	uint32_t payload_length;
+} PENDING_TRANSFER;
 
 typedef struct LINK_ENDPOINT_INSTANCE_TAG
 {
@@ -32,8 +33,8 @@ typedef struct SESSION_INSTANCE_TAG
 	ENDPOINT_HANDLE endpoint;
 	LINK_ENDPOINT_INSTANCE** link_endpoints;
 	uint32_t link_endpoint_count;
-	size_t delivery_count;
-
+	size_t pending_transfer_count;
+	PENDING_TRANSFER* pending_transfers;
 
 	/* Codes_SRS_SESSION_01_016: [next-outgoing-id The next-outgoing-id is the transfer-id to assign to the next transfer frame.] */
 	delivery_number next_outgoing_id;
@@ -181,26 +182,55 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 
 	if (is_begin_type_by_descriptor(descriptor))
 	{
+		BEGIN_HANDLE begin_handle;
+
 		LOG(consolelogger_log, 0, "<- [BEGIN]");
 		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
-		session_set_state(session_instance, SESSION_STATE_MAPPED);
-	}
-	else if (is_attach_type_by_descriptor(descriptor))
-	{
-		const char* name = NULL;
-		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
-		AMQP_VALUE name_value = amqpvalue_get_list_item(described_value, 0);
-		amqpvalue_get_string(name_value, &name);
 
-		LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_name(session_instance, name);
-		if (link_endpoint == NULL)
+		if (amqpvalue_get_begin(performative, &begin_handle) != 0)
 		{
 			/* error */
 		}
 		else
 		{
-			link_endpoint->incoming_handle = 0;
-			link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
+			if (begin_get_incoming_window(begin_handle, &session_instance->remote_incoming_window) != 0)
+			{
+				/* error */
+			}
+
+			session_set_state(session_instance, SESSION_STATE_MAPPED);
+			begin_destroy(begin_handle);
+		}
+	}
+	else if (is_attach_type_by_descriptor(descriptor))
+	{
+		const char* name = NULL;
+		ATTACH_HANDLE attach_handle;
+		if (amqpvalue_get_attach(performative, &attach_handle) != 0)
+		{
+			/* error */
+		}
+		else
+		{
+			if (attach_get_name(attach_handle, &name) != 0)
+			{
+				/* error */
+			}
+			else
+			{
+				LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_name(session_instance, name);
+				if (link_endpoint == NULL)
+				{
+					/* error */
+				}
+				else
+				{
+					link_endpoint->incoming_handle = 0;
+					link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
+				}
+			}
+
+			attach_destroy(attach_handle);
 		}
 	}
 	else if (is_detach_type_by_descriptor(descriptor))
@@ -324,6 +354,9 @@ SESSION_HANDLE session_create(CONNECTION_HANDLE connection)
 			result->remote_incoming_window = 0;
 			result->remote_outgoing_window = 0;
 
+			result->pending_transfer_count = 0;
+			result->pending_transfers = NULL;
+
 			/* Codes_SRS_SESSION_01_032: [session_create shall create a new session endpoint by calling connection_create_endpoint.] */
 			result->endpoint = connection_create_endpoint(connection, on_frame_received, on_connection_state_changed, result);
 			if (result->endpoint == NULL)
@@ -431,6 +464,15 @@ void session_destroy(SESSION_HANDLE session)
 		{
 			amqpalloc_free(session_instance->link_endpoints);
 		}
+
+		while (session_instance->pending_transfer_count > 0)
+		{
+			amqpvalue_destroy(session_instance->pending_transfers[session_instance->pending_transfer_count - 1].transfer_amqp_value);
+			amqpalloc_free(session_instance->pending_transfers[session_instance->pending_transfer_count - 1].payload_bytes);
+			session_instance->pending_transfer_count--;
+		}
+
+		amqpalloc_free(session_instance->pending_transfers);
 
 		amqpalloc_free(session);
 	}
@@ -582,6 +624,65 @@ int session_encode_frame(LINK_ENDPOINT_HANDLE link_endpoint, const AMQP_VALUE pe
 	return result;
 }
 
+static int send_deliveries(SESSION_INSTANCE* session_instance)
+{
+	int result = 0;
+	size_t i;
+
+	for (i = 0; i < session_instance->pending_transfer_count; i++)
+	{
+		if ((session_instance->outgoing_window > 0) &&
+			(session_instance->remote_incoming_window > 0))
+		{
+			PAYLOAD payload = { session_instance->pending_transfers[i].payload_bytes, session_instance->pending_transfers[i].payload_length };
+			if (connection_encode_frame(session_instance->endpoint, session_instance->pending_transfers[i].transfer_amqp_value, &payload, 1) != 0)
+			{
+				result = __LINE__;
+				break;
+			}
+			else
+			{
+				LOG(consolelogger_log, 0, "-> [TRANSFER]");
+				LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(session_instance->pending_transfers[i].transfer_amqp_value));
+
+				session_instance->remote_incoming_window--;
+				session_instance->outgoing_window--;
+
+				/* sent */
+				amqpvalue_destroy(session_instance->pending_transfers[i].transfer_amqp_value);
+				amqpalloc_free(session_instance->pending_transfers[i].payload_bytes);
+			}
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	/* cleanup sent pending transfers */
+	if (i > 0)
+	{
+		if (i < session_instance->pending_transfer_count)
+		{
+			(void)memmove(&session_instance->pending_transfers[0], &session_instance->pending_transfers[i], (session_instance->pending_transfer_count - i) * sizeof(PENDING_TRANSFER));
+			PENDING_TRANSFER* new_pending_transfers = (PENDING_TRANSFER*)amqpalloc_realloc(session_instance->pending_transfers, (session_instance->pending_transfer_count - i) * sizeof(PENDING_TRANSFER));
+			if (new_pending_transfers != NULL)
+			{
+				session_instance->pending_transfers = new_pending_transfers;
+			}
+		}
+		else
+		{
+			amqpalloc_free(session_instance->pending_transfers);
+			session_instance->pending_transfers = NULL;
+		}
+
+		session_instance->pending_transfer_count -= i;
+	}
+
+	return result;
+}
+
 /* Codes_SRS_SESSION_01_051: [session_transfer shall send a transfer frame with the performative indicated in the transfer argument.] */
 int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfer, PAYLOAD* payloads, size_t payload_count, delivery_number* delivery_id)
 {
@@ -646,7 +747,8 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 						available_frame_size -= encoded_size;
 						available_frame_size -= 8;
 
-						if (available_frame_size >= payload_size)
+						if ((available_frame_size >= payload_size) &&
+							(session_instance->pending_transfer_count == 0))
 						{
 							/* Codes_SRS_SESSION_01_055: [The encoding of the frame shall be done by calling connection_encode_frame and passing as arguments: the connection handle associated with the session, the transfer performative and the payload chunks passed to session_transfer.] */
 							if (connection_encode_frame(session_instance->endpoint, transfer_value, payloads, payload_count) != 0)
@@ -656,8 +758,12 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 							}
 							else
 							{
+								LOG(consolelogger_log, 0, "-> [TRANSFER]");
+								LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(transfer_value));
+
 								/* Codes_SRS_SESSION_01_018: [is incremented after each successive transfer according to RFC-1982 [RFC1982] serial number arithmetic.] */
 								session_instance->next_outgoing_id++;
+								session_instance->outgoing_window--;
 
 								/* Codes_SRS_SESSION_01_053: [On success, session_transfer shall return 0.] */
 								result = 0;
@@ -665,7 +771,120 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 						}
 						else
 						{
+							size_t checkpoint_pending_transfer_count = session_instance->pending_transfer_count;
+							size_t needed_transfer_message_count = (payload_size / available_frame_size) + 1;
 
+							PENDING_TRANSFER* new_pending_transfers = (PENDING_TRANSFER*)amqpalloc_realloc(session_instance->pending_transfers, (session_instance->pending_transfer_count + needed_transfer_message_count) * sizeof(PENDING_TRANSFER));
+							if (new_pending_transfers == NULL)
+							{
+								result = __LINE__;
+							}
+							else
+							{
+								size_t current_payload_index = 0;
+								uint32_t current_payload_pos = 0;
+
+								session_instance->pending_transfers = new_pending_transfers;
+
+								/* break it down into different deliveries */
+								while (payload_size > 0)
+								{
+									uint32_t current_transfer_frame_payload_size = payload_size;
+									PENDING_TRANSFER* pending_transfer = &session_instance->pending_transfers[session_instance->pending_transfer_count];
+
+									if (current_transfer_frame_payload_size > available_frame_size)
+									{
+										current_transfer_frame_payload_size = available_frame_size;
+									}
+
+									if (available_frame_size >= payload_size)
+									{
+										transfer_set_more(transfer, false);
+									}
+									else
+									{
+										transfer_set_more(transfer, true);
+									}
+
+									pending_transfer->transfer_amqp_value = amqpvalue_create_transfer(transfer);
+									if (pending_transfer->transfer_amqp_value == NULL)
+									{
+										break;
+									}
+
+									pending_transfer->payload_length = current_transfer_frame_payload_size;
+									pending_transfer->payload_bytes = (unsigned char*)amqpalloc_malloc(current_transfer_frame_payload_size);
+									if (pending_transfer->payload_bytes == NULL)
+									{
+										break;
+									}
+
+									/* copy data */
+									while (current_transfer_frame_payload_size > 0)
+									{
+										if (payloads[current_payload_index].length - current_payload_pos > current_transfer_frame_payload_size)
+										{
+											/* more data than we need */
+											(void)memcpy(pending_transfer->payload_bytes + pending_transfer->payload_length - current_transfer_frame_payload_size, payloads[current_payload_index].bytes + current_payload_pos, current_transfer_frame_payload_size);
+											current_payload_pos += current_transfer_frame_payload_size;
+											current_transfer_frame_payload_size = 0;
+										}
+										else
+										{
+											/* copy entire payload and move to the next */
+											(void)memcpy(pending_transfer->payload_bytes + pending_transfer->payload_length - current_transfer_frame_payload_size, payloads[current_payload_index].bytes + current_payload_pos, payloads[current_payload_index].length - current_payload_pos);
+											current_transfer_frame_payload_size -= payloads[current_payload_index].length - current_payload_pos;
+											current_payload_index++;
+											current_payload_pos = 0;
+										}
+									}
+
+									session_instance->pending_transfer_count++;
+									payload_size -= pending_transfer->payload_length;
+								}
+
+								if (payload_size > 0)
+								{
+									while (session_instance->pending_transfer_count > checkpoint_pending_transfer_count)
+									{
+										amqpvalue_destroy(session_instance->pending_transfers[session_instance->pending_transfer_count - 1].transfer_amqp_value);
+										amqpalloc_free(session_instance->pending_transfers[session_instance->pending_transfer_count - 1].payload_bytes);
+										session_instance->pending_transfer_count--;
+									}
+
+									new_pending_transfers = (PENDING_TRANSFER*)amqpalloc_realloc(session_instance->pending_transfers, session_instance->pending_transfer_count * sizeof(PENDING_TRANSFER));
+									if (new_pending_transfers != NULL)
+									{
+										session_instance->pending_transfers = new_pending_transfers;
+									}
+
+									result = __LINE__;
+								}
+								else
+								{
+									if (send_deliveries(session_instance) != 0)
+									{
+										while (session_instance->pending_transfer_count > checkpoint_pending_transfer_count)
+										{
+											amqpvalue_destroy(session_instance->pending_transfers[session_instance->pending_transfer_count - 1].transfer_amqp_value);
+											amqpalloc_free(session_instance->pending_transfers[session_instance->pending_transfer_count - 1].payload_bytes);
+											session_instance->pending_transfer_count--;
+										}
+
+										new_pending_transfers = (PENDING_TRANSFER*)amqpalloc_realloc(session_instance->pending_transfers, session_instance->pending_transfer_count * sizeof(PENDING_TRANSFER));
+										if (new_pending_transfers != NULL)
+										{
+											session_instance->pending_transfers = new_pending_transfers;
+										}
+
+										result = __LINE__;
+									}
+									else
+									{
+										result = 0;
+									}
+								}
+							}
 						}
 					}
 

@@ -193,6 +193,10 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 				{
 					result = __LINE__;
 				}
+				else
+				{
+					session_set_outgoing_window(messaging->session, 10);
+				}
 			}
 
 			if (messaging->session == NULL)
@@ -283,6 +287,8 @@ void messaging_dowork(MESSAGING_HANDLE handle)
 							messaging->outgoing_messages[i].callback(MESSAGING_OK, messaging->outgoing_messages[i].context);
 						}
 					}
+
+					amqpvalue_destroy(message_payload);
 				}
 
 				messaging->outgoing_message_count = 0;

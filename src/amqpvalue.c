@@ -2040,7 +2040,7 @@ AMQP_VALUE amqpvalue_clone(AMQP_VALUE value)
 			break;
 		}
 		case AMQP_TYPE_DESCRIBED:
-			result = amqpvalue_create_described(value_data->value.described_value.descriptor, value_data->value.described_value.value);
+			result = amqpvalue_create_described(amqpvalue_clone(value_data->value.described_value.descriptor), amqpvalue_clone(value_data->value.described_value.value));
 			break;
 
 		case AMQP_TYPE_COMPOSITE:
@@ -5210,6 +5210,31 @@ int amqpvalue_set_composite_item(AMQP_VALUE value, size_t index, AMQP_VALUE item
 			{
 				result = 0;
 			}
+		}
+	}
+
+	return result;
+}
+
+AMQP_VALUE amqpvalue_get_composite_item(AMQP_VALUE value, size_t index)
+{
+	AMQP_VALUE result;
+
+	if (value == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if ((value_data->type != AMQP_TYPE_COMPOSITE) &&
+			(value_data->type != AMQP_TYPE_DESCRIBED))
+		{
+			result = NULL;
+		}
+		else
+		{
+			result = amqpvalue_get_list_item(value_data->value.described_value.value, index);
 		}
 	}
 

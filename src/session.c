@@ -252,22 +252,32 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 	}
 	else if (is_flow_type_by_descriptor(descriptor))
 	{
-		uint32_t remote_handle;
-		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
-		AMQP_VALUE handle_value = amqpvalue_get_list_item(described_value, 5);
-		if ((handle_value != NULL) &&
-			(amqpvalue_get_uint(handle_value, &remote_handle) == 0))
+		ATTACH_HANDLE flow_handle;
+		if (amqpvalue_get_flow(performative, &flow_handle) != 0)
 		{
-			LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session_instance, remote_handle);
-			if (link_endpoint == NULL)
+			/* error */
+		}
+		else
+		{
+			uint32_t remote_handle;
+			if (flow_get_handle(flow_handle, &remote_handle) != 0)
 			{
 				/* error */
 			}
 			else
 			{
-				link_endpoint->incoming_handle = 0;
-				link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
+				LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session_instance, remote_handle);
+				if (link_endpoint == NULL)
+				{
+					/* error */
+				}
+				else
+				{
+					link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
+				}
 			}
+
+			flow_destroy(flow_handle);
 		}
 
 		LOG(consolelogger_log, 0, "<- [FLOW]");

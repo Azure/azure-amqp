@@ -189,11 +189,11 @@ typedef struct DECODER_DATA_TAG
 AMQP_VALUE amqpvalue_create_null(void)
 {
 	/* Codes_SRS_AMQPVALUE_01_002: [If allocating the AMQP_VALUE fails then amqpvalue_create_null shall return NULL.] */
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	AMQP_TYPE* result = (AMQP_TYPE*)amqpalloc_malloc(sizeof(AMQP_TYPE));
 	if (result != NULL)
 	{
 		/* Codes_SRS_AMQPVALUE_01_001: [amqpvalue_create_null shall return a handle to an AMQP_VALUE that stores a null value.] */
-		result->type = AMQP_TYPE_NULL;
+		*result = AMQP_TYPE_NULL;
 	}
 	return result;
 }
@@ -202,12 +202,12 @@ AMQP_VALUE amqpvalue_create_null(void)
 AMQP_VALUE amqpvalue_create_boolean(bool value)
 {
 	/* Codes_SRS_AMQPVALUE_01_007: [If allocating the AMQP_VALUE fails then amqpvalue_create_boolean shall return NULL.] */
-	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
+	AMQP_TYPE* result = (AMQP_TYPE*)amqpalloc_malloc(sizeof(AMQP_TYPE) + sizeof(bool));
 	if (result != NULL)
 	{
 		/* Codes_SRS_AMQPVALUE_01_006: [amqpvalue_create_boolean shall return a handle to an AMQP_VALUE that stores a boolean value.] */
-		result->type = AMQP_TYPE_BOOL;
-		result->value.bool_value = value;
+		*result = AMQP_TYPE_BOOL;
+		memcpy(result + 1, &value, sizeof(bool));
 	}
 
 	return result;

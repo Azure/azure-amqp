@@ -4,6 +4,7 @@
 #endif /* _CRT_DBG_MAP_ALLOC */
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include "amqpalloc.h"
 
 #ifndef SIZE_MAX
@@ -23,6 +24,8 @@ static ALLOCATION* head = NULL;
 static size_t total_size = 0;
 static size_t max_size = 0;
 
+#define LOG_TRACE_MALLOC // printf
+
 #ifndef DISABLE_MEMORY_TRACE
 
 void* trace_malloc(size_t size)
@@ -36,6 +39,7 @@ void* trace_malloc(size_t size)
 	}
 	else
 	{
+		LOG_TRACE_MALLOC("Alloc: %lu\r\n", (unsigned long)size);
 		result = malloc(size);
 		if (result == NULL)
 		{
@@ -101,6 +105,7 @@ void* trace_realloc(void* ptr, size_t size)
 
 	if (ptr == NULL)
 	{
+		LOG_TRACE_MALLOC("Realloc: %lu\r\n", (unsigned long)size);
 		allocation = (ALLOCATION*)malloc(sizeof(ALLOCATION));
 	}
 	else
@@ -138,12 +143,16 @@ void* trace_realloc(void* ptr, size_t size)
 		{
 			if (ptr != NULL)
 			{
+				LOG_TRACE_MALLOC("Realloc change: %ld\r\n", (long)size - allocation->size);
+
 				allocation->ptr = result;
 				total_size -= allocation->size;
 				allocation->size = size;
 			}
 			else
 			{
+				LOG_TRACE_MALLOC("Realloc: %lu\r\n", (unsigned long)size);
+
 				/* add block */
 				allocation->ptr = result;
 				allocation->size = size;
@@ -173,6 +182,7 @@ void trace_free(void* ptr)
 		if (curr->ptr == ptr)
 		{
 			free(ptr);
+			LOG_TRACE_MALLOC("Free: %lu\r\n", (unsigned long)curr->size);
 			total_size -= curr->size;
 			if (prev != NULL)
 			{

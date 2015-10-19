@@ -65,11 +65,31 @@ static int resize_receive_buffer(TLS_IO_INSTANCE* tls_io_instance, size_t needed
 		else
 		{
 			tls_io_instance->received_bytes = new_buffer;
+			tls_io_instance->buffer_size = needed_buffer_size;
 			result = 0;
 		}
 	}
 	else
 	{
+		result = 0;
+	}
+
+	return result;
+}
+
+static int set_receive_buffer(TLS_IO_INSTANCE* tls_io_instance, size_t buffer_size)
+{
+	int result;
+
+	unsigned char* new_buffer = amqpalloc_realloc(tls_io_instance->received_bytes, buffer_size);
+	if (new_buffer == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		tls_io_instance->received_bytes = new_buffer;
+		tls_io_instance->buffer_size = buffer_size;
 		result = 0;
 	}
 
@@ -164,7 +184,7 @@ static void tlsio_receive_bytes(void* context, const void* buffer, size_t size)
 					tls_io_instance->needed_bytes = 1;
 					tls_io_instance->consumed_bytes = tls_io_instance->needed_bytes;
 
-					if (resize_receive_buffer(tls_io_instance, tls_io_instance->needed_bytes + tls_io_instance->received_byte_count) != 0)
+					if (set_receive_buffer(tls_io_instance, tls_io_instance->needed_bytes + tls_io_instance->received_byte_count) != 0)
 					{
 						tls_io_instance->tls_state = TLS_STATE_ERROR;
 					}
@@ -191,7 +211,7 @@ static void tlsio_receive_bytes(void* context, const void* buffer, size_t size)
 						/* set the needed bytes to 1, to get on the next byte how many we actually need */
 						tls_io_instance->needed_bytes = 1;
 						tls_io_instance->consumed_bytes = tls_io_instance->needed_bytes;
-						if (resize_receive_buffer(tls_io_instance, tls_io_instance->needed_bytes + tls_io_instance->received_byte_count) != 0)
+						if (set_receive_buffer(tls_io_instance, tls_io_instance->needed_bytes + tls_io_instance->received_byte_count) != 0)
 						{
 							FreeCredentialHandle(&tls_io_instance->credential_handle);
 							tls_io_instance->tls_state = TLS_STATE_ERROR;
@@ -266,7 +286,7 @@ static void tlsio_receive_bytes(void* context, const void* buffer, size_t size)
 						tls_io_instance->needed_bytes = 1;
 						tls_io_instance->consumed_bytes = tls_io_instance->needed_bytes;
 
-						if (resize_receive_buffer(tls_io_instance, tls_io_instance->needed_bytes + tls_io_instance->received_byte_count) != 0)
+						if (set_receive_buffer(tls_io_instance, tls_io_instance->needed_bytes + tls_io_instance->received_byte_count) != 0)
 						{
 							tls_io_instance->tls_state = TLS_STATE_ERROR;
 						}

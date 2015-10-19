@@ -236,7 +236,6 @@ void socketio_dowork(IO_HANDLE socket_io)
 		SOCKET_IO_INSTANCE* socket_io_instance = (SOCKET_IO_INSTANCE*)socket_io;
 		if (socket_io_instance->io_state == IO_STATE_READY)
 		{
-			unsigned char c;
 			int received = 1;
 
 			if (socket_io_instance->pending_send_byte_count > 0)
@@ -264,15 +263,20 @@ void socketio_dowork(IO_HANDLE socket_io)
 
 			while (received > 0)
 			{
-				received = recv(socket_io_instance->socket, &c, 1, 0);
+				unsigned char recv_bytes[1];
+				received = recv(socket_io_instance->socket, recv_bytes, sizeof(recv_bytes), 0);
 				if (received > 0)
 				{
-					LOG(socket_io_instance->logger_log, 0, "<-%02x ", (unsigned char)c);
+					int i;
+					for (i = 0; i < received; i++)
+					{
+						LOG(socket_io_instance->logger_log, 0, "<-%02x ", (unsigned char)recv_bytes[i]);
+					}
 
 					if (socket_io_instance->receive_callback != NULL)
 					{
 						/* explictly ignoring here the result of the callback */
-						(void)socket_io_instance->receive_callback(socket_io_instance->context, &c, 1);
+						(void)socket_io_instance->receive_callback(socket_io_instance->context, recv_bytes, received);
 					}
 				}
 			}

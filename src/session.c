@@ -701,7 +701,6 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 					}
 					else
 					{
-						available_frame_size = 512;
 						uint32_t payload_size = 0;
 						size_t i;
 

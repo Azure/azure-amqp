@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 		MESSAGING_HANDLE messaging;
 		MESSAGE_HANDLE message;
 		size_t last_memory_used = 0;
-		unsigned char muie[4] = { 'm', 'u', 'i', 'e' };
+		unsigned char muie[250000] = { 'm', 'u', 'i', 'e' };
 		amqp_binary body = { muie, sizeof(muie) };
 
 		messaging = messaging_create();

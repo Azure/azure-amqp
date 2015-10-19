@@ -37,7 +37,8 @@ typedef struct SESSION_INSTANCE_TAG
 	PENDING_TRANSFER* pending_transfers;
 
 	/* Codes_SRS_SESSION_01_016: [next-outgoing-id The next-outgoing-id is the transfer-id to assign to the next transfer frame.] */
-	delivery_number next_outgoing_id;
+	transfer_number next_outgoing_id;
+	transfer_number next_incoming_id;
 	uint32_t incoming_window;
 	uint32_t outgoing_window;
 	handle handle_max;
@@ -168,7 +169,7 @@ static void on_connection_state_changed(void* context, CONNECTION_STATE new_conn
 			session_set_state(session_instance, SESSION_STATE_BEGIN_SENT);
 		}
 	}
-	/* Codes_-	SRS_SESSION_01_061: [If the previous connection state is OPENED and the new connection state is not OPENED anymore, the state shall be switched to DISCARDING.] */
+	/* Codes_SRS_SESSION_01_061: [If the previous connection state is OPENED and the new connection state is not OPENED anymore, the state shall be switched to DISCARDING.] */
 	else if ((new_connection_state != CONNECTION_STATE_OPENED) && (previous_connection_state == CONNECTION_STATE_OPENED))
 	{
 		session_set_state(session_instance, SESSION_STATE_DISCARDING);
@@ -278,13 +279,20 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 		else
 		{
 			uint32_t remote_handle;
-			if (flow_get_handle(flow_handle, &remote_handle) != 0)
+			transfer_number flow_next_incoming_id;
+			uint32_t flow_incoming_window;
+			if ((flow_get_handle(flow_handle, &remote_handle) != 0) ||
+				(flow_get_next_outgoing_id(flow_handle, &session_instance->next_incoming_id) != 0) ||
+				(flow_get_next_incoming_id(flow_handle, &flow_next_incoming_id) != 0) ||
+				(flow_get_incoming_window(flow_handle, &flow_incoming_window) != 0))
 			{
 				flow_destroy(flow_handle);
 				/* error */
 			}
 			else
 			{
+				session_instance->remote_incoming_window = flow_next_incoming_id + flow_incoming_window - session_instance->next_outgoing_id;
+
 				flow_destroy(flow_handle);
 
 				LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_incoming_handle(session_instance, remote_handle);

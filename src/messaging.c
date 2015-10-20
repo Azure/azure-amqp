@@ -16,7 +16,7 @@
 typedef struct MESSAGE_WITH_CALLBACK_TAG
 {
 	MESSAGE_HANDLE message;
-	MESSAGE_SEND_COMPLETE_CALLBACK callback;
+	ON_MESSAGE_SEND_COMPLETE on_message_send_complete;
 	const void* context;
 } MESSAGE_WITH_CALLBACK;
 
@@ -135,7 +135,7 @@ static void delivery_settled_callback(void* context, delivery_number delivery_no
 
 	for (i = 0; i < messaging_instance->outgoing_message_count; i++)
 	{
-		messaging_instance->outgoing_messages[i].callback(MESSAGING_OK, messaging_instance->outgoing_messages[i].context);
+		messaging_instance->outgoing_messages[i].on_message_send_complete(MESSAGING_OK, messaging_instance->outgoing_messages[i].context);
 	}
 }
 
@@ -164,7 +164,7 @@ static void on_link_state_changed(void* context, LINK_STATE new_link_state, LINK
 	}
 }
 
-int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND_COMPLETE_CALLBACK callback, const void* callback_context)
+int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, ON_MESSAGE_SEND_COMPLETE on_message_send_complete, const void* callback_context)
 {
 	int result;
 	MESSAGING_INSTANCE* messaging = (MESSAGING_INSTANCE*)handle;
@@ -271,7 +271,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 					{
 						messaging->outgoing_messages = messages;
 						messaging->outgoing_messages[messaging->outgoing_message_count].message = message;
-						messaging->outgoing_messages[messaging->outgoing_message_count].callback = callback;
+						messaging->outgoing_messages[messaging->outgoing_message_count].on_message_send_complete = on_message_send_complete;
 						messaging->outgoing_messages[messaging->outgoing_message_count].context = callback_context;
 						messaging->outgoing_message_count++;
 
@@ -286,6 +286,13 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 	}
 
 	return result;
+}
+
+int messaging_receive(MESSAGING_HANDLE handle, const char* source, ON_MESSAGE_RECEIVE on_message_receive, const void* callback_context)
+{
+	MESSAGING_INSTANCE* messaging = (MESSAGING_INSTANCE*)handle;
+
+	return 0;
 }
 
 void messaging_dowork(MESSAGING_HANDLE handle)

@@ -33,6 +33,7 @@
     <ClInclude Include="..\inc\link.h" />
     <ClInclude Include="..\inc\list.h" />
     <ClInclude Include="..\inc\message.h" />
+    <ClInclude Include="..\inc\message_sender.h" />
     <ClInclude Include="..\inc\messaging.h" />
     <ClInclude Include="..\inc\platform.h" />
     <ClInclude Include="..\inc\saslio.h" />

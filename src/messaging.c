@@ -20,7 +20,7 @@ typedef struct MESSAGE_WITH_CALLBACK_TAG
 	const void* context;
 } MESSAGE_WITH_CALLBACK;
 
-typedef struct MESSAGING_DATA_TAG
+typedef struct MESSAGING_INSTANCE_TAG
 {
 	LIST_HANDLE connections;
 	IO_HANDLE io;
@@ -29,11 +29,11 @@ typedef struct MESSAGING_DATA_TAG
 	LINK_HANDLE link;
 	MESSAGE_WITH_CALLBACK* outgoing_messages;
 	size_t outgoing_message_count;
-} MESSAGING_DATA;
+} MESSAGING_INSTANCE;
 
 MESSAGING_HANDLE messaging_create(void)
 {
-	MESSAGING_DATA* result = (MESSAGING_DATA*)amqpalloc_malloc(sizeof(MESSAGING_DATA));
+	MESSAGING_INSTANCE* result = (MESSAGING_INSTANCE*)amqpalloc_malloc(sizeof(MESSAGING_INSTANCE));
 	if (result != NULL)
 	{
 		result->connections = list_create();
@@ -51,7 +51,7 @@ void messaging_destroy(MESSAGING_HANDLE handle)
 {
 	if (handle != NULL)
 	{
-		MESSAGING_DATA* messaging = (MESSAGING_DATA*)handle;
+		MESSAGING_INSTANCE* messaging = (MESSAGING_INSTANCE*)handle;
 		list_destroy(messaging->connections);
 		link_destroy(messaging->link);
 		connection_destroy(messaging->connection);
@@ -137,10 +137,33 @@ static void on_transfer_received(void* context, TRANSFER_HANDLE transfer, uint32
 {
 }
 
+static void on_link_state_changed(void* context, LINK_STATE new_link_state, LINK_STATE previous_link_state)
+{
+	MESSAGING_INSTANCE* messaging_instance = (MESSAGING_INSTANCE*)context;
+
+	if (new_link_state == LINK_STATE_HALF_ATTACHED)
+	{
+		size_t i;
+
+		for (i = 0; i < messaging_instance->outgoing_message_count; i++)
+		{
+			BINARY_DATA binary_data;
+			(void)message_get_body_amqp_data(messaging_instance->outgoing_messages[i].message, &binary_data);
+			PAYLOAD payload = { binary_data.bytes, binary_data.length };
+			if (link_transfer(messaging_instance->link, &payload, 1, delivery_settled_callback, messaging_instance) == 0)
+			{
+				messaging_instance->outgoing_messages[i].callback(MESSAGING_OK, messaging_instance->outgoing_messages[i].context);
+			}
+		}
+
+		messaging_instance->outgoing_message_count = 0;
+	}
+}
+
 int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND_COMPLETE_CALLBACK callback, const void* callback_context)
 {
 	int result;
-	MESSAGING_DATA* messaging = (MESSAGING_DATA*)handle;
+	MESSAGING_INSTANCE* messaging = (MESSAGING_INSTANCE*)handle;
 	CONNECTION_HANDLE connection = NULL;
 
 	if (messaging == NULL)
@@ -222,7 +245,7 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, MESSAGE_SEND
 
 				if (messaging->link == NULL)
 				{
-					messaging->link = link_create(messaging->session, "voodoo", source_value, target_value, on_transfer_received, messaging);
+					messaging->link = link_create(messaging->session, "voodoo", source_value, target_value, on_transfer_received, on_link_state_changed, messaging);
 					if (messaging->link == NULL)
 					{
 						result = __LINE__;
@@ -265,29 +288,7 @@ void messaging_dowork(MESSAGING_HANDLE handle)
 {
 	if (handle != NULL)
 	{
-		MESSAGING_DATA* messaging = (MESSAGING_DATA*)handle;
-		LINK_STATE link_state;
-
-		if (link_get_state(messaging->link, &link_state) == 0)
-		{
-			if (link_state == LINK_STATE_HALF_ATTACHED)
-			{
-				size_t i;
-
-				for (i = 0; i < messaging->outgoing_message_count; i++)
-				{
-					BINARY_DATA binary_data;
-					(void)message_get_body_amqp_data(messaging->outgoing_messages[i].message, &binary_data);
-					PAYLOAD payload = { binary_data.bytes, binary_data.length };
-					if (link_transfer(messaging->link, &payload, 1, delivery_settled_callback, messaging) == 0)
-					{
-						messaging->outgoing_messages[i].callback(MESSAGING_OK, messaging->outgoing_messages[i].context);
-					}
-				}
-
-				messaging->outgoing_message_count = 0;
-			}
-		}
+		MESSAGING_INSTANCE* messaging = (MESSAGING_INSTANCE*)handle;
 
 		if (messaging->connection != NULL)
 		{

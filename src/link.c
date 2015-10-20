@@ -31,11 +31,20 @@ typedef struct LINK_INSTANCE_TAG
 	uint32_t pending_delivery_count;
 	DELIVERY_INSTANCE* pending_deliveries;
 	uint32_t delivery_tag_no;
+	ON_LINK_STATE_CHANGED on_link_state_changed;
+	void* callback_context;
 } LINK_INSTANCE;
+
+static void set_link_state(LINK_INSTANCE* link_instance, LINK_STATE link_state)
+{
+	LINK_STATE previous_state = link_instance->link_state;
+	link_instance->link_state = link_state;
+	link_instance->on_link_state_changed(link_instance->callback_context, link_state, previous_state);
+}
 
 static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size, const unsigned char* payload_bytes)
 {
-	LINK_INSTANCE* link = (LINK_INSTANCE*)context;
+	LINK_INSTANCE* link_instance = (LINK_INSTANCE*)context;
 	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
 	uint64_t performative_ulong;
 	amqpvalue_get_ulong(descriptor, &performative_ulong);
@@ -44,9 +53,9 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 	case AMQP_ATTACH:
 		LOG(consolelogger_log, LOG_LINE, "<- [ATTACH]");
 		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
-		if (link->link_state == LINK_STATE_HALF_ATTACHED)
+		if (link_instance->link_state == LINK_STATE_HALF_ATTACHED)
 		{
-			link->link_state = LINK_STATE_ATTACHED;
+			set_link_state(link_instance, LINK_STATE_ATTACHED);
 		}
 		break;
 
@@ -71,18 +80,18 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 		}
 
 		uint32_t i;
-		for (i = 0; i < link->pending_delivery_count; i++)
+		for (i = 0; i < link_instance->pending_delivery_count; i++)
 		{
-			if ((link->pending_deliveries[i].delivery_id >= first) &&
-				(link->pending_deliveries[i].delivery_id <= last))
+			if ((link_instance->pending_deliveries[i].delivery_id >= first) &&
+				(link_instance->pending_deliveries[i].delivery_id <= last))
 			{
-				link->pending_deliveries[i].on_delivery_settled(link->pending_deliveries[i].callback_context, link->pending_deliveries[i].delivery_id);
-				if (link->pending_delivery_count - i > 1)
+				link_instance->pending_deliveries[i].on_delivery_settled(link_instance->pending_deliveries[i].callback_context, link_instance->pending_deliveries[i].delivery_id);
+				if (link_instance->pending_delivery_count - i > 1)
 				{
-					memmove(&link->pending_deliveries[i], &link->pending_deliveries[i + 1], sizeof(DELIVERY_INSTANCE) * (link->pending_delivery_count - i - 1));
+					memmove(&link_instance->pending_deliveries[i], &link_instance->pending_deliveries[i + 1], sizeof(DELIVERY_INSTANCE) * (link_instance->pending_delivery_count - i - 1));
 				}
 
-				link->pending_delivery_count--;
+				link_instance->pending_delivery_count--;
 				i--;
 			}
 		}
@@ -160,7 +169,7 @@ static void on_session_state_changed(void* context, SESSION_STATE new_session_st
 		{
 			if (send_attach(link_instance, link_instance->name, 0, role_sender, sender_settle_mode_settled, receiver_settle_mode_first) == 0)
 			{
-				link_instance->link_state = LINK_STATE_HALF_ATTACHED;
+				set_link_state(link_instance, LINK_STATE_HALF_ATTACHED);
 			}
 		}
 	}
@@ -174,7 +183,7 @@ static int encode_bytes(void* context, const void* bytes, size_t length)
 	return 0;
 }
 
-LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target, ON_TRANSFER_RECEIVED on_transfer_received, void* callback_context)
+LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target, ON_TRANSFER_RECEIVED on_transfer_received, ON_LINK_STATE_CHANGED on_link_state_changed, void* callback_context)
 {
 	LINK_INSTANCE* result = amqpalloc_malloc(sizeof(LINK_INSTANCE));
 	if (result != NULL)
@@ -187,6 +196,8 @@ LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE sou
 		result->pending_deliveries = NULL;
 		result->pending_delivery_count = 0;
 		result->delivery_tag_no = 0;
+		result->on_link_state_changed = on_link_state_changed;
+		result->callback_context = callback_context;
 
 		result->name = amqpalloc_malloc(_mbstrlen(name) + 1);
 		if (result->name == NULL)
@@ -198,6 +209,16 @@ LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE sou
 		{
 			(void)strcpy(result->name, name);
 			result->link_endpoint = session_create_link_endpoint(session, name, link_frame_received, on_session_state_changed, result);
+			if (result->link_endpoint == NULL)
+			{
+				amqpalloc_free(result->name);
+				amqpalloc_free(result);
+				result = NULL;
+			}
+			else
+			{
+				set_link_state(result, LINK_STATE_DETACHED);
+			}
 		}
 	}
 
@@ -216,28 +237,13 @@ void link_destroy(LINK_HANDLE handle)
 		{
 			amqpalloc_free(link->pending_deliveries);
 		}
+		if (link->name != NULL)
+		{
+			amqpalloc_free(link->name);
+		}
 
 		amqpalloc_free(handle);
 	}
-}
-
-int link_get_state(LINK_HANDLE handle, LINK_STATE* link_state)
-{
-	int result;
-	LINK_INSTANCE* link = (LINK_INSTANCE*)handle;
-
-	if ((link == NULL) ||
-		(link_state == NULL))
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		*link_state = link->link_state;
-		result = 0;
-	}
-
-	return result;
 }
 
 int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, ON_DELIVERY_SETTLED on_delivery_settled, void* callback_context)

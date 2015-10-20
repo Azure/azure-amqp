@@ -62,6 +62,11 @@ int main(int argc, char** argv)
 				printf("Current memory usage:%lu (max:%lu)\r\n", (unsigned long)current_memory_used, (unsigned long)maximum_memory_used);
 				last_memory_used = current_memory_used;
 			}
+
+			if (sent)
+			{
+				break;
+			}
 		}
 		
 		message_destroy(message);

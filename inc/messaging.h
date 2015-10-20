@@ -2,21 +2,15 @@
 #define MESSAGING_H
 
 #include "amqpvalue.h"
+#include "message_sender.h"
 #include "message.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-	typedef enum MESSAGING_RESULT_TAG
-	{
-		MESSAGING_OK,
-		MESSAGING_ERROR
-	} MESSAGING_RESULT;
-
 	typedef void* MESSAGING_HANDLE;
-	typedef void(*ON_MESSAGE_SEND_COMPLETE)(MESSAGING_RESULT send_result, const void* context);
-	typedef void(*ON_MESSAGE_RECEIVE)(MESSAGING_RESULT send_result, const void* context);
+	typedef void(*ON_MESSAGE_RECEIVE)(MESSAGE_SEND_RESULT send_result, const void* context);
 
 	extern MESSAGING_HANDLE messaging_create(void);
 	extern void messaging_destroy(MESSAGING_HANDLE handle);

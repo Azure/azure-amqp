@@ -11,7 +11,7 @@
 
 static bool sent = false;
 
-void message_send_callback(MESSAGING_RESULT send_result, const void* context)
+void message_send_callback(const void* context, MESSAGE_SEND_RESULT send_result)
 {
 	(void)send_result;
 	(void)context;

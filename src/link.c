@@ -183,7 +183,7 @@ static int encode_bytes(void* context, const void* bytes, size_t length)
 	return 0;
 }
 
-LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target, ON_TRANSFER_RECEIVED on_transfer_received, ON_LINK_STATE_CHANGED on_link_state_changed, void* callback_context)
+LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target)
 {
 	LINK_INSTANCE* result = amqpalloc_malloc(sizeof(LINK_INSTANCE));
 	if (result != NULL)
@@ -196,8 +196,6 @@ LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE sou
 		result->pending_deliveries = NULL;
 		result->pending_delivery_count = 0;
 		result->delivery_tag_no = 0;
-		result->on_link_state_changed = on_link_state_changed;
-		result->callback_context = callback_context;
 
 		result->name = amqpalloc_malloc(_mbstrlen(name) + 1);
 		if (result->name == NULL)
@@ -220,6 +218,26 @@ LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE sou
 				set_link_state(result, LINK_STATE_DETACHED);
 			}
 		}
+	}
+
+	return result;
+}
+
+int link_subscribe_events(LINK_HANDLE link, ON_TRANSFER_RECEIVED on_transfer_received, ON_LINK_STATE_CHANGED on_link_state_changed, void* callback_context)
+{
+	int result;
+
+	if (link == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		LINK_INSTANCE* link_instance = (LINK_INSTANCE*)link;
+		link_instance->on_link_state_changed = on_link_state_changed;
+		link_instance->callback_context = callback_context;
+
+		result = 0;
 	}
 
 	return result;

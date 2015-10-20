@@ -12,6 +12,7 @@
 #include "tlsio.h"
 #include "saslio.h"
 #include "consolelogger.h"
+#include "message_sender.h"
 
 typedef struct MESSAGE_WITH_CALLBACK_TAG
 {
@@ -135,7 +136,7 @@ static void delivery_settled_callback(void* context, delivery_number delivery_no
 
 	for (i = 0; i < messaging_instance->outgoing_message_count; i++)
 	{
-		messaging_instance->outgoing_messages[i].on_message_send_complete(MESSAGING_OK, messaging_instance->outgoing_messages[i].context);
+		messaging_instance->outgoing_messages[i].on_message_send_complete(messaging_instance->outgoing_messages[i].context, MESSAGE_SEND_OK);
 	}
 }
 
@@ -249,10 +250,14 @@ int messaging_send(MESSAGING_HANDLE handle, MESSAGE_HANDLE message, ON_MESSAGE_S
 
 				if (messaging->link == NULL)
 				{
-					messaging->link = link_create(messaging->session, "voodoo", source_value, target_value, on_transfer_received, on_link_state_changed, messaging);
+					messaging->link = link_create(messaging->session, "voodoo", source_value, target_value);
 					if (messaging->link == NULL)
 					{
 						result = __LINE__;
+					}
+					else
+					{
+						(void)link_subscribe_events(messaging->link, on_transfer_received, on_link_state_changed, messaging);
 					}
 				}
 

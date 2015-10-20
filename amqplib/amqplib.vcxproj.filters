@@ -143,5 +143,8 @@
     <ClCompile Include="..\src\amqpvalue_to_string.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\message_sender.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -56,6 +56,7 @@
     <ClCompile Include="..\src\link.c" />
     <ClCompile Include="..\src\list.c" />
     <ClCompile Include="..\src\message.c" />
+    <ClCompile Include="..\src\message_sender.c" />
     <ClCompile Include="..\src\messaging.c" />
     <ClCompile Include="..\src\platform_win32.c" />
     <ClCompile Include="..\src\saslio.c" />

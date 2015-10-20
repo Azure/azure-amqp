@@ -130,7 +130,13 @@ AMQP_VALUE messaging_create_target(AMQP_VALUE address)
 
 static void delivery_settled_callback(void* context, delivery_number delivery_no)
 {
-	(void)printf("delivery callback %u\r\n", delivery_no);
+	MESSAGING_INSTANCE* messaging_instance = (MESSAGING_INSTANCE*)context;
+	size_t i;
+
+	for (i = 0; i < messaging_instance->outgoing_message_count; i++)
+	{
+		messaging_instance->outgoing_messages[i].callback(MESSAGING_OK, messaging_instance->outgoing_messages[i].context);
+	}
 }
 
 static void on_transfer_received(void* context, TRANSFER_HANDLE transfer, uint32_t payoad_size, const unsigned char* payload_bytes)
@@ -150,13 +156,11 @@ static void on_link_state_changed(void* context, LINK_STATE new_link_state, LINK
 			BINARY_DATA binary_data;
 			(void)message_get_body_amqp_data(messaging_instance->outgoing_messages[i].message, &binary_data);
 			PAYLOAD payload = { binary_data.bytes, binary_data.length };
-			if (link_transfer(messaging_instance->link, &payload, 1, delivery_settled_callback, messaging_instance) == 0)
+			if (link_transfer(messaging_instance->link, &payload, 1, delivery_settled_callback, messaging_instance) != 0)
 			{
-				messaging_instance->outgoing_messages[i].callback(MESSAGING_OK, messaging_instance->outgoing_messages[i].context);
+				/* error */
 			}
 		}
-
-		messaging_instance->outgoing_message_count = 0;
 	}
 }
 

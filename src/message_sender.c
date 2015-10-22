@@ -39,6 +39,13 @@ static void on_delivery_settled(void* context, delivery_number delivery_no)
 static void remove_pending_message(MESSAGE_SENDER_INSTANCE* message_sender_instance, size_t index)
 {
 	MESSAGE_WITH_CALLBACK* new_messages;
+
+	if (message_sender_instance->messages[index].message != NULL)
+	{
+		message_destroy(message_sender_instance->messages[index].message);
+		message_sender_instance->messages[index].message = NULL;
+	}
+
 	if (message_sender_instance->message_count - index > 1)
 	{
 		(void)memmove(&message_sender_instance->messages[index], &message_sender_instance->messages[index + 1], sizeof(MESSAGE_WITH_CALLBACK) * (message_sender_instance->message_count - index - 1));

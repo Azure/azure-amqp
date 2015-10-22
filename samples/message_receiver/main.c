@@ -38,8 +38,6 @@ int main(int argc, char** argv)
 	}
 
 	size_t last_memory_used = 0;
-	unsigned char muie[4] = { 'm', 'u', 'i', 'e' };
-	BINARY_DATA binary_data = { muie, sizeof(muie) };
 
 	TLSIO_CONFIG tls_io_config = { "pupupupu.servicebus.windows.net", 5671 };
 	SASLIO_CONFIG sasl_io_config = { tlsio_get_interface_description(), &tls_io_config };

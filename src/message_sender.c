@@ -30,10 +30,6 @@ typedef struct MESSAGE_SENDER_INSTANCE_TAG
 	MESSAGE_SENDER_STATE message_sender_state;
 } MESSAGE_SENDER_INSTANCE;
 
-static void on_transfer_received(void* context, TRANSFER_HANDLE transfer, uint32_t payload_size, const unsigned char* payload_bytes)
-{
-}
-
 static void on_delivery_settled(void* context, delivery_number delivery_no)
 {
 	MESSAGE_WITH_CALLBACK* message_with_callback = (MESSAGE_WITH_CALLBACK*)context;
@@ -104,7 +100,7 @@ MESSAGE_SENDER_HANDLE messagesender_create(LINK_HANDLE link)
 	MESSAGE_SENDER_INSTANCE* result = amqpalloc_malloc(sizeof(MESSAGE_SENDER_INSTANCE));
 	if (result != NULL)
 	{
-		if (link_subscribe_events(link, on_transfer_received, on_link_state_changed, result) != 0)
+		if (link_subscribe_events(link, NULL, on_link_state_changed, result) != 0)
 		{
 			amqpalloc_free(result);
 			result = NULL;
@@ -151,7 +147,7 @@ int messagesender_send(MESSAGE_SENDER_HANDLE message_sender, MESSAGE_HANDLE mess
 			message_sender_instance->messages = new_messages;
 			if (message_sender_instance->message_sender_state == MESSAGE_SENDER_STATE_IDLE)
 			{
-				message_sender_instance->messages[message_sender_instance->message_count].message = message;
+				message_sender_instance->messages[message_sender_instance->message_count].message = message_clone(message);
 			}
 			else
 			{

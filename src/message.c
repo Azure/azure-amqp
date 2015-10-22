@@ -21,7 +21,30 @@ MESSAGE_HANDLE message_create(void)
 	}
 
 	return result;
+}
 
+MESSAGE_HANDLE message_clone(MESSAGE_HANDLE source_message)
+{
+	MESSAGE_DATA* result = (MESSAGE_DATA*)amqpalloc_malloc(sizeof(MESSAGE_DATA));
+	MESSAGE_DATA* source_message_instance = (MESSAGE_DATA*)source_message;
+
+	if (result != NULL)
+	{
+		result->to = amqpvalue_clone(source_message_instance->to);
+		result->body_data_section_length = source_message_instance->body_data_section_length;
+
+		if (source_message_instance->body_data_section_length > 0)
+		{
+			result->body_data_section_bytes = amqpalloc_malloc(source_message_instance->body_data_section_length);
+			if (result->body_data_section_bytes == NULL)
+			{
+				amqpalloc_free(result);
+				result = NULL;
+			}
+		}
+	}
+
+	return result;
 }
 
 void message_destroy(MESSAGE_HANDLE handle)

@@ -2,13 +2,14 @@
 #define MESSAGING_H
 
 #include "amqpvalue.h"
+#include "amqp_definitions.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-	extern AMQP_VALUE messaging_create_source(AMQP_VALUE address);
-	extern AMQP_VALUE messaging_create_target(AMQP_VALUE address);
+	extern AMQP_VALUE messaging_create_source(SOURCE_HANDLE address);
+	extern AMQP_VALUE messaging_create_target(TARGET_HANDLE address);
 
 #ifdef __cplusplus
 }

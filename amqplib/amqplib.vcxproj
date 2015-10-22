@@ -33,6 +33,7 @@
     <ClInclude Include="..\inc\link.h" />
     <ClInclude Include="..\inc\list.h" />
     <ClInclude Include="..\inc\message.h" />
+    <ClInclude Include="..\inc\message_receiver.h" />
     <ClInclude Include="..\inc\message_sender.h" />
     <ClInclude Include="..\inc\messaging.h" />
     <ClInclude Include="..\inc\platform.h" />
@@ -56,6 +57,7 @@
     <ClCompile Include="..\src\link.c" />
     <ClCompile Include="..\src\list.c" />
     <ClCompile Include="..\src\message.c" />
+    <ClCompile Include="..\src\message_receiver.c" />
     <ClCompile Include="..\src\message_sender.c" />
     <ClCompile Include="..\src\messaging.c" />
     <ClCompile Include="..\src\platform_win32.c" />

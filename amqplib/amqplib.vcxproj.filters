@@ -81,6 +81,9 @@
     <ClInclude Include="..\inc\message_sender.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\inc\message_receiver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\socketio_win32.c">
@@ -144,6 +147,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\message_sender.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\message_receiver.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

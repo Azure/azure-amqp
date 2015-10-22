@@ -667,7 +667,6 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 			if (result->frame_codec == NULL)
 			{
 				/* Codes_SRS_CONNECTION_01_083: [If frame_codec_create fails then connection_create shall return NULL.] */
-				io_destroy(result->io);
 				amqpalloc_free(result);
 				result = NULL;
 			}
@@ -678,7 +677,6 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 				{
 					/* Codes_SRS_CONNECTION_01_108: [If amqp_frame_codec_create fails, connection_create shall return NULL.] */
 					frame_codec_destroy(result->frame_codec);
-					io_destroy(result->io);
 					amqpalloc_free(result);
 					result = NULL;
 				}
@@ -692,7 +690,6 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 							/* Codes_SRS_CONNECTION_01_081: [If allocating the memory for the connection fails then connection_create shall return NULL.] */
 							amqp_frame_codec_destroy(result->amqp_frame_codec);
 							frame_codec_destroy(result->frame_codec);
-							io_destroy(result->io);
 							amqpalloc_free(result);
 							result = NULL;
 						}
@@ -715,7 +712,6 @@ CONNECTION_HANDLE connection_create(IO_HANDLE io, const char* hostname, const ch
 							amqpalloc_free(result->host_name);
 							amqp_frame_codec_destroy(result->amqp_frame_codec);
 							frame_codec_destroy(result->frame_codec);
-							io_destroy(result->io);
 							amqpalloc_free(result);
 							result = NULL;
 						}
@@ -764,7 +760,6 @@ void connection_destroy(CONNECTION_HANDLE connection)
 		frame_codec_destroy(connection_instance->frame_codec);
 
 		/* Codes_SRS_CONNECTION_01_074: [connection_destroy shall close the socket connection.] */
-		io_destroy(connection_instance->io);
 		amqpalloc_free(connection_instance);
 	}
 }

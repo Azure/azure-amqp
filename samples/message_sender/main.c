@@ -93,6 +93,7 @@ int main(int argc, char** argv)
 		link_destroy(link);
 		session_destroy(session);
 		connection_destroy(connection);
+		io_destroy(sasl_io);
 		amqplib_deinit();
 
 		printf("Max memory usage:%lu\r\n", (unsigned long)amqpalloc_get_maximum_memory_used());

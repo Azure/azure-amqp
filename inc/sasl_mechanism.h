@@ -27,9 +27,9 @@ extern "C" {
 		SASL_MECHANISM_CREATE sasl_mechanism_concrete_create;
 		SASL_MECHANISM_DESTROY sasl_mechanism_concrete_destroy;
 		SASL_MECHANISM_GET_INIT_BYTES sasl_mechanism_concrete_get_init_bytes;
-	} SASL_MECHANISM_INTERFACE;
+	} SASL_MECHANISM_INTERFACE_DESCRIPTION;
 
-	extern SASL_MECHANISM_HANDLE saslmechanism_create(const SASL_MECHANISM_INTERFACE* sasl_mechanism_interface, void* sasl_mechanism_config);
+	extern SASL_MECHANISM_HANDLE saslmechanism_create(const SASL_MECHANISM_INTERFACE_DESCRIPTION* sasl_mechanism_interface_description, void* sasl_mechanism_create_parameters);
 	extern void saslmechanism_destroy(SASL_MECHANISM_HANDLE sasl_mechanism);
 	extern int saslmechanism_get_init_bytes(SASL_MECHANISM_HANDLE sasl_mechanism, INIT_BYTES* init_bytes);
 

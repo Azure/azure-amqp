@@ -15,7 +15,7 @@ int saslplain_get_init_bytes(SASL_MECHANISM_CONCRETE_HANDLE sasl_mechanism_concr
 	return 0;
 }
 
-const SASL_MECHANISM_INTERFACE* saslplain_get_interface(void)
+const SASL_MECHANISM_INTERFACE_DESCRIPTION* saslplain_get_interface(void)
 {
 	return NULL;
 }

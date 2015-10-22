@@ -50,7 +50,7 @@ int main(int argc, char** argv)
 		sasl_io = io_create(saslio_get_interface_description(), &sasl_io_config, NULL);
 		connection = connection_create(sasl_io, "pupupupu.servicebus.windows.net", "11222");
 		session = session_create(connection);
-		link = link_create(session, "sender-link", messaging_create_source("/ingress"), messaging_create_target("/ingress"));
+		link = link_create(session, "sender-link", messaging_create_source("ingress"), messaging_create_target("amqps://pupupupu.servicebus.windows.net/ingress"));
 		message_sender = messagesender_create(link);
 		uint32_t i;
 
@@ -86,6 +86,9 @@ int main(int argc, char** argv)
 		
 		message_destroy(message);
 		messagesender_destroy(message_sender);
+		link_destroy(link);
+		session_destroy(session);
+		connection_destroy(connection);
 		amqplib_deinit();
 
 		printf("Max memory usage:%lu\r\n", (unsigned long)amqpalloc_get_maximum_memory_used());

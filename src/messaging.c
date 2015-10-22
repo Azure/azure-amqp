@@ -63,69 +63,21 @@ void messaging_destroy(MESSAGING_HANDLE handle)
 
 AMQP_VALUE messaging_create_source(AMQP_VALUE address)
 {
-	AMQP_VALUE result = amqpvalue_create_composite_with_ulong_descriptor(0x28);
-	if (result != NULL)
-	{
-		AMQP_VALUE list_value = amqpvalue_get_described_value(result);
-		if (list_value == NULL)
-		{
-			amqpvalue_destroy(result);
-			result = NULL;
-		}
-		else
-		{
-			AMQP_VALUE address_copy_value = amqpvalue_clone(address);
-			if (address_copy_value == NULL)
-			{
-				amqpvalue_destroy(result);
-				result = NULL;
-			}
-			else
-			{
-				if (amqpvalue_set_list_item(list_value, 0, address_copy_value) != 0)
-				{
-					amqpvalue_destroy(address_copy_value);
-					amqpvalue_destroy(result);
-					result = NULL;
-				}
-			}
-		}
-	}
-
+	AMQP_VALUE result;
+	SOURCE_HANDLE source = source_create();
+	source_set_address(source, amqpvalue_create_string(address));
+	result = amqpvalue_create_source(source);
+	source_destroy(source);
 	return result;
 }
 
 AMQP_VALUE messaging_create_target(AMQP_VALUE address)
 {
-	AMQP_VALUE result = amqpvalue_create_composite_with_ulong_descriptor(0x29);
-	if (result != NULL)
-	{
-		AMQP_VALUE list_value = amqpvalue_get_described_value(result);
-		if (list_value == NULL)
-		{
-			amqpvalue_destroy(result);
-			result = NULL;
-		}
-		else
-		{
-			AMQP_VALUE address_copy_value = amqpvalue_clone(address);
-			if (address_copy_value == NULL)
-			{
-				amqpvalue_destroy(result);
-				result = NULL;
-			}
-			else
-			{
-				if (amqpvalue_set_list_item(list_value, 0, address_copy_value) != 0)
-				{
-					amqpvalue_destroy(address_copy_value);
-					amqpvalue_destroy(result);
-					result = NULL;
-				}
-			}
-		}
-	}
-
+	AMQP_VALUE result;
+	TARGET_HANDLE target = target_create();
+	source_set_address(target, amqpvalue_create_string(address));
+	result = amqpvalue_create_source(target);
+	source_destroy(target);
 	return result;
 }
 

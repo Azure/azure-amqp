@@ -1,3 +1,4 @@
+#include <string.h>
 #include "message_sender.h"
 #include "amqpalloc.h"
 
@@ -6,6 +7,12 @@ typedef enum MESSAGE_SENDER_STATE_TAG
 	MESSAGE_SENDER_STATE_IDLE,
 	MESSAGE_SENDER_STATE_CONNECTED
 } MESSAGE_SENDER_STATE;
+
+typedef enum MESSAGE_SEND_STATE_TAG
+{
+	MESSAGE_SEND_STATE_NOT_SENT,
+	MESSAGE_SEND_STATE_PENDING
+} MESSAGE_SEND_STATE;
 
 typedef struct MESSAGE_WITH_CALLBACK_TAG
 {
@@ -66,7 +73,7 @@ static void send_all_pending_messages(MESSAGE_SENDER_INSTANCE* message_sender_in
 		else
 		{
 			PAYLOAD payload = { binary_data.bytes, binary_data.length };
-			if (link_transfer(message_sender_instance->link, &payload, 1, on_delivery_settled, message_sender_instance) != 0)
+			if (link_transfer(message_sender_instance->link, &payload, 1, on_delivery_settled, &message_sender_instance->messages[i]) != 0)
 			{
 				message_sender_instance->messages[i].on_message_send_complete(message_sender_instance->messages[i].context, MESSAGE_SEND_ERROR);
 				remove_pending_message(message_sender_instance, i);
@@ -134,44 +141,51 @@ int messagesender_send(MESSAGE_SENDER_HANDLE message_sender, MESSAGE_HANDLE mess
 	else
 	{
 		MESSAGE_SENDER_INSTANCE* message_sender_instance = (MESSAGE_SENDER_INSTANCE*)message_sender;
-
-		if (message_sender_instance->message_sender_state == MESSAGE_SENDER_STATE_IDLE)
+		MESSAGE_WITH_CALLBACK* new_messages = (MESSAGE_WITH_CALLBACK*)realloc(message_sender_instance->messages, sizeof(MESSAGE_WITH_CALLBACK) * (message_sender_instance->message_count + 1));
+		if (new_messages == NULL)
 		{
-			MESSAGE_WITH_CALLBACK* new_messages = (MESSAGE_WITH_CALLBACK*)realloc(message_sender_instance->messages, sizeof(MESSAGE_WITH_CALLBACK) * (message_sender_instance->message_count + 1));
-			if (new_messages == NULL)
-			{
-				result = __LINE__;
-			}
-			else
-			{
-				message_sender_instance->messages = new_messages;
-				message_sender_instance->messages[message_sender_instance->message_count].message = message;
-				message_sender_instance->messages[message_sender_instance->message_count].on_message_send_complete = on_message_send_complete;
-				message_sender_instance->messages[message_sender_instance->message_count].context = callback_context;
-				message_sender_instance->messages[message_sender_instance->message_count].message_sender = message_sender_instance;
-				message_sender_instance->message_count++;
-
-				result = 0;
-			}
+			result = __LINE__;
 		}
 		else
 		{
-			BINARY_DATA binary_data;
-			if (message_get_body_amqp_data(message, &binary_data) != 0)
+			message_sender_instance->messages = new_messages;
+			if (message_sender_instance->message_sender_state == MESSAGE_SENDER_STATE_IDLE)
 			{
-				result = __LINE__;
+				message_sender_instance->messages[message_sender_instance->message_count].message = message;
 			}
 			else
 			{
-				PAYLOAD payload = { binary_data.bytes, binary_data.length };
-				if (link_transfer(message_sender_instance->link, &payload, 1, on_delivery_settled, message_sender_instance) != 0)
+				message_sender_instance->messages[message_sender_instance->message_count].message = NULL;
+			}
+
+			message_sender_instance->messages[message_sender_instance->message_count].on_message_send_complete = on_message_send_complete;
+			message_sender_instance->messages[message_sender_instance->message_count].context = callback_context;
+			message_sender_instance->messages[message_sender_instance->message_count].message_sender = message_sender_instance;
+			message_sender_instance->message_count++;
+
+			if (message_sender_instance->message_sender_state != MESSAGE_SENDER_STATE_IDLE)
+			{
+				BINARY_DATA binary_data;
+				if (message_get_body_amqp_data(message, &binary_data) != 0)
 				{
 					result = __LINE__;
 				}
 				else
 				{
-					result = 0;
+					PAYLOAD payload = { binary_data.bytes, binary_data.length };
+					if (link_transfer(message_sender_instance->link, &payload, 1, on_delivery_settled, message_sender_instance) != 0)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						result = 0;
+					}
 				}
+			}
+			else
+			{
+				result = 0;
 			}
 		}
 	}

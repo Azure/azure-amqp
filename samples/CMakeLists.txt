@@ -1,1 +1,1 @@
-add_subdirectory(send)
+add_subdirectory(message_receiver)

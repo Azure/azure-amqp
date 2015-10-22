@@ -46,15 +46,24 @@ int main(int argc, char** argv)
 		unsigned char muie[4] = { 'm', 'u', 'i', 'e' };
 		BINARY_DATA binary_data = { muie, sizeof(muie) };
 
-		TLSIO_CONFIG tls_io_config = { "pupupupu.servicebus.windows.net", 5671 };
+        /* create SASL plain handler */
 		SASL_PLAIN_CONFIG sasl_plain_config = { "SendRule", "HXSisf7p1PRyj2xx5DC234QKXRJvxSn7fhUKklC72jc=" };
 		SASL_MECHANISM_HANDLE sasl_mechanism_handle = saslmechanism_create(saslplain_get_interface(), &sasl_plain_config);
-		SASLIO_CONFIG sasl_io_config = { tlsio_get_interface_description(), &tls_io_config, sasl_mechanism_handle };
+
+        /* create the TLS IO */
+        TLSIO_CONFIG tls_io_config = { "pupupupu.servicebus.windows.net", 5671 };
+
+        /* create the SASL IO using the TLS IO */
+        SASLIO_CONFIG sasl_io_config = { tlsio_get_interface_description(), &tls_io_config, sasl_mechanism_handle };
 		sasl_io = io_create(saslio_get_interface_description(), &sasl_io_config, NULL);
-		connection = connection_create(sasl_io, "pupupupu.servicebus.windows.net", "11222");
+
+        /* create the connection, session and link */
+        connection = connection_create(sasl_io, "pupupupu.servicebus.windows.net", "whatever");
 		session = session_create(connection);
-		link = link_create(session, "sender-link", messaging_create_source("ingress"), messaging_create_target("amqps://pupupupu.servicebus.windows.net/ingress"));
-		message_sender = messagesender_create(link);
+        link = link_create(session, "sender-link", messaging_create_source("ingress"), messaging_create_target("amqps://pupupupu.servicebus.windows.net/ingress"));
+
+        /* create a message sender */
+        message_sender = messagesender_create(link);
 		uint32_t i;
 
 		for (i = 0; i < 1; i++)

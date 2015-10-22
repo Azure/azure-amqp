@@ -8,7 +8,7 @@ typedef struct MESSAGE_RECEIVER_INSTANCE_TAG
 	const void* callback_context;
 } MESSAGE_RECEIVER_INSTANCE;
 
-MESSAGE_RECEIVER_HANDLE messagesender_receiver(LINK_HANDLE link)
+MESSAGE_RECEIVER_HANDLE messagereceiver_create(LINK_HANDLE link)
 {
 	MESSAGE_RECEIVER_INSTANCE* result = (MESSAGE_RECEIVER_INSTANCE*)amqpalloc_malloc(sizeof(MESSAGE_RECEIVER_INSTANCE));
 	if (result != NULL)
@@ -19,7 +19,7 @@ MESSAGE_RECEIVER_HANDLE messagesender_receiver(LINK_HANDLE link)
 	return result;
 }
 
-void messagesender_destroy(MESSAGE_RECEIVER_HANDLE message_receiver)
+void messagereceiver_destroy(MESSAGE_RECEIVER_HANDLE message_receiver)
 {
 	if (message_receiver != NULL)
 	{
@@ -27,7 +27,7 @@ void messagesender_destroy(MESSAGE_RECEIVER_HANDLE message_receiver)
 	}
 }
 
-int messagesender_subscribe(MESSAGE_RECEIVER_HANDLE message_receiver, ON_MESSAGE_RECEIVED on_message_received, const void* callback_context)
+int messagereceiver_subscribe(MESSAGE_RECEIVER_HANDLE message_receiver, ON_MESSAGE_RECEIVED on_message_received, const void* callback_context)
 {
 	int result;
 

@@ -9,12 +9,14 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include "io.h"
+#include "sasl_mechanism.h"
 #include "logger.h"
 
 typedef struct SASLIO_CONFIG_TAG
 {
 	const IO_INTERFACE_DESCRIPTION* socket_io_interface;
 	const void* socket_io_parameters;
+	SASL_MECHANISM_HANDLE sasl_mechanism;
 } SASLIO_CONFIG;
 
 extern IO_HANDLE saslio_create(void* io_create_parameters, LOGGER_LOG logger_log);

@@ -39,6 +39,8 @@
     <ClInclude Include="..\inc\platform.h" />
     <ClInclude Include="..\inc\saslio.h" />
     <ClInclude Include="..\inc\sasl_frame_codec.h" />
+    <ClInclude Include="..\inc\sasl_mechanism.h" />
+    <ClInclude Include="..\inc\sasl_plain.h" />
     <ClInclude Include="..\inc\session.h" />
     <ClInclude Include="..\inc\socketio.h" />
     <ClInclude Include="..\inc\tlsio.h" />
@@ -63,6 +65,8 @@
     <ClCompile Include="..\src\platform_win32.c" />
     <ClCompile Include="..\src\saslio.c" />
     <ClCompile Include="..\src\sasl_frame_codec.c" />
+    <ClCompile Include="..\src\sasl_mechanism.c" />
+    <ClCompile Include="..\src\sasl_plain.c" />
     <ClCompile Include="..\src\session.c" />
     <ClCompile Include="..\src\socketio_win32.c" />
     <ClCompile Include="..\src\tlsio_win32.c" />

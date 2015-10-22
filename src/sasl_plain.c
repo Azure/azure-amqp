@@ -4,8 +4,8 @@
 
 typedef struct SASL_PLAIN_INSTANCE_TAG
 {
-	char* authcid;
-	char* passwd;
+	unsigned char* init_bytes;
+	size_t init_bytes_length;
 } SASL_PLAIN_INSTANCE;
 
 static const SASL_MECHANISM_INTERFACE_DESCRIPTION saslplain_interface =
@@ -23,25 +23,22 @@ SASL_MECHANISM_CONCRETE_HANDLE saslplain_create(void* config)
 		SASL_PLAIN_CONFIG* sasl_plain_config = (SASL_PLAIN_CONFIG*)config;
 		size_t authcid_length = strlen(sasl_plain_config->authcid);
 		size_t passwd_length = strlen(sasl_plain_config->passwd);
-		result->authcid = (char*)amqpalloc_malloc(authcid_length + 1);
-		if (result->authcid == NULL)
+
+		/* Ignore UTF8 for now */
+		result->init_bytes = (unsigned char*)amqpalloc_malloc(authcid_length + passwd_length + 3);
+		if (result->init_bytes == NULL)
 		{
 			amqpalloc_free(result);
 			result = NULL;
 		}
 		else
 		{
-			result->passwd = (char*)amqpalloc_malloc(passwd_length + 1);
-			if (result->passwd == NULL)
-			{
-				amqpalloc_free(result);
-				result = NULL;
-			}
-			else
-			{
-				strcpy(result->authcid, sasl_plain_config->authcid);
-				strcpy(result->passwd, sasl_plain_config->passwd);
-			}
+			result->init_bytes[0] = 0;
+			(void)memcpy(result->init_bytes + 1, sasl_plain_config->authcid, authcid_length);
+			result->init_bytes[authcid_length + 1] = 0;
+			(void)memcpy(result->init_bytes + authcid_length + 2, sasl_plain_config->passwd, passwd_length);
+			result->init_bytes[authcid_length + passwd_length + 2] = 0;
+			result->init_bytes_length = authcid_length + passwd_length + 3;
 		}
 	}
 
@@ -53,21 +50,32 @@ void saslplain_destroy(SASL_MECHANISM_CONCRETE_HANDLE sasl_mechanism_concrete_ha
 	if (sasl_mechanism_concrete_handle != NULL)
 	{
 		SASL_PLAIN_INSTANCE* sasl_plain_instance = (SASL_PLAIN_INSTANCE*)sasl_mechanism_concrete_handle;
-		if (sasl_plain_instance->authcid != NULL)
+		if (sasl_plain_instance->init_bytes != NULL)
 		{
-			amqpalloc_free(sasl_plain_instance->authcid);
-		}
-
-		if (sasl_plain_instance->passwd != NULL)
-		{
-			amqpalloc_free(sasl_plain_instance->passwd);
+			amqpalloc_free(sasl_plain_instance->init_bytes);
 		}
 	}
 }
 
 int saslplain_get_init_bytes(SASL_MECHANISM_CONCRETE_HANDLE sasl_mechanism_concrete_handle, INIT_BYTES* init_bytes)
 {
-	return 0;
+	int result;
+
+	if (sasl_mechanism_concrete_handle == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		SASL_PLAIN_INSTANCE* sasl_plain_instance = (SASL_PLAIN_INSTANCE*)sasl_mechanism_concrete_handle;
+
+		init_bytes->bytes = sasl_plain_instance->init_bytes;
+		init_bytes->length = sasl_plain_instance->init_bytes_length;
+
+		result = 0;
+	}
+
+	return result;
 }
 
 const SASL_MECHANISM_INTERFACE_DESCRIPTION* saslplain_get_interface(void)

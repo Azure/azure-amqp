@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 	sasl_io = io_create(saslio_get_interface_description(), &sasl_io_config, NULL);
 	connection = connection_create(sasl_io, "pupupupu.servicebus.windows.net", "11222");
 	session = session_create(connection);
-	link = link_create(session, "sender-link", messaging_create_source("ingress"), messaging_create_target("amqps://pupupupu.servicebus.windows.net/ingress"));
+	link = link_create(session, "receiver-link", messaging_create_source("ingress"), messaging_create_target("amqps://pupupupu.servicebus.windows.net/ingress"));
 	message_receiver = messagereceiver_create(link);
 	if ((message_receiver == NULL) ||
 		(messagereceiver_subscribe(message_receiver, on_message_received, message_receiver) != 0))

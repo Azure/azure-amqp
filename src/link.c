@@ -39,7 +39,11 @@ static void set_link_state(LINK_INSTANCE* link_instance, LINK_STATE link_state)
 {
 	LINK_STATE previous_state = link_instance->link_state;
 	link_instance->link_state = link_state;
-	link_instance->on_link_state_changed(link_instance->callback_context, link_state, previous_state);
+
+	if (link_instance->on_link_state_changed != NULL)
+	{
+		link_instance->on_link_state_changed(link_instance->callback_context, link_state, previous_state);
+	}
 }
 
 static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size, const unsigned char* payload_bytes)
@@ -215,6 +219,9 @@ LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE sou
 			}
 			else
 			{
+				result->on_link_state_changed = NULL;
+				result->callback_context = NULL;
+
 				set_link_state(result, LINK_STATE_DETACHED);
 			}
 		}

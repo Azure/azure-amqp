@@ -50,7 +50,7 @@ int main(int argc, char** argv)
 		sasl_io = io_create(saslio_get_interface_description(), &sasl_io_config, NULL);
 		connection = connection_create(sasl_io, "pupupupu.servicebus.windows.net", "11222");
 		session = session_create(connection);
-		link = link_create(session, "sender-link", messaging_create_source("/"), messaging_create_target("pupupupu.servicebus.windows.net"));
+		link = link_create(session, "sender-link", messaging_create_source("/ingress"), messaging_create_target("/ingress"));
 		message_sender = messagesender_create(link);
 		uint32_t i;
 
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 			message_set_to(message, "pupupupu.servicebus.windows.net");
 			message_set_body_amqp_data(message, binary_data);
 
-			(void)messagesender_send(message_sender, message, on_message_send_complete, NULL);
+			(void)messagesender_send(message_sender, message, on_message_send_complete, message);
 		}
 
 		while (true)

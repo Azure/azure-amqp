@@ -1,24 +1,114 @@
 #include "message_sender.h"
 #include "amqpalloc.h"
 
+typedef enum MESSAGE_SENDER_STATE_TAG
+{
+	MESSAGE_SENDER_STATE_IDLE,
+	MESSAGE_SENDER_STATE_CONNECTED
+} MESSAGE_SENDER_STATE;
+
 typedef struct MESSAGE_WITH_CALLBACK_TAG
 {
 	MESSAGE_HANDLE message;
 	ON_MESSAGE_SEND_COMPLETE on_message_send_complete;
 	const void* context;
+	MESSAGE_SENDER_HANDLE message_sender;
 } MESSAGE_WITH_CALLBACK;
 
 typedef struct MESSAGE_SENDER_INSTANCE_TAG
 {
 	LINK_HANDLE link;
+	size_t message_count;
+	MESSAGE_WITH_CALLBACK* messages;
+	MESSAGE_SENDER_STATE message_sender_state;
 } MESSAGE_SENDER_INSTANCE;
+
+static void on_transfer_received(void* context, TRANSFER_HANDLE transfer, uint32_t payload_size, const unsigned char* payload_bytes)
+{
+}
+
+static void on_delivery_settled(void* context, delivery_number delivery_no)
+{
+	MESSAGE_WITH_CALLBACK* message_with_callback = (MESSAGE_WITH_CALLBACK*)context;
+	message_with_callback->on_message_send_complete(message_with_callback->context, MESSAGE_SEND_OK);
+}
+
+static void remove_pending_message(MESSAGE_SENDER_INSTANCE* message_sender_instance, size_t index)
+{
+	MESSAGE_WITH_CALLBACK* new_messages;
+	if (message_sender_instance->message_count - index > 1)
+	{
+		(void)memmove(&message_sender_instance->messages[index], &message_sender_instance->messages[index + 1], sizeof(MESSAGE_WITH_CALLBACK) * (message_sender_instance->message_count - index - 1));
+	}
+
+	message_sender_instance->message_count--;
+	new_messages = (MESSAGE_WITH_CALLBACK*)realloc(message_sender_instance->messages, sizeof(MESSAGE_WITH_CALLBACK) * (message_sender_instance->message_count));
+	if (new_messages != NULL)
+	{
+		message_sender_instance->messages = new_messages;
+	}
+}
+
+static void send_all_pending_messages(MESSAGE_SENDER_INSTANCE* message_sender_instance)
+{
+	size_t i;
+
+	for (i = 0; i < message_sender_instance->message_count; i++)
+	{
+		BINARY_DATA binary_data;
+		if (message_get_body_amqp_data(message_sender_instance->messages[i].message, &binary_data) != 0)
+		{
+
+			message_sender_instance->messages[i].on_message_send_complete(message_sender_instance->messages[i].context, MESSAGE_SEND_ERROR);
+			remove_pending_message(message_sender_instance, i);
+			i--;
+		}
+		else
+		{
+			PAYLOAD payload = { binary_data.bytes, binary_data.length };
+			if (link_transfer(message_sender_instance->link, &payload, 1, on_delivery_settled, message_sender_instance) != 0)
+			{
+				message_sender_instance->messages[i].on_message_send_complete(message_sender_instance->messages[i].context, MESSAGE_SEND_ERROR);
+				remove_pending_message(message_sender_instance, i);
+				i--;
+			}
+		}
+	}
+}
+
+static void on_link_state_changed(void* context, LINK_STATE new_link_state, LINK_STATE previous_link_state)
+{
+	MESSAGE_SENDER_INSTANCE* message_sender_instance = (MESSAGE_SENDER_INSTANCE*)context;
+
+	if ((new_link_state == LINK_STATE_HALF_ATTACHED) ||
+		(new_link_state == LINK_STATE_ATTACHED))
+	{
+		message_sender_instance->message_sender_state = MESSAGE_SENDER_STATE_CONNECTED;
+		send_all_pending_messages(message_sender_instance);
+	}
+	else
+	{
+		message_sender_instance->message_sender_state = MESSAGE_SENDER_STATE_IDLE;
+	}
+}
 
 MESSAGE_SENDER_HANDLE messagesender_create(LINK_HANDLE link)
 {
 	MESSAGE_SENDER_INSTANCE* result = amqpalloc_malloc(sizeof(MESSAGE_SENDER_INSTANCE));
 	if (result != NULL)
 	{
-		result->link = link;
+		if (link_subscribe_events(link, on_transfer_received, on_link_state_changed, result) != 0)
+		{
+			amqpalloc_free(result);
+			result = NULL;
+		}
+		else
+		{
+			result->messages = NULL;
+			result->message_count = 0;
+			result->link = link;
+			result->message_sender_state = MESSAGE_SENDER_STATE_IDLE;
+		}
 	}
 
 	return result;
@@ -43,7 +133,47 @@ int messagesender_send(MESSAGE_SENDER_HANDLE message_sender, MESSAGE_HANDLE mess
 	}
 	else
 	{
-		result = 0;
+		MESSAGE_SENDER_INSTANCE* message_sender_instance = (MESSAGE_SENDER_INSTANCE*)message_sender;
+
+		if (message_sender_instance->message_sender_state == MESSAGE_SENDER_STATE_IDLE)
+		{
+			MESSAGE_WITH_CALLBACK* new_messages = (MESSAGE_WITH_CALLBACK*)realloc(message_sender_instance->messages, sizeof(MESSAGE_WITH_CALLBACK) * (message_sender_instance->message_count + 1));
+			if (new_messages == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				message_sender_instance->messages = new_messages;
+				message_sender_instance->messages[message_sender_instance->message_count].message = message;
+				message_sender_instance->messages[message_sender_instance->message_count].on_message_send_complete = on_message_send_complete;
+				message_sender_instance->messages[message_sender_instance->message_count].context = callback_context;
+				message_sender_instance->messages[message_sender_instance->message_count].message_sender = message_sender_instance;
+				message_sender_instance->message_count++;
+
+				result = 0;
+			}
+		}
+		else
+		{
+			BINARY_DATA binary_data;
+			if (message_get_body_amqp_data(message, &binary_data) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				PAYLOAD payload = { binary_data.bytes, binary_data.length };
+				if (link_transfer(message_sender_instance->link, &payload, 1, on_delivery_settled, message_sender_instance) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+			}
+		}
 	}
 
 	return result;

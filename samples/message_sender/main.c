@@ -10,7 +10,9 @@
 #include "messaging.h"
 #include "amqpalloc.h"
 #include "saslio.h"
+#include "sasl_plain.h"
 #include "tlsio.h"
+#include "consolelogger.h"
 
 static bool sent = false;
 
@@ -45,7 +47,9 @@ int main(int argc, char** argv)
 		BINARY_DATA binary_data = { muie, sizeof(muie) };
 
 		TLSIO_CONFIG tls_io_config = { "pupupupu.servicebus.windows.net", 5671 };
-		SASLIO_CONFIG sasl_io_config = { tlsio_get_interface_description(), &tls_io_config };
+		SASL_PLAIN_CONFIG sasl_plain_config = { "SendRule", "HXSisf7p1PRyj2xx5DC234QKXRJvxSn7fhUKklC72jc=" };
+		SASL_MECHANISM_HANDLE sasl_mechanism_handle = saslmechanism_create(saslplain_get_interface(), &sasl_plain_config);
+		SASLIO_CONFIG sasl_io_config = { tlsio_get_interface_description(), &tls_io_config, sasl_mechanism_handle };
 
 		sasl_io = io_create(saslio_get_interface_description(), &sasl_io_config, NULL);
 		connection = connection_create(sasl_io, "pupupupu.servicebus.windows.net", "11222");

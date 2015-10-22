@@ -12,6 +12,7 @@
 #include "saslio.h"
 #include "sasl_plain.h"
 #include "tlsio.h"
+#include "consolelogger.h"
 
 void on_message_received(const void* context, MESSAGE_HANDLE message)
 {
@@ -45,7 +46,7 @@ int main(int argc, char** argv)
 	SASL_MECHANISM_HANDLE sasl_mechanism_handle = saslmechanism_create(saslplain_get_interface(), &sasl_plain_config);
 	SASLIO_CONFIG sasl_io_config = { tlsio_get_interface_description(), &tls_io_config, sasl_mechanism_handle };
 
-	sasl_io = io_create(saslio_get_interface_description(), &sasl_io_config, NULL);
+	sasl_io = io_create(saslio_get_interface_description(), &sasl_io_config, consolelogger_log);
 	connection = connection_create(sasl_io, "pupupupu.servicebus.windows.net", "11222");
 	session = session_create(connection);
 	link = link_create(session, "receiver-link", messaging_create_source("ingress"), messaging_create_target("amqps://pupupupu.servicebus.windows.net/ingress"));

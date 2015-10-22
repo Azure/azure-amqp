@@ -40,6 +40,7 @@ typedef struct SASL_IO_INSTANCE_TAG
 	SASL_FRAME_CODEC_HANDLE sasl_frame_codec;
 	FRAME_CODEC_HANDLE frame_codec;
 	IO_STATE io_state;
+	SASL_MECHANISM_HANDLE sasl_mechanism;
 } SASL_IO_INSTANCE;
 
 static const IO_INTERFACE_DESCRIPTION sasl_io_interface_description =
@@ -150,7 +151,6 @@ static int saslio_receive_byte(SASL_IO_INSTANCE* sasl_io, unsigned char b)
 				result = 0;
 			}
 		}
-		break;
 
 		break;
 	}
@@ -187,37 +187,45 @@ static int send_sasl_init(SASL_IO_INSTANCE* sasl_io)
 	int result;
 
 	SASL_INIT_HANDLE sasl_init = sasl_init_create("PLAIN");
-	char binary_creds[] = "\0SendRule\0HXSisf7p1PRyj2xx5DC234QKXRJvxSn7fhUKklC72jc=";
-	amqp_binary creds = { &binary_creds, sizeof(binary_creds) - 1 };
-	sasl_init_set_initial_response(sasl_init, creds);
-	if (sasl_init == NULL)
+	INIT_BYTES init_bytes;
+
+	if (saslmechanism_get_init_bytes(sasl_io->sasl_mechanism, &init_bytes) != 0)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		AMQP_VALUE sasl_init_value = amqpvalue_create_sasl_init(sasl_init);
-		if (sasl_init_value == NULL)
+		amqp_binary creds = { init_bytes.bytes, init_bytes.length };
+		sasl_init_set_initial_response(sasl_init, creds);
+		if (sasl_init == NULL)
 		{
 			result = __LINE__;
 		}
 		else
 		{
-			if (sasl_frame_codec_encode_frame(sasl_io->sasl_frame_codec, sasl_init_value) != 0)
+			AMQP_VALUE sasl_init_value = amqpvalue_create_sasl_init(sasl_init);
+			if (sasl_init_value == NULL)
 			{
 				result = __LINE__;
 			}
 			else
 			{
-				LOG(sasl_io->logger_log, LOG_LINE, "-> [SASL_INIT]");
+				if (sasl_frame_codec_encode_frame(sasl_io->sasl_frame_codec, sasl_init_value) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					LOG(sasl_io->logger_log, LOG_LINE, "-> [SASL_INIT]");
 
-				result = 0;
+					result = 0;
+				}
+
+				amqpvalue_destroy(sasl_init_value);
 			}
 
-			amqpvalue_destroy(sasl_init_value);
+			sasl_init_destroy(sasl_init);
 		}
-
-		sasl_init_destroy(sasl_init);
 	}
 
 	return result;
@@ -323,6 +331,7 @@ IO_HANDLE saslio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 						result->receive_callback = NULL;
 						result->context = NULL;
 						result->header_bytes_received = 0;
+						result->sasl_mechanism = sasl_io_config->sasl_mechanism;
 
 						result->sasl_io_state = SASL_IO_IDLE;
 						result->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_NOT_STARTED;

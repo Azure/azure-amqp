@@ -25,7 +25,7 @@ SASL_MECHANISM_CONCRETE_HANDLE saslplain_create(void* config)
 		size_t passwd_length = strlen(sasl_plain_config->passwd);
 
 		/* Ignore UTF8 for now */
-		result->init_bytes = (unsigned char*)amqpalloc_malloc(authcid_length + passwd_length + 3);
+		result->init_bytes = (unsigned char*)amqpalloc_malloc(authcid_length + passwd_length + 2);
 		if (result->init_bytes == NULL)
 		{
 			amqpalloc_free(result);
@@ -37,8 +37,7 @@ SASL_MECHANISM_CONCRETE_HANDLE saslplain_create(void* config)
 			(void)memcpy(result->init_bytes + 1, sasl_plain_config->authcid, authcid_length);
 			result->init_bytes[authcid_length + 1] = 0;
 			(void)memcpy(result->init_bytes + authcid_length + 2, sasl_plain_config->passwd, passwd_length);
-			result->init_bytes[authcid_length + passwd_length + 2] = 0;
-			result->init_bytes_length = authcid_length + passwd_length + 3;
+			result->init_bytes_length = authcid_length + passwd_length + 2;
 		}
 	}
 

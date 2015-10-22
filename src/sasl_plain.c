@@ -53,6 +53,8 @@ void saslplain_destroy(SASL_MECHANISM_CONCRETE_HANDLE sasl_mechanism_concrete_ha
 		{
 			amqpalloc_free(sasl_plain_instance->init_bytes);
 		}
+
+		amqpalloc_free(sasl_plain_instance);
 	}
 }
 

@@ -50,7 +50,6 @@ int main(int argc, char** argv)
 		SASL_PLAIN_CONFIG sasl_plain_config = { "SendRule", "HXSisf7p1PRyj2xx5DC234QKXRJvxSn7fhUKklC72jc=" };
 		SASL_MECHANISM_HANDLE sasl_mechanism_handle = saslmechanism_create(saslplain_get_interface(), &sasl_plain_config);
 		SASLIO_CONFIG sasl_io_config = { tlsio_get_interface_description(), &tls_io_config, sasl_mechanism_handle };
-
 		sasl_io = io_create(saslio_get_interface_description(), &sasl_io_config, NULL);
 		connection = connection_create(sasl_io, "pupupupu.servicebus.windows.net", "11222");
 		session = session_create(connection);
@@ -94,6 +93,7 @@ int main(int argc, char** argv)
 		session_destroy(session);
 		connection_destroy(connection);
 		io_destroy(sasl_io);
+		saslmechanism_destroy(sasl_mechanism_handle);
 		amqplib_deinit();
 
 		printf("Max memory usage:%lu\r\n", (unsigned long)amqpalloc_get_maximum_memory_used());

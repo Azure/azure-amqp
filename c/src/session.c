@@ -208,6 +208,10 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 	{
 		const char* name = NULL;
 		ATTACH_HANDLE attach_handle;
+
+		LOG(consolelogger_log, 0, "<- [ATTACH]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
+
 		if (amqpvalue_get_attach(performative, &attach_handle) != 0)
 		{
 			/* error */
@@ -221,8 +225,6 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 			}
 			else
 			{
-				attach_destroy(attach_handle);
-
 				LINK_ENDPOINT_INSTANCE* link_endpoint = find_link_endpoint_by_name(session_instance, name);
 				if (link_endpoint == NULL)
 				{
@@ -233,12 +235,18 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 					link_endpoint->incoming_handle = 0;
 					link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
 				}
+
+				attach_destroy(attach_handle);
 			}
 		}
 	}
 	else if (is_detach_type_by_descriptor(descriptor))
 	{
 		DETACH_HANDLE detach_handle;
+
+		LOG(consolelogger_log, 0, "<- [DETACH]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
+
 		if (amqpvalue_get_detach(performative, &detach_handle) != 0)
 		{
 			/* error */
@@ -270,6 +278,10 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 	else if (is_flow_type_by_descriptor(descriptor))
 	{
 		ATTACH_HANDLE flow_handle;
+
+		LOG(consolelogger_log, 0, "<- [FLOW]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
+
 		if (amqpvalue_get_flow(performative, &flow_handle) != 0)
 		{
 			/* error */
@@ -304,13 +316,13 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 				}
 			}
 		}
-
-		LOG(consolelogger_log, 0, "<- [FLOW]");
-		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 	}
 	else if (is_transfer_type_by_descriptor(descriptor))
 	{
 		TRANSFER_HANDLE transfer_handle;
+
+		LOG(consolelogger_log, 0, "<- [TRANSFER]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 
 		if (amqpvalue_get_transfer(performative, &transfer_handle) != 0)
 		{
@@ -339,12 +351,12 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 				}
 			}
 		}
-
-		LOG(consolelogger_log, 0, "<- [TRANSFER]");
-		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 	}
 	else if (is_disposition_type_by_descriptor(descriptor))
 	{
+		LOG(consolelogger_log, 0, "<- [DISPOSITION]");
+		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
+
 		uint32_t i;
 		for (i = 0; i < session_instance->link_endpoint_count; i++)
 		{

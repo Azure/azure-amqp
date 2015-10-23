@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 		BINARY_DATA binary_data = { muie, sizeof(muie) };
 
         /* create SASL plain handler */
-		SASL_PLAIN_CONFIG sasl_plain_config = { "SendRule", "HXSisf7p1PRyj2xx5DC234QKXRJvxSn7fhUKklC72jc=" };
+		SASL_PLAIN_CONFIG sasl_plain_config = { "SendRule", "HXSisf7p1PRyj2xx5DC234QKXRJvxSn7fhUKklC72jc" };
 		SASL_MECHANISM_HANDLE sasl_mechanism_handle = saslmechanism_create(saslplain_get_interface(), &sasl_plain_config);
 
         /* create the TLS IO */
@@ -62,7 +62,7 @@ int main(int argc, char** argv)
         /* create the connection, session and link */
         connection = connection_create(sasl_io, "pupupupu.servicebus.windows.net", "whatever");
 		session = session_create(connection);
-        link = link_create(session, "sender-link", messaging_create_source("ingress"), messaging_create_target("amqps://pupupupu.servicebus.windows.net/ingress"));
+        link = link_create(session, "sender-link", role_receiver, messaging_create_source("ingress"), messaging_create_target("amqps://pupupupu.servicebus.windows.net/ingress"));
 
         /* create a message sender */
         message_sender = messagesender_create(link);

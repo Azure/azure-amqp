@@ -31,6 +31,7 @@ typedef struct LINK_INSTANCE_TAG
 	uint32_t pending_delivery_count;
 	DELIVERY_INSTANCE* pending_deliveries;
 	uint32_t delivery_tag_no;
+	role role;
 	ON_LINK_STATE_CHANGED on_link_state_changed;
 	void* callback_context;
 } LINK_INSTANCE;
@@ -55,8 +56,6 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 	switch (performative_ulong)
 	{
 	case AMQP_ATTACH:
-		LOG(consolelogger_log, LOG_LINE, "<- [ATTACH]");
-		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 		if (link_instance->link_state == LINK_STATE_HALF_ATTACHED)
 		{
 			set_link_state(link_instance, LINK_STATE_ATTACHED);
@@ -100,8 +99,6 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 			}
 		}
 
-		LOG(consolelogger_log, 0, "<- [DISPOSITION]");
-		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 		break;
 	}
 
@@ -113,9 +110,6 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 		AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
 		AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
 		amqpvalue_get_string(error_description_value, &error);
-
-		LOG(consolelogger_log, 0, "<- [DETACH]");
-		LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 		break;
 	}
 	}
@@ -171,7 +165,7 @@ static void on_session_state_changed(void* context, SESSION_STATE new_session_st
 	{
 		if (link_instance->link_state == LINK_STATE_DETACHED)
 		{
-			if (send_attach(link_instance, link_instance->name, 0, role_sender, sender_settle_mode_settled, receiver_settle_mode_first) == 0)
+			if (send_attach(link_instance, link_instance->name, 0, link_instance->role, sender_settle_mode_settled, receiver_settle_mode_first) == 0)
 			{
 				set_link_state(link_instance, LINK_STATE_HALF_ATTACHED);
 			}
@@ -187,12 +181,13 @@ static int encode_bytes(void* context, const void* bytes, size_t length)
 	return 0;
 }
 
-LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, AMQP_VALUE source, AMQP_VALUE target)
+LINK_HANDLE link_create(SESSION_HANDLE session, const char* name, role role, AMQP_VALUE source, AMQP_VALUE target)
 {
 	LINK_INSTANCE* result = amqpalloc_malloc(sizeof(LINK_INSTANCE));
 	if (result != NULL)
 	{
 		result->link_state = LINK_STATE_DETACHED;
+		result->role = role;
 		result->source = amqpvalue_clone(source);
 		result->target = amqpvalue_clone(target);
 		result->session = session;

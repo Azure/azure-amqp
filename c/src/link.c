@@ -33,6 +33,7 @@ typedef struct LINK_INSTANCE_TAG
 	uint32_t delivery_tag_no;
 	role role;
 	ON_LINK_STATE_CHANGED on_link_state_changed;
+    ON_TRANSFER_RECEIVED on_transfer_received;
 	void* callback_context;
 } LINK_INSTANCE;
 
@@ -88,7 +89,7 @@ static int send_flow(LINK_INSTANCE* link)
 	return result;
 }
 
-static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size, const unsigned char* payload_bytes)
+static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t payload_size, const unsigned char* payload_bytes)
 {
 	LINK_INSTANCE* link_instance = (LINK_INSTANCE*)context;
 	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
@@ -108,6 +109,16 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 		break;
 
 	case AMQP_TRANSFER:
+        if (link_instance->on_transfer_received != NULL)
+        {
+            TRANSFER_HANDLE transfer_handle;
+            if (amqpvalue_get_transfer(performative, &transfer_handle) == 0)
+            {
+                link_instance->on_transfer_received(link_instance->callback_context, transfer_handle, payload_size, payload_bytes);
+                transfer_destroy(transfer_handle);
+            }
+        }
+
 		break;
 
 	case AMQP_DISPOSITION:
@@ -279,6 +290,7 @@ int link_subscribe_events(LINK_HANDLE link, ON_TRANSFER_RECEIVED on_transfer_rec
 	{
 		LINK_INSTANCE* link_instance = (LINK_INSTANCE*)link;
 		link_instance->on_link_state_changed = on_link_state_changed;
+        link_instance->on_transfer_received = on_transfer_received;
 		link_instance->callback_context = callback_context;
 
 		result = 0;

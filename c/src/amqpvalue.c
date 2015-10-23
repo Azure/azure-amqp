@@ -5240,3 +5240,54 @@ AMQP_VALUE amqpvalue_get_composite_item(AMQP_VALUE value, size_t index)
 
 	return result;
 }
+
+AMQP_VALUE amqpvalue_get_composite_item_in_place(AMQP_VALUE value, size_t index)
+{
+	AMQP_VALUE result;
+
+	if (value == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+		if ((value_data->type != AMQP_TYPE_COMPOSITE) &&
+			(value_data->type != AMQP_TYPE_DESCRIBED))
+		{
+			result = NULL;
+		}
+		else
+		{
+			result = amqpvalue_get_list_item_in_place(value_data->value.described_value.value, index);
+		}
+	}
+
+	return result;
+}
+
+AMQP_VALUE amqpvalue_get_list_item_in_place(AMQP_VALUE value, size_t index)
+{
+	AMQP_VALUE result;
+
+	if (value == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE_DATA* value_data = (AMQP_VALUE_DATA*)value;
+
+		if ((value_data->type != AMQP_TYPE_LIST) ||
+			(value_data->value.list_value.count <= index))
+		{
+			result = NULL;
+		}
+		else
+		{
+			result = amqpvalue_clone(value_data->value.list_value.items[index]);
+		}
+	}
+
+	return result;
+}

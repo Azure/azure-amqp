@@ -235,7 +235,7 @@
 		else
 		{
 			<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)<#= type_name #>;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(<#= type_name #>_instance->composite_value, <#= j #>);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(<#= type_name #>_instance->composite_value, <#= j #>);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -256,8 +256,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 <#						} #>
 			}
 		}

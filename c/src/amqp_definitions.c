@@ -201,7 +201,7 @@
 		else
 		{
 			ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)error;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(error_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(error_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -216,8 +216,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -261,7 +259,7 @@
 		else
 		{
 			ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)error;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(error_instance->composite_value, 1);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(error_instance->composite_value, 1);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -276,8 +274,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -321,7 +317,7 @@
 		else
 		{
 			ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)error;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(error_instance->composite_value, 2);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(error_instance->composite_value, 2);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -336,8 +332,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -714,7 +708,7 @@
 		else
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(open_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(open_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -729,8 +723,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -774,7 +766,7 @@
 		else
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(open_instance->composite_value, 1);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(open_instance->composite_value, 1);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -789,8 +781,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -834,7 +824,7 @@
 		else
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(open_instance->composite_value, 2);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(open_instance->composite_value, 2);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -849,8 +839,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -894,7 +882,7 @@
 		else
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(open_instance->composite_value, 3);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(open_instance->composite_value, 3);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -909,8 +897,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -954,7 +940,7 @@
 		else
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(open_instance->composite_value, 4);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(open_instance->composite_value, 4);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -969,8 +955,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -1014,7 +998,7 @@
 		else
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(open_instance->composite_value, 5);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(open_instance->composite_value, 5);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -1029,8 +1013,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -1074,7 +1056,7 @@
 		else
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(open_instance->composite_value, 6);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(open_instance->composite_value, 6);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -1089,8 +1071,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -1134,7 +1114,7 @@
 		else
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(open_instance->composite_value, 7);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(open_instance->composite_value, 7);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -1149,8 +1129,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -1194,7 +1172,7 @@
 		else
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(open_instance->composite_value, 8);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(open_instance->composite_value, 8);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -1209,8 +1187,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -1254,7 +1230,7 @@
 		else
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(open_instance->composite_value, 9);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(open_instance->composite_value, 9);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -1269,8 +1245,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -1621,7 +1595,7 @@
 		else
 		{
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(begin_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(begin_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -1636,8 +1610,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -1681,7 +1653,7 @@
 		else
 		{
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(begin_instance->composite_value, 1);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(begin_instance->composite_value, 1);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -1696,8 +1668,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -1741,7 +1711,7 @@
 		else
 		{
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(begin_instance->composite_value, 2);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(begin_instance->composite_value, 2);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -1756,8 +1726,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -1801,7 +1769,7 @@
 		else
 		{
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(begin_instance->composite_value, 3);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(begin_instance->composite_value, 3);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -1816,8 +1784,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -1861,7 +1827,7 @@
 		else
 		{
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(begin_instance->composite_value, 4);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(begin_instance->composite_value, 4);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -1876,8 +1842,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -1921,7 +1885,7 @@
 		else
 		{
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(begin_instance->composite_value, 5);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(begin_instance->composite_value, 5);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -1936,8 +1900,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -1981,7 +1943,7 @@
 		else
 		{
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(begin_instance->composite_value, 6);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(begin_instance->composite_value, 6);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -1996,8 +1958,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -2041,7 +2001,7 @@
 		else
 		{
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(begin_instance->composite_value, 7);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(begin_instance->composite_value, 7);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -2056,8 +2016,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -2510,7 +2468,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -2525,8 +2483,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -2570,7 +2526,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 1);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 1);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -2585,8 +2541,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -2630,7 +2584,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 2);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 2);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -2645,8 +2599,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -2690,7 +2642,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 3);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 3);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -2705,8 +2657,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -2750,7 +2700,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 4);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 4);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -2765,8 +2715,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -2810,7 +2758,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 5);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 5);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -2861,7 +2809,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 6);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 6);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -2912,7 +2860,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 7);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 7);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -2927,8 +2875,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -2972,7 +2918,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 8);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 8);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -2987,8 +2933,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -3032,7 +2976,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 9);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 9);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -3047,8 +2991,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -3092,7 +3034,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 10);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 10);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -3107,8 +3049,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -3152,7 +3092,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 11);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 11);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -3167,8 +3107,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -3212,7 +3150,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 12);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 12);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -3227,8 +3165,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -3272,7 +3208,7 @@
 		else
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(attach_instance->composite_value, 13);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(attach_instance->composite_value, 13);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -3287,8 +3223,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -3702,7 +3636,7 @@
 		else
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(flow_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(flow_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -3717,8 +3651,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -3762,7 +3694,7 @@
 		else
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(flow_instance->composite_value, 1);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(flow_instance->composite_value, 1);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -3777,8 +3709,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -3822,7 +3752,7 @@
 		else
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(flow_instance->composite_value, 2);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(flow_instance->composite_value, 2);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -3837,8 +3767,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -3882,7 +3810,7 @@
 		else
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(flow_instance->composite_value, 3);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(flow_instance->composite_value, 3);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -3897,8 +3825,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -3942,7 +3868,7 @@
 		else
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(flow_instance->composite_value, 4);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(flow_instance->composite_value, 4);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -3957,8 +3883,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -4002,7 +3926,7 @@
 		else
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(flow_instance->composite_value, 5);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(flow_instance->composite_value, 5);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -4017,8 +3941,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -4062,7 +3984,7 @@
 		else
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(flow_instance->composite_value, 6);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(flow_instance->composite_value, 6);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -4077,8 +3999,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -4122,7 +4042,7 @@
 		else
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(flow_instance->composite_value, 7);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(flow_instance->composite_value, 7);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -4137,8 +4057,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -4182,7 +4100,7 @@
 		else
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(flow_instance->composite_value, 8);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(flow_instance->composite_value, 8);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -4197,8 +4115,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -4242,7 +4158,7 @@
 		else
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(flow_instance->composite_value, 9);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(flow_instance->composite_value, 9);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -4257,8 +4173,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -4302,7 +4216,7 @@
 		else
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(flow_instance->composite_value, 10);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(flow_instance->composite_value, 10);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -4317,8 +4231,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -4704,7 +4616,7 @@
 		else
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(transfer_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(transfer_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -4719,8 +4631,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -4764,7 +4674,7 @@
 		else
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(transfer_instance->composite_value, 1);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(transfer_instance->composite_value, 1);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -4779,8 +4689,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -4824,7 +4732,7 @@
 		else
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(transfer_instance->composite_value, 2);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(transfer_instance->composite_value, 2);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -4839,8 +4747,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -4884,7 +4790,7 @@
 		else
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(transfer_instance->composite_value, 3);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(transfer_instance->composite_value, 3);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -4899,8 +4805,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -4944,7 +4848,7 @@
 		else
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(transfer_instance->composite_value, 4);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(transfer_instance->composite_value, 4);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -4959,8 +4863,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -5004,7 +4906,7 @@
 		else
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(transfer_instance->composite_value, 5);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(transfer_instance->composite_value, 5);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -5019,8 +4921,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -5064,7 +4964,7 @@
 		else
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(transfer_instance->composite_value, 6);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(transfer_instance->composite_value, 6);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -5079,8 +4979,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -5124,7 +5022,7 @@
 		else
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(transfer_instance->composite_value, 7);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(transfer_instance->composite_value, 7);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -5175,7 +5073,7 @@
 		else
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(transfer_instance->composite_value, 8);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(transfer_instance->composite_value, 8);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -5190,8 +5088,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -5235,7 +5131,7 @@
 		else
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(transfer_instance->composite_value, 9);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(transfer_instance->composite_value, 9);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -5250,8 +5146,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -5295,7 +5189,7 @@
 		else
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(transfer_instance->composite_value, 10);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(transfer_instance->composite_value, 10);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -5310,8 +5204,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -5600,7 +5492,7 @@
 		else
 		{
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(disposition_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(disposition_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -5615,8 +5507,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -5660,7 +5550,7 @@
 		else
 		{
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(disposition_instance->composite_value, 1);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(disposition_instance->composite_value, 1);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -5675,8 +5565,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -5720,7 +5608,7 @@
 		else
 		{
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(disposition_instance->composite_value, 2);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(disposition_instance->composite_value, 2);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -5735,8 +5623,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -5780,7 +5666,7 @@
 		else
 		{
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(disposition_instance->composite_value, 3);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(disposition_instance->composite_value, 3);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -5795,8 +5681,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -5840,7 +5724,7 @@
 		else
 		{
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(disposition_instance->composite_value, 4);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(disposition_instance->composite_value, 4);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -5891,7 +5775,7 @@
 		else
 		{
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(disposition_instance->composite_value, 5);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(disposition_instance->composite_value, 5);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -5906,8 +5790,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -6137,7 +6019,7 @@
 		else
 		{
 			DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)detach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(detach_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(detach_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -6152,8 +6034,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -6197,7 +6077,7 @@
 		else
 		{
 			DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)detach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(detach_instance->composite_value, 1);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(detach_instance->composite_value, 1);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -6212,8 +6092,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -6257,7 +6135,7 @@
 		else
 		{
 			DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)detach;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(detach_instance->composite_value, 2);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(detach_instance->composite_value, 2);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -6272,8 +6150,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -6447,7 +6323,7 @@
 		else
 		{
 			END_INSTANCE* end_instance = (END_INSTANCE*)end;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(end_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(end_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -6462,8 +6338,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -6637,7 +6511,7 @@
 		else
 		{
 			CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)close;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(close_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(close_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -6652,8 +6526,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -6841,7 +6713,7 @@
 		else
 		{
 			SASL_MECHANISMS_INSTANCE* sasl_mechanisms_instance = (SASL_MECHANISMS_INSTANCE*)sasl_mechanisms;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(sasl_mechanisms_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(sasl_mechanisms_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -6856,8 +6728,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -7087,7 +6957,7 @@
 		else
 		{
 			SASL_INIT_INSTANCE* sasl_init_instance = (SASL_INIT_INSTANCE*)sasl_init;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(sasl_init_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(sasl_init_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -7102,8 +6972,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -7147,7 +7015,7 @@
 		else
 		{
 			SASL_INIT_INSTANCE* sasl_init_instance = (SASL_INIT_INSTANCE*)sasl_init;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(sasl_init_instance->composite_value, 1);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(sasl_init_instance->composite_value, 1);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -7162,8 +7030,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -7207,7 +7073,7 @@
 		else
 		{
 			SASL_INIT_INSTANCE* sasl_init_instance = (SASL_INIT_INSTANCE*)sasl_init;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(sasl_init_instance->composite_value, 2);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(sasl_init_instance->composite_value, 2);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -7222,8 +7088,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -7411,7 +7275,7 @@
 		else
 		{
 			SASL_CHALLENGE_INSTANCE* sasl_challenge_instance = (SASL_CHALLENGE_INSTANCE*)sasl_challenge;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(sasl_challenge_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(sasl_challenge_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -7426,8 +7290,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -7615,7 +7477,7 @@
 		else
 		{
 			SASL_RESPONSE_INSTANCE* sasl_response_instance = (SASL_RESPONSE_INSTANCE*)sasl_response;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(sasl_response_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(sasl_response_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -7630,8 +7492,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -7840,7 +7700,7 @@
 		else
 		{
 			SASL_OUTCOME_INSTANCE* sasl_outcome_instance = (SASL_OUTCOME_INSTANCE*)sasl_outcome;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(sasl_outcome_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(sasl_outcome_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -7855,8 +7715,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -7900,7 +7758,7 @@
 		else
 		{
 			SASL_OUTCOME_INSTANCE* sasl_outcome_instance = (SASL_OUTCOME_INSTANCE*)sasl_outcome;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(sasl_outcome_instance->composite_value, 1);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(sasl_outcome_instance->composite_value, 1);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -7915,8 +7773,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -8276,7 +8132,7 @@
 		else
 		{
 			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(source_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(source_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -8327,7 +8183,7 @@
 		else
 		{
 			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(source_instance->composite_value, 1);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(source_instance->composite_value, 1);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -8342,8 +8198,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -8387,7 +8241,7 @@
 		else
 		{
 			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(source_instance->composite_value, 2);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(source_instance->composite_value, 2);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -8402,8 +8256,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -8447,7 +8299,7 @@
 		else
 		{
 			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(source_instance->composite_value, 3);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(source_instance->composite_value, 3);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -8462,8 +8314,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -8507,7 +8357,7 @@
 		else
 		{
 			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(source_instance->composite_value, 4);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(source_instance->composite_value, 4);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -8522,8 +8372,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -8567,7 +8415,7 @@
 		else
 		{
 			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(source_instance->composite_value, 5);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(source_instance->composite_value, 5);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -8582,8 +8430,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -8627,7 +8473,7 @@
 		else
 		{
 			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(source_instance->composite_value, 6);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(source_instance->composite_value, 6);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -8642,8 +8488,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -8687,7 +8531,7 @@
 		else
 		{
 			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(source_instance->composite_value, 7);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(source_instance->composite_value, 7);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -8702,8 +8546,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -8747,7 +8589,7 @@
 		else
 		{
 			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(source_instance->composite_value, 8);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(source_instance->composite_value, 8);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -8798,7 +8640,7 @@
 		else
 		{
 			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(source_instance->composite_value, 9);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(source_instance->composite_value, 9);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -8813,8 +8655,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -8858,7 +8698,7 @@
 		else
 		{
 			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(source_instance->composite_value, 10);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(source_instance->composite_value, 10);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -8873,8 +8713,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -9162,7 +9000,7 @@
 		else
 		{
 			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(target_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(target_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -9213,7 +9051,7 @@
 		else
 		{
 			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(target_instance->composite_value, 1);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(target_instance->composite_value, 1);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -9228,8 +9066,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -9273,7 +9109,7 @@
 		else
 		{
 			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(target_instance->composite_value, 2);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(target_instance->composite_value, 2);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -9288,8 +9124,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -9333,7 +9167,7 @@
 		else
 		{
 			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(target_instance->composite_value, 3);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(target_instance->composite_value, 3);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -9348,8 +9182,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -9393,7 +9225,7 @@
 		else
 		{
 			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(target_instance->composite_value, 4);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(target_instance->composite_value, 4);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -9408,8 +9240,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -9453,7 +9283,7 @@
 		else
 		{
 			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(target_instance->composite_value, 5);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(target_instance->composite_value, 5);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -9468,8 +9298,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -9513,7 +9341,7 @@
 		else
 		{
 			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(target_instance->composite_value, 6);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(target_instance->composite_value, 6);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -9528,8 +9356,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -9907,7 +9733,7 @@
 		else
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(properties_instance->composite_value, 0);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(properties_instance->composite_value, 0);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -9958,7 +9784,7 @@
 		else
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(properties_instance->composite_value, 1);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(properties_instance->composite_value, 1);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -9973,8 +9799,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -10018,7 +9842,7 @@
 		else
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(properties_instance->composite_value, 2);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(properties_instance->composite_value, 2);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -10069,7 +9893,7 @@
 		else
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(properties_instance->composite_value, 3);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(properties_instance->composite_value, 3);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -10084,8 +9908,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -10129,7 +9951,7 @@
 		else
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(properties_instance->composite_value, 4);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(properties_instance->composite_value, 4);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -10180,7 +10002,7 @@
 		else
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(properties_instance->composite_value, 5);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(properties_instance->composite_value, 5);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -10231,7 +10053,7 @@
 		else
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(properties_instance->composite_value, 6);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(properties_instance->composite_value, 6);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -10246,8 +10068,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -10291,7 +10111,7 @@
 		else
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(properties_instance->composite_value, 7);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(properties_instance->composite_value, 7);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -10306,8 +10126,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -10351,7 +10169,7 @@
 		else
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(properties_instance->composite_value, 8);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(properties_instance->composite_value, 8);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -10366,8 +10184,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -10411,7 +10227,7 @@
 		else
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(properties_instance->composite_value, 9);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(properties_instance->composite_value, 9);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -10426,8 +10242,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -10471,7 +10285,7 @@
 		else
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(properties_instance->composite_value, 10);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(properties_instance->composite_value, 10);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -10486,8 +10300,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -10531,7 +10343,7 @@
 		else
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(properties_instance->composite_value, 11);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(properties_instance->composite_value, 11);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -10546,8 +10358,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 
@@ -10591,7 +10401,7 @@
 		else
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
-			AMQP_VALUE item_value = amqpvalue_get_composite_item(properties_instance->composite_value, 12);
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(properties_instance->composite_value, 12);
 			if (item_value == NULL)
 			{
 				result = __LINE__;
@@ -10606,8 +10416,6 @@
 				{
 					result = 0;
 				}
-
-				amqpvalue_destroy(item_value);
 			}
 		}
 

@@ -101,6 +101,8 @@ extern "C" {
 	extern AMQP_VALUE amqpvalue_get_composite_item(AMQP_VALUE value, size_t index);
 	extern AMQP_VALUE amqpvalue_create_described(AMQP_VALUE descriptor, AMQP_VALUE value);
 	extern AMQP_VALUE amqpvalue_create_composite_with_ulong_descriptor(uint64_t descriptor);
+	extern AMQP_VALUE amqpvalue_get_list_item_in_place(AMQP_VALUE value, size_t index);
+	extern AMQP_VALUE amqpvalue_get_composite_item_in_place(AMQP_VALUE value, size_t index);
 
 #ifdef __cplusplus
 }

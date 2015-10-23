@@ -47,6 +47,47 @@ static void set_link_state(LINK_INSTANCE* link_instance, LINK_STATE link_state)
 	}
 }
 
+static int send_flow(LINK_INSTANCE* link)
+{
+	int result;
+	FLOW_HANDLE flow = flow_create(100, 0, 100);
+
+	if (flow == NULL)
+	{
+		result = __LINE__;
+	}
+	else
+	{
+		flow_set_link_credit(flow, 100000);
+		flow_set_handle(flow, 12);
+		AMQP_VALUE flow_performative_value = amqpvalue_create_flow(flow);
+		if (flow_performative_value == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			if (session_encode_frame(link->link_endpoint, flow_performative_value, NULL, 0) != 0)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				LOG(consolelogger_log, 0, "-> [FLOW]");
+				LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(flow_performative_value));
+
+				result = 0;
+			}
+
+			amqpvalue_destroy(flow_performative_value);
+		}
+
+		flow_destroy(flow);
+	}
+
+	return result;
+}
+
 static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t frame_payload_size, const unsigned char* payload_bytes)
 {
 	LINK_INSTANCE* link_instance = (LINK_INSTANCE*)context;
@@ -58,6 +99,7 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 	case AMQP_ATTACH:
 		if (link_instance->link_state == LINK_STATE_HALF_ATTACHED)
 		{
+			send_flow(link_instance);
 			set_link_state(link_instance, LINK_STATE_ATTACHED);
 		}
 		break;
@@ -128,7 +170,7 @@ static int send_attach(LINK_INSTANCE* link, const char* name, handle handle, rol
 	{
 		attach_set_snd_settle_mode(attach, snd_settle_mode);
 		attach_set_rcv_settle_mode(attach, rcv_settle_mode);
-		attach_set_role(attach, false);
+		attach_set_role(attach, role);
 		attach_set_source(attach, link->source);
 		attach_set_target(attach, link->target);
 
@@ -165,7 +207,7 @@ static void on_session_state_changed(void* context, SESSION_STATE new_session_st
 	{
 		if (link_instance->link_state == LINK_STATE_DETACHED)
 		{
-			if (send_attach(link_instance, link_instance->name, 0, link_instance->role, sender_settle_mode_settled, receiver_settle_mode_first) == 0)
+			if (send_attach(link_instance, link_instance->name, 12, link_instance->role, sender_settle_mode_settled, receiver_settle_mode_first) == 0)
 			{
 				set_link_state(link_instance, LINK_STATE_HALF_ATTACHED);
 			}

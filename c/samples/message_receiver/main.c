@@ -36,59 +36,68 @@ int main(int argc, char** argv)
 	if (amqplib_init() != 0)
 	{
 		result = -1;
-		goto error;
 	}
-
-	size_t last_memory_used = 0;
-
-	TLSIO_CONFIG tls_io_config = { "pupupupu.servicebus.windows.net", 5671 };
-	SASL_PLAIN_CONFIG sasl_plain_config = { "User", "Pwd" };
-	SASL_MECHANISM_HANDLE sasl_mechanism_handle = saslmechanism_create(saslplain_get_interface(), &sasl_plain_config);
-	SASLIO_CONFIG sasl_io_config = { tlsio_get_interface_description(), &tls_io_config, sasl_mechanism_handle };
-
-	sasl_io = io_create(saslio_get_interface_description(), &sasl_io_config, consolelogger_log);
-	connection = connection_create(sasl_io, "pupupupu.servicebus.windows.net", "11222");
-	session = session_create(connection);
-	link = link_create(session, "receiver-link", messaging_create_source("ingress"), messaging_create_target("amqps://pupupupu.servicebus.windows.net/ingress"));
-	message_receiver = messagereceiver_create(link);
-	if ((message_receiver == NULL) ||
-		(messagereceiver_subscribe(message_receiver, on_message_received, message_receiver) != 0))
+	else
 	{
-		result = -1;
-		goto error;
-	}
+		size_t last_memory_used = 0;
 
-	while (true)
-	{
-		size_t current_memory_used;
-		size_t maximum_memory_used;
-		connection_dowork(connection);
+		/* create SASL plain handler */
+		SASL_PLAIN_CONFIG sasl_plain_config = { "SendRule", "HXSisf7p1PRyj2xx5DC234QKXRJvxSn7fhUKklC72jc" };
+		SASL_MECHANISM_HANDLE sasl_mechanism_handle = saslmechanism_create(saslplain_get_interface(), &sasl_plain_config);
 
-		current_memory_used = amqpalloc_get_current_memory_used();
-		maximum_memory_used = amqpalloc_get_maximum_memory_used();
+		/* create the TLS IO */
+		TLSIO_CONFIG tls_io_config = { "pupupupu.servicebus.windows.net", 5671 };
 
-		if (current_memory_used != last_memory_used)
+		/* create the SASL IO using the TLS IO */
+		SASLIO_CONFIG sasl_io_config = { tlsio_get_interface_description(), &tls_io_config, sasl_mechanism_handle };
+		sasl_io = io_create(saslio_get_interface_description(), &sasl_io_config, NULL);
+
+		/* create the connection, session and link */
+		connection = connection_create(sasl_io, "pupupupu.servicebus.windows.net", "whatever");
+		session = session_create(connection);
+		link = link_create(session, "receiver-link", messaging_create_source("ingress"), messaging_create_target("amqps://pupupupu.servicebus.windows.net/ingress"));
+
+		/* create a message receiver */
+		message_receiver = messagereceiver_create(link);
+		if ((message_receiver == NULL) ||
+			(messagereceiver_subscribe(message_receiver, on_message_received, message_receiver) != 0))
 		{
-			printf("Current memory usage:%lu (max:%lu)\r\n", (unsigned long)current_memory_used, (unsigned long)maximum_memory_used);
-			last_memory_used = current_memory_used;
+			result = -1;
 		}
-	}
+		else
+		{
+			while (true)
+			{
+				size_t current_memory_used;
+				size_t maximum_memory_used;
+				connection_dowork(connection);
 
-	result = 0;
+				current_memory_used = amqpalloc_get_current_memory_used();
+				maximum_memory_used = amqpalloc_get_maximum_memory_used();
 
-error:
-	messagereceiver_destroy(message_receiver);
-	link_destroy(link);
-	session_destroy(session);
-	connection_destroy(connection);
-	amqplib_deinit();
+				if (current_memory_used != last_memory_used)
+				{
+					printf("Current memory usage:%lu (max:%lu)\r\n", (unsigned long)current_memory_used, (unsigned long)maximum_memory_used);
+					last_memory_used = current_memory_used;
+				}
+			}
 
-	printf("Max memory usage:%lu\r\n", (unsigned long)amqpalloc_get_maximum_memory_used());
-	printf("Current memory usage:%lu\r\n", (unsigned long)amqpalloc_get_current_memory_used());
+			result = 0;
+		}
+
+		messagereceiver_destroy(message_receiver);
+		link_destroy(link);
+		session_destroy(session);
+		connection_destroy(connection);
+		amqplib_deinit();
+
+		printf("Max memory usage:%lu\r\n", (unsigned long)amqpalloc_get_maximum_memory_used());
+		printf("Current memory usage:%lu\r\n", (unsigned long)amqpalloc_get_current_memory_used());
 
 #ifdef _CRT_DBG_MAP_ALLOC
-	_CrtDumpMemoryLeaks();
+		_CrtDumpMemoryLeaks();
 #endif
+	}
 
 	return result;
 }

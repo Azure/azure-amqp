@@ -27,11 +27,13 @@ void on_message_send_complete(const void* context, MESSAGE_SEND_RESULT send_resu
 
 int main(int argc, char** argv)
 {
+	int result;
+
 	amqpalloc_set_memory_tracing_enabled(true);
 
 	if (amqplib_init() != 0)
 	{
-		/* init failed */
+		result = -1;
 	}
 	else
 	{
@@ -64,35 +66,38 @@ int main(int argc, char** argv)
 
         /* create a message sender */
         message_sender = messagesender_create(link);
-		uint32_t i;
-
-		for (i = 0; i < 1; i++)
+		if (message_sender != NULL)
 		{
-			message = message_create();
-			message_set_to(message, "pupupupu.servicebus.windows.net");
-			message_set_body_amqp_data(message, binary_data);
+			uint32_t i;
 
-			(void)messagesender_send(message_sender, message, on_message_send_complete, message);
-		}
-
-		while (true)
-		{
-			size_t current_memory_used;
-			size_t maximum_memory_used;
-			connection_dowork(connection);
-
-			current_memory_used = amqpalloc_get_current_memory_used();
-			maximum_memory_used = amqpalloc_get_maximum_memory_used();
-			
-			if (current_memory_used != last_memory_used)
+			for (i = 0; i < 1; i++)
 			{
-				printf("Current memory usage:%lu (max:%lu)\r\n", (unsigned long)current_memory_used, (unsigned long)maximum_memory_used);
-				last_memory_used = current_memory_used;
+				message = message_create();
+				message_set_to(message, "pupupupu.servicebus.windows.net");
+				message_set_body_amqp_data(message, binary_data);
+
+				(void)messagesender_send(message_sender, message, on_message_send_complete, message);
 			}
 
-			if (sent)
+			while (true)
 			{
-				break;
+				size_t current_memory_used;
+				size_t maximum_memory_used;
+				connection_dowork(connection);
+
+				current_memory_used = amqpalloc_get_current_memory_used();
+				maximum_memory_used = amqpalloc_get_maximum_memory_used();
+
+				if (current_memory_used != last_memory_used)
+				{
+					printf("Current memory usage:%lu (max:%lu)\r\n", (unsigned long)current_memory_used, (unsigned long)maximum_memory_used);
+					last_memory_used = current_memory_used;
+				}
+
+				if (sent)
+				{
+					break;
+				}
 			}
 		}
 		

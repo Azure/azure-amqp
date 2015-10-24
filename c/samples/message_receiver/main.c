@@ -55,7 +55,11 @@ int main(int argc, char** argv)
 		/* create the connection, session and link */
 		connection = connection_create(sasl_io, "pupupupu.servicebus.windows.net", "whatever");
 		session = session_create(connection);
-		link = link_create(session, "receiver-link", role_receiver, messaging_create_source("amqps://pupupupu.servicebus.windows.net/ingress/ConsumerGroups/$Default/Partitions/0"), messaging_create_target("ingress-rx"));
+		AMQP_VALUE source = messaging_create_source("amqps://pupupupu.servicebus.windows.net/ingress/ConsumerGroups/$Default/Partitions/0");
+		AMQP_VALUE target = messaging_create_target("ingress-rx");
+		link = link_create(session, "receiver-link", role_receiver, source, target);
+		amqpvalue_destroy(source);
+		amqpvalue_destroy(target);
 
 		/* create a message receiver */
 		message_receiver = messagereceiver_create(link);

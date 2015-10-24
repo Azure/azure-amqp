@@ -206,7 +206,7 @@ static int send_sasl_init(SASL_IO_INSTANCE* sasl_io)
 	int result;
 
 	const char* sasl_mechanism_name = saslmechanism_get_mechanism_name(sasl_io->sasl_mechanism);
-	SASL_INIT_HANDLE sasl_init = sasl_init_create(sasl_mechanism_name);
+	SASL_INIT_HANDLE sasl_init;
 	INIT_BYTES init_bytes;
 
 	if ((sasl_mechanism_name == NULL) ||
@@ -223,8 +223,7 @@ static int send_sasl_init(SASL_IO_INSTANCE* sasl_io)
 		else
 		{
 			amqp_binary creds = { init_bytes.bytes, init_bytes.length };
-			sasl_init_set_initial_response(sasl_init, creds);
-			if (sasl_init == NULL)
+			if (sasl_init_set_initial_response(sasl_init, creds) != 0)
 			{
 				result = __LINE__;
 			}

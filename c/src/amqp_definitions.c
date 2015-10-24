@@ -63,6 +63,7 @@
 		{
 			ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)error;
 			amqpvalue_destroy(error_instance->composite_value);
+			amqpalloc_free(error_instance);
 		}
 	}
 
@@ -423,6 +424,7 @@
 		{
 			OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open;
 			amqpvalue_destroy(open_instance->composite_value);
+			amqpalloc_free(open_instance);
 		}
 	}
 
@@ -1350,6 +1352,7 @@
 		{
 			BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin;
 			amqpvalue_destroy(begin_instance->composite_value);
+			amqpalloc_free(begin_instance);
 		}
 	}
 
@@ -2121,6 +2124,7 @@
 		{
 			ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach;
 			amqpvalue_destroy(attach_instance->composite_value);
+			amqpalloc_free(attach_instance);
 		}
 	}
 
@@ -3328,6 +3332,7 @@
 		{
 			FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow;
 			amqpvalue_destroy(flow_instance->composite_value);
+			amqpalloc_free(flow_instance);
 		}
 	}
 
@@ -4322,6 +4327,7 @@
 		{
 			TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer;
 			amqpvalue_destroy(transfer_instance->composite_value);
+			amqpalloc_free(transfer_instance);
 		}
 	}
 
@@ -5302,6 +5308,7 @@
 		{
 			DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition;
 			amqpvalue_destroy(disposition_instance->composite_value);
+			amqpalloc_free(disposition_instance);
 		}
 	}
 
@@ -5881,6 +5888,7 @@
 		{
 			DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)detach;
 			amqpvalue_destroy(detach_instance->composite_value);
+			amqpalloc_free(detach_instance);
 		}
 	}
 
@@ -6228,6 +6236,7 @@
 		{
 			END_INSTANCE* end_instance = (END_INSTANCE*)end;
 			amqpvalue_destroy(end_instance->composite_value);
+			amqpalloc_free(end_instance);
 		}
 	}
 
@@ -6416,6 +6425,7 @@
 		{
 			CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)close;
 			amqpvalue_destroy(close_instance->composite_value);
+			amqpalloc_free(close_instance);
 		}
 	}
 
@@ -6617,6 +6627,7 @@
 		{
 			SASL_MECHANISMS_INSTANCE* sasl_mechanisms_instance = (SASL_MECHANISMS_INSTANCE*)sasl_mechanisms;
 			amqpvalue_destroy(sasl_mechanisms_instance->composite_value);
+			amqpalloc_free(sasl_mechanisms_instance);
 		}
 	}
 
@@ -6819,6 +6830,7 @@
 		{
 			SASL_INIT_INSTANCE* sasl_init_instance = (SASL_INIT_INSTANCE*)sasl_init;
 			amqpvalue_destroy(sasl_init_instance->composite_value);
+			amqpalloc_free(sasl_init_instance);
 		}
 	}
 
@@ -7179,6 +7191,7 @@
 		{
 			SASL_CHALLENGE_INSTANCE* sasl_challenge_instance = (SASL_CHALLENGE_INSTANCE*)sasl_challenge;
 			amqpvalue_destroy(sasl_challenge_instance->composite_value);
+			amqpalloc_free(sasl_challenge_instance);
 		}
 	}
 
@@ -7381,6 +7394,7 @@
 		{
 			SASL_RESPONSE_INSTANCE* sasl_response_instance = (SASL_RESPONSE_INSTANCE*)sasl_response;
 			amqpvalue_destroy(sasl_response_instance->composite_value);
+			amqpalloc_free(sasl_response_instance);
 		}
 	}
 
@@ -7583,6 +7597,7 @@
 		{
 			SASL_OUTCOME_INSTANCE* sasl_outcome_instance = (SASL_OUTCOME_INSTANCE*)sasl_outcome;
 			amqpvalue_destroy(sasl_outcome_instance->composite_value);
+			amqpalloc_free(sasl_outcome_instance);
 		}
 	}
 
@@ -7851,6 +7866,7 @@
 		{
 			SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source;
 			amqpvalue_destroy(source_instance->composite_value);
+			amqpalloc_free(source_instance);
 		}
 	}
 
@@ -8791,6 +8807,7 @@
 		{
 			TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target;
 			amqpvalue_destroy(target_instance->composite_value);
+			amqpalloc_free(target_instance);
 		}
 	}
 
@@ -9434,6 +9451,7 @@
 		{
 			PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties;
 			amqpvalue_destroy(properties_instance->composite_value);
+			amqpalloc_free(properties_instance);
 		}
 	}
 

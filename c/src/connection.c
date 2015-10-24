@@ -888,6 +888,9 @@ void connection_destroy(CONNECTION_HANDLE connection)
 		amqp_frame_codec_destroy(connection_instance->amqp_frame_codec);
 		frame_codec_destroy(connection_instance->frame_codec);
 
+		amqpalloc_free(connection_instance->host_name);
+		amqpalloc_free(connection_instance->container_id);
+
 		/* Codes_SRS_CONNECTION_01_074: [connection_destroy shall close the socket connection.] */
 		amqpalloc_free(connection_instance);
 	}

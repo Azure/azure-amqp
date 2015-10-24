@@ -98,6 +98,7 @@
 		{
 			<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)<#= type_name #>;
 			amqpvalue_destroy(<#= type_name #>_instance->composite_value);
+			amqpalloc_free(<#= type_name #>_instance);
 		}
 	}
 

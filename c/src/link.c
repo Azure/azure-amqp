@@ -10,7 +10,6 @@
 #include "amqp_frame_codec.h"
 #include "consolelogger.h"
 #include "logger.h"
-#include "amqpvalue_to_string.h"
 
 typedef struct DELIVERY_INSTANCE_TAG
 {
@@ -74,9 +73,6 @@ static int send_flow(LINK_INSTANCE* link)
 			}
 			else
 			{
-				LOG(consolelogger_log, 0, "-> [FLOW]");
-				LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(flow_performative_value));
-
 				result = 0;
 			}
 
@@ -202,9 +198,6 @@ static int send_attach(LINK_INSTANCE* link, const char* name, handle handle, rol
 			}
 			else
 			{
-				LOG(consolelogger_log, 0, "-> [ATTACH]");
-				LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(attach_performative_value));
-
 				result = 0;
 			}
 

@@ -4,7 +4,6 @@
 #include "amqpalloc.h"
 #include "consolelogger.h"
 #include "logger.h"
-#include "amqpvalue_to_string.h"
 
 typedef struct PENDING_TRANSFER_TAG
 {
@@ -87,9 +86,6 @@ static int send_begin(SESSION_INSTANCE* session_instance)
 				}
 				else
 				{
-					LOG(consolelogger_log, 0, "-> [BEGIN]");
-					LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(begin_performative_value));
-
 					result = 0;
 				}
 
@@ -711,9 +707,6 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 							}
 							else
 							{
-								LOG(consolelogger_log, 0, "-> [TRANSFER]");
-								LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(transfer_value));
-
 								/* Codes_SRS_SESSION_01_018: [is incremented after each successive transfer according to RFC-1982 [RFC1982] serial number arithmetic.] */
 								session_instance->next_outgoing_id++;
 								session_instance->outgoing_window--;
@@ -815,9 +808,6 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 									amqpvalue_destroy(multi_transfer_amqp_value);
 									break;
 								}
-
-								LOG(consolelogger_log, 0, "-> [TRANSFER]");
-								LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(multi_transfer_amqp_value));
 
 								amqpalloc_free(transfer_frame_payloads);
 								amqpvalue_destroy(multi_transfer_amqp_value);

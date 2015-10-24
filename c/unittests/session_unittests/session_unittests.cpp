@@ -83,10 +83,6 @@ public:
 	MOCK_STATIC_METHOD_2(, int, amqpvalue_get_encoded_size, AMQP_VALUE, value, size_t*, encoded_size)
 	MOCK_METHOD_END(int, 0);
 
-	/* amqpvalue_to_string mocks */
-	MOCK_STATIC_METHOD_1(, char*, amqpvalue_to_string, AMQP_VALUE, amqp_value)
-	MOCK_METHOD_END(char*, NULL);
-
 	/* connection mocks */
 	MOCK_STATIC_METHOD_4(, ENDPOINT_HANDLE, connection_create_endpoint, CONNECTION_HANDLE, connection, ON_ENDPOINT_FRAME_RECEIVED, frame_received_callback, ON_CONNECTION_STATE_CHANGED, on_connection_state_changed, void*, context)
 		saved_frame_received_callback = frame_received_callback;
@@ -120,8 +116,6 @@ extern "C"
 	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , AMQP_VALUE, amqpvalue_get_described_value, AMQP_VALUE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , void, amqpvalue_destroy, AMQP_VALUE, amqp_value)
 	DECLARE_GLOBAL_MOCK_METHOD_2(session_mocks, , int, amqpvalue_get_encoded_size, AMQP_VALUE, value, size_t*, encoded_size);
-
-	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , char*, amqpvalue_to_string, AMQP_VALUE, amqp_value)
 
 	DECLARE_GLOBAL_MOCK_METHOD_4(session_mocks, , ENDPOINT_HANDLE, connection_create_endpoint, CONNECTION_HANDLE, connection, ON_ENDPOINT_FRAME_RECEIVED, frame_received_callback, ON_CONNECTION_STATE_CHANGED, on_connection_state_changed, void*, context);
 	DECLARE_GLOBAL_MOCK_METHOD_1(session_mocks, , void, connection_destroy_endpoint, ENDPOINT_HANDLE, endpoint);
@@ -891,8 +885,6 @@ TEST_METHOD(connection_state_changed_callback_with_OPENED_triggers_sending_the_B
 	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
-
 	STRICT_EXPECTED_CALL(definition_mocks, begin_create(0, 1, 1));
 	STRICT_EXPECTED_CALL(definition_mocks, begin_set_handle_max(test_begin_handle, 4294967295));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_begin(test_begin_handle));
@@ -924,8 +916,6 @@ TEST_METHOD(connection_state_changed_callback_and_new_state_is_not_OPENED_does_n
 	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
 	mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
-
 	// act
 	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPEN_SENT, CONNECTION_STATE_START);
 
@@ -948,8 +938,6 @@ TEST_METHOD(connection_state_changed_callback_and_from_OPENED_to_OPENED_does_not
 	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
-
-	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	// act
 	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPENED);
@@ -975,8 +963,6 @@ TEST_METHOD(connection_state_changed_callback_to_OPENED_twice_only_triggers_send
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
-	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
-
 	// act
 	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);
 
@@ -999,8 +985,6 @@ TEST_METHOD(connection_state_changed_callback_to_different_than_OPENED_when_in_U
 	LINK_ENDPOINT_HANDLE link_endpoint = session_create_link_endpoint(session, "1", test_frame_received_callback, test_on_session_state_changed, NULL);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
-
-	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, test_on_session_state_changed(NULL, SESSION_STATE_DISCARDING, SESSION_STATE_UNMAPPED));
 
@@ -1027,8 +1011,6 @@ TEST_METHOD(connection_state_changed_callback_to_different_than_OPENED_when_in_B
 	saved_connection_state_changed_callback(saved_callback_context, CONNECTION_STATE_OPENED, CONNECTION_STATE_OPEN_SENT);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
-
-	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, test_on_session_state_changed(NULL, SESSION_STATE_DISCARDING, SESSION_STATE_BEGIN_SENT));
 
@@ -1058,8 +1040,6 @@ TEST_METHOD(connection_state_changed_callback_to_different_than_OPENED_when_in_M
 	saved_frame_received_callback(saved_callback_context, TEST_BEGIN_PERFORMATIVE, NULL, 0);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
-
-	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, test_on_session_state_changed(NULL, SESSION_STATE_DISCARDING, SESSION_STATE_MAPPED));
 
@@ -1096,8 +1076,6 @@ TEST_METHOD(when_2_transfers_happen_on_2_different_endpoints_2_different_deliver
 	saved_frame_received_callback(saved_callback_context, TEST_BEGIN_PERFORMATIVE, NULL, 0);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
-
-	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
 	STRICT_EXPECTED_CALL(definition_mocks, amqpvalue_create_transfer(test_transfer_handle));
@@ -1146,8 +1124,6 @@ TEST_METHOD(when_if_sending_the_frame_to_the_connection_fails_the_next_outgoing_
 	saved_frame_received_callback(saved_callback_context, TEST_BEGIN_PERFORMATIVE, NULL, 0);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
-
-	EXPECTED_CALL(mocks, amqpvalue_to_string(IGNORED_PTR_ARG)).IgnoreAllCalls();
 
 	STRICT_EXPECTED_CALL(definition_mocks, transfer_set_delivery_id(test_transfer_handle, 0));
 	STRICT_EXPECTED_CALL(mocks, connection_get_remote_max_frame_size(TEST_CONNECTION_HANDLE, IGNORED_PTR_ARG))

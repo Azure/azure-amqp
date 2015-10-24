@@ -101,6 +101,86 @@ static int send_header(CONNECTION_INSTANCE* connection_instance)
 	return result;
 }
 
+static const char* get_frame_type_as_string(AMQP_VALUE descriptor)
+{
+	const char* result;
+
+	if (is_open_type_by_descriptor(descriptor))
+	{
+		result = "[OPEN]";
+	}
+	else if (is_begin_type_by_descriptor(descriptor))
+	{
+		result = "[BEGIN]";
+	}
+	else if (is_attach_type_by_descriptor(descriptor))
+	{
+		result = "[ATTACH]";
+	}
+	else if (is_flow_type_by_descriptor(descriptor))
+	{
+		result = "[FLOW]";
+	}
+	else if (is_disposition_type_by_descriptor(descriptor))
+	{
+		result = "[DISPOSITION]";
+	}
+	else if (is_transfer_type_by_descriptor(descriptor))
+	{
+		result = "[TRANSFER]";
+	}
+	else if (is_detach_type_by_descriptor(descriptor))
+	{
+		result = "[DETACH]";
+	}
+	else if (is_end_type_by_descriptor(descriptor))
+	{
+		result = "[END]";
+	}
+	else if (is_close_type_by_descriptor(descriptor))
+	{
+		result = "[CLOSE]";
+	}
+	else
+	{
+		result = "[Unknown]";
+	}
+
+	return result;
+}
+
+void log_incoming_frame(AMQP_VALUE performative)
+{
+	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
+	if (descriptor != NULL)
+	{
+		LOG(consolelogger_log, 0, "<- ");
+		LOG(consolelogger_log, 0, (char*)get_frame_type_as_string(descriptor));
+		char* performative_as_string = NULL;
+		LOG(consolelogger_log, LOG_LINE, (performative_as_string = amqpvalue_to_string(performative)));
+		if (performative_as_string != NULL)
+		{
+			amqpalloc_free(performative_as_string);
+		}
+	}
+}
+
+void log_outgoing_frame(AMQP_VALUE performative)
+{
+	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
+	if (descriptor != NULL)
+	{
+		LOG(consolelogger_log, 0, "-> ");
+		LOG(consolelogger_log, 0, (char*)get_frame_type_as_string(descriptor));
+		char* performative_as_string = NULL;
+		LOG(consolelogger_log, LOG_LINE, (performative_as_string = amqpvalue_to_string(performative)));
+		if (performative_as_string != NULL)
+		{
+			amqpalloc_free(performative_as_string);
+		}
+	}
+}
+
 static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 {
 	int result;
@@ -188,10 +268,7 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 					}
 					else
 					{
-						LOG(consolelogger_log, 0, "-> [OPEN]");
-						char* frame_string = amqpvalue_to_string(open_performative_value);
-						LOG(consolelogger_log, LOG_LINE, frame_string);
-						amqpalloc_free(frame_string);
+						log_outgoing_frame(open_performative_value);
 
 						/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
 						connection_set_state(connection_instance, CONNECTION_STATE_OPEN_SENT);
@@ -245,8 +322,7 @@ static int send_close_frame(CONNECTION_INSTANCE* connection_instance, ERROR_HAND
 				}
 				else
 				{
-					LOG(consolelogger_log, 0, "-> [CLOSE]");
-					LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(close_performative_value));
+					log_outgoing_frame(close_performative_value);
 					result = 0;
 				}
 
@@ -487,54 +563,6 @@ static void on_empty_amqp_frame_received(void* context, uint16_t channel)
 {
 }
 
-static const char* get_frame_type_as_string(AMQP_VALUE descriptor)
-{
-	const char* result;
-
-	if (is_open_type_by_descriptor(descriptor))
-	{
-		result = "[OPEN]";
-	}
-	else if (is_begin_type_by_descriptor(descriptor))
-	{
-		result = "[BEGIN]";
-	}
-	else if (is_attach_type_by_descriptor(descriptor))
-	{
-		result = "[ATTACH]";
-	}
-	else if (is_flow_type_by_descriptor(descriptor))
-	{
-		result = "[FLOW]";
-	}
-	else if (is_disposition_type_by_descriptor(descriptor))
-	{
-		result = "[DISPOSITION]";
-	}
-	else if (is_transfer_type_by_descriptor(descriptor))
-	{
-		result = "[TRANSFER]";
-	}
-	else if (is_detach_type_by_descriptor(descriptor))
-	{
-		result = "[DETACH]";
-	}
-	else if (is_end_type_by_descriptor(descriptor))
-	{
-		result = "[END]";
-	}
-	else if (is_close_type_by_descriptor(descriptor))
-	{
-		result = "[CLOSE]";
-	}
-	else
-	{
-		result = "[Unknown]";
-	}
-
-	return result;
-}
-
 static void on_amqp_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, const unsigned char* payload_bytes, uint32_t payload_size)
 {
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)context;
@@ -554,15 +582,7 @@ static void on_amqp_frame_received(void* context, uint16_t channel, AMQP_VALUE p
 				AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
 				uint64_t performative_ulong;
 
-				LOG(consolelogger_log, 0, "<- ");
-				LOG(consolelogger_log, 0, (char*)get_frame_type_as_string(descriptor));
-
-				char* performative_as_string = amqpvalue_to_string(performative);
-				if (performative_as_string != NULL)
-				{
-					LOG(consolelogger_log, LOG_LINE, performative_as_string);
-					amqpalloc_free(performative_as_string);
-				}
+				log_incoming_frame(performative);
 
 				if (is_open_type_by_descriptor(descriptor))
 				{
@@ -1261,6 +1281,8 @@ int connection_encode_frame(ENDPOINT_HANDLE endpoint, const AMQP_VALUE performat
 				}
 				else
 				{
+					log_outgoing_frame(performative);
+
 					/* Codes_SRS_CONNECTION_01_248: [On success it shall return 0.] */
 					result = 0;
 				}

@@ -60,7 +60,7 @@ static int send_flow(LINK_INSTANCE* link)
 	else
 	{
 		flow_set_link_credit(flow, 100000);
-		flow_set_handle(flow, 12);
+		flow_set_handle(flow, link->handle);
 		AMQP_VALUE flow_performative_value = amqpvalue_create_flow(flow);
 		if (flow_performative_value == NULL)
 		{
@@ -100,7 +100,11 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 	case AMQP_ATTACH:
 		if (link_instance->link_state == LINK_STATE_HALF_ATTACHED)
 		{
-			send_flow(link_instance);
+			if (link_instance->role == role_receiver)
+			{
+				send_flow(link_instance);
+			}
+
 			set_link_state(link_instance, LINK_STATE_ATTACHED);
 		}
 		break;
@@ -218,7 +222,7 @@ static void on_session_state_changed(void* context, SESSION_STATE new_session_st
 	{
 		if (link_instance->link_state == LINK_STATE_DETACHED)
 		{
-			if (send_attach(link_instance, link_instance->name, 12, link_instance->role, sender_settle_mode_settled, receiver_settle_mode_first) == 0)
+			if (send_attach(link_instance, link_instance->name, 0, link_instance->role, sender_settle_mode_settled, receiver_settle_mode_first) == 0)
 			{
 				set_link_state(link_instance, LINK_STATE_HALF_ATTACHED);
 			}

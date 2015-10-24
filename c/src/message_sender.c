@@ -20,6 +20,7 @@ typedef struct MESSAGE_WITH_CALLBACK_TAG
 	ON_MESSAGE_SEND_COMPLETE on_message_send_complete;
 	const void* context;
 	MESSAGE_SENDER_HANDLE message_sender;
+	MESSAGE_SEND_STATE message_send_state;
 } MESSAGE_WITH_CALLBACK;
 
 typedef struct MESSAGE_SENDER_INSTANCE_TAG
@@ -65,22 +66,28 @@ static void send_all_pending_messages(MESSAGE_SENDER_INSTANCE* message_sender_in
 
 	for (i = 0; i < message_sender_instance->message_count; i++)
 	{
-		BINARY_DATA binary_data;
-		if (message_get_body_amqp_data(message_sender_instance->messages[i].message, &binary_data) != 0)
+		if (message_sender_instance->messages[message_sender_instance->message_count].message_send_state == MESSAGE_SEND_STATE_NOT_SENT)
 		{
-
-			message_sender_instance->messages[i].on_message_send_complete(message_sender_instance->messages[i].context, MESSAGE_SEND_ERROR);
-			remove_pending_message(message_sender_instance, i);
-			i--;
-		}
-		else
-		{
-			PAYLOAD payload = { binary_data.bytes, binary_data.length };
-			if (link_transfer(message_sender_instance->link, &payload, 1, on_delivery_settled, &message_sender_instance->messages[i]) != 0)
+			BINARY_DATA binary_data;
+			if (message_get_body_amqp_data(message_sender_instance->messages[i].message, &binary_data) != 0)
 			{
 				message_sender_instance->messages[i].on_message_send_complete(message_sender_instance->messages[i].context, MESSAGE_SEND_ERROR);
 				remove_pending_message(message_sender_instance, i);
 				i--;
+			}
+			else
+			{
+				PAYLOAD payload = { binary_data.bytes, binary_data.length };
+				if (link_transfer(message_sender_instance->link, &payload, 1, on_delivery_settled, &message_sender_instance->messages[i]) != 0)
+				{
+					message_sender_instance->messages[i].on_message_send_complete(message_sender_instance->messages[i].context, MESSAGE_SEND_ERROR);
+					remove_pending_message(message_sender_instance, i);
+					i--;
+				}
+				else
+				{
+					message_sender_instance->messages[message_sender_instance->message_count].message_send_state = MESSAGE_SEND_STATE_PENDING;
+				}
 			}
 		}
 	}
@@ -155,10 +162,12 @@ int messagesender_send(MESSAGE_SENDER_HANDLE message_sender, MESSAGE_HANDLE mess
 			if (message_sender_instance->message_sender_state == MESSAGE_SENDER_STATE_IDLE)
 			{
 				message_sender_instance->messages[message_sender_instance->message_count].message = message_clone(message);
+				message_sender_instance->messages[message_sender_instance->message_count].message_send_state = MESSAGE_SEND_STATE_NOT_SENT;
 			}
 			else
 			{
 				message_sender_instance->messages[message_sender_instance->message_count].message = NULL;
+				message_sender_instance->messages[message_sender_instance->message_count].message_send_state = MESSAGE_SEND_STATE_PENDING;
 			}
 
 			message_sender_instance->messages[message_sender_instance->message_count].on_message_send_complete = on_message_send_complete;
@@ -171,6 +180,7 @@ int messagesender_send(MESSAGE_SENDER_HANDLE message_sender, MESSAGE_HANDLE mess
 				BINARY_DATA binary_data;
 				if (message_get_body_amqp_data(message, &binary_data) != 0)
 				{
+					remove_pending_message(message_sender_instance, message_sender_instance->message_count - 1);
 					result = __LINE__;
 				}
 				else
@@ -178,6 +188,7 @@ int messagesender_send(MESSAGE_SENDER_HANDLE message_sender, MESSAGE_HANDLE mess
 					PAYLOAD payload = { binary_data.bytes, binary_data.length };
 					if (link_transfer(message_sender_instance->link, &payload, 1, on_delivery_settled, message_sender_instance) != 0)
 					{
+						remove_pending_message(message_sender_instance, message_sender_instance->message_count - 1);
 						result = __LINE__;
 					}
 					else

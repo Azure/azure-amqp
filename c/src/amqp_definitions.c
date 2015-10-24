@@ -36,7 +36,7 @@
 			error_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(29);
 			if (error_instance->composite_value == NULL)
 			{
-				free(error_instance);
+				amqpalloc_free(error_instance);
 				error_instance = NULL;
 			}
 			else
@@ -396,7 +396,7 @@
 			open_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(16);
 			if (open_instance->composite_value == NULL)
 			{
-				free(open_instance);
+				amqpalloc_free(open_instance);
 				open_instance = NULL;
 			}
 			else
@@ -1309,7 +1309,7 @@
 			begin_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(17);
 			if (begin_instance->composite_value == NULL)
 			{
-				free(begin_instance);
+				amqpalloc_free(begin_instance);
 				begin_instance = NULL;
 			}
 			else
@@ -2080,7 +2080,7 @@
 			attach_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(18);
 			if (attach_instance->composite_value == NULL)
 			{
-				free(attach_instance);
+				amqpalloc_free(attach_instance);
 				attach_instance = NULL;
 			}
 			else
@@ -3287,7 +3287,7 @@
 			flow_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(19);
 			if (flow_instance->composite_value == NULL)
 			{
-				free(flow_instance);
+				amqpalloc_free(flow_instance);
 				flow_instance = NULL;
 			}
 			else
@@ -4295,7 +4295,7 @@
 			transfer_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(20);
 			if (transfer_instance->composite_value == NULL)
 			{
-				free(transfer_instance);
+				amqpalloc_free(transfer_instance);
 				transfer_instance = NULL;
 			}
 			else
@@ -5268,7 +5268,7 @@
 			disposition_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(21);
 			if (disposition_instance->composite_value == NULL)
 			{
-				free(disposition_instance);
+				amqpalloc_free(disposition_instance);
 				disposition_instance = NULL;
 			}
 			else
@@ -5854,7 +5854,7 @@
 			detach_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(22);
 			if (detach_instance->composite_value == NULL)
 			{
-				free(detach_instance);
+				amqpalloc_free(detach_instance);
 				detach_instance = NULL;
 			}
 			else
@@ -6214,7 +6214,7 @@
 			end_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(23);
 			if (end_instance->composite_value == NULL)
 			{
-				free(end_instance);
+				amqpalloc_free(end_instance);
 				end_instance = NULL;
 			}
 		}
@@ -6402,7 +6402,7 @@
 			close_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(24);
 			if (close_instance->composite_value == NULL)
 			{
-				free(close_instance);
+				amqpalloc_free(close_instance);
 				close_instance = NULL;
 			}
 		}
@@ -6590,7 +6590,7 @@
 			sasl_mechanisms_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(64);
 			if (sasl_mechanisms_instance->composite_value == NULL)
 			{
-				free(sasl_mechanisms_instance);
+				amqpalloc_free(sasl_mechanisms_instance);
 				sasl_mechanisms_instance = NULL;
 			}
 			else
@@ -6792,7 +6792,7 @@
 			sasl_init_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(65);
 			if (sasl_init_instance->composite_value == NULL)
 			{
-				free(sasl_init_instance);
+				amqpalloc_free(sasl_init_instance);
 				sasl_init_instance = NULL;
 			}
 			else
@@ -7152,7 +7152,7 @@
 			sasl_challenge_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(66);
 			if (sasl_challenge_instance->composite_value == NULL)
 			{
-				free(sasl_challenge_instance);
+				amqpalloc_free(sasl_challenge_instance);
 				sasl_challenge_instance = NULL;
 			}
 			else
@@ -7354,7 +7354,7 @@
 			sasl_response_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(67);
 			if (sasl_response_instance->composite_value == NULL)
 			{
-				free(sasl_response_instance);
+				amqpalloc_free(sasl_response_instance);
 				sasl_response_instance = NULL;
 			}
 			else
@@ -7556,7 +7556,7 @@
 			sasl_outcome_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(68);
 			if (sasl_outcome_instance->composite_value == NULL)
 			{
-				free(sasl_outcome_instance);
+				amqpalloc_free(sasl_outcome_instance);
 				sasl_outcome_instance = NULL;
 			}
 			else
@@ -7837,7 +7837,7 @@
 			source_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(40);
 			if (source_instance->composite_value == NULL)
 			{
-				free(source_instance);
+				amqpalloc_free(source_instance);
 				source_instance = NULL;
 			}
 		}
@@ -8777,7 +8777,7 @@
 			target_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(41);
 			if (target_instance->composite_value == NULL)
 			{
-				free(target_instance);
+				amqpalloc_free(target_instance);
 				target_instance = NULL;
 			}
 		}
@@ -9420,7 +9420,7 @@
 			properties_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(115);
 			if (properties_instance->composite_value == NULL)
 			{
-				free(properties_instance);
+				amqpalloc_free(properties_instance);
 				properties_instance = NULL;
 			}
 		}

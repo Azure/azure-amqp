@@ -273,7 +273,7 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write("_instance->composite_value == NULL)\r\n\t\t\t{\r\n\t\t\t\tfree(");
+            this.Write("_instance->composite_value == NULL)\r\n\t\t\t{\r\n\t\t\t\tamqpalloc_free(");
             
             #line 58 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));

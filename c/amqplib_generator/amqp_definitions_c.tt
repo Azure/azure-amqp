@@ -55,7 +55,7 @@
 			<#= type_name #>_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(<#= Program.GetDescriptorCode(Program.GetDescriptor(type)) #>);
 			if (<#= type_name #>_instance->composite_value == NULL)
 			{
-				free(<#= type_name #>_instance);
+				amqpalloc_free(<#= type_name #>_instance);
 				<#= type_name #>_instance = NULL;
 			}
 <#				if (mandatory_args.Count() > 0) #>

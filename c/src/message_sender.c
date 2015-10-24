@@ -59,7 +59,7 @@ static void remove_pending_message(MESSAGE_SENDER_INSTANCE* message_sender_insta
 	}
 
 	message_sender_instance->message_count--;
-	new_messages = (MESSAGE_WITH_CALLBACK*)realloc(message_sender_instance->messages, sizeof(MESSAGE_WITH_CALLBACK) * (message_sender_instance->message_count));
+	new_messages = (MESSAGE_WITH_CALLBACK*)amqpalloc_realloc(message_sender_instance->messages, sizeof(MESSAGE_WITH_CALLBACK) * (message_sender_instance->message_count));
 	if (new_messages != NULL)
 	{
 		message_sender_instance->messages = new_messages;
@@ -157,7 +157,7 @@ int messagesender_send(MESSAGE_SENDER_HANDLE message_sender, MESSAGE_HANDLE mess
 	else
 	{
 		MESSAGE_SENDER_INSTANCE* message_sender_instance = (MESSAGE_SENDER_INSTANCE*)message_sender;
-		MESSAGE_WITH_CALLBACK* new_messages = (MESSAGE_WITH_CALLBACK*)realloc(message_sender_instance->messages, sizeof(MESSAGE_WITH_CALLBACK) * (message_sender_instance->message_count + 1));
+		MESSAGE_WITH_CALLBACK* new_messages = (MESSAGE_WITH_CALLBACK*)amqpalloc_realloc(message_sender_instance->messages, sizeof(MESSAGE_WITH_CALLBACK) * (message_sender_instance->message_count + 1));
 		if (new_messages == NULL)
 		{
 			result = __LINE__;

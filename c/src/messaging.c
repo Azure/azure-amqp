@@ -22,7 +22,7 @@ AMQP_VALUE messaging_create_source(AMQP_VALUE address)
 		}
 		else
 		{
-			if (source_set_address(source, amqpvalue_create_string(address)) != 0)
+			if (source_set_address(source, address_value) != 0)
 			{
 				result = NULL;
 			}
@@ -57,7 +57,7 @@ AMQP_VALUE messaging_create_target(AMQP_VALUE address)
 		}
 		else
 		{
-			if (target_set_address(target, amqpvalue_create_string(address)) != 0)
+			if (target_set_address(target, address_value) != 0)
 			{
 				result = NULL;
 			}

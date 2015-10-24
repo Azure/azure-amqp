@@ -288,14 +288,22 @@
 <# { #>
 			AMQP_VALUE <#= field_name #>_amqp_value = amqpvalue_clone(<#= field_name #>_value);
 <# } #>
-			if ((<#= field_name #>_amqp_value == NULL) ||
-				(amqpvalue_set_composite_item(<#= type_name #>_instance->composite_value, <#= j #>, <#= field_name #>_amqp_value) != 0))
+			if (<#= field_name #>_amqp_value == NULL)
 			{
 				result = __LINE__;
 			}
 			else
 			{
-				result = 0;
+				if (amqpvalue_set_composite_item(<#= type_name #>_instance->composite_value, <#= j #>, <#= field_name #>_amqp_value) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+
+				amqpvalue_destroy(<#= field_name #>_amqp_value);
 			}
 		}
 

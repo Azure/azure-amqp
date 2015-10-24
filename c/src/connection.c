@@ -616,8 +616,6 @@ static void on_amqp_frame_received(void* context, uint16_t channel, AMQP_VALUE p
 
 								connection_set_state(connection_instance, CONNECTION_STATE_END);
 							}
-
-							close_destroy(close_handle);
 						}
 					}
 				}

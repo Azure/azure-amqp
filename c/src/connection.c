@@ -487,6 +487,54 @@ static void on_empty_amqp_frame_received(void* context, uint16_t channel)
 {
 }
 
+static const char* get_frame_type_as_string(AMQP_VALUE descriptor)
+{
+	const char* result;
+
+	if (is_open_type_by_descriptor(descriptor))
+	{
+		result = "[OPEN]";
+	}
+	else if (is_begin_type_by_descriptor(descriptor))
+	{
+		result = "[BEGIN]";
+	}
+	else if (is_attach_type_by_descriptor(descriptor))
+	{
+		result = "[ATTACH]";
+	}
+	else if (is_flow_type_by_descriptor(descriptor))
+	{
+		result = "[FLOW]";
+	}
+	else if (is_disposition_type_by_descriptor(descriptor))
+	{
+		result = "[DISPOSITION]";
+	}
+	else if (is_transfer_type_by_descriptor(descriptor))
+	{
+		result = "[TRANSFER]";
+	}
+	else if (is_detach_type_by_descriptor(descriptor))
+	{
+		result = "[DETACH]";
+	}
+	else if (is_end_type_by_descriptor(descriptor))
+	{
+		result = "[END]";
+	}
+	else if (is_close_type_by_descriptor(descriptor))
+	{
+		result = "[CLOSE]";
+	}
+	else
+	{
+		result = "[Unknown]";
+	}
+
+	return result;
+}
+
 static void on_amqp_frame_received(void* context, uint16_t channel, AMQP_VALUE performative, const unsigned char* payload_bytes, uint32_t payload_size)
 {
 	CONNECTION_INSTANCE* connection_instance = (CONNECTION_INSTANCE*)context;
@@ -506,11 +554,18 @@ static void on_amqp_frame_received(void* context, uint16_t channel, AMQP_VALUE p
 				AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
 				uint64_t performative_ulong;
 
+				LOG(consolelogger_log, 0, "<- ");
+				LOG(consolelogger_log, 0, (char*)get_frame_type_as_string(descriptor));
+
+				char* performative_as_string = amqpvalue_to_string(performative);
+				if (performative_as_string != NULL)
+				{
+					LOG(consolelogger_log, LOG_LINE, performative_as_string);
+					amqpalloc_free(performative_as_string);
+				}
+
 				if (is_open_type_by_descriptor(descriptor))
 				{
-					LOG(consolelogger_log, 0, "<- [OPEN] ");
-					LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
-
 					if (channel != 0)
 					{
 						/* Codes_SRS_CONNECTION_01_006: [The open frame can only be sent on channel 0.] */
@@ -591,9 +646,6 @@ static void on_amqp_frame_received(void* context, uint16_t channel, AMQP_VALUE p
 					else
 					{
 						CLOSE_HANDLE close_handle;
-
-						LOG(consolelogger_log, 0, "<- [CLOSE]");
-						LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(performative));
 
 						/* Codes_SRS_CONNECTION_01_012: [A close frame MAY be received on any channel up to the maximum channel number negotiated in open.] */
 						if (channel > connection_instance->channel_max)

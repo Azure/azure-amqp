@@ -1,6 +1,8 @@
 #include <string.h>
 #include "message_sender.h"
 #include "amqpalloc.h"
+#include "logger.h"
+#include "consolelogger.h"
 
 typedef enum MESSAGE_SENDER_STATE_TAG
 {
@@ -66,7 +68,7 @@ static void send_all_pending_messages(MESSAGE_SENDER_INSTANCE* message_sender_in
 
 	for (i = 0; i < message_sender_instance->message_count; i++)
 	{
-		if (message_sender_instance->messages[message_sender_instance->message_count].message_send_state == MESSAGE_SEND_STATE_NOT_SENT)
+		if (message_sender_instance->messages[i].message_send_state == MESSAGE_SEND_STATE_NOT_SENT)
 		{
 			BINARY_DATA binary_data;
 			if (message_get_body_amqp_data(message_sender_instance->messages[i].message, &binary_data) != 0)

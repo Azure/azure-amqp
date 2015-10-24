@@ -202,46 +202,55 @@ static int send_sasl_init(SASL_IO_INSTANCE* sasl_io)
 {
 	int result;
 
-	SASL_INIT_HANDLE sasl_init = sasl_init_create("PLAIN");
+	const char* sasl_mechanism_name = saslmechanism_get_mechanism_name(sasl_io->sasl_mechanism);
+	SASL_INIT_HANDLE sasl_init = sasl_init_create(sasl_mechanism_name);
 	INIT_BYTES init_bytes;
 
-	if (saslmechanism_get_init_bytes(sasl_io->sasl_mechanism, &init_bytes) != 0)
+	if ((sasl_mechanism_name == NULL) ||
+		((sasl_init = sasl_init_create(sasl_mechanism_name)) == NULL))
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		amqp_binary creds = { init_bytes.bytes, init_bytes.length };
-		sasl_init_set_initial_response(sasl_init, creds);
-		if (sasl_init == NULL)
+		if (saslmechanism_get_init_bytes(sasl_io->sasl_mechanism, &init_bytes) != 0)
 		{
 			result = __LINE__;
 		}
 		else
 		{
-			AMQP_VALUE sasl_init_value = amqpvalue_create_sasl_init(sasl_init);
-			if (sasl_init_value == NULL)
+			amqp_binary creds = { init_bytes.bytes, init_bytes.length };
+			sasl_init_set_initial_response(sasl_init, creds);
+			if (sasl_init == NULL)
 			{
 				result = __LINE__;
 			}
 			else
 			{
-				if (sasl_frame_codec_encode_frame(sasl_io->sasl_frame_codec, sasl_init_value) != 0)
+				AMQP_VALUE sasl_init_value = amqpvalue_create_sasl_init(sasl_init);
+				if (sasl_init_value == NULL)
 				{
 					result = __LINE__;
 				}
 				else
 				{
-					LOG(sasl_io->logger_log, LOG_LINE, "-> [SASL_INIT]");
+					if (sasl_frame_codec_encode_frame(sasl_io->sasl_frame_codec, sasl_init_value) != 0)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						LOG(sasl_io->logger_log, LOG_LINE, "-> [SASL_INIT]");
 
-					result = 0;
+						result = 0;
+					}
+
+					amqpvalue_destroy(sasl_init_value);
 				}
-
-				amqpvalue_destroy(sasl_init_value);
 			}
-
-			sasl_init_destroy(sasl_init);
 		}
+
+		sasl_init_destroy(sasl_init);
 	}
 
 	return result;

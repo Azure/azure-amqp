@@ -12,7 +12,8 @@ static const SASL_MECHANISM_INTERFACE_DESCRIPTION saslplain_interface =
 {
 	saslplain_create,
 	saslplain_destroy,
-	saslplain_get_init_bytes
+	saslplain_get_init_bytes,
+	saslplain_get_mechanism_name
 };
 
 SASL_MECHANISM_CONCRETE_HANDLE saslplain_create(void* config)
@@ -74,6 +75,22 @@ int saslplain_get_init_bytes(SASL_MECHANISM_CONCRETE_HANDLE sasl_mechanism_concr
 		init_bytes->length = sasl_plain_instance->init_bytes_length;
 
 		result = 0;
+	}
+
+	return result;
+}
+
+const char* saslplain_get_mechanism_name(SASL_MECHANISM_HANDLE sasl_mechanism)
+{
+	const char* result;
+
+	if (sasl_mechanism == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		result = "PLAIN";
 	}
 
 	return result;

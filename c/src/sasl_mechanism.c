@@ -72,3 +72,21 @@ int saslmechanism_get_init_bytes(SASL_MECHANISM_HANDLE sasl_mechanism, INIT_BYTE
 
 	return result;
 }
+
+const char* saslmechanism_get_mechanism_name(SASL_MECHANISM_HANDLE sasl_mechanism)
+{
+	const char* result;
+
+	if (sasl_mechanism == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		SASL_MECHANISM_INSTANCE* sasl_mechanism_instance = (SASL_MECHANISM_INSTANCE*)sasl_mechanism;
+
+		result = sasl_mechanism_instance->sasl_mechanism_interface_description->sasl_mechanism_concrete_get_mechanism_name(sasl_mechanism_instance->concrete_sasl_mechanism_handle);
+	}
+
+	return result;
+}

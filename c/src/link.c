@@ -85,15 +85,36 @@ static int send_flow(LINK_INSTANCE* link)
 	return result;
 }
 
+static void remove_pending_delivery(LINK_INSTANCE* link_instance, uint32_t index)
+{
+	if (link_instance->pending_delivery_count - index > 1)
+	{
+		memmove(&link_instance->pending_deliveries[index], &link_instance->pending_deliveries[index + 1], sizeof(DELIVERY_INSTANCE) * (link_instance->pending_delivery_count - index - 1));
+	}
+
+	if (link_instance->pending_delivery_count > 1)
+	{
+		DELIVERY_INSTANCE* new_pending_deliveries = (DELIVERY_INSTANCE*)amqpalloc_realloc(link_instance->pending_deliveries, sizeof(DELIVERY_INSTANCE) * (link_instance->pending_delivery_count - 1));
+		if (new_pending_deliveries != NULL)
+		{
+			link_instance->pending_deliveries = new_pending_deliveries;
+		}
+	}
+	else
+	{
+		amqpalloc_free(link_instance->pending_deliveries);
+		link_instance->pending_deliveries = NULL;
+	}
+
+	link_instance->pending_delivery_count--;
+}
+
 static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t payload_size, const unsigned char* payload_bytes)
 {
 	LINK_INSTANCE* link_instance = (LINK_INSTANCE*)context;
 	AMQP_VALUE descriptor = amqpvalue_get_inplace_descriptor(performative);
-	uint64_t performative_ulong;
-	amqpvalue_get_ulong(descriptor, &performative_ulong);
-	switch (performative_ulong)
+	if (is_attach_type_by_descriptor(descriptor))
 	{
-	case AMQP_ATTACH:
 		if (link_instance->link_state == LINK_STATE_HALF_ATTACHED)
 		{
 			if (link_instance->role == role_receiver)
@@ -103,68 +124,63 @@ static void link_frame_received(void* context, AMQP_VALUE performative, uint32_t
 
 			set_link_state(link_instance, LINK_STATE_ATTACHED);
 		}
-		break;
-
-	case AMQP_FLOW:
-		break;
-
-	case AMQP_TRANSFER:
-        if (link_instance->on_transfer_received != NULL)
-        {
-            TRANSFER_HANDLE transfer_handle;
-            if (amqpvalue_get_transfer(performative, &transfer_handle) == 0)
-            {
-                link_instance->on_transfer_received(link_instance->callback_context, transfer_handle, payload_size, payload_bytes);
-                transfer_destroy(transfer_handle);
-            }
-        }
-
-		break;
-
-	case AMQP_DISPOSITION:
+	}
+	else if (is_flow_type_by_descriptor(descriptor))
 	{
-		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
-		AMQP_VALUE first_value = amqpvalue_get_list_item(described_value, 1);
-		AMQP_VALUE last_value = amqpvalue_get_list_item(described_value, 2);
-		delivery_number first;
-		delivery_number last;
-
-		amqpvalue_get_uint(first_value, &first);
-		if (amqpvalue_get_uint(last_value, &last) != 0)
+	}
+	else if (is_transfer_type_by_descriptor(descriptor))
+	{
+		if (link_instance->on_transfer_received != NULL)
 		{
-			last = first;
-		}
-
-		uint32_t i;
-		for (i = 0; i < link_instance->pending_delivery_count; i++)
-		{
-			if ((link_instance->pending_deliveries[i].delivery_id >= first) &&
-				(link_instance->pending_deliveries[i].delivery_id <= last))
+			TRANSFER_HANDLE transfer_handle;
+			if (amqpvalue_get_transfer(performative, &transfer_handle) == 0)
 			{
-				link_instance->pending_deliveries[i].on_delivery_settled(link_instance->pending_deliveries[i].callback_context, link_instance->pending_deliveries[i].delivery_id);
-				if (link_instance->pending_delivery_count - i > 1)
-				{
-					memmove(&link_instance->pending_deliveries[i], &link_instance->pending_deliveries[i + 1], sizeof(DELIVERY_INSTANCE) * (link_instance->pending_delivery_count - i - 1));
-				}
-
-				link_instance->pending_delivery_count--;
-				i--;
+				link_instance->on_transfer_received(link_instance->callback_context, transfer_handle, payload_size, payload_bytes);
+				transfer_destroy(transfer_handle);
 			}
 		}
-
-		break;
 	}
-
-	case AMQP_DETACH:
+	else if (is_disposition_type_by_descriptor(descriptor))
 	{
-		const char* error = NULL;
-		AMQP_VALUE described_value = amqpvalue_get_described_value(performative);
-		AMQP_VALUE error_value = amqpvalue_get_list_item(described_value, 2);
-		AMQP_VALUE error_described_value = amqpvalue_get_described_value(error_value);
-		AMQP_VALUE error_description_value = amqpvalue_get_list_item(error_described_value, 1);
-		amqpvalue_get_string(error_description_value, &error);
-		break;
+		DISPOSITION_HANDLE disposition;
+		if (amqpvalue_get_disposition(performative, &disposition) != 0)
+		{
+			/* error */
+		}
+		else
+		{
+			delivery_number first;
+			delivery_number last;
+
+			if (disposition_get_first(disposition, &first) != 0)
+			{
+				/* error */
+			}
+			else
+			{
+				if (disposition_get_last(disposition, &last) != 0)
+				{
+					last = first;
+				}
+
+				uint32_t i;
+				for (i = 0; i < link_instance->pending_delivery_count; i++)
+				{
+					if ((link_instance->pending_deliveries[i].delivery_id >= first) &&
+						(link_instance->pending_deliveries[i].delivery_id <= last))
+					{
+						link_instance->pending_deliveries[i].on_delivery_settled(link_instance->pending_deliveries[i].callback_context, link_instance->pending_deliveries[i].delivery_id);
+						remove_pending_delivery(link_instance, i);
+						i--;
+					}
+				}
+			}
+
+			disposition_destroy(disposition);
+		}
 	}
+	else if (is_detach_type_by_descriptor(descriptor))
+	{
 	}
 }
 
@@ -286,6 +302,7 @@ int link_subscribe_events(LINK_HANDLE link, ON_TRANSFER_RECEIVED on_transfer_rec
 	else
 	{
 		LINK_INSTANCE* link_instance = (LINK_INSTANCE*)link;
+
 		link_instance->on_link_state_changed = on_link_state_changed;
         link_instance->on_transfer_received = on_transfer_received;
 		link_instance->callback_context = callback_context;
@@ -374,9 +391,9 @@ int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, O
 
 			amqpvalue_destroy(amqp_value);
 			amqpvalue_destroy(amqp_value_descriptor);
-
-			transfer_destroy(transfer);
 		}
+
+		transfer_destroy(transfer);
 	}
 
 	return result;

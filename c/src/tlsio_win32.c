@@ -191,7 +191,7 @@ static void tlsio_receive_bytes(void* context, const void* buffer, size_t size)
 					else
 					{
 						tls_io_instance->tls_state = TLS_STATE_HANDSHAKE_DONE;
-						tls_io_instance->io_state = IO_STATE_READY;
+						tls_io_instance->io_state = IO_STATE_OPEN;
 					}
 
 					break;
@@ -293,7 +293,7 @@ static void tlsio_receive_bytes(void* context, const void* buffer, size_t size)
 						else
 						{
 							tls_io_instance->tls_state = TLS_STATE_HANDSHAKE_DONE;
-							tls_io_instance->io_state = IO_STATE_READY;
+							tls_io_instance->io_state = IO_STATE_OPEN;
 						}
 					}
 					break;
@@ -418,7 +418,7 @@ int tlsio_open(IO_HANDLE tls_io, IO_RECEIVE_CALLBACK receive_callback, void* con
 			}
 			else
 			{
-				tls_io_instance->io_state = IO_STATE_NOT_READY;
+				tls_io_instance->io_state = IO_STATE_OPENING;
 				result = 0;
 			}
 		}
@@ -459,7 +459,7 @@ int send_chunk(IO_HANDLE tls_io, const void* buffer, size_t size)
 	else
 	{
 		TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
-		if (tls_io_instance->io_state != IO_STATE_READY)
+		if (tls_io_instance->io_state != IO_STATE_OPEN)
 		{
 			result = __LINE__;
 		}
@@ -558,7 +558,7 @@ void tlsio_dowork(IO_HANDLE tls_io)
 	{
 		TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
 
-		if (tls_io_instance->io_state == IO_STATE_NOT_READY)
+		if (tls_io_instance->io_state == IO_STATE_OPENING)
 		{
 			switch (tls_io_instance->tls_state)
 			{

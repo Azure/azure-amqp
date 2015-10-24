@@ -994,10 +994,10 @@ void connection_dowork(CONNECTION_HANDLE connection)
 			connection_set_state(connection_instance, CONNECTION_STATE_END);
 			break;
 
-		case IO_STATE_NOT_READY:
+		case IO_STATE_OPENING:
 			break;
 		/* Codes_SRS_CONNECTION_01_200: [The connection state machine processing shall only be done when the IO interface state is ready.] */
-		case IO_STATE_READY:
+		case IO_STATE_OPEN:
 			/* Codes_SRS_CONNECTION_01_084: [The connection_instance state machine implementing the protocol requirements shall be run as part of connection_dowork.] */
 			switch (connection_instance->connection_state)
 			{
@@ -1005,7 +1005,7 @@ void connection_dowork(CONNECTION_HANDLE connection)
 				break;
 
 			case CONNECTION_STATE_START:
-				if (io_state == IO_STATE_READY)
+				if (io_state == IO_STATE_OPEN)
 				{
 					/* Codes_SRS_CONNECTION_01_086: [Prior to sending any frames on a connection_instance, each peer MUST start by sending a protocol header that indicates the protocol version used on the connection_instance.] */
 					/* Codes_SRS_CONNECTION_01_091: [The AMQP peer which acted in the role of the TCP client (i.e. the peer that actively opened the connection_instance) MUST immediately send its outgoing protocol header on establishment of the TCP connection_instance.] */

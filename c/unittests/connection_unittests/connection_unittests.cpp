@@ -119,7 +119,7 @@ public:
 	MOCK_STATIC_METHOD_1(, void, io_dowork, IO_HANDLE, io)
 	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_1(, IO_STATE, io_get_state, IO_HANDLE, io)
-	MOCK_METHOD_END(IO_STATE, IO_STATE_READY);
+	MOCK_METHOD_END(IO_STATE, IO_STATE_OPEN);
 
 	/* amqpalloc mocks */
 	MOCK_STATIC_METHOD_1(, void*, amqpalloc_malloc, size_t, size)
@@ -1023,7 +1023,7 @@ TEST_METHOD(when_io_state_is_not_open_connection_dowork_opens_the_io)
 	EXPECTED_CALL(mocks, io_open(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE))
-		.SetReturn(IO_STATE_NOT_READY);
+		.SetReturn(IO_STATE_OPENING);
 	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
 
 	// act
@@ -1082,7 +1082,7 @@ TEST_METHOD(connection_dowork_when_state_is_start_sends_the_AMQP_header_and_trig
 	EXPECTED_CALL(mocks, io_open(TEST_IO_HANDLE, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
 		.ValidateArgument(1);
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE))
-		.SetReturn(IO_STATE_READY);
+		.SetReturn(IO_STATE_OPEN);
 	STRICT_EXPECTED_CALL(mocks, io_send(TEST_IO_HANDLE, amqp_header, sizeof(amqp_header)))
 		.ValidateArgumentBuffer(2, amqp_header, sizeof(amqp_header));
 	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
@@ -1107,7 +1107,7 @@ TEST_METHOD(when_io_is_not_ready_connection_dowork_does_not_process_connection_s
 	mocks.ResetAllCalls();
 
 	STRICT_EXPECTED_CALL(mocks, io_get_state(TEST_IO_HANDLE))
-		.SetReturn(IO_STATE_NOT_READY);
+		.SetReturn(IO_STATE_OPENING);
 	STRICT_EXPECTED_CALL(mocks, io_dowork(TEST_IO_HANDLE));
 
 	// act

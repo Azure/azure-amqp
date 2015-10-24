@@ -135,7 +135,7 @@ int socketio_open(IO_HANDLE socket_io, IO_RECEIVE_CALLBACK receive_callback, voi
 					socket_io_instance->receive_callback = receive_callback;
 					socket_io_instance->context = context;
 
-					socket_io_instance->io_state = IO_STATE_READY;
+					socket_io_instance->io_state = IO_STATE_OPEN;
 					result = 0;
 				}
 			}
@@ -180,7 +180,7 @@ int socketio_send(IO_HANDLE socket_io, const void* buffer, size_t size)
 	else
 	{
 		SOCKET_IO_INSTANCE* socket_io_instance = (SOCKET_IO_INSTANCE*)socket_io;
-		if (socket_io_instance->io_state != IO_STATE_READY)
+		if (socket_io_instance->io_state != IO_STATE_OPEN)
 		{
 			result = __LINE__;
 		}
@@ -234,7 +234,7 @@ void socketio_dowork(IO_HANDLE socket_io)
 	if (socket_io != NULL)
 	{
 		SOCKET_IO_INSTANCE* socket_io_instance = (SOCKET_IO_INSTANCE*)socket_io;
-		if (socket_io_instance->io_state == IO_STATE_READY)
+		if (socket_io_instance->io_state == IO_STATE_OPEN)
 		{
 			int received = 1;
 

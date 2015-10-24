@@ -270,7 +270,7 @@ static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 		if (sasl_io->sasl_client_negotiation_state != SASL_CLIENT_NEGOTIATION_ERROR)
 		{
 			sasl_io->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD;
-			sasl_io->io_state = IO_STATE_READY;
+			sasl_io->io_state = IO_STATE_OPEN;
 		}
 
 		break;
@@ -378,7 +378,7 @@ int saslio_open(IO_HANDLE sasl_io, IO_RECEIVE_CALLBACK receive_callback, void* c
 		}
 		else
 		{
-			sasl_io_instance->io_state = IO_STATE_NOT_READY;
+			sasl_io_instance->io_state = IO_STATE_OPENING;
 			result = 0;
 		}
 	}
@@ -425,7 +425,7 @@ int saslio_send(IO_HANDLE sasl_io, const void* buffer, size_t size)
 	else
 	{
 		SASL_IO_INSTANCE* sasl_io_instance = (SASL_IO_INSTANCE*)sasl_io;
-		if (sasl_io_instance->io_state != IO_STATE_READY)
+		if (sasl_io_instance->io_state != IO_STATE_OPEN)
 		{
 			result = __LINE__;
 		}
@@ -452,7 +452,7 @@ void saslio_dowork(IO_HANDLE sasl_io)
 		SASL_IO_INSTANCE* sasl_io_instance = (SASL_IO_INSTANCE*)sasl_io;
 		io_dowork(sasl_io_instance->socket_io);
 
-		if (io_get_state(sasl_io_instance->socket_io) == IO_STATE_READY)
+		if (io_get_state(sasl_io_instance->socket_io) == IO_STATE_OPEN)
 		{
 			switch (sasl_io_instance->sasl_io_state)
 			{

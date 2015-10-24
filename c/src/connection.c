@@ -189,7 +189,9 @@ static int send_open_frame(CONNECTION_INSTANCE* connection_instance)
 					else
 					{
 						LOG(consolelogger_log, 0, "-> [OPEN]");
-						LOG(consolelogger_log, LOG_LINE, amqpvalue_to_string(open_performative_value));
+						char* frame_string = amqpvalue_to_string(open_performative_value);
+						LOG(consolelogger_log, LOG_LINE, frame_string);
+						amqpalloc_free(frame_string);
 
 						/* Codes_SRS_CONNECTION_01_046: [OPEN SENT In this state the connection headers have been exchanged. An open frame has been sent to the peer but no open frame has yet been received.] */
 						connection_set_state(connection_instance, CONNECTION_STATE_OPEN_SENT);

@@ -7,8 +7,13 @@
 
 <# amqp amqp = Program.LoadAMQPTypes(); #>
 
+#include <stdlib.h>
+#ifdef _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
 #include "amqpvalue.h"
 #include "amqp_definitions.h"
+#include "amqpalloc.h"
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -33,7 +38,7 @@
 <#				KeyValuePair<field, int>[] mandatory_args = Program.GetMandatoryArgs(type).ToArray(); #>
 	static <#= type_name.ToUpper() #>_HANDLE <#= type_name #>_create_internal(void)
 	{
-		<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)malloc(sizeof(<#= type_name.ToUpper() #>_INSTANCE));
+		<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)amqpalloc_malloc(sizeof(<#= type_name.ToUpper() #>_INSTANCE));
 		if (<#= type_name #>_instance != NULL)
 		{
 			<#= type_name #>_instance->composite_value = NULL;
@@ -44,7 +49,7 @@
 
 	<#= type_name.ToUpper() #>_HANDLE <#= type_name #>_create(<#= arg_list #>)
 	{
-		<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)malloc(sizeof(<#= type_name.ToUpper() #>_INSTANCE));
+		<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)amqpalloc_malloc(sizeof(<#= type_name.ToUpper() #>_INSTANCE));
 		if (<#= type_name #>_instance != NULL)
 		{
 			<#= type_name #>_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(<#= Program.GetDescriptorCode(Program.GetDescriptor(type)) #>);

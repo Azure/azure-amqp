@@ -1,4 +1,7 @@
 #include <stdlib.h>
+#ifdef _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>

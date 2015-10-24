@@ -1,4 +1,7 @@
 #include <stdlib.h>
+#ifdef _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
 #include "message.h"
 #include "amqpvalue.h"
 #include "amqpalloc.h"
@@ -114,7 +117,7 @@ int message_set_body_amqp_data(MESSAGE_HANDLE handle, BINARY_DATA binary_data)
 	}
 	else
 	{
-		message->body_data_section_bytes = (unsigned char*)malloc(binary_data.length);
+		message->body_data_section_bytes = (unsigned char*)amqpalloc_malloc(binary_data.length);
 		message->body_data_section_length = binary_data.length;
 		result = 0;
 	}

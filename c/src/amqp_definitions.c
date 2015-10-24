@@ -1,7 +1,12 @@
 
 
+#include <stdlib.h>
+#ifdef _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
 #include "amqpvalue.h"
 #include "amqp_definitions.h"
+#include "amqpalloc.h"
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -14,7 +19,7 @@
 
 	static ERROR_HANDLE error_create_internal(void)
 	{
-		ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)malloc(sizeof(ERROR_INSTANCE));
+		ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)amqpalloc_malloc(sizeof(ERROR_INSTANCE));
 		if (error_instance != NULL)
 		{
 			error_instance->composite_value = NULL;
@@ -25,7 +30,7 @@
 
 	ERROR_HANDLE error_create(const char* condition_value)
 	{
-		ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)malloc(sizeof(ERROR_INSTANCE));
+		ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)amqpalloc_malloc(sizeof(ERROR_INSTANCE));
 		if (error_instance != NULL)
 		{
 			error_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(29);
@@ -374,7 +379,7 @@
 
 	static OPEN_HANDLE open_create_internal(void)
 	{
-		OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)malloc(sizeof(OPEN_INSTANCE));
+		OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)amqpalloc_malloc(sizeof(OPEN_INSTANCE));
 		if (open_instance != NULL)
 		{
 			open_instance->composite_value = NULL;
@@ -385,7 +390,7 @@
 
 	OPEN_HANDLE open_create(const char* container_id_value)
 	{
-		OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)malloc(sizeof(OPEN_INSTANCE));
+		OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)amqpalloc_malloc(sizeof(OPEN_INSTANCE));
 		if (open_instance != NULL)
 		{
 			open_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(16);
@@ -1287,7 +1292,7 @@
 
 	static BEGIN_HANDLE begin_create_internal(void)
 	{
-		BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)malloc(sizeof(BEGIN_INSTANCE));
+		BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)amqpalloc_malloc(sizeof(BEGIN_INSTANCE));
 		if (begin_instance != NULL)
 		{
 			begin_instance->composite_value = NULL;
@@ -1298,7 +1303,7 @@
 
 	BEGIN_HANDLE begin_create(transfer_number next_outgoing_id_value, uint32_t incoming_window_value, uint32_t outgoing_window_value)
 	{
-		BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)malloc(sizeof(BEGIN_INSTANCE));
+		BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)amqpalloc_malloc(sizeof(BEGIN_INSTANCE));
 		if (begin_instance != NULL)
 		{
 			begin_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(17);
@@ -2058,7 +2063,7 @@
 
 	static ATTACH_HANDLE attach_create_internal(void)
 	{
-		ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)malloc(sizeof(ATTACH_INSTANCE));
+		ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)amqpalloc_malloc(sizeof(ATTACH_INSTANCE));
 		if (attach_instance != NULL)
 		{
 			attach_instance->composite_value = NULL;
@@ -2069,7 +2074,7 @@
 
 	ATTACH_HANDLE attach_create(const char* name_value, handle handle_value, role role_value)
 	{
-		ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)malloc(sizeof(ATTACH_INSTANCE));
+		ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)amqpalloc_malloc(sizeof(ATTACH_INSTANCE));
 		if (attach_instance != NULL)
 		{
 			attach_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(18);
@@ -3265,7 +3270,7 @@
 
 	static FLOW_HANDLE flow_create_internal(void)
 	{
-		FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)malloc(sizeof(FLOW_INSTANCE));
+		FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)amqpalloc_malloc(sizeof(FLOW_INSTANCE));
 		if (flow_instance != NULL)
 		{
 			flow_instance->composite_value = NULL;
@@ -3276,7 +3281,7 @@
 
 	FLOW_HANDLE flow_create(uint32_t incoming_window_value, transfer_number next_outgoing_id_value, uint32_t outgoing_window_value)
 	{
-		FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)malloc(sizeof(FLOW_INSTANCE));
+		FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)amqpalloc_malloc(sizeof(FLOW_INSTANCE));
 		if (flow_instance != NULL)
 		{
 			flow_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(19);
@@ -4273,7 +4278,7 @@
 
 	static TRANSFER_HANDLE transfer_create_internal(void)
 	{
-		TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)malloc(sizeof(TRANSFER_INSTANCE));
+		TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)amqpalloc_malloc(sizeof(TRANSFER_INSTANCE));
 		if (transfer_instance != NULL)
 		{
 			transfer_instance->composite_value = NULL;
@@ -4284,7 +4289,7 @@
 
 	TRANSFER_HANDLE transfer_create(handle handle_value)
 	{
-		TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)malloc(sizeof(TRANSFER_INSTANCE));
+		TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)amqpalloc_malloc(sizeof(TRANSFER_INSTANCE));
 		if (transfer_instance != NULL)
 		{
 			transfer_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(20);
@@ -5246,7 +5251,7 @@
 
 	static DISPOSITION_HANDLE disposition_create_internal(void)
 	{
-		DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)malloc(sizeof(DISPOSITION_INSTANCE));
+		DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)amqpalloc_malloc(sizeof(DISPOSITION_INSTANCE));
 		if (disposition_instance != NULL)
 		{
 			disposition_instance->composite_value = NULL;
@@ -5257,7 +5262,7 @@
 
 	DISPOSITION_HANDLE disposition_create(role role_value, delivery_number first_value)
 	{
-		DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)malloc(sizeof(DISPOSITION_INSTANCE));
+		DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)amqpalloc_malloc(sizeof(DISPOSITION_INSTANCE));
 		if (disposition_instance != NULL)
 		{
 			disposition_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(21);
@@ -5832,7 +5837,7 @@
 
 	static DETACH_HANDLE detach_create_internal(void)
 	{
-		DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)malloc(sizeof(DETACH_INSTANCE));
+		DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)amqpalloc_malloc(sizeof(DETACH_INSTANCE));
 		if (detach_instance != NULL)
 		{
 			detach_instance->composite_value = NULL;
@@ -5843,7 +5848,7 @@
 
 	DETACH_HANDLE detach_create(handle handle_value)
 	{
-		DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)malloc(sizeof(DETACH_INSTANCE));
+		DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)amqpalloc_malloc(sizeof(DETACH_INSTANCE));
 		if (detach_instance != NULL)
 		{
 			detach_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(22);
@@ -6192,7 +6197,7 @@
 
 	static END_HANDLE end_create_internal(void)
 	{
-		END_INSTANCE* end_instance = (END_INSTANCE*)malloc(sizeof(END_INSTANCE));
+		END_INSTANCE* end_instance = (END_INSTANCE*)amqpalloc_malloc(sizeof(END_INSTANCE));
 		if (end_instance != NULL)
 		{
 			end_instance->composite_value = NULL;
@@ -6203,7 +6208,7 @@
 
 	END_HANDLE end_create(void)
 	{
-		END_INSTANCE* end_instance = (END_INSTANCE*)malloc(sizeof(END_INSTANCE));
+		END_INSTANCE* end_instance = (END_INSTANCE*)amqpalloc_malloc(sizeof(END_INSTANCE));
 		if (end_instance != NULL)
 		{
 			end_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(23);
@@ -6380,7 +6385,7 @@
 
 	static CLOSE_HANDLE close_create_internal(void)
 	{
-		CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)malloc(sizeof(CLOSE_INSTANCE));
+		CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)amqpalloc_malloc(sizeof(CLOSE_INSTANCE));
 		if (close_instance != NULL)
 		{
 			close_instance->composite_value = NULL;
@@ -6391,7 +6396,7 @@
 
 	CLOSE_HANDLE close_create(void)
 	{
-		CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)malloc(sizeof(CLOSE_INSTANCE));
+		CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)amqpalloc_malloc(sizeof(CLOSE_INSTANCE));
 		if (close_instance != NULL)
 		{
 			close_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(24);
@@ -6568,7 +6573,7 @@
 
 	static SASL_MECHANISMS_HANDLE sasl_mechanisms_create_internal(void)
 	{
-		SASL_MECHANISMS_INSTANCE* sasl_mechanisms_instance = (SASL_MECHANISMS_INSTANCE*)malloc(sizeof(SASL_MECHANISMS_INSTANCE));
+		SASL_MECHANISMS_INSTANCE* sasl_mechanisms_instance = (SASL_MECHANISMS_INSTANCE*)amqpalloc_malloc(sizeof(SASL_MECHANISMS_INSTANCE));
 		if (sasl_mechanisms_instance != NULL)
 		{
 			sasl_mechanisms_instance->composite_value = NULL;
@@ -6579,7 +6584,7 @@
 
 	SASL_MECHANISMS_HANDLE sasl_mechanisms_create(const char* sasl_server_mechanisms_value)
 	{
-		SASL_MECHANISMS_INSTANCE* sasl_mechanisms_instance = (SASL_MECHANISMS_INSTANCE*)malloc(sizeof(SASL_MECHANISMS_INSTANCE));
+		SASL_MECHANISMS_INSTANCE* sasl_mechanisms_instance = (SASL_MECHANISMS_INSTANCE*)amqpalloc_malloc(sizeof(SASL_MECHANISMS_INSTANCE));
 		if (sasl_mechanisms_instance != NULL)
 		{
 			sasl_mechanisms_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(64);
@@ -6770,7 +6775,7 @@
 
 	static SASL_INIT_HANDLE sasl_init_create_internal(void)
 	{
-		SASL_INIT_INSTANCE* sasl_init_instance = (SASL_INIT_INSTANCE*)malloc(sizeof(SASL_INIT_INSTANCE));
+		SASL_INIT_INSTANCE* sasl_init_instance = (SASL_INIT_INSTANCE*)amqpalloc_malloc(sizeof(SASL_INIT_INSTANCE));
 		if (sasl_init_instance != NULL)
 		{
 			sasl_init_instance->composite_value = NULL;
@@ -6781,7 +6786,7 @@
 
 	SASL_INIT_HANDLE sasl_init_create(const char* mechanism_value)
 	{
-		SASL_INIT_INSTANCE* sasl_init_instance = (SASL_INIT_INSTANCE*)malloc(sizeof(SASL_INIT_INSTANCE));
+		SASL_INIT_INSTANCE* sasl_init_instance = (SASL_INIT_INSTANCE*)amqpalloc_malloc(sizeof(SASL_INIT_INSTANCE));
 		if (sasl_init_instance != NULL)
 		{
 			sasl_init_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(65);
@@ -7130,7 +7135,7 @@
 
 	static SASL_CHALLENGE_HANDLE sasl_challenge_create_internal(void)
 	{
-		SASL_CHALLENGE_INSTANCE* sasl_challenge_instance = (SASL_CHALLENGE_INSTANCE*)malloc(sizeof(SASL_CHALLENGE_INSTANCE));
+		SASL_CHALLENGE_INSTANCE* sasl_challenge_instance = (SASL_CHALLENGE_INSTANCE*)amqpalloc_malloc(sizeof(SASL_CHALLENGE_INSTANCE));
 		if (sasl_challenge_instance != NULL)
 		{
 			sasl_challenge_instance->composite_value = NULL;
@@ -7141,7 +7146,7 @@
 
 	SASL_CHALLENGE_HANDLE sasl_challenge_create(amqp_binary challenge_value)
 	{
-		SASL_CHALLENGE_INSTANCE* sasl_challenge_instance = (SASL_CHALLENGE_INSTANCE*)malloc(sizeof(SASL_CHALLENGE_INSTANCE));
+		SASL_CHALLENGE_INSTANCE* sasl_challenge_instance = (SASL_CHALLENGE_INSTANCE*)amqpalloc_malloc(sizeof(SASL_CHALLENGE_INSTANCE));
 		if (sasl_challenge_instance != NULL)
 		{
 			sasl_challenge_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(66);
@@ -7332,7 +7337,7 @@
 
 	static SASL_RESPONSE_HANDLE sasl_response_create_internal(void)
 	{
-		SASL_RESPONSE_INSTANCE* sasl_response_instance = (SASL_RESPONSE_INSTANCE*)malloc(sizeof(SASL_RESPONSE_INSTANCE));
+		SASL_RESPONSE_INSTANCE* sasl_response_instance = (SASL_RESPONSE_INSTANCE*)amqpalloc_malloc(sizeof(SASL_RESPONSE_INSTANCE));
 		if (sasl_response_instance != NULL)
 		{
 			sasl_response_instance->composite_value = NULL;
@@ -7343,7 +7348,7 @@
 
 	SASL_RESPONSE_HANDLE sasl_response_create(amqp_binary response_value)
 	{
-		SASL_RESPONSE_INSTANCE* sasl_response_instance = (SASL_RESPONSE_INSTANCE*)malloc(sizeof(SASL_RESPONSE_INSTANCE));
+		SASL_RESPONSE_INSTANCE* sasl_response_instance = (SASL_RESPONSE_INSTANCE*)amqpalloc_malloc(sizeof(SASL_RESPONSE_INSTANCE));
 		if (sasl_response_instance != NULL)
 		{
 			sasl_response_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(67);
@@ -7534,7 +7539,7 @@
 
 	static SASL_OUTCOME_HANDLE sasl_outcome_create_internal(void)
 	{
-		SASL_OUTCOME_INSTANCE* sasl_outcome_instance = (SASL_OUTCOME_INSTANCE*)malloc(sizeof(SASL_OUTCOME_INSTANCE));
+		SASL_OUTCOME_INSTANCE* sasl_outcome_instance = (SASL_OUTCOME_INSTANCE*)amqpalloc_malloc(sizeof(SASL_OUTCOME_INSTANCE));
 		if (sasl_outcome_instance != NULL)
 		{
 			sasl_outcome_instance->composite_value = NULL;
@@ -7545,7 +7550,7 @@
 
 	SASL_OUTCOME_HANDLE sasl_outcome_create(sasl_code code_value)
 	{
-		SASL_OUTCOME_INSTANCE* sasl_outcome_instance = (SASL_OUTCOME_INSTANCE*)malloc(sizeof(SASL_OUTCOME_INSTANCE));
+		SASL_OUTCOME_INSTANCE* sasl_outcome_instance = (SASL_OUTCOME_INSTANCE*)amqpalloc_malloc(sizeof(SASL_OUTCOME_INSTANCE));
 		if (sasl_outcome_instance != NULL)
 		{
 			sasl_outcome_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(68);
@@ -7815,7 +7820,7 @@
 
 	static SOURCE_HANDLE source_create_internal(void)
 	{
-		SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)malloc(sizeof(SOURCE_INSTANCE));
+		SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)amqpalloc_malloc(sizeof(SOURCE_INSTANCE));
 		if (source_instance != NULL)
 		{
 			source_instance->composite_value = NULL;
@@ -7826,7 +7831,7 @@
 
 	SOURCE_HANDLE source_create(void)
 	{
-		SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)malloc(sizeof(SOURCE_INSTANCE));
+		SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)amqpalloc_malloc(sizeof(SOURCE_INSTANCE));
 		if (source_instance != NULL)
 		{
 			source_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(40);
@@ -8755,7 +8760,7 @@
 
 	static TARGET_HANDLE target_create_internal(void)
 	{
-		TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)malloc(sizeof(TARGET_INSTANCE));
+		TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)amqpalloc_malloc(sizeof(TARGET_INSTANCE));
 		if (target_instance != NULL)
 		{
 			target_instance->composite_value = NULL;
@@ -8766,7 +8771,7 @@
 
 	TARGET_HANDLE target_create(void)
 	{
-		TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)malloc(sizeof(TARGET_INSTANCE));
+		TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)amqpalloc_malloc(sizeof(TARGET_INSTANCE));
 		if (target_instance != NULL)
 		{
 			target_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(41);
@@ -9398,7 +9403,7 @@
 
 	static PROPERTIES_HANDLE properties_create_internal(void)
 	{
-		PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)malloc(sizeof(PROPERTIES_INSTANCE));
+		PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)amqpalloc_malloc(sizeof(PROPERTIES_INSTANCE));
 		if (properties_instance != NULL)
 		{
 			properties_instance->composite_value = NULL;
@@ -9409,7 +9414,7 @@
 
 	PROPERTIES_HANDLE properties_create(void)
 	{
-		PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)malloc(sizeof(PROPERTIES_INSTANCE));
+		PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)amqpalloc_malloc(sizeof(PROPERTIES_INSTANCE));
 		if (properties_instance != NULL)
 		{
 			properties_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(115);

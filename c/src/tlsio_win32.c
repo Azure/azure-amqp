@@ -1,7 +1,11 @@
 #define SECURITY_WIN32
 
-#include <stddef.h>
 #include <stdlib.h>
+#ifdef _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
+
+#include <stddef.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include "tlsio.h"
@@ -430,7 +434,7 @@ IO_HANDLE tlsio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 			result->logger_log = logger_log;
 			result->callback_context = NULL;
 
-			result->host_name = (SEC_CHAR*)malloc(sizeof(SEC_CHAR) * (1 + strlen(tls_io_config->hostname)));
+			result->host_name = (SEC_CHAR*)amqpalloc_malloc(sizeof(SEC_CHAR) * (1 + strlen(tls_io_config->hostname)));
 			if (result->host_name == NULL)
 			{
 				amqpalloc_free(result);

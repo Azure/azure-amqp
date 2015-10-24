@@ -1,3 +1,7 @@
+#include <stdlib.h>
+#ifdef _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
 #include <string.h>
 #include "session.h"
 #include "connection.h"
@@ -768,7 +772,7 @@ int session_transfer(LINK_ENDPOINT_HANDLE link_endpoint, TRANSFER_HANDLE transfe
 								}
 
 								transfer_frame_payload_count = temp_current_payload_index - current_payload_index + 1;
-								PAYLOAD* transfer_frame_payloads = (PAYLOAD*)malloc(transfer_frame_payload_count * sizeof(PAYLOAD));
+								PAYLOAD* transfer_frame_payloads = (PAYLOAD*)amqpalloc_malloc(transfer_frame_payload_count * sizeof(PAYLOAD));
 								if (transfer_frame_payloads == NULL)
 								{
 									amqpvalue_destroy(multi_transfer_amqp_value);

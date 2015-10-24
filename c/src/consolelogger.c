@@ -1,3 +1,7 @@
+#include <stdlib.h>
+#ifdef _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
 #include <stdarg.h>
 #include <stdio.h>
 #include "logger.h"

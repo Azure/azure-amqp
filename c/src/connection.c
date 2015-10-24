@@ -1,4 +1,7 @@
 #include <stdlib.h>
+#ifdef _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
 #include <string.h>
 #include "connection.h"
 #include "consolelogger.h"

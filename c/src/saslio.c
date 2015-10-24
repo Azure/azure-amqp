@@ -1,5 +1,8 @@
-#include <stddef.h>
 #include <stdlib.h>
+#ifdef _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
+#include <stddef.h>
 #include <stdio.h>
 #include "saslio.h"
 #include "amqpalloc.h"

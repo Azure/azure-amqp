@@ -1,5 +1,8 @@
-#include <stddef.h>
 #include <stdlib.h>
+#ifdef _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
+#include <stddef.h>
 #include <stdio.h>
 #include "socketio.h"
 #include "winsock2.h"
@@ -55,7 +58,7 @@ IO_HANDLE socketio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 		result = amqpalloc_malloc(sizeof(SOCKET_IO_INSTANCE));
 		if (result != NULL)
 		{
-			result->hostname = (char*)malloc(strlen(socket_io_config->hostname) + 1);
+			result->hostname = (char*)amqpalloc_malloc(strlen(socket_io_config->hostname) + 1);
 			if (result->hostname == NULL)
 			{
 				amqpalloc_free(result);

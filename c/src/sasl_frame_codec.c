@@ -1,5 +1,8 @@
-#include <stdint.h>
 #include <stdlib.h>
+#ifdef _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
+#include <stdint.h>
 #include <stddef.h>
 #include "sasl_frame_codec.h"
 #include "frame_codec.h"

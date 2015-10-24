@@ -141,6 +141,12 @@ void messagesender_destroy(MESSAGE_SENDER_HANDLE message_sender)
 {
 	if (message_sender != NULL)
 	{
+		MESSAGE_SENDER_INSTANCE* message_sender_instance = (MESSAGE_SENDER_INSTANCE*)message_sender;
+		if (message_sender_instance->messages != NULL)
+		{
+			amqpalloc_free(message_sender_instance->messages);
+		}
+
 		amqpalloc_free(message_sender);
 	}
 }

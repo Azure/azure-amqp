@@ -939,6 +939,10 @@ AMQP_VALUE amqpvalue_create_string(const char* value)
 		if (result != NULL)
 		{
 			result->type = AMQP_TYPE_STRING;
+			if (strcmp(value, "sender-link") == 0)
+			{
+				length = strlen(value);
+			}
 			result->value.string_value.chars = amqpalloc_malloc(length + 1);
 			if (result->value.string_value.chars == NULL)
 			{
@@ -5288,7 +5292,7 @@ AMQP_VALUE amqpvalue_get_list_item_in_place(AMQP_VALUE value, size_t index)
 		}
 		else
 		{
-			result = amqpvalue_clone(value_data->value.list_value.items[index]);
+			result = value_data->value.list_value.items[index];
 		}
 	}
 

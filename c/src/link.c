@@ -222,6 +222,8 @@ static int send_attach(LINK_INSTANCE* link, const char* name, handle handle, rol
 
 			amqpvalue_destroy(attach_performative_value);
 		}
+
+		attach_destroy(attach);
 	}
 
 	return result;
@@ -350,53 +352,60 @@ int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, O
 	{
 		TRANSFER_HANDLE transfer = transfer_create(0);
 
-		unsigned char delivery_tag_bytes[sizeof(int)];
-		memcpy(delivery_tag_bytes, &link->delivery_tag_no, sizeof(int));
-		link->delivery_tag_no++;
-		delivery_tag delivery_tag = { &delivery_tag_bytes, sizeof(delivery_tag_bytes) };
-		transfer_set_delivery_tag(transfer, delivery_tag);
-		transfer_set_message_format(transfer, 0);
-		transfer_set_settled(transfer, false);
-		transfer_set_more(transfer, false);
-		AMQP_VALUE transfer_value = amqpvalue_create_transfer(transfer);
-
-		DELIVERY_INSTANCE* new_pending_deliveries = amqpalloc_realloc(link->pending_deliveries, (link->pending_delivery_count + 1) * sizeof(DELIVERY_INSTANCE));
-		if (new_pending_deliveries == NULL)
+		if (transfer == NULL)
 		{
-			result = __LINE__;
+
 		}
 		else
 		{
-			size_t encoded_size;
-			AMQP_VALUE amqp_value_descriptor = amqpvalue_create_ulong(0x77);
-			amqp_binary binary_value = { payloads[0].bytes, payloads[0].length };
-			AMQP_VALUE amqp_value = amqpvalue_create_described(amqpvalue_clone(amqp_value_descriptor), amqpvalue_create_binary(binary_value));
-			amqpvalue_get_encoded_size(amqp_value, &encoded_size);
-			void* data_bytes = amqpalloc_malloc(encoded_size);
-			PAYLOAD payload = { data_bytes, 0 };
-			(void)amqpvalue_encode(amqp_value, encode_bytes, &payload);
+			unsigned char delivery_tag_bytes[sizeof(int)];
+			memcpy(delivery_tag_bytes, &link->delivery_tag_no, sizeof(int));
+			link->delivery_tag_no++;
+			delivery_tag delivery_tag = { &delivery_tag_bytes, sizeof(delivery_tag_bytes) };
+			transfer_set_delivery_tag(transfer, delivery_tag);
+			transfer_set_message_format(transfer, 0);
+			transfer_set_settled(transfer, false);
+			transfer_set_more(transfer, false);
+			AMQP_VALUE transfer_value = amqpvalue_create_transfer(transfer);
 
-			link->pending_deliveries = new_pending_deliveries;
-
-			/* here we should feed data to the transfer frame */
-			if (session_transfer(link->link_endpoint, transfer, &payload, 1, &link->pending_deliveries[link->pending_delivery_count].delivery_id) != 0)
+			DELIVERY_INSTANCE* new_pending_deliveries = amqpalloc_realloc(link->pending_deliveries, (link->pending_delivery_count + 1) * sizeof(DELIVERY_INSTANCE));
+			if (new_pending_deliveries == NULL)
 			{
 				result = __LINE__;
 			}
 			else
 			{
-				link->pending_deliveries[link->pending_delivery_count].on_delivery_settled = on_delivery_settled;
-				link->pending_deliveries[link->pending_delivery_count].callback_context = callback_context;
-				link->pending_delivery_count++;
+				size_t encoded_size;
+				AMQP_VALUE amqp_value_descriptor = amqpvalue_create_ulong(0x77);
+				amqp_binary binary_value = { payloads[0].bytes, payloads[0].length };
+				AMQP_VALUE amqp_value = amqpvalue_create_described(amqpvalue_clone(amqp_value_descriptor), amqpvalue_create_binary(binary_value));
+				amqpvalue_get_encoded_size(amqp_value, &encoded_size);
+				void* data_bytes = amqpalloc_malloc(encoded_size);
+				PAYLOAD payload = { data_bytes, 0 };
+				(void)amqpvalue_encode(amqp_value, encode_bytes, &payload);
 
-				result = 0;
+				link->pending_deliveries = new_pending_deliveries;
+
+				/* here we should feed data to the transfer frame */
+				if (session_transfer(link->link_endpoint, transfer, &payload, 1, &link->pending_deliveries[link->pending_delivery_count].delivery_id) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					link->pending_deliveries[link->pending_delivery_count].on_delivery_settled = on_delivery_settled;
+					link->pending_deliveries[link->pending_delivery_count].callback_context = callback_context;
+					link->pending_delivery_count++;
+
+					result = 0;
+				}
+
+				amqpvalue_destroy(amqp_value);
+				amqpvalue_destroy(amqp_value_descriptor);
 			}
 
-			amqpvalue_destroy(amqp_value);
-			amqpvalue_destroy(amqp_value_descriptor);
+			transfer_destroy(transfer);
 		}
-
-		transfer_destroy(transfer);
 	}
 
 	return result;

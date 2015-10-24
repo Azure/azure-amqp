@@ -215,7 +215,6 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 			if (attach_get_name(attach_handle, &name) != 0)
 			{
 				/* error */
-				attach_destroy(attach_handle);
 			}
 			else
 			{
@@ -229,9 +228,9 @@ static void on_frame_received(void* context, AMQP_VALUE performative, uint32_t p
 					link_endpoint->incoming_handle = 0;
 					link_endpoint->frame_received_callback(link_endpoint->callback_context, performative, payload_size, payload_bytes);
 				}
-
-				attach_destroy(attach_handle);
 			}
+
+			attach_destroy(attach_handle);
 		}
 	}
 	else if (is_detach_type_by_descriptor(descriptor))

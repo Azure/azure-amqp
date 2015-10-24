@@ -68,6 +68,10 @@ int main(int argc, char** argv)
 		amqpvalue_destroy(source);
 		amqpvalue_destroy(target);
 
+		message = message_create();
+		message_set_to(message, "pupupupu.servicebus.windows.net");
+		message_set_body_amqp_data(message, binary_data);
+
         /* create a message sender */
         message_sender = messagesender_create(link);
 		if (message_sender != NULL)
@@ -76,10 +80,6 @@ int main(int argc, char** argv)
 
 			for (i = 0; i < 1; i++)
 			{
-				message = message_create();
-				message_set_to(message, "pupupupu.servicebus.windows.net");
-				message_set_body_amqp_data(message, binary_data);
-
 				(void)messagesender_send(message_sender, message, on_message_send_complete, message);
 			}
 

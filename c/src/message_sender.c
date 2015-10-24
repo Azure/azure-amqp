@@ -92,7 +92,7 @@ static void send_all_pending_messages(MESSAGE_SENDER_INSTANCE* message_sender_in
 				}
 				else
 				{
-					message_sender_instance->messages[message_sender_instance->message_count].message_send_state = MESSAGE_SEND_STATE_PENDING;
+					message_sender_instance->messages[i].message_send_state = MESSAGE_SEND_STATE_PENDING;
 				}
 			}
 		}

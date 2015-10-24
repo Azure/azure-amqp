@@ -31,6 +31,16 @@ static const IO_INTERFACE_DESCRIPTION socket_io_interface_description =
 	socketio_dowork
 };
 
+static void set_io_state(SOCKET_IO_INSTANCE* socket_io_instance, IO_STATE io_state)
+{
+	IO_STATE previous_state = socket_io_instance->io_state;
+	socket_io_instance->io_state = io_state;
+	if (socket_io_instance->on_io_state_changed != NULL)
+	{
+		socket_io_instance->on_io_state_changed(socket_io_instance->callback_context, io_state, previous_state);
+	}
+}
+
 IO_HANDLE socketio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 {
 	SOCKETIO_CONFIG* socket_io_config = io_create_parameters;
@@ -99,7 +109,7 @@ int socketio_open(IO_HANDLE socket_io, ON_BYTES_RECEIVED on_bytes_received, ON_I
 		socket_io_instance->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		if (socket_io_instance->socket == INVALID_SOCKET)
 		{
-			socket_io_instance->io_state = IO_STATE_ERROR;
+			set_io_state(socket_io_instance, IO_STATE_ERROR);
 			result = __LINE__;
 		}
 		else
@@ -108,7 +118,7 @@ int socketio_open(IO_HANDLE socket_io, ON_BYTES_RECEIVED on_bytes_received, ON_I
 			if (getaddrinfo(socket_io_instance->hostname, portString, NULL, &addrInfo) != 0)
 			{
 				closesocket(socket_io_instance->socket);
-				socket_io_instance->io_state = IO_STATE_ERROR;
+				set_io_state(socket_io_instance, IO_STATE_ERROR);
 				socket_io_instance->socket = INVALID_SOCKET;
 				result = __LINE__;
 			}
@@ -119,14 +129,14 @@ int socketio_open(IO_HANDLE socket_io, ON_BYTES_RECEIVED on_bytes_received, ON_I
 				if (connect(socket_io_instance->socket, addrInfo->ai_addr, sizeof(*addrInfo->ai_addr)) != 0)
 				{
 					closesocket(socket_io_instance->socket);
-					socket_io_instance->io_state = IO_STATE_ERROR;
+					set_io_state(socket_io_instance, IO_STATE_ERROR);
 					socket_io_instance->socket = INVALID_SOCKET;
 					result = __LINE__;
 				}
 				else if (ioctlsocket(socket_io_instance->socket, FIONBIO, &iMode))
 				{
 					closesocket(socket_io_instance->socket);
-					socket_io_instance->io_state = IO_STATE_ERROR;
+					set_io_state(socket_io_instance, IO_STATE_ERROR);
 					socket_io_instance->socket = INVALID_SOCKET;
 					result = __LINE__;
 				}
@@ -136,7 +146,7 @@ int socketio_open(IO_HANDLE socket_io, ON_BYTES_RECEIVED on_bytes_received, ON_I
 					socket_io_instance->on_io_state_changed = on_io_state_changed;
 					socket_io_instance->callback_context = callback_context;
 
-					socket_io_instance->io_state = IO_STATE_OPEN;
+					set_io_state(socket_io_instance, IO_STATE_OPEN);
 					result = 0;
 				}
 			}
@@ -160,7 +170,7 @@ int socketio_close(IO_HANDLE socket_io)
 
 		closesocket(socket_io_instance->socket);
 		socket_io_instance->socket = INVALID_SOCKET;
-		socket_io_instance->io_state = IO_STATE_NOT_OPEN;
+		set_io_state(socket_io_instance, IO_STATE_NOT_OPEN);
 		result = 0;
 	}
 

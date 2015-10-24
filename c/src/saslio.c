@@ -56,17 +56,27 @@ static const IO_INTERFACE_DESCRIPTION sasl_io_interface_description =
 
 const unsigned char sasl_header[] = { 'A', 'M', 'Q', 'P', 3, 1, 0, 0 };
 
-static int send_sasl_header(SASL_IO_INSTANCE* sasl_io)
+static void set_io_state(SASL_IO_INSTANCE* sasl_io_instance, IO_STATE io_state)
+{
+	IO_STATE previous_state = sasl_io_instance->io_state;
+	sasl_io_instance->io_state = io_state;
+	if (sasl_io_instance->on_io_state_changed != NULL)
+	{
+		sasl_io_instance->on_io_state_changed(sasl_io_instance->callback_context, io_state, previous_state);
+	}
+}
+
+static int send_sasl_header(SASL_IO_INSTANCE* sasl_io_instance)
 {
 	int result;
 
-	if (io_send(sasl_io->socket_io, sasl_header, sizeof(sasl_header)) != 0)
+	if (io_send(sasl_io_instance->socket_io, sasl_header, sizeof(sasl_header)) != 0)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		LOG(sasl_io->logger_log, LOG_LINE, "-> Header (AMQP 3.1.0.0)");
+		LOG(sasl_io_instance->logger_log, LOG_LINE, "-> Header (AMQP 3.1.0.0)");
 
 		result = 0;
 	}
@@ -346,7 +356,7 @@ static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
 		if (sasl_io->sasl_client_negotiation_state != SASL_CLIENT_NEGOTIATION_ERROR)
 		{
 			sasl_io->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD;
-			sasl_io->io_state = IO_STATE_OPEN;
+			set_io_state(sasl_io, IO_STATE_OPEN);
 		}
 
 		break;
@@ -411,7 +421,7 @@ IO_HANDLE saslio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 
 						result->sasl_io_state = SASL_IO_IDLE;
 						result->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_NOT_STARTED;
-						result->io_state = IO_STATE_NOT_OPEN;
+						set_io_state(result, IO_STATE_NOT_OPEN);
 					}
 				}
 			}
@@ -455,7 +465,7 @@ int saslio_open(IO_HANDLE sasl_io, ON_BYTES_RECEIVED on_bytes_received, ON_IO_ST
 		}
 		else
 		{
-			sasl_io_instance->io_state = IO_STATE_OPENING;
+			set_io_state(sasl_io_instance, IO_STATE_OPENING);
 			result = 0;
 		}
 	}
@@ -480,7 +490,7 @@ int saslio_close(IO_HANDLE sasl_io)
 		}
 		else
 		{
-			sasl_io_instance->io_state = IO_STATE_NOT_OPEN;
+			set_io_state(sasl_io_instance, IO_STATE_NOT_OPEN);
 			result = 0;
 		}
 	}

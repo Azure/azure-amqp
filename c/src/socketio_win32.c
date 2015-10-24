@@ -10,9 +10,10 @@
 typedef struct SOCKET_IO_INSTANCE_TAG
 {
 	SOCKET socket;
-	IO_RECEIVE_CALLBACK receive_callback;
+	ON_BYTES_RECEIVED on_bytes_received;
+	ON_IO_STATE_CHANGED on_io_state_changed;
 	LOGGER_LOG logger_log;
-	void* context;
+	void* callback_context;
 	char* hostname;
 	int port;
 	IO_STATE io_state;
@@ -55,11 +56,11 @@ IO_HANDLE socketio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 			{
 				strcpy(result->hostname, socket_io_config->hostname);
 				result->port = socket_io_config->port;
-				result->receive_callback = NULL;
+				result->on_bytes_received = NULL;
+				result->on_io_state_changed = NULL;
 				result->logger_log = logger_log;
-				result->receive_callback = NULL;
 				result->socket = INVALID_SOCKET;
-				result->context = NULL;
+				result->callback_context = NULL;
 				result->pending_send_byte_count = 0;
 				result->pending_send_bytes = NULL;
 				result->io_state = IO_STATE_NOT_OPEN;
@@ -82,7 +83,7 @@ void socketio_destroy(IO_HANDLE socket_io)
 	}
 }
 
-int socketio_open(IO_HANDLE socket_io, IO_RECEIVE_CALLBACK receive_callback, void* context)
+int socketio_open(IO_HANDLE socket_io, ON_BYTES_RECEIVED on_bytes_received, ON_IO_STATE_CHANGED on_io_state_changed, void* callback_context)
 {
 	int result;
 
@@ -132,8 +133,9 @@ int socketio_open(IO_HANDLE socket_io, IO_RECEIVE_CALLBACK receive_callback, voi
 				}
 				else
 				{
-					socket_io_instance->receive_callback = receive_callback;
-					socket_io_instance->context = context;
+					socket_io_instance->on_bytes_received = on_bytes_received;
+					socket_io_instance->on_io_state_changed = on_io_state_changed;
+					socket_io_instance->callback_context = callback_context;
 
 					socket_io_instance->io_state = IO_STATE_OPEN;
 					result = 0;
@@ -273,10 +275,10 @@ void socketio_dowork(IO_HANDLE socket_io)
 						LOG(socket_io_instance->logger_log, 0, "<-%02x ", (unsigned char)recv_bytes[i]);
 					}
 
-					if (socket_io_instance->receive_callback != NULL)
+					if (socket_io_instance->on_bytes_received != NULL)
 					{
 						/* explictly ignoring here the result of the callback */
-						(void)socket_io_instance->receive_callback(socket_io_instance->context, recv_bytes, received);
+						(void)socket_io_instance->on_bytes_received(socket_io_instance->callback_context, recv_bytes, received);
 					}
 				}
 			}

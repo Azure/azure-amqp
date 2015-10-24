@@ -31,9 +31,10 @@ typedef enum SASL_CLIENT_NEGOTIATION_STATE_TAG
 typedef struct SASL_IO_INSTANCE_TAG
 {
 	IO_HANDLE socket_io;
-	IO_RECEIVE_CALLBACK receive_callback;
+	ON_BYTES_RECEIVED on_bytes_received;
+	ON_IO_STATE_CHANGED on_io_state_changed;
 	LOGGER_LOG logger_log;
-	void* context;
+	void* callback_context;
 	SASL_IO_STATE sasl_io_state;
 	SASL_CLIENT_NEGOTIATION_STATE sasl_client_negotiation_state;
 	size_t header_bytes_received;
@@ -106,7 +107,10 @@ static int saslio_receive_byte(SASL_IO_INSTANCE* sasl_io, unsigned char b)
 
 		case SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD:
 			/* simply pass bytes to the upper layer */
-			sasl_io->receive_callback(sasl_io->context, &b, 1);
+			if (sasl_io->on_bytes_received != NULL)
+			{
+				sasl_io->on_bytes_received(sasl_io->callback_context, &b, 1);
+			}
 			result = 0;
 			break;
 		}
@@ -158,7 +162,7 @@ static int saslio_receive_byte(SASL_IO_INSTANCE* sasl_io, unsigned char b)
 	return result;
 }
 
-static void saslio_receive_bytes(void* context, const void* buffer, size_t size)
+static void saslio_on_bytes_received(void* context, const void* buffer, size_t size)
 {
 	SASL_IO_INSTANCE* sasl_io_instance = (SASL_IO_INSTANCE*)context;
 
@@ -166,7 +170,10 @@ static void saslio_receive_bytes(void* context, const void* buffer, size_t size)
 		(sasl_io_instance->sasl_client_negotiation_state == SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD))
 	{
 		/* simply pass bytes to the upper layer */
-		sasl_io_instance->receive_callback(sasl_io_instance->context, buffer, size);
+		if (sasl_io_instance->on_bytes_received != NULL)
+		{
+			sasl_io_instance->on_bytes_received(sasl_io_instance->callback_context, buffer, size);
+		}
 	}
 	else
 	{
@@ -180,6 +187,10 @@ static void saslio_receive_bytes(void* context, const void* buffer, size_t size)
 			}
 		}
 	}
+}
+
+static void saslio_on_io_state_changed(void* context, IO_STATE new_io_state, IO_STATE previous_io_state)
+{
 }
 
 static int send_sasl_init(SASL_IO_INSTANCE* sasl_io)
@@ -326,10 +337,10 @@ IO_HANDLE saslio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 					}
 					else
 					{
-						result->receive_callback = NULL;
+						result->on_bytes_received = NULL;
+						result->on_io_state_changed = NULL;
 						result->logger_log = logger_log;
-						result->receive_callback = NULL;
-						result->context = NULL;
+						result->callback_context = NULL;
 						result->header_bytes_received = 0;
 						result->sasl_mechanism = sasl_io_config->sasl_mechanism;
 
@@ -357,7 +368,7 @@ void saslio_destroy(IO_HANDLE sasl_io)
 	}
 }
 
-int saslio_open(IO_HANDLE sasl_io, IO_RECEIVE_CALLBACK receive_callback, void* context)
+int saslio_open(IO_HANDLE sasl_io, ON_BYTES_RECEIVED on_bytes_received, ON_IO_STATE_CHANGED on_io_state_changed, void* callback_context)
 {
 	int result = 0;
 
@@ -369,10 +380,11 @@ int saslio_open(IO_HANDLE sasl_io, IO_RECEIVE_CALLBACK receive_callback, void* c
 	{
 		SASL_IO_INSTANCE* sasl_io_instance = (SASL_IO_INSTANCE*)sasl_io;
 
-		sasl_io_instance->receive_callback = receive_callback;
-		sasl_io_instance->context = context;
+		sasl_io_instance->on_bytes_received = on_bytes_received;
+		sasl_io_instance->on_io_state_changed = on_io_state_changed;
+		sasl_io_instance->callback_context = callback_context;
 
-		if (io_open(sasl_io_instance->socket_io, saslio_receive_bytes, sasl_io_instance) != 0)
+		if (io_open(sasl_io_instance->socket_io, saslio_on_bytes_received, saslio_on_io_state_changed, sasl_io_instance) != 0)
 		{
 			result = __LINE__;
 		}

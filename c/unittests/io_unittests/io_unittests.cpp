@@ -19,7 +19,7 @@ public:
 	MOCK_METHOD_END(CONCRETE_IO_HANDLE, TEST_CONCRETE_IO_HANDLE);
 	MOCK_STATIC_METHOD_1(, void, test_io_destroy, CONCRETE_IO_HANDLE, handle)
 	MOCK_VOID_METHOD_END();
-	MOCK_STATIC_METHOD_3(, int, test_io_open, CONCRETE_IO_HANDLE, handle, IO_RECEIVE_CALLBACK, receive_callback, void*, receive_callback_context)
+	MOCK_STATIC_METHOD_4(, int, test_io_open, CONCRETE_IO_HANDLE, handle, ON_BYTES_RECEIVED, on_bytes_received, ON_IO_STATE_CHANGED, on_io_state_changed, void*, callback_context)
 	MOCK_METHOD_END(int, 0);
 	MOCK_STATIC_METHOD_1(, int, test_io_close, CONCRETE_IO_HANDLE, handle)
 	MOCK_METHOD_END(int, 0);
@@ -36,16 +36,20 @@ extern "C"
 
 	DECLARE_GLOBAL_MOCK_METHOD_2(io_mocks, , CONCRETE_IO_HANDLE, test_io_create, void*, io_create_parameters, LOGGER_LOG, logger_log);
 	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , void, test_io_destroy, CONCRETE_IO_HANDLE, handle);
-	DECLARE_GLOBAL_MOCK_METHOD_3(io_mocks, , int, test_io_open, CONCRETE_IO_HANDLE, handle, IO_RECEIVE_CALLBACK, receive_callback, void*, receive_callback_context);
+	DECLARE_GLOBAL_MOCK_METHOD_4(io_mocks, , int, test_io_open, CONCRETE_IO_HANDLE, handle, ON_BYTES_RECEIVED, on_bytes_received, ON_IO_STATE_CHANGED, on_io_state_changed, void*, callback_context);
 	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , int, test_io_close, CONCRETE_IO_HANDLE, handle);
 	DECLARE_GLOBAL_MOCK_METHOD_3(io_mocks, , int, test_io_send, CONCRETE_IO_HANDLE, handle, const void*, buffer, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(io_mocks, , void, test_io_dowork, CONCRETE_IO_HANDLE, handle);
 
-	void test_receive_callback(void* context, const void* buffer, size_t size)
+	void test_on_bytes_received(void* context, const void* buffer, size_t size)
 	{
 		(void)context;
 		(void)buffer;
 		(void)size;
+	}
+
+	void test_on_io_state_changed(void* context, IO_STATE new_io_state, IO_STATE previous_io_state)
+	{
 	}
 
 	void test_logger_log(unsigned int options, char* format, ...)
@@ -362,10 +366,10 @@ TEST_FUNCTION(io_open_calls_the_underlying_concrete_io_open_and_succeeds)
 	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL);
 	mocks.ResetAllCalls();
 
-	STRICT_EXPECTED_CALL(mocks, test_io_open(TEST_CONCRETE_IO_HANDLE, test_receive_callback, (void*)0x4242));
+	STRICT_EXPECTED_CALL(mocks, test_io_open(TEST_CONCRETE_IO_HANDLE, test_on_bytes_received, test_on_io_state_changed, (void*)0x4242));
 
 	// act
-	int result = io_open(handle, test_receive_callback, (void*)0x4242);
+	int result = io_open(handle, test_on_bytes_received, test_on_io_state_changed, (void*)0x4242);
 
 	// assert
 	ASSERT_ARE_EQUAL(int, 0, result);
@@ -382,7 +386,7 @@ TEST_FUNCTION(io_open_with_NULL_handle_fails)
 	io_mocks mocks;
 
 	// act
-	int result = io_open(NULL, test_receive_callback, (void*)0x4242);
+	int result = io_open(NULL, test_on_bytes_received, test_on_io_state_changed, (void*)0x4242);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);
@@ -396,11 +400,11 @@ TEST_FUNCTION(when_the_concrete_io_open_fails_then_io_open_fails)
 	IO_HANDLE handle = io_create(&test_io_description, NULL, NULL);
 	mocks.ResetAllCalls();
 
-	STRICT_EXPECTED_CALL(mocks, test_io_open(TEST_CONCRETE_IO_HANDLE, test_receive_callback, (void*)0x4242))
+	STRICT_EXPECTED_CALL(mocks, test_io_open(TEST_CONCRETE_IO_HANDLE, test_on_bytes_received, test_on_io_state_changed, (void*)0x4242))
 		.SetReturn(1);
 
 	// act
-	int result = io_open(handle, test_receive_callback, (void*)0x4242);
+	int result = io_open(handle, test_on_bytes_received, test_on_io_state_changed, (void*)0x4242);
 
 	// assert
 	ASSERT_ARE_NOT_EQUAL(int, 0, result);

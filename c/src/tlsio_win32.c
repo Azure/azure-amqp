@@ -24,8 +24,9 @@ typedef enum TLS_STATE_TAG
 typedef struct TLS_IO_INSTANCE_TAG
 {
 	IO_HANDLE socket_io;
-	IO_RECEIVE_CALLBACK receive_callback;
-	void* context;
+	ON_BYTES_RECEIVED on_bytes_received;
+	ON_IO_STATE_CHANGED on_io_state_changed;
+	void* callback_context;
 	LOGGER_LOG logger_log;
 	CtxtHandle security_context;
 	TLS_STATE tls_state;
@@ -96,7 +97,7 @@ static int set_receive_buffer(TLS_IO_INSTANCE* tls_io_instance, size_t buffer_si
 	return result;
 }
 
-static void tlsio_receive_bytes(void* context, const void* buffer, size_t size)
+static void tlsio_on_bytes_received(void* context, const void* buffer, size_t size)
 {
 	TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)context;
 
@@ -278,7 +279,10 @@ static void tlsio_receive_bytes(void* context, const void* buffer, size_t size)
 						}
 
 						/* notify of the received data */
-						tls_io_instance->receive_callback(tls_io_instance->context, security_buffers[1].pvBuffer, security_buffers[1].cbBuffer);
+						if (tls_io_instance->on_bytes_received != NULL)
+						{
+							tls_io_instance->on_bytes_received(tls_io_instance->callback_context, security_buffers[1].pvBuffer, security_buffers[1].cbBuffer);
+						}
 
 						memmove(tls_io_instance->received_bytes, tls_io_instance->received_bytes + tls_io_instance->consumed_bytes, tls_io_instance->received_byte_count - tls_io_instance->consumed_bytes);
 						tls_io_instance->received_byte_count -= tls_io_instance->consumed_bytes;
@@ -307,6 +311,10 @@ static void tlsio_receive_bytes(void* context, const void* buffer, size_t size)
 	}
 }
 
+static void tlsio_on_io_state_changed(void* context, IO_STATE new_io_state, IO_STATE previous_io_state)
+{
+}
+
 IO_HANDLE tlsio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 {
 	TLSIO_CONFIG* tls_io_config = io_create_parameters;
@@ -326,10 +334,10 @@ IO_HANDLE tlsio_create(void* io_create_parameters, LOGGER_LOG logger_log)
 			socketio_config.hostname = tls_io_config->hostname;
 			socketio_config.port = tls_io_config->port;
 
-			result->receive_callback = NULL;
+			result->on_bytes_received = NULL;
+			result->on_io_state_changed = NULL;
 			result->logger_log = logger_log;
-			result->receive_callback = NULL;
-			result->context = NULL;
+			result->callback_context = NULL;
 
 			result->host_name = (SEC_CHAR*)malloc(sizeof(SEC_CHAR) * (1 + strlen(tls_io_config->hostname)));
 			if (result->host_name == NULL)
@@ -390,7 +398,7 @@ void tlsio_destroy(IO_HANDLE tls_io)
 	}
 }
 
-int tlsio_open(IO_HANDLE tls_io, IO_RECEIVE_CALLBACK receive_callback, void* context)
+int tlsio_open(IO_HANDLE tls_io, ON_BYTES_RECEIVED on_bytes_received, ON_IO_STATE_CHANGED on_io_state_changed, void* callback_context)
 {
 	int result;
 
@@ -408,10 +416,11 @@ int tlsio_open(IO_HANDLE tls_io, IO_RECEIVE_CALLBACK receive_callback, void* con
 		}
 		else
 		{
-			tls_io_instance->receive_callback = receive_callback;
-			tls_io_instance->context = context;
+			tls_io_instance->on_bytes_received = on_bytes_received;
+			tls_io_instance->on_io_state_changed = on_io_state_changed;
+			tls_io_instance->callback_context = callback_context;
 
-			if (io_open(tls_io_instance->socket_io, tlsio_receive_bytes, tls_io_instance) != 0)
+			if (io_open(tls_io_instance->socket_io, tlsio_on_bytes_received, tlsio_on_io_state_changed, tls_io_instance) != 0)
 			{
 				tls_io_instance->io_state = IO_STATE_ERROR;
 				result = __LINE__;

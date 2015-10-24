@@ -15,8 +15,6 @@
 
 const IO_INTERFACE_DESCRIPTION test_io_interface_description = { 0 };
 
-static IO_RECEIVE_CALLBACK io_receive_callback;
-static void* io_receive_callback_context;
 static const void** list_items = NULL;
 static size_t list_item_count = 0;
 static unsigned char* sent_io_bytes;

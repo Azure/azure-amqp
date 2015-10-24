@@ -62,7 +62,7 @@ void io_destroy(IO_HANDLE io)
 	}
 }
 
-int io_open(IO_HANDLE io, IO_RECEIVE_CALLBACK receive_callback, void* receive_callback_context)
+int io_open(IO_HANDLE io, ON_BYTES_RECEIVED on_bytes_received, ON_IO_STATE_CHANGED on_io_state_changed, void* callback_context)
 {
 	int result;
 
@@ -76,7 +76,7 @@ int io_open(IO_HANDLE io, IO_RECEIVE_CALLBACK receive_callback, void* receive_ca
 		IO_INSTANCE* io_instance = (IO_INSTANCE*)io;
 
 		/* Codes_SRS_IO_01_019: [io_open shall call the specific concrete_io_open function specified in io_create, passing the receive_callback and receive_callback_context arguments.] */
-		if (io_instance->io_interface_description->concrete_io_open(io_instance->concrete_io_handle, receive_callback, receive_callback_context) != 0)
+		if (io_instance->io_interface_description->concrete_io_open(io_instance->concrete_io_handle, on_bytes_received, on_io_state_changed, callback_context) != 0)
 		{
 			/* Codes_SRS_IO_01_022: [If the underlying concrete_io_open fails, io_open shall return a non-zero value.] */
 			result = __LINE__;

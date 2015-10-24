@@ -414,7 +414,7 @@ static int connection_byte_received(CONNECTION_INSTANCE* connection_instance, un
 	return result;
 }
 
-static void connection_receive_callback(void* context, const void* buffer, size_t size)
+static void connection_on_bytes_received(void* context, const void* buffer, size_t size)
 {
 	size_t i;
 
@@ -425,6 +425,10 @@ static void connection_receive_callback(void* context, const void* buffer, size_
 			break;
 		}
 	}
+}
+
+static void connection_on_io_state_changed(void* context, IO_STATE new_io_state, IO_STATE previous_io_state)
+{
 }
 
 static void on_empty_amqp_frame_received(void* context, uint16_t channel)
@@ -967,7 +971,7 @@ void connection_dowork(CONNECTION_HANDLE connection)
 		if (!connection_instance->is_io_open)
 		{
 			/* Codes_SRS_CONNECTION_01_203: [If the io has not been open before is IO_STATE_NOT_OPEN, connection_dowork shall attempt to open the io by calling io_open.] */
-			if (io_open(connection_instance->io, connection_receive_callback, connection_instance) != 0)
+			if (io_open(connection_instance->io, connection_on_bytes_received, connection_on_io_state_changed, connection_instance) != 0)
 			{
 				/* Codes_SRS_CONNECTION_01_204: [If io_open_fails, no more work shall be done by connection_dowork and the connection shall be consideren in the END state.] */
 				connection_set_state(connection_instance, CONNECTION_STATE_END);

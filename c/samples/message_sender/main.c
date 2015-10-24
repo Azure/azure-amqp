@@ -69,7 +69,7 @@ int main(int argc, char** argv)
 		amqpvalue_destroy(target);
 
         /* create a message sender */
-/*        message_sender = messagesender_create(link);
+        message_sender = messagesender_create(link);
 		if (message_sender != NULL)
 		{
 			uint32_t i;
@@ -106,7 +106,7 @@ int main(int argc, char** argv)
 		}
 		
 		message_destroy(message);
-		messagesender_destroy(message_sender);*/
+		messagesender_destroy(message_sender);
 		link_destroy(link);
 		session_destroy(session);
 		connection_destroy(connection);

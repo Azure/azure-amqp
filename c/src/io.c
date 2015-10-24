@@ -154,20 +154,3 @@ void io_dowork(IO_HANDLE io)
 		io_instance->io_interface_description->concrete_io_dowork(io_instance->concrete_io_handle);
 	}
 }
-
-IO_STATE io_get_state(IO_HANDLE io)
-{
-	IO_STATE result;
-
-	if (io == NULL)
-	{
-		result = IO_STATE_ERROR;
-	}
-	else
-	{
-		IO_INSTANCE* io_instance = (IO_INSTANCE*)io;
-		result = io_instance->io_interface_description->concrete_io_get_state(io_instance->concrete_io_handle);
-	}
-
-	return result;
-}

@@ -28,8 +28,7 @@ static const IO_INTERFACE_DESCRIPTION socket_io_interface_description =
 	socketio_open,
 	socketio_close,
 	socketio_send,
-	socketio_dowork,
-	socketio_get_state
+	socketio_dowork
 };
 
 IO_HANDLE socketio_create(void* io_create_parameters, LOGGER_LOG logger_log)
@@ -284,23 +283,6 @@ void socketio_dowork(IO_HANDLE socket_io)
 			}
 		}
 	}
-}
-
-IO_STATE socketio_get_state(IO_HANDLE socket_io)
-{
-	IO_STATE result;
-
-	if (socket_io == NULL)
-	{
-		result = IO_STATE_ERROR;
-	}
-	else
-	{
-		SOCKET_IO_INSTANCE* socket_io_instance = (SOCKET_IO_INSTANCE*)socket_io;
-		result = socket_io_instance->io_state;
-	}
-
-	return result;
 }
 
 const IO_INTERFACE_DESCRIPTION* socketio_get_interface_description(void)

@@ -30,7 +30,6 @@ extern "C" {
 	typedef int(*IO_CLOSE)(CONCRETE_IO_HANDLE handle);
 	typedef int(*IO_SEND)(CONCRETE_IO_HANDLE handle, const void* buffer, size_t size);
 	typedef void(*IO_DOWORK)(CONCRETE_IO_HANDLE handle);
-	typedef IO_STATE(*IO_GETSTATE)(CONCRETE_IO_HANDLE handle);
 
 	typedef struct IO_INTERFACE_DESCRIPTION_TAG
 	{
@@ -40,7 +39,6 @@ extern "C" {
 		IO_CLOSE concrete_io_close;
 		IO_SEND concrete_io_send;
 		IO_DOWORK concrete_io_dowork;
-		IO_GETSTATE concrete_io_get_state;
 	} IO_INTERFACE_DESCRIPTION;
 
 	extern IO_HANDLE io_create(const IO_INTERFACE_DESCRIPTION* io_interface_description, const void* io_create_parameters, LOGGER_LOG logger_log);
@@ -49,7 +47,6 @@ extern "C" {
 	extern int io_close(IO_HANDLE handle);
 	extern int io_send(IO_HANDLE handle, const void* buffer, size_t size);
 	extern void io_dowork(IO_HANDLE handle);
-	extern IO_STATE io_get_state(IO_HANDLE handle);
 
 #ifdef __cplusplus
 }

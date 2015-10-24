@@ -51,8 +51,7 @@ static const IO_INTERFACE_DESCRIPTION sasl_io_interface_description =
 	saslio_open,
 	saslio_close,
 	saslio_send,
-	saslio_dowork,
-	saslio_get_state
+	saslio_dowork
 };
 
 const unsigned char sasl_header[] = { 'A', 'M', 'Q', 'P', 3, 1, 0, 0 };
@@ -189,10 +188,6 @@ static void saslio_on_bytes_received(void* context, const void* buffer, size_t s
 	}
 }
 
-static void saslio_on_io_state_changed(void* context, IO_STATE new_io_state, IO_STATE previous_io_state)
-{
-}
-
 static int send_sasl_init(SASL_IO_INSTANCE* sasl_io)
 {
 	int result;
@@ -240,6 +235,76 @@ static int send_sasl_init(SASL_IO_INSTANCE* sasl_io)
 	}
 
 	return result;
+}
+
+static void saslio_on_io_state_changed(void* context, IO_STATE new_io_state, IO_STATE previous_io_state)
+{
+	SASL_IO_INSTANCE* sasl_io_instance = (SASL_IO_INSTANCE*)context;
+
+	if (new_io_state == IO_STATE_OPEN)
+	{
+		switch (sasl_io_instance->sasl_io_state)
+		{
+		default:
+			break;
+
+		case SASL_IO_IDLE:
+			/* send SASL header */
+			if (send_sasl_header(sasl_io_instance) != 0)
+			{
+				sasl_io_instance->sasl_io_state = SASL_IO_ERROR;
+			}
+			else
+			{
+				sasl_io_instance->sasl_io_state = SASL_IO_HEADER_SENT;
+			}
+			break;
+
+		case SASL_IO_HEADER_RCVD:
+			if (send_sasl_header(sasl_io_instance) != 0)
+			{
+				sasl_io_instance->sasl_io_state = SASL_IO_ERROR;
+			}
+			else
+			{
+				sasl_io_instance->sasl_io_state = SASL_IO_HEADER_EXCH;
+			}
+			break;
+
+		case SASL_IO_HEADER_EXCH:
+			switch (sasl_io_instance->sasl_client_negotiation_state)
+			{
+			default:
+				break;
+
+			case SASL_CLIENT_NEGOTIATION_NOT_STARTED:
+			case SASL_CLIENT_NEGOTIATION_INIT_SENT:
+			case SASL_CLIENT_NEGOTIATION_RESPONSE_SENT:
+				/* do nothing, just wait */
+				break;
+
+			case SASL_CLIENT_NEGOTIATION_MECH_RCVD:
+				if (send_sasl_init(sasl_io_instance) != 0)
+				{
+					sasl_io_instance->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_ERROR;
+				}
+				else
+				{
+					sasl_io_instance->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_INIT_SENT;
+				}
+				break;
+
+			case SASL_CLIENT_NEGOTIATION_CHALLENGE_RCVD:
+				/* we should send the response here */
+				break;
+
+			case SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD:
+				/* SASL negotiated, simply do nothing*/
+				break;
+			}
+			break;
+		}
+	}
 }
 
 static void sasl_frame_received_callback(void* context, AMQP_VALUE sasl_frame)
@@ -463,89 +528,7 @@ void saslio_dowork(IO_HANDLE sasl_io)
 	{
 		SASL_IO_INSTANCE* sasl_io_instance = (SASL_IO_INSTANCE*)sasl_io;
 		io_dowork(sasl_io_instance->socket_io);
-
-		if (io_get_state(sasl_io_instance->socket_io) == IO_STATE_OPEN)
-		{
-			switch (sasl_io_instance->sasl_io_state)
-			{
-			default:
-				break;
-
-			case SASL_IO_IDLE:
-				/* send SASL header */
-				if (send_sasl_header(sasl_io_instance) != 0)
-				{
-					sasl_io_instance->sasl_io_state = SASL_IO_ERROR;
-				}
-				else
-				{
-					sasl_io_instance->sasl_io_state = SASL_IO_HEADER_SENT;
-				}
-				break;
-
-			case SASL_IO_HEADER_RCVD:
-				if (send_sasl_header(sasl_io_instance) != 0)
-				{
-					sasl_io_instance->sasl_io_state = SASL_IO_ERROR;
-				}
-				else
-				{
-					sasl_io_instance->sasl_io_state = SASL_IO_HEADER_EXCH;
-				}
-				break;
-
-			case SASL_IO_HEADER_EXCH:
-				switch (sasl_io_instance->sasl_client_negotiation_state)
-				{
-				default:
-					break;
-
-				case SASL_CLIENT_NEGOTIATION_NOT_STARTED:
-				case SASL_CLIENT_NEGOTIATION_INIT_SENT:
-				case SASL_CLIENT_NEGOTIATION_RESPONSE_SENT:
-					/* do nothing, just wait */
-					break;
-
-				case SASL_CLIENT_NEGOTIATION_MECH_RCVD:
-					if (send_sasl_init(sasl_io_instance) != 0)
-					{
-						sasl_io_instance->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_ERROR;
-					}
-					else
-					{
-						sasl_io_instance->sasl_client_negotiation_state = SASL_CLIENT_NEGOTIATION_INIT_SENT;
-					}
-					break;
-
-				case SASL_CLIENT_NEGOTIATION_CHALLENGE_RCVD:
-					/* we should send the response here */
-					break;
-
-				case SASL_CLIENT_NEGOTIATION_OUTCOME_RCVD:
-					/* SASL negotiated, simply do nothing*/
-					break;
-				}
-				break;
-			}
-		}
 	}
-}
-
-IO_STATE saslio_get_state(IO_HANDLE sasl_io)
-{
-	IO_STATE result;
-
-	if (sasl_io == NULL)
-	{
-		result = IO_STATE_ERROR;
-	}
-	else
-	{
-		SASL_IO_INSTANCE* sasl_io_instance = (SASL_IO_INSTANCE*)sasl_io;
-		result = sasl_io_instance->io_state;
-	}
-
-	return result;
 }
 
 const IO_INTERFACE_DESCRIPTION* saslio_get_interface_description(void)

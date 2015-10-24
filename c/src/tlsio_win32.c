@@ -48,8 +48,7 @@ static const IO_INTERFACE_DESCRIPTION tls_io_interface_description =
 	tlsio_open,
 	tlsio_close,
 	tlsio_send,
-	tlsio_dowork,
-	tlsio_get_state
+	tlsio_dowork
 };
 
 static int resize_receive_buffer(TLS_IO_INSTANCE* tls_io_instance, size_t needed_buffer_size)
@@ -650,23 +649,6 @@ void tlsio_dowork(IO_HANDLE tls_io)
 
 		io_dowork(tls_io_instance->socket_io);
 	}
-}
-
-IO_STATE tlsio_get_state(IO_HANDLE tls_io)
-{
-	IO_STATE result;
-
-	if (tls_io == NULL)
-	{
-		result = IO_STATE_ERROR;
-	}
-	else
-	{
-		TLS_IO_INSTANCE* tls_io_instance = (TLS_IO_INSTANCE*)tls_io;
-		result = tls_io_instance->io_state;
-	}
-
-	return result;
 }
 
 const IO_INTERFACE_DESCRIPTION* tlsio_get_interface_description(void)

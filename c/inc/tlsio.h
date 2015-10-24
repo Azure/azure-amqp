@@ -23,7 +23,6 @@ extern int tlsio_open(IO_HANDLE tls_io, ON_BYTES_RECEIVED on_bytes_received, ON_
 extern int tlsio_close(IO_HANDLE tls_io);
 extern int tlsio_send(IO_HANDLE tls_io, const void* buffer, size_t size);
 extern void tlsio_dowork(IO_HANDLE tls_io);
-extern IO_STATE tlsio_get_state(IO_HANDLE tls_io);
 extern const IO_INTERFACE_DESCRIPTION* tlsio_get_interface_description(void);
 
 #ifdef __cplusplus

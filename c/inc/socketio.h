@@ -23,7 +23,6 @@ extern int socketio_open(IO_HANDLE socket_io, ON_BYTES_RECEIVED on_bytes_receive
 extern int socketio_close(IO_HANDLE socket_io);
 extern int socketio_send(IO_HANDLE socket_io, const void* buffer, size_t size);
 extern void socketio_dowork(IO_HANDLE socket_io);
-extern IO_STATE socketio_get_state(IO_HANDLE socket_io);
 extern const IO_INTERFACE_DESCRIPTION* socketio_get_interface_description(void);
 
 #ifdef __cplusplus

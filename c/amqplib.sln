@@ -24,6 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "requirement_docs", "require
 		doc\io_requirements.docm = doc\io_requirements.docm
 		doc\link_requirements.docm = doc\link_requirements.docm
 		doc\list_requirements.docm = doc\list_requirements.docm
+		doc\message_requirements.docm = doc\message_requirements.docm
 		doc\sasl_frame_codec_requirements.docm = doc\sasl_frame_codec_requirements.docm
 		doc\session_requirements.docm = doc\session_requirements.docm
 	EndProjectSection

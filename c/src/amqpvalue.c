@@ -3116,12 +3116,14 @@ int internal_decoder_decode_bytes(INTERNAL_DECODER_DATA* internal_decoder_data, 
 	}
 	else
 	{
+		result = 0;
 		/* Codes_SRS_AMQPVALUE_01_322: [amqpvalue_decode_bytes shall process the bytes byte by byte, as a stream.] */
 		while ((size > 0) && (internal_decoder_data->decoder_state != DECODER_STATE_DONE))
 		{
 			switch (internal_decoder_data->decoder_state)
 			{
 			default:
+				result = __LINE__;
 				break;
 			case DECODER_STATE_CONSTRUCTOR:
 			{

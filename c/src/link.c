@@ -351,10 +351,9 @@ int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, O
 	else
 	{
 		TRANSFER_HANDLE transfer = transfer_create(0);
-
 		if (transfer == NULL)
 		{
-
+			result = __LINE__;
 		}
 		else
 		{
@@ -369,7 +368,7 @@ int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, O
 			AMQP_VALUE transfer_value = amqpvalue_create_transfer(transfer);
 			if (transfer_value == NULL)
 			{
-
+				result = __LINE__;
 			}
 			else
 			{

@@ -291,7 +291,7 @@ char* amqpvalue_to_string(AMQP_VALUE amqp_value)
 			else
 			{
 				char str_value[25];
-				if ((snprintf(str_value, sizeof(str_value), "%.02F", double_value) < 0) ||
+				if ((snprintf(str_value, sizeof(str_value), "%.02lf", double_value) < 0) ||
 					(string_concat(&result, str_value) != 0))
 				{
 					amqpalloc_free(result);

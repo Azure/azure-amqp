@@ -143,7 +143,11 @@
 		int result;
 		<#= type_name.ToUpper() #>_INSTANCE* <#= type_name.ToLower() #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)<#= type_name #>_create_internal();
 		*<#= type_name.ToLower() #>_handle = <#= type_name.ToLower() #>_instance;
-		if (*<#= type_name.ToLower() #>_handle != NULL)
+		if (*<#= type_name.ToLower() #>_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -251,6 +255,7 @@
 <#						if (field.type.Replace('-', '_').Replace(':', '_') == "*") #>
 <#						{ #>
 				*<#= field_name #>_value = item_value;
+				result = 0;
 <#						} #>
 <#						else #>
 <#						{ #>

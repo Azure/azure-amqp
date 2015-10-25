@@ -108,7 +108,11 @@
 		int result;
 		ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)error_create_internal();
 		*error_handle = error_instance;
-		if (*error_handle != NULL)
+		if (*error_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -493,7 +497,11 @@
 		int result;
 		OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)open_create_internal();
 		*open_handle = open_instance;
-		if (*open_handle != NULL)
+		if (*open_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -1501,7 +1509,11 @@
 		int result;
 		BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)begin_create_internal();
 		*begin_handle = begin_instance;
-		if (*begin_handle != NULL)
+		if (*begin_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -2337,7 +2349,11 @@
 		int result;
 		ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)attach_create_internal();
 		*attach_handle = attach_instance;
-		if (*attach_handle != NULL)
+		if (*attach_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -2985,6 +3001,7 @@
 			else
 			{
 				*source_value = item_value;
+				result = 0;
 			}
 		}
 
@@ -3044,6 +3061,7 @@
 			else
 			{
 				*target_value = item_value;
+				result = 0;
 			}
 		}
 
@@ -3659,7 +3677,11 @@
 		int result;
 		FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)flow_create_internal();
 		*flow_handle = flow_instance;
-		if (*flow_handle != NULL)
+		if (*flow_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -4742,7 +4764,11 @@
 		int result;
 		TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)transfer_create_internal();
 		*transfer_handle = transfer_instance;
-		if (*transfer_handle != NULL)
+		if (*transfer_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -5468,6 +5494,7 @@
 			else
 			{
 				*state_value = item_value;
+				result = 0;
 			}
 		}
 
@@ -5812,7 +5839,11 @@
 		int result;
 		DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)disposition_create_internal();
 		*disposition_handle = disposition_instance;
-		if (*disposition_handle != NULL)
+		if (*disposition_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -6236,6 +6267,7 @@
 			else
 			{
 				*state_value = item_value;
+				result = 0;
 			}
 		}
 
@@ -6441,7 +6473,11 @@
 		int result;
 		DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)detach_create_internal();
 		*detach_handle = detach_instance;
-		if (*detach_handle != NULL)
+		if (*detach_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -6813,7 +6849,11 @@
 		int result;
 		END_INSTANCE* end_instance = (END_INSTANCE*)end_create_internal();
 		*end_handle = end_instance;
-		if (*end_handle != NULL)
+		if (*end_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -7010,7 +7050,11 @@
 		int result;
 		CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)close_create_internal();
 		*close_handle = close_instance;
-		if (*close_handle != NULL)
+		if (*close_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -7220,7 +7264,11 @@
 		int result;
 		SASL_MECHANISMS_INSTANCE* sasl_mechanisms_instance = (SASL_MECHANISMS_INSTANCE*)sasl_mechanisms_create_internal();
 		*sasl_mechanisms_handle = sasl_mechanisms_instance;
-		if (*sasl_mechanisms_handle != NULL)
+		if (*sasl_mechanisms_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -7431,7 +7479,11 @@
 		int result;
 		SASL_INIT_INSTANCE* sasl_init_instance = (SASL_INIT_INSTANCE*)sasl_init_create_internal();
 		*sasl_init_handle = sasl_init_instance;
-		if (*sasl_init_handle != NULL)
+		if (*sasl_init_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -7816,7 +7868,11 @@
 		int result;
 		SASL_CHALLENGE_INSTANCE* sasl_challenge_instance = (SASL_CHALLENGE_INSTANCE*)sasl_challenge_create_internal();
 		*sasl_challenge_handle = sasl_challenge_instance;
-		if (*sasl_challenge_handle != NULL)
+		if (*sasl_challenge_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -8027,7 +8083,11 @@
 		int result;
 		SASL_RESPONSE_INSTANCE* sasl_response_instance = (SASL_RESPONSE_INSTANCE*)sasl_response_create_internal();
 		*sasl_response_handle = sasl_response_instance;
-		if (*sasl_response_handle != NULL)
+		if (*sasl_response_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -8238,7 +8298,11 @@
 		int result;
 		SASL_OUTCOME_INSTANCE* sasl_outcome_instance = (SASL_OUTCOME_INSTANCE*)sasl_outcome_create_internal();
 		*sasl_outcome_handle = sasl_outcome_instance;
-		if (*sasl_outcome_handle != NULL)
+		if (*sasl_outcome_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -8523,7 +8587,11 @@
 		int result;
 		SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)source_create_internal();
 		*source_handle = source_instance;
-		if (*source_handle != NULL)
+		if (*source_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -8775,6 +8843,7 @@
 			else
 			{
 				*address_value = item_value;
+				result = 0;
 			}
 		}
 
@@ -9296,6 +9365,7 @@
 			else
 			{
 				*default_outcome_value = item_value;
+				result = 0;
 			}
 		}
 
@@ -9554,7 +9624,11 @@
 		int result;
 		TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)target_create_internal();
 		*target_handle = target_instance;
-		if (*target_handle != NULL)
+		if (*target_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -9733,6 +9807,7 @@
 			else
 			{
 				*address_value = item_value;
+				result = 0;
 			}
 		}
 
@@ -10255,7 +10330,11 @@
 		int result;
 		PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)properties_create_internal();
 		*properties_handle = properties_instance;
-		if (*properties_handle != NULL)
+		if (*properties_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
 		{
 			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
 			if (list_value == NULL)
@@ -10527,6 +10606,7 @@
 			else
 			{
 				*message_id_value = item_value;
+				result = 0;
 			}
 		}
 
@@ -10652,6 +10732,7 @@
 			else
 			{
 				*to_value = item_value;
+				result = 0;
 			}
 		}
 
@@ -10777,6 +10858,7 @@
 			else
 			{
 				*reply_to_value = item_value;
+				result = 0;
 			}
 		}
 
@@ -10836,6 +10918,7 @@
 			else
 			{
 				*correlation_id_value = item_value;
+				result = 0;
 			}
 		}
 

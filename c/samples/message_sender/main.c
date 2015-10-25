@@ -45,8 +45,6 @@ int main(int argc, char** argv)
 		MESSAGE_HANDLE message;
 
 		size_t last_memory_used = 0;
-		unsigned char muie[4] = { 'm', 'u', 'i', 'e' };
-		BINARY_DATA binary_data = { muie, sizeof(muie) };
 
         /* create SASL plain handler */
 		SASL_PLAIN_CONFIG sasl_plain_config = { "RootManageSharedAccessKey", "GZOKQjll7SoJuQcoArp26Zs3wxFj9FmA0Q7t3Gpv+90=" };
@@ -69,17 +67,9 @@ int main(int argc, char** argv)
 		amqpvalue_destroy(target);
 
 		message = message_create();
+		unsigned char muie[4] = { 'm', 'u', 'i', 'e' };
+		BINARY_DATA binary_data = { muie, sizeof(muie) };
 		message_set_body_amqp_data(message, binary_data);
-
-		HEADER_HANDLE header = header_create();
-		header_set_priority(header, 1);
-		message_set_header(message, header);
-		header_destroy(header);
-
-		PROPERTIES_HANDLE properties = properties_create();
-		properties_set_subject(properties, "blah");
-		message_set_properties(message, properties);
-		properties_destroy(properties);
 
         /* create a message sender */
         message_sender = messagesender_create(link);

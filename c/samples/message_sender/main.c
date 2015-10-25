@@ -69,8 +69,17 @@ int main(int argc, char** argv)
 		amqpvalue_destroy(target);
 
 		message = message_create();
-		message_set_to(message, "pupupupu.servicebus.windows.net");
 		message_set_body_amqp_data(message, binary_data);
+
+		HEADER_HANDLE header = header_create();
+		header_set_priority(header, 1);
+		message_set_header(message, header);
+		header_destroy(header);
+
+		PROPERTIES_HANDLE properties = properties_create();
+		properties_set_subject(properties, "blah");
+		message_set_properties(message, properties);
+		properties_destroy(properties);
 
         /* create a message sender */
         message_sender = messagesender_create(link);

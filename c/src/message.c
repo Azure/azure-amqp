@@ -8,10 +8,10 @@
 
 typedef struct MESSAGE_DATA_TAG
 {
-	AMQP_VALUE to;
 	unsigned char* body_data_section_bytes;
 	size_t body_data_section_length;
 	HEADER_HANDLE header;
+	PROPERTIES_HANDLE properties;
 } MESSAGE_DATA;
 
 MESSAGE_HANDLE message_create(void)
@@ -20,7 +20,7 @@ MESSAGE_HANDLE message_create(void)
 	if (result != NULL)
 	{
 		result->header = NULL;
-		result->to = NULL;
+		result->properties = NULL;
 		result->body_data_section_bytes = NULL;
 		result->body_data_section_length = 0;
 	}
@@ -35,8 +35,25 @@ MESSAGE_HANDLE message_clone(MESSAGE_HANDLE source_message)
 
 	if (result != NULL)
 	{
-		result->to = amqpvalue_clone(source_message_instance->to);
 		result->body_data_section_length = source_message_instance->body_data_section_length;
+
+		if (source_message_instance->header != NULL)
+		{
+			result->header = header_clone(source_message_instance->header);
+		}
+		else
+		{
+			result->header = NULL;
+		}
+
+		if (source_message_instance->properties != NULL)
+		{
+			result->properties = properties_clone(source_message_instance->properties);
+		}
+		else
+		{
+			result->properties = NULL;
+		}
 
 		if (source_message_instance->body_data_section_length > 0)
 		{
@@ -61,55 +78,13 @@ void message_destroy(MESSAGE_HANDLE handle)
 		{
 			header_destroy(message->header);
 		}
-		amqpvalue_destroy(message->to);
+		if (message->properties != NULL)
+		{
+			properties_destroy(message->properties);
+		}
 		amqpalloc_free(message->body_data_section_bytes);
 		amqpalloc_free(handle);
 	}
-}
-
-int message_set_to(MESSAGE_HANDLE handle, const char* to)
-{
-	int result;
-
-	MESSAGE_DATA* message = (MESSAGE_DATA*)handle;
-	if (message == NULL)
-	{
-		result = __LINE__;
-	}
-	else
-	{
-		message->to = amqpvalue_create_string(to);
-		if (message->to == NULL)
-		{
-			result = __LINE__;
-		}
-		else
-		{
-			result = 0;
-		}
-	}
-
-	return result;
-}
-
-const char* message_get_to(MESSAGE_HANDLE handle)
-{
-	const char* result;
-
-	MESSAGE_DATA* message = (MESSAGE_DATA*)handle;
-	if (message == NULL)
-	{
-		result = NULL;
-	}
-	else
-	{
-		if (amqpvalue_get_string(message->to, &result) != 0)
-		{
-			result = NULL;
-		}
-	}
-
-	return result;
 }
 
 int message_set_header(MESSAGE_HANDLE handle, HEADER_HANDLE header)
@@ -164,11 +139,31 @@ int message_get_message_annotations(MESSAGE_HANDLE handle, annotations* message_
 
 int message_set_properties(MESSAGE_HANDLE handle, PROPERTIES_HANDLE properties)
 {
+	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)handle;
+
+	if (message_instance->properties != NULL)
+	{
+		properties_destroy(message_instance->properties);
+	}
+
+	message_instance->properties = properties_clone(properties);
+
 	return 0;
 }
 
 int message_get_properties(MESSAGE_HANDLE handle, PROPERTIES_HANDLE* properties)
 {
+	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)handle;
+
+	if (message_instance->properties == NULL)
+	{
+		*properties = NULL;
+	}
+	else
+	{
+		*properties = properties_clone(message_instance->properties);
+	}
+
 	return 0;
 }
 

@@ -33,8 +33,6 @@ extern "C" {
 	extern int message_get_application_properties(MESSAGE_HANDLE handle, AMQP_VALUE* application_properties);
 	extern int message_set_footer(MESSAGE_HANDLE handle, annotations footer);
 	extern int message_get_footer(MESSAGE_HANDLE handle, annotations* footer);
-	extern int message_set_to(MESSAGE_HANDLE handle, const char* to);
-	extern const char* message_get_to(MESSAGE_HANDLE handle);
 	extern int message_set_body_amqp_data(MESSAGE_HANDLE handle, BINARY_DATA binary_data);
 	extern int message_get_body_amqp_data(MESSAGE_HANDLE handle, BINARY_DATA* binary_data);
 

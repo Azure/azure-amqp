@@ -76,7 +76,7 @@ typedef union AMQP_VALUE_UNION_TAG
 	double double_value;
 	uint32_t char_value;
 	int64_t timestamp_value;
-	amqp_uuid uuid_value;
+	uuid uuid_value;
 	AMQP_STRING_VALUE string_value;
 	amqp_binary binary_value;
 	AMQP_LIST_VALUE list_value;
@@ -799,20 +799,20 @@ int amqpvalue_get_timestamp(AMQP_VALUE value, int64_t* timestamp_value)
 }
 
 /* Codes_SRS_AMQPVALUE_01_026: [1.6.18 uuid A universally unique identifier as defined by RFC-4122 section 4.1.2 .] */
-AMQP_VALUE amqpvalue_create_uuid(amqp_uuid value)
+AMQP_VALUE amqpvalue_create_uuid(uuid value)
 {
 	AMQP_VALUE_DATA* result = (AMQP_VALUE_DATA*)amqpalloc_malloc(sizeof(AMQP_VALUE_DATA));
 	/* Codes_SRS_AMQPVALUE_01_114: [If allocating the AMQP_VALUE fails then amqpvalue_create_uuid shall return NULL.] */
 	if (result != NULL)
 	{
-		/* Codes_SRS_AMQPVALUE_01_113: [amqpvalue_create_uuid shall return a handle to an AMQP_VALUE that stores an amqp_uuid value that represents a unique identifier per RFC-4122 section 4.1.2.] */
+		/* Codes_SRS_AMQPVALUE_01_113: [amqpvalue_create_uuid shall return a handle to an AMQP_VALUE that stores an uuid value that represents a unique identifier per RFC-4122 section 4.1.2.] */
 		result->type = AMQP_TYPE_UUID;
-		(void)memcpy(&result->value.uuid_value, value, sizeof(amqp_uuid));
+		(void)memcpy(&result->value.uuid_value, value, sizeof(uuid));
 	}
 	return result;
 }
 
-int amqpvalue_get_uuid(AMQP_VALUE value, amqp_uuid* uuid_value)
+int amqpvalue_get_uuid(AMQP_VALUE value, uuid* uuid_value)
 {
 	int result;
 
@@ -833,7 +833,7 @@ int amqpvalue_get_uuid(AMQP_VALUE value, amqp_uuid* uuid_value)
 		else
 		{
 			/* Codes_SRS_AMQPVALUE_01_115: [amqpvalue_get_uuid shall fill in the uuid_value argument the uuid value stored by the AMQP value indicated by the value argument.] */
-			(void)memcpy(*uuid_value, value_data->value.uuid_value, sizeof(amqp_uuid));
+			(void)memcpy(*uuid_value, value_data->value.uuid_value, sizeof(uuid));
 
 			/* Codes_SRS_AMQPVALUE_01_116: [On success amqpvalue_get_uuid shall return 0.] */
 			result = 0;
@@ -2471,13 +2471,13 @@ static int encode_timestamp(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* conte
 	return result;
 }
 
-static int encode_uuid(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, amqp_uuid uuid)
+static int encode_uuid(AMQPVALUE_ENCODER_OUTPUT encoder_output, void* context, uuid uuid)
 {
 	int result;
 
 	/* Codes_SRS_AMQPVALUE_01_296: [<encoding code="0x98" category="fixed" width="16" label="UUID as defined in section 4.1.2 of RFC-4122"/>] */
 	if ((output_byte(encoder_output, context, 0x98) != 0) ||
-		(output_bytes(encoder_output, context, uuid, sizeof(amqp_uuid))  != 0))
+		(output_bytes(encoder_output, context, uuid, sizeof(uuid))  != 0))
 	{
 		/* Codes_SRS_AMQPVALUE_01_274: [When the encoder output function fails, amqpvalue_encode shall fail and return a non-zero value.] */
 		result = __LINE__;

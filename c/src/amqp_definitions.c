@@ -10245,6 +10245,555 @@
 	}
 
 
+/* header */
+
+	typedef struct HEADER_INSTANCE_TAG
+	{
+		AMQP_VALUE composite_value;
+	} HEADER_INSTANCE;
+
+	static HEADER_HANDLE header_create_internal(void)
+	{
+		HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)amqpalloc_malloc(sizeof(HEADER_INSTANCE));
+		if (header_instance != NULL)
+		{
+			header_instance->composite_value = NULL;
+		}
+
+		return header_instance;
+	}
+
+	HEADER_HANDLE header_create(void)
+	{
+		HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)amqpalloc_malloc(sizeof(HEADER_INSTANCE));
+		if (header_instance != NULL)
+		{
+			header_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(112);
+			if (header_instance->composite_value == NULL)
+			{
+				amqpalloc_free(header_instance);
+				header_instance = NULL;
+			}
+		}
+
+		return header_instance;
+	}
+
+	void header_destroy(HEADER_HANDLE header)
+	{
+		if (header != NULL)
+		{
+			HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)header;
+			amqpvalue_destroy(header_instance->composite_value);
+			amqpalloc_free(header_instance);
+		}
+	}
+
+	AMQP_VALUE amqpvalue_create_header(HEADER_HANDLE header)
+	{
+		AMQP_VALUE result;
+
+		if (header == NULL)
+		{
+			result = NULL;
+		}
+		else
+		{
+			HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)header;
+			result = amqpvalue_clone(header_instance->composite_value);
+		}
+
+		return result;
+	}
+
+	bool is_header_type_by_descriptor(AMQP_VALUE descriptor)
+	{
+		bool result;
+
+		uint64_t descriptor_ulong;
+		if ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &&
+			(descriptor_ulong == 112))
+		{
+			result = true;
+		}
+		else
+		{
+			result = false;
+		}
+
+		return result;
+	}
+
+
+	int amqpvalue_get_header(AMQP_VALUE value, HEADER_HANDLE* header_handle)
+	{
+		int result;
+		HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)header_create_internal();
+		*header_handle = header_instance;
+		if (*header_handle == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			AMQP_VALUE list_value = amqpvalue_get_described_value(value);
+			if (list_value == NULL)
+			{
+				header_destroy(*header_handle);
+				result = __LINE__;
+			}
+			else
+			{
+				AMQP_VALUE item_value;
+				do
+				{
+					/* durable */
+					item_value = amqpvalue_get_list_item(list_value, 0);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool durable;
+						if (amqpvalue_get_boolean(item_value, &durable) != 0)
+						{
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								header_destroy(*header_handle);
+								result = __LINE__;
+								break;
+							}
+						}
+
+						amqpvalue_destroy(item_value);
+					}
+					/* priority */
+					item_value = amqpvalue_get_list_item(list_value, 1);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						uint8_t priority;
+						if (amqpvalue_get_ubyte(item_value, &priority) != 0)
+						{
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								header_destroy(*header_handle);
+								result = __LINE__;
+								break;
+							}
+						}
+
+						amqpvalue_destroy(item_value);
+					}
+					/* ttl */
+					item_value = amqpvalue_get_list_item(list_value, 2);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						milliseconds ttl;
+						if (amqpvalue_get_milliseconds(item_value, &ttl) != 0)
+						{
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								header_destroy(*header_handle);
+								result = __LINE__;
+								break;
+							}
+						}
+
+						amqpvalue_destroy(item_value);
+					}
+					/* first-acquirer */
+					item_value = amqpvalue_get_list_item(list_value, 3);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						bool first_acquirer;
+						if (amqpvalue_get_boolean(item_value, &first_acquirer) != 0)
+						{
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								header_destroy(*header_handle);
+								result = __LINE__;
+								break;
+							}
+						}
+
+						amqpvalue_destroy(item_value);
+					}
+					/* delivery-count */
+					item_value = amqpvalue_get_list_item(list_value, 4);
+					if (item_value == NULL)
+					{
+						/* do nothing */
+					}
+					else
+					{
+						uint32_t delivery_count;
+						if (amqpvalue_get_uint(item_value, &delivery_count) != 0)
+						{
+							if (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)
+							{
+								header_destroy(*header_handle);
+								result = __LINE__;
+								break;
+							}
+						}
+
+						amqpvalue_destroy(item_value);
+					}
+
+					header_instance->composite_value = amqpvalue_clone(value);
+
+					result = 0;
+				} while (0);
+			}
+		}
+
+		return result;
+	}
+
+	int header_get_durable(HEADER_HANDLE header, bool* durable_value)
+	{
+		int result;
+
+		if (header == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)header;
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(header_instance->composite_value, 0);
+			if (item_value == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (amqpvalue_get_boolean(item_value, durable_value) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+			}
+		}
+
+		return result;
+	}
+
+	int header_set_durable(HEADER_HANDLE header, bool durable_value)
+	{
+		int result;
+
+		if (header == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)header;
+			AMQP_VALUE durable_amqp_value = amqpvalue_create_boolean(durable_value);
+			if (durable_amqp_value == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (amqpvalue_set_composite_item(header_instance->composite_value, 0, durable_amqp_value) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+
+				amqpvalue_destroy(durable_amqp_value);
+			}
+		}
+
+		return result;
+	}
+
+	int header_get_priority(HEADER_HANDLE header, uint8_t* priority_value)
+	{
+		int result;
+
+		if (header == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)header;
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(header_instance->composite_value, 1);
+			if (item_value == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (amqpvalue_get_ubyte(item_value, priority_value) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+			}
+		}
+
+		return result;
+	}
+
+	int header_set_priority(HEADER_HANDLE header, uint8_t priority_value)
+	{
+		int result;
+
+		if (header == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)header;
+			AMQP_VALUE priority_amqp_value = amqpvalue_create_ubyte(priority_value);
+			if (priority_amqp_value == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (amqpvalue_set_composite_item(header_instance->composite_value, 1, priority_amqp_value) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+
+				amqpvalue_destroy(priority_amqp_value);
+			}
+		}
+
+		return result;
+	}
+
+	int header_get_ttl(HEADER_HANDLE header, milliseconds* ttl_value)
+	{
+		int result;
+
+		if (header == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)header;
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(header_instance->composite_value, 2);
+			if (item_value == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (amqpvalue_get_milliseconds(item_value, ttl_value) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+			}
+		}
+
+		return result;
+	}
+
+	int header_set_ttl(HEADER_HANDLE header, milliseconds ttl_value)
+	{
+		int result;
+
+		if (header == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)header;
+			AMQP_VALUE ttl_amqp_value = amqpvalue_create_milliseconds(ttl_value);
+			if (ttl_amqp_value == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (amqpvalue_set_composite_item(header_instance->composite_value, 2, ttl_amqp_value) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+
+				amqpvalue_destroy(ttl_amqp_value);
+			}
+		}
+
+		return result;
+	}
+
+	int header_get_first_acquirer(HEADER_HANDLE header, bool* first_acquirer_value)
+	{
+		int result;
+
+		if (header == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)header;
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(header_instance->composite_value, 3);
+			if (item_value == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (amqpvalue_get_boolean(item_value, first_acquirer_value) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+			}
+		}
+
+		return result;
+	}
+
+	int header_set_first_acquirer(HEADER_HANDLE header, bool first_acquirer_value)
+	{
+		int result;
+
+		if (header == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)header;
+			AMQP_VALUE first_acquirer_amqp_value = amqpvalue_create_boolean(first_acquirer_value);
+			if (first_acquirer_amqp_value == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (amqpvalue_set_composite_item(header_instance->composite_value, 3, first_acquirer_amqp_value) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+
+				amqpvalue_destroy(first_acquirer_amqp_value);
+			}
+		}
+
+		return result;
+	}
+
+	int header_get_delivery_count(HEADER_HANDLE header, uint32_t* delivery_count_value)
+	{
+		int result;
+
+		if (header == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)header;
+			AMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(header_instance->composite_value, 4);
+			if (item_value == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (amqpvalue_get_uint(item_value, delivery_count_value) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+			}
+		}
+
+		return result;
+	}
+
+	int header_set_delivery_count(HEADER_HANDLE header, uint32_t delivery_count_value)
+	{
+		int result;
+
+		if (header == NULL)
+		{
+			result = __LINE__;
+		}
+		else
+		{
+			HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)header;
+			AMQP_VALUE delivery_count_amqp_value = amqpvalue_create_uint(delivery_count_value);
+			if (delivery_count_amqp_value == NULL)
+			{
+				result = __LINE__;
+			}
+			else
+			{
+				if (amqpvalue_set_composite_item(header_instance->composite_value, 4, delivery_count_amqp_value) != 0)
+				{
+					result = __LINE__;
+				}
+				else
+				{
+					result = 0;
+				}
+
+				amqpvalue_destroy(delivery_count_amqp_value);
+			}
+		}
+
+		return result;
+	}
+
+
 /* properties */
 
 	typedef struct PROPERTIES_INSTANCE_TAG

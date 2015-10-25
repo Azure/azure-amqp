@@ -1926,13 +1926,13 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 
 		/* amqpvalue_create_uuid */
 
-		/* Tests_SRS_AMQPVALUE_01_113: [amqpvalue_create_uuid shall return a handle to an AMQP_VALUE that stores an amqp_uuid value that represents a unique identifier per RFC-4122 section 4.1.2.] */
+		/* Tests_SRS_AMQPVALUE_01_113: [amqpvalue_create_uuid shall return a handle to an AMQP_VALUE that stores an uuid value that represents a unique identifier per RFC-4122 section 4.1.2.] */
 		/* Tests_SRS_AMQPVALUE_01_026: [1.6.18 uuid A universally unique identifier as defined by RFC-4122 section 4.1.2 .] */
 		TEST_FUNCTION(amqpvalue_create_uuid_all_zeroes_succeeds)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid = { 0x0 };
+			uuid uuid = { 0x0 };
 
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
@@ -1943,13 +1943,13 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			ASSERT_IS_NOT_NULL(result);
 		}
 
-		/* Tests_SRS_AMQPVALUE_01_113: [amqpvalue_create_uuid shall return a handle to an AMQP_VALUE that stores an amqp_uuid value that represents a unique identifier per RFC-4122 section 4.1.2.] */
+		/* Tests_SRS_AMQPVALUE_01_113: [amqpvalue_create_uuid shall return a handle to an AMQP_VALUE that stores an uuid value that represents a unique identifier per RFC-4122 section 4.1.2.] */
 		/* Tests_SRS_AMQPVALUE_01_026: [1.6.18 uuid A universally unique identifier as defined by RFC-4122 section 4.1.2 .] */
 		TEST_FUNCTION(amqpvalue_create_uuid_all_0xFF_succeeds)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+			uuid uuid = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 
@@ -1965,7 +1965,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid = { 0x0 };
+			uuid uuid = { 0x0 };
 
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.SetReturn((void*)NULL);
@@ -1985,16 +1985,16 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid = { 0x0 };
-			amqp_uuid uuid_value;
-			AMQP_VALUE value = amqpvalue_create_uuid(uuid);
+			uuid uuid_src = { 0x0 };
+			uuid uuid_value;
+			AMQP_VALUE value = amqpvalue_create_uuid(uuid_src);
 			mocks.ResetAllCalls();
 
 			// act
 			int result = amqpvalue_get_uuid(value, &uuid_value);
 
 			// assert
-			ASSERT_ARE_EQUAL(int, 0, memcmp(&uuid, &uuid_value, sizeof(uuid)));
+			ASSERT_ARE_EQUAL(int, 0, memcmp(&uuid_src, &uuid_value, sizeof(uuid)));
 			ASSERT_ARE_EQUAL(int, 0, result);
 		}
 
@@ -2004,16 +2004,16 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-			amqp_uuid uuid_value;
-			AMQP_VALUE value = amqpvalue_create_uuid(uuid);
+			uuid uuid_src = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+			uuid uuid_value;
+			AMQP_VALUE value = amqpvalue_create_uuid(uuid_src);
 			mocks.ResetAllCalls();
 
 			// act
 			int result = amqpvalue_get_uuid(value, &uuid_value);
 
 			// assert
-			ASSERT_ARE_EQUAL(int, 0, memcmp(&uuid, &uuid_value, sizeof(uuid)));
+			ASSERT_ARE_EQUAL(int, 0, memcmp(&uuid_src, &uuid_value, sizeof(uuid)));
 			ASSERT_ARE_EQUAL(int, 0, result);
 		}
 
@@ -2022,7 +2022,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid_value;
+			uuid uuid_value;
 
 			// act
 			int result = amqpvalue_get_uuid(NULL, &uuid_value);
@@ -2036,7 +2036,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid = { 0x0 };
+			uuid uuid = { 0x0 };
 			AMQP_VALUE value = amqpvalue_create_uuid(uuid);
 			mocks.ResetAllCalls();
 
@@ -2052,7 +2052,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid_value;
+			uuid uuid_value;
 			AMQP_VALUE value = amqpvalue_create_null();
 			mocks.ResetAllCalls();
 
@@ -5106,8 +5106,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid bin1 = { 0x42 };
-			amqp_uuid bin2 = { 0x42 };
+			uuid bin1 = { 0x42 };
+			uuid bin2 = { 0x42 };
 			AMQP_VALUE value1 = amqpvalue_create_uuid(bin1);
 			AMQP_VALUE value2 = amqpvalue_create_uuid(bin2);
 			mocks.ResetAllCalls();
@@ -5129,8 +5129,8 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid bin1 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x42 };
-			amqp_uuid bin2 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x43 };
+			uuid bin1 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x42 };
+			uuid bin2 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x43 };
 			AMQP_VALUE value1 = amqpvalue_create_uuid(bin1);
 			AMQP_VALUE value2 = amqpvalue_create_uuid(bin2);
 			mocks.ResetAllCalls();
@@ -6925,7 +6925,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid_value = { 0x42 };
+			uuid uuid_value = { 0x42 };
 			AMQP_VALUE source = amqpvalue_create_uuid(uuid_value);
 			mocks.ResetAllCalls();
 
@@ -6950,7 +6950,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid_value = { 0x42, 0x43 };
+			uuid uuid_value = { 0x42, 0x43 };
 			AMQP_VALUE source = amqpvalue_create_uuid(uuid_value);
 			mocks.ResetAllCalls();
 
@@ -6975,7 +6975,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid_value = { 0x42, 0x43 };
+			uuid uuid_value = { 0x42, 0x43 };
 			AMQP_VALUE source = amqpvalue_create_uuid(uuid_value);
 			mocks.ResetAllCalls();
 
@@ -8422,7 +8422,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		TEST_FUNCTION(amqpvalue_encode_uuid_all_zeroes_succeeds)
 		{
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid = { 0 };
+			uuid uuid = { 0 };
 			AMQP_VALUE source = amqpvalue_create_uuid(uuid);
 			test_amqpvalue_encode(&mocks, source, "[0x98,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]");
 		}
@@ -8431,7 +8431,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		TEST_FUNCTION(amqpvalue_encode_uuid_succeeds)
 		{
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid = { 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
+			uuid uuid = { 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
 				0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F };
 			AMQP_VALUE source = amqpvalue_create_uuid(uuid);
 			test_amqpvalue_encode(&mocks, source, "[0x98,0x40,0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x4A,0x4B,0x4C,0x4D,0x4E,0x4F]");
@@ -8441,7 +8441,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		TEST_FUNCTION(when_encoder_output_fails_amqpvalue_encode_uuid_fails)
 		{
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid = { 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
+			uuid uuid = { 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
 				0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F };
 			AMQP_VALUE source = amqpvalue_create_uuid(uuid);
 			test_amqpvalue_encode_failure(&mocks, source);
@@ -9452,7 +9452,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid = { 0 };
+			uuid uuid = { 0 };
 			AMQP_VALUE source = amqpvalue_create_uuid(uuid);
 			test_amqpvalue_get_encoded_size(&mocks, source, 17);
 		}
@@ -9958,7 +9958,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid = { 0 };
+			uuid uuid = { 0 };
 			AMQP_VALUE value = amqpvalue_create_uuid(uuid);
 			mocks.ResetAllCalls();
 
@@ -10422,7 +10422,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 		{
 			// arrange
 			amqpvalue_mocks mocks;
-			amqp_uuid uuid = { 0 };
+			uuid uuid = { 0 };
 			AMQP_VALUE value = amqpvalue_create_uuid(uuid);
 			AMQP_VALUE cloned_value = amqpvalue_clone(value);
 			amqpvalue_destroy(value);
@@ -12613,7 +12613,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
 			mocks.ResetAllCalls();
 			unsigned char bytes[] = { 0x98, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
-			amqp_uuid expected_uuid = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
+			uuid expected_uuid = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
 
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
 				.IgnoreAllCalls();
@@ -12627,7 +12627,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			ASSERT_ARE_EQUAL(int, 0, result);
 			mocks.AssertActualAndExpectedCalls();
 			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_UUID, (int)amqpvalue_get_type(decoded_values[0]));
-			amqp_uuid actual_value = { 0 };
+			uuid actual_value = { 0 };
 			amqpvalue_get_uuid(decoded_values[0], &actual_value);
 			stringify_bytes(actual_value, sizeof(actual_value), actual_stringified);
 			stringify_bytes(expected_uuid, sizeof(expected_uuid), expected_stringified);
@@ -12646,7 +12646,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			AMQPVALUE_DECODER_HANDLE amqpvalue_decoder = amqpvalue_decoder_create(value_decoded_callback, test_context);
 			mocks.ResetAllCalls();
 			unsigned char bytes[] = { 0x98, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
-			amqp_uuid expected_uuid = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
+			uuid expected_uuid = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18 };
 			int i;
 
 			EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
@@ -12664,7 +12664,7 @@ BEGIN_TEST_SUITE(amqpvalue_unittests)
 			// assert
 			mocks.AssertActualAndExpectedCalls();
 			ASSERT_ARE_EQUAL(int, (int)AMQP_TYPE_UUID, (int)amqpvalue_get_type(decoded_values[0]));
-			amqp_uuid actual_value = { 0 };
+			uuid actual_value = { 0 };
 			amqpvalue_get_uuid(decoded_values[0], &actual_value);
 			stringify_bytes(actual_value, sizeof(actual_value), actual_stringified);
 			stringify_bytes(expected_uuid, sizeof(expected_uuid), expected_stringified);

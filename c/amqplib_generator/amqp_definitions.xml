@@ -223,6 +223,19 @@
       <field name="dynamic-node-properties" type="node-properties"/>
       <field name="capabilities" type="symbol" multiple="true"/>
     </type>
+    <type name="message-id-ulong" class="restricted" source="ulong" provides="message-id"/>
+    <type name="message-id-uuid" class="restricted" source="uuid" provides="message-id"/>
+    <type name="message-id-binary" class="restricted" source="binary" provides="message-id"/>
+    <type name="message-id-string" class="restricted" source="string" provides="message-id"/>
+    <type name="address-string" class="restricted" source="string" provides="address"/>
+    <type name="header" class="composite" source="list" provides="section">
+      <descriptor name="amqp:header:list" code="0x00000000:0x00000070"/>
+      <field name="durable" type="boolean" default="false"/>
+      <field name="priority" type="ubyte" default="4"/>
+      <field name="ttl" type="milliseconds"/>
+      <field name="first-acquirer" type="boolean" default="false"/>
+      <field name="delivery-count" type="uint" default="0"/>
+    </type>
     <type name="properties" class="composite" source="list" provides="section">
       <descriptor name="amqp:properties:list" code="0x00000000:0x00000073"/>
       <field name="message-id" type="*" requires="message-id"/>
@@ -239,5 +252,5 @@
       <field name="group-sequence" type="sequence-no"/>
       <field name="reply-to-group-id" type="string"/>
     </type>
-</section>
+  </section>
 </amqp>

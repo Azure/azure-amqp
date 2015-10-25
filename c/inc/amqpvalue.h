@@ -15,7 +15,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 	typedef void* AMQP_VALUE;
-	typedef unsigned char amqp_uuid[16];
+	typedef unsigned char uuid[16];
 	typedef int64_t timestamp;
 
 	typedef struct amqp_binary_TAG
@@ -52,8 +52,8 @@ extern "C" {
 	extern int amqpvalue_get_char(AMQP_VALUE value, uint32_t* char_value);
 	extern AMQP_VALUE amqpvalue_create_timestamp(int64_t value);
 	extern int amqpvalue_get_timestamp(AMQP_VALUE value, int64_t* timestamp_value);
-	extern AMQP_VALUE amqpvalue_create_uuid(amqp_uuid value);
-	extern int amqpvalue_get_uuid(AMQP_VALUE value, amqp_uuid* uuid_value);
+	extern AMQP_VALUE amqpvalue_create_uuid(uuid value);
+	extern int amqpvalue_get_uuid(AMQP_VALUE value, uuid* uuid_value);
 	extern AMQP_VALUE amqpvalue_create_binary(amqp_binary value);
 	extern int amqpvalue_get_binary(AMQP_VALUE value, amqp_binary* binary_value);
 	extern AMQP_VALUE amqpvalue_create_string(const char* value);

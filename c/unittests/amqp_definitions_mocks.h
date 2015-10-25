@@ -117,10 +117,24 @@ static const AMQP_VALUE test_source_amqp_value = (AMQP_VALUE)16978;
 
 static const TARGET_HANDLE test_target_handle = (TARGET_HANDLE)16978;
 static const AMQP_VALUE test_target_amqp_value = (AMQP_VALUE)16979;
+/* message-id-ulong */
+
+/* message-id-uuid */
+
+/* message-id-binary */
+
+/* message-id-string */
+
+/* address-string */
+
+/* header */
+
+static const HEADER_HANDLE test_header_handle = (HEADER_HANDLE)16979;
+static const AMQP_VALUE test_header_amqp_value = (AMQP_VALUE)16980;
 /* properties */
 
-static const PROPERTIES_HANDLE test_properties_handle = (PROPERTIES_HANDLE)16979;
-static const AMQP_VALUE test_properties_amqp_value = (AMQP_VALUE)16980;
+static const PROPERTIES_HANDLE test_properties_handle = (PROPERTIES_HANDLE)16980;
+static const AMQP_VALUE test_properties_amqp_value = (AMQP_VALUE)16981;
 
 TYPED_MOCK_CLASS(amqp_definitions_mocks, CGlobalMock)
 {
@@ -783,6 +797,50 @@ public:
 	MOCK_STATIC_METHOD_2(, int, target_set_capabilities, TARGET_HANDLE, target, const char*, capabilities_value);
 	MOCK_METHOD_END(int, 0);
 
+/* message-id-ulong */
+
+/* message-id-uuid */
+
+/* message-id-binary */
+
+/* message-id-string */
+
+/* address-string */
+
+/* header */
+
+	MOCK_STATIC_METHOD_0(,HEADER_HANDLE, header_create);
+	MOCK_METHOD_END(HEADER_HANDLE, test_header_handle);
+	MOCK_STATIC_METHOD_1(, void, header_destroy, HEADER_HANDLE, header);
+	MOCK_VOID_METHOD_END();
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_create_header, HEADER_HANDLE, header);
+	MOCK_METHOD_END(AMQP_VALUE, test_header_amqp_value);
+	MOCK_STATIC_METHOD_1(, bool, is_header_type_by_descriptor, AMQP_VALUE, value);
+	MOCK_METHOD_END(bool, true);
+	MOCK_STATIC_METHOD_2(, int, amqpvalue_get_header, AMQP_VALUE, value, HEADER_HANDLE*, HEADER_handle);
+	MOCK_METHOD_END(int, 0);
+
+	MOCK_STATIC_METHOD_2(, int, header_get_durable, HEADER_HANDLE, header, bool*, durable_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, header_set_durable, HEADER_HANDLE, header, bool, durable_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, header_get_priority, HEADER_HANDLE, header, uint8_t*, priority_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, header_set_priority, HEADER_HANDLE, header, uint8_t, priority_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, header_get_ttl, HEADER_HANDLE, header, milliseconds*, ttl_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, header_set_ttl, HEADER_HANDLE, header, milliseconds, ttl_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, header_get_first_acquirer, HEADER_HANDLE, header, bool*, first_acquirer_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, header_set_first_acquirer, HEADER_HANDLE, header, bool, first_acquirer_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, header_get_delivery_count, HEADER_HANDLE, header, uint32_t*, delivery_count_value);
+	MOCK_METHOD_END(int, 0);
+	MOCK_STATIC_METHOD_2(, int, header_set_delivery_count, HEADER_HANDLE, header, uint32_t, delivery_count_value);
+	MOCK_METHOD_END(int, 0);
+
 /* properties */
 
 	MOCK_STATIC_METHOD_0(,PROPERTIES_HANDLE, properties_create);
@@ -1235,6 +1293,35 @@ public:
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_set_dynamic_node_properties, TARGET_HANDLE, target, node_properties, dynamic_node_properties_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_get_capabilities, TARGET_HANDLE, target, const char**, capabilities_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_set_capabilities, TARGET_HANDLE, target, const char*, capabilities_value);
+
+/* message-id-ulong */
+
+/* message-id-uuid */
+
+/* message-id-binary */
+
+/* message-id-string */
+
+/* address-string */
+
+/* header */
+
+	DECLARE_GLOBAL_MOCK_METHOD_0(amqp_definitions_mocks, ,HEADER_HANDLE, header_create);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, header_destroy, HEADER_HANDLE, header);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_header, HEADER_HANDLE, header);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_header_type_by_descriptor, AMQP_VALUE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, amqpvalue_get_header, AMQP_VALUE, value, HEADER_HANDLE*, HEADER_handle);
+
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_get_durable, HEADER_HANDLE, header, bool*, durable_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_set_durable, HEADER_HANDLE, header, bool, durable_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_get_priority, HEADER_HANDLE, header, uint8_t*, priority_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_set_priority, HEADER_HANDLE, header, uint8_t, priority_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_get_ttl, HEADER_HANDLE, header, milliseconds*, ttl_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_set_ttl, HEADER_HANDLE, header, milliseconds, ttl_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_get_first_acquirer, HEADER_HANDLE, header, bool*, first_acquirer_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_set_first_acquirer, HEADER_HANDLE, header, bool, first_acquirer_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_get_delivery_count, HEADER_HANDLE, header, uint32_t*, delivery_count_value);
+	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_set_delivery_count, HEADER_HANDLE, header, uint32_t, delivery_count_value);
 
 /* properties */
 

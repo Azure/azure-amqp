@@ -609,6 +609,67 @@ extern "C" {
 	extern int target_get_capabilities(TARGET_HANDLE target, const char** capabilities_value);
 	extern int target_set_capabilities(TARGET_HANDLE target, const char* capabilities_value);
 
+/* message-id-ulong */
+
+	typedef uint64_t message_id_ulong;
+
+	#define amqpvalue_create_message_id_ulong amqpvalue_create_ulong
+	#define amqpvalue_get_message_id_ulong amqpvalue_get_ulong
+
+
+/* message-id-uuid */
+
+	typedef uuid message_id_uuid;
+
+	#define amqpvalue_create_message_id_uuid amqpvalue_create_uuid
+	#define amqpvalue_get_message_id_uuid amqpvalue_get_uuid
+
+
+/* message-id-binary */
+
+	typedef amqp_binary message_id_binary;
+
+	#define amqpvalue_create_message_id_binary amqpvalue_create_binary
+	#define amqpvalue_get_message_id_binary amqpvalue_get_binary
+
+
+/* message-id-string */
+
+	typedef const char* message_id_string;
+
+	#define amqpvalue_create_message_id_string amqpvalue_create_string
+	#define amqpvalue_get_message_id_string amqpvalue_get_string
+
+
+/* address-string */
+
+	typedef const char* address_string;
+
+	#define amqpvalue_create_address_string amqpvalue_create_string
+	#define amqpvalue_get_address_string amqpvalue_get_string
+
+
+/* header */
+
+	typedef void* HEADER_HANDLE;
+
+	extern HEADER_HANDLE header_create(void);
+	extern void header_destroy(HEADER_HANDLE header);
+	extern bool is_header_type_by_descriptor(AMQP_VALUE descriptor);
+	extern int amqpvalue_get_header(AMQP_VALUE value, HEADER_HANDLE* HEADER_handle);
+	extern AMQP_VALUE amqpvalue_create_header(HEADER_HANDLE header);
+
+	extern int header_get_durable(HEADER_HANDLE header, bool* durable_value);
+	extern int header_set_durable(HEADER_HANDLE header, bool durable_value);
+	extern int header_get_priority(HEADER_HANDLE header, uint8_t* priority_value);
+	extern int header_set_priority(HEADER_HANDLE header, uint8_t priority_value);
+	extern int header_get_ttl(HEADER_HANDLE header, milliseconds* ttl_value);
+	extern int header_set_ttl(HEADER_HANDLE header, milliseconds ttl_value);
+	extern int header_get_first_acquirer(HEADER_HANDLE header, bool* first_acquirer_value);
+	extern int header_set_first_acquirer(HEADER_HANDLE header, bool first_acquirer_value);
+	extern int header_get_delivery_count(HEADER_HANDLE header, uint32_t* delivery_count_value);
+	extern int header_set_delivery_count(HEADER_HANDLE header, uint32_t delivery_count_value);
+
 /* properties */
 
 	typedef void* PROPERTIES_HANDLE;

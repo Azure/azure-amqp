@@ -2466,6 +2466,7 @@
 					}
 					else
 					{
+						amqpvalue_destroy(item_value);
 					}
 					/* target */
 					item_value = amqpvalue_get_list_item(list_value, 6);
@@ -2475,6 +2476,7 @@
 					}
 					else
 					{
+						amqpvalue_destroy(item_value);
 					}
 					/* unsettled */
 					item_value = amqpvalue_get_list_item(list_value, 7);
@@ -4909,6 +4911,7 @@
 					}
 					else
 					{
+						amqpvalue_destroy(item_value);
 					}
 					/* resume */
 					item_value = amqpvalue_get_list_item(list_value, 8);
@@ -5916,6 +5919,7 @@
 					}
 					else
 					{
+						amqpvalue_destroy(item_value);
 					}
 					/* batchable */
 					item_value = amqpvalue_get_list_item(list_value, 5);
@@ -8540,6 +8544,7 @@
 					}
 					else
 					{
+						amqpvalue_destroy(item_value);
 					}
 					/* durable */
 					item_value = amqpvalue_get_list_item(list_value, 1);
@@ -8696,6 +8701,7 @@
 					}
 					else
 					{
+						amqpvalue_destroy(item_value);
 					}
 					/* outcomes */
 					item_value = amqpvalue_get_list_item(list_value, 9);
@@ -9569,6 +9575,7 @@
 					}
 					else
 					{
+						amqpvalue_destroy(item_value);
 					}
 					/* durable */
 					item_value = amqpvalue_get_list_item(list_value, 1);
@@ -10269,6 +10276,7 @@
 					}
 					else
 					{
+						amqpvalue_destroy(item_value);
 					}
 					/* user-id */
 					item_value = amqpvalue_get_list_item(list_value, 1);
@@ -10299,6 +10307,7 @@
 					}
 					else
 					{
+						amqpvalue_destroy(item_value);
 					}
 					/* subject */
 					item_value = amqpvalue_get_list_item(list_value, 3);
@@ -10329,6 +10338,7 @@
 					}
 					else
 					{
+						amqpvalue_destroy(item_value);
 					}
 					/* correlation-id */
 					item_value = amqpvalue_get_list_item(list_value, 5);
@@ -10338,6 +10348,7 @@
 					}
 					else
 					{
+						amqpvalue_destroy(item_value);
 					}
 					/* content-type */
 					item_value = amqpvalue_get_list_item(list_value, 6);

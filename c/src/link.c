@@ -367,43 +367,51 @@ int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, O
 			transfer_set_settled(transfer, false);
 			transfer_set_more(transfer, false);
 			AMQP_VALUE transfer_value = amqpvalue_create_transfer(transfer);
-
-			DELIVERY_INSTANCE* new_pending_deliveries = amqpalloc_realloc(link->pending_deliveries, (link->pending_delivery_count + 1) * sizeof(DELIVERY_INSTANCE));
-			if (new_pending_deliveries == NULL)
+			if (transfer_value == NULL)
 			{
-				result = __LINE__;
+
 			}
 			else
 			{
-				size_t encoded_size;
-				AMQP_VALUE amqp_value_descriptor = amqpvalue_create_ulong(0x77);
-				amqp_binary binary_value = { payloads[0].bytes, payloads[0].length };
-				AMQP_VALUE amqp_value = amqpvalue_create_described(amqpvalue_clone(amqp_value_descriptor), amqpvalue_create_binary(binary_value));
-				amqpvalue_get_encoded_size(amqp_value, &encoded_size);
-				void* data_bytes = amqpalloc_malloc(encoded_size);
-				PAYLOAD payload = { data_bytes, 0 };
-				(void)amqpvalue_encode(amqp_value, encode_bytes, &payload);
-
-				link->pending_deliveries = new_pending_deliveries;
-
-				/* here we should feed data to the transfer frame */
-				if (session_transfer(link->link_endpoint, transfer, &payload, 1, &link->pending_deliveries[link->pending_delivery_count].delivery_id) != 0)
+				DELIVERY_INSTANCE* new_pending_deliveries = amqpalloc_realloc(link->pending_deliveries, (link->pending_delivery_count + 1) * sizeof(DELIVERY_INSTANCE));
+				if (new_pending_deliveries == NULL)
 				{
 					result = __LINE__;
 				}
 				else
 				{
-					link->pending_deliveries[link->pending_delivery_count].on_delivery_settled = on_delivery_settled;
-					link->pending_deliveries[link->pending_delivery_count].callback_context = callback_context;
-					link->pending_delivery_count++;
+					size_t encoded_size;
+					AMQP_VALUE amqp_value_descriptor = amqpvalue_create_ulong(0x77);
+					amqp_binary binary_value = { payloads[0].bytes, payloads[0].length };
+					AMQP_VALUE amqp_value = amqpvalue_create_described(amqpvalue_clone(amqp_value_descriptor), amqpvalue_create_binary(binary_value));
+					amqpvalue_get_encoded_size(amqp_value, &encoded_size);
+					void* data_bytes = amqpalloc_malloc(encoded_size);
+					PAYLOAD payload = { data_bytes, 0 };
+					(void)amqpvalue_encode(amqp_value, encode_bytes, &payload);
 
-					result = 0;
+					link->pending_deliveries = new_pending_deliveries;
+
+					/* here we should feed data to the transfer frame */
+					if (session_transfer(link->link_endpoint, transfer, &payload, 1, &link->pending_deliveries[link->pending_delivery_count].delivery_id) != 0)
+					{
+						result = __LINE__;
+					}
+					else
+					{
+						link->pending_deliveries[link->pending_delivery_count].on_delivery_settled = on_delivery_settled;
+						link->pending_deliveries[link->pending_delivery_count].callback_context = callback_context;
+						link->pending_delivery_count++;
+
+						result = 0;
+					}
+
+					amqpalloc_free(data_bytes);
+
+					amqpvalue_destroy(amqp_value);
+					amqpvalue_destroy(amqp_value_descriptor);
 				}
 
-				amqpalloc_free(data_bytes);
-
-				amqpvalue_destroy(amqp_value);
-				amqpvalue_destroy(amqp_value_descriptor);
+				amqpvalue_destroy(transfer_value);
 			}
 
 			transfer_destroy(transfer);

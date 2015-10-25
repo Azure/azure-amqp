@@ -487,6 +487,11 @@ void tlsio_destroy(IO_HANDLE tls_io)
 			(void)FreeCredentialHandle(&tls_io_instance->credential_handle);
 		}
 
+		if (tls_io_instance->received_bytes != NULL)
+		{
+			amqpalloc_free(tls_io_instance->received_bytes);
+		}
+
 		io_destroy(tls_io_instance->socket_io);
 		amqpalloc_free(tls_io_instance->host_name);
 		amqpalloc_free(tls_io);

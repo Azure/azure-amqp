@@ -908,32 +908,32 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write("\t\t\t\t\t\t}\r\n\r\n\t\t\t\t\t\tamqpvalue_destroy(item_value);\r\n");
+            this.Write("\t\t\t\t\t\t}\r\n\r\n");
             
-            #line 208 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 207 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  } 
             
             #line default
             #line hidden
             
-            #line 209 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 208 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  else 
             
             #line default
             #line hidden
             
-            #line 210 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 209 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  { 
             
             #line default
             #line hidden
             
-            #line 211 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 210 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  } 
             
             #line default
             #line hidden
-            this.Write("\t\t\t\t\t}\r\n");
+            this.Write("\t\t\t\t\t\tamqpvalue_destroy(item_value);\r\n\t\t\t\t\t}\r\n");
             
             #line 213 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 					k++; 

@@ -63,7 +63,7 @@ AMQP_VALUE messaging_create_target(AMQP_VALUE address)
 			}
 			else
 			{
-				result = amqpvalue_create_source(target);
+				result = amqpvalue_create_target(target);
 			}
 
 			amqpvalue_destroy(address_value);

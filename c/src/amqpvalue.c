@@ -939,10 +939,6 @@ AMQP_VALUE amqpvalue_create_string(const char* value)
 		if (result != NULL)
 		{
 			result->type = AMQP_TYPE_STRING;
-			if (strncmp(value, "pupupu", 6) == 0)
-			{
-				result->type = AMQP_TYPE_STRING;
-			}
 			result->value.string_value.chars = amqpalloc_malloc(length + 1);
 			if (result->value.string_value.chars == NULL)
 			{

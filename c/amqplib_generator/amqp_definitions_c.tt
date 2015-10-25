@@ -204,11 +204,11 @@
 <# 					} #>
 						}
 
-						amqpvalue_destroy(item_value);
 <# } #>
 <# else #>
 <# { #>
 <# } #>
+						amqpvalue_destroy(item_value);
 					}
 <#					k++; #>
 <#				} #>

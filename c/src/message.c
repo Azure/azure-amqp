@@ -12,6 +12,9 @@ typedef struct MESSAGE_DATA_TAG
 	size_t body_data_section_length;
 	HEADER_HANDLE header;
 	PROPERTIES_HANDLE properties;
+	message_format message_format;
+	unsigned char* raw_payload_bytes;
+	size_t raw_payload_length;
 } MESSAGE_DATA;
 
 MESSAGE_HANDLE message_create(void)
@@ -225,4 +228,24 @@ int message_get_body_amqp_data(MESSAGE_HANDLE handle, BINARY_DATA* binary_data)
 	}
 
 	return result;
+}
+
+int message_set_format(MESSAGE_HANDLE handle, message_format message_format)
+{
+	return 0;
+}
+
+int message_get_format(MESSAGE_HANDLE handle, message_format* message_format)
+{
+	return 0;
+}
+
+int message_set_raw_payload(MESSAGE_HANDLE handle, BINARY_DATA raw_payload)
+{
+	return 0;
+}
+
+int message_get_raw_payload(MESSAGE_HANDLE handle, BINARY_DATA* raw_payload)
+{
+	return 0;
 }

@@ -35,6 +35,10 @@ extern "C" {
 	extern int message_get_footer(MESSAGE_HANDLE handle, annotations* footer);
 	extern int message_set_body_amqp_data(MESSAGE_HANDLE handle, BINARY_DATA binary_data);
 	extern int message_get_body_amqp_data(MESSAGE_HANDLE handle, BINARY_DATA* binary_data);
+	extern int message_set_format(MESSAGE_HANDLE handle, message_format message_format);
+	extern int message_get_format(MESSAGE_HANDLE handle, message_format* message_format);
+	extern int message_set_raw_payload(MESSAGE_HANDLE handle, BINARY_DATA raw_payload);
+	extern int message_get_raw_payload(MESSAGE_HANDLE handle, BINARY_DATA* raw_payload);
 
 #ifdef __cplusplus
 }

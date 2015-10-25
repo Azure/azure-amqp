@@ -82,6 +82,8 @@ int main(int argc, char** argv)
 				(void)messagesender_send(message_sender, message, on_message_send_complete, message);
 			}
 
+			message_destroy(message);
+
 			while (true)
 			{
 				size_t current_memory_used;
@@ -104,7 +106,6 @@ int main(int argc, char** argv)
 			}
 		}
 		
-		message_destroy(message);
 		messagesender_destroy(message_sender);
 		link_destroy(link);
 		session_destroy(session);

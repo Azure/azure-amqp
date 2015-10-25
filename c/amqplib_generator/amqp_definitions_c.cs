@@ -454,14 +454,7 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write("_instance;\r\n\t}\r\n\r\n\tvoid ");
-            
-            #line 95 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
-            
-            #line default
-            #line hidden
-            this.Write("_destroy(");
+            this.Write("_instance;\r\n\t}\r\n\r\n\t");
             
             #line 95 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
@@ -475,84 +468,119 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write(")\r\n\t{\r\n\t\tif (");
+            this.Write("_clone(");
+            
+            #line 95 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
+            
+            #line default
+            #line hidden
+            this.Write("_HANDLE value)\r\n\t{\r\n\t\t");
+            
+            #line 97 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
+            
+            #line default
+            #line hidden
+            this.Write("_INSTANCE* ");
             
             #line 97 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
-            this.Write(" != NULL)\r\n\t\t{\r\n\t\t\t");
-            
-            #line 99 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
-            
-            #line default
-            #line hidden
-            this.Write("_INSTANCE* ");
-            
-            #line 99 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
-            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
-            
-            #line default
-            #line hidden
             this.Write("_instance = (");
             
-            #line 99 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 97 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
-            this.Write("_INSTANCE*)");
+            this.Write("_INSTANCE*)amqpalloc_malloc(sizeof(");
             
-            #line 99 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 97 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
+            
+            #line default
+            #line hidden
+            this.Write("_INSTANCE));\r\n\t\tif (");
+            
+            #line 98 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
-            this.Write(";\r\n\t\t\tamqpvalue_destroy(");
+            this.Write("_instance != NULL)\r\n\t\t{\r\n\t\t\t");
             
             #line 100 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
-            this.Write("_instance->composite_value);\r\n\t\t\tamqpalloc_free(");
+            this.Write("_instance->composite_value = amqpvalue_clone(((");
+            
+            #line 100 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
+            
+            #line default
+            #line hidden
+            this.Write("_INSTANCE*)value)->composite_value);\r\n\t\t\tif (");
             
             #line 101 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
-            this.Write("_instance);\r\n\t\t}\r\n\t}\r\n\r\n\tAMQP_VALUE amqpvalue_create_");
+            this.Write("_instance->composite_value == NULL)\r\n\t\t\t{\r\n\t\t\t\tamqpalloc_free(");
             
-            #line 105 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 103 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
-            this.Write("(");
+            this.Write("_instance);\r\n\t\t\t\t");
             
-            #line 105 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 104 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            
+            #line default
+            #line hidden
+            this.Write("_instance = NULL;\r\n\t\t\t}\r\n\t\t}\r\n\r\n\t\treturn ");
+            
+            #line 108 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            
+            #line default
+            #line hidden
+            this.Write("_instance;\r\n\t}\r\n\r\n\tvoid ");
+            
+            #line 111 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            
+            #line default
+            #line hidden
+            this.Write("_destroy(");
+            
+            #line 111 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE ");
             
-            #line 105 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 111 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
-            this.Write(")\r\n\t{\r\n\t\tAMQP_VALUE result;\r\n\r\n\t\tif (");
+            this.Write(")\r\n\t{\r\n\t\tif (");
             
-            #line 109 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 113 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
-            this.Write(" == NULL)\r\n\t\t{\r\n\t\t\tresult = NULL;\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\t");
+            this.Write(" != NULL)\r\n\t\t{\r\n\t\t\t");
             
             #line 115 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
@@ -580,16 +608,86 @@ namespace amqplib_generator
             
             #line default
             #line hidden
-            this.Write(";\r\n\t\t\tresult = amqpvalue_clone(");
+            this.Write(";\r\n\t\t\tamqpvalue_destroy(");
             
             #line 116 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
+            this.Write("_instance->composite_value);\r\n\t\t\tamqpalloc_free(");
+            
+            #line 117 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            
+            #line default
+            #line hidden
+            this.Write("_instance);\r\n\t\t}\r\n\t}\r\n\r\n\tAMQP_VALUE amqpvalue_create_");
+            
+            #line 121 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            
+            #line default
+            #line hidden
+            this.Write("(");
+            
+            #line 121 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
+            
+            #line default
+            #line hidden
+            this.Write("_HANDLE ");
+            
+            #line 121 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            
+            #line default
+            #line hidden
+            this.Write(")\r\n\t{\r\n\t\tAMQP_VALUE result;\r\n\r\n\t\tif (");
+            
+            #line 125 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            
+            #line default
+            #line hidden
+            this.Write(" == NULL)\r\n\t\t{\r\n\t\t\tresult = NULL;\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\t");
+            
+            #line 131 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
+            
+            #line default
+            #line hidden
+            this.Write("_INSTANCE* ");
+            
+            #line 131 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            
+            #line default
+            #line hidden
+            this.Write("_instance = (");
+            
+            #line 131 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
+            
+            #line default
+            #line hidden
+            this.Write("_INSTANCE*)");
+            
+            #line 131 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            
+            #line default
+            #line hidden
+            this.Write(";\r\n\t\t\tresult = amqpvalue_clone(");
+            
+            #line 132 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
+            
+            #line default
+            #line hidden
             this.Write("_instance->composite_value);\r\n\t\t}\r\n\r\n\t\treturn result;\r\n\t}\r\n\r\n\tbool is_");
             
-            #line 122 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 138 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
@@ -598,7 +696,7 @@ namespace amqplib_generator
                     "riptor_ulong;\r\n\t\tif ((amqpvalue_get_ulong(descriptor, &descriptor_ulong) == 0) &" +
                     "&\r\n\t\t\t(descriptor_ulong == ");
             
-            #line 128 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 144 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(Program.GetDescriptorCode(descriptor).ToString()));
             
             #line default
@@ -606,70 +704,70 @@ namespace amqplib_generator
             this.Write("))\r\n\t\t{\r\n\t\t\tresult = true;\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\tresult = false;\r\n\t\t}\r\n\r\n\t\treturn" +
                     " result;\r\n\t}\r\n\r\n\r\n\tint amqpvalue_get_");
             
-            #line 141 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 157 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("(AMQP_VALUE value, ");
             
-            #line 141 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 157 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE* ");
             
-            #line 141 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 157 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
             
             #line default
             #line hidden
             this.Write("_handle)\r\n\t{\r\n\t\tint result;\r\n\t\t");
             
-            #line 144 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 160 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_INSTANCE* ");
             
-            #line 144 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 160 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
             
             #line default
             #line hidden
             this.Write("_instance = (");
             
-            #line 144 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 160 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_INSTANCE*)");
             
-            #line 144 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 160 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_create_internal();\r\n\t\t*");
             
-            #line 145 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 161 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
             
             #line default
             #line hidden
             this.Write("_handle = ");
             
-            #line 145 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 161 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
             
             #line default
             #line hidden
             this.Write("_instance;\r\n\t\tif (*");
             
-            #line 146 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 162 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
             
             #line default
@@ -678,14 +776,14 @@ namespace amqplib_generator
                     "t_value = amqpvalue_get_described_value(value);\r\n\t\t\tif (list_value == NULL)\r\n\t\t\t" +
                     "{\r\n\t\t\t\t");
             
-            #line 155 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 171 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_destroy(*");
             
-            #line 155 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 171 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
             
             #line default
@@ -693,263 +791,263 @@ namespace amqplib_generator
             this.Write("_handle);\r\n\t\t\t\tresult = __LINE__;\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t\t{\r\n\t\t\t\tAMQP_VALUE item_value" +
                     ";\r\n\t\t\t\tdo\r\n\t\t\t\t{\r\n");
             
-            #line 163 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 179 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 				int k = 0; 
             
             #line default
             #line hidden
             
-            #line 164 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 180 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 				foreach (field field in type.Items.Where(item => item is field)) 
             
             #line default
             #line hidden
             
-            #line 165 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 181 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 				{ 
             
             #line default
             #line hidden
             
-            #line 166 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 182 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 					string field_name = field.name.ToLower().Replace('-', '_'); 
             
             #line default
             #line hidden
             
-            #line 167 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 183 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 					string c_type = Program.GetCType(field.type).Replace('-', '_').Replace(':', '_'); 
             
             #line default
             #line hidden
             
-            #line 168 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 184 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 					type field_type = Program.GetTypeByName(types, field.type); 
             
             #line default
             #line hidden
             
-            #line 169 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 185 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 					if ((field_type != null) && (field_type.@class == typeClass.composite)) c_type = field_type.name.ToUpper().Replace('-', '_').Replace(':', '_') + "_HANDLE"; 
             
             #line default
             #line hidden
             this.Write("\t\t\t\t\t/* ");
             
-            #line 170 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 186 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field.name));
             
             #line default
             #line hidden
             this.Write(" */\r\n\t\t\t\t\titem_value = amqpvalue_get_list_item(list_value, ");
             
-            #line 171 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 187 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(k));
             
             #line default
             #line hidden
             this.Write(");\r\n\t\t\t\t\tif (item_value == NULL)\r\n\t\t\t\t\t{\r\n");
             
-            #line 174 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 190 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  					if (field.mandatory == "true") 
             
             #line default
             #line hidden
             
-            #line 175 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 191 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  					{ 
             
             #line default
             #line hidden
             this.Write("\t\t\t\t\t\t{\r\n\t\t\t\t\t\t\t");
             
-            #line 177 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 193 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_destroy(*");
             
-            #line 177 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 193 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
             
             #line default
             #line hidden
             this.Write("_handle);\r\n\t\t\t\t\t\t\tresult = __LINE__;\r\n\t\t\t\t\t\t\tbreak;\r\n\t\t\t\t\t\t}\r\n");
             
-            #line 181 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 197 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  					} 
             
             #line default
             #line hidden
             
-            #line 182 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 198 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  					else 
             
             #line default
             #line hidden
             
-            #line 183 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 199 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  					{ 
             
             #line default
             #line hidden
             this.Write("\t\t\t\t\t\t/* do nothing */\r\n");
             
-            #line 185 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 201 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  					} 
             
             #line default
             #line hidden
             this.Write("\t\t\t\t\t}\r\n\t\t\t\t\telse\r\n\t\t\t\t\t{\r\n");
             
-            #line 189 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 205 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  if (field.type != "*") 
             
             #line default
             #line hidden
             
-            #line 190 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 206 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  { 
             
             #line default
             #line hidden
             this.Write("\t\t\t\t\t\t");
             
-            #line 191 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 207 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(c_type));
             
             #line default
             #line hidden
             this.Write(" ");
             
-            #line 191 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 207 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write(";\r\n\t\t\t\t\t\tif (amqpvalue_get_");
             
-            #line 192 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 208 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field.type.ToLower().Replace('-', '_').Replace(':', '_')));
             
             #line default
             #line hidden
             this.Write("(item_value, &");
             
-            #line 192 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 208 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write(") != 0)\r\n\t\t\t\t\t\t{\r\n");
             
-            #line 194 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 210 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  					if (field.mandatory == "true") 
             
             #line default
             #line hidden
             
-            #line 195 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 211 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  					{ 
             
             #line default
             #line hidden
             this.Write("\t\t\t\t\t\t\t");
             
-            #line 196 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 212 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_destroy(*");
             
-            #line 196 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 212 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
             
             #line default
             #line hidden
             this.Write("_handle);\r\n\t\t\t\t\t\t\tresult = __LINE__;\r\n\t\t\t\t\t\t\tbreak;\r\n");
             
-            #line 199 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 215 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  					} 
             
             #line default
             #line hidden
             
-            #line 200 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 216 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  					else 
             
             #line default
             #line hidden
             
-            #line 201 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 217 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  					{ 
             
             #line default
             #line hidden
             this.Write("\t\t\t\t\t\t\tif (amqpvalue_get_type(item_value) != AMQP_TYPE_NULL)\r\n\t\t\t\t\t\t\t{\r\n\t\t\t\t\t\t\t\t");
             
-            #line 204 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 220 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_destroy(*");
             
-            #line 204 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 220 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
             
             #line default
             #line hidden
             this.Write("_handle);\r\n\t\t\t\t\t\t\t\tresult = __LINE__;\r\n\t\t\t\t\t\t\t\tbreak;\r\n\t\t\t\t\t\t\t}\r\n");
             
-            #line 208 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 224 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  					} 
             
             #line default
             #line hidden
             this.Write("\t\t\t\t\t\t}\r\n\r\n");
             
-            #line 211 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 227 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  } 
             
             #line default
             #line hidden
             
-            #line 212 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 228 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  else 
             
             #line default
             #line hidden
             
-            #line 213 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 229 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  { 
             
             #line default
             #line hidden
             
-            #line 214 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 230 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  } 
             
             #line default
             #line hidden
             this.Write("\t\t\t\t\t\tamqpvalue_destroy(item_value);\r\n\t\t\t\t\t}\r\n");
             
-            #line 217 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 233 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 					k++; 
             
             #line default
             #line hidden
             
-            #line 218 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 234 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 				} 
             
             #line default
             #line hidden
             this.Write("\r\n\t\t\t\t\t");
             
-            #line 220 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 236 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToLower()));
             
             #line default
@@ -957,134 +1055,134 @@ namespace amqplib_generator
             this.Write("_instance->composite_value = amqpvalue_clone(value);\r\n\r\n\t\t\t\t\tresult = 0;\r\n\t\t\t\t} w" +
                     "hile (0);\r\n\t\t\t}\r\n\t\t}\r\n\r\n\t\treturn result;\r\n\t}\r\n\r\n");
             
-            #line 230 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 246 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 				int j = 0; 
             
             #line default
             #line hidden
             
-            #line 231 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 247 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 				foreach (field field in type.Items.Where(item => item is field)) 
             
             #line default
             #line hidden
             
-            #line 232 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 248 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 				{ 
             
             #line default
             #line hidden
             
-            #line 233 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 249 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 					string field_name = field.name.ToLower().Replace('-', '_'); 
             
             #line default
             #line hidden
             
-            #line 234 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 250 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 					string c_type = Program.GetCType(field.type).Replace('-', '_').Replace(':', '_'); 
             
             #line default
             #line hidden
             
-            #line 235 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 251 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 					type field_type = Program.GetTypeByName(types, field.type); 
             
             #line default
             #line hidden
             
-            #line 236 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 252 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 					if ((field_type != null) && (field_type.@class == typeClass.composite)) c_type = field_type.name.ToUpper().Replace('-', '_').Replace(':', '_') + "_HANDLE"; 
             
             #line default
             #line hidden
             this.Write("\tint ");
             
-            #line 237 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 253 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_get_");
             
-            #line 237 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 253 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("(");
             
-            #line 237 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 253 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE ");
             
-            #line 237 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 253 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 237 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 253 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(c_type));
             
             #line default
             #line hidden
             this.Write("* ");
             
-            #line 237 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 253 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("_value)\r\n\t{\r\n\t\tint result;\r\n\r\n\t\tif (");
             
-            #line 241 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 257 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(" == NULL)\r\n\t\t{\r\n\t\t\tresult = __LINE__;\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\t");
             
-            #line 247 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 263 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_INSTANCE* ");
             
-            #line 247 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 263 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_instance = (");
             
-            #line 247 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 263 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_INSTANCE*)");
             
-            #line 247 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 263 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(";\r\n\t\t\tAMQP_VALUE item_value = amqpvalue_get_composite_item_in_place(");
             
-            #line 248 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 264 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_instance->composite_value, ");
             
-            #line 248 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 264 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(j));
             
             #line default
@@ -1092,53 +1190,53 @@ namespace amqplib_generator
             this.Write(");\r\n\t\t\tif (item_value == NULL)\r\n\t\t\t{\r\n\t\t\t\tresult = __LINE__;\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t\t{" +
                     "\r\n");
             
-            #line 255 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 271 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 						if (field.type.Replace('-', '_').Replace(':', '_') == "*") 
             
             #line default
             #line hidden
             
-            #line 256 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 272 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 						{ 
             
             #line default
             #line hidden
             this.Write("\t\t\t\t*");
             
-            #line 257 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 273 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("_value = item_value;\r\n\t\t\t\tresult = 0;\r\n");
             
-            #line 259 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 275 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 						} 
             
             #line default
             #line hidden
             
-            #line 260 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 276 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 						else 
             
             #line default
             #line hidden
             
-            #line 261 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 277 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 						{ 
             
             #line default
             #line hidden
             this.Write("\t\t\t\tif (amqpvalue_get_");
             
-            #line 262 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 278 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field.type.Replace('-', '_').Replace(':', '_')));
             
             #line default
             #line hidden
             this.Write("(item_value, ");
             
-            #line 262 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 278 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
@@ -1146,165 +1244,165 @@ namespace amqplib_generator
             this.Write("_value) != 0)\r\n\t\t\t\t{\r\n\t\t\t\t\tresult = __LINE__;\r\n\t\t\t\t}\r\n\t\t\t\telse\r\n\t\t\t\t{\r\n\t\t\t\t\tresul" +
                     "t = 0;\r\n\t\t\t\t}\r\n");
             
-            #line 270 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 286 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 						} 
             
             #line default
             #line hidden
             this.Write("\t\t\t}\r\n\t\t}\r\n\r\n\t\treturn result;\r\n\t}\r\n\r\n\tint ");
             
-            #line 277 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 293 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_set_");
             
-            #line 277 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 293 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("(");
             
-            #line 277 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 293 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE ");
             
-            #line 277 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 293 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 277 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 293 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(c_type));
             
             #line default
             #line hidden
             this.Write(" ");
             
-            #line 277 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 293 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("_value)\r\n\t{\r\n\t\tint result;\r\n\r\n\t\tif (");
             
-            #line 281 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 297 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(" == NULL)\r\n\t\t{\r\n\t\t\tresult = __LINE__;\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\t");
             
-            #line 287 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 303 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_INSTANCE* ");
             
-            #line 287 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 303 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_instance = (");
             
-            #line 287 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 303 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_INSTANCE*)");
             
-            #line 287 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 303 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(";\r\n");
             
-            #line 288 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 304 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  if (c_type != "AMQP_VALUE") 
             
             #line default
             #line hidden
             
-            #line 289 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 305 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  { 
             
             #line default
             #line hidden
             this.Write("\t\t\tAMQP_VALUE ");
             
-            #line 290 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 306 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("_amqp_value = amqpvalue_create_");
             
-            #line 290 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 306 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field.type.ToLower().Replace('-', '_').Replace(':', '_')));
             
             #line default
             #line hidden
             this.Write("(");
             
-            #line 290 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 306 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("_value);\r\n");
             
-            #line 291 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 307 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  } 
             
             #line default
             #line hidden
             
-            #line 292 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 308 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  else 
             
             #line default
             #line hidden
             
-            #line 293 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 309 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  { 
             
             #line default
             #line hidden
             this.Write("\t\t\tAMQP_VALUE ");
             
-            #line 294 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 310 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("_amqp_value = amqpvalue_clone(");
             
-            #line 294 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 310 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("_value);\r\n");
             
-            #line 295 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 311 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
  } 
             
             #line default
             #line hidden
             this.Write("\t\t\tif (");
             
-            #line 296 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 312 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
@@ -1312,21 +1410,21 @@ namespace amqplib_generator
             this.Write("_amqp_value == NULL)\r\n\t\t\t{\r\n\t\t\t\tresult = __LINE__;\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t\t{\r\n\t\t\t\tif (" +
                     "amqpvalue_set_composite_item(");
             
-            #line 302 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 318 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_instance->composite_value, ");
             
-            #line 302 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 318 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(j));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 302 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 318 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
@@ -1334,39 +1432,39 @@ namespace amqplib_generator
             this.Write("_amqp_value) != 0)\r\n\t\t\t\t{\r\n\t\t\t\t\tresult = __LINE__;\r\n\t\t\t\t}\r\n\t\t\t\telse\r\n\t\t\t\t{\r\n\t\t\t\t\t" +
                     "result = 0;\r\n\t\t\t\t}\r\n\r\n\t\t\t\tamqpvalue_destroy(");
             
-            #line 311 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 327 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("_amqp_value);\r\n\t\t\t}\r\n\t\t}\r\n\r\n\t\treturn result;\r\n\t}\r\n\r\n");
             
-            #line 318 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 334 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 					j++; 
             
             #line default
             #line hidden
             
-            #line 319 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 335 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 				} 
             
             #line default
             #line hidden
             this.Write("\r\n");
             
-            #line 321 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 337 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 			} 
             
             #line default
             #line hidden
             
-            #line 322 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 338 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 		} 
             
             #line default
             #line hidden
             
-            #line 323 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
+            #line 339 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_c.tt"
 	} 
             
             #line default

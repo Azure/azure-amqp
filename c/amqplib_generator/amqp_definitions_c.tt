@@ -92,6 +92,22 @@
 		return <#= type_name #>_instance;
 	}
 
+	<#= type_name.ToUpper() #>_HANDLE <#= type_name #>_clone(<#= type_name.ToUpper() #>_HANDLE value)
+	{
+		<#= type_name.ToUpper() #>_INSTANCE* <#= type_name #>_instance = (<#= type_name.ToUpper() #>_INSTANCE*)amqpalloc_malloc(sizeof(<#= type_name.ToUpper() #>_INSTANCE));
+		if (<#= type_name #>_instance != NULL)
+		{
+			<#= type_name #>_instance->composite_value = amqpvalue_clone(((<#= type_name.ToUpper() #>_INSTANCE*)value)->composite_value);
+			if (<#= type_name #>_instance->composite_value == NULL)
+			{
+				amqpalloc_free(<#= type_name #>_instance);
+				<#= type_name #>_instance = NULL;
+			}
+		}
+
+		return <#= type_name #>_instance;
+	}
+
 	void <#= type_name #>_destroy(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>)
 	{
 		if (<#= type_name #> != NULL)

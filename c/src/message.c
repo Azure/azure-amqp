@@ -11,6 +11,7 @@ typedef struct MESSAGE_DATA_TAG
 	AMQP_VALUE to;
 	unsigned char* body_data_section_bytes;
 	size_t body_data_section_length;
+	HEADER_HANDLE header;
 } MESSAGE_DATA;
 
 MESSAGE_HANDLE message_create(void)
@@ -18,6 +19,7 @@ MESSAGE_HANDLE message_create(void)
 	MESSAGE_DATA* result = (MESSAGE_DATA*)amqpalloc_malloc(sizeof(MESSAGE_DATA));
 	if (result != NULL)
 	{
+		result->header = NULL;
 		result->to = NULL;
 		result->body_data_section_bytes = NULL;
 		result->body_data_section_length = 0;
@@ -55,6 +57,10 @@ void message_destroy(MESSAGE_HANDLE handle)
 	if (handle != NULL)
 	{
 		MESSAGE_DATA* message = (MESSAGE_DATA*)handle;
+		if (message->header != NULL)
+		{
+			header_destroy(message->header);
+		}
 		amqpvalue_destroy(message->to);
 		amqpalloc_free(message->body_data_section_bytes);
 		amqpalloc_free(handle);
@@ -106,13 +112,33 @@ const char* message_get_to(MESSAGE_HANDLE handle)
 	return result;
 }
 
-int message_set_header(MESSAGE_HANDLE handle, HEADER_HANDLE message_header)
+int message_set_header(MESSAGE_HANDLE handle, HEADER_HANDLE header)
 {
+	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)handle;
+
+	if (message_instance->header != NULL)
+	{
+		header_destroy(message_instance->header);
+	}
+
+	message_instance->header = header_clone(header);
+
 	return 0;
 }
 
-int message_get_header(MESSAGE_HANDLE handle, HEADER_HANDLE* message_header)
+int message_get_header(MESSAGE_HANDLE handle, HEADER_HANDLE* header)
 {
+	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)handle;
+
+	if (message_instance->header == NULL)
+	{
+		*header = NULL;
+	}
+	else
+	{
+		*header = header_clone(message_instance->header);
+	}
+
 	return 0;
 }
 

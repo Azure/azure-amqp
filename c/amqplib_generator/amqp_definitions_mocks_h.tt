@@ -51,6 +51,8 @@ public:
 <#				ICollection<KeyValuePair<field, int>> args = Program.GetMandatoryArgs(type); #>
 	MOCK_STATIC_METHOD_<#= args.Count() #>(,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_create<#= arg_list #>);
 	MOCK_METHOD_END(<#= type_name.ToUpper() #>_HANDLE, test_<#= type_name #>_handle);
+	MOCK_STATIC_METHOD_1(,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_create, <#= type_name.ToUpper() #>_HANDLE, value);
+	MOCK_METHOD_END(<#= type_name.ToUpper() #>_HANDLE, test_<#= type_name #>_handle);
 	MOCK_STATIC_METHOD_1(, void, <#= type_name #>_destroy, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
 	MOCK_VOID_METHOD_END();
 	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_create_<#= type_name #>, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
@@ -91,6 +93,7 @@ public:
 <#				string arg_list = Program.GetMandatoryArgListMock(type); #>
 <#				ICollection<KeyValuePair<field, int>> args = Program.GetMandatoryArgs(type); #>
 	DECLARE_GLOBAL_MOCK_METHOD_<#= args.Count() #>(amqp_definitions_mocks, ,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_create<#= arg_list #>);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_create, <#= type_name.ToUpper() #>_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, <#= type_name #>_destroy, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_<#= type_name #>, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_<#= type_name #>_type_by_descriptor, AMQP_VALUE, value);

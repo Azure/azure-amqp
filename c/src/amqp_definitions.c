@@ -57,6 +57,22 @@
 		return error_instance;
 	}
 
+	ERROR_HANDLE error_clone(ERROR_HANDLE value)
+	{
+		ERROR_INSTANCE* error_instance = (ERROR_INSTANCE*)amqpalloc_malloc(sizeof(ERROR_INSTANCE));
+		if (error_instance != NULL)
+		{
+			error_instance->composite_value = amqpvalue_clone(((ERROR_INSTANCE*)value)->composite_value);
+			if (error_instance->composite_value == NULL)
+			{
+				amqpalloc_free(error_instance);
+				error_instance = NULL;
+			}
+		}
+
+		return error_instance;
+	}
+
 	void error_destroy(ERROR_HANDLE error)
 	{
 		if (error != NULL)
@@ -440,6 +456,22 @@
 				}
 
 				amqpvalue_destroy(container_id_amqp_value);
+			}
+		}
+
+		return open_instance;
+	}
+
+	OPEN_HANDLE open_clone(OPEN_HANDLE value)
+	{
+		OPEN_INSTANCE* open_instance = (OPEN_INSTANCE*)amqpalloc_malloc(sizeof(OPEN_INSTANCE));
+		if (open_instance != NULL)
+		{
+			open_instance->composite_value = amqpvalue_clone(((OPEN_INSTANCE*)value)->composite_value);
+			if (open_instance->composite_value == NULL)
+			{
+				amqpalloc_free(open_instance);
+				open_instance = NULL;
 			}
 		}
 
@@ -1458,6 +1490,22 @@
 		return begin_instance;
 	}
 
+	BEGIN_HANDLE begin_clone(BEGIN_HANDLE value)
+	{
+		BEGIN_INSTANCE* begin_instance = (BEGIN_INSTANCE*)amqpalloc_malloc(sizeof(BEGIN_INSTANCE));
+		if (begin_instance != NULL)
+		{
+			begin_instance->composite_value = amqpvalue_clone(((BEGIN_INSTANCE*)value)->composite_value);
+			if (begin_instance->composite_value == NULL)
+			{
+				amqpalloc_free(begin_instance);
+				begin_instance = NULL;
+			}
+		}
+
+		return begin_instance;
+	}
+
 	void begin_destroy(BEGIN_HANDLE begin)
 	{
 		if (begin != NULL)
@@ -2292,6 +2340,22 @@
 				amqpvalue_destroy(name_amqp_value);
 				amqpvalue_destroy(handle_amqp_value);
 				amqpvalue_destroy(role_amqp_value);
+			}
+		}
+
+		return attach_instance;
+	}
+
+	ATTACH_HANDLE attach_clone(ATTACH_HANDLE value)
+	{
+		ATTACH_INSTANCE* attach_instance = (ATTACH_INSTANCE*)amqpalloc_malloc(sizeof(ATTACH_INSTANCE));
+		if (attach_instance != NULL)
+		{
+			attach_instance->composite_value = amqpvalue_clone(((ATTACH_INSTANCE*)value)->composite_value);
+			if (attach_instance->composite_value == NULL)
+			{
+				amqpalloc_free(attach_instance);
+				attach_instance = NULL;
 			}
 		}
 
@@ -3626,6 +3690,22 @@
 		return flow_instance;
 	}
 
+	FLOW_HANDLE flow_clone(FLOW_HANDLE value)
+	{
+		FLOW_INSTANCE* flow_instance = (FLOW_INSTANCE*)amqpalloc_malloc(sizeof(FLOW_INSTANCE));
+		if (flow_instance != NULL)
+		{
+			flow_instance->composite_value = amqpvalue_clone(((FLOW_INSTANCE*)value)->composite_value);
+			if (flow_instance->composite_value == NULL)
+			{
+				amqpalloc_free(flow_instance);
+				flow_instance = NULL;
+			}
+		}
+
+		return flow_instance;
+	}
+
 	void flow_destroy(FLOW_HANDLE flow)
 	{
 		if (flow != NULL)
@@ -4713,6 +4793,22 @@
 		return transfer_instance;
 	}
 
+	TRANSFER_HANDLE transfer_clone(TRANSFER_HANDLE value)
+	{
+		TRANSFER_INSTANCE* transfer_instance = (TRANSFER_INSTANCE*)amqpalloc_malloc(sizeof(TRANSFER_INSTANCE));
+		if (transfer_instance != NULL)
+		{
+			transfer_instance->composite_value = amqpvalue_clone(((TRANSFER_INSTANCE*)value)->composite_value);
+			if (transfer_instance->composite_value == NULL)
+			{
+				amqpalloc_free(transfer_instance);
+				transfer_instance = NULL;
+			}
+		}
+
+		return transfer_instance;
+	}
+
 	void transfer_destroy(TRANSFER_HANDLE transfer)
 	{
 		if (transfer != NULL)
@@ -5788,6 +5884,22 @@
 		return disposition_instance;
 	}
 
+	DISPOSITION_HANDLE disposition_clone(DISPOSITION_HANDLE value)
+	{
+		DISPOSITION_INSTANCE* disposition_instance = (DISPOSITION_INSTANCE*)amqpalloc_malloc(sizeof(DISPOSITION_INSTANCE));
+		if (disposition_instance != NULL)
+		{
+			disposition_instance->composite_value = amqpvalue_clone(((DISPOSITION_INSTANCE*)value)->composite_value);
+			if (disposition_instance->composite_value == NULL)
+			{
+				amqpalloc_free(disposition_instance);
+				disposition_instance = NULL;
+			}
+		}
+
+		return disposition_instance;
+	}
+
 	void disposition_destroy(DISPOSITION_HANDLE disposition)
 	{
 		if (disposition != NULL)
@@ -6422,6 +6534,22 @@
 		return detach_instance;
 	}
 
+	DETACH_HANDLE detach_clone(DETACH_HANDLE value)
+	{
+		DETACH_INSTANCE* detach_instance = (DETACH_INSTANCE*)amqpalloc_malloc(sizeof(DETACH_INSTANCE));
+		if (detach_instance != NULL)
+		{
+			detach_instance->composite_value = amqpvalue_clone(((DETACH_INSTANCE*)value)->composite_value);
+			if (detach_instance->composite_value == NULL)
+			{
+				amqpalloc_free(detach_instance);
+				detach_instance = NULL;
+			}
+		}
+
+		return detach_instance;
+	}
+
 	void detach_destroy(DETACH_HANDLE detach)
 	{
 		if (detach != NULL)
@@ -6798,6 +6926,22 @@
 		return end_instance;
 	}
 
+	END_HANDLE end_clone(END_HANDLE value)
+	{
+		END_INSTANCE* end_instance = (END_INSTANCE*)amqpalloc_malloc(sizeof(END_INSTANCE));
+		if (end_instance != NULL)
+		{
+			end_instance->composite_value = amqpvalue_clone(((END_INSTANCE*)value)->composite_value);
+			if (end_instance->composite_value == NULL)
+			{
+				amqpalloc_free(end_instance);
+				end_instance = NULL;
+			}
+		}
+
+		return end_instance;
+	}
+
 	void end_destroy(END_HANDLE end)
 	{
 		if (end != NULL)
@@ -6989,6 +7133,22 @@
 		if (close_instance != NULL)
 		{
 			close_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(24);
+			if (close_instance->composite_value == NULL)
+			{
+				amqpalloc_free(close_instance);
+				close_instance = NULL;
+			}
+		}
+
+		return close_instance;
+	}
+
+	CLOSE_HANDLE close_clone(CLOSE_HANDLE value)
+	{
+		CLOSE_INSTANCE* close_instance = (CLOSE_INSTANCE*)amqpalloc_malloc(sizeof(CLOSE_INSTANCE));
+		if (close_instance != NULL)
+		{
+			close_instance->composite_value = amqpvalue_clone(((CLOSE_INSTANCE*)value)->composite_value);
 			if (close_instance->composite_value == NULL)
 			{
 				amqpalloc_free(close_instance);
@@ -7213,6 +7373,22 @@
 		return sasl_mechanisms_instance;
 	}
 
+	SASL_MECHANISMS_HANDLE sasl_mechanisms_clone(SASL_MECHANISMS_HANDLE value)
+	{
+		SASL_MECHANISMS_INSTANCE* sasl_mechanisms_instance = (SASL_MECHANISMS_INSTANCE*)amqpalloc_malloc(sizeof(SASL_MECHANISMS_INSTANCE));
+		if (sasl_mechanisms_instance != NULL)
+		{
+			sasl_mechanisms_instance->composite_value = amqpvalue_clone(((SASL_MECHANISMS_INSTANCE*)value)->composite_value);
+			if (sasl_mechanisms_instance->composite_value == NULL)
+			{
+				amqpalloc_free(sasl_mechanisms_instance);
+				sasl_mechanisms_instance = NULL;
+			}
+		}
+
+		return sasl_mechanisms_instance;
+	}
+
 	void sasl_mechanisms_destroy(SASL_MECHANISMS_HANDLE sasl_mechanisms)
 	{
 		if (sasl_mechanisms != NULL)
@@ -7422,6 +7598,22 @@
 				}
 
 				amqpvalue_destroy(mechanism_amqp_value);
+			}
+		}
+
+		return sasl_init_instance;
+	}
+
+	SASL_INIT_HANDLE sasl_init_clone(SASL_INIT_HANDLE value)
+	{
+		SASL_INIT_INSTANCE* sasl_init_instance = (SASL_INIT_INSTANCE*)amqpalloc_malloc(sizeof(SASL_INIT_INSTANCE));
+		if (sasl_init_instance != NULL)
+		{
+			sasl_init_instance->composite_value = amqpvalue_clone(((SASL_INIT_INSTANCE*)value)->composite_value);
+			if (sasl_init_instance->composite_value == NULL)
+			{
+				amqpalloc_free(sasl_init_instance);
+				sasl_init_instance = NULL;
 			}
 		}
 
@@ -7817,6 +8009,22 @@
 		return sasl_challenge_instance;
 	}
 
+	SASL_CHALLENGE_HANDLE sasl_challenge_clone(SASL_CHALLENGE_HANDLE value)
+	{
+		SASL_CHALLENGE_INSTANCE* sasl_challenge_instance = (SASL_CHALLENGE_INSTANCE*)amqpalloc_malloc(sizeof(SASL_CHALLENGE_INSTANCE));
+		if (sasl_challenge_instance != NULL)
+		{
+			sasl_challenge_instance->composite_value = amqpvalue_clone(((SASL_CHALLENGE_INSTANCE*)value)->composite_value);
+			if (sasl_challenge_instance->composite_value == NULL)
+			{
+				amqpalloc_free(sasl_challenge_instance);
+				sasl_challenge_instance = NULL;
+			}
+		}
+
+		return sasl_challenge_instance;
+	}
+
 	void sasl_challenge_destroy(SASL_CHALLENGE_HANDLE sasl_challenge)
 	{
 		if (sasl_challenge != NULL)
@@ -8032,6 +8240,22 @@
 		return sasl_response_instance;
 	}
 
+	SASL_RESPONSE_HANDLE sasl_response_clone(SASL_RESPONSE_HANDLE value)
+	{
+		SASL_RESPONSE_INSTANCE* sasl_response_instance = (SASL_RESPONSE_INSTANCE*)amqpalloc_malloc(sizeof(SASL_RESPONSE_INSTANCE));
+		if (sasl_response_instance != NULL)
+		{
+			sasl_response_instance->composite_value = amqpvalue_clone(((SASL_RESPONSE_INSTANCE*)value)->composite_value);
+			if (sasl_response_instance->composite_value == NULL)
+			{
+				amqpalloc_free(sasl_response_instance);
+				sasl_response_instance = NULL;
+			}
+		}
+
+		return sasl_response_instance;
+	}
+
 	void sasl_response_destroy(SASL_RESPONSE_HANDLE sasl_response)
 	{
 		if (sasl_response != NULL)
@@ -8241,6 +8465,22 @@
 				}
 
 				amqpvalue_destroy(code_amqp_value);
+			}
+		}
+
+		return sasl_outcome_instance;
+	}
+
+	SASL_OUTCOME_HANDLE sasl_outcome_clone(SASL_OUTCOME_HANDLE value)
+	{
+		SASL_OUTCOME_INSTANCE* sasl_outcome_instance = (SASL_OUTCOME_INSTANCE*)amqpalloc_malloc(sizeof(SASL_OUTCOME_INSTANCE));
+		if (sasl_outcome_instance != NULL)
+		{
+			sasl_outcome_instance->composite_value = amqpvalue_clone(((SASL_OUTCOME_INSTANCE*)value)->composite_value);
+			if (sasl_outcome_instance->composite_value == NULL)
+			{
+				amqpalloc_free(sasl_outcome_instance);
+				sasl_outcome_instance = NULL;
 			}
 		}
 
@@ -8526,6 +8766,22 @@
 		if (source_instance != NULL)
 		{
 			source_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(40);
+			if (source_instance->composite_value == NULL)
+			{
+				amqpalloc_free(source_instance);
+				source_instance = NULL;
+			}
+		}
+
+		return source_instance;
+	}
+
+	SOURCE_HANDLE source_clone(SOURCE_HANDLE value)
+	{
+		SOURCE_INSTANCE* source_instance = (SOURCE_INSTANCE*)amqpalloc_malloc(sizeof(SOURCE_INSTANCE));
+		if (source_instance != NULL)
+		{
+			source_instance->composite_value = amqpvalue_clone(((SOURCE_INSTANCE*)value)->composite_value);
 			if (source_instance->composite_value == NULL)
 			{
 				amqpalloc_free(source_instance);
@@ -9573,6 +9829,22 @@
 		return target_instance;
 	}
 
+	TARGET_HANDLE target_clone(TARGET_HANDLE value)
+	{
+		TARGET_INSTANCE* target_instance = (TARGET_INSTANCE*)amqpalloc_malloc(sizeof(TARGET_INSTANCE));
+		if (target_instance != NULL)
+		{
+			target_instance->composite_value = amqpvalue_clone(((TARGET_INSTANCE*)value)->composite_value);
+			if (target_instance->composite_value == NULL)
+			{
+				amqpalloc_free(target_instance);
+				target_instance = NULL;
+			}
+		}
+
+		return target_instance;
+	}
+
 	void target_destroy(TARGET_HANDLE target)
 	{
 		if (target != NULL)
@@ -10279,6 +10551,22 @@
 		return header_instance;
 	}
 
+	HEADER_HANDLE header_clone(HEADER_HANDLE value)
+	{
+		HEADER_INSTANCE* header_instance = (HEADER_INSTANCE*)amqpalloc_malloc(sizeof(HEADER_INSTANCE));
+		if (header_instance != NULL)
+		{
+			header_instance->composite_value = amqpvalue_clone(((HEADER_INSTANCE*)value)->composite_value);
+			if (header_instance->composite_value == NULL)
+			{
+				amqpalloc_free(header_instance);
+				header_instance = NULL;
+			}
+		}
+
+		return header_instance;
+	}
+
 	void header_destroy(HEADER_HANDLE header)
 	{
 		if (header != NULL)
@@ -10818,6 +11106,22 @@
 		if (properties_instance != NULL)
 		{
 			properties_instance->composite_value = amqpvalue_create_composite_with_ulong_descriptor(115);
+			if (properties_instance->composite_value == NULL)
+			{
+				amqpalloc_free(properties_instance);
+				properties_instance = NULL;
+			}
+		}
+
+		return properties_instance;
+	}
+
+	PROPERTIES_HANDLE properties_clone(PROPERTIES_HANDLE value)
+	{
+		PROPERTIES_INSTANCE* properties_instance = (PROPERTIES_INSTANCE*)amqpalloc_malloc(sizeof(PROPERTIES_INSTANCE));
+		if (properties_instance != NULL)
+		{
+			properties_instance->composite_value = amqpvalue_clone(((PROPERTIES_INSTANCE*)value)->composite_value);
 			if (properties_instance->composite_value == NULL)
 			{
 				amqpalloc_free(properties_instance);

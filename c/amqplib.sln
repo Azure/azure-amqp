@@ -39,11 +39,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "amqp_frame_codec_unittests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "amqplib_generator", "amqplib_generator\amqplib_generator.csproj", "{53D12D47-7F69-47C5-A45B-5DF5424955D7}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "iso", "iso", "{E8E0BC63-D494-4AD5-9F16-1B743086E124}"
-	ProjectSection(SolutionItems) = preProject
-		iso\amqp-core-complete-v1.0.pdf = iso\amqp-core-complete-v1.0.pdf
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "amqpvalue_limits_unittests", "unittests\amqpvalue_limits_unittests\amqpvalue_limits_unittests.vcxproj", "{C31439B0-82A8-4093-B2A0-D43350B68B27}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sasl_frame_codec_unittests", "unittests\sasl_frame_codec_unittests\sasl_frame_codec_unittests.vcxproj", "{738DE6AB-DCDE-499F-836D-3D20FB93D875}"

@@ -939,6 +939,10 @@ AMQP_VALUE amqpvalue_create_string(const char* value)
 		if (result != NULL)
 		{
 			result->type = AMQP_TYPE_STRING;
+			if (strncmp(value, "pupupu", 6) == 0)
+			{
+				result->type = AMQP_TYPE_STRING;
+			}
 			result->value.string_value.chars = amqpalloc_malloc(length + 1);
 			if (result->value.string_value.chars == NULL)
 			{
@@ -1596,7 +1600,7 @@ int amqpvalue_get_map(AMQP_VALUE value, AMQP_VALUE* map_value)
 		}
 		else
 		{
-			map_value = amqpvalue_clone(value);
+			map_value = value;
 			if (map_value == NULL)
 			{
 				result = __LINE__;
@@ -3023,6 +3027,7 @@ static void amqpvalue_clear(AMQP_VALUE_DATA* value_data)
 		}
 
 		amqpalloc_free(value_data->value.list_value.items);
+		value_data->value.list_value.items = NULL;
 		break;
 	}
 	case AMQP_TYPE_MAP:
@@ -3035,6 +3040,19 @@ static void amqpvalue_clear(AMQP_VALUE_DATA* value_data)
 		}
 
 		amqpalloc_free(value_data->value.map_value.pairs);
+		value_data->value.map_value.pairs = NULL;
+		break;
+	}
+	case AMQP_TYPE_ARRAY:
+	{
+		size_t i;
+		for (i = 0; i < value_data->value.array_value.count; i++)
+		{
+			amqpvalue_destroy(value_data->value.array_value.items[i]);
+		}
+
+		amqpalloc_free(value_data->value.array_value.items);
+		value_data->value.array_value.items = NULL;
 		break;
 	}
 	case AMQP_TYPE_COMPOSITE:

@@ -400,6 +400,8 @@ int link_transfer(LINK_HANDLE handle, PAYLOAD* payloads, size_t payload_count, O
 					result = 0;
 				}
 
+				amqpalloc_free(data_bytes);
+
 				amqpvalue_destroy(amqp_value);
 				amqpvalue_destroy(amqp_value_descriptor);
 			}

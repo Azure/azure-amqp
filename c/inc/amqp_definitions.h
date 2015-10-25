@@ -609,6 +609,14 @@ extern "C" {
 	extern int target_get_capabilities(TARGET_HANDLE target, const char** capabilities_value);
 	extern int target_set_capabilities(TARGET_HANDLE target, const char* capabilities_value);
 
+/* annotations */
+
+	typedef AMQP_VALUE annotations;
+
+	#define amqpvalue_create_annotations amqpvalue_clone
+	#define amqpvalue_get_annotations amqpvalue_get_map
+
+
 /* message-id-ulong */
 
 	typedef uint64_t message_id_ulong;

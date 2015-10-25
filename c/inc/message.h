@@ -2,6 +2,7 @@
 #define MESSAGE_H
 
 #include "amqpvalue.h"
+#include "amqp_definitions.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,6 +21,18 @@ extern "C" {
 	extern MESSAGE_HANDLE message_create(void);
 	extern MESSAGE_HANDLE message_clone(MESSAGE_HANDLE source_message);
 	extern void message_destroy(MESSAGE_HANDLE handle);
+	extern int message_set_header(MESSAGE_HANDLE handle, HEADER_HANDLE message_header);
+	extern int message_get_header(MESSAGE_HANDLE handle, HEADER_HANDLE* message_header);
+	extern int message_set_delivery_annotations(MESSAGE_HANDLE handle, annotations delivery_annotations);
+	extern int message_get_delivery_annotations(MESSAGE_HANDLE handle, annotations* delivery_annotations);
+	extern int message_set_message_annotations(MESSAGE_HANDLE handle, annotations delivery_annotations);
+	extern int message_get_message_annotations(MESSAGE_HANDLE handle, annotations* delivery_annotations);
+	extern int message_set_properties(MESSAGE_HANDLE handle, PROPERTIES_HANDLE properties);
+	extern int message_get_properties(MESSAGE_HANDLE handle, PROPERTIES_HANDLE* properties);
+	extern int message_set_application_properties(MESSAGE_HANDLE handle, AMQP_VALUE application_properties);
+	extern int message_get_application_properties(MESSAGE_HANDLE handle, AMQP_VALUE* application_properties);
+	extern int message_set_footer(MESSAGE_HANDLE handle, annotations footer);
+	extern int message_get_footer(MESSAGE_HANDLE handle, annotations* footer);
 	extern int message_set_to(MESSAGE_HANDLE handle, const char* to);
 	extern const char* message_get_to(MESSAGE_HANDLE handle);
 	extern int message_set_body_amqp_data(MESSAGE_HANDLE handle, BINARY_DATA binary_data);

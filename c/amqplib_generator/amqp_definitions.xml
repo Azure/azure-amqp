@@ -223,6 +223,7 @@
       <field name="dynamic-node-properties" type="node-properties"/>
       <field name="capabilities" type="symbol" multiple="true"/>
     </type>
+    <type name="annotations" class="restricted" source="map"/>
     <type name="message-id-ulong" class="restricted" source="ulong" provides="message-id"/>
     <type name="message-id-uuid" class="restricted" source="uuid" provides="message-id"/>
     <type name="message-id-binary" class="restricted" source="binary" provides="message-id"/>

@@ -106,6 +106,66 @@ const char* message_get_to(MESSAGE_HANDLE handle)
 	return result;
 }
 
+int message_set_header(MESSAGE_HANDLE handle, HEADER_HANDLE message_header)
+{
+	return 0;
+}
+
+int message_get_header(MESSAGE_HANDLE handle, HEADER_HANDLE* message_header)
+{
+	return 0;
+}
+
+int message_set_delivery_annotations(MESSAGE_HANDLE handle, annotations delivery_annotations)
+{
+	return 0;
+}
+
+int message_get_delivery_annotations(MESSAGE_HANDLE handle, annotations* delivery_annotations)
+{
+	return 0;
+}
+
+int message_set_message_annotations(MESSAGE_HANDLE handle, annotations message_annotations)
+{
+	return 0;
+}
+
+int message_get_message_annotations(MESSAGE_HANDLE handle, annotations* message_annotations)
+{
+	return 0;
+}
+
+int message_set_properties(MESSAGE_HANDLE handle, PROPERTIES_HANDLE properties)
+{
+	return 0;
+}
+
+int message_get_properties(MESSAGE_HANDLE handle, PROPERTIES_HANDLE* properties)
+{
+	return 0;
+}
+
+int message_set_application_properties(MESSAGE_HANDLE handle, AMQP_VALUE application_properties)
+{
+	return 0;
+}
+
+int message_get_application_properties(MESSAGE_HANDLE handle, AMQP_VALUE* application_properties)
+{
+	return 0;
+}
+
+int message_set_footer(MESSAGE_HANDLE handle, annotations footer)
+{
+	return 0;
+}
+
+int message_get_footer(MESSAGE_HANDLE handle, annotations* footer)
+{
+	return 0;
+}
+
 int message_set_body_amqp_data(MESSAGE_HANDLE handle, BINARY_DATA binary_data)
 {
 	int result;

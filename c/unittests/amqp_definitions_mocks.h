@@ -117,6 +117,8 @@ static const AMQP_VALUE test_source_amqp_value = (AMQP_VALUE)16978;
 
 static const TARGET_HANDLE test_target_handle = (TARGET_HANDLE)16978;
 static const AMQP_VALUE test_target_amqp_value = (AMQP_VALUE)16979;
+/* annotations */
+
 /* message-id-ulong */
 
 /* message-id-uuid */
@@ -797,6 +799,8 @@ public:
 	MOCK_STATIC_METHOD_2(, int, target_set_capabilities, TARGET_HANDLE, target, const char*, capabilities_value);
 	MOCK_METHOD_END(int, 0);
 
+/* annotations */
+
 /* message-id-ulong */
 
 /* message-id-uuid */
@@ -1293,6 +1297,8 @@ public:
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_set_dynamic_node_properties, TARGET_HANDLE, target, node_properties, dynamic_node_properties_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_get_capabilities, TARGET_HANDLE, target, const char**, capabilities_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, target_set_capabilities, TARGET_HANDLE, target, const char*, capabilities_value);
+
+/* annotations */
 
 /* message-id-ulong */
 

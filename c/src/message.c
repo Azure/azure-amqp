@@ -12,6 +12,7 @@ typedef struct MESSAGE_DATA_TAG
 	size_t body_data_section_length;
 	HEADER_HANDLE header;
 	annotations delivery_annotations;
+	annotations message_annotations;
 	PROPERTIES_HANDLE properties;
 } MESSAGE_DATA;
 
@@ -24,7 +25,8 @@ MESSAGE_HANDLE message_create(void)
 		result->header = NULL;
 		result->properties = NULL;
 		result->delivery_annotations = NULL;
-		result->body_data_section_bytes = NULL;
+		result->message_annotations = NULL;
+		result->body_data_section_bytes = NULL; 
 		result->body_data_section_length = 0;
 	}
 
@@ -70,6 +72,16 @@ MESSAGE_HANDLE message_clone(MESSAGE_HANDLE source_message)
 			else
 			{
 				result->delivery_annotations = NULL;
+			}
+
+			if (source_message_instance->message_annotations != NULL)
+			{
+				/* Codes_SRS_MESSAGE_01_007: [If message annotations exist on the source message they shall be cloned by using annotations_clone.] */
+				result->message_annotations = annotations_clone(source_message_instance->message_annotations);
+			}
+			else
+			{
+				result->message_annotations = NULL;
 			}
 
 			if (source_message_instance->properties != NULL)
@@ -158,7 +170,7 @@ int message_set_delivery_annotations(MESSAGE_HANDLE message, annotations deliver
 		annotations_destroy(message_instance->delivery_annotations);
 	}
 
-	message_instance->delivery_annotations = header_clone(delivery_annotations);
+	message_instance->delivery_annotations = annotations_clone(delivery_annotations);
 
 	return 0;
 }
@@ -170,6 +182,15 @@ int message_get_delivery_annotations(MESSAGE_HANDLE message, annotations* delive
 
 int message_set_message_annotations(MESSAGE_HANDLE message, annotations message_annotations)
 {
+	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)message;
+
+	if (message_instance->message_annotations != NULL)
+	{
+		annotations_destroy(message_instance->message_annotations);
+	}
+
+	message_instance->message_annotations = annotations_clone(message_annotations);
+
 	return 0;
 }
 

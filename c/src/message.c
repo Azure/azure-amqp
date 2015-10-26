@@ -71,27 +71,27 @@ MESSAGE_HANDLE message_clone(MESSAGE_HANDLE source_message)
 	return result;
 }
 
-void message_destroy(MESSAGE_HANDLE handle)
+void message_destroy(MESSAGE_HANDLE message)
 {
-	if (handle != NULL)
+	if (message != NULL)
 	{
-		MESSAGE_DATA* message = (MESSAGE_DATA*)handle;
-		if (message->header != NULL)
+		MESSAGE_DATA* message_instance = (MESSAGE_DATA*)message;
+		if (message_instance->header != NULL)
 		{
-			header_destroy(message->header);
+			header_destroy(message_instance->header);
 		}
-		if (message->properties != NULL)
+		if (message_instance->properties != NULL)
 		{
-			properties_destroy(message->properties);
+			properties_destroy(message_instance->properties);
 		}
-		amqpalloc_free(message->body_data_section_bytes);
-		amqpalloc_free(handle);
+		amqpalloc_free(message_instance->body_data_section_bytes);
+		amqpalloc_free(message_instance);
 	}
 }
 
-int message_set_header(MESSAGE_HANDLE handle, HEADER_HANDLE header)
+int message_set_header(MESSAGE_HANDLE message, HEADER_HANDLE header)
 {
-	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)handle;
+	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)message;
 
 	if (message_instance->header != NULL)
 	{
@@ -103,9 +103,9 @@ int message_set_header(MESSAGE_HANDLE handle, HEADER_HANDLE header)
 	return 0;
 }
 
-int message_get_header(MESSAGE_HANDLE handle, HEADER_HANDLE* header)
+int message_get_header(MESSAGE_HANDLE message, HEADER_HANDLE* header)
 {
-	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)handle;
+	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)message;
 
 	if (message_instance->header == NULL)
 	{
@@ -119,29 +119,29 @@ int message_get_header(MESSAGE_HANDLE handle, HEADER_HANDLE* header)
 	return 0;
 }
 
-int message_set_delivery_annotations(MESSAGE_HANDLE handle, annotations delivery_annotations)
+int message_set_delivery_annotations(MESSAGE_HANDLE message, annotations delivery_annotations)
 {
 	return 0;
 }
 
-int message_get_delivery_annotations(MESSAGE_HANDLE handle, annotations* delivery_annotations)
+int message_get_delivery_annotations(MESSAGE_HANDLE message, annotations* delivery_annotations)
 {
 	return 0;
 }
 
-int message_set_message_annotations(MESSAGE_HANDLE handle, annotations message_annotations)
+int message_set_message_annotations(MESSAGE_HANDLE message, annotations message_annotations)
 {
 	return 0;
 }
 
-int message_get_message_annotations(MESSAGE_HANDLE handle, annotations* message_annotations)
+int message_get_message_annotations(MESSAGE_HANDLE message, annotations* message_annotations)
 {
 	return 0;
 }
 
-int message_set_properties(MESSAGE_HANDLE handle, PROPERTIES_HANDLE properties)
+int message_set_properties(MESSAGE_HANDLE message, PROPERTIES_HANDLE properties)
 {
-	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)handle;
+	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)message;
 
 	if (message_instance->properties != NULL)
 	{
@@ -153,9 +153,9 @@ int message_set_properties(MESSAGE_HANDLE handle, PROPERTIES_HANDLE properties)
 	return 0;
 }
 
-int message_get_properties(MESSAGE_HANDLE handle, PROPERTIES_HANDLE* properties)
+int message_get_properties(MESSAGE_HANDLE message, PROPERTIES_HANDLE* properties)
 {
-	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)handle;
+	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)message;
 
 	if (message_instance->properties == NULL)
 	{
@@ -169,50 +169,49 @@ int message_get_properties(MESSAGE_HANDLE handle, PROPERTIES_HANDLE* properties)
 	return 0;
 }
 
-int message_set_application_properties(MESSAGE_HANDLE handle, AMQP_VALUE application_properties)
+int message_set_application_properties(MESSAGE_HANDLE message, AMQP_VALUE application_properties)
 {
 	return 0;
 }
 
-int message_get_application_properties(MESSAGE_HANDLE handle, AMQP_VALUE* application_properties)
+int message_get_application_properties(MESSAGE_HANDLE message, AMQP_VALUE* application_properties)
 {
 	return 0;
 }
 
-int message_set_footer(MESSAGE_HANDLE handle, annotations footer)
+int message_set_footer(MESSAGE_HANDLE message, annotations footer)
 {
 	return 0;
 }
 
-int message_get_footer(MESSAGE_HANDLE handle, annotations* footer)
+int message_get_footer(MESSAGE_HANDLE message, annotations* footer)
 {
 	return 0;
 }
 
-int message_set_body_amqp_data(MESSAGE_HANDLE handle, BINARY_DATA binary_data)
+int message_set_body_amqp_data(MESSAGE_HANDLE message, BINARY_DATA binary_data)
 {
 	int result;
 
-	MESSAGE_DATA* message = (MESSAGE_DATA*)handle;
+	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)message;
 	if (message == NULL)
 	{
 		result = __LINE__;
 	}
 	else
 	{
-		message->body_data_section_bytes = (unsigned char*)amqpalloc_malloc(binary_data.length);
-		message->body_data_section_length = binary_data.length;
+		message_instance->body_data_section_bytes = (unsigned char*)amqpalloc_malloc(binary_data.length);
+		message_instance->body_data_section_length = binary_data.length;
 		result = 0;
 	}
 
 	return result;
 }
 
-int message_get_body_amqp_data(MESSAGE_HANDLE handle, BINARY_DATA* binary_data)
+int message_get_body_amqp_data(MESSAGE_HANDLE message, BINARY_DATA* binary_data)
 {
 	int result;
 
-	MESSAGE_DATA* message = (MESSAGE_DATA*)handle;
 	if ((message == NULL) ||
 		(binary_data == NULL))
 	{
@@ -220,8 +219,10 @@ int message_get_body_amqp_data(MESSAGE_HANDLE handle, BINARY_DATA* binary_data)
 	}
 	else
 	{
-		binary_data->bytes = message->body_data_section_bytes;
-		binary_data->length = message->body_data_section_length;
+		MESSAGE_DATA* message_instance = (MESSAGE_DATA*)message;
+
+		binary_data->bytes = message_instance->body_data_section_bytes;
+		binary_data->length = message_instance->body_data_section_length;
 
 		result = 0;
 	}

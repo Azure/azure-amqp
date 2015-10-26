@@ -122,6 +122,8 @@ extern "C" {
 	typedef AMQP_VALUE fields;
 
 	#define amqpvalue_create_fields amqpvalue_clone
+	#define fields_clone amqpvalue_clone
+	#define fields_destroy amqpvalue_destroy
 	#define amqpvalue_get_fields amqpvalue_get_map
 
 
@@ -563,6 +565,8 @@ extern "C" {
 	typedef AMQP_VALUE filter_set;
 
 	#define amqpvalue_create_filter_set amqpvalue_clone
+	#define filter_set_clone amqpvalue_clone
+	#define filter_set_destroy amqpvalue_destroy
 	#define amqpvalue_get_filter_set amqpvalue_get_map
 
 
@@ -631,6 +635,8 @@ extern "C" {
 	typedef AMQP_VALUE annotations;
 
 	#define amqpvalue_create_annotations amqpvalue_clone
+	#define annotations_clone amqpvalue_clone
+	#define annotations_destroy amqpvalue_destroy
 	#define amqpvalue_get_annotations amqpvalue_get_map
 
 

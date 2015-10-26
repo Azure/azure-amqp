@@ -66,6 +66,8 @@ extern "C" {
 <#				else #>
 <#				{ #>
 	#define amqpvalue_create_<#= type_name.ToLower() #> amqpvalue_clone
+	#define <#= type_name.ToLower() #>_clone amqpvalue_clone
+	#define <#= type_name.ToLower() #>_destroy amqpvalue_destroy
 <#				} #>
 	#define amqpvalue_get_<#= type_name.ToLower() #> amqpvalue_get_<#= type.source.Replace('-', '_').Replace(':', '_') #>
 

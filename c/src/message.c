@@ -11,6 +11,7 @@ typedef struct MESSAGE_DATA_TAG
 	unsigned char* body_data_section_bytes;
 	size_t body_data_section_length;
 	HEADER_HANDLE header;
+	annotations delivery_annotations;
 	PROPERTIES_HANDLE properties;
 } MESSAGE_DATA;
 
@@ -22,6 +23,7 @@ MESSAGE_HANDLE message_create(void)
 	{
 		result->header = NULL;
 		result->properties = NULL;
+		result->delivery_annotations = NULL;
 		result->body_data_section_bytes = NULL;
 		result->body_data_section_length = 0;
 	}
@@ -58,6 +60,16 @@ MESSAGE_HANDLE message_clone(MESSAGE_HANDLE source_message)
 			else
 			{
 				result->header = NULL;
+			}
+
+			if (source_message_instance->delivery_annotations != NULL)
+			{
+				/* Codes_SRS_MESSAGE_01_006: [If delivery annotations exist on the source message they shall be cloned by using annotations_clone.] */
+				result->delivery_annotations = annotations_clone(source_message_instance->delivery_annotations);
+			}
+			else
+			{
+				result->delivery_annotations = NULL;
 			}
 
 			if (source_message_instance->properties != NULL)
@@ -139,6 +151,15 @@ int message_get_header(MESSAGE_HANDLE message, HEADER_HANDLE* header)
 
 int message_set_delivery_annotations(MESSAGE_HANDLE message, annotations delivery_annotations)
 {
+	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)message;
+
+	if (message_instance->delivery_annotations != NULL)
+	{
+		annotations_destroy(message_instance->delivery_annotations);
+	}
+
+	message_instance->delivery_annotations = header_clone(delivery_annotations);
+
 	return 0;
 }
 

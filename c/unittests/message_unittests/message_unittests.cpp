@@ -10,6 +10,8 @@
 #include "amqp_definitions_mocks.h"
 
 static const HEADER_HANDLE custom_message_header = (HEADER_HANDLE)0x4242;
+static const AMQP_VALUE custom_delivery_annotations = (HEADER_HANDLE)0x4243;
+static const AMQP_VALUE test_cloned_amqp_value = (AMQP_VALUE)0x4300;
 
 TYPED_MOCK_CLASS(message_mocks, CGlobalMock)
 {
@@ -20,12 +22,21 @@ public:
 	MOCK_STATIC_METHOD_1(, void, amqpalloc_free, void*, ptr)
 		free(ptr);
 	MOCK_VOID_METHOD_END();
+
+	/* amqpvalue mocks */
+	MOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_clone, AMQP_VALUE, value)
+	MOCK_METHOD_END(AMQP_VALUE, test_cloned_amqp_value);
+	MOCK_STATIC_METHOD_1(, void, amqpvalue_destroy, AMQP_VALUE, value)
+	MOCK_VOID_METHOD_END();
 };
 
 extern "C"
 {
 	DECLARE_GLOBAL_MOCK_METHOD_1(message_mocks, , void*, amqpalloc_malloc, size_t, size);
 	DECLARE_GLOBAL_MOCK_METHOD_1(message_mocks, , void, amqpalloc_free, void*, ptr);
+
+	DECLARE_GLOBAL_MOCK_METHOD_1(message_mocks, , AMQP_VALUE, amqpvalue_clone, AMQP_VALUE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(message_mocks, , void, amqpvalue_destroy, AMQP_VALUE, value);
 }
 
 MICROMOCK_MUTEX_HANDLE test_serialize_mutex;
@@ -127,6 +138,7 @@ TEST_METHOD(when_allocating_memory_for_the_message_fails_then_message_create_fai
 
 /* Tests_SRS_MESSAGE_01_003: [message_clone shall clone a message entirely and on success return a non-NULL handle to the cloned message.] */
 /* Tests_SRS_MESSAGE_01_005: [If a header exists on the source message it shall be cloned by using header_clone.] */
+/* Tests_SRS_MESSAGE_01_006: [If delivery annotations exist on the source message they shall be cloned by using annotations_clone.] */
 TEST_METHOD(message_clone_with_a_valid_argument_succeeds)
 {
 	// arrange
@@ -134,11 +146,13 @@ TEST_METHOD(message_clone_with_a_valid_argument_succeeds)
 	amqp_definitions_mocks definition_mocks;
 	MESSAGE_HANDLE source_message = message_create();
 	(void)message_set_header(source_message, custom_message_header);
+	(void)message_set_delivery_annotations(source_message, custom_delivery_annotations);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
 	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
 	STRICT_EXPECTED_CALL(definition_mocks, header_clone(test_header_handle));
+	STRICT_EXPECTED_CALL(mocks, annotations_clone(test_header_handle));
 
 	// act
 	MESSAGE_HANDLE message = message_clone(source_message);

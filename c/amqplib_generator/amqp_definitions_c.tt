@@ -338,21 +338,54 @@ int <#= type_name #>_set_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#=
 <#			else if (type.@class == typeClass.restricted) #>
 <#			{ #>
 <#				string c_type = Program.GetCType(type.source).Replace('-', '_').Replace(':', '_'); #>
+<#				bool hasDescriptor = (type.Items != null) && (type.Items.Where(item => item is descriptor).Count() > 0); #>
 /* <#=		type.name #> */
 
 <#				if (c_type != "AMQP_VALUE") #>
 <#				{ #>
 AMQP_VALUE amqpvalue_create_<#= type_name.ToLower() #>(<#= type_name.ToLower() #> value)
 {
+<#					if (!hasDescriptor) #>
+<#					{ #>
 	return amqpvalue_create_<#= type.source.ToLower().Replace('-', '_').Replace(':', '_') #>(value);
+<#					} #>
+<#					else #>
+<#					{ #>
+
+	AMQP_VALUE result;
+	AMQP_VALUE described_value = amqpvalue_create_<#= type.source.ToLower().Replace('-', '_').Replace(':', '_') #>(value);
+	if (described_value == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE descriptor = amqpvalue_create_uint(<#= Program.GetDescriptorCode(Program.GetDescriptor(type)) #>);
+		if (descriptor == NULL)
+		{
+			result = NULL;
+		}
+		else
+		{
+			result = amqpvalue_create_described(descriptor, described_value);
+
+			amqpvalue_destroy(descriptor);
+		}
+
+		amqpvalue_destroy(described_value);
+	}
+
+	return result;
+<#					} #>
+}
 <#				} #>
 <#				else #>
 <#				{ #>
 AMQP_VALUE amqpvalue_create_<#= type_name.ToLower() #>(AMQP_VALUE value)
 {
 	return amqpvalue_clone(value);
-<#				} #>
 }
+<#				} #>
 
 <#			} #>
 <#		} #>

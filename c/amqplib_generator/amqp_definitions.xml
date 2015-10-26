@@ -237,6 +237,9 @@
       <field name="first-acquirer" type="boolean" default="false"/>
       <field name="delivery-count" type="uint" default="0"/>
     </type>
+    <type name="delivery-annotations" class="restricted" source="annotations" provides="section">
+      <descriptor name="amqp:delivery-annotations:map" code="0x00000000:0x00000071"/>
+    </type>
     <type name="properties" class="composite" source="list" provides="section">
       <descriptor name="amqp:properties:list" code="0x00000000:0x00000073"/>
       <field name="message-id" type="*" requires="message-id"/>

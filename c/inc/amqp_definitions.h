@@ -758,6 +758,16 @@ extern "C" {
 	extern int header_get_delivery_count(HEADER_HANDLE header, uint32_t* delivery_count_value);
 	extern int header_set_delivery_count(HEADER_HANDLE header, uint32_t delivery_count_value);
 
+/* delivery-annotations */
+
+/* delivery-annotations */
+
+	typedef annotations delivery_annotations;
+
+	extern AMQP_VALUE amqpvalue_create_delivery_annotations(delivery_annotations value);
+	#define amqpvalue_get_delivery_annotations amqpvalue_get_annotations
+
+
 /* properties */
 
 	typedef void* PROPERTIES_HANDLE;

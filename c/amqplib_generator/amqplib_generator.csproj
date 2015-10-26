@@ -62,7 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="amqp_definitions.cs" />
-    <Compile Include="amqp_definitions_c.cs">
+    <Compile Include="amqp_definitions_c1.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>amqp_definitions_c.tt</DependentUpon>
@@ -86,7 +86,7 @@
     </None>
     <None Include="amqp_definitions_c.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>
-      <LastGenOutput>amqp_definitions_c.cs</LastGenOutput>
+      <LastGenOutput>amqp_definitions_c1.cs</LastGenOutput>
     </None>
     <None Include="amqp_definitions_mocks_h.tt">
       <Generator>TextTemplatingFilePreprocessor</Generator>

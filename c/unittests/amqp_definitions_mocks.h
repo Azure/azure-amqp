@@ -134,6 +134,8 @@ static const AMQP_VALUE test_target_amqp_value = (AMQP_VALUE)16979;
 
 static const HEADER_HANDLE test_header_handle = (HEADER_HANDLE)16979;
 static const AMQP_VALUE test_header_amqp_value = (AMQP_VALUE)16980;
+/* delivery-annotations */
+
 /* properties */
 
 static const PROPERTIES_HANDLE test_properties_handle = (PROPERTIES_HANDLE)16980;
@@ -882,6 +884,8 @@ public:
 	MOCK_STATIC_METHOD_2(, int, header_set_delivery_count, HEADER_HANDLE, header, uint32_t, delivery_count_value);
 	MOCK_METHOD_END(int, 0);
 
+/* delivery-annotations */
+
 /* properties */
 
 	MOCK_STATIC_METHOD_0(,PROPERTIES_HANDLE, properties_create);
@@ -1385,6 +1389,8 @@ public:
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_set_first_acquirer, HEADER_HANDLE, header, bool, first_acquirer_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_get_delivery_count, HEADER_HANDLE, header, uint32_t*, delivery_count_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_set_delivery_count, HEADER_HANDLE, header, uint32_t, delivery_count_value);
+
+/* delivery-annotations */
 
 /* properties */
 

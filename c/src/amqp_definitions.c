@@ -11278,6 +11278,37 @@ int header_set_delivery_count(HEADER_HANDLE header, uint32_t delivery_count_valu
 }
 
 
+/* delivery-annotations */
+
+AMQP_VALUE amqpvalue_create_delivery_annotations(delivery_annotations value)
+{
+
+	AMQP_VALUE result;
+	AMQP_VALUE described_value = amqpvalue_create_annotations(value);
+	if (described_value == NULL)
+	{
+		result = NULL;
+	}
+	else
+	{
+		AMQP_VALUE descriptor = amqpvalue_create_uint(113);
+		if (descriptor == NULL)
+		{
+			result = NULL;
+		}
+		else
+		{
+			result = amqpvalue_create_described(descriptor, described_value);
+
+			amqpvalue_destroy(descriptor);
+		}
+
+		amqpvalue_destroy(described_value);
+	}
+
+	return result;
+}
+
 /* properties */
 
 typedef struct PROPERTIES_INSTANCE_TAG

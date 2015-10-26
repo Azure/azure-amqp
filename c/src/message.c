@@ -14,6 +14,8 @@ typedef struct MESSAGE_DATA_TAG
 	annotations delivery_annotations;
 	annotations message_annotations;
 	PROPERTIES_HANDLE properties;
+	AMQP_VALUE application_properties;
+	annotations footer;
 } MESSAGE_DATA;
 
 MESSAGE_HANDLE message_create(void)
@@ -23,10 +25,12 @@ MESSAGE_HANDLE message_create(void)
 	if (result != NULL)
 	{
 		result->header = NULL;
-		result->properties = NULL;
 		result->delivery_annotations = NULL;
 		result->message_annotations = NULL;
-		result->body_data_section_bytes = NULL; 
+		result->properties = NULL;
+		result->application_properties = NULL;
+		result->footer = NULL;
+		result->body_data_section_bytes = NULL;
 		result->body_data_section_length = 0;
 	}
 
@@ -86,11 +90,32 @@ MESSAGE_HANDLE message_clone(MESSAGE_HANDLE source_message)
 
 			if (source_message_instance->properties != NULL)
 			{
+				/* Codes_SRS_MESSAGE_01_008: [If message properties exist on the source message they shall be cloned by using properties_clone.] */
 				result->properties = properties_clone(source_message_instance->properties);
 			}
 			else
 			{
 				result->properties = NULL;
+			}
+
+			if (source_message_instance->application_properties != NULL)
+			{
+				/* Codes_SRS_MESSAGE_01_009: [If application properties exist on the source message they shall be cloned by using amqpvalue_clone.] */
+				result->application_properties = amqpvalue_clone(source_message_instance->application_properties);
+			}
+			else
+			{
+				result->application_properties = NULL;
+			}
+
+			if (source_message_instance->footer != NULL)
+			{
+				/* Codes_SRS_MESSAGE_01_010: [If a footer exists on the source message it shall be cloned by using annotations_clone.] */
+				result->footer = amqpvalue_clone(source_message_instance->footer);
+			}
+			else
+			{
+				result->footer = NULL;
 			}
 
 			if (source_message_instance->body_data_section_length > 0)
@@ -231,6 +256,15 @@ int message_get_properties(MESSAGE_HANDLE message, PROPERTIES_HANDLE* properties
 
 int message_set_application_properties(MESSAGE_HANDLE message, AMQP_VALUE application_properties)
 {
+	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)message;
+
+	if (message_instance->application_properties != NULL)
+	{
+		amqpvalue_destroy(message_instance->application_properties);
+	}
+
+	message_instance->application_properties = amqpvalue_clone(application_properties);
+
 	return 0;
 }
 
@@ -241,6 +275,15 @@ int message_get_application_properties(MESSAGE_HANDLE message, AMQP_VALUE* appli
 
 int message_set_footer(MESSAGE_HANDLE message, annotations footer)
 {
+	MESSAGE_DATA* message_instance = (MESSAGE_DATA*)message;
+
+	if (message_instance->footer != NULL)
+	{
+		annotations_destroy(message_instance->footer);
+	}
+
+	message_instance->footer = annotations_clone(footer);
+
 	return 0;
 }
 

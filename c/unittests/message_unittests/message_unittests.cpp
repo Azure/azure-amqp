@@ -14,6 +14,12 @@ static const AMQP_VALUE custom_delivery_annotations = (HEADER_HANDLE)0x4243;
 static const AMQP_VALUE custom_message_annotations = (HEADER_HANDLE)0x4244;
 static const AMQP_VALUE cloned_delivery_annotations = (HEADER_HANDLE)0x4245;
 static const AMQP_VALUE cloned_message_annotations = (HEADER_HANDLE)0x4246;
+static const AMQP_VALUE custom_properties = (PROPERTIES_HANDLE)0x4247;
+static const AMQP_VALUE cloned_properties = (PROPERTIES_HANDLE)0x4248;
+static const AMQP_VALUE custom_application_properties = (PROPERTIES_HANDLE)0x4249;
+static const AMQP_VALUE cloned_application_properties = (PROPERTIES_HANDLE)0x4250;
+static const AMQP_VALUE custom_footer = (PROPERTIES_HANDLE)0x4251;
+static const AMQP_VALUE cloned_footer = (PROPERTIES_HANDLE)0x4252;
 static const AMQP_VALUE test_cloned_amqp_value = (AMQP_VALUE)0x4300;
 
 TYPED_MOCK_CLASS(message_mocks, CGlobalMock)
@@ -143,6 +149,9 @@ TEST_METHOD(when_allocating_memory_for_the_message_fails_then_message_create_fai
 /* Tests_SRS_MESSAGE_01_005: [If a header exists on the source message it shall be cloned by using header_clone.] */
 /* Tests_SRS_MESSAGE_01_006: [If delivery annotations exist on the source message they shall be cloned by using annotations_clone.] */
 /* Tests_SRS_MESSAGE_01_007: [If message annotations exist on the source message they shall be cloned by using annotations_clone.] */
+/* Tests_SRS_MESSAGE_01_008: [If message properties exist on the source message they shall be cloned by using properties_clone.] */
+/* Tests_SRS_MESSAGE_01_009: [If application properties exist on the source message they shall be cloned by using amqpvalue_clone.] */
+/* Tests_SRS_MESSAGE_01_010: [If a footer exists on the source message it shall be cloned by using annotations_clone.] */
 TEST_METHOD(message_clone_with_a_valid_argument_succeeds)
 {
 	// arrange
@@ -157,6 +166,15 @@ TEST_METHOD(message_clone_with_a_valid_argument_succeeds)
 	STRICT_EXPECTED_CALL(mocks, annotations_clone(custom_message_annotations))
 		.SetReturn(cloned_message_annotations);
 	(void)message_set_message_annotations(source_message, custom_message_annotations);
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_clone(custom_properties))
+		.SetReturn(cloned_properties);
+	(void)message_set_properties(source_message, custom_properties);
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_clone(custom_application_properties))
+		.SetReturn(cloned_application_properties);
+	(void)message_set_application_properties(source_message, custom_application_properties);
+	STRICT_EXPECTED_CALL(mocks, annotations_clone(custom_footer))
+		.SetReturn(cloned_footer);
+	(void)message_set_footer(source_message, custom_footer);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
@@ -164,6 +182,9 @@ TEST_METHOD(message_clone_with_a_valid_argument_succeeds)
 	STRICT_EXPECTED_CALL(definition_mocks, header_clone(test_header_handle));
 	STRICT_EXPECTED_CALL(mocks, annotations_clone(cloned_delivery_annotations));
 	STRICT_EXPECTED_CALL(mocks, annotations_clone(cloned_message_annotations));
+	STRICT_EXPECTED_CALL(definition_mocks, properties_clone(test_properties_handle));
+	STRICT_EXPECTED_CALL(mocks, amqpvalue_clone(cloned_application_properties));
+	STRICT_EXPECTED_CALL(mocks, annotations_clone(cloned_footer));
 
 	// act
 	MESSAGE_HANDLE message = message_clone(source_message);

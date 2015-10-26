@@ -120,6 +120,7 @@ MESSAGE_HANDLE message_clone(MESSAGE_HANDLE source_message)
 
 			if (source_message_instance->body_data_section_length > 0)
 			{
+				/* Codes_SRS_MESSAGE_01_011: [If an AMQP data has been set as message body on the source message it shall be cloned by allocating memory for the binary payload.] */
 				result->body_data_section_bytes = amqpalloc_malloc(source_message_instance->body_data_section_length);
 				if (result->body_data_section_bytes == NULL)
 				{

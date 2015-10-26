@@ -152,12 +152,14 @@ TEST_METHOD(when_allocating_memory_for_the_message_fails_then_message_create_fai
 /* Tests_SRS_MESSAGE_01_008: [If message properties exist on the source message they shall be cloned by using properties_clone.] */
 /* Tests_SRS_MESSAGE_01_009: [If application properties exist on the source message they shall be cloned by using amqpvalue_clone.] */
 /* Tests_SRS_MESSAGE_01_010: [If a footer exists on the source message it shall be cloned by using annotations_clone.] */
+/* Tests_SRS_MESSAGE_01_011: [If an AMQP data has been set as message body on the source message it shall be cloned by allocating memory for the binary payload.] */
 TEST_METHOD(message_clone_with_a_valid_argument_succeeds)
 {
 	// arrange
 	message_mocks mocks;
 	amqp_definitions_mocks definition_mocks;
 	MESSAGE_HANDLE source_message = message_create();
+	unsigned char data_section[2] = { 0x42, 0x43 };
 
 	(void)message_set_header(source_message, custom_message_header);
 	STRICT_EXPECTED_CALL(mocks, annotations_clone(custom_delivery_annotations))
@@ -175,6 +177,8 @@ TEST_METHOD(message_clone_with_a_valid_argument_succeeds)
 	STRICT_EXPECTED_CALL(mocks, annotations_clone(custom_footer))
 		.SetReturn(cloned_footer);
 	(void)message_set_footer(source_message, custom_footer);
+	BINARY_DATA binary_data = { data_section, sizeof(data_section) };
+	(void)message_set_body_amqp_data(source_message, binary_data);
 	mocks.ResetAllCalls();
 	definition_mocks.ResetAllCalls();
 
@@ -185,6 +189,7 @@ TEST_METHOD(message_clone_with_a_valid_argument_succeeds)
 	STRICT_EXPECTED_CALL(definition_mocks, properties_clone(test_properties_handle));
 	STRICT_EXPECTED_CALL(mocks, amqpvalue_clone(cloned_application_properties));
 	STRICT_EXPECTED_CALL(mocks, annotations_clone(cloned_footer));
+	STRICT_EXPECTED_CALL(mocks, amqpalloc_malloc(sizeof(data_section)));
 
 	// act
 	MESSAGE_HANDLE message = message_clone(source_message);

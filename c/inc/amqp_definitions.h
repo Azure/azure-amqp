@@ -768,6 +768,72 @@ extern "C" {
 	#define amqpvalue_get_delivery_annotations amqpvalue_get_annotations
 
 
+/* message-annotations */
+
+/* message-annotations */
+
+	typedef annotations message_annotations;
+
+	extern AMQP_VALUE amqpvalue_create_message_annotations(message_annotations value);
+	#define amqpvalue_get_message_annotations amqpvalue_get_annotations
+
+
+/* application-properties */
+
+/* application-properties */
+
+	typedef AMQP_VALUE application_properties;
+
+	extern AMQP_VALUE amqpvalue_create_application_properties(AMQP_VALUE value);
+	#define application_properties_clone amqpvalue_clone
+	#define application_properties_destroy amqpvalue_destroy
+	#define amqpvalue_get_application_properties amqpvalue_get_map
+
+
+/* data */
+
+/* data */
+
+	typedef amqp_binary data;
+
+	extern AMQP_VALUE amqpvalue_create_data(data value);
+	#define amqpvalue_get_data amqpvalue_get_binary
+
+
+/* amqp-sequence */
+
+/* amqp-sequence */
+
+	typedef AMQP_VALUE amqp_sequence;
+
+	extern AMQP_VALUE amqpvalue_create_amqp_sequence(AMQP_VALUE value);
+	#define amqp_sequence_clone amqpvalue_clone
+	#define amqp_sequence_destroy amqpvalue_destroy
+	#define amqpvalue_get_amqp_sequence amqpvalue_get_list
+
+
+/* amqp-value */
+
+/* amqp-value */
+
+	typedef AMQP_VALUE amqp_value;
+
+	extern AMQP_VALUE amqpvalue_create_amqp_value(AMQP_VALUE value);
+	#define amqp_value_clone amqpvalue_clone
+	#define amqp_value_destroy amqpvalue_destroy
+	#define amqpvalue_get_amqp_value amqpvalue_get_*
+
+
+/* footer */
+
+/* footer */
+
+	typedef annotations footer;
+
+	extern AMQP_VALUE amqpvalue_create_footer(footer value);
+	#define amqpvalue_get_footer amqpvalue_get_annotations
+
+
 /* properties */
 
 	typedef void* PROPERTIES_HANDLE;

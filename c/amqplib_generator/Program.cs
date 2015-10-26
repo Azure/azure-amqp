@@ -66,6 +66,10 @@ namespace amqplib_generator
                     result = "AMQP_VALUE";
                     break;
 
+                case "list":
+                    result = "AMQP_VALUE";
+                    break;
+
                 case "*":
                     result = "AMQP_VALUE";
                     break;

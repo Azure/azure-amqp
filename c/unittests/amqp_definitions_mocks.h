@@ -136,6 +136,18 @@ static const HEADER_HANDLE test_header_handle = (HEADER_HANDLE)16979;
 static const AMQP_VALUE test_header_amqp_value = (AMQP_VALUE)16980;
 /* delivery-annotations */
 
+/* message-annotations */
+
+/* application-properties */
+
+/* data */
+
+/* amqp-sequence */
+
+/* amqp-value */
+
+/* footer */
+
 /* properties */
 
 static const PROPERTIES_HANDLE test_properties_handle = (PROPERTIES_HANDLE)16980;
@@ -886,6 +898,18 @@ public:
 
 /* delivery-annotations */
 
+/* message-annotations */
+
+/* application-properties */
+
+/* data */
+
+/* amqp-sequence */
+
+/* amqp-value */
+
+/* footer */
+
 /* properties */
 
 	MOCK_STATIC_METHOD_0(,PROPERTIES_HANDLE, properties_create);
@@ -1391,6 +1415,18 @@ public:
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, header_set_delivery_count, HEADER_HANDLE, header, uint32_t, delivery_count_value);
 
 /* delivery-annotations */
+
+/* message-annotations */
+
+/* application-properties */
+
+/* data */
+
+/* amqp-sequence */
+
+/* amqp-value */
+
+/* footer */
 
 /* properties */
 

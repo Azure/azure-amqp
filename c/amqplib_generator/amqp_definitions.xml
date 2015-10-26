@@ -240,6 +240,24 @@
     <type name="delivery-annotations" class="restricted" source="annotations" provides="section">
       <descriptor name="amqp:delivery-annotations:map" code="0x00000000:0x00000071"/>
     </type>
+    <type name="message-annotations" class="restricted" source="annotations" provides="section">
+      <descriptor name="amqp:message-annotations:map" code="0x00000000:0x00000072"/>
+    </type>
+    <type name="application-properties" class="restricted" source="map" provides="section">
+      <descriptor name="amqp:application-properties:map" code="0x00000000:0x00000074"/>
+    </type>
+    <type name="data" class="restricted" source="binary" provides="section">
+      <descriptor name="amqp:data:binary" code="0x00000000:0x00000075"/>
+    </type>
+    <type name="amqp-sequence" class="restricted" source="list" provides="section">
+      <descriptor name="amqp:amqp-sequence:list" code="0x00000000:0x00000076"/>
+    </type>
+    <type name="amqp-value" class="restricted" source="*" provides="section">
+      <descriptor name="amqp:amqp-value:*" code="0x00000000:0x00000077"/>
+    </type>
+    <type name="footer" class="restricted" source="annotations" provides="section">
+      <descriptor name="amqp:footer:map" code="0x00000000:0x00000078"/>
+    </type>
     <type name="properties" class="composite" source="list" provides="section">
       <descriptor name="amqp:properties:list" code="0x00000000:0x00000073"/>
       <field name="message-id" type="*" requires="message-id"/>

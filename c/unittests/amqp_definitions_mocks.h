@@ -4,6 +4,7 @@
 #define AMQP_DEFINITIONS_MOCKS_H
 
 #include "amqp_definitions.h"
+#include "micromock.h"
 
 /* role */
 
@@ -171,7 +172,7 @@ public:
 
 	MOCK_STATIC_METHOD_1(,ERROR_HANDLE, error_create, const char*, condition_value);
 	MOCK_METHOD_END(ERROR_HANDLE, test_error_handle);
-	MOCK_STATIC_METHOD_1(,ERROR_HANDLE, error_create, ERROR_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,ERROR_HANDLE, error_clone, ERROR_HANDLE, value);
 	MOCK_METHOD_END(ERROR_HANDLE, test_error_handle);
 	MOCK_STATIC_METHOD_1(, void, error_destroy, ERROR_HANDLE, error);
 	MOCK_VOID_METHOD_END();
@@ -207,7 +208,7 @@ public:
 
 	MOCK_STATIC_METHOD_1(,OPEN_HANDLE, open_create, const char*, container_id_value);
 	MOCK_METHOD_END(OPEN_HANDLE, test_open_handle);
-	MOCK_STATIC_METHOD_1(,OPEN_HANDLE, open_create, OPEN_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,OPEN_HANDLE, open_clone, OPEN_HANDLE, value);
 	MOCK_METHOD_END(OPEN_HANDLE, test_open_handle);
 	MOCK_STATIC_METHOD_1(, void, open_destroy, OPEN_HANDLE, open);
 	MOCK_VOID_METHOD_END();
@@ -263,7 +264,7 @@ public:
 
 	MOCK_STATIC_METHOD_3(,BEGIN_HANDLE, begin_create, transfer_number, next_outgoing_id_value, uint32_t, incoming_window_value, uint32_t, outgoing_window_value);
 	MOCK_METHOD_END(BEGIN_HANDLE, test_begin_handle);
-	MOCK_STATIC_METHOD_1(,BEGIN_HANDLE, begin_create, BEGIN_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,BEGIN_HANDLE, begin_clone, BEGIN_HANDLE, value);
 	MOCK_METHOD_END(BEGIN_HANDLE, test_begin_handle);
 	MOCK_STATIC_METHOD_1(, void, begin_destroy, BEGIN_HANDLE, begin);
 	MOCK_VOID_METHOD_END();
@@ -311,7 +312,7 @@ public:
 
 	MOCK_STATIC_METHOD_3(,ATTACH_HANDLE, attach_create, const char*, name_value, handle, handle_value, role, role_value);
 	MOCK_METHOD_END(ATTACH_HANDLE, test_attach_handle);
-	MOCK_STATIC_METHOD_1(,ATTACH_HANDLE, attach_create, ATTACH_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,ATTACH_HANDLE, attach_clone, ATTACH_HANDLE, value);
 	MOCK_METHOD_END(ATTACH_HANDLE, test_attach_handle);
 	MOCK_STATIC_METHOD_1(, void, attach_destroy, ATTACH_HANDLE, attach);
 	MOCK_VOID_METHOD_END();
@@ -383,7 +384,7 @@ public:
 
 	MOCK_STATIC_METHOD_3(,FLOW_HANDLE, flow_create, uint32_t, incoming_window_value, transfer_number, next_outgoing_id_value, uint32_t, outgoing_window_value);
 	MOCK_METHOD_END(FLOW_HANDLE, test_flow_handle);
-	MOCK_STATIC_METHOD_1(,FLOW_HANDLE, flow_create, FLOW_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,FLOW_HANDLE, flow_clone, FLOW_HANDLE, value);
 	MOCK_METHOD_END(FLOW_HANDLE, test_flow_handle);
 	MOCK_STATIC_METHOD_1(, void, flow_destroy, FLOW_HANDLE, flow);
 	MOCK_VOID_METHOD_END();
@@ -443,7 +444,7 @@ public:
 
 	MOCK_STATIC_METHOD_1(,TRANSFER_HANDLE, transfer_create, handle, handle_value);
 	MOCK_METHOD_END(TRANSFER_HANDLE, test_transfer_handle);
-	MOCK_STATIC_METHOD_1(,TRANSFER_HANDLE, transfer_create, TRANSFER_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,TRANSFER_HANDLE, transfer_clone, TRANSFER_HANDLE, value);
 	MOCK_METHOD_END(TRANSFER_HANDLE, test_transfer_handle);
 	MOCK_STATIC_METHOD_1(, void, transfer_destroy, TRANSFER_HANDLE, transfer);
 	MOCK_VOID_METHOD_END();
@@ -503,7 +504,7 @@ public:
 
 	MOCK_STATIC_METHOD_2(,DISPOSITION_HANDLE, disposition_create, role, role_value, delivery_number, first_value);
 	MOCK_METHOD_END(DISPOSITION_HANDLE, test_disposition_handle);
-	MOCK_STATIC_METHOD_1(,DISPOSITION_HANDLE, disposition_create, DISPOSITION_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,DISPOSITION_HANDLE, disposition_clone, DISPOSITION_HANDLE, value);
 	MOCK_METHOD_END(DISPOSITION_HANDLE, test_disposition_handle);
 	MOCK_STATIC_METHOD_1(, void, disposition_destroy, DISPOSITION_HANDLE, disposition);
 	MOCK_VOID_METHOD_END();
@@ -543,7 +544,7 @@ public:
 
 	MOCK_STATIC_METHOD_1(,DETACH_HANDLE, detach_create, handle, handle_value);
 	MOCK_METHOD_END(DETACH_HANDLE, test_detach_handle);
-	MOCK_STATIC_METHOD_1(,DETACH_HANDLE, detach_create, DETACH_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,DETACH_HANDLE, detach_clone, DETACH_HANDLE, value);
 	MOCK_METHOD_END(DETACH_HANDLE, test_detach_handle);
 	MOCK_STATIC_METHOD_1(, void, detach_destroy, DETACH_HANDLE, detach);
 	MOCK_VOID_METHOD_END();
@@ -571,7 +572,7 @@ public:
 
 	MOCK_STATIC_METHOD_0(,END_HANDLE, end_create);
 	MOCK_METHOD_END(END_HANDLE, test_end_handle);
-	MOCK_STATIC_METHOD_1(,END_HANDLE, end_create, END_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,END_HANDLE, end_clone, END_HANDLE, value);
 	MOCK_METHOD_END(END_HANDLE, test_end_handle);
 	MOCK_STATIC_METHOD_1(, void, end_destroy, END_HANDLE, end);
 	MOCK_VOID_METHOD_END();
@@ -591,7 +592,7 @@ public:
 
 	MOCK_STATIC_METHOD_0(,CLOSE_HANDLE, close_create);
 	MOCK_METHOD_END(CLOSE_HANDLE, test_close_handle);
-	MOCK_STATIC_METHOD_1(,CLOSE_HANDLE, close_create, CLOSE_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,CLOSE_HANDLE, close_clone, CLOSE_HANDLE, value);
 	MOCK_METHOD_END(CLOSE_HANDLE, test_close_handle);
 	MOCK_STATIC_METHOD_1(, void, close_destroy, CLOSE_HANDLE, close);
 	MOCK_VOID_METHOD_END();
@@ -613,7 +614,7 @@ public:
 
 	MOCK_STATIC_METHOD_1(,SASL_MECHANISMS_HANDLE, sasl_mechanisms_create, const char*, sasl_server_mechanisms_value);
 	MOCK_METHOD_END(SASL_MECHANISMS_HANDLE, test_sasl_mechanisms_handle);
-	MOCK_STATIC_METHOD_1(,SASL_MECHANISMS_HANDLE, sasl_mechanisms_create, SASL_MECHANISMS_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,SASL_MECHANISMS_HANDLE, sasl_mechanisms_clone, SASL_MECHANISMS_HANDLE, value);
 	MOCK_METHOD_END(SASL_MECHANISMS_HANDLE, test_sasl_mechanisms_handle);
 	MOCK_STATIC_METHOD_1(, void, sasl_mechanisms_destroy, SASL_MECHANISMS_HANDLE, sasl_mechanisms);
 	MOCK_VOID_METHOD_END();
@@ -633,7 +634,7 @@ public:
 
 	MOCK_STATIC_METHOD_1(,SASL_INIT_HANDLE, sasl_init_create, const char*, mechanism_value);
 	MOCK_METHOD_END(SASL_INIT_HANDLE, test_sasl_init_handle);
-	MOCK_STATIC_METHOD_1(,SASL_INIT_HANDLE, sasl_init_create, SASL_INIT_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,SASL_INIT_HANDLE, sasl_init_clone, SASL_INIT_HANDLE, value);
 	MOCK_METHOD_END(SASL_INIT_HANDLE, test_sasl_init_handle);
 	MOCK_STATIC_METHOD_1(, void, sasl_init_destroy, SASL_INIT_HANDLE, sasl_init);
 	MOCK_VOID_METHOD_END();
@@ -661,7 +662,7 @@ public:
 
 	MOCK_STATIC_METHOD_1(,SASL_CHALLENGE_HANDLE, sasl_challenge_create, amqp_binary, challenge_value);
 	MOCK_METHOD_END(SASL_CHALLENGE_HANDLE, test_sasl_challenge_handle);
-	MOCK_STATIC_METHOD_1(,SASL_CHALLENGE_HANDLE, sasl_challenge_create, SASL_CHALLENGE_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,SASL_CHALLENGE_HANDLE, sasl_challenge_clone, SASL_CHALLENGE_HANDLE, value);
 	MOCK_METHOD_END(SASL_CHALLENGE_HANDLE, test_sasl_challenge_handle);
 	MOCK_STATIC_METHOD_1(, void, sasl_challenge_destroy, SASL_CHALLENGE_HANDLE, sasl_challenge);
 	MOCK_VOID_METHOD_END();
@@ -681,7 +682,7 @@ public:
 
 	MOCK_STATIC_METHOD_1(,SASL_RESPONSE_HANDLE, sasl_response_create, amqp_binary, response_value);
 	MOCK_METHOD_END(SASL_RESPONSE_HANDLE, test_sasl_response_handle);
-	MOCK_STATIC_METHOD_1(,SASL_RESPONSE_HANDLE, sasl_response_create, SASL_RESPONSE_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,SASL_RESPONSE_HANDLE, sasl_response_clone, SASL_RESPONSE_HANDLE, value);
 	MOCK_METHOD_END(SASL_RESPONSE_HANDLE, test_sasl_response_handle);
 	MOCK_STATIC_METHOD_1(, void, sasl_response_destroy, SASL_RESPONSE_HANDLE, sasl_response);
 	MOCK_VOID_METHOD_END();
@@ -701,7 +702,7 @@ public:
 
 	MOCK_STATIC_METHOD_1(,SASL_OUTCOME_HANDLE, sasl_outcome_create, sasl_code, code_value);
 	MOCK_METHOD_END(SASL_OUTCOME_HANDLE, test_sasl_outcome_handle);
-	MOCK_STATIC_METHOD_1(,SASL_OUTCOME_HANDLE, sasl_outcome_create, SASL_OUTCOME_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,SASL_OUTCOME_HANDLE, sasl_outcome_clone, SASL_OUTCOME_HANDLE, value);
 	MOCK_METHOD_END(SASL_OUTCOME_HANDLE, test_sasl_outcome_handle);
 	MOCK_STATIC_METHOD_1(, void, sasl_outcome_destroy, SASL_OUTCOME_HANDLE, sasl_outcome);
 	MOCK_VOID_METHOD_END();
@@ -733,7 +734,7 @@ public:
 
 	MOCK_STATIC_METHOD_0(,SOURCE_HANDLE, source_create);
 	MOCK_METHOD_END(SOURCE_HANDLE, test_source_handle);
-	MOCK_STATIC_METHOD_1(,SOURCE_HANDLE, source_create, SOURCE_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,SOURCE_HANDLE, source_clone, SOURCE_HANDLE, value);
 	MOCK_METHOD_END(SOURCE_HANDLE, test_source_handle);
 	MOCK_STATIC_METHOD_1(, void, source_destroy, SOURCE_HANDLE, source);
 	MOCK_VOID_METHOD_END();
@@ -793,7 +794,7 @@ public:
 
 	MOCK_STATIC_METHOD_0(,TARGET_HANDLE, target_create);
 	MOCK_METHOD_END(TARGET_HANDLE, test_target_handle);
-	MOCK_STATIC_METHOD_1(,TARGET_HANDLE, target_create, TARGET_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,TARGET_HANDLE, target_clone, TARGET_HANDLE, value);
 	MOCK_METHOD_END(TARGET_HANDLE, test_target_handle);
 	MOCK_STATIC_METHOD_1(, void, target_destroy, TARGET_HANDLE, target);
 	MOCK_VOID_METHOD_END();
@@ -849,7 +850,7 @@ public:
 
 	MOCK_STATIC_METHOD_0(,HEADER_HANDLE, header_create);
 	MOCK_METHOD_END(HEADER_HANDLE, test_header_handle);
-	MOCK_STATIC_METHOD_1(,HEADER_HANDLE, header_create, HEADER_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,HEADER_HANDLE, header_clone, HEADER_HANDLE, value);
 	MOCK_METHOD_END(HEADER_HANDLE, test_header_handle);
 	MOCK_STATIC_METHOD_1(, void, header_destroy, HEADER_HANDLE, header);
 	MOCK_VOID_METHOD_END();
@@ -885,7 +886,7 @@ public:
 
 	MOCK_STATIC_METHOD_0(,PROPERTIES_HANDLE, properties_create);
 	MOCK_METHOD_END(PROPERTIES_HANDLE, test_properties_handle);
-	MOCK_STATIC_METHOD_1(,PROPERTIES_HANDLE, properties_create, PROPERTIES_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,PROPERTIES_HANDLE, properties_clone, PROPERTIES_HANDLE, value);
 	MOCK_METHOD_END(PROPERTIES_HANDLE, test_properties_handle);
 	MOCK_STATIC_METHOD_1(, void, properties_destroy, PROPERTIES_HANDLE, properties);
 	MOCK_VOID_METHOD_END();
@@ -980,7 +981,7 @@ public:
 /* error */
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,ERROR_HANDLE, error_create, const char*, condition_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,ERROR_HANDLE, error_create, ERROR_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,ERROR_HANDLE, error_clone, ERROR_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, error_destroy, ERROR_HANDLE, error);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_error, ERROR_HANDLE, error);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_error_type_by_descriptor, AMQP_VALUE, value);
@@ -1004,7 +1005,7 @@ public:
 /* open */
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,OPEN_HANDLE, open_create, const char*, container_id_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,OPEN_HANDLE, open_create, OPEN_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,OPEN_HANDLE, open_clone, OPEN_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, open_destroy, OPEN_HANDLE, open);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_open, OPEN_HANDLE, open);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_open_type_by_descriptor, AMQP_VALUE, value);
@@ -1034,7 +1035,7 @@ public:
 /* begin */
 
 	DECLARE_GLOBAL_MOCK_METHOD_3(amqp_definitions_mocks, ,BEGIN_HANDLE, begin_create, transfer_number, next_outgoing_id_value, uint32_t, incoming_window_value, uint32_t, outgoing_window_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,BEGIN_HANDLE, begin_create, BEGIN_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,BEGIN_HANDLE, begin_clone, BEGIN_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, begin_destroy, BEGIN_HANDLE, begin);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_begin, BEGIN_HANDLE, begin);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_begin_type_by_descriptor, AMQP_VALUE, value);
@@ -1060,7 +1061,7 @@ public:
 /* attach */
 
 	DECLARE_GLOBAL_MOCK_METHOD_3(amqp_definitions_mocks, ,ATTACH_HANDLE, attach_create, const char*, name_value, handle, handle_value, role, role_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,ATTACH_HANDLE, attach_create, ATTACH_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,ATTACH_HANDLE, attach_clone, ATTACH_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, attach_destroy, ATTACH_HANDLE, attach);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_attach, ATTACH_HANDLE, attach);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_attach_type_by_descriptor, AMQP_VALUE, value);
@@ -1098,7 +1099,7 @@ public:
 /* flow */
 
 	DECLARE_GLOBAL_MOCK_METHOD_3(amqp_definitions_mocks, ,FLOW_HANDLE, flow_create, uint32_t, incoming_window_value, transfer_number, next_outgoing_id_value, uint32_t, outgoing_window_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,FLOW_HANDLE, flow_create, FLOW_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,FLOW_HANDLE, flow_clone, FLOW_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, flow_destroy, FLOW_HANDLE, flow);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_flow, FLOW_HANDLE, flow);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_flow_type_by_descriptor, AMQP_VALUE, value);
@@ -1130,7 +1131,7 @@ public:
 /* transfer */
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,TRANSFER_HANDLE, transfer_create, handle, handle_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,TRANSFER_HANDLE, transfer_create, TRANSFER_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,TRANSFER_HANDLE, transfer_clone, TRANSFER_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, transfer_destroy, TRANSFER_HANDLE, transfer);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_transfer, TRANSFER_HANDLE, transfer);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_transfer_type_by_descriptor, AMQP_VALUE, value);
@@ -1162,7 +1163,7 @@ public:
 /* disposition */
 
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, ,DISPOSITION_HANDLE, disposition_create, role, role_value, delivery_number, first_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,DISPOSITION_HANDLE, disposition_create, DISPOSITION_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,DISPOSITION_HANDLE, disposition_clone, DISPOSITION_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, disposition_destroy, DISPOSITION_HANDLE, disposition);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_disposition, DISPOSITION_HANDLE, disposition);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_disposition_type_by_descriptor, AMQP_VALUE, value);
@@ -1184,7 +1185,7 @@ public:
 /* detach */
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,DETACH_HANDLE, detach_create, handle, handle_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,DETACH_HANDLE, detach_create, DETACH_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,DETACH_HANDLE, detach_clone, DETACH_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, detach_destroy, DETACH_HANDLE, detach);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_detach, DETACH_HANDLE, detach);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_detach_type_by_descriptor, AMQP_VALUE, value);
@@ -1200,7 +1201,7 @@ public:
 /* end */
 
 	DECLARE_GLOBAL_MOCK_METHOD_0(amqp_definitions_mocks, ,END_HANDLE, end_create);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,END_HANDLE, end_create, END_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,END_HANDLE, end_clone, END_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, end_destroy, END_HANDLE, end);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_end, END_HANDLE, end);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_end_type_by_descriptor, AMQP_VALUE, value);
@@ -1212,7 +1213,7 @@ public:
 /* close */
 
 	DECLARE_GLOBAL_MOCK_METHOD_0(amqp_definitions_mocks, ,CLOSE_HANDLE, close_create);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,CLOSE_HANDLE, close_create, CLOSE_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,CLOSE_HANDLE, close_clone, CLOSE_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, close_destroy, CLOSE_HANDLE, close);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_close, CLOSE_HANDLE, close);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_close_type_by_descriptor, AMQP_VALUE, value);
@@ -1226,7 +1227,7 @@ public:
 /* sasl-mechanisms */
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_MECHANISMS_HANDLE, sasl_mechanisms_create, const char*, sasl_server_mechanisms_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_MECHANISMS_HANDLE, sasl_mechanisms_create, SASL_MECHANISMS_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_MECHANISMS_HANDLE, sasl_mechanisms_clone, SASL_MECHANISMS_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, sasl_mechanisms_destroy, SASL_MECHANISMS_HANDLE, sasl_mechanisms);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_sasl_mechanisms, SASL_MECHANISMS_HANDLE, sasl_mechanisms);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_sasl_mechanisms_type_by_descriptor, AMQP_VALUE, value);
@@ -1238,7 +1239,7 @@ public:
 /* sasl-init */
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_INIT_HANDLE, sasl_init_create, const char*, mechanism_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_INIT_HANDLE, sasl_init_create, SASL_INIT_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_INIT_HANDLE, sasl_init_clone, SASL_INIT_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, sasl_init_destroy, SASL_INIT_HANDLE, sasl_init);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_sasl_init, SASL_INIT_HANDLE, sasl_init);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_sasl_init_type_by_descriptor, AMQP_VALUE, value);
@@ -1254,7 +1255,7 @@ public:
 /* sasl-challenge */
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_CHALLENGE_HANDLE, sasl_challenge_create, amqp_binary, challenge_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_CHALLENGE_HANDLE, sasl_challenge_create, SASL_CHALLENGE_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_CHALLENGE_HANDLE, sasl_challenge_clone, SASL_CHALLENGE_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, sasl_challenge_destroy, SASL_CHALLENGE_HANDLE, sasl_challenge);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_sasl_challenge, SASL_CHALLENGE_HANDLE, sasl_challenge);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_sasl_challenge_type_by_descriptor, AMQP_VALUE, value);
@@ -1266,7 +1267,7 @@ public:
 /* sasl-response */
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_RESPONSE_HANDLE, sasl_response_create, amqp_binary, response_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_RESPONSE_HANDLE, sasl_response_create, SASL_RESPONSE_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_RESPONSE_HANDLE, sasl_response_clone, SASL_RESPONSE_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, sasl_response_destroy, SASL_RESPONSE_HANDLE, sasl_response);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_sasl_response, SASL_RESPONSE_HANDLE, sasl_response);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_sasl_response_type_by_descriptor, AMQP_VALUE, value);
@@ -1278,7 +1279,7 @@ public:
 /* sasl-outcome */
 
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_OUTCOME_HANDLE, sasl_outcome_create, sasl_code, code_value);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_OUTCOME_HANDLE, sasl_outcome_create, SASL_OUTCOME_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SASL_OUTCOME_HANDLE, sasl_outcome_clone, SASL_OUTCOME_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, sasl_outcome_destroy, SASL_OUTCOME_HANDLE, sasl_outcome);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_sasl_outcome, SASL_OUTCOME_HANDLE, sasl_outcome);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_sasl_outcome_type_by_descriptor, AMQP_VALUE, value);
@@ -1300,7 +1301,7 @@ public:
 /* source */
 
 	DECLARE_GLOBAL_MOCK_METHOD_0(amqp_definitions_mocks, ,SOURCE_HANDLE, source_create);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SOURCE_HANDLE, source_create, SOURCE_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,SOURCE_HANDLE, source_clone, SOURCE_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, source_destroy, SOURCE_HANDLE, source);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_source, SOURCE_HANDLE, source);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_source_type_by_descriptor, AMQP_VALUE, value);
@@ -1332,7 +1333,7 @@ public:
 /* target */
 
 	DECLARE_GLOBAL_MOCK_METHOD_0(amqp_definitions_mocks, ,TARGET_HANDLE, target_create);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,TARGET_HANDLE, target_create, TARGET_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,TARGET_HANDLE, target_clone, TARGET_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, target_destroy, TARGET_HANDLE, target);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_target, TARGET_HANDLE, target);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_target_type_by_descriptor, AMQP_VALUE, value);
@@ -1368,7 +1369,7 @@ public:
 /* header */
 
 	DECLARE_GLOBAL_MOCK_METHOD_0(amqp_definitions_mocks, ,HEADER_HANDLE, header_create);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,HEADER_HANDLE, header_create, HEADER_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,HEADER_HANDLE, header_clone, HEADER_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, header_destroy, HEADER_HANDLE, header);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_header, HEADER_HANDLE, header);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_header_type_by_descriptor, AMQP_VALUE, value);
@@ -1388,7 +1389,7 @@ public:
 /* properties */
 
 	DECLARE_GLOBAL_MOCK_METHOD_0(amqp_definitions_mocks, ,PROPERTIES_HANDLE, properties_create);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,PROPERTIES_HANDLE, properties_create, PROPERTIES_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,PROPERTIES_HANDLE, properties_clone, PROPERTIES_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, properties_destroy, PROPERTIES_HANDLE, properties);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_properties, PROPERTIES_HANDLE, properties);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_properties_type_by_descriptor, AMQP_VALUE, value);
@@ -1421,5 +1422,29 @@ public:
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_get_reply_to_group_id, PROPERTIES_HANDLE, properties, const char**, reply_to_group_id_value);
 	DECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, properties_set_reply_to_group_id, PROPERTIES_HANDLE, properties, const char*, reply_to_group_id_value);
 
+
+std::ostream& operator<<(std::ostream& left, const delivery_tag& delivery)
+{
+    std::ios::fmtflags f(left.flags());
+    left << std::hex;
+    for (size_t i = 0; i < delivery.length; i++)
+    {
+        left << ((const unsigned char*)delivery.bytes)[i];
+    }
+    left.flags(f);
+    return left;
+}
+
+static bool operator==(const delivery_tag& left, const delivery_tag& right)
+{
+    if (left.length != right.length)
+    {
+        return false;
+    }
+    else
+    {
+        return memcmp(left.bytes, right.bytes, left.length) == 0;
+    }
+}
 
 #endif /* AMQP_DEFINITIONS_MOCKS_H */

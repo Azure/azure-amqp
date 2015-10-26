@@ -77,30 +77,6 @@ void stringify_bytes(const unsigned char* bytes, size_t byte_count, char* output
 static char expected_stringified_io[8192];
 static char actual_stringified_io[8192];
 
-std::ostream& operator<<(std::ostream& left, const delivery_tag& delivery)
-{
-    std::ios::fmtflags f(left.flags());
-    left << std::hex;
-    for (size_t i = 0; i < delivery.length; i++)
-    {
-        left << ((const unsigned char*)delivery.bytes)[i];
-    }
-    left.flags(f);
-    return left;
-}
-
-static bool operator==(const delivery_tag& left, const delivery_tag& right)
-{
-    if (left.length != right.length)
-    {
-        return false;
-    }
-    else
-    {
-        return memcmp(left.bytes, right.bytes, left.length) == 0;
-    }
-}
-
 TYPED_MOCK_CLASS(connection_mocks, CGlobalMock)
 {
 public:

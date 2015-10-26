@@ -37,323 +37,323 @@ namespace amqplib_generator
             #line default
             #line hidden
             this.Write("\r\n#ifndef AMQP_DEFINITIONS_MOCKS_H\r\n#define AMQP_DEFINITIONS_MOCKS_H\r\n\r\n#include " +
-                    "\"amqp_definitions.h\"\r\n\r\n");
+                    "\"amqp_definitions.h\"\r\n#include \"micromock.h\"\r\n\r\n");
             
-            #line 15 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 16 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 	int i = 0; 
             
             #line default
             #line hidden
             
-            #line 16 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 17 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 	foreach (section section in amqp.Items.Where(item => item is section)) 
             
             #line default
             #line hidden
             
-            #line 17 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 18 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 	{ 
             
             #line default
             #line hidden
             
-            #line 18 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 19 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		List<type> types = new List<type>(); 
             
             #line default
             #line hidden
             
-            #line 19 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 20 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		types.AddRange(section.Items.Where(item => item is type).Cast<type>()); 
             
             #line default
             #line hidden
             
-            #line 20 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 21 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		foreach (type type in types) 
             
             #line default
             #line hidden
             
-            #line 21 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 22 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		{ 
             
             #line default
             #line hidden
             
-            #line 22 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 23 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 			string type_name = type.name.ToLower().Replace('-', '_'); 
             
             #line default
             #line hidden
             this.Write("/* ");
             
-            #line 23 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 24 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type.name));
             
             #line default
             #line hidden
             this.Write(" */\r\n\r\n");
             
-            #line 25 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 26 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 			if (type.@class == typeClass.composite) 
             
             #line default
             #line hidden
             
-            #line 26 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 27 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 			{ 
             
             #line default
             #line hidden
             
-            #line 27 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 28 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 				string arg_list = Program.GetMandatoryArgListMock(type); 
             
             #line default
             #line hidden
             
-            #line 28 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 29 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 				ICollection<KeyValuePair<field, int>> args = Program.GetMandatoryArgs(type); 
             
             #line default
             #line hidden
             this.Write("static const ");
             
-            #line 29 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 30 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE test_");
             
-            #line 29 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 30 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_handle = (");
             
-            #line 29 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 30 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE)");
             
-            #line 29 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 30 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(0x4242 + i));
             
             #line default
             #line hidden
             this.Write(";\r\nstatic const AMQP_VALUE test_");
             
-            #line 30 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 31 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_amqp_value = (AMQP_VALUE)");
             
-            #line 30 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 31 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(0x4243 + i));
             
             #line default
             #line hidden
             this.Write(";\r\n");
             
-            #line 31 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 32 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 				i++; 
             
             #line default
             #line hidden
             
-            #line 32 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 33 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 			} 
             
             #line default
             #line hidden
             
-            #line 33 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 34 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		} 
             
             #line default
             #line hidden
             
-            #line 34 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 35 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 	} 
             
             #line default
             #line hidden
             this.Write("\r\nTYPED_MOCK_CLASS(amqp_definitions_mocks, CGlobalMock)\r\n{\r\npublic:\r\n");
             
-            #line 39 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 40 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 	foreach (section section in amqp.Items.Where(item => item is section)) 
             
             #line default
             #line hidden
             
-            #line 40 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 41 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 	{ 
             
             #line default
             #line hidden
             
-            #line 41 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 42 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		List<type> types = new List<type>(); 
             
             #line default
             #line hidden
             
-            #line 42 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 43 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		types.AddRange(section.Items.Where(item => item is type).Cast<type>()); 
             
             #line default
             #line hidden
             
-            #line 43 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 44 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		foreach (type type in types) 
             
             #line default
             #line hidden
             
-            #line 44 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 45 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		{ 
             
             #line default
             #line hidden
             
-            #line 45 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 46 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 			string type_name = type.name.ToLower().Replace('-', '_'); 
             
             #line default
             #line hidden
             this.Write("/* ");
             
-            #line 46 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 47 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type.name));
             
             #line default
             #line hidden
             this.Write(" */\r\n\r\n");
             
-            #line 48 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 49 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 			if (type.@class == typeClass.composite) 
             
             #line default
             #line hidden
             
-            #line 49 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 50 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 			{ 
             
             #line default
             #line hidden
             
-            #line 50 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 51 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 				string arg_list = Program.GetMandatoryArgListMock(type); 
             
             #line default
             #line hidden
             
-            #line 51 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 52 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 				ICollection<KeyValuePair<field, int>> args = Program.GetMandatoryArgs(type); 
             
             #line default
             #line hidden
             this.Write("\tMOCK_STATIC_METHOD_");
             
-            #line 52 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 53 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(args.Count()));
             
             #line default
             #line hidden
             this.Write("(,");
             
-            #line 52 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 53 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, ");
             
-            #line 52 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 53 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_create");
             
-            #line 52 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 53 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(arg_list));
             
             #line default
             #line hidden
             this.Write(");\r\n\tMOCK_METHOD_END(");
             
-            #line 53 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 54 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, test_");
             
-            #line 53 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 54 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_handle);\r\n\tMOCK_STATIC_METHOD_1(,");
             
-            #line 54 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 55 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, ");
             
-            #line 54 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 55 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
-            this.Write("_create, ");
+            this.Write("_clone, ");
             
-            #line 54 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 55 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, value);\r\n\tMOCK_METHOD_END(");
             
-            #line 55 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 56 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, test_");
             
-            #line 55 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 56 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_handle);\r\n\tMOCK_STATIC_METHOD_1(, void, ");
             
-            #line 56 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 57 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_destroy, ");
             
-            #line 56 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 57 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, ");
             
-            #line 56 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 57 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
@@ -361,35 +361,35 @@ namespace amqplib_generator
             this.Write(");\r\n\tMOCK_VOID_METHOD_END();\r\n\tMOCK_STATIC_METHOD_1(, AMQP_VALUE, amqpvalue_creat" +
                     "e_");
             
-            #line 58 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 59 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 58 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 59 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, ");
             
-            #line 58 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 59 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(");\r\n\tMOCK_METHOD_END(AMQP_VALUE, test_");
             
-            #line 59 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 60 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_amqp_value);\r\n\tMOCK_STATIC_METHOD_1(, bool, is_");
             
-            #line 60 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 61 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
@@ -397,313 +397,313 @@ namespace amqplib_generator
             this.Write("_type_by_descriptor, AMQP_VALUE, value);\r\n\tMOCK_METHOD_END(bool, true);\r\n\tMOCK_ST" +
                     "ATIC_METHOD_2(, int, amqpvalue_get_");
             
-            #line 62 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 63 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(", AMQP_VALUE, value, ");
             
-            #line 62 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 63 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE*, ");
             
-            #line 62 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 63 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_handle);\r\n\tMOCK_METHOD_END(int, 0);\r\n\r\n");
             
-            #line 65 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 66 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 				foreach (field field in type.Items.Where(item => item is field)) 
             
             #line default
             #line hidden
             
-            #line 66 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 67 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 				{ 
             
             #line default
             #line hidden
             
-            #line 67 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 68 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 					string field_name = field.name.ToLower().Replace('-', '_'); 
             
             #line default
             #line hidden
             
-            #line 68 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 69 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 					string c_type = Program.GetCType(field.type).Replace('-', '_').Replace(':', '_'); 
             
             #line default
             #line hidden
             
-            #line 69 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 70 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 					type field_type = Program.GetTypeByName(types, field.type); 
             
             #line default
             #line hidden
             
-            #line 70 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 71 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 					if ((field_type != null) && (field_type.@class == typeClass.composite)) c_type = field_type.name.ToUpper().Replace('-', '_').Replace(':', '_') + "_HANDLE"; 
             
             #line default
             #line hidden
             this.Write("\tMOCK_STATIC_METHOD_2(, int, ");
             
-            #line 71 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 72 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_get_");
             
-            #line 71 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 72 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 71 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 72 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, ");
             
-            #line 71 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 72 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 71 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 72 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(c_type));
             
             #line default
             #line hidden
             this.Write("*, ");
             
-            #line 71 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 72 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("_value);\r\n\tMOCK_METHOD_END(int, 0);\r\n\tMOCK_STATIC_METHOD_2(, int, ");
             
-            #line 73 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 74 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_set_");
             
-            #line 73 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 74 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 73 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 74 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, ");
             
-            #line 73 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 74 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 73 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 74 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(c_type));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 73 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 74 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("_value);\r\n\tMOCK_METHOD_END(int, 0);\r\n");
             
-            #line 75 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 76 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 				} 
             
             #line default
             #line hidden
             this.Write("\r\n");
             
-            #line 77 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 78 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 			} 
             
             #line default
             #line hidden
             
-            #line 78 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 79 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		} 
             
             #line default
             #line hidden
             
-            #line 79 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 80 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 	} 
             
             #line default
             #line hidden
             this.Write("};\r\n\r\n");
             
-            #line 82 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 83 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 	foreach (section section in amqp.Items.Where(item => item is section)) 
             
             #line default
             #line hidden
             
-            #line 83 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 84 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 	{ 
             
             #line default
             #line hidden
             
-            #line 84 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 85 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		List<type> types = new List<type>(); 
             
             #line default
             #line hidden
             
-            #line 85 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 86 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		types.AddRange(section.Items.Where(item => item is type).Cast<type>()); 
             
             #line default
             #line hidden
             
-            #line 86 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 87 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		foreach (type type in types) 
             
             #line default
             #line hidden
             
-            #line 87 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 88 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		{ 
             
             #line default
             #line hidden
             
-            #line 88 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 89 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 			string type_name = type.name.ToLower().Replace('-', '_'); 
             
             #line default
             #line hidden
             this.Write("/* ");
             
-            #line 89 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 90 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type.name));
             
             #line default
             #line hidden
             this.Write(" */\r\n\r\n");
             
-            #line 91 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 92 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 			if (type.@class == typeClass.composite) 
             
             #line default
             #line hidden
             
-            #line 92 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 93 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 			{ 
             
             #line default
             #line hidden
             
-            #line 93 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 94 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 				string arg_list = Program.GetMandatoryArgListMock(type); 
             
             #line default
             #line hidden
             
-            #line 94 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 95 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 				ICollection<KeyValuePair<field, int>> args = Program.GetMandatoryArgs(type); 
             
             #line default
             #line hidden
             this.Write("\tDECLARE_GLOBAL_MOCK_METHOD_");
             
-            #line 95 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 96 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(args.Count()));
             
             #line default
             #line hidden
             this.Write("(amqp_definitions_mocks, ,");
             
-            #line 95 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 96 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, ");
             
-            #line 95 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 96 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_create");
             
-            #line 95 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 96 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(arg_list));
             
             #line default
             #line hidden
             this.Write(");\r\n\tDECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,");
             
-            #line 96 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 97 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, ");
             
-            #line 96 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 97 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
-            this.Write("_create, ");
+            this.Write("_clone, ");
             
-            #line 96 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 97 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, value);\r\n\tDECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, ");
             
-            #line 97 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 98 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_destroy, ");
             
-            #line 97 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 98 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, ");
             
-            #line 97 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 98 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
@@ -711,28 +711,28 @@ namespace amqplib_generator
             this.Write(");\r\n\tDECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue" +
                     "_create_");
             
-            #line 98 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 99 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 98 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 99 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, ");
             
-            #line 98 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 99 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(");\r\n\tDECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_");
             
-            #line 99 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 100 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
@@ -740,173 +740,199 @@ namespace amqplib_generator
             this.Write("_type_by_descriptor, AMQP_VALUE, value);\r\n\tDECLARE_GLOBAL_MOCK_METHOD_2(amqp_defi" +
                     "nitions_mocks, , int, amqpvalue_get_");
             
-            #line 100 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 101 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(", AMQP_VALUE, value, ");
             
-            #line 100 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 101 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE*, ");
             
-            #line 100 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 101 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_handle);\r\n\r\n");
             
-            #line 102 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 103 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 				foreach (field field in type.Items.Where(item => item is field)) 
             
             #line default
             #line hidden
             
-            #line 103 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 104 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 				{ 
             
             #line default
             #line hidden
             
-            #line 104 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 105 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 					string field_name = field.name.ToLower().Replace('-', '_'); 
             
             #line default
             #line hidden
             
-            #line 105 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 106 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 					string c_type = Program.GetCType(field.type).Replace('-', '_').Replace(':', '_'); 
             
             #line default
             #line hidden
             
-            #line 106 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 107 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 					type field_type = Program.GetTypeByName(types, field.type); 
             
             #line default
             #line hidden
             
-            #line 107 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 108 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 					if ((field_type != null) && (field_type.@class == typeClass.composite)) c_type = field_type.name.ToUpper().Replace('-', '_').Replace(':', '_') + "_HANDLE"; 
             
             #line default
             #line hidden
             this.Write("\tDECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, ");
             
-            #line 108 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 109 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_get_");
             
-            #line 108 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 109 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 108 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 109 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, ");
             
-            #line 108 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 109 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 108 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 109 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(c_type));
             
             #line default
             #line hidden
             this.Write("*, ");
             
-            #line 108 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 109 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("_value);\r\n\tDECLARE_GLOBAL_MOCK_METHOD_2(amqp_definitions_mocks, , int, ");
             
-            #line 109 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 110 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write("_set_");
             
-            #line 109 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 110 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 109 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 110 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name.ToUpper()));
             
             #line default
             #line hidden
             this.Write("_HANDLE, ");
             
-            #line 109 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 110 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(type_name));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 109 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 110 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(c_type));
             
             #line default
             #line hidden
             this.Write(", ");
             
-            #line 109 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 110 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
             this.Write(this.ToStringHelper.ToStringWithCulture(field_name));
             
             #line default
             #line hidden
             this.Write("_value);\r\n");
             
-            #line 110 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 111 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 				} 
             
             #line default
             #line hidden
             this.Write("\r\n");
             
-            #line 112 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 113 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 			} 
             
             #line default
             #line hidden
             
-            #line 113 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 114 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 		} 
             
             #line default
             #line hidden
             
-            #line 114 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
+            #line 115 "D:\azure-amqp\azure-amqp\c\amqplib_generator\amqp_definitions_mocks_h.tt"
 	} 
             
             #line default
             #line hidden
-            this.Write("\r\n#endif /* AMQP_DEFINITIONS_MOCKS_H */\r\n");
+            this.Write(@"
+std::ostream& operator<<(std::ostream& left, const delivery_tag& delivery)
+{
+    std::ios::fmtflags f(left.flags());
+    left << std::hex;
+    for (size_t i = 0; i < delivery.length; i++)
+    {
+        left << ((const unsigned char*)delivery.bytes)[i];
+    }
+    left.flags(f);
+    return left;
+}
+
+static bool operator==(const delivery_tag& left, const delivery_tag& right)
+{
+    if (left.length != right.length)
+    {
+        return false;
+    }
+    else
+    {
+        return memcmp(left.bytes, right.bytes, left.length) == 0;
+    }
+}
+
+#endif /* AMQP_DEFINITIONS_MOCKS_H */
+");
             return this.GenerationEnvironment.ToString();
         }
     }

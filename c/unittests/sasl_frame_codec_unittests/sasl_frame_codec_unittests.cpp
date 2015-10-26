@@ -8,30 +8,6 @@
 #include "amqp_definitions.h"
 #include "amqp_definitions_mocks.h"
 
-std::ostream& operator<<(std::ostream& left, const delivery_tag& delivery)
-{
-	std::ios::fmtflags f(left.flags());
-	left << std::hex;
-	for (size_t i = 0; i < delivery.length; i++)
-	{
-		left << ((const unsigned char*)delivery.bytes)[i];
-	}
-	left.flags(f);
-	return left;
-}
-
-static bool operator==(const delivery_tag& left, const delivery_tag& right)
-{
-	if (left.length != right.length)
-	{
-		return false;
-	}
-	else
-	{
-		return memcmp(left.bytes, right.bytes, left.length) == 0;
-	}
-}
-
 #define TEST_FRAME_CODEC_HANDLE			(FRAME_CODEC_HANDLE)0x4242
 #define TEST_DESCRIPTOR_AMQP_VALUE		(AMQP_VALUE)0x4243
 #define TEST_DECODER_HANDLE				(AMQPVALUE_DECODER_HANDLE)0x4244

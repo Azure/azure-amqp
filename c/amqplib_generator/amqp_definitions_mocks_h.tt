@@ -11,6 +11,7 @@
 #define AMQP_DEFINITIONS_MOCKS_H
 
 #include "amqp_definitions.h"
+#include "micromock.h"
 
 <#	int i = 0; #>
 <#	foreach (section section in amqp.Items.Where(item => item is section)) #>
@@ -51,7 +52,7 @@ public:
 <#				ICollection<KeyValuePair<field, int>> args = Program.GetMandatoryArgs(type); #>
 	MOCK_STATIC_METHOD_<#= args.Count() #>(,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_create<#= arg_list #>);
 	MOCK_METHOD_END(<#= type_name.ToUpper() #>_HANDLE, test_<#= type_name #>_handle);
-	MOCK_STATIC_METHOD_1(,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_create, <#= type_name.ToUpper() #>_HANDLE, value);
+	MOCK_STATIC_METHOD_1(,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_clone, <#= type_name.ToUpper() #>_HANDLE, value);
 	MOCK_METHOD_END(<#= type_name.ToUpper() #>_HANDLE, test_<#= type_name #>_handle);
 	MOCK_STATIC_METHOD_1(, void, <#= type_name #>_destroy, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
 	MOCK_VOID_METHOD_END();
@@ -93,7 +94,7 @@ public:
 <#				string arg_list = Program.GetMandatoryArgListMock(type); #>
 <#				ICollection<KeyValuePair<field, int>> args = Program.GetMandatoryArgs(type); #>
 	DECLARE_GLOBAL_MOCK_METHOD_<#= args.Count() #>(amqp_definitions_mocks, ,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_create<#= arg_list #>);
-	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_create, <#= type_name.ToUpper() #>_HANDLE, value);
+	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, ,<#= type_name.ToUpper() #>_HANDLE, <#= type_name #>_clone, <#= type_name.ToUpper() #>_HANDLE, value);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , void, <#= type_name #>_destroy, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , AMQP_VALUE, amqpvalue_create_<#= type_name #>, <#= type_name.ToUpper() #>_HANDLE, <#= type_name #>);
 	DECLARE_GLOBAL_MOCK_METHOD_1(amqp_definitions_mocks, , bool, is_<#= type_name #>_type_by_descriptor, AMQP_VALUE, value);
@@ -112,5 +113,29 @@ public:
 <#			} #>
 <#		} #>
 <#	} #>
+
+std::ostream& operator<<(std::ostream& left, const delivery_tag& delivery)
+{
+    std::ios::fmtflags f(left.flags());
+    left << std::hex;
+    for (size_t i = 0; i < delivery.length; i++)
+    {
+        left << ((const unsigned char*)delivery.bytes)[i];
+    }
+    left.flags(f);
+    return left;
+}
+
+static bool operator==(const delivery_tag& left, const delivery_tag& right)
+{
+    if (left.length != right.length)
+    {
+        return false;
+    }
+    else
+    {
+        return memcmp(left.bytes, right.bytes, left.length) == 0;
+    }
+}
 
 #endif /* AMQP_DEFINITIONS_MOCKS_H */

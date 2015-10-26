@@ -24,30 +24,6 @@ static ON_CONNECTION_STATE_CHANGED saved_connection_state_changed_callback;
 static void* saved_callback_context;
 static uint32_t remote_max_frame_size = 512;
 
-std::ostream& operator<<(std::ostream& left, const delivery_tag& delivery)
-{
-    std::ios::fmtflags f(left.flags());
-    left << std::hex;
-    for (size_t i = 0; i < delivery.length; i++)
-    {
-        left << ((const unsigned char*)delivery.bytes)[i];
-    }
-    left.flags(f);
-    return left;
-}
-
-static bool operator==(const delivery_tag& left, const delivery_tag& right)
-{
-    if (left.length != right.length)
-    {
-        return false;
-    }
-    else
-    {
-        return memcmp(left.bytes, right.bytes, left.length) == 0;
-    }
-}
-
 uint64_t performative_ulong;
 
 TYPED_MOCK_CLASS(session_mocks, CGlobalMock)
@@ -1156,4 +1132,4 @@ TEST_METHOD(when_if_sending_the_frame_to_the_connection_fails_the_next_outgoing_
 	session_destroy(session);
 }
 
-END_TEST_SUITE(connection_unittests)
+END_TEST_SUITE(session_unittests)

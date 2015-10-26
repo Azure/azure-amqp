@@ -57,15 +57,17 @@ extern "C" {
 <#			if (type.@class == typeClass.restricted) #>
 <#			{ #>
 <#				string c_type = Program.GetCType(type.source).Replace('-', '_').Replace(':', '_'); #>
+/* <#=		type.name #> */
+
 	typedef <#= c_type #> <#= type_name.ToLower() #>;
 
 <#				if (c_type != "AMQP_VALUE") #>
 <#				{ #>
-	#define amqpvalue_create_<#= type_name.ToLower() #> amqpvalue_create_<#= type.source.ToLower().Replace('-', '_').Replace(':', '_') #>
+	extern AMQP_VALUE amqpvalue_create_<#= type_name.ToLower() #>(<#= type_name.ToLower() #> value);
 <#				} #>
 <#				else #>
 <#				{ #>
-	#define amqpvalue_create_<#= type_name.ToLower() #> amqpvalue_clone
+	extern AMQP_VALUE amqpvalue_create_<#= type_name.ToLower() #>(AMQP_VALUE value);
 	#define <#= type_name.ToLower() #>_clone amqpvalue_clone
 	#define <#= type_name.ToLower() #>_destroy amqpvalue_destroy
 <#				} #>

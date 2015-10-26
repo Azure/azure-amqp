@@ -16,9 +16,11 @@ extern "C" {
 
 /* role */
 
+/* role */
+
 	typedef bool role;
 
-	#define amqpvalue_create_role amqpvalue_create_boolean
+	extern AMQP_VALUE amqpvalue_create_role(role value);
 	#define amqpvalue_get_role amqpvalue_get_boolean
 
 	#define role_sender false
@@ -26,9 +28,11 @@ extern "C" {
 
 /* sender-settle-mode */
 
+/* sender-settle-mode */
+
 	typedef uint8_t sender_settle_mode;
 
-	#define amqpvalue_create_sender_settle_mode amqpvalue_create_ubyte
+	extern AMQP_VALUE amqpvalue_create_sender_settle_mode(sender_settle_mode value);
 	#define amqpvalue_get_sender_settle_mode amqpvalue_get_ubyte
 
 	#define sender_settle_mode_unsettled 0
@@ -37,9 +41,11 @@ extern "C" {
 
 /* receiver-settle-mode */
 
+/* receiver-settle-mode */
+
 	typedef uint8_t receiver_settle_mode;
 
-	#define amqpvalue_create_receiver_settle_mode amqpvalue_create_ubyte
+	extern AMQP_VALUE amqpvalue_create_receiver_settle_mode(receiver_settle_mode value);
 	#define amqpvalue_get_receiver_settle_mode amqpvalue_get_ubyte
 
 	#define receiver_settle_mode_first 0
@@ -47,81 +53,101 @@ extern "C" {
 
 /* handle */
 
+/* handle */
+
 	typedef uint32_t handle;
 
-	#define amqpvalue_create_handle amqpvalue_create_uint
+	extern AMQP_VALUE amqpvalue_create_handle(handle value);
 	#define amqpvalue_get_handle amqpvalue_get_uint
 
 
 /* seconds */
 
+/* seconds */
+
 	typedef uint32_t seconds;
 
-	#define amqpvalue_create_seconds amqpvalue_create_uint
+	extern AMQP_VALUE amqpvalue_create_seconds(seconds value);
 	#define amqpvalue_get_seconds amqpvalue_get_uint
 
 
 /* milliseconds */
 
+/* milliseconds */
+
 	typedef uint32_t milliseconds;
 
-	#define amqpvalue_create_milliseconds amqpvalue_create_uint
+	extern AMQP_VALUE amqpvalue_create_milliseconds(milliseconds value);
 	#define amqpvalue_get_milliseconds amqpvalue_get_uint
 
 
 /* delivery-tag */
 
+/* delivery-tag */
+
 	typedef amqp_binary delivery_tag;
 
-	#define amqpvalue_create_delivery_tag amqpvalue_create_binary
+	extern AMQP_VALUE amqpvalue_create_delivery_tag(delivery_tag value);
 	#define amqpvalue_get_delivery_tag amqpvalue_get_binary
 
 
 /* sequence-no */
 
+/* sequence-no */
+
 	typedef uint32_t sequence_no;
 
-	#define amqpvalue_create_sequence_no amqpvalue_create_uint
+	extern AMQP_VALUE amqpvalue_create_sequence_no(sequence_no value);
 	#define amqpvalue_get_sequence_no amqpvalue_get_uint
 
 
 /* delivery-number */
 
+/* delivery-number */
+
 	typedef sequence_no delivery_number;
 
-	#define amqpvalue_create_delivery_number amqpvalue_create_sequence_no
+	extern AMQP_VALUE amqpvalue_create_delivery_number(delivery_number value);
 	#define amqpvalue_get_delivery_number amqpvalue_get_sequence_no
 
 
 /* transfer-number */
 
+/* transfer-number */
+
 	typedef sequence_no transfer_number;
 
-	#define amqpvalue_create_transfer_number amqpvalue_create_sequence_no
+	extern AMQP_VALUE amqpvalue_create_transfer_number(transfer_number value);
 	#define amqpvalue_get_transfer_number amqpvalue_get_sequence_no
 
 
 /* message-format */
 
+/* message-format */
+
 	typedef uint32_t message_format;
 
-	#define amqpvalue_create_message_format amqpvalue_create_uint
+	extern AMQP_VALUE amqpvalue_create_message_format(message_format value);
 	#define amqpvalue_get_message_format amqpvalue_get_uint
 
 
 /* ietf-language-tag */
 
+/* ietf-language-tag */
+
 	typedef const char* ietf_language_tag;
 
-	#define amqpvalue_create_ietf_language_tag amqpvalue_create_symbol
+	extern AMQP_VALUE amqpvalue_create_ietf_language_tag(ietf_language_tag value);
 	#define amqpvalue_get_ietf_language_tag amqpvalue_get_symbol
 
 
 /* fields */
 
+/* fields */
+
 	typedef AMQP_VALUE fields;
 
-	#define amqpvalue_create_fields amqpvalue_clone
+	extern AMQP_VALUE amqpvalue_create_fields(AMQP_VALUE value);
 	#define fields_clone amqpvalue_clone
 	#define fields_destroy amqpvalue_destroy
 	#define amqpvalue_get_fields amqpvalue_get_map
@@ -147,9 +173,11 @@ extern "C" {
 
 /* amqp-error */
 
+/* amqp-error */
+
 	typedef const char* amqp_error;
 
-	#define amqpvalue_create_amqp_error amqpvalue_create_symbol
+	extern AMQP_VALUE amqpvalue_create_amqp_error(amqp_error value);
 	#define amqpvalue_get_amqp_error amqpvalue_get_symbol
 
 	#define amqp_error_internal_error amqp_internal_error
@@ -168,9 +196,11 @@ extern "C" {
 
 /* connection-error */
 
+/* connection-error */
+
 	typedef const char* connection_error;
 
-	#define amqpvalue_create_connection_error amqpvalue_create_symbol
+	extern AMQP_VALUE amqpvalue_create_connection_error(connection_error value);
 	#define amqpvalue_get_connection_error amqpvalue_get_symbol
 
 	#define connection_error_connection_forced amqp_connection_forced
@@ -179,9 +209,11 @@ extern "C" {
 
 /* session-error */
 
+/* session-error */
+
 	typedef const char* session_error;
 
-	#define amqpvalue_create_session_error amqpvalue_create_symbol
+	extern AMQP_VALUE amqpvalue_create_session_error(session_error value);
 	#define amqpvalue_get_session_error amqpvalue_get_symbol
 
 	#define session_error_window_violation amqp_session_window_violation
@@ -191,9 +223,11 @@ extern "C" {
 
 /* link-error */
 
+/* link-error */
+
 	typedef const char* link_error;
 
-	#define amqpvalue_create_link_error amqpvalue_create_symbol
+	extern AMQP_VALUE amqpvalue_create_link_error(link_error value);
 	#define amqpvalue_get_link_error amqpvalue_get_symbol
 
 	#define link_error_detach_forced amqp_link_detach_forced
@@ -442,9 +476,11 @@ extern "C" {
 
 /* sasl-code */
 
+/* sasl-code */
+
 	typedef uint8_t sasl_code;
 
-	#define amqpvalue_create_sasl_code amqpvalue_create_ubyte
+	extern AMQP_VALUE amqpvalue_create_sasl_code(sasl_code value);
 	#define amqpvalue_get_sasl_code amqpvalue_get_ubyte
 
 	#define sasl_code_ok 0
@@ -531,9 +567,11 @@ extern "C" {
 
 /* terminus-durability */
 
+/* terminus-durability */
+
 	typedef uint32_t terminus_durability;
 
-	#define amqpvalue_create_terminus_durability amqpvalue_create_uint
+	extern AMQP_VALUE amqpvalue_create_terminus_durability(terminus_durability value);
 	#define amqpvalue_get_terminus_durability amqpvalue_get_uint
 
 	#define terminus_durability_none 0
@@ -542,9 +580,11 @@ extern "C" {
 
 /* terminus-expiry-policy */
 
+/* terminus-expiry-policy */
+
 	typedef const char* terminus_expiry_policy;
 
-	#define amqpvalue_create_terminus_expiry_policy amqpvalue_create_symbol
+	extern AMQP_VALUE amqpvalue_create_terminus_expiry_policy(terminus_expiry_policy value);
 	#define amqpvalue_get_terminus_expiry_policy amqpvalue_get_symbol
 
 	#define terminus_expiry_policy_link_detach link_detach
@@ -554,17 +594,21 @@ extern "C" {
 
 /* node-properties */
 
+/* node-properties */
+
 	typedef fields node_properties;
 
-	#define amqpvalue_create_node_properties amqpvalue_create_fields
+	extern AMQP_VALUE amqpvalue_create_node_properties(node_properties value);
 	#define amqpvalue_get_node_properties amqpvalue_get_fields
 
 
 /* filter-set */
 
+/* filter-set */
+
 	typedef AMQP_VALUE filter_set;
 
-	#define amqpvalue_create_filter_set amqpvalue_clone
+	extern AMQP_VALUE amqpvalue_create_filter_set(AMQP_VALUE value);
 	#define filter_set_clone amqpvalue_clone
 	#define filter_set_destroy amqpvalue_destroy
 	#define amqpvalue_get_filter_set amqpvalue_get_map
@@ -632,9 +676,11 @@ extern "C" {
 
 /* annotations */
 
+/* annotations */
+
 	typedef AMQP_VALUE annotations;
 
-	#define amqpvalue_create_annotations amqpvalue_clone
+	extern AMQP_VALUE amqpvalue_create_annotations(AMQP_VALUE value);
 	#define annotations_clone amqpvalue_clone
 	#define annotations_destroy amqpvalue_destroy
 	#define amqpvalue_get_annotations amqpvalue_get_map
@@ -642,41 +688,51 @@ extern "C" {
 
 /* message-id-ulong */
 
+/* message-id-ulong */
+
 	typedef uint64_t message_id_ulong;
 
-	#define amqpvalue_create_message_id_ulong amqpvalue_create_ulong
+	extern AMQP_VALUE amqpvalue_create_message_id_ulong(message_id_ulong value);
 	#define amqpvalue_get_message_id_ulong amqpvalue_get_ulong
 
 
 /* message-id-uuid */
 
+/* message-id-uuid */
+
 	typedef uuid message_id_uuid;
 
-	#define amqpvalue_create_message_id_uuid amqpvalue_create_uuid
+	extern AMQP_VALUE amqpvalue_create_message_id_uuid(message_id_uuid value);
 	#define amqpvalue_get_message_id_uuid amqpvalue_get_uuid
 
 
 /* message-id-binary */
 
+/* message-id-binary */
+
 	typedef amqp_binary message_id_binary;
 
-	#define amqpvalue_create_message_id_binary amqpvalue_create_binary
+	extern AMQP_VALUE amqpvalue_create_message_id_binary(message_id_binary value);
 	#define amqpvalue_get_message_id_binary amqpvalue_get_binary
 
 
 /* message-id-string */
 
+/* message-id-string */
+
 	typedef const char* message_id_string;
 
-	#define amqpvalue_create_message_id_string amqpvalue_create_string
+	extern AMQP_VALUE amqpvalue_create_message_id_string(message_id_string value);
 	#define amqpvalue_get_message_id_string amqpvalue_get_string
 
 
 /* address-string */
 
+/* address-string */
+
 	typedef const char* address_string;
 
-	#define amqpvalue_create_address_string amqpvalue_create_string
+	extern AMQP_VALUE amqpvalue_create_address_string(address_string value);
 	#define amqpvalue_get_address_string amqpvalue_get_string
 
 

@@ -153,4 +153,44 @@ TEST_METHOD(message_clone_with_a_valid_argument_succeeds)
 	message_destroy(message);
 }
 
+/* Tests_SRS_MESSAGE_01_062: [If source_message is NULL, message_clone shall fail and return NULL.] */
+TEST_METHOD(message_clone_with_NULL_message_source_fails)
+{
+	// arrange
+	message_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+
+	// act
+	MESSAGE_HANDLE message = message_clone(NULL);
+
+	// assert
+	ASSERT_IS_NULL(message);
+}
+
+/* Tests_SRS_MESSAGE_01_004: [If allocating memory for the new cloned message fails, message_clone shall fail and return NULL.] */
+TEST_METHOD(when_allocating_memory_fails_then_message_clone_fails)
+{
+	// arrange
+	message_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+	MESSAGE_HANDLE source_message = message_create();
+	(void)message_set_header(source_message, custom_message_header);
+	mocks.ResetAllCalls();
+	definition_mocks.ResetAllCalls();
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+		.SetReturn((void*)NULL);
+
+	// act
+	MESSAGE_HANDLE message = message_clone(source_message);
+
+	// assert
+	ASSERT_IS_NULL(message);
+	mocks.AssertActualAndExpectedCalls();
+	definition_mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	message_destroy(source_message);
+}
+
 END_TEST_SUITE(message_unittests)

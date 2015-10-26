@@ -32,46 +32,57 @@ MESSAGE_HANDLE message_create(void)
 
 MESSAGE_HANDLE message_clone(MESSAGE_HANDLE source_message)
 {
-	MESSAGE_DATA* result = (MESSAGE_DATA*)amqpalloc_malloc(sizeof(MESSAGE_DATA));
-	MESSAGE_DATA* source_message_instance = (MESSAGE_DATA*)source_message;
+	MESSAGE_DATA* result;
 
-	/* Codes_SRS_MESSAGE_01_003: [message_clone shall clone a message entirely and on success return a non-NULL handle to the cloned message.] */
-	if (result != NULL)
+	/* Codes_SRS_MESSAGE_01_062: [If source_message is NULL, message_clone shall fail and return NULL.] */
+	if (source_message == NULL)
 	{
-		result->body_data_section_length = source_message_instance->body_data_section_length;
+		result = NULL;
+	}
+	else
+	{
+		MESSAGE_DATA* source_message_instance = (MESSAGE_DATA*)source_message;
+		result = (MESSAGE_DATA*)amqpalloc_malloc(sizeof(MESSAGE_DATA));
 
-		if (source_message_instance->header != NULL)
+		/* Codes_SRS_MESSAGE_01_003: [message_clone shall clone a message entirely and on success return a non-NULL handle to the cloned message.] */
+		/* Codes_SRS_MESSAGE_01_004: [If allocating memory for the new cloned message fails, message_clone shall fail and return NULL.] */
+		if (result != NULL)
 		{
-			/* Codes_SRS_MESSAGE_01_005: [If a header exists on the source message it shall be cloned by using header_clone.] */
-			result->header = header_clone(source_message_instance->header);
-		}
-		else
-		{
-			result->header = NULL;
-		}
+			result->body_data_section_length = source_message_instance->body_data_section_length;
 
-		if (source_message_instance->properties != NULL)
-		{
-			result->properties = properties_clone(source_message_instance->properties);
-		}
-		else
-		{
-			result->properties = NULL;
-		}
-
-		if (source_message_instance->body_data_section_length > 0)
-		{
-			result->body_data_section_bytes = amqpalloc_malloc(source_message_instance->body_data_section_length);
-			if (result->body_data_section_bytes == NULL)
+			if (source_message_instance->header != NULL)
 			{
-				amqpalloc_free(result);
-				result = NULL;
+				/* Codes_SRS_MESSAGE_01_005: [If a header exists on the source message it shall be cloned by using header_clone.] */
+				result->header = header_clone(source_message_instance->header);
 			}
-		}
-		else
-		{
-			result->body_data_section_bytes = NULL;
-			result->body_data_section_length = 0;
+			else
+			{
+				result->header = NULL;
+			}
+
+			if (source_message_instance->properties != NULL)
+			{
+				result->properties = properties_clone(source_message_instance->properties);
+			}
+			else
+			{
+				result->properties = NULL;
+			}
+
+			if (source_message_instance->body_data_section_length > 0)
+			{
+				result->body_data_section_bytes = amqpalloc_malloc(source_message_instance->body_data_section_length);
+				if (result->body_data_section_bytes == NULL)
+				{
+					amqpalloc_free(result);
+					result = NULL;
+				}
+			}
+			else
+			{
+				result->body_data_section_bytes = NULL;
+				result->body_data_section_length = 0;
+			}
 		}
 	}
 

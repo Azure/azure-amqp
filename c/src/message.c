@@ -35,12 +35,14 @@ MESSAGE_HANDLE message_clone(MESSAGE_HANDLE source_message)
 	MESSAGE_DATA* result = (MESSAGE_DATA*)amqpalloc_malloc(sizeof(MESSAGE_DATA));
 	MESSAGE_DATA* source_message_instance = (MESSAGE_DATA*)source_message;
 
+	/* Codes_SRS_MESSAGE_01_003: [message_clone shall clone a message entirely and on success return a non-NULL handle to the cloned message.] */
 	if (result != NULL)
 	{
 		result->body_data_section_length = source_message_instance->body_data_section_length;
 
 		if (source_message_instance->header != NULL)
 		{
+			/* Codes_SRS_MESSAGE_01_005: [If a header exists on the source message it shall be cloned by using header_clone.] */
 			result->header = header_clone(source_message_instance->header);
 		}
 		else
@@ -65,6 +67,11 @@ MESSAGE_HANDLE message_clone(MESSAGE_HANDLE source_message)
 				amqpalloc_free(result);
 				result = NULL;
 			}
+		}
+		else
+		{
+			result->body_data_section_bytes = NULL;
+			result->body_data_section_length = 0;
 		}
 	}
 

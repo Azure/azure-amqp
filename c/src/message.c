@@ -17,6 +17,7 @@ typedef struct MESSAGE_DATA_TAG
 MESSAGE_HANDLE message_create(void)
 {
 	MESSAGE_DATA* result = (MESSAGE_DATA*)amqpalloc_malloc(sizeof(MESSAGE_DATA));
+	/* Codes_SRS_MESSAGE_01_002: [If allocating memory for the message fails, message_create shall fail and return NULL.] */
 	if (result != NULL)
 	{
 		result->header = NULL;
@@ -25,6 +26,7 @@ MESSAGE_HANDLE message_create(void)
 		result->body_data_section_length = 0;
 	}
 
+	/* Codes_SRS_MESSAGE_01_001: [message_create shall create a new AMQP message instance and on success it shall return a non-NULL handle for the newly created message instance.] */
 	return result;
 }
 

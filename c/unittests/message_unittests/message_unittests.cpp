@@ -59,7 +59,7 @@ TEST_FUNCTION_CLEANUP(method_cleanup)
 
 /* message_create */
 
-/* Tests_SRS_SESSION_01_032: [session_create shall create a new session endpoint by calling connection_create_endpoint.] */
+/* Tests_SRS_MESSAGE_01_001: [message_create shall create a new AMQP message instance and on success it shall return a non-NULL handle for the newly created message instance.] */
 TEST_METHOD(message_create_succeeds)
 {
 	// arrange
@@ -77,6 +77,48 @@ TEST_METHOD(message_create_succeeds)
 
 	// cleanup
 	message_destroy(message);
+}
+
+/* Tests_SRS_MESSAGE_01_001: [message_create shall create a new AMQP message instance and on success it shall return a non-NULL handle for the newly created message instance.] */
+TEST_METHOD(message_create_2_times_yields_2_different_message_instances)
+{
+	// arrange
+	message_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG));
+
+	// act
+	MESSAGE_HANDLE message1 = message_create();
+	MESSAGE_HANDLE message2 = message_create();
+
+	// assert
+	ASSERT_IS_NOT_NULL(message1);
+	ASSERT_IS_NOT_NULL(message2);
+	ASSERT_ARE_NOT_EQUAL(void_ptr, message1, message2);
+	mocks.AssertActualAndExpectedCalls();
+
+	// cleanup
+	message_destroy(message1);
+	message_destroy(message2);
+}
+
+/* Tests_SRS_MESSAGE_01_002: [If allocating memory for the message fails, message_create shall fail and return NULL.] */
+TEST_METHOD(when_allocating_memory_for_the_message_fails_then_message_create_fails)
+{
+	// arrange
+	message_mocks mocks;
+	amqp_definitions_mocks definition_mocks;
+
+	EXPECTED_CALL(mocks, amqpalloc_malloc(IGNORED_NUM_ARG))
+		.SetReturn((void*)NULL);
+
+	// act
+	MESSAGE_HANDLE message = message_create();
+
+	// assert
+	ASSERT_IS_NULL(message);
 }
 
 END_TEST_SUITE(message_unittests)

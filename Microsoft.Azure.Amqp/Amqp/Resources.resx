@@ -1,0 +1,291 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AmqpNoValidAddressForHost" xml:space="preserve">
+    <value>No valid IP addresses were found for host {0}.</value>
+  </data>
+  <data name="AmqpFramingError" xml:space="preserve">
+    <value>A valid frame header cannot be formed from the incoming byte stream.</value>
+  </data>
+  <data name="AmqpInvalidPerformativeCode" xml:space="preserve">
+    <value>The descriptor code of the performative '{0}' cannot be processed by the link.</value>
+  </data>
+  <data name="AmqpInvalidFormatCode" xml:space="preserve">
+    <value>The format code '{0}' at frame buffer offset '{1}' is invalid or unexpected.</value>
+  </data>
+  <data name="AmqpInvalidMessageSectionCode" xml:space="preserve">
+    <value>The format code '{0}' is not a valid message section code.</value>
+  </data>
+  <data name="AmqpRequiredFieldNotSet" xml:space="preserve">
+    <value>The required field '{0}' is not set in '{1}'.</value>
+  </data>
+  <data name="AmqpApplicationProperties" xml:space="preserve">
+    <value>Type {0} is not currently supported in AMQP application properties.</value>
+  </data>
+  <data name="AmqpObjectAborted" xml:space="preserve">
+    <value>The AMQP object {0} is aborted.</value>
+  </data>
+  <data name="AmqpFieldSessionId" xml:space="preserve">
+    <value>No session-id was specified for a session receiver.</value>
+  </data>
+  <data name="AmqpIllegalOperationState" xml:space="preserve">
+    <value>operation: {0}, state: {1}</value>
+  </data>
+  <data name="AmqpInvalidMessageBodyType" xml:space="preserve">
+    <value>The message body type is invalid.</value>
+  </data>
+  <data name="AmqpUnopenObject" xml:space="preserve">
+    <value>The object is not open.</value>
+  </data>
+  <data name="AmqpChannelNotFound" xml:space="preserve">
+    <value>The session channel '{0}' cannot be found in connection '{1}'.</value>
+  </data>
+  <data name="AmqpHandleNotFound" xml:space="preserve">
+    <value>The link handle '{0}' cannot be found in session '{1}'.</value>
+  </data>
+  <data name="AmqpHandleInUse" xml:space="preserve">
+    <value>The handle '{0}' is already associated with object '{1}'.</value>
+  </data>
+  <data name="AmqpHandleExceeded" xml:space="preserve">
+    <value>Cannot allocate more handles. The maximum number of handles is {0}.</value>
+  </data>
+  <data name="AmqpNotSupportMechanism" xml:space="preserve">
+    <value>None of the server sasl-mechanisms ({0}) are supported by the client ({1}).</value>
+  </data>
+  <data name="AmqpMessageSizeExceeded" xml:space="preserve">
+    <value>The received message (delivery-id:{0}, size:{1} bytes) exceeds the limit ({2} bytes) currently allowed on the link.</value>
+  </data>
+  <data name="AmqpDynamicTerminusNotSupported" xml:space="preserve">
+    <value>Dynamic terminus is not currently supported.</value>
+  </data>
+  <data name="AmqpConnectionInactive" xml:space="preserve">
+    <value>The connection was inactive for more than the allowed period of time.</value>
+  </data>
+  <data name="AmqpTransferLimitExceeded" xml:space="preserve">
+    <value>There is no link credit to accept the delivery (id={0}).</value>
+  </data>
+  <data name="AmqpProtocolVersionNotSupported" xml:space="preserve">
+    <value>The requested protocol version '{0}' is not supported. The supported version is '{1}'.</value>
+  </data>
+  <data name="AmqpProtocolVersionNotSet" xml:space="preserve">
+    <value>At least one protocol version must be set for {0}.</value>
+  </data>
+  <data name="AmqpInvalidType" xml:space="preserve">
+    <value>The field {0} is either not set or not a supported type.</value>
+  </data>
+  <data name="AmqpOperationNotSupported" xml:space="preserve">
+    <value>{0} is not supported over AMQP.</value>
+  </data>
+  <data name="AmqpInvalidRemoteIp" xml:space="preserve">
+    <value>Unable to get valid source IP address for connection.</value>
+  </data>
+  <data name="AmqpInvalidReOpenOperation" xml:space="preserve">
+    <value>Open was already called for the object '{0}' (state={1}).</value>
+  </data>
+  <data name="AmqpTimeout" xml:space="preserve">
+    <value>The operation did not complete within the allocated time {0} for object {1}.</value>
+  </data>
+  <data name="AmqpDeliveryIDInUse" xml:space="preserve">
+    <value>The delivery id is already used (id:{0}, next-id:{1}, ulw:{2}, index:{3}).</value>
+  </data>
+  <data name="AmqpEncodingTypeMismatch" xml:space="preserve">
+    <value>The Encoding value of type ({0}:{1}) is different from that of its base type ({2}:{3}).</value>
+  </data>
+  <data name="AmqpDuplicateMemberOrder" xml:space="preserve">
+    <value>The order {0} is defined more than once for type {1}. Please specify the Order property of AmqpMemberAttribute explicitly to avoid this error.</value>
+  </data>
+  <data name="AmqpUnknownDescriptor" xml:space="preserve">
+    <value>The descriptor {0} is unknown while deserializing {1}. This usually happens if a wrong type is given to the ReadObject method or KnownTypesAttribute is not defined.</value>
+  </data>
+  <data name="AmqpInsufficientBufferSize" xml:space="preserve">
+    <value>The requested data size '{0}' is greater than the length of the remaining buffer '{1}'.</value>
+  </data>
+  <data name="AmqpErrorOccurred" xml:space="preserve">
+    <value>An AMQP error occurred (condition='{0}').</value>
+  </data>
+  <data name="AmqpInvalidLinkAttachAddress" xml:space="preserve">
+    <value>The hostname within the Target or Source address URL in the ATTACH frame ('{0}') is different than the hostname passed in the connection OPEN ('{1}').</value>
+  </data>
+  <data name="AmqpInvalidPublisherOperationForMessagingSku" xml:space="preserve">
+    <value>The operation cannot be performed against publisher '{0}' because the targeted namespace '{1}' is of {2} tier.</value>
+  </data>
+  <data name="AmqpGlobalOpaqueAddressesNotSupported" xml:space="preserve">
+    <value>Global opaque (non-DNS) addresses are not supported ('{0}')</value>
+  </data>
+  <data name="AmqpInvalidLinkAttachScheme" xml:space="preserve">
+    <value>The scheme of the Target or Source address URL in the ATTACH frame ('{0}') is invalid. Only 'amqp' and 'amqps' schemes are supported.</value>
+  </data>
+  <data name="AmqpBufferAlreadyReclaimed" xml:space="preserve">
+    <value>The buffer has already been reclaimed.</value>
+  </data>
+  <data name="AmqpIdleTimeoutNotSupported" xml:space="preserve">
+    <value>Idle timeout value specified in connection OPEN ('{0} ms') is not supported. Minimum idle timeout is '{1}' ms.</value>
+  </data>
+  <data name="AmqpCannotCloneSentMessage" xml:space="preserve">
+    <value>A message cannot be cloned after it has been sent.</value>
+  </data>
+  <data name="AmqpInvalidSequenceNumberComparison" xml:space="preserve">
+    <value>Comparison of {0} and {1} is invalid because the result is undefined.</value>
+  </data>
+  <data name="AmqpInvalidPropertyType" xml:space="preserve">
+    <value>Invalid type for property '{0}' in the '{1}' section.</value>
+  </data>
+  <data name="AmqpInvalidPropertyValue" xml:space="preserve">
+    <value>Invalid value for property '{0}' in the '{1}' section.</value>
+  </data>
+  <data name="AmqpMissingOrInvalidProperty" xml:space="preserve">
+    <value>Property '{0}' in the '{1}' section is either missing, has the wrong type, or has an unexpected value.</value>
+  </data>
+  <data name="AmqpMissingProperty" xml:space="preserve">
+    <value>Missing property '{0}' in the '{1}' section.</value>
+  </data>
+  <data name="AmqpPutTokenAudienceMismatch" xml:space="preserve">
+    <value>'put-token' operation: the 'name' application property value '{0}' should match the token audience value. Expected: '{1}' </value>
+  </data>
+  <data name="AmqpPutTokenFailed" xml:space="preserve">
+    <value>Put token failed. status-code: {0}, status-description: {1}.</value>
+  </data>
+  <data name="AmqpUnsupportedTokenType" xml:space="preserve">
+    <value>The token type is not supported by this client implementation.</value>
+  </data>
+  <data name="AmqpCbsLinkAlreadyOpen" xml:space="preserve">
+    <value>A link to connection '{0}' $cbs node has already been opened.</value>
+  </data>
+  <data name="AmqpInvalidCommand" xml:space="preserve">
+    <value>Invalid command.</value>
+  </data>
+  <data name="AmqpManagementLinkAlreadyOpen" xml:space="preserve">
+    <value>A link to connection '{0}' $management node has already been opened.</value>
+  </data>
+  <data name="AmqpManagementOperationFailed" xml:space="preserve">
+    <value>Management operation failed. status-code: {0}, status-description: {1}.</value>
+  </data>
+  <data name="AmqpTransportNotSecure" xml:space="preserve">
+    <value>The current transport is not secure. Establish a secure transport by setting AmqpTransportSettings.UseSslStreamSecurity to true.</value>
+  </data>
+  <data name="AmqpLinkNameInUse" xml:space="preserve">
+    <value>A link with name '{0}' is already attached in session {1}.</value>
+  </data>
+  <data name="AmqpEmptyMessageNotAllowed" xml:space="preserve">
+    <value>Sending an emtpy message is not allowed. At least one message section must be initialized.</value>
+  </data>
+  <data name="AmqpCannotResendMessage" xml:space="preserve">
+    <value>A message cannot be sent because it is either received from a link or is already sent over a link.</value>
+  </data>
+</root>

@@ -1,4 +1,4 @@
-# Microsoft Azure AMQP for C#
+# Microsoft Azure AMQP for .Net
 
 This repository contains the source code for the Microsoft Azure AMQP for C# implementation.
 

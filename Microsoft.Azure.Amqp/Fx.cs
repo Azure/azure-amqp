@@ -355,11 +355,6 @@ namespace Microsoft.Azure.Amqp
             return (new IOCompletionThunk(callback)).ThunkFrame;
         }
 
-        public static TransactionCompletedEventHandler ThunkTransactionEventHandler(TransactionCompletedEventHandler handler)
-        {
-            return (new TransactionEventHandlerThunk(handler)).ThunkFrame;
-        }
-
 #if DEBUG
         internal static bool AssertsFailFast
         {
@@ -698,73 +693,6 @@ namespace Microsoft.Azure.Amqp
                     {
                         throw;
                     }
-                }
-            }
-        }
-
-#if UNUSED
-        sealed class SendOrPostThunk : Thunk<SendOrPostCallback>
-        {
-            public SendOrPostThunk(SendOrPostCallback callback)
-                : base(callback)
-            {
-            }
-
-            public SendOrPostCallback ThunkFrame
-            {
-                get
-                {
-                    return new SendOrPostCallback(UnhandledExceptionFrame);
-                }
-            }
-
-            [Fx.Tag.SecurityNote(Critical = "Calls PrepareConstrainedRegions which has a LinkDemand",
-                Safe = "Guaranteed not to call into PT user code from the finally.")]
-            void UnhandledExceptionFrame(object state)
-            {
-                RuntimeHelpers.PrepareConstrainedRegions();
-                try
-                {
-                    Callback(state);
-                }
-                catch (Exception exception)
-                {
-                    if (!Fx.HandleAtThreadBase(exception))
-                    {
-                        throw;
-                    }
-                }
-            }
-        }
-#endif // UNUSED
-
-        sealed class TransactionEventHandlerThunk
-        {
-            readonly TransactionCompletedEventHandler callback;
-
-            public TransactionEventHandlerThunk(TransactionCompletedEventHandler callback)
-            {
-                this.callback = callback;
-            }
-
-            public TransactionCompletedEventHandler ThunkFrame
-            {
-                get
-                {
-                    return new TransactionCompletedEventHandler(UnhandledExceptionFrame);
-                }
-            }
-
-            void UnhandledExceptionFrame(object sender, TransactionEventArgs args)
-            {
-                RuntimeHelpers.PrepareConstrainedRegions();
-                try
-                {
-                    this.callback(sender, args);
-                }
-                catch (Exception exception)
-                {
-                    throw AssertAndFailFastService(exception.ToString());
                 }
             }
         }

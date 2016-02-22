@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Amqp.Encoding
     using System;
     using System.Collections;
     using System.Collections.Generic;
-    using System.Globalization;
+    using System.Reflection;
 
     /// <summary>
     /// Encode and decode data within the AMQP type system.

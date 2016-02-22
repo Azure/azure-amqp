@@ -32,33 +32,6 @@ namespace Microsoft.Azure.Amqp
 
         [Fx.Tag.SecurityNote(Critical = "used in a security-sensitive decision")]
         [SecurityCritical]
-        internal static bool IsInFullTrust()
-        {
-            if (AppDomain.CurrentDomain.IsHomogenous)
-            {
-                return AppDomain.CurrentDomain.IsFullyTrusted;
-            }
-            else
-            {
-                if (!SecurityManager.CurrentThreadRequiresSecurityContextCapture())
-                {
-                    return true;
-                }
-
-                try
-                {
-                    DemandForFullTrust();
-                    return true;
-                }
-                catch (SecurityException)
-                {
-                    return false;
-                }
-            }
-        }
-
-        [Fx.Tag.SecurityNote(Critical = "used in a security-sensitive decision")]
-        [SecurityCritical]
         internal static bool UnsafeIsInFullTrust()
         {
             if (AppDomain.CurrentDomain.IsHomogenous)

@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
+    using System.Diagnostics.Tracing;
     using System.Threading;
     using System.Transactions;
     using Microsoft.Azure.Amqp.Tracing;
@@ -114,9 +115,9 @@ namespace Microsoft.Azure.Amqp
         }
 
         // Override this property to change the trace level when completing with exception
-        protected virtual TraceEventType TraceEventType
+        protected virtual EventLevel EventLevel
         {
-            get { return TraceEventType.Verbose; }
+            get { return EventLevel.Verbose; }
         }
 
         protected object ThisLock
@@ -443,13 +444,13 @@ namespace Microsoft.Azure.Amqp
             if (asyncResult.manualResetEvent != null)
             {
                 asyncResult.manualResetEvent.WaitOne();
-                asyncResult.manualResetEvent.Close();
+                asyncResult.manualResetEvent.Dispose();
             }
 
             if (asyncResult.exception != null)
             {
                 // Trace before PrepareForRethrow to avoid weird callstack strings
-                Fx.Exception.TraceException(asyncResult.exception, asyncResult.TraceEventType, asyncResult.Activity);
+                Fx.Exception.TraceException(asyncResult.exception, asyncResult.EventLevel, asyncResult.Activity);
 
                 ExceptionDispatcher.Throw(asyncResult.exception);
             }

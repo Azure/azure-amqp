@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
+    using System.Diagnostics.Tracing;
     using System.Globalization;
     using System.Runtime.CompilerServices;
     using System.Runtime.Versioning;
@@ -25,37 +26,37 @@ namespace Microsoft.Azure.Amqp
 
         public Exception AsError(Exception exception, EventTraceActivity activity = null)
         {
-            return TraceException<Exception>(exception, TraceEventType.Error, activity);
+            return TraceException<Exception>(exception, EventLevel.Error, activity);
         }
 
         public Exception AsInformation(Exception exception, EventTraceActivity activity = null)
         {
-            return TraceException<Exception>(exception, TraceEventType.Information, activity);
+            return TraceException<Exception>(exception, EventLevel.Informational, activity);
         }
 
         public Exception AsWarning(Exception exception, EventTraceActivity activity = null)
         {
-            return TraceException<Exception>(exception, TraceEventType.Warning, activity);
+            return TraceException<Exception>(exception, EventLevel.Warning, activity);
         }
 
         public Exception AsVerbose(Exception exception, EventTraceActivity activity = null)
         {
-            return TraceException<Exception>(exception, TraceEventType.Verbose, activity);
+            return TraceException<Exception>(exception, EventLevel.Verbose, activity);
         }
 
         public ArgumentException Argument(string paramName, string message)
         {
-            return TraceException<ArgumentException>(new ArgumentException(message, paramName), TraceEventType.Error);
+            return TraceException<ArgumentException>(new ArgumentException(message, paramName), EventLevel.Error);
         }
 
         public ArgumentNullException ArgumentNull(string paramName)
         {
-            return TraceException<ArgumentNullException>(new ArgumentNullException(paramName), TraceEventType.Error);
+            return TraceException<ArgumentNullException>(new ArgumentNullException(paramName), EventLevel.Error);
         }
 
         public ArgumentNullException ArgumentNull(string paramName, string message)
         {
-            return TraceException<ArgumentNullException>(new ArgumentNullException(paramName, message), TraceEventType.Error);
+            return TraceException<ArgumentNullException>(new ArgumentNullException(paramName, message), EventLevel.Error);
         }
 
         public ArgumentException ArgumentNullOrEmpty(string paramName)
@@ -70,7 +71,7 @@ namespace Microsoft.Azure.Amqp
 
         public ArgumentOutOfRangeException ArgumentOutOfRange(string paramName, object actualValue, string message)
         {
-            return TraceException<ArgumentOutOfRangeException>(new ArgumentOutOfRangeException(paramName, actualValue, message), TraceEventType.Error);
+            return TraceException<ArgumentOutOfRangeException>(new ArgumentOutOfRangeException(paramName, actualValue, message), EventLevel.Error);
         }
 
         // When throwing ObjectDisposedException, it is highly recommended that you use this ctor
@@ -81,7 +82,7 @@ namespace Microsoft.Azure.Amqp
         public ObjectDisposedException ObjectDisposed(string message)
         {
             // pass in null, not disposedObject.GetType().FullName as per the above guideline
-            return TraceException<ObjectDisposedException>(new ObjectDisposedException(null, message), TraceEventType.Error);
+            return TraceException<ObjectDisposedException>(new ObjectDisposedException(null, message), EventLevel.Error);
         }
 
         public void TraceHandled(Exception exception, string catchLocation, EventTraceActivity activity = null)
@@ -110,7 +111,7 @@ namespace Microsoft.Azure.Amqp
         [ResourceConsumption(ResourceScope.Process)]
         [Fx.Tag.SecurityNote(Critical = "Calls 'System.Runtime.Interop.UnsafeNativeMethods.IsDebuggerPresent()' which is a P/Invoke method",
             Safe = "Does not leak any resource, needed for debugging")]
-        public TException TraceException<TException>(TException exception, TraceEventType level, EventTraceActivity activity = null)
+        public TException TraceException<TException>(TException exception, EventLevel level, EventTraceActivity activity = null)
             where TException : Exception
         {
             if (!exception.Data.Contains(this.eventSourceName))
@@ -120,8 +121,8 @@ namespace Microsoft.Azure.Amqp
 
                 switch (level)
                 {
-                    case TraceEventType.Critical:
-                    case TraceEventType.Error:
+                    case EventLevel.Critical:
+                    case EventLevel.Error:
                         Trace.TraceError("An Exception is being thrown: {0}", GetDetailsForThrownException(exception));
                         ////if (MessagingClientEtwProvider.Provider.IsEnabled(
                         ////        EventLevel.Error,
@@ -132,7 +133,7 @@ namespace Microsoft.Azure.Amqp
                         ////}
                          
                         break;
-                    case TraceEventType.Warning:
+                    case EventLevel.Warning:
                         Trace.TraceWarning("An Exception is being thrown: {0}", GetDetailsForThrownException(exception));
                         ////if (MessagingClientEtwProvider.Provider.IsEnabled(
                         ////        EventLevel.Warning,

@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using Microsoft.Azure.Amqp.Interop;
 
     static class Ticks
     {
@@ -14,10 +13,7 @@ namespace Microsoft.Azure.Amqp
             get
             {
                 long time;
-#pragma warning disable 1634
-#pragma warning suppress 56523 // function has no error return value
-#pragma warning restore 1634
-                UnsafeNativeMethods.GetSystemTimeAsFileTime(out time);
+                time = DateTime.UtcNow.ToFileTimeUtc();
                 return time;
             }
         }

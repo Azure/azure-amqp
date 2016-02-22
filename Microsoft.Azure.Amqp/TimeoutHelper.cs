@@ -204,7 +204,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                return waitHandle.WaitOne(timeout, false);
+                return waitHandle.WaitOne(timeout);
             }
         }
     }

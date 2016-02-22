@@ -204,7 +204,6 @@
     <Compile Include="FxCop.cs" />
     <Compile Include="IAmqpTrace.cs" />
     <Compile Include="InternalBufferManager.cs" />
-    <Compile Include="Interop\SafeEventLogWriteHandle.cs" />
     <Compile Include="Interop\UnsafeNativeMethods.cs" />
     <Compile Include="IOThreadScheduler.cs" />
     <Compile Include="IOThreadTimer.cs" />

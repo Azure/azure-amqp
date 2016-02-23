@@ -6,13 +6,13 @@ namespace Microsoft.Azure.Amqp.Transaction
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
-    sealed class Declare : Performative
+    public sealed class Declare : Performative
     {
         public static readonly string Name = "amqp:declare:list";
         public static readonly ulong Code = 0x0000000000000031;
         const int Fields = 1;
 
-        public Declare() : base(Name, Code)
+        internal Declare() : base(Name, Code)
         {
         }
 

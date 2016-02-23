@@ -7,7 +7,7 @@ namespace Microsoft.Azure.Amqp.Transaction
     using System.Text;
     using Microsoft.Azure.Amqp.Framing;
 
-    sealed class Declared : Outcome
+    public sealed class Declared : Outcome
     {
         public static readonly string Name = "amqp:declared:list";
         public static readonly ulong Code = 0x0000000000000033;

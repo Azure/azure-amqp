@@ -47,7 +47,9 @@ namespace Microsoft.Azure.Amqp
                 return exception;
             }
 
+#if !DNXCORE
             if (PartialTrustHelpers.UnsafeIsInFullTrust())
+#endif
             {
                 // Racing here is harmless
                 if (ExceptionExtensions.prepForRemotingMethodInfo == null)

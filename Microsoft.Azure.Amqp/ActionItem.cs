@@ -27,11 +27,13 @@ namespace Microsoft.Azure.Amqp
         {
             Fx.Assert(callback != null, "A null callback was passed for Schedule!");
 
+#if !DNXCORE
             if (PartialTrustHelpers.ShouldFlowSecurityContext || WaitCallbackActionItem.ShouldUseActivity)
             {
                 new DefaultActionItem(callback, state).Schedule();
             }
             else
+#endif
             {
                 ScheduleCallback(callback, state);
             }

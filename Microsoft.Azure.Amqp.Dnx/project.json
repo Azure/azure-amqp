@@ -33,7 +33,7 @@
     "configurations": {
         "Debug": {
             "compilationOptions": {
-                "define": [ "DEBUG", "TRACE", "AMQP_DEBUG" ]
+                "define": [ "DEBUG", "TRACE" ]
             }
         },
         "Release": {
@@ -56,8 +56,11 @@
         },
         "dnxcore50": {
             "compilationOptions": {
-                "define": [ "DNXCORE", "SupportsSerialization" ]
+                "define": [ "DNXCORE" ]
             },
+            "compileExclude": [
+                "../Microsoft.Azure.Amqp/Interop/UnsafeNativeMethods.cs"
+            ],
             "dependencies": {
                 "Microsoft.NETCore.Console": "1.0.0-rc2-23712",
                 "System.Net.Primitives": "4.0.11-rc2-23712",

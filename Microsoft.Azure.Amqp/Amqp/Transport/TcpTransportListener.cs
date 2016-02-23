@@ -7,10 +7,11 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Collections.Generic;
     using System.Net;
     using System.Net.Sockets;
-    
+    using System.Threading;
+
     sealed class TcpTransportListener : TransportListener
     {
-        readonly Action<object> acceptTransportLoop;
+        readonly WaitCallback acceptTransportLoop;
         readonly TcpTransportSettings transportSettings;
         Socket[] listenSockets;
 
@@ -42,11 +43,11 @@ namespace Microsoft.Azure.Amqp.Transport
             // TODO: Fix this code to listen on Any address for FQDN pointing to the local host machine.
             if (listenHost.Equals(string.Empty))
             {
-                addresses.AddRange(Dns.GetHostAddresses(listenHost));
+                addresses.AddRange(Dns.GetHostAddressesAsync(listenHost).Result);
             }
             else if (listenHost.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
-                listenHost.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase) ||
-                listenHost.Equals(Dns.GetHostEntry(string.Empty).HostName, StringComparison.OrdinalIgnoreCase))
+                listenHost.Equals(Environment.GetEnvironmentVariable("COMPUTERNAME"), StringComparison.OrdinalIgnoreCase) ||
+                listenHost.Equals(Dns.GetHostEntryAsync(string.Empty).Result.HostName, StringComparison.OrdinalIgnoreCase))
             {
                 if (Socket.OSSupportsIPv4)
                 {
@@ -64,7 +65,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
             else
             {
-                addresses.AddRange(Dns.GetHostAddresses(this.transportSettings.Host));
+                addresses.AddRange(Dns.GetHostAddressesAsync(this.transportSettings.Host).Result);
             }
 
             if (addresses.Count == 0)
@@ -99,15 +100,7 @@ namespace Microsoft.Azure.Amqp.Transport
                     this.listenSockets[i] = null;
                     if (socket != null)
                     {
-                        if (abort)
-                        {
-                            socket.Close(0);
-                        }
-                        else
-                        {
-                            socket.Close();
-                        }
-
+                        socket.Dispose();
                     }
                 }
             }

@@ -6,7 +6,9 @@ namespace Microsoft.Azure.Amqp
     using System;
 
     // An AsyncResult that completes as soon as it is instantiated.
+#if !DNXCORE
     [Serializable]
+#endif
     class CompletedAsyncResult : AsyncResult
     {
         public CompletedAsyncResult(AsyncCallback callback, object state)
@@ -29,7 +31,9 @@ namespace Microsoft.Azure.Amqp
         }
     }
 
+#if !DNXCORE
     [Serializable]
+#endif
     class CompletedAsyncResult<T> : AsyncResult
     {
         T data;
@@ -50,7 +54,9 @@ namespace Microsoft.Azure.Amqp
         }
     }
 
+#if !DNXCORE
     [Serializable]
+#endif
     class CompletedAsyncResult<TResult, TParameter> : AsyncResult
     {
         TResult resultData;

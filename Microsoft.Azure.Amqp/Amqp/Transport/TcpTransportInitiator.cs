@@ -53,7 +53,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 exception = new SocketException((int)e.SocketError);
                 if (e.AcceptSocket != null)
                 {
-                    e.AcceptSocket.Close(0);
+                    e.AcceptSocket.Dispose();
                 }
             }
             else

@@ -5,7 +5,9 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
+#if !DNXCORE
     using System.Security.Permissions;
+#endif
     using System.Threading;
 
     // A simple synchronized pool would simply lock a stack and push/pop on return/take.
@@ -334,7 +336,9 @@ namespace Microsoft.Azure.Amqp
             public static readonly int ProcessorCount = GetProcessorCount();
 
             [Fx.Tag.SecurityNote(Critical = "Asserts in order to get the processor count from the environment", Safe = "This data isn't actually protected so it's ok to leak")]
+#if !DNXCORE
             [EnvironmentPermission(SecurityAction.Assert, Read = "NUMBER_OF_PROCESSORS")]
+#endif
             static int GetProcessorCount()
             {
                 return Environment.ProcessorCount;

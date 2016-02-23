@@ -75,7 +75,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                     default: generator.Emit(OpCodes.Ldc_I4, i); break;
                 }
                 generator.Emit(OpCodes.Ldelem_Ref);
-                if (paramsType[i].IsValueType)
+                if (paramsType[i].GetTypeInfo().IsValueType)
                 {
                     generator.Emit(OpCodes.Unbox_Any, paramsType[i]);
                 }
@@ -96,7 +96,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 ILGenerator generator = method.GetILGenerator();
                 this.LoadArguments(generator, paramsType);
                 generator.Emit(OpCodes.Newobj, constructorInfo);
-                if (constructorInfo.DeclaringType.IsValueType)
+                if (constructorInfo.DeclaringType.GetTypeInfo().IsValueType)
                 {
                     generator.Emit(OpCodes.Box, constructorInfo.DeclaringType);
                 }
@@ -116,7 +116,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 if (!this.isStatic)
                 {
                     generator.Emit(OpCodes.Ldarg_0);
-                    if (methodInfo.DeclaringType.IsValueType)
+                    if (methodInfo.DeclaringType.GetTypeInfo().IsValueType)
                     {
                         generator.Emit(OpCodes.Unbox_Any, methodInfo.DeclaringType);
                     }
@@ -139,7 +139,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 {
                     generator.Emit(OpCodes.Ldnull);
                 }
-                else if (methodInfo.ReturnType.IsValueType)
+                else if (methodInfo.ReturnType.GetTypeInfo().IsValueType)
                 {
                     generator.Emit(OpCodes.Box, methodInfo.ReturnType);
                 }

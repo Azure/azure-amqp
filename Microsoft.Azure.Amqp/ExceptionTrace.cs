@@ -10,8 +10,11 @@ namespace Microsoft.Azure.Amqp
     using System.Globalization;
     using System.Runtime.CompilerServices;
     using System.Runtime.Versioning;
+    using System.Text;
     using System.Threading;
+#if !DNXCORE
     using Microsoft.Azure.Amqp.Interop;
+#endif
     using Microsoft.Azure.Amqp.Tracing;
 
     class ExceptionTrace
@@ -88,7 +91,7 @@ namespace Microsoft.Azure.Amqp
         public void TraceHandled(Exception exception, string catchLocation, EventTraceActivity activity = null)
         {
 #if DEBUG
-            Trace.WriteLine(string.Format(
+            Debug.WriteLine(string.Format(
                 CultureInfo.InvariantCulture,
                 "IotHub/TraceHandled ThreadID=\"{0}\" catchLocation=\"{1}\" exceptionType=\"{2}\" exception=\"{3}\"",
                 Thread.CurrentThread.ManagedThreadId,
@@ -108,9 +111,11 @@ namespace Microsoft.Azure.Amqp
             ////MessagingClientEtwProvider.Provider.EventWriteUnhandledException(this.eventSourceName + ": " + exception.ToStringSlim());
         }
 
+#if !DNXCORE
         [ResourceConsumption(ResourceScope.Process)]
+#endif
         [Fx.Tag.SecurityNote(Critical = "Calls 'System.Runtime.Interop.UnsafeNativeMethods.IsDebuggerPresent()' which is a P/Invoke method",
-            Safe = "Does not leak any resource, needed for debugging")]
+        Safe = "Does not leak any resource, needed for debugging")]
         public TException TraceException<TException>(TException exception, EventLevel level, EventTraceActivity activity = null)
             where TException : Exception
         {
@@ -123,7 +128,11 @@ namespace Microsoft.Azure.Amqp
                 {
                     case EventLevel.Critical:
                     case EventLevel.Error:
+#if DNXCORE
+                        Debug.WriteLine("[{0}] An Exception is being thrown: {1}", level, exception);
+#else
                         Trace.TraceError("An Exception is being thrown: {0}", GetDetailsForThrownException(exception));
+#endif
                         ////if (MessagingClientEtwProvider.Provider.IsEnabled(
                         ////        EventLevel.Error,
                         ////        MessagingClientEventSource.Keywords.Client,
@@ -131,10 +140,14 @@ namespace Microsoft.Azure.Amqp
                         ////{
                         ////    MessagingClientEtwProvider.Provider.ThrowingExceptionError(activity, GetDetailsForThrownException(exception));
                         ////}
-                         
+
                         break;
                     case EventLevel.Warning:
+#if DNXCORE
+                        Debug.WriteLine("[{0}] An Exception is being thrown: {1}", level, exception);
+#else
                         Trace.TraceWarning("An Exception is being thrown: {0}", GetDetailsForThrownException(exception));
+#endif
                         ////if (MessagingClientEtwProvider.Provider.IsEnabled(
                         ////        EventLevel.Warning,
                         ////        MessagingClientEventSource.Keywords.Client,
@@ -142,7 +155,7 @@ namespace Microsoft.Azure.Amqp
                         ////{
                         ////    MessagingClientEtwProvider.Provider.ThrowingExceptionWarning(activity, GetDetailsForThrownException(exception));
                         ////}
-                       
+
                         break;
                     default:
 #if DEBUG
@@ -165,22 +178,22 @@ namespace Microsoft.Azure.Amqp
 
         public static string GetDetailsForThrownException(Exception e)
         {
-            const int MaxStackFrames = 10;
-            string details = e.GetType().ToString();
-
-            // Include the current callstack (this ensures we see the Stack in case exception is not output when caught)
-            var stackTrace = new StackTrace();
-            string stackTraceString = stackTrace.ToString();
-            if (stackTrace.FrameCount > MaxStackFrames)
+            StringBuilder details = new StringBuilder(2048);
+            details.AppendLine(e.ToStringSlim());
+            if (string.IsNullOrWhiteSpace(e.StackTrace))
             {
-                string[] frames = stackTraceString.Split(new[] { Environment.NewLine }, MaxStackFrames + 1, StringSplitOptions.RemoveEmptyEntries);
-                stackTraceString = string.Join(Environment.NewLine, frames, 0, MaxStackFrames) + "...";
+                // Include the current callstack (this ensures we see the Stack in case exception is not output when caught)
+                const int MaxStackTraceLength = 2000;
+                string stackTraceString = Environment.StackTrace;
+                if (stackTraceString.Length > MaxStackTraceLength)
+                {
+                    stackTraceString = stackTraceString.Substring(0, MaxStackTraceLength) + "...";
+                }
+
+                details.Append(stackTraceString);
             }
 
-            details += Environment.NewLine + stackTraceString;
-            details += Environment.NewLine + "Exception ToString:" + Environment.NewLine;
-            details += e.ToStringSlim();
-            return details;
+            return details.ToString();
         }
 
         [SuppressMessage(FxCop.Category.Performance, FxCop.Rule.MarkMembersAsStatic, Justification = "CSDMain #183668")]
@@ -188,7 +201,7 @@ namespace Microsoft.Azure.Amqp
             Safe = "Safe because it's a no-op in retail builds.")]
         internal void BreakOnException(Exception exception)
         {
-#if DEBUG
+#if DEBUG && !DNXCORE
             if (Fx.BreakOnExceptionTypes != null)
             {
                 foreach (Type breakType in Fx.BreakOnExceptionTypes)

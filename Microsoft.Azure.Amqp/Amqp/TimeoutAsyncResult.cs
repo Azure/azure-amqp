@@ -8,9 +8,8 @@ namespace Microsoft.Azure.Amqp
     
     abstract class TimeoutAsyncResult<T> : AsyncResult where T : class
     {
-        static readonly Action<object> timerCallback = new Action<object>(OnTimerCallback);
         readonly TimeSpan timeout;
-        IOThreadTimer timer;
+        Timer timer;
         int completed;
 #if DEBUG
         bool setTimerCalled;  // make sure derived class always call SetTimer
@@ -34,8 +33,7 @@ namespace Microsoft.Azure.Amqp
 #endif
             if (this.timeout != TimeSpan.MaxValue)
             {
-                this.timer = new IOThreadTimer(timerCallback, this, true);
-                this.timer.Set(this.timeout);
+                this.timer = new Timer(s => OnTimerCallback(s), this, this.timeout, Timeout.InfiniteTimeSpan);
             }
         }
 
@@ -53,7 +51,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (this.timer != null)
             {
-                this.timer.Cancel();
+                this.timer.Change(Timeout.Infinite, Timeout.Infinite);
             }
 
             this.CompleteInternal(syncComplete, exception);

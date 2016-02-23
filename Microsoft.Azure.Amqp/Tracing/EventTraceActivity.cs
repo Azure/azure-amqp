@@ -46,7 +46,12 @@ namespace Microsoft.Azure.Amqp.Tracing
 
         public static EventTraceActivity CreateFromThread()
         {
-            Guid id = Trace.CorrelationManager.ActivityId;
+            Guid id;
+#if DNXCORE
+            id = Guid.NewGuid();
+#else
+            id = Trace.CorrelationManager.ActivityId;
+#endif
             if (id == Guid.Empty)
             {
                 return EventTraceActivity.Empty;

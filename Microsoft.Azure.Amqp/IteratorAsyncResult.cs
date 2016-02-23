@@ -188,12 +188,12 @@ namespace Microsoft.Azure.Amqp
         // of IAsyncCatch, use the CatchAndTransfer or CatchAndContinue methods.
         protected AsyncStep CallAsync(BeginCall beginCall, EndCall endCall, Call call, ExceptionPolicy policy)
         {
-            return new AsyncStep(null, beginCall, endCall, call, policy);
+            return new AsyncStep(beginCall, endCall, call, policy);
         }
 
         protected AsyncStep CallAsync(BeginCall beginCall, EndCall endCall, ExceptionPolicy policy)
         {
-            return new AsyncStep(null, beginCall, endCall, null, policy);
+            return new AsyncStep(beginCall, endCall, null, policy);
         }
 
         protected AsyncStep CallParallelAsync<TWorkItem>(ICollection<TWorkItem> workItems, BeginCall<TWorkItem> beginCall, EndCall<TWorkItem> endCall, ExceptionPolicy policy)
@@ -229,16 +229,6 @@ namespace Microsoft.Azure.Amqp
                 },
                 (thisPtr, r) => TaskHelpers.EndAsyncResult(r),
                 policy);
-        }
-
-        protected AsyncStep CallTransactionalAsync(System.Transactions.Transaction transaction, BeginCall beginCall, EndCall endCall, Call call, ExceptionPolicy policy)
-        {
-            return new AsyncStep(transaction, beginCall, endCall, call, policy);
-        }
-
-        protected AsyncStep CallTransactionalAsync(System.Transactions.Transaction transaction, BeginCall beginCall, EndCall endCall, ExceptionPolicy policy)
-        {
-            return new AsyncStep(transaction, beginCall, endCall, null, policy);
         }
 
         protected AsyncStep CallAsyncSleep(TimeSpan amountToSleep)
@@ -357,19 +347,13 @@ namespace Microsoft.Azure.Amqp
                     {
                         if (step.Policy == ExceptionPolicy.Transfer)
                         {
-                            using (this.PrepareTransactionalCall(step.Transaction))
-                            {
-                                step.Call((TIteratorAsyncResult)this, this.timeoutHelper.RemainingTime());
-                            }
+                            step.Call((TIteratorAsyncResult)this, this.timeoutHelper.RemainingTime());
                         }
                         else
                         {
                             try
                             {
-                                using (this.PrepareTransactionalCall(step.Transaction))
-                                {
-                                    step.Call((TIteratorAsyncResult)this, this.timeoutHelper.RemainingTime());
-                                }
+                                step.Call((TIteratorAsyncResult)this, this.timeoutHelper.RemainingTime());
                             }
                             catch (Exception e)
                             {
@@ -385,28 +369,22 @@ namespace Microsoft.Azure.Amqp
                         if (step.Policy == ExceptionPolicy.Transfer)
                         {
                             // Don't refactor this into a seperate method. It adds one extra call stack reducing readibility of call stack in trace.
-                            using (this.PrepareTransactionalCall(step.Transaction))
-                            {
-                                result = step.BeginCall(
-                                    (TIteratorAsyncResult)this,
-                                    this.timeoutHelper.RemainingTime(),
-                                    this.PrepareAsyncCompletion(IteratorAsyncResult<TIteratorAsyncResult>.StepCallbackDelegate),
-                                    this);
-                            }
+                            result = step.BeginCall(
+                                (TIteratorAsyncResult)this,
+                                this.timeoutHelper.RemainingTime(),
+                                this.PrepareAsyncCompletion(IteratorAsyncResult<TIteratorAsyncResult>.StepCallbackDelegate),
+                                this);
                         }
                         else
                         {
                             try
                             {
                                 // Don't refactor this into a seperate method. It adds one extra call stack reducing readibility of call stack in trace.
-                                using (this.PrepareTransactionalCall(step.Transaction))
-                                {
-                                    result = step.BeginCall(
-                                        (TIteratorAsyncResult)this,
-                                        this.timeoutHelper.RemainingTime(),
-                                        this.PrepareAsyncCompletion(IteratorAsyncResult<TIteratorAsyncResult>.StepCallbackDelegate),
-                                        this);
-                                }
+                                result = step.BeginCall(
+                                    (TIteratorAsyncResult)this,
+                                    this.timeoutHelper.RemainingTime(),
+                                    this.PrepareAsyncCompletion(IteratorAsyncResult<TIteratorAsyncResult>.StepCallbackDelegate),
+                                    this);
                             }
                             catch (Exception e)
                             {
@@ -483,18 +461,15 @@ namespace Microsoft.Azure.Amqp
             readonly BeginCall beginCall;
             readonly EndCall endCall;
             readonly Call call;
-            readonly System.Transactions.Transaction transaction;
 
             public static readonly AsyncStep Empty = new AsyncStep();
 
             public AsyncStep(
-                System.Transactions.Transaction transaction,
                 BeginCall beginCall,
                 EndCall endCall,
                 Call call,
                 ExceptionPolicy policy)
             {
-                this.transaction = transaction;
                 this.policy = policy;
                 this.beginCall = beginCall;
                 this.endCall = endCall;
@@ -514,11 +489,6 @@ namespace Microsoft.Azure.Amqp
             public Call Call
             {
                 get { return this.call; }
-            }
-
-            public System.Transactions.Transaction Transaction
-            {
-                get { return this.transaction; }
             }
 
             public bool HasSynchronous
@@ -556,21 +526,19 @@ namespace Microsoft.Azure.Amqp
 
         sealed class SleepAsyncResult : AsyncResult<SleepAsyncResult>
         {
-            static readonly Action<object> onTimer = new Action<object>(OnTimer);
-            static readonly Action<object> StaticOnCancellation = OnCancellation;
-            readonly IOThreadTimer timer;
+            readonly Timer timer;
+            int complete;
 
             CancellationTokenRegistration cancellationTokenRegistration;
 
             public SleepAsyncResult(TimeSpan amount, CancellationToken cancellationToken, AsyncCallback callback, object state)
                 : base(callback, state)
             {
-                this.timer = new IOThreadTimer(onTimer, this, false);
-                this.timer.Set(amount);
+                this.timer = new Timer(s => OnTimer(s), this, amount, Timeout.InfiniteTimeSpan);
 
                 try
                 {
-                    this.cancellationTokenRegistration = cancellationToken.Register(StaticOnCancellation, this);
+                    this.cancellationTokenRegistration = cancellationToken.Register(s => OnCancellation(s), this);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -595,7 +563,10 @@ namespace Microsoft.Azure.Amqp
             static void OnTimer(object state)
             {
                 SleepAsyncResult thisPtr = (SleepAsyncResult)state;
-                thisPtr.Complete(false);
+                if (Interlocked.CompareExchange(ref thisPtr.complete, 1, 0) == 0)
+                {
+                    thisPtr.Complete(false);
+                }
             }
 
             static void OnCancellation(object state)
@@ -609,11 +580,13 @@ namespace Microsoft.Azure.Amqp
 
             void HandleCancellation(bool scheduleComplete)
             {
-                if (this.timer.Cancel())
+                if (Interlocked.CompareExchange(ref this.complete, 1, 0) == 0)
                 {
+                    this.timer.Change(Timeout.Infinite, Timeout.Infinite);
+
                     if (scheduleComplete)
                     {
-                        IOThreadScheduler.ScheduleCallbackNoFlow(s => ((SleepAsyncResult)s).Complete(false), this);
+                        ActionItem.Schedule(s => ((SleepAsyncResult)s).Complete(false), this);
                     }
                     else
                     {

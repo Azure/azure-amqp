@@ -4,29 +4,27 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using System.Reflection;
-    using System.Runtime.CompilerServices;
     using System.Security;
-    using System.Security.Permissions;
 
     static class PartialTrustHelpers
     {
-        [Fx.Tag.SecurityNote(Critical = "used in a security-sensitive decision")]
-        [SecurityCritical]
-        static Type aptca;
-
         internal static bool ShouldFlowSecurityContext
         {
             [Fx.Tag.SecurityNote(Critical = "used in a security-sensitive decision")]
             [SecurityCritical]
             get
             {
+#if DNXCORE
+                return false;
+#else
+
                 if (AppDomain.CurrentDomain.IsHomogenous)
                 {
                     return false;
                 }
 
                 return SecurityManager.CurrentThreadRequiresSecurityContextCapture();
+#endif
             }
         }
 
@@ -34,6 +32,9 @@ namespace Microsoft.Azure.Amqp
         [SecurityCritical]
         internal static bool UnsafeIsInFullTrust()
         {
+#if DNXCORE
+            return true;
+#else
             if (AppDomain.CurrentDomain.IsHomogenous)
             {
                 return AppDomain.CurrentDomain.IsFullyTrusted;
@@ -42,8 +43,10 @@ namespace Microsoft.Azure.Amqp
             {
                 return !SecurityManager.CurrentThreadRequiresSecurityContextCapture();
             }
+#endif
         }
 
+#if !DNXCORE
         [Fx.Tag.SecurityNote(Critical = "Captures security context with identity flow suppressed, " +
             "this requires satisfying a LinkDemand for infrastructure.")]
         [SecurityCritical]
@@ -62,59 +65,6 @@ namespace Microsoft.Azure.Amqp
                 }
             }
         }
-
-        [Fx.Tag.SecurityNote(Critical = "used in a security-sensitive decision")]
-        [SecurityCritical]
-        internal static bool IsTypeAptca(Type type)
-        {
-            Assembly assembly = type.Assembly;
-            return IsAssemblyAptca(assembly) || !IsAssemblySigned(assembly);
-        }
-
-        [Fx.Tag.SecurityNote(Critical = "used in a security-sensitive decision")]
-        [SecurityCritical]
-        [PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        static void DemandForFullTrust()
-        {
-        }
-
-        [Fx.Tag.SecurityNote(Critical = "used in a security-sensitive decision")]
-        [SecurityCritical]
-        static bool IsAssemblyAptca(Assembly assembly)
-        {
-            if (aptca == null)
-            {
-                aptca = typeof(AllowPartiallyTrustedCallersAttribute);
-            }
-            return assembly.GetCustomAttributes(aptca, false).Length > 0;
-        }
-
-        [Fx.Tag.SecurityNote(Critical = "used in a security-sensitive decision")]
-        [SecurityCritical]
-        [FileIOPermission(SecurityAction.Assert, Unrestricted = true)]
-        static bool IsAssemblySigned(Assembly assembly)
-        {
-            byte[] publicKeyToken = assembly.GetName().GetPublicKeyToken();
-            return publicKeyToken != null & publicKeyToken.Length > 0;
-        }
-
-        [Fx.Tag.SecurityNote(Critical = "used in a security-sensitive decision")]
-        [SecurityCritical]
-        internal static bool CheckAppDomainPermissions(PermissionSet permissions)
-        {
-            return AppDomain.CurrentDomain.IsHomogenous &&
-                   permissions.IsSubsetOf(AppDomain.CurrentDomain.PermissionSet);
-        }
-
-        [Fx.Tag.SecurityNote(Critical = "used in a security-sensitive decision")]
-        [SecurityCritical]
-        internal static bool HasEtwPermissions()
-        {
-            //Currently unrestricted permissions are required to create Etw provider. 
-            PermissionSet permissions = new PermissionSet(PermissionState.Unrestricted);
-            return CheckAppDomainPermissions(permissions);
-        }
-
+#endif // !DNXCORE
     }
 }

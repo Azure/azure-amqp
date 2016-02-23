@@ -6,7 +6,7 @@
 // This interface doesn't exist in DNXCORE50, define it manually
 namespace System
 {
-    interface ICloneable
+    public interface ICloneable
     {
         object Clone();
     }

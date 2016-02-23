@@ -522,10 +522,9 @@ namespace Microsoft.Azure.Amqp
 
         sealed class ReceiveAsyncResult : AsyncResult
         {
-            static Action<object> onTimer = OnTimer;
             readonly ReceivingAmqpLink parent;
             readonly TimeSpan timeout;
-            IOThreadTimer timer;
+            Timer timer;
             LinkedListNode<ReceiveAsyncResult> node;
             int completed;  // 1: signaled, 2: timeout
             IEnumerable<AmqpMessage> messages;
@@ -543,8 +542,7 @@ namespace Microsoft.Azure.Amqp
                 this.node = node;
                 if (this.timeout != TimeSpan.MaxValue)
                 {
-                    timer = new IOThreadTimer(onTimer, this, false);
-                    timer.Set(timeout);
+                    timer = new Timer(s => OnTimer(s), this, this.timeout, Timeout.InfiniteTimeSpan);
                 }
             }
 
@@ -580,10 +578,10 @@ namespace Microsoft.Azure.Amqp
 
             public void Signal(IEnumerable<AmqpMessage> messages, bool syncComplete, Exception exception)
             {
-                IOThreadTimer t = this.timer;
+                Timer t = this.timer;
                 if (t != null)
                 {
-                    t.Cancel();
+                    t.Change(Timeout.Infinite, Timeout.Infinite);
                 }
 
                 this.CompleteInternal(messages, syncComplete, 1, exception);

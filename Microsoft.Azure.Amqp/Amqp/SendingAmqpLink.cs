@@ -12,7 +12,6 @@ namespace Microsoft.Azure.Amqp
     public sealed class SendingAmqpLink : AmqpLink, IWorkDelegate<AmqpMessage>
     {
         static readonly TimeSpan MinRequestCreditWindow = TimeSpan.FromSeconds(10);
-        static readonly Action<object> onRequestCredit = OnRequestCredit;
         readonly SerializedWorker<AmqpMessage> pendingDeliveries;   // need link credit
         readonly WorkCollection<ArraySegment<byte>, SendAsyncResult, Outcome> inflightSends;
         Action<Delivery> dispositionListener;
@@ -217,7 +216,7 @@ namespace Microsoft.Azure.Amqp
             {
                 // Tell the other side that we have some messages to send
                 this.lastFlowRequestTime = DateTime.UtcNow;
-                ActionItem.Schedule(onRequestCredit, this);
+                ActionItem.Schedule(s => OnRequestCredit(s), this);
             }
 
             return success;

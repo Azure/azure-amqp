@@ -7,7 +7,6 @@ namespace Microsoft.Azure.Amqp
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Transactions;
 
     static class TaskHelpers
     {

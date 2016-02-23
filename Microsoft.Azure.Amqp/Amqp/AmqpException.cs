@@ -8,7 +8,9 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
+#if !DNXCORE
     [Serializable]
+#endif
     public sealed class AmqpException : Exception
     {
         public AmqpException(Error error)
@@ -22,11 +24,13 @@ namespace Microsoft.Azure.Amqp
         {
         }
 
+#if !DNXCORE
         AmqpException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             this.Error = (Error)info.GetValue("Error", typeof(Error));
         }
+#endif
 
         public Error Error
         {
@@ -44,11 +48,13 @@ namespace Microsoft.Azure.Amqp
             return new AmqpException(error);
         }
 
+#if !DNXCORE
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
 
             info.AddValue("Error", this.Error);
         }
+#endif
     }
 }

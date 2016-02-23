@@ -6,13 +6,17 @@ namespace Microsoft.Azure.Amqp.Framing
     using System;
     using System.Runtime.Serialization;
     using System.Text;
-    using System.Transactions;
     using Microsoft.Azure.Amqp.Encoding;
 
+#if !DNXCORE
     [Serializable]
-    public sealed class Error : DescribedList, ISerializable
+#endif
+    public sealed class Error : DescribedList
+#if !DNXCORE
+        , ISerializable
+#endif
     {
-        public static readonly string Name = "amqp:error:list";
+    public static readonly string Name = "amqp:error:list";
         public static readonly ulong Code = 0x000000000000001d;
         const int Fields = 3;
         const int MaxSizeInInfoMap = 8 * 1024;
@@ -21,12 +25,14 @@ namespace Microsoft.Azure.Amqp.Framing
         {
         }
 
+#if !DNXCORE
         Error(SerializationInfo info, StreamingContext context)
             : base(Name, Code)
         {
             this.Condition = (string)info.GetValue("Condition", typeof(string));
             this.Description = (string)info.GetValue("Description", typeof(string));
         }
+#endif
 
         public AmqpSymbol Condition { get; set; }
 
@@ -58,10 +64,12 @@ namespace Microsoft.Azure.Amqp.Framing
             {
                 error.Condition = AmqpErrorCode.NotAllowed;
             }
-            else if (exception is TransactionAbortedException)
+#if !DNXCORE
+            else if (exception is System.Transactions.TransactionAbortedException)
             {
                 error.Condition = AmqpErrorCode.TransactionRollback;
             }
+#endif
             else if (exception is NotImplementedException)
             {
                 error.Condition = AmqpErrorCode.NotImplemented;
@@ -100,6 +108,7 @@ namespace Microsoft.Azure.Amqp.Framing
             return sb.ToString();
         }
 
+#if !DNXCORE
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
             // The inner types aren't actually serializable, instead we serialize
@@ -107,6 +116,7 @@ namespace Microsoft.Azure.Amqp.Framing
             info.AddValue("Condition", this.Condition.Value);
             info.AddValue("Description", this.Description);
         }
+#endif
 
         protected override void EnsureRequired()
         {

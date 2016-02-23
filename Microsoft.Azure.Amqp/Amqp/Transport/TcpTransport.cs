@@ -140,7 +140,7 @@ namespace Microsoft.Azure.Amqp.Transport
             try
             {
                 this.socket.Shutdown(SocketShutdown.Both);
-                this.socket.Close();
+                this.socket.Dispose();
             }
             finally
             {
@@ -155,7 +155,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
         protected override void AbortInternal()
         {
-            this.socket.Close(0);
+            this.socket.Dispose();
             this.sendEventArgs.Dispose();
             this.receiveEventArgs.Dispose();
         }

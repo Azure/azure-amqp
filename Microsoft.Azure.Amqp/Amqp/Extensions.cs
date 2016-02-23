@@ -52,11 +52,15 @@ namespace Microsoft.Azure.Amqp
                 }
                 else
                 {
+#if DNXCORE
+                    System.Diagnostics.Debug.WriteLine(message);
+#else
                     System.Diagnostics.Trace.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}\t{1}", AppDomain.CurrentDomain.FriendlyName, message));
+#endif // DNXCORE
                 }
             }
         }
-#endif
+#endif // DEBUG
 
         // open
         public static uint MaxFrameSize(this Open open)

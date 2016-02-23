@@ -552,7 +552,7 @@ namespace Microsoft.Azure.Amqp
             sealed class TimedHeartBeat : HeartBeat
             {
                 readonly AmqpConnection connection;
-                readonly IOThreadTimer heartBeatTimer;
+                readonly Timer heartBeatTimer;
                 readonly int heartBeatInterval;
                 DateTime lastSendTime;
                 DateTime lastReceiveTime;
@@ -563,8 +563,7 @@ namespace Microsoft.Azure.Amqp
                     this.lastReceiveTime = DateTime.UtcNow;
                     this.lastSendTime = DateTime.UtcNow;
                     this.heartBeatInterval = (int)(interval * 7 / 8);
-                    this.heartBeatTimer = new IOThreadTimer(OnHeartBeatTimer, this, false);
-                    this.heartBeatTimer.Set(this.heartBeatInterval);
+                    this.heartBeatTimer = new Timer(OnHeartBeatTimer, this, this.heartBeatInterval, Timeout.Infinite);
                 }
 
                 public override void OnSend()
@@ -579,7 +578,7 @@ namespace Microsoft.Azure.Amqp
 
                 public override void Stop()
                 {
-                    this.heartBeatTimer.Cancel();
+                    this.heartBeatTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 }
 
                 static void OnHeartBeatTimer(object state)
@@ -607,7 +606,7 @@ namespace Microsoft.Azure.Amqp
                             thisPtr.connection.SendCommand(null, 0, null);
                         }
 
-                        thisPtr.heartBeatTimer.Set(scheduleAfterTime.AddMilliseconds(thisPtr.heartBeatInterval).Subtract(now));
+                        thisPtr.heartBeatTimer.Change(scheduleAfterTime.AddMilliseconds(thisPtr.heartBeatInterval).Subtract(now), Timeout.InfiniteTimeSpan);
                     }
                     catch (Exception exception)
                     {

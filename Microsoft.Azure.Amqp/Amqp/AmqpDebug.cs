@@ -9,6 +9,17 @@ namespace Microsoft.Azure.Amqp
     using System.Threading;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// This class logs the frame activity on session and dumps them into a file
+    /// for debugging issues that are difficult to repro under debugger. The output
+    /// file is named as "session#.log" and it contains lines as follows:
+    ///   ticks(10000)	direction	op	p1	p2
+    ///   1653194746831	9	RECV	17	0	0
+    ///   1653194746844	9	SEND	17	0	0
+    /// Refer to the calls to AmqpDebug.Log for parameter definition.
+    /// Enable this logging by including AMQP_DEBUG constant in the project file
+    /// for the desired build configuration.
+    /// </summary>
     static class AmqpDebug
     {
         [Conditional("AMQP_DEBUG")]

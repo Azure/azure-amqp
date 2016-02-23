@@ -7,7 +7,7 @@ namespace Microsoft.Azure.Amqp.Transaction
     using System.Text;
     using Microsoft.Azure.Amqp.Framing;
 
-    sealed class TransactionalState : DeliveryState
+    public sealed class TransactionalState : DeliveryState
     {
         public static readonly string Name = "amqp:transactional-state:list";
         public static readonly ulong Code = 0x0000000000000034;

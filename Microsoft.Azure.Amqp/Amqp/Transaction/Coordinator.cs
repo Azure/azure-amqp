@@ -6,13 +6,13 @@ namespace Microsoft.Azure.Amqp.Transaction
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
-    sealed class Coordinator : DescribedList
+    public sealed class Coordinator : DescribedList
     {
         public static readonly string Name = "amqp:coordinator:list";
         public static readonly ulong Code = 0x0000000000000030;
         const int Fields = 1;
 
-        public Coordinator() : base(Name, Code)
+        internal Coordinator() : base(Name, Code)
         {
         }
 

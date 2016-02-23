@@ -140,8 +140,10 @@ namespace Microsoft.Azure.Amqp
         [SecurityCritical]
         static class CallbackHelper
         {
+#if !DNXCORE
             [Fx.Tag.SecurityNote(Critical = "Stores a delegate to a critical method")]
             static WaitCallback invokeWithContextCallback;
+#endif
 
             [Fx.Tag.SecurityNote(Critical = "Stores a delegate to a critical method")]
             static WaitCallback invokeWithoutContextCallback;

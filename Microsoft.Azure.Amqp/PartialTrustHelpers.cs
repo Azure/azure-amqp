@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !DNXCORE
+
 namespace Microsoft.Azure.Amqp
 {
     using System;
@@ -14,17 +16,12 @@ namespace Microsoft.Azure.Amqp
             [SecurityCritical]
             get
             {
-#if DNXCORE
-                return false;
-#else
-
                 if (AppDomain.CurrentDomain.IsHomogenous)
                 {
                     return false;
                 }
 
                 return SecurityManager.CurrentThreadRequiresSecurityContextCapture();
-#endif
             }
         }
 
@@ -32,9 +29,6 @@ namespace Microsoft.Azure.Amqp
         [SecurityCritical]
         internal static bool UnsafeIsInFullTrust()
         {
-#if DNXCORE
-            return true;
-#else
             if (AppDomain.CurrentDomain.IsHomogenous)
             {
                 return AppDomain.CurrentDomain.IsFullyTrusted;
@@ -43,10 +37,8 @@ namespace Microsoft.Azure.Amqp
             {
                 return !SecurityManager.CurrentThreadRequiresSecurityContextCapture();
             }
-#endif
         }
 
-#if !DNXCORE
         [Fx.Tag.SecurityNote(Critical = "Captures security context with identity flow suppressed, " +
             "this requires satisfying a LinkDemand for infrastructure.")]
         [SecurityCritical]
@@ -65,6 +57,7 @@ namespace Microsoft.Azure.Amqp
                 }
             }
         }
-#endif // !DNXCORE
     }
 }
+
+#endif // !DNXCORE

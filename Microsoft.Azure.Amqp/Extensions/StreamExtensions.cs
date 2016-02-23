@@ -8,6 +8,7 @@ namespace Microsoft.Azure.Amqp
     using System.Net.Security;
     using System.Security.Authentication;
     using System.Security.Cryptography.X509Certificates;
+
     static class StreamExtensions
     {
 // DNXCORE50 removes Stream's BeginRead/EndRead/BeginWrite/EndWrite as well as SslStream IAsyncResult methods.

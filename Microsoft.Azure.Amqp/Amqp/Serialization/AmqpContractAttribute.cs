@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Amqp.Serialization
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct,
         AllowMultiple = false, Inherited = true)]
-    sealed class AmqpContractAttribute : Attribute
+    public sealed class AmqpContractAttribute : Attribute
     {
         public AmqpContractAttribute()
         {

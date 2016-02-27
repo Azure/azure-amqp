@@ -172,3 +172,7 @@
 /c/doc/~$slio_requirements.docm
 /c/doc/~$qpvalue_requirements.docm
 /c/doc/~$sl_frame_codec_requirements.docm
+
+[Oo]bj/
+[Bb]in/
+project.lock.json

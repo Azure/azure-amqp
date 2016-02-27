@@ -121,6 +121,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
                 this.receiveEventArgs.Args = args;
                 Fx.Assert(this.receiveEventArgs.Count > 0, "Must have a count to read");
+
                 if (!this.socket.ReceiveAsync(this.receiveEventArgs))
                 {
                     this.HandleReadComplete(args, false, true);

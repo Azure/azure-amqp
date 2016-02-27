@@ -1,7 +1,16 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if DNXCORE
+
+// This interface doesn't exist in DNXCORE50, define it manually
+namespace System
+{
+    public interface ICloneable
+    {
+        object Clone();
+    }
+}
 
 namespace System.Collections.Generic
 {
@@ -152,5 +161,21 @@ namespace System.Collections.Generic
         }
     }
 }
+
+#if WINDOWS_UWP
+
+namespace System.Threading
+{
+    //
+    // Summary:
+    //     Represents a callback method to be executed by a thread pool thread.
+    //
+    // Parameters:
+    //   state:
+    //     An object containing information to be used by the callback method.
+    public delegate void WaitCallback(object state);
+}
+
+#endif
 
 #endif // DNXCORE

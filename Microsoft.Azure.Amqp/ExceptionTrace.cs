@@ -94,7 +94,7 @@ namespace Microsoft.Azure.Amqp
             Debug.WriteLine(string.Format(
                 CultureInfo.InvariantCulture,
                 "IotHub/TraceHandled ThreadID=\"{0}\" catchLocation=\"{1}\" exceptionType=\"{2}\" exception=\"{3}\"",
-                Thread.CurrentThread.ManagedThreadId,
+                Environment.CurrentManagedThreadId,
                 catchLocation,
                 exception.GetType(),
                 exception.ToStringSlim()));

@@ -211,7 +211,8 @@ namespace Microsoft.Azure.Amqp
 
         public bool Return(T value)
         {
-            int thisThreadID = Thread.CurrentThread.ManagedThreadId;
+
+            int thisThreadID = Environment.CurrentManagedThreadId;
 
             if (thisThreadID == 0)
             {
@@ -264,7 +265,7 @@ namespace Microsoft.Azure.Amqp
 
         public T Take()
         {
-            int thisThreadID = Thread.CurrentThread.ManagedThreadId;
+            int thisThreadID = Environment.CurrentManagedThreadId;
 
             if (thisThreadID == 0)
             {

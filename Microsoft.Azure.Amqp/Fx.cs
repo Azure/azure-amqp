@@ -203,8 +203,9 @@ namespace Microsoft.Azure.Amqp
                     // Mark that a FailFast is in progress, so that we can take ourselves out of the NLB if for
                     // any reason we can't kill ourselves quickly.  Wait 15 seconds so this state gets picked up for sure.
                     Fx.FailFastInProgress = true;
-                    // M00HACK
-                    //Thread.Sleep(TimeSpan.FromSeconds(15));
+#if !WINDOWS_UWP
+                    Thread.Sleep(TimeSpan.FromSeconds(15));
+#endif
                 }
                 finally
                 {
@@ -212,11 +213,11 @@ namespace Microsoft.Azure.Amqp
                     // Environment.FailFast does not collect crash dumps when used in Azure services. 
                     // Environment.FailFast(failFastMessage);
 
+#if !WINDOWS_UWP
                     // ################## WORKAROUND #############################
                     // Workaround for the issue above. Throwing an unhandled exception on a separate thread to trigger process crash and crash dump collection
                     // Throwing FatalException since our service does not morph/eat up fatal exceptions
                     // We should find the tracking bug in Azure for this issue, and remove the workaround when fixed by Azure
-                    /* M00HACK
                     Thread failFastWorkaroundThread = new Thread(delegate()
                     {
                         throw new FatalException(failFastMessage);
@@ -224,7 +225,7 @@ namespace Microsoft.Azure.Amqp
 
                     failFastWorkaroundThread.Start();
                     failFastWorkaroundThread.Join();
-                    */
+#endif
                 }
             }
             catch

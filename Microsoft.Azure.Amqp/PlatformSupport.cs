@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if WINDOWS_UWP
+using System.Runtime.InteropServices;
+#endif
+
 #if DNXCORE
 
 // This interface doesn't exist in DNXCORE50, define it manually
@@ -177,5 +181,33 @@ namespace System.Threading
 }
 
 #endif
+
+#if WINDOWS_UWP
+
+class Win32
+{
+    [System.DllImport("kernel32.dll")]
+    public static extern int GetCurrentProcessId();
+}
+
+#endif
+
+namespace Diagnostics
+{
+    static class CurrentProcess
+    {
+        public static int ID
+        {
+            get
+            {
+#if WINDOWS_UWP
+                return Win32.GetCurrentProcessId();
+#else
+                return System.Diagnostics.Process.GetCurrentProcess().Id;
+#endif
+            }
+        }
+    }
+}
 
 #endif // DNXCORE

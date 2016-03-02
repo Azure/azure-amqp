@@ -2,7 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if WINDOWS_UWP
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using Windows.Networking;
+using Windows.Networking.Sockets;
 #endif
 
 #if DNXCORE
@@ -186,11 +190,25 @@ namespace System.Threading
 
 class Win32
 {
-    [System.DllImport("kernel32.dll")]
+    [DllImport("kernel32.dll")]
     public static extern int GetCurrentProcessId();
 }
 
+namespace System.Net
+{
+    static class Dns
+    {
+        public static async Task<IPAddress[]> GetHostAddressesAsync(string hostName)
+        {
+            var endpointPairs = await DatagramSocket.GetEndpointPairsAsync(new HostName(hostName), "0");
+            return endpointPairs.Select(_ => IPAddress.Parse(_.RemoteHostName.DisplayName)).Distinct().ToArray();
+        }
+    }
+}
+
 #endif
+
+#endif // DNXCORE
 
 namespace Diagnostics
 {
@@ -210,4 +228,3 @@ namespace Diagnostics
     }
 }
 
-#endif // DNXCORE

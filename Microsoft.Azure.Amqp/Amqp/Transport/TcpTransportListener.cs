@@ -56,13 +56,7 @@ namespace Microsoft.Azure.Amqp.Transport
             // TODO: Fix this code to listen on Any address for FQDN pointing to the local host machine.
             if (listenHost.Equals(string.Empty))
             {
-#if WINDOWS_UWP
-                // M00HACK, but should not get here
-                // TODO: figure out replacement for Dns.GetHostAddressesAsync
-                throw new NotImplementedException();
-#else
                 addresses.AddRange(Dns.GetHostAddressesAsync(listenHost).Result);
-#endif
             }
             else if (listenHost.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
                 listenHost.Equals(computerName, StringComparison.OrdinalIgnoreCase) ||
@@ -84,13 +78,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
             else
             {
-#if WINDOWS_UWP
-                // M00HACK, but should not get here
-                // TODO: figure out replacement for Dns.GetHostAddressesAsync
-                throw new NotImplementedException();
-#else
                 addresses.AddRange(Dns.GetHostAddressesAsync(this.transportSettings.Host).Result);
-#endif
             }
 
             if (addresses.Count == 0)

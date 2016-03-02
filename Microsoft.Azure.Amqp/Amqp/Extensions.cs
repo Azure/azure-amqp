@@ -41,10 +41,7 @@ namespace Microsoft.Azure.Amqp
                 string message = string.Format(
                         System.Globalization.CultureInfo.InvariantCulture,
                         "[{0:X3}.{1:X3} {2:HH:mm:ss.fff}] {3} {4}",
-                        // M00HACK{
-                        9999,
-                        //System.Diagnostics.Process.GetCurrentProcess().Id,
-                        // M00HACK{
+                        Diagnostics.CurrentProcess.ID,
                         Environment.CurrentManagedThreadId,
                         DateTime.UtcNow,
                         send ? "SEND" : "RECV",

@@ -230,8 +230,8 @@ namespace Microsoft.Azure.Amqp
                 (thisPtr, r) => TaskHelpers.EndAsyncResult(r),
                 policy);
         }
-/*
-// M00HACK{
+
+#if !WINDOWS_UWP
         protected AsyncStep CallAsyncSleep(TimeSpan amountToSleep)
         {
             return this.CallAsyncSleep(amountToSleep, CancellationToken.None);
@@ -247,8 +247,7 @@ namespace Microsoft.Azure.Amqp
                 (thisPtr, t) => Thread.Sleep(amountToSleep),
                 ExceptionPolicy.Transfer);
         }
-// M00HACK}
-*/
+#endif
         protected AsyncStep CallCompletedAsyncStep()
         {
             return this.CallAsync(

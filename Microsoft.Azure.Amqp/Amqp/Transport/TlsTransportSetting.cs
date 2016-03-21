@@ -69,6 +69,7 @@ namespace Microsoft.Azure.Amqp.Transport
             return new TlsTransportInitiator(this);
         }
 
+#if !WINDOWS_UWP
         public override TransportListener CreateListener()
         {
             if (this.Certificate == null)
@@ -78,6 +79,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
             return new TlsTransportListener(this);
         }
+#endif
 
         public override string ToString()
         {

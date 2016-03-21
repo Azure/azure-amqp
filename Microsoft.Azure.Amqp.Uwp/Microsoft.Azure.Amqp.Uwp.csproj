@@ -34,20 +34,22 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP;DNXCORE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETFX_CORE;WINDOWS_UWP;DNXCORE</DefineConstants>
     <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <PlatformTarget>x86</PlatformTarget>
@@ -106,6 +108,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <PRIResource Include="..\Microsoft.Azure.Amqp\Amqp\AmqpResources.UWP.resw" />
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
@@ -236,11 +239,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ProtocolId.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ReceivingAmqpLink.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\RequestResponseAmqpLink.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Resources.Designer.cs">
-      <DependentUpon>Resources.resx</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\ISaslPlainAuthenticator.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslAnonymousHandler.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslChallenge.cs" />
@@ -253,7 +251,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslOutcome.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslPlainHandler.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslResponse.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\CustomSslStream.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\AsyncResult.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\CommonResources.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\CompletedAsyncResult.cs" />
@@ -291,15 +288,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SegmentBufferPool.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SendingAmqpLink.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SequenceNumber.cs" />
-    <!--
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\AmqpContractAttribute.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\AmqpContractSerializer.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\AmqpMemberAttribute.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\MemberAccessor.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\MethodAccessor.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\SerialiableMember.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\SerializableType.cs" />
--->
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SerializedWorker.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SettleMode.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\StateTransition.cs" />
@@ -312,27 +300,23 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\TransactionalState.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\TxnCapabilities.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportInitiator.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportListener.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportProvider.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransport.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportInitiator.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportListener.cs" />
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransport.UWP.cs" />
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportInitiator.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportSetting.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransport.cs" />
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransport.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportInitiator.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportListener.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportProvider.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportSetting.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportAsyncEventArgs.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportBase.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportInitiator.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportListener.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportProvider.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportSettings.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportStream.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\WorkCollection.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Properties\AssemblyInfo.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\PlatformSupport.cs" />
+    <Compile Include="..\Microsoft.Azure.Amqp\Resources.UWP.cs" />
     <None Include="..\Microsoft.Azure.Amqp\Nuget\make_nuget_package.ps1" />
     <None Include="..\Microsoft.Azure.Amqp\Nuget\Microsoft.Azure.Amqp.nuspec" />
   </ItemGroup>

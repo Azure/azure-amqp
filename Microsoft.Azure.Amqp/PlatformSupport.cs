@@ -186,24 +186,13 @@ namespace System.Threading
 
 #endif
 
+
 #if WINDOWS_UWP
 
 class Win32
 {
     [DllImport("kernel32.dll")]
     public static extern int GetCurrentProcessId();
-}
-
-namespace System.Net
-{
-    static class Dns
-    {
-        public static async Task<IPAddress[]> GetHostAddressesAsync(string hostName)
-        {
-            var endpointPairs = await DatagramSocket.GetEndpointPairsAsync(new HostName(hostName), "0");
-            return endpointPairs.Select(_ => IPAddress.Parse(_.RemoteHostName.DisplayName)).Distinct().ToArray();
-        }
-    }
 }
 
 #endif

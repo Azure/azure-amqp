@@ -9,9 +9,7 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Linq;
     using System.Net.Sockets;
     using System.Threading;
-#if WINDOWS_UWP
-    using Windows.Networking.Connectivity;
-#endif
+
     sealed class TcpTransportListener : TransportListener
     {
         readonly WaitCallback acceptTransportLoop;
@@ -43,15 +41,8 @@ namespace Microsoft.Azure.Amqp.Transport
             List<IPAddress> addresses = new List<IPAddress>();
             IPAddress ipAddress;
 
-#if WINDOWS_UWP
-            var hostNames = NetworkInformation.GetHostNames();
-            var localName = hostNames.FirstOrDefault(name => name.DisplayName.Contains(".local"));
-            var computerName = localName.DisplayName.Replace(".local", "");
-            var hostName = hostNames.FirstOrDefault(name => name.Type == Windows.Networking.HostNameType.DomainName)?.DisplayName ?? "???";
-#else
             var computerName = Environment.GetEnvironmentVariable("COMPUTERNAME");
             var hostName = Dns.GetHostEntryAsync(string.Empty).Result.HostName;
-#endif
 
             // TODO: Fix this code to listen on Any address for FQDN pointing to the local host machine.
             if (listenHost.Equals(string.Empty))

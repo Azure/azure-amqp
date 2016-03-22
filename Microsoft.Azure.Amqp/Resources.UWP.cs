@@ -3,6 +3,7 @@
 //
 // This file is NOT generated
 //
+#if WINDOWS_UWP
 namespace Microsoft.Azure.Amqp.Amqp
 {
     using System;
@@ -695,3 +696,4 @@ namespace Microsoft.Azure.Amqp.Amqp
         }
     }
 }
+#endif

@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
+#if WINDOWS_UWP
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
@@ -63,3 +63,4 @@ namespace Microsoft.Azure.Amqp.Transport
         }
     }
 }
+#endif

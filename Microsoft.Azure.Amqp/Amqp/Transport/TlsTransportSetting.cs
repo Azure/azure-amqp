@@ -53,11 +53,13 @@ namespace Microsoft.Azure.Amqp.Transport
             get { return this.innerSettings; }
         }
 
+#if !WINDOWS_UWP
         public RemoteCertificateValidationCallback CertificateValidationCallback
         {
             get;
             set;
         }
+#endif
 
         public override TransportInitiator CreateInitiator()
         {

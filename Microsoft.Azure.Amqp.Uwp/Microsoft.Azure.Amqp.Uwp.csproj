@@ -260,7 +260,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Exceptions\FatalException.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\ExceptionTrace.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Extensions\ExceptionExtensions.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Extensions\StreamExtensions.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Fx.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\FxCop.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\IAmqpTrace.cs" />
@@ -322,12 +321,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Microsoft.Azure.Amqp.Uwp.rd.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Net.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Externals\System.Net.Security.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

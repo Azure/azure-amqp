@@ -59,15 +59,11 @@ namespace Microsoft.Azure.Amqp.Transport
         public override bool WriteAsync(TransportAsyncCallbackArgs args)
         {
             Fx.Assert(this.writeState.Args == null, "Cannot write when a write is still in progress");
+            Windows.Storage.Streams.IBuffer ibuffer;
             if (args.Buffer != null)
             {
                 this.writeState.Args = args;
-                var ibuffer = args.Buffer.AsBuffer(args.Offset, args.Count);
-                var t = this.socket.OutputStream.WriteAsync(ibuffer).AsTask();
-                t.ContinueWith(completion =>
-                {
-                    this.HandleWriteOperationComplete(completion, false);
-                });
+                ibuffer = args.Buffer.AsBuffer(args.Offset, args.Count);
             }
             else
             {
@@ -96,14 +92,45 @@ namespace Microsoft.Azure.Amqp.Transport
                     this.writeState.Buffer = temp;
                 }
 
-                var ibuffer = buffer.Array.AsBuffer(0, buffer.Count);
-
-                var t = this.socket.OutputStream.WriteAsync(ibuffer).AsTask();
-                t.ContinueWith(completion =>
-                {
-                    this.HandleWriteOperationComplete(completion, false);
-                });
+                ibuffer = buffer.Array.AsBuffer(0, buffer.Count);
             }
+
+            var t = this.socket.OutputStream.WriteAsync(ibuffer).AsTask();
+            t.ContinueWith(completion =>
+            {
+                var args2 = this.readState.Args;
+                if (completion.IsFaulted)
+                {
+                    if (Fx.IsFatal(completion.Exception))
+                    {
+                        throw completion.Exception;
+                    }
+                    args2.Exception = completion.Exception;
+                }
+                else
+                {
+                    args2 = this.writeState.Args;
+                    ByteBuffer buffer = this.writeState.Buffer;
+                    this.writeState.Reset();
+
+                    if (buffer != null)
+                    {
+                        buffer.Dispose();
+                    }
+
+                    Fx.Assert(args2.Count == completion.Result, "completion must have the same write count");
+                    args2.BytesTransfered = args2.Count;
+                }
+
+                args2.CompletedSynchronously = false;
+
+                Action<TransportAsyncCallbackArgs> callback = args2.CompletedCallback;
+                if (callback != null)
+                {
+                    args2.CompletedCallback(args2);
+                }
+            });
+
             return true;
         }
 
@@ -118,7 +145,30 @@ namespace Microsoft.Azure.Amqp.Transport
             var t = this.socket.InputStream.ReadAsync(buffer, (uint)args.Count, Windows.Storage.Streams.InputStreamOptions.Partial).AsTask();
             t.ContinueWith(completion =>
             {
-                this.HandleReadOperationComplete(completion, false);
+                var args2 = this.readState.Args;
+                if (completion.IsFaulted)
+                {
+                    if (Fx.IsFatal(completion.Exception))
+                    {
+                        throw completion.Exception;
+                    }
+                    args2.Exception = completion.Exception;
+                }
+                else
+                {
+                    this.readState.Reset();
+
+                    Fx.Assert(args2.Count == completion.Result.Length, "completion must have the same write count");
+                    args2.BytesTransfered = args2.Count;
+                }
+
+                args2.CompletedSynchronously = false;
+
+                Action<TransportAsyncCallbackArgs> callback = args2.CompletedCallback;
+                if (callback != null)
+                {
+                    args2.CompletedCallback(args2);
+                }
             });
             return true;
 
@@ -129,7 +179,15 @@ namespace Microsoft.Azure.Amqp.Transport
             var t = this.socket.UpgradeToSslAsync(SocketProtectionLevel.Tls12, new Windows.Networking.HostName(this.tlsSettings.TargetHost)).AsTask();
             t.ContinueWith(completion =>
             {
-                this.HandleOpenComplete(completion, false);
+                if (completion.IsFaulted)
+                {
+                    if (Fx.IsFatal(completion.Exception))
+                    {
+                        throw completion.Exception;
+                    }
+                }
+
+                this.CompleteOpen(false, completion.Exception);
             });
             return false;
         }
@@ -146,91 +204,6 @@ namespace Microsoft.Azure.Amqp.Transport
         protected override void AbortInternal()
         {
             this.innerTransport.Abort();
-        }
-
-        void HandleOpenComplete(Task result, bool syncComplete)
-        {
-            if (result.Exception != null)
-            {
-                if (Fx.IsFatal(result.Exception))
-                {
-                    throw result.Exception;
-                }
-            }
-            if (!syncComplete)
-            {
-                this.CompleteOpen(false, result.Exception);
-            }
-        }
-
-        void HandleWriteOperationComplete(Task<uint> result, bool syncComplete)
-        {
-            TransportAsyncCallbackArgs args = null;
-            try
-            {
-                args = this.writeState.Args;
-                ByteBuffer buffer = this.writeState.Buffer;
-                this.writeState.Reset();
-
-                if (buffer != null)
-                {
-                    buffer.Dispose();
-                }
-
-                args.BytesTransfered = args.Count;
-            }
-            catch (Exception exception)
-            {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
-                args.Exception = exception;
-            }
-
-            args.CompletedSynchronously = syncComplete;
-
-            if (!syncComplete)
-            {
-                Action<TransportAsyncCallbackArgs> callback = args.CompletedCallback;
-                if (callback != null)
-                {
-                    args.CompletedCallback(args);
-                }
-            }
-        }
-
-        void HandleReadOperationComplete(Task<Windows.Storage.Streams.IBuffer> result, bool syncComplete)
-        {
-            TransportAsyncCallbackArgs args = null;
-            try
-            {
-                args = this.readState.Args;
-                this.readState.Reset();
-
-                args.BytesTransfered = (int)result.Result.Length;
-            }
-            catch (Exception exception)
-            {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
-                args.Exception = exception;
-            }
-
-            args.CompletedSynchronously = syncComplete;
-
-            if (!syncComplete)
-            {
-                Action<TransportAsyncCallbackArgs> callback = args.CompletedCallback;
-                if (callback != null)
-                {
-                    args.CompletedCallback(args);
-                }
-            }
         }
 
         /// <inheritdoc/>

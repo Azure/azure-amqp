@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Amqp.Transaction
         public static readonly ulong Code = 0x0000000000000030;
         const int Fields = 1;
 
-        internal Coordinator() : base(Name, Code)
+        public Coordinator() : base(Name, Code)
         {
         }
 

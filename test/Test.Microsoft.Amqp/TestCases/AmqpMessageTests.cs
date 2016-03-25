@@ -17,10 +17,7 @@
         {
         }
 
-        [Description("Message serialization test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpMessageSerializationTest()
         {
             // empty message

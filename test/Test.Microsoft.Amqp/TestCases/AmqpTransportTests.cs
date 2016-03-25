@@ -18,9 +18,7 @@
         {
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void TcpTransportTest()
         {
             const string localHost = "localhost";

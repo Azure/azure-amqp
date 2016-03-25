@@ -36,10 +36,7 @@
             broker.Stop();
         }
 
-        [Description("AMQP link basic sync send test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpLinkSyncSendReceiveTest()
         {
             const int messageCount = 10;
@@ -49,10 +46,7 @@
             this.SendReceive(queue, messageCount, true, true, false);
         }
         
-        [Description("AMQP link basic async send test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpLinkAsyncSendReceiveTest()
         {
             const int messageCount = 10;
@@ -62,10 +56,7 @@
             this.SendReceive(queue, messageCount);
         }
 
-        [Description("AMQP link settle on send test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpLinkSettleOnSendTest()
         {
             const int messageCount = 30;
@@ -85,10 +76,7 @@
                 (s) => { s.TotalLinkCredit = 26; s.SettleType = SettleMode.SettleOnSend; });
         }
 
-        [Description("AMQP link settle on receive test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpLinkSettleOnReceiveTest()
         {
             const int messageCount = 30;
@@ -108,10 +96,7 @@
                 (s) => { s.TotalLinkCredit = 26; s.SettleType = SettleMode.SettleOnReceive; });
         }
 
-        [Description("AMQP link settle on dispose test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpLinkSettleOnDisposeTest()
         {
             const int messageCount = 30;
@@ -131,10 +116,7 @@
                 (s) => { s.TotalLinkCredit = 26; s.SettleType = SettleMode.SettleOnDispose; });
         }
 
-        [Description("AMQP link best effort send with link close test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpLinkBestEffortSendTest()
         {
             const int messageCount = 10;
@@ -157,10 +139,7 @@
                 (s) => { s.TotalLinkCredit = 50; s.SettleType = SettleMode.SettleOnSend; });
         }
 
-        [Description("AMQP async and order test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpAsyncAndOrderTest()
         {
             const int messageCount = 100;
@@ -264,10 +243,7 @@
             connection.Close();
         }
 
-        [Description("AMQP message test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpMessageTest()
         {
             string queue = "AmqpMessageTest";
@@ -312,10 +288,7 @@
             connection.Close();
         }
 
-        [Description("AMQP dynamic node test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpDynamicNodeTest()
         {
             AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
@@ -352,10 +325,7 @@
             connection.Close();
         }
 
-        [Description("AMQP message fragmentation test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpMessageFragmentationTest()
         {
             const int sendMaxFrameSize = 512;
@@ -369,10 +339,7 @@
             this.SendReceive(queue, messageCount, false, true, true, receiveMaxFrameSize, bodySize);
         }
 
-        [Description("AMQP multiple settle mode links test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpMultipleSettleModeLinksTest()
         {
             const int messageCount = 29;
@@ -461,10 +428,7 @@
             connection.Close();
         }
 
-        [Description("AMQP concurrent connections test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpConcurrentConnectionsTest()
         {
             Exception lastException = null;
@@ -502,10 +466,7 @@
             Assert.IsNull(lastException, "Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString());
         }
 
-        [Description("AMQP sequence number wrap around test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpSequenceNumberWrapAroundTest()
         {
             const int messageCount = 24;
@@ -525,10 +486,7 @@
                 (s) => { s.InitialDeliveryCount = uint.MaxValue - 2; s.TotalLinkCredit = 18; });
         }
 
-        [Description("AMQP pipe line mode using API test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpPipeLineModeUsingAPITest()
         {
             string queue = "AmqpPipeLineModeUsingAPITestQueue";
@@ -557,10 +515,7 @@
             foreach (var item in results) item();
         }
 
-        [Description("AMQP transaction test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpTransactionTest()
         {
             const int messageCount = 6;
@@ -646,10 +601,7 @@
             connection.Close();
         }
 
-        [Description("AMQP dynamic link credit test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpDynamicLinkCreditTest()
         {
             AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
@@ -737,10 +689,7 @@
             connection.Close();
         }
 
-        [Description("AmqpTransferWithFlowControlTest")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpTransferWithFlowControlTest()
         {
             string entity = "AmqpTransferWithFlowControlTest";
@@ -806,10 +755,7 @@
             connection.Close();
         }
 
-        [Description("AMQP Connection Idle Timeout Test")]
-        [Owner("affandar")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpConnectionIdleTimeoutTest()
         {
             string queue = "AmqpConnectionIdleTimeoutTest";
@@ -837,10 +783,7 @@
             Assert.IsTrue(gotException);
         }
 
-        [Description("AMQP Message clone for resend Test")]
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpMessageCloneForResendTest()
         {
             string queue = "AmqpMessageCloneForResendTest" + Guid.NewGuid().ToString("N");
@@ -932,8 +875,6 @@
             connection.Close();
         }
 
-        [Description("A small integration test that stresses the system and makes sure race conditions do not occur")]
-        [Owner("julido")]
         [TestMethod]
         public async Task OpenSequentialConnectionsToFindRaceConditions()
         {

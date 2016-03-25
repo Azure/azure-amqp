@@ -130,9 +130,7 @@
         {
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpCodecSingleValueTest()
         {
             byte[] workBuffer = new byte[2048];
@@ -307,9 +305,7 @@
             Assert.IsTrue(str32Utf8 == strValue, "UTF8 string32 string value is not equal.");
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpCodecListTest()
         {
             byte[] workBuffer = new byte[4096];
@@ -410,9 +406,7 @@
             EnsureEqual((IList)described.Value, (IList)described4.Value);
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpCodecList0Test()
         {
             byte[] list0Bin = new byte[] { 0x45 };
@@ -427,7 +421,6 @@
             Assert.IsTrue(list0v.Count == 0, "The list should contain 0 items.");
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
         public void AmqpCodecMapTest()
         {
@@ -515,9 +508,7 @@
             Assert.IsTrue(described.Value.Equals(described1.Value), "Described value 1 value is different");
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpCodecMultipleTest()
         {
             byte[] workBuffer = new byte[2048];
@@ -544,9 +535,7 @@
             Assert.IsTrue(Multiple<AmqpSymbol>.Intersect(threeValues, threeDecoded).Count == 3, "multiple of three symbol values failed");
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpCodecFramingTypeTest()
         {
             byte[] workBuffer = new byte[1024 * 16];
@@ -626,9 +615,7 @@
             Assert.IsTrue(buffer.Length == 0, "All bytes in the buffer should be consumed");
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpCodecDescribedArrayTest()
         {
             int size = AmqpCodec.GetObjectEncodeSize(described5);
@@ -645,9 +632,7 @@
             }
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpCodecArrayTest()
         {
             ArrayTest<bool>(
@@ -744,9 +729,7 @@
                 (n1, n2) => { });
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpSerializerListEncodingTest()
         {
             Action<Person, Person> personValidator = (p1, p2) =>
@@ -858,9 +841,7 @@
             Assert.AreEqual(teacher.Classes[205], ((Teacher)p6).Classes[205]);
         }
 
-        [Owner("xinchen")]
         [TestMethod]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void AmqpExceptionSerializeTest()
         {
             const string errorDescription = "No link found...";

@@ -17,9 +17,7 @@
         {
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void SerializedWorkerTest()
         {
             const int workerCount = 3;
@@ -103,9 +101,7 @@
             }
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void SerializedWorkerRaceTest()
         {
             int callCount = 0;
@@ -133,9 +129,7 @@
             Assert.IsTrue(callCount == 100, "the work is not done even if continue is called.");
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void SequenceNumberTest()
         {
             SequenceNumber sn0 = 0u;
@@ -199,9 +193,7 @@
             invalidCompare(2147483647u, 4294967295u);
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void BufferListStreamTest()
         {
             byte[] buffer = new byte[256];
@@ -326,9 +318,7 @@
             }
         }
 
-        [Owner("xinchen")]
         [TestMethod()]
-        [TestCategory("CIT"), TestCategory("InProc")]
         public void ByteBufferTest()
         {
             // wrapping a byte[]

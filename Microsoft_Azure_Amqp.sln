@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{07A72A72-7
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAmqpBroker", "test\TestAmqpBroker\TestAmqpBroker.csproj", "{124A25C1-CFE3-47E5-8B0A-564FBCD6C319}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Microsoft.Azure.Amqp", "test\Test.Microsoft.Amqp\Test.Microsoft.Azure.Amqp.csproj", "{8DEA610D-7D10-4B81-B30D-E348BB948623}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,15 +40,25 @@ Global
 		{124A25C1-CFE3-47E5-8B0A-564FBCD6C319}.Signed|Any CPU.ActiveCfg = Release|Any CPU
 		{124A25C1-CFE3-47E5-8B0A-564FBCD6C319}.Signed|Any CPU.Build.0 = Release|Any CPU
 		{124A25C1-CFE3-47E5-8B0A-564FBCD6C319}.Signed|x64.ActiveCfg = Release|Any CPU
+		{8DEA610D-7D10-4B81-B30D-E348BB948623}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DEA610D-7D10-4B81-B30D-E348BB948623}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DEA610D-7D10-4B81-B30D-E348BB948623}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8DEA610D-7D10-4B81-B30D-E348BB948623}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DEA610D-7D10-4B81-B30D-E348BB948623}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DEA610D-7D10-4B81-B30D-E348BB948623}.Release|x64.ActiveCfg = Release|Any CPU
+		{8DEA610D-7D10-4B81-B30D-E348BB948623}.Signed|Any CPU.ActiveCfg = Release|Any CPU
+		{8DEA610D-7D10-4B81-B30D-E348BB948623}.Signed|Any CPU.Build.0 = Release|Any CPU
+		{8DEA610D-7D10-4B81-B30D-E348BB948623}.Signed|x64.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{124A25C1-CFE3-47E5-8B0A-564FBCD6C319} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
+		{8DEA610D-7D10-4B81-B30D-E348BB948623} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		EnterpriseLibraryConfigurationToolBinariesPath = packages\TransientFaultHandling.Core.5.1.1209.1\lib\NET4
 		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.TransientFaultHandling.6.0.1304.0\lib\portable-net45+win+wp8;packages\EnterpriseLibrary.TransientFaultHandling.WindowsAzure.Storage.6.0.1304.1\lib\NET45;packages\EnterpriseLibrary.TransientFaultHandling.Data.6.0.1304.1\lib\NET45
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\TransientFaultHandling.Core.5.1.1209.1\lib\NET4
 	EndGlobalSection
 EndGlobal

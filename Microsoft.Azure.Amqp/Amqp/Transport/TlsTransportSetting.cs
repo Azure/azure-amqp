@@ -5,7 +5,6 @@ namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
     using System.Net.Security;
-    using System.Security.Cryptography.X509Certificates;
 
     public sealed class TlsTransportSettings : TransportSettings
     {
@@ -42,11 +41,13 @@ namespace Microsoft.Azure.Amqp.Transport
             set;
         }
 
+#if !WINDOWS_UWP
         public X509Certificate2 Certificate
         {
             get;
             set;
         }
+#endif
 
         public TransportSettings InnerTransportSettings
         {

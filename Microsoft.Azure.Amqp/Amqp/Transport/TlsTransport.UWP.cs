@@ -6,7 +6,6 @@ namespace Microsoft.Azure.Amqp.Transport
     using System;
     using System.Net;
     using System.Security.Authentication;
-    using System.Security.Cryptography.X509Certificates;
     using System.Security.Principal;
     using System.Runtime.InteropServices.WindowsRuntime;
     using Windows.Networking.Sockets;
@@ -25,8 +24,6 @@ namespace Microsoft.Azure.Amqp.Transport
         public TlsTransport(TransportBase innerTransport, TlsTransportSettings tlsSettings)
             : base("tls", innerTransport.Identifier)
         {
-            Fx.Assert((tlsSettings.IsInitiator && tlsSettings.TargetHost != null) || (!tlsSettings.IsInitiator && tlsSettings.Certificate != null),
-                tlsSettings.IsInitiator ? "Must have a target host for the client." : "Must have a certificate for the server.");
             this.innerTransport = innerTransport;
             this.tlsSettings = tlsSettings;
 

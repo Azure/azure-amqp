@@ -28,7 +28,7 @@
             int working = 0;
             ManualResetEvent completeEvent = new ManualResetEvent(false);
 
-            Action<object> callContinue = null;
+            WaitCallback callContinue = null;
 
             Func<object, bool> func = (o) =>
             {

@@ -15,7 +15,7 @@ namespace Microsoft.Azure.Amqp
     /// Provides a single place to encode and decode AMQP premitives
     /// Encode and decode AMQP framing types.
     /// </summary>
-    static class AmqpCodec
+    public static class AmqpCodec
     {
         static Dictionary<string, Func<AmqpDescribed>> knownTypesByName;
         static Dictionary<ulong, Func<AmqpDescribed>> knownTypesByCode;

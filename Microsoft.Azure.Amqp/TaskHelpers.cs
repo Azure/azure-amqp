@@ -212,14 +212,7 @@ namespace Microsoft.Azure.Amqp
                 throw Fx.Exception.AsError(new ArgumentException(CommonResources.InvalidAsyncResult));
             }
 
-            try
-            {
-                task.Wait();
-            }
-            catch (AggregateException ae)
-            {
-                ExceptionDispatcher.Throw(ae.GetBaseException());
-            }
+            task.GetAwaiter().GetResult();
         }
 
         public static TResult EndAsyncResult<TResult>(IAsyncResult asyncResult)
@@ -230,17 +223,7 @@ namespace Microsoft.Azure.Amqp
                 throw Fx.Exception.AsError(new ArgumentException(CommonResources.InvalidAsyncResult));
             }
 
-            try
-            {
-                return task.Result;
-            }
-            catch (AggregateException ae)
-            {
-                ExceptionDispatcher.Throw(ae.GetBaseException());
-
-                // Dummy Code
-                throw ae.GetBaseException();
-            }
+            return task.GetAwaiter().GetResult();
         }
 
         internal static void MarshalTaskResults<TResult>(Task source, TaskCompletionSource<TResult> proxy)

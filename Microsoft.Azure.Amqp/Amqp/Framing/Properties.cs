@@ -12,19 +12,19 @@ namespace Microsoft.Azure.Amqp.Framing
     {
         public static readonly string Name = "amqp:properties:list";
         public static readonly ulong Code = 0x0000000000000073;
-        static readonly string MessageIdName = "message-id";
-        static readonly string UserIdName = "user-id";
-        static readonly string ToName = "to";
-        static readonly string SubjectName = "subject";
-        static readonly string ReplyToName = "reply-to";
-        static readonly string CorrelationIdName = "correlation-id";
-        static readonly string ContentTypeName = "content-type";
-        static readonly string ContentEncodingName = "content-encoding";
-        static readonly string AbsoluteExpiryTimeName = "absolute-expiry-time";
-        static readonly string CreationTimeName = "creation-time";
-        static readonly string GroupIdName = "group-id";
-        static readonly string GroupSequenceName = "group-sequence";
-        static readonly string ReplyToGroupIdName = "reply-to-group-id";
+        public static readonly string MessageIdName = "message-id";
+        public static readonly string UserIdName = "user-id";
+        public static readonly string ToName = "to";
+        public static readonly string SubjectName = "subject";
+        public static readonly string ReplyToName = "reply-to";
+        public static readonly string CorrelationIdName = "correlation-id";
+        public static readonly string ContentTypeName = "content-type";
+        public static readonly string ContentEncodingName = "content-encoding";
+        public static readonly string AbsoluteExpiryTimeName = "absolute-expiry-time";
+        public static readonly string CreationTimeName = "creation-time";
+        public static readonly string GroupIdName = "group-id";
+        public static readonly string GroupSequenceName = "group-sequence";
+        public static readonly string ReplyToGroupIdName = "reply-to-group-id";
 
         const int Fields = 13;
 

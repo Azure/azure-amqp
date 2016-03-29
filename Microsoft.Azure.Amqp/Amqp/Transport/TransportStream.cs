@@ -58,12 +58,20 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+#if DNXCORE
+            return this.EndRead(this.BeginRead(buffer, offset, count, null, null));
+#else
             throw new InvalidOperationException();
+#endif
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
+#if DNXCORE
+            this.EndWrite(this.BeginWrite(buffer, offset, count, null, null));
+#else
             throw new InvalidOperationException();
+#endif
         }
 
         public override long Seek(long offset, SeekOrigin origin)

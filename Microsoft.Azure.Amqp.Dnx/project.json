@@ -11,8 +11,8 @@
     },
 
     "namedResource": {
-        "ResourcesGeneric": "../Microsoft.Azure.Amqp/ResourcesGeneric.resx",
-        "Amqp.Resources": "../Microsoft.Azure.Amqp/Amqp/Resources.resx"
+        "Microsoft.Azure.Amqp.ResourcesGeneric": "../Microsoft.Azure.Amqp/ResourcesGeneric.resx",
+        "Microsoft.Azure.Amqp.Amqp.Resources": "../Microsoft.Azure.Amqp/Amqp/Resources.resx"
     },
 
     "compile": [
@@ -66,7 +66,7 @@
                 "System.Net.Primitives": "4.0.11-rc2-23712",
                 "System.Net.Security": "4.0.0-rc2-23712",
                 "System.Net.Sockets": "4.1.0-rc2-23712",
-                "System.Threading.Thread": "4.0.0-beta-23509",
+                "System.Threading.Thread": "4.0.0-rc2-23712",
                 "System.Threading.ThreadPool": "4.0.10-rc2-23712"
             }
         }

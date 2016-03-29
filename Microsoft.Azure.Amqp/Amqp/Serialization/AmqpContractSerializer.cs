@@ -343,7 +343,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             MethodAccessor addAccess = null;
             Type itemType = null;
 
-            if (type.GetInterfaces().FirstOrDefault(i => i is IAmqpSerializable) != null)
+            if (type.GetInterfaces().FirstOrDefault(i => i == typeof(IAmqpSerializable)) != null)
             {
                 return SerializableType.CreateAmqpSerializableType(this, type);
             }

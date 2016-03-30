@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
-    using System.Security.Cryptography.X509Certificates;
 
     public sealed class TlsTransportProvider : TransportProvider
     {

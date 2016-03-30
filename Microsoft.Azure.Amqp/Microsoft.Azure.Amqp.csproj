@@ -206,6 +206,7 @@
     <Compile Include="Interop\UnsafeNativeMethods.cs" />
     <Compile Include="IteratorAsyncResult.cs" />
     <Compile Include="PartialTrustHelpers.cs" />
+    <Compile Include="PlatformSupport.cs" />
     <Compile Include="ResourcesGeneric.Designer.cs">
       <DependentUpon>ResourcesGeneric.resx</DependentUpon>
       <AutoGen>True</AutoGen>

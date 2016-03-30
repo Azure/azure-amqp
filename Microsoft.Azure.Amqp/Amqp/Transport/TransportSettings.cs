@@ -31,6 +31,8 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public abstract TransportInitiator CreateInitiator();
 
+#if !WINDOWS_UWP
         public abstract TransportListener CreateListener();
+#endif
     }
 }

@@ -6,7 +6,7 @@
         <title>Microsoft Azure Amqp</title>
         <authors>Microsoft</authors>
         <requireLicenseAcceptance>true</requireLicenseAcceptance>
-        <licenseUrl><![CDATA[http://go.microsoft.com/fwlink/?LinkId=536623]]></licenseUrl>
+        <licenseUrl>https://github.com/Azure/azure-amqp/blob/master/LICENSE.txt</licenseUrl>
         <description>Package for Azure AMQP</description>
         <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288890</iconUrl>
         <language>en-US</language>
@@ -14,5 +14,6 @@
     <files>
         <file src="..\..\bin\release\Microsoft.Azure.Amqp.dll" target="lib\net451\Microsoft.Azure.Amqp.dll" />
         <file src="..\..\bin\release\Microsoft.Azure.Amqp.XML" target="lib\net451\Microsoft.Azure.Amqp.XML" />
+        <file src="..\..\Microsoft.Azure.Amqp.Uwp\bin\Release\Microsoft.Azure.Amqp.Uwp.dll" target="lib\uap10.0\Microsoft.Azure.Amqp.Uwp.dll" />
     </files>
 </package>

@@ -231,6 +231,7 @@ namespace Microsoft.Azure.Amqp
                 policy);
         }
 
+#if !WINDOWS_UWP
         protected AsyncStep CallAsyncSleep(TimeSpan amountToSleep)
         {
             return this.CallAsyncSleep(amountToSleep, CancellationToken.None);
@@ -246,7 +247,7 @@ namespace Microsoft.Azure.Amqp
                 (thisPtr, t) => Thread.Sleep(amountToSleep),
                 ExceptionPolicy.Transfer);
         }
-
+#endif
         protected AsyncStep CallCompletedAsyncStep()
         {
             return this.CallAsync(

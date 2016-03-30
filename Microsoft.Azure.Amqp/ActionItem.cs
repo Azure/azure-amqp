@@ -116,7 +116,14 @@ namespace Microsoft.Azure.Amqp
         static void ScheduleCallback(WaitCallback callback, object state)
         {
             Fx.Assert(callback != null, "Cannot schedule a null callback");
+#if WINDOWS_UWP
+            Windows.System.Threading.ThreadPool.RunAsync((workitem) =>
+            {
+                callback(state);
+            });
+#else
             ThreadPool.QueueUserWorkItem(callback, state);
+#endif
         }
 
 #if !DNXCORE

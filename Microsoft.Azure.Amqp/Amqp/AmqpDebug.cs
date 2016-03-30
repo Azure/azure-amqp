@@ -143,7 +143,7 @@ namespace Microsoft.Azure.Amqp
                 this.entries[p] = new Entry()
                 {
                     Ticks = Stopwatch.GetTimestamp(),
-                    ThreadId = Thread.CurrentThread.ManagedThreadId,
+                    ThreadId = System.Environment.CurrentManagedThreadId,
                     Send = send,
                     Code = code,
                     Param1 = p1,

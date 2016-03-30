@@ -1594,7 +1594,7 @@
           "lib/dotnet5.4/System.Threading.Tasks.Parallel.dll": {}
         }
       },
-      "System.Threading.Thread/4.0.0-beta-23509": {
+      "System.Threading.Thread/4.0.0-rc2-23712": {
         "type": "package",
         "dependencies": {
           "System.Runtime": "4.0.0"
@@ -12446,38 +12446,6 @@
         "System.Threading.Tasks.Parallel.nuspec"
       ]
     },
-    "System.Threading.Thread/4.0.0-beta-23509": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "xJZEPFCLTTERXzcUCmRW3qvY1c0jD5tDNyONFSqbm4IIcb/D2AornSVPhyTEKG/1ghnBP0c+wDs9H+RGqb/Vfw==",
-      "files": [
-        "lib/DNXCore50/System.Threading.Thread.dll",
-        "lib/MonoAndroid10/_._",
-        "lib/MonoTouch10/_._",
-        "lib/net46/System.Threading.Thread.dll",
-        "lib/xamarinios10/_._",
-        "lib/xamarinmac20/_._",
-        "ref/dotnet5.4/de/System.Threading.Thread.xml",
-        "ref/dotnet5.4/es/System.Threading.Thread.xml",
-        "ref/dotnet5.4/fr/System.Threading.Thread.xml",
-        "ref/dotnet5.4/it/System.Threading.Thread.xml",
-        "ref/dotnet5.4/ja/System.Threading.Thread.xml",
-        "ref/dotnet5.4/ko/System.Threading.Thread.xml",
-        "ref/dotnet5.4/ru/System.Threading.Thread.xml",
-        "ref/dotnet5.4/System.Threading.Thread.dll",
-        "ref/dotnet5.4/System.Threading.Thread.xml",
-        "ref/dotnet5.4/zh-hans/System.Threading.Thread.xml",
-        "ref/dotnet5.4/zh-hant/System.Threading.Thread.xml",
-        "ref/MonoAndroid10/_._",
-        "ref/MonoTouch10/_._",
-        "ref/net46/System.Threading.Thread.dll",
-        "ref/xamarinios10/_._",
-        "ref/xamarinmac20/_._",
-        "System.Threading.Thread.4.0.0-beta-23509.nupkg",
-        "System.Threading.Thread.4.0.0-beta-23509.nupkg.sha512",
-        "System.Threading.Thread.nuspec"
-      ]
-    },
     "System.Threading.Thread/4.0.0-rc2-23712": {
       "type": "package",
       "serviceable": true,
@@ -12820,7 +12788,7 @@
       "System.Net.Primitives >= 4.0.11-rc2-23712",
       "System.Net.Security >= 4.0.0-rc2-23712",
       "System.Net.Sockets >= 4.1.0-rc2-23712",
-      "System.Threading.Thread >= 4.0.0-beta-23509",
+      "System.Threading.Thread >= 4.0.0-rc2-23712",
       "System.Threading.ThreadPool >= 4.0.10-rc2-23712"
     ]
   }

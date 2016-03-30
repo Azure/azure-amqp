@@ -6,7 +6,6 @@ namespace Microsoft.Azure.Amqp.Transport
     using System;
     using System.Collections.Generic;
     using System.Net;
-    using System.Linq;
     using System.Net.Sockets;
     using System.Threading;
 
@@ -41,17 +40,14 @@ namespace Microsoft.Azure.Amqp.Transport
             List<IPAddress> addresses = new List<IPAddress>();
             IPAddress ipAddress;
 
-            var computerName = Environment.GetEnvironmentVariable("COMPUTERNAME");
-            var hostName = Dns.GetHostEntryAsync(string.Empty).Result.HostName;
-
             // TODO: Fix this code to listen on Any address for FQDN pointing to the local host machine.
             if (listenHost.Equals(string.Empty))
             {
                 addresses.AddRange(Dns.GetHostAddressesAsync(listenHost).Result);
             }
             else if (listenHost.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
-                listenHost.Equals(computerName, StringComparison.OrdinalIgnoreCase) ||
-                listenHost.Equals(hostName, StringComparison.OrdinalIgnoreCase))
+                listenHost.Equals(Environment.GetEnvironmentVariable("COMPUTERNAME"), StringComparison.OrdinalIgnoreCase) ||
+                listenHost.Equals(Dns.GetHostEntryAsync(string.Empty).Result.HostName, StringComparison.OrdinalIgnoreCase))
             {
                 if (Socket.OSSupportsIPv4)
                 {

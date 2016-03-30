@@ -7,6 +7,7 @@ namespace Microsoft.Azure.Amqp.Serialization
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Reflection;
     using System.Runtime.Serialization;
     using Microsoft.Azure.Amqp.Encoding;
@@ -180,8 +181,8 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         SerializableType CompileType(Type type, bool describedOnly)
         {
-            object[] typeAttributes = type.GetCustomAttributes(typeof(AmqpContractAttribute), false);
-            if (typeAttributes.Length == 0)
+            var typeAttributes = type.GetTypeInfo().GetCustomAttributes(typeof(AmqpContractAttribute), false);
+            if (!typeAttributes.Any())
             {
                 if (describedOnly)
                 {
@@ -193,19 +194,19 @@ namespace Microsoft.Azure.Amqp.Serialization
                 }
             }
 
-            AmqpContractAttribute contractAttribute = (AmqpContractAttribute)typeAttributes[0];
+            AmqpContractAttribute contractAttribute = (AmqpContractAttribute)typeAttributes.First();
             SerializableType baseType = null;
-            if (type.BaseType != typeof(object))
+            if (type.GetTypeInfo().BaseType != typeof(object))
             {
-                baseType = this.CompileType(type.BaseType, true);
+                baseType = this.CompileType(type.GetTypeInfo().BaseType, true);
                 if (baseType != null)
                 {
                     if (baseType.Encoding != contractAttribute.Encoding)
                     {
-                        throw new SerializationException(AmqpResources.GetString(AmqpResources.AmqpEncodingTypeMismatch, type.Name, contractAttribute.Encoding, type.BaseType.Name, baseType.Encoding));
+                        throw new SerializationException(AmqpResources.GetString(AmqpResources.AmqpEncodingTypeMismatch, type.Name, contractAttribute.Encoding, type.GetTypeInfo().BaseType.Name, baseType.Encoding));
                     }
 
-                    this.customTypeCache.TryAdd(type.BaseType, baseType);
+                    this.customTypeCache.TryAdd(type.GetTypeInfo().BaseType, baseType);
                 }
             }
 
@@ -232,16 +233,16 @@ namespace Microsoft.Azure.Amqp.Serialization
                     continue;
                 }
 
-                if (memberInfo.MemberType == MemberTypes.Field ||
-                    memberInfo.MemberType == MemberTypes.Property)
+                if (memberInfo is FieldInfo ||
+                    memberInfo is PropertyInfo)
                 {
-                    object[] memberAttributes = memberInfo.GetCustomAttributes(typeof(AmqpMemberAttribute), true);
-                    if (memberAttributes.Length != 1)
+                    var memberAttributes = memberInfo.GetCustomAttributes(typeof(AmqpMemberAttribute), true);
+                    if (memberAttributes.Count() != 1)
                     {
                         continue;
                     }
 
-                    AmqpMemberAttribute attribute = (AmqpMemberAttribute)memberAttributes[0];
+                    AmqpMemberAttribute attribute = (AmqpMemberAttribute)memberAttributes.First();
 
                     SerialiableMember member = new SerialiableMember();
                     member.Name = attribute.Name ?? memberInfo.Name;
@@ -250,15 +251,15 @@ namespace Microsoft.Azure.Amqp.Serialization
                     member.Accessor = MemberAccessor.Create(memberInfo, true);
 
                     // This will recursively resolve member types
-                    Type memberType = memberInfo.MemberType == MemberTypes.Field ? ((FieldInfo)memberInfo).FieldType : ((PropertyInfo)memberInfo).PropertyType;
+                    Type memberType = memberInfo is FieldInfo ? ((FieldInfo)memberInfo).FieldType : ((PropertyInfo)memberInfo).PropertyType;
                     member.Type = GetType(memberType);
 
                     memberList.Add(member);
                 }
-                else if (memberInfo.MemberType == MemberTypes.Method)
+                else if (memberInfo is MethodInfo)
                 {
-                    object[] memberAttributes = memberInfo.GetCustomAttributes(typeof(OnDeserializedAttribute), false);
-                    if (memberAttributes.Length == 1)
+                    var memberAttributes = memberInfo.GetCustomAttributes(typeof(OnDeserializedAttribute), false);
+                    if (memberAttributes.Count() == 1)
                     {
                         onDeserialized = MethodAccessor.Create((MethodInfo)memberInfo);
                     }
@@ -283,10 +284,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             SerialiableMember[] members = memberList.ToArray();
 
             Dictionary<Type, SerializableType> knownTypes = null;
-            foreach (object o in type.GetCustomAttributes(typeof(KnownTypeAttribute), false))
+            foreach (object o in type.GetTypeInfo().GetCustomAttributes(typeof(KnownTypeAttribute), false))
             {
                 KnownTypeAttribute knownAttribute = (KnownTypeAttribute)o;
-                if (knownAttribute.Type.GetCustomAttributes(typeof(AmqpContractAttribute), false).Length > 0)
+                if (knownAttribute.Type.GetTypeInfo().GetCustomAttributes(typeof(AmqpContractAttribute), false).Any())
                 {
                     if (knownTypes == null)
                     {
@@ -300,7 +301,7 @@ namespace Microsoft.Azure.Amqp.Serialization
 
             if (contractAttribute.Encoding == EncodingType.List)
             {
-                return SerializableType.CreateDescribedListType(this, type, baseType, descriptorName, 
+                return SerializableType.CreateDescribedListType(this, type, baseType, descriptorName,
                     descriptorCode, members, knownTypes, onDeserialized);
             }
             else if (contractAttribute.Encoding == EncodingType.Map)
@@ -321,7 +322,7 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         SerializableType CompileNullableTypes(Type type)
         {
-            if (type.IsGenericType &&
+            if (type.GetTypeInfo().IsGenericType &&
                 type.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
                 Type[] argTypes = type.GetGenericArguments();
@@ -342,14 +343,14 @@ namespace Microsoft.Azure.Amqp.Serialization
             MethodAccessor addAccess = null;
             Type itemType = null;
 
-            if (type.GetInterface(typeof(IAmqpSerializable).Name, false) != null)
+            if (type.GetInterfaces().FirstOrDefault(i => i == typeof(IAmqpSerializable)) != null)
             {
                 return SerializableType.CreateAmqpSerializableType(this, type);
             }
 
             foreach (Type it in type.GetInterfaces())
             {
-                if (it.IsGenericType)
+                if (it.GetTypeInfo().IsGenericType)
                 {
                     Type genericTypeDef = it.GetGenericTypeDefinition();
                     if (genericTypeDef == typeof(IDictionary<,>))

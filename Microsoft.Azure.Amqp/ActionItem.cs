@@ -9,46 +9,33 @@ namespace Microsoft.Azure.Amqp
 
     abstract class ActionItem
     {
+#if !DNXCORE
         [Fx.Tag.SecurityNote(Critical = "Stores the security context, used later in binding back into")]
         [SecurityCritical]
         SecurityContext context;
-        bool isScheduled;
+#endif
 
-        bool lowPriority;
+        bool isScheduled;
 
         protected ActionItem()
         {
         }
 
-        public bool LowPriority
-        {
-            get
-            {
-                return this.lowPriority;
-            }
-            protected set
-            {
-                this.lowPriority = value;
-            }
-        }
-
-        public static void Schedule(Action<object> callback, object state)
-        {
-            Schedule(callback, state, false);
-        }
         [Fx.Tag.SecurityNote(Critical = "Calls into critical method ScheduleCallback",
             Safe = "Schedule invoke of the given delegate under the current context")]
-        public static void Schedule(Action<object> callback, object state, bool lowPriority)
+        public static void Schedule(WaitCallback callback, object state)
         {
             Fx.Assert(callback != null, "A null callback was passed for Schedule!");
 
+#if !DNXCORE
             if (PartialTrustHelpers.ShouldFlowSecurityContext || WaitCallbackActionItem.ShouldUseActivity)
             {
-                new DefaultActionItem(callback, state, lowPriority).Schedule();
+                new DefaultActionItem(callback, state).Schedule();
             }
             else
+#endif
             {
-                ScheduleCallback(callback, state, lowPriority);
+                ScheduleCallback(callback, state);
             }
         }
 
@@ -71,6 +58,7 @@ namespace Microsoft.Azure.Amqp
             }
 
             this.isScheduled = true;
+#if !DNXCORE
             if (PartialTrustHelpers.ShouldFlowSecurityContext)
             {
                 this.context = PartialTrustHelpers.CaptureSecurityContextNoIdentityFlow();
@@ -80,10 +68,13 @@ namespace Microsoft.Azure.Amqp
                 ScheduleCallback(CallbackHelper.InvokeWithContextCallback);
             }
             else
+#endif // !DNXCORE
             {
                 ScheduleCallback(CallbackHelper.InvokeWithoutContextCallback);
             }
         }
+
+#if !DNXCORE
         [Fx.Tag.SecurityNote(Critical = "Access critical field context and critical property " +
             "CallbackHelper.InvokeWithContextCallback, calls into critical method ScheduleCallback; " +
             "since nothing is known about the given context, can't be treated as safe")]
@@ -103,6 +94,8 @@ namespace Microsoft.Azure.Amqp
             this.context = contextToSchedule.CreateCopy();
             ScheduleCallback(CallbackHelper.InvokeWithContextCallback);
         }
+#endif // !DNXCORE
+
         [Fx.Tag.SecurityNote(Critical = "Access critical property CallbackHelper.InvokeWithoutContextCallback, " +
             "Calls into critical method ScheduleCallback; not bound to a security context")]
         [SecurityCritical]
@@ -120,19 +113,20 @@ namespace Microsoft.Azure.Amqp
         [Fx.Tag.SecurityNote(Critical = "Calls into critical methods IOThreadScheduler.ScheduleCallbackNoFlow, " +
             "IOThreadScheduler.ScheduleCallbackLowPriNoFlow")]
         [SecurityCritical]
-        static void ScheduleCallback(Action<object> callback, object state, bool lowPriority)
+        static void ScheduleCallback(WaitCallback callback, object state)
         {
             Fx.Assert(callback != null, "Cannot schedule a null callback");
-            if (lowPriority)
+#if WINDOWS_UWP
+            Windows.System.Threading.ThreadPool.RunAsync((workitem) =>
             {
-                IOThreadScheduler.ScheduleCallbackLowPriNoFlow(callback, state);
-            }
-            else
-            {
-                IOThreadScheduler.ScheduleCallbackNoFlow(callback, state);
-            }
+                callback(state);
+            });
+#else
+            ThreadPool.QueueUserWorkItem(callback, state);
+#endif
         }
 
+#if !DNXCORE
         [Fx.Tag.SecurityNote(Critical = "Extract the security context stored and reset the critical field")]
         [SecurityCritical]
         SecurityContext ExtractContext()
@@ -143,52 +137,58 @@ namespace Microsoft.Azure.Amqp
             this.context = null;
             return result;
         }
+#endif // !DNXCORE
 
         [Fx.Tag.SecurityNote(Critical = "Calls into critical static method ScheduleCallback")]
         [SecurityCritical]
-        void ScheduleCallback(Action<object> callback)
+        void ScheduleCallback(WaitCallback callback)
         {
-            ScheduleCallback(callback, this, this.lowPriority);
+            ScheduleCallback(callback, this);
         }
 
         [SecurityCritical]
         static class CallbackHelper
         {
+#if !DNXCORE
             [Fx.Tag.SecurityNote(Critical = "Stores a delegate to a critical method")]
-            static Action<object> invokeWithContextCallback;
+            static WaitCallback invokeWithContextCallback;
+#endif
+
             [Fx.Tag.SecurityNote(Critical = "Stores a delegate to a critical method")]
-            static Action<object> invokeWithoutContextCallback;
+            static WaitCallback invokeWithoutContextCallback;
+
             [Fx.Tag.SecurityNote(Critical = "Stores a delegate to a critical method")]
             static ContextCallback onContextAppliedCallback;
-            [Fx.Tag.SecurityNote(Critical = "Provides access to a critical field; Initialize it with " +
-                "a delegate to a critical method")]
-            public static Action<object> InvokeWithContextCallback
+
+#if !DNXCORE
+            [Fx.Tag.SecurityNote(Critical = "Provides access to a critical field; Initialize it with a delegate to a critical method")]
+            public static WaitCallback InvokeWithContextCallback
             {
                 get
                 {
                     if (invokeWithContextCallback == null)
                     {
-                        invokeWithContextCallback = new Action<object>(InvokeWithContext);
+                        invokeWithContextCallback = InvokeWithContext;
                     }
                     return invokeWithContextCallback;
                 }
             }
+#endif // !DNXCORE
 
-            [Fx.Tag.SecurityNote(Critical = "Provides access to a critical field; Initialize it with " +
-                "a delegate to a critical method")]
-            public static Action<object> InvokeWithoutContextCallback
+            [Fx.Tag.SecurityNote(Critical = "Provides access to a critical field; Initialize it with a delegate to a critical method")]
+            public static WaitCallback InvokeWithoutContextCallback
             {
                 get
                 {
                     if (invokeWithoutContextCallback == null)
                     {
-                        invokeWithoutContextCallback = new Action<object>(InvokeWithoutContext);
+                        invokeWithoutContextCallback = InvokeWithoutContext;
                     }
                     return invokeWithoutContextCallback;
                 }
             }
-            [Fx.Tag.SecurityNote(Critical = "Provides access to a critical field; Initialize it with " +
-                "a delegate to a critical method")]
+
+            [Fx.Tag.SecurityNote(Critical = "Provides access to a critical field; Initialize it with a delegate to a critical method")]
             public static ContextCallback OnContextAppliedCallback
             {
                 get
@@ -200,12 +200,15 @@ namespace Microsoft.Azure.Amqp
                     return onContextAppliedCallback;
                 }
             }
+
+#if !DNXCORE
             [Fx.Tag.SecurityNote(Critical = "Called by the scheduler without any user context on the stack")]
             static void InvokeWithContext(object state)
             {
                 SecurityContext context = ((ActionItem)state).ExtractContext();
                 SecurityContext.Run(context, OnContextAppliedCallback, state);
             }
+#endif // !DNXCORE
 
             [Fx.Tag.SecurityNote(Critical = "Called by the scheduler without any user context on the stack")]
             static void InvokeWithoutContext(object state)
@@ -214,6 +217,7 @@ namespace Microsoft.Azure.Amqp
                 tempState.Invoke();
                 tempState.isScheduled = false;
             }
+
             [Fx.Tag.SecurityNote(Critical = "Called after applying the user context on the stack")]
             static void OnContextApplied(object o)
             {
@@ -227,28 +231,19 @@ namespace Microsoft.Azure.Amqp
         {
             [Fx.Tag.SecurityNote(Critical = "Stores a delegate that will be called later, at a particular context")]
             [SecurityCritical]
-            Action<object> callback;
+            WaitCallback callback;
             [Fx.Tag.SecurityNote(Critical = "Stores an object that will be passed to the delegate that will be " +
                 "called later, at a particular context")]
             [SecurityCritical]
             object state;
 
-            ////bool flowActivityId;
-            ////Guid activityId;
-
             [Fx.Tag.SecurityNote(Critical = "Access critical fields callback and state",
                 Safe = "Doesn't leak information or resources")]
-            public DefaultActionItem(Action<object> callback, object state, bool isLowPriority)
+            public DefaultActionItem(WaitCallback callback, object state)
             {
                 Fx.Assert(callback != null, "Shouldn't instantiate an object to wrap a null callback");
-                base.LowPriority = isLowPriority;
                 this.callback = callback;
                 this.state = state;
-                ////if (WaitCallbackActionItem.ShouldUseActivity)
-                ////{
-                ////    this.flowActivityId = true;
-                ////    this.activityId = DiagnosticTrace.ActivityId;
-                ////}
             }
 
             [Fx.Tag.SecurityNote(Critical = "Implements a the critical abstract ActionItem.Invoke method, " +
@@ -256,23 +251,7 @@ namespace Microsoft.Azure.Amqp
             [SecurityCritical]
             protected override void Invoke()
             {
-                ////if (this.flowActivityId)
-                ////{
-                ////    Guid currentActivityId = DiagnosticTrace.ActivityId;
-                ////    try
-                ////    {
-                ////        DiagnosticTrace.ActivityId = this.activityId;
-                ////        this.callback(this.state);
-                ////    }
-                ////    finally
-                ////    {
-                ////        DiagnosticTrace.ActivityId = currentActivityId;
-                ////    }
-                ////}
-                ////else
-                {
-                    this.callback(this.state);
-                }
+                this.callback(this.state);
             }
         }
     }

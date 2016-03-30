@@ -541,10 +541,9 @@ namespace Microsoft.Azure.Amqp
 
         abstract class SessionChannel
         {
-            static readonly Action<object> dispositionTimerCallback = DispositionTimerCallback;
             readonly AmqpSession session;
             readonly object syncRoot;
-            readonly IOThreadTimer dispositionTimer;
+            readonly Timer dispositionTimer;
             SequenceNumber nextDeliveryId;
             int needDispositionCount;
             bool sendingDisposition;
@@ -559,7 +558,7 @@ namespace Microsoft.Azure.Amqp
                 this.syncRoot = new object();
                 if (session.settings.DispositionInterval > TimeSpan.Zero)
                 {
-                    this.dispositionTimer = new IOThreadTimer(SessionChannel.dispositionTimerCallback, this, false);
+                    this.dispositionTimer = new Timer(s => DispositionTimerCallback(s), this, Timeout.Infinite, Timeout.Infinite);
                 }
             }
 
@@ -734,7 +733,7 @@ namespace Microsoft.Azure.Amqp
                 else if (scheduleTimer)
                 {
                     Fx.Assert(this.dispositionTimer != null, "Disposition timer cannot be null");
-                    this.dispositionTimer.Set(this.session.settings.DispositionInterval);
+                    this.dispositionTimer.Change(this.session.settings.DispositionInterval, Timeout.InfiniteTimeSpan);
                 }
                 else
                 {

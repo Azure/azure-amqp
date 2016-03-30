@@ -17,11 +17,10 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\bin\debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;AMQP_DEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>..\bin\debug\Microsoft.Azure.Amqp.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,7 +30,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>..\bin\release\Microsoft.Azure.Amqp.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -200,22 +198,20 @@
     <Compile Include="Exceptions\FatalException.cs" />
     <Compile Include="ExceptionTrace.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />
+    <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Fx.cs" />
     <Compile Include="FxCop.cs" />
     <Compile Include="IAmqpTrace.cs" />
     <Compile Include="InternalBufferManager.cs" />
-    <Compile Include="Interop\SafeEventLogWriteHandle.cs" />
     <Compile Include="Interop\UnsafeNativeMethods.cs" />
-    <Compile Include="IOThreadScheduler.cs" />
-    <Compile Include="IOThreadTimer.cs" />
     <Compile Include="IteratorAsyncResult.cs" />
     <Compile Include="PartialTrustHelpers.cs" />
+    <Compile Include="PlatformSupport.cs" />
     <Compile Include="ResourcesGeneric.Designer.cs">
       <DependentUpon>ResourcesGeneric.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="SignalGate.cs" />
     <Compile Include="Singleton.cs" />
     <Compile Include="SynchronizedPool.cs" />
     <Compile Include="TaskHelpers.cs" />
@@ -226,7 +222,6 @@
     <Compile Include="Tracing\EventTraceActivity.cs" />
     <Compile Include="Tracing\TrackingContext.cs" />
     <Compile Include="WaitCallbackActionItem.cs" />
-    <None Include="Amqp\Sasl\SaslSwtHandler.cs" />
     <Compile Include="Amqp\Sasl\SaslTransport.cs" />
     <Compile Include="Amqp\Sasl\SaslTransportProvider.cs" />
     <Compile Include="Amqp\SegmentBufferPool.cs" />

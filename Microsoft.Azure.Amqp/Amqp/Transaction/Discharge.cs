@@ -7,7 +7,7 @@ namespace Microsoft.Azure.Amqp.Transaction
     using System.Text;
     using Microsoft.Azure.Amqp.Framing;
 
-    sealed class Discharge : Performative
+    public sealed class Discharge : Performative
     {
         public static readonly string Name = "amqp:discharge:list";
         public static readonly ulong Code = 0x0000000000000032;

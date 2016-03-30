@@ -7,7 +7,7 @@ namespace Microsoft.Azure.Amqp.Serialization
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field,
         AllowMultiple = false, Inherited = true)]
-    sealed class AmqpMemberAttribute : Attribute
+    public sealed class AmqpMemberAttribute : Attribute
     {
         int? order;
         bool? mandatory;

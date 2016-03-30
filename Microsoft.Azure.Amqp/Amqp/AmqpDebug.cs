@@ -9,6 +9,17 @@ namespace Microsoft.Azure.Amqp
     using System.Threading;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// This class logs the frame activity on session and dumps them into a file
+    /// for debugging issues that are difficult to repro under debugger. The output
+    /// file is named as "session#.log" and it contains lines as follows:
+    ///   ticks(10000)	direction	op	p1	p2
+    ///   1653194746831	9	RECV	17	0	0
+    ///   1653194746844	9	SEND	17	0	0
+    /// Refer to the calls to AmqpDebug.Log for parameter definition.
+    /// Enable this logging by including AMQP_DEBUG constant in the project file
+    /// for the desired build configuration.
+    /// </summary>
     static class AmqpDebug
     {
         [Conditional("AMQP_DEBUG")]
@@ -132,7 +143,7 @@ namespace Microsoft.Azure.Amqp
                 this.entries[p] = new Entry()
                 {
                     Ticks = Stopwatch.GetTimestamp(),
-                    ThreadId = Thread.CurrentThread.ManagedThreadId,
+                    ThreadId = System.Environment.CurrentManagedThreadId,
                     Send = send,
                     Code = code,
                     Param1 = p1,
@@ -142,25 +153,31 @@ namespace Microsoft.Azure.Amqp
 
             void DumpInternal(string file)
             {
-                using (var sw = new System.IO.StreamWriter(file, false))
+                using (var fs = System.IO.File.OpenWrite(file))
                 {
-                    sw.WriteLine(string.Format(CultureInfo.InvariantCulture, "ticks({0})\tdirection\top\tp1\tp2", System.TimeSpan.FromMilliseconds(1).Ticks));
-                    int p = this.index;
-                    for (int i = 0; i < this.entries.Length; ++i)
+                    // Truncate any existing data
+                    fs.SetLength(0);
+
+                    using (var sw = new System.IO.StreamWriter(fs))
                     {
-                        var t = this.entries[++p % this.entries.Length];
-                        if (t.Ticks > 0)
+                        sw.WriteLine(string.Format(CultureInfo.InvariantCulture, "ticks({0})\tdirection\top\tp1\tp2", System.TimeSpan.FromMilliseconds(1).Ticks));
+                        int p = this.index;
+                        for (int i = 0; i < this.entries.Length; ++i)
                         {
-                            sw.WriteLine(
-                                string.Format(
-                                    CultureInfo.InvariantCulture,
-                                    "{0}\t{1}\t{2}\t{3}\t{4}\t{5}",
-                                    t.Ticks,
-                                    t.ThreadId,
-                                    t.Send ? "SEND" : "RECV",
-                                    t.Code,
-                                    t.Param1,
-                                    t.Param2));
+                            var t = this.entries[++p % this.entries.Length];
+                            if (t.Ticks > 0)
+                            {
+                                sw.WriteLine(
+                                    string.Format(
+                                        CultureInfo.InvariantCulture,
+                                        "{0}\t{1}\t{2}\t{3}\t{4}\t{5}",
+                                        t.Ticks,
+                                        t.ThreadId,
+                                        t.Send ? "SEND" : "RECV",
+                                        t.Code,
+                                        t.Param1,
+                                        t.Param2));
+                            }
                         }
                     }
                 }

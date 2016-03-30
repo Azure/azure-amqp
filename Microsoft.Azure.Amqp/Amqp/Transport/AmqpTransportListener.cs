@@ -114,7 +114,6 @@ namespace Microsoft.Azure.Amqp.Transport
             readonly TransportAsyncCallbackArgs args;
             static Action<TransportAsyncCallbackArgs> readCompleteCallback = OnReadHeaderComplete;
             static Action<TransportAsyncCallbackArgs> writeCompleteCallback = OnWriteHeaderComplete;
-            static Action<object> startCallback = Start;
             AsyncIO.AsyncBufferReader bufferReader;
             AsyncIO.AsyncBufferWriter bufferWriter;
             byte[] buffer;
@@ -134,7 +133,7 @@ namespace Microsoft.Azure.Amqp.Transport
             public static void SpawnHandler(AmqpTransportListener parent, TransportAsyncCallbackArgs args)
             {
                 TransportHandler handler = new TransportHandler(parent, args);
-                ActionItem.Schedule(startCallback, handler);
+                ActionItem.Schedule(s => Start(s), handler);
             }
 
             public override string ToString()

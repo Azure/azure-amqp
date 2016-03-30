@@ -7,7 +7,6 @@ namespace Microsoft.Azure.Amqp
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Transactions;
 
     static class TaskHelpers
     {
@@ -62,79 +61,6 @@ namespace Microsoft.Azure.Amqp
                 }
 
                 var completionSource = new TaskCompletionSource<T>(state);
-                completionSource.SetException(ex);
-                retval = completionSource.Task;
-            }
-
-            return retval;
-        }
-
-        /// <summary>
-        /// Create a Task based on Begin/End IAsyncResult pattern.
-        /// </summary>
-        /// <param name="transaction">The transaction (optional) to use.  If not null a TransactionScope will be used when calling the begin Func.</param>
-        /// <param name="begin"></param>
-        /// <param name="end"></param>
-        /// <param name="state"> 
-        /// This parameter helps reduce allocations by passing state to the Funcs. e.g.:
-        ///  await TaskHelpers.CreateTask(
-        ///      (c, s) => ((Transaction)s).BeginCommit(c, s),
-        ///      (a) => ((Transaction)a.AsyncState).EndCommit(a),
-        ///      transaction);
-        /// </param>
-        public static Task CreateTransactionalTask(System.Transactions.Transaction transaction, Func<AsyncCallback, object, IAsyncResult> begin, Action<IAsyncResult> end, object state = null)
-        {
-            Task retval;
-            TransactionScope scope = null;
-            try
-            {
-                scope = Fx.CreateTransactionScope(transaction);
-                retval = Task.Factory.FromAsync(begin, end, state);
-                Fx.CompleteTransactionScope(ref scope);
-            }
-            catch (Exception ex)
-            {
-                if (Fx.IsFatal(ex))
-                {
-                    throw;
-                }
-
-                if (scope != null)
-                {
-                    scope.Dispose();
-                }
-
-                var completionSource = new TaskCompletionSource<object>(state);
-                completionSource.SetException(ex);
-                retval = completionSource.Task;
-            }
-
-            return retval;
-        }
-
-        public static Task<TResult> CreateTransactionalTask<TResult>(System.Transactions.Transaction transaction, Func<AsyncCallback, object, IAsyncResult> begin, Func<IAsyncResult, TResult> end)
-        {
-            Task<TResult> retval;
-            TransactionScope scope = null;
-            try
-            {
-                scope = Fx.CreateTransactionScope(transaction);
-                retval = Task.Factory.FromAsync(begin, end, null);
-                Fx.CompleteTransactionScope(ref scope);
-            }
-            catch (Exception ex)
-            {
-                if (Fx.IsFatal(ex))
-                {
-                    throw;
-                }
-
-                if (scope != null)
-                {
-                    scope.Dispose();
-                }
-
-                var completionSource = new TaskCompletionSource<TResult>();
                 completionSource.SetException(ex);
                 retval = completionSource.Task;
             }
@@ -286,14 +212,7 @@ namespace Microsoft.Azure.Amqp
                 throw Fx.Exception.AsError(new ArgumentException(CommonResources.InvalidAsyncResult));
             }
 
-            try
-            {
-                task.Wait();
-            }
-            catch (AggregateException ae)
-            {
-                ExceptionDispatcher.Throw(ae.GetBaseException());
-            }
+            task.GetAwaiter().GetResult();
         }
 
         public static TResult EndAsyncResult<TResult>(IAsyncResult asyncResult)
@@ -304,17 +223,7 @@ namespace Microsoft.Azure.Amqp
                 throw Fx.Exception.AsError(new ArgumentException(CommonResources.InvalidAsyncResult));
             }
 
-            try
-            {
-                return task.Result;
-            }
-            catch (AggregateException ae)
-            {
-                ExceptionDispatcher.Throw(ae.GetBaseException());
-
-                // Dummy Code
-                throw ae.GetBaseException();
-            }
+            return task.GetAwaiter().GetResult();
         }
 
         internal static void MarshalTaskResults<TResult>(Task source, TaskCompletionSource<TResult> proxy)

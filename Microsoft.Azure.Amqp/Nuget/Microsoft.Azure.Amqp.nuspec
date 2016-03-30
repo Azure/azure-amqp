@@ -6,7 +6,7 @@
         <title>Microsoft Azure Amqp</title>
         <authors>Microsoft</authors>
         <requireLicenseAcceptance>true</requireLicenseAcceptance>
-        <licenseUrl><![CDATA[http://go.microsoft.com/fwlink/?LinkId=536623]]></licenseUrl>
+        <licenseUrl>https://github.com/Azure/azure-amqp/blob/master/LICENSE.txt</licenseUrl>
         <description>Package for Azure AMQP</description>
         <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288890</iconUrl>
         <language>en-US</language>

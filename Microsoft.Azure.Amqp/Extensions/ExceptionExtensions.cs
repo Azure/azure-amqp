@@ -47,13 +47,15 @@ namespace Microsoft.Azure.Amqp
                 return exception;
             }
 
+#if !DNXCORE
             if (PartialTrustHelpers.UnsafeIsInFullTrust())
+#endif
             {
                 // Racing here is harmless
                 if (ExceptionExtensions.prepForRemotingMethodInfo == null)
                 {
                     ExceptionExtensions.prepForRemotingMethodInfo =
-                        typeof(Exception).GetMethod("PrepForRemoting", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { }, new ParameterModifier[] { });
+                        typeof(Exception).GetMethod("PrepForRemoting", BindingFlags.Instance | BindingFlags.NonPublic);
                 }
 
                 if (ExceptionExtensions.prepForRemotingMethodInfo != null)

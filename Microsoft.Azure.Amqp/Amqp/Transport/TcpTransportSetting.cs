@@ -42,10 +42,13 @@ namespace Microsoft.Azure.Amqp.Transport
             return new TcpTransportInitiator(this);
         }
 
+// No support for TCP listener in UWP
+#if !WINDOWS_UWP
         public override TransportListener CreateListener()
         {
             return new TcpTransportListener(this);
         }
+#endif
 
         public override string ToString()
         {

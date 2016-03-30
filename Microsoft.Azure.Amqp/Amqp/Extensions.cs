@@ -41,8 +41,8 @@ namespace Microsoft.Azure.Amqp
                 string message = string.Format(
                         System.Globalization.CultureInfo.InvariantCulture,
                         "[{0:X3}.{1:X3} {2:HH:mm:ss.fff}] {3} {4}",
-                        System.Diagnostics.Process.GetCurrentProcess().Id,
-                        System.Threading.Thread.CurrentThread.ManagedThreadId,
+                        Diagnostics.CurrentProcess.ID,
+                        Environment.CurrentManagedThreadId,
                         DateTime.UtcNow,
                         send ? "SEND" : "RECV",
                         target.ToString());
@@ -52,11 +52,15 @@ namespace Microsoft.Azure.Amqp
                 }
                 else
                 {
+#if DNXCORE
+                    System.Diagnostics.Debug.WriteLine(message);
+#else
                     System.Diagnostics.Trace.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}\t{1}", AppDomain.CurrentDomain.FriendlyName, message));
+#endif // DNXCORE
                 }
             }
         }
-#endif
+#endif // DEBUG
 
         // open
         public static uint MaxFrameSize(this Open open)

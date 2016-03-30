@@ -26,16 +26,18 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         public static MemberAccessor Create(MemberInfo memberInfo, bool requiresSetter)
         {
-            if (memberInfo.MemberType == MemberTypes.Field)
+            FieldInfo fieldInfo;
+            PropertyInfo propertyInfo;
+            if ((fieldInfo = memberInfo as FieldInfo) != null)
             {
-                return new FieldMemberAccessor((FieldInfo)memberInfo);
+                return new FieldMemberAccessor(fieldInfo);
             }
-            else if (memberInfo.MemberType == MemberTypes.Property)
+            else if ((propertyInfo = memberInfo as PropertyInfo) != null)
             {
-                return new PropertyMemberAccessor((PropertyInfo)memberInfo, requiresSetter);
+                return new PropertyMemberAccessor(propertyInfo, requiresSetter);
             }
 
-            throw new NotSupportedException(memberInfo.MemberType.ToString());
+            throw new NotSupportedException(memberInfo.GetType().ToString());
         }
 
         public object Get(object container)
@@ -53,7 +55,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             if (castType == typeof(object))
             {
             }
-            else if (castType.IsValueType)
+            else if (castType.GetTypeInfo().IsValueType)
             {
                 generator.Emit(isContainer ? OpCodes.Unbox : OpCodes.Unbox_Any, castType);
             }
@@ -65,7 +67,7 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         static void EmitCall(ILGenerator generator, MethodInfo method)
         {
-            OpCode opcode = (method.IsStatic || method.DeclaringType.IsValueType) ? OpCodes.Call : OpCodes.Callvirt;
+            OpCode opcode = (method.IsStatic || method.DeclaringType.GetTypeInfo().IsValueType) ? OpCodes.Call : OpCodes.Callvirt;
             generator.EmitCall(opcode, method, null);
         }
 
@@ -90,7 +92,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 generator.Emit(OpCodes.Ldarg_0);
                 EmitTypeConversion(generator, fieldInfo.DeclaringType, true);
                 generator.Emit(OpCodes.Ldfld, fieldInfo);
-                if (fieldInfo.FieldType.IsValueType)
+                if (fieldInfo.FieldType.GetTypeInfo().IsValueType)
                 {
                     generator.Emit(OpCodes.Box, fieldInfo.FieldType);
                 }
@@ -128,11 +130,11 @@ namespace Microsoft.Azure.Amqp.Serialization
             {
                 DynamicMethod method = new DynamicMethod(GetAccessorName(true, propertyInfo.Name), typeof(object), new[] { typeof(object) }, true);
                 ILGenerator generator = method.GetILGenerator();
-                generator.DeclareLocal(typeof(object)); 
+                generator.DeclareLocal(typeof(object));
                 generator.Emit(OpCodes.Ldarg_0);
                 EmitTypeConversion(generator, propertyInfo.DeclaringType, true);
                 EmitCall(generator, propertyInfo.GetGetMethod(true));
-                if (propertyInfo.PropertyType.IsValueType)
+                if (propertyInfo.PropertyType.GetTypeInfo().IsValueType)
                 {
                     generator.Emit(OpCodes.Box, propertyInfo.PropertyType);
                 }

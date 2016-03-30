@@ -8,14 +8,14 @@ namespace Microsoft.Azure.Amqp
     using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
-    using System.Globalization;
     using System.Reflection;
     using System.Runtime.CompilerServices;
+#if !DNXCORE
     using System.Runtime.ConstrainedExecution;
+#endif
     using System.Runtime.InteropServices;
     using System.Security;
     using System.Threading;
-    using System.Transactions;
     using Microsoft.Win32;
 
     static class Fx
@@ -103,16 +103,20 @@ namespace Microsoft.Azure.Amqp
 
         public static byte[] AllocateByteArray(int size)
         {
+#if !DNXCORE
             try
             {
+#endif
                 // Safe to catch OOM from this as long as the ONLY thing it does is a simple allocation of a primitive type (no method calls).
                 return new byte[size];
+#if !DNXCORE
             }
             catch (OutOfMemoryException exception)
             {
                 // Convert OOM into an exception that can be safely handled by higher layers.
                 throw Fx.Exception.AsError(new InsufficientMemoryException(CommonResources.GetString(CommonResources.BufferAllocationFailed, size), exception));
             }
+#endif
         }
 
         // Do not call the parameter "message" or else FxCop thinks it should be localized.
@@ -199,7 +203,9 @@ namespace Microsoft.Azure.Amqp
                     // Mark that a FailFast is in progress, so that we can take ourselves out of the NLB if for
                     // any reason we can't kill ourselves quickly.  Wait 15 seconds so this state gets picked up for sure.
                     Fx.FailFastInProgress = true;
+#if !WINDOWS_UWP
                     Thread.Sleep(TimeSpan.FromSeconds(15));
+#endif
                 }
                 finally
                 {
@@ -207,6 +213,7 @@ namespace Microsoft.Azure.Amqp
                     // Environment.FailFast does not collect crash dumps when used in Azure services. 
                     // Environment.FailFast(failFastMessage);
 
+#if !WINDOWS_UWP
                     // ################## WORKAROUND #############################
                     // Workaround for the issue above. Throwing an unhandled exception on a separate thread to trigger process crash and crash dump collection
                     // Throwing FatalException since our service does not morph/eat up fatal exceptions
@@ -218,6 +225,7 @@ namespace Microsoft.Azure.Amqp
 
                     failFastWorkaroundThread.Start();
                     failFastWorkaroundThread.Join();
+#endif
                 }
             }
             catch
@@ -236,9 +244,11 @@ namespace Microsoft.Azure.Amqp
             {
                 // FYI, CallbackException is-a FatalException
                 if (exception is FatalException ||
+#if !DNXCORE
                     (exception is OutOfMemoryException && !(exception is InsufficientMemoryException)) ||
                     exception is ThreadAbortException ||
                     exception is AccessViolationException ||
+#endif
                     exception is SEHException)
                 {
                     return true;
@@ -280,84 +290,6 @@ namespace Microsoft.Azure.Amqp
             }
 
             return false;
-        }
-
-        // If the transaction has aborted then we switch over to a new transaction
-        // which we will immediately abort after setting Transaction.Current
-        public static TransactionScope CreateTransactionScope(System.Transactions.Transaction transaction)
-        {
-            try
-            {
-                return transaction == null ? null : new TransactionScope(transaction);
-            }
-            catch (TransactionAbortedException)
-            {
-                CommittableTransaction tempTransaction = new CommittableTransaction();
-                try
-                {
-                    return new TransactionScope(tempTransaction.Clone());
-                }
-                finally
-                {
-                    tempTransaction.Rollback();
-                }
-            }
-        }
-
-        public static void CompleteTransactionScope(ref TransactionScope scope)
-        {
-            TransactionScope localScope = scope;
-            if (localScope != null)
-            {
-                scope = null;
-                try
-                {
-                    localScope.Complete();
-                }
-                finally
-                {
-                    localScope.Dispose();
-                }
-            }
-        }
-
-#if UNUSED
-        public static AsyncCallback ThunkCallback(AsyncCallback callback)
-        {
-            return (new AsyncThunk(callback)).ThunkFrame;
-        }
-
-        public static WaitCallback ThunkCallback(WaitCallback callback)
-        {
-            return (new WaitThunk(callback)).ThunkFrame;
-        }
-
-        public static TimerCallback ThunkCallback(TimerCallback callback)
-        {
-            return (new TimerThunk(callback)).ThunkFrame;
-        }
-
-        public static WaitOrTimerCallback ThunkCallback(WaitOrTimerCallback callback)
-        {
-            return (new WaitOrTimerThunk(callback)).ThunkFrame;
-        }
-
-        public static SendOrPostCallback ThunkCallback(SendOrPostCallback callback)
-        {
-            return (new SendOrPostThunk(callback)).ThunkFrame;
-        }
-#endif
-
-        [Fx.Tag.SecurityNote(Critical = "Construct the unsafe object IOCompletionThunk")]
-        [SecurityCritical]
-        public static IOCompletionCallback ThunkCallback(IOCompletionCallback callback)
-        {
-            return (new IOCompletionThunk(callback)).ThunkFrame;
-        }
-
-        public static TransactionCompletedEventHandler ThunkTransactionEventHandler(TransactionCompletedEventHandler handler)
-        {
-            return (new TransactionEventHandlerThunk(handler)).ThunkFrame;
         }
 
 #if DEBUG
@@ -423,6 +355,7 @@ namespace Microsoft.Azure.Amqp
         static bool TryGetDebugSwitch(string name, out object value)
         {
             value = null;
+#if !DNXCORE
             try
             {
                 RegistryKey key = Registry.LocalMachine.OpenSubKey(Fx.SBRegistryKey);
@@ -438,14 +371,17 @@ namespace Microsoft.Azure.Amqp
             {
                 // This debug-only code shouldn't trace.
             }
+#endif // !DNXCORE
             return value != null;
         }
-#endif
+#endif // DEBUG
 
         [SuppressMessage(FxCop.Category.Design, FxCop.Rule.DoNotCatchGeneralExceptionTypes,
             Justification = "Don't want to hide the exception which is about to crash the process.")]
         [Fx.Tag.SecurityNote(Miscellaneous = "Must not call into PT code as it is called within a CER.")]
+#if !DNXCORE
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+#endif
         static void TraceExceptionNoThrow(Exception exception)
         {
             try
@@ -466,7 +402,9 @@ namespace Microsoft.Azure.Amqp
         [SuppressMessage(FxCop.Category.ReliabilityBasic, FxCop.Rule.IsFatalRule,
             Justification = "Don't want to hide the exception which is about to crash the process.")]
         [Fx.Tag.SecurityNote(Miscellaneous = "Must not call into PT code as it is called within a CER.")]
+#if !DNXCORE
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
+#endif
         static bool HandleAtThreadBase(Exception exception)
         {
             // This area is too sensitive to do anything but return.
@@ -492,281 +430,6 @@ namespace Microsoft.Azure.Amqp
 #endif // UNUSED
 
             return false;
-        }
-
-#if UNUSED
-        abstract class Thunk<T> where T : class
-        {
-            [Fx.Tag.SecurityNote(Critical = "Make these safe to use in SecurityCritical contexts.")]
-            [SecurityCritical]
-            T callback;
-
-            [Fx.Tag.SecurityNote(Critical = "Accesses critical field.", Safe = "Data provided by caller.")]
-            protected Thunk(T callback)
-            {
-                this.callback = callback;
-            }
-
-            internal T Callback
-            {
-                [Fx.Tag.SecurityNote(Critical = "Accesses critical field.", Safe = "Data is not privileged.")]
-                get
-                {
-                    return this.callback;
-                }
-            }
-        }
-
-        sealed class TimerThunk : Thunk<TimerCallback>
-        {
-            public TimerThunk(TimerCallback callback)
-                : base(callback)
-            {
-            }
-
-            public TimerCallback ThunkFrame
-            {
-                get
-                {
-                    return new TimerCallback(UnhandledExceptionFrame);
-                }
-            }
-
-            [Fx.Tag.SecurityNote(Critical = "Calls PrepareConstrainedRegions which has a LinkDemand",
-                Safe = "Guaranteed not to call into PT user code from the finally.")]
-            void UnhandledExceptionFrame(object state)
-            {
-                RuntimeHelpers.PrepareConstrainedRegions();
-                try
-                {
-                    Callback(state);
-                }
-                catch (Exception exception)
-                {
-                    if (!Fx.HandleAtThreadBase(exception))
-                    {
-                        throw;
-                    }
-                }
-            }
-        }
-
-        sealed class WaitOrTimerThunk : Thunk<WaitOrTimerCallback>
-        {
-            public WaitOrTimerThunk(WaitOrTimerCallback callback)
-                : base(callback)
-            {
-            }
-
-            public WaitOrTimerCallback ThunkFrame
-            {
-                get
-                {
-                    return new WaitOrTimerCallback(UnhandledExceptionFrame);
-                }
-            }
-
-            [Fx.Tag.SecurityNote(Critical = "Calls PrepareConstrainedRegions which has a LinkDemand",
-                Safe = "Guaranteed not to call into PT user code from the finally.")]
-            void UnhandledExceptionFrame(object state, bool timedOut)
-            {
-                RuntimeHelpers.PrepareConstrainedRegions();
-                try
-                {
-                    Callback(state, timedOut);
-                }
-                catch (Exception exception)
-                {
-                    if (!Fx.HandleAtThreadBase(exception))
-                    {
-                        throw;
-                    }
-                }
-            }
-        }
-
-        sealed class WaitThunk : Thunk<WaitCallback>
-        {
-            public WaitThunk(WaitCallback callback)
-                : base(callback)
-            {
-            }
-
-            public WaitCallback ThunkFrame
-            {
-                get
-                {
-                    return new WaitCallback(UnhandledExceptionFrame);
-                }
-            }
-
-            [Fx.Tag.SecurityNote(Critical = "Calls PrepareConstrainedRegions which has a LinkDemand",
-                Safe = "Guaranteed not to call into PT user code from the finally.")]
-            void UnhandledExceptionFrame(object state)
-            {
-                RuntimeHelpers.PrepareConstrainedRegions();
-                try
-                {
-                    Callback(state);
-                }
-                catch (Exception exception)
-                {
-                    if (!Fx.HandleAtThreadBase(exception))
-                    {
-                        throw;
-                    }
-                }
-            }
-        }
-
-        sealed class AsyncThunk : Thunk<AsyncCallback>
-        {
-            public AsyncThunk(AsyncCallback callback)
-                : base(callback)
-            {
-            }
-
-            public AsyncCallback ThunkFrame
-            {
-                get
-                {
-                    return new AsyncCallback(UnhandledExceptionFrame);
-                }
-            }
-
-            [Fx.Tag.SecurityNote(Critical = "Calls PrepareConstrainedRegions which has a LinkDemand",
-                Safe = "Guaranteed not to call into PT user code from the finally.")]
-            void UnhandledExceptionFrame(IAsyncResult result)
-            {
-                RuntimeHelpers.PrepareConstrainedRegions();
-                try
-                {
-                    Callback(result);
-                }
-                catch (Exception exception)
-                {
-                    if (!Fx.HandleAtThreadBase(exception))
-                    {
-                        throw;
-                    }
-                }
-            }
-        }
-
-        public abstract class ExceptionHandler
-        {
-            [Fx.Tag.SecurityNote(Miscellaneous = "Must not call into PT code as it is called within a CER.")]
-            public abstract bool HandleException(Exception exception);
-        }
-#endif // UNUSED
-
-        // This can't derive from Thunk since T would be unsafe.
-        [Fx.Tag.SecurityNote(Critical = "unsafe object")]
-        [SecurityCritical]
-        unsafe sealed class IOCompletionThunk
-        {
-            [Fx.Tag.SecurityNote(Critical = "Make these safe to use in SecurityCritical contexts.")]
-            IOCompletionCallback callback;
-
-            [Fx.Tag.SecurityNote(Critical = "Accesses critical field.", Safe = "Data provided by caller.")]
-            public IOCompletionThunk(IOCompletionCallback callback)
-            {
-                this.callback = callback;
-            }
-
-            public IOCompletionCallback ThunkFrame
-            {
-                [Fx.Tag.SecurityNote(Safe = "returns a delegate around the safe method UnhandledExceptionFrame")]
-                get
-                {
-                    return new IOCompletionCallback(UnhandledExceptionFrame);
-                }
-            }
-
-            [Fx.Tag.SecurityNote(Critical = "Accesses critical field, calls PrepareConstrainedRegions which has a LinkDemand",
-                Safe = "Delegates can be invoked, guaranteed not to call into PT user code from the finally.")]
-            void UnhandledExceptionFrame(uint error, uint bytesRead, NativeOverlapped* nativeOverlapped)
-            {
-                RuntimeHelpers.PrepareConstrainedRegions();
-                try
-                {
-                    this.callback(error, bytesRead, nativeOverlapped);
-                }
-                catch (Exception exception)
-                {
-                    if (!Fx.HandleAtThreadBase(exception))
-                    {
-                        throw;
-                    }
-                }
-            }
-        }
-
-#if UNUSED
-        sealed class SendOrPostThunk : Thunk<SendOrPostCallback>
-        {
-            public SendOrPostThunk(SendOrPostCallback callback)
-                : base(callback)
-            {
-            }
-
-            public SendOrPostCallback ThunkFrame
-            {
-                get
-                {
-                    return new SendOrPostCallback(UnhandledExceptionFrame);
-                }
-            }
-
-            [Fx.Tag.SecurityNote(Critical = "Calls PrepareConstrainedRegions which has a LinkDemand",
-                Safe = "Guaranteed not to call into PT user code from the finally.")]
-            void UnhandledExceptionFrame(object state)
-            {
-                RuntimeHelpers.PrepareConstrainedRegions();
-                try
-                {
-                    Callback(state);
-                }
-                catch (Exception exception)
-                {
-                    if (!Fx.HandleAtThreadBase(exception))
-                    {
-                        throw;
-                    }
-                }
-            }
-        }
-#endif // UNUSED
-
-        sealed class TransactionEventHandlerThunk
-        {
-            readonly TransactionCompletedEventHandler callback;
-
-            public TransactionEventHandlerThunk(TransactionCompletedEventHandler callback)
-            {
-                this.callback = callback;
-            }
-
-            public TransactionCompletedEventHandler ThunkFrame
-            {
-                get
-                {
-                    return new TransactionCompletedEventHandler(UnhandledExceptionFrame);
-                }
-            }
-
-            void UnhandledExceptionFrame(object sender, TransactionEventArgs args)
-            {
-                RuntimeHelpers.PrepareConstrainedRegions();
-                try
-                {
-                    this.callback(sender, args);
-                }
-                catch (Exception exception)
-                {
-                    throw AssertAndFailFastService(exception.ToString());
-                }
-            }
         }
 
         public static class Tag

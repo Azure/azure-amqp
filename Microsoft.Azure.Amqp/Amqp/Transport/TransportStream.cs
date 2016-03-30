@@ -5,7 +5,9 @@ namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
     using System.IO;
-    
+    using System.Threading;
+    using System.Threading.Tasks;
+
     sealed class TransportStream : Stream
     {
         static readonly Action<TransportAsyncCallbackArgs> onIOComplete = OnIOComplete;
@@ -56,12 +58,20 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+#if DNXCORE
+            return this.EndRead(this.BeginRead(buffer, offset, count, null, null));
+#else
             throw new InvalidOperationException();
+#endif
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
+#if DNXCORE
+            this.EndWrite(this.BeginWrite(buffer, offset, count, null, null));
+#else
             throw new InvalidOperationException();
+#endif
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -74,7 +84,19 @@ namespace Microsoft.Azure.Amqp.Transport
             throw new InvalidOperationException();
         }
 
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return TaskHelpers.CreateTask(
+                (c, s) => this.BeginWrite(buffer, offset, count, c, s),
+                (a) => this.EndWrite(a),
+                this);
+        }
+
+#if DNXCORE
+        IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+#else
         public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+#endif
         {
             TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();
             args.SetBuffer(buffer, offset, count);
@@ -89,7 +111,11 @@ namespace Microsoft.Azure.Amqp.Transport
             return args;
         }
 
+#if DNXCORE
+        void EndWrite(IAsyncResult asyncResult)
+#else
         public override void EndWrite(IAsyncResult asyncResult)
+#endif
         {
             var args = (TransportAsyncCallbackArgs)asyncResult;
             if (args.Exception != null)
@@ -98,7 +124,19 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return TaskHelpers.CreateTask(
+                (c, s) => this.BeginRead(buffer, offset, count, c, s),
+                (a) => this.EndRead(a),
+                this);
+        }
+
+#if DNXCORE
+        IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+#else
         public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+#endif
         {
             TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();
             args.SetBuffer(buffer, offset, count);
@@ -114,7 +152,11 @@ namespace Microsoft.Azure.Amqp.Transport
             return args;
         }
 
+#if DNXCORE
+        int EndRead(IAsyncResult asyncResult)
+#else
         public override int EndRead(IAsyncResult asyncResult)
+#endif
         {
             var args = (TransportAsyncCallbackArgs)asyncResult;
             if (args.Exception != null)

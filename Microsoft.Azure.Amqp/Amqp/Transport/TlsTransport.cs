@@ -14,6 +14,7 @@ namespace Microsoft.Azure.Amqp.Transport
         static readonly AsyncCallback onOpenComplete = OnOpenComplete;
         static readonly AsyncCallback onWriteComplete = OnWriteComplete;
         static readonly AsyncCallback onReadComplete = OnReadComplete;
+        const SslProtocols DefaultSslProtocols = SslProtocols.Tls | SslProtocols.Ssl3; // SslProtocols.Default from .NET 4.5
         readonly TransportBase innerTransport;
         readonly CustomSslStream sslStream;
         TlsTransportSettings tlsSettings;
@@ -117,14 +118,14 @@ namespace Microsoft.Azure.Amqp.Transport
                 result = this.tlsSettings.Certificate != null
                     ? this.sslStream.BeginAuthenticateAsClient(
                         this.tlsSettings.TargetHost, GetX509CertificateCollection(this.tlsSettings.Certificate),
-                        SslProtocols.Default, true, onOpenComplete, this)
+                        DefaultSslProtocols, true, onOpenComplete, this)
                     : this.sslStream.BeginAuthenticateAsClient(this.tlsSettings.TargetHost, onOpenComplete, this);
             }
             else
             {
                 result = this.tlsSettings.CertificateValidationCallback != null
                     ? this.sslStream.BeginAuthenticateAsServer(
-                        this.tlsSettings.Certificate, true, SslProtocols.Default, true, onOpenComplete, this)
+                        this.tlsSettings.Certificate, true, DefaultSslProtocols, true, onOpenComplete, this)
                     : this.sslStream.BeginAuthenticateAsServer(this.tlsSettings.Certificate, onOpenComplete, this);
             }
 
@@ -139,7 +140,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
         protected override bool CloseInternal()
         {
-            this.sslStream.Close();
+            this.sslStream.Dispose();
             return true;
         }
 

@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Amqp.Serialization
     using System;
     using System.Collections;
     using System.Collections.Generic;
-    using System.IO;
+    using System.Reflection;
     using System.Runtime.Serialization;
     using Microsoft.Azure.Amqp.Encoding;
     using AmqpDescribedType = Microsoft.Azure.Amqp.Encoding.DescribedType;
@@ -22,6 +22,9 @@ namespace Microsoft.Azure.Amqp.Serialization
             this.serializer = serializer;
             this.type = type;
             this.hasDefaultCtor = type.GetConstructor(Type.EmptyTypes) != null;
+#if DNXCORE
+            Fx.AssertAndThrow(this.hasDefaultCtor, "CoreCLR support is only implemented for types with default .ctors.");
+#endif
         }
 
         public virtual EncodingType Encoding
@@ -168,9 +171,13 @@ namespace Microsoft.Azure.Amqp.Serialization
                 }
                 else
                 {
+#if DNXCORE
+                    object container = Activator.CreateInstance(this.type);
+#else
                     object container = this.hasDefaultCtor ?
                         Activator.CreateInstance(this.type) :
                         FormatterServices.GetUninitializedObject(this.type);
+#endif
                     ((IAmqpSerializable)container).Decode(buffer);
                     return container;
                 }
@@ -297,9 +304,13 @@ namespace Microsoft.Azure.Amqp.Serialization
                 this.Initialize(buffer, formatCode, out size, out count, out encodeWidth, out effectiveType);
                 int offset = buffer.Offset;
 
+#if DNXCORE
+                object container = Activator.CreateInstance(effectiveType.type);
+#else
                 object container = effectiveType.hasDefaultCtor ?
-                    Activator.CreateInstance(effectiveType.type) :
+                Activator.CreateInstance(effectiveType.type) :
                     FormatterServices.GetUninitializedObject(effectiveType.type);
+#endif
 
                 if (count > 0)
                 {

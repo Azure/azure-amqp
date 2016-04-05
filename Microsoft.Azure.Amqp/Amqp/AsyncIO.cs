@@ -291,7 +291,7 @@ namespace Microsoft.Azure.Amqp
 
             void HandleProtocolHeaderReadComplete(TransportAsyncCallbackArgs args)
             {
-                this.asyncIo.ioHandler.OnReceiveBuffer(new ByteBuffer(args.Buffer, 0, args.Count));
+                this.asyncIo.ioHandler.OnReceiveBuffer(new ByteBuffer(args.Buffer, 0, AmqpConstants.ProtocolHeaderSize));
 
                 this.SetReadFrameSize();
             }

@@ -59,7 +59,12 @@ namespace Microsoft.Azure.Amqp.Transport
         public override int Read(byte[] buffer, int offset, int count)
         {
 #if DNXCORE
-            return this.EndRead(this.BeginRead(buffer, offset, count, null, null));
+            using (var doneEvent = new ManualResetEventSlim())
+            {
+                var asyncResult = this.BeginRead(buffer, offset, count, ar => ((ManualResetEventSlim)ar.AsyncState).Set(), doneEvent);
+                doneEvent.Wait();
+                return this.EndRead(asyncResult);
+            }
 #else
             throw new InvalidOperationException();
 #endif
@@ -68,7 +73,12 @@ namespace Microsoft.Azure.Amqp.Transport
         public override void Write(byte[] buffer, int offset, int count)
         {
 #if DNXCORE
-            this.EndWrite(this.BeginWrite(buffer, offset, count, null, null));
+            using (var doneEvent = new ManualResetEventSlim())
+            {
+                var asyncResult = this.BeginWrite(buffer, offset, count, ar => ((ManualResetEventSlim)ar.AsyncState).Set(), doneEvent);
+                doneEvent.Wait();
+                this.EndWrite(asyncResult);
+            }
 #else
             throw new InvalidOperationException();
 #endif

@@ -24,6 +24,7 @@
         "../Microsoft.Azure.Amqp/Amqp/Serialization/*.cs",
         "../Microsoft.Azure.Amqp/Amqp/Transaction/*.cs",
         "../Microsoft.Azure.Amqp/Amqp/Transport/*.cs",
+        "../Microsoft.Azure.Amqp/Amqp/X509/*.cs",
         "../Microsoft.Azure.Amqp/Exceptions/*.cs",
         "../Microsoft.Azure.Amqp/Extensions/*.cs",
         "../Microsoft.Azure.Amqp/Interop/*.cs",

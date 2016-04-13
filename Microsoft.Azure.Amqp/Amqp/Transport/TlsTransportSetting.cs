@@ -62,8 +62,13 @@ namespace Microsoft.Azure.Amqp.Transport
             get;
             set;
         }
-#endif
 
+        public bool SurfaceRemoteClientCertificate
+        {
+            get;
+            set;
+        }
+#endif
         public override TransportInitiator CreateInitiator()
         {
             if (this.TargetHost == null)

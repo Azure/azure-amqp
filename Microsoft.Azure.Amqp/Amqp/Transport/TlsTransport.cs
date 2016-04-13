@@ -8,6 +8,7 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Security.Authentication;
     using System.Security.Cryptography.X509Certificates;
     using System.Security.Principal;
+    using Microsoft.Azure.Amqp.X509;
 
     sealed class TlsTransport : TransportBase, IDisposable
     {
@@ -198,10 +199,22 @@ namespace Microsoft.Azure.Amqp.Transport
                 else
                 {
                     this.sslStream.EndAuthenticateAsServer(result);
-                    if (this.sslStream.RequireMutualAuthentication && this.sslStream.IsRemoteCertificateValid && this.sslStream.RemoteCertificate != null)
+                    if (this.sslStream.RequireMutualAuthentication && this.sslStream.RemoteCertificate != null)
                     {
-                        // if the ClientCertAuth succeeds - we set the pricipal on the transport indicating AuthorizationSuccess
-                        this.Principal = new GenericPrincipal(new GenericIdentity(this.sslStream.RemoteCertificate.Subject), null);
+                        if (!this.tlsSettings.SurfaceRemoteClientCertificate && this.sslStream.IsRemoteCertificateValid)
+                        {
+                            // if the ClientCertAuth succeeds - we set the principal on the transport indicating AuthorizationSuccess
+                            this.Principal = new GenericPrincipal(new GenericIdentity(this.sslStream.RemoteCertificate.Subject), null);
+                        }
+
+                        // Regardless of the remote cert being valid (or not), we pass it up to the application if this flag is set
+                        if (this.tlsSettings.SurfaceRemoteClientCertificate)
+                        {
+                            // Cannot cast from X509Certificate to X509Certificate2
+                            // using workaround mentioned here: https://github.com/dotnet/corefx/issues/4510
+                            var cert = new X509Certificate2(this.sslStream.RemoteCertificate.Export(X509ContentType.Cert));
+                            this.Principal = new X509Principal(new X509CertificateIdentity(cert));
+                        }
                     }
                 }
             }

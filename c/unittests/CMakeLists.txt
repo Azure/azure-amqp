@@ -1,0 +1,7 @@
+add_subdirectory(amqpvalue_limits_unittests)
+add_subdirectory(amqpvalue_unittests)
+add_subdirectory(amqp_frame_codec_unittests)
+add_subdirectory(connection_unittests)
+add_subdirectory(frame_codec_unittests)
+add_subdirectory(io_unittests)
+add_subdirectory(list_unittests)

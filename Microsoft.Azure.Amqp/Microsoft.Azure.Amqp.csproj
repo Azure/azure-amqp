@@ -188,6 +188,8 @@
     <Compile Include="Amqp\Sasl\SaslPlainHandler.cs" />
     <Compile Include="Amqp\Sasl\SaslResponse.cs" />
     <Compile Include="Amqp\Transport\CustomSslStream.cs" />
+    <Compile Include="Amqp\X509\X509CertificateIdentity.cs" />
+    <Compile Include="Amqp\X509\X509Principal.cs" />
     <Compile Include="AsyncResult.cs" />
     <Compile Include="CommonResources.cs" />
     <Compile Include="CompletedAsyncResult.cs" />
@@ -281,6 +283,7 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

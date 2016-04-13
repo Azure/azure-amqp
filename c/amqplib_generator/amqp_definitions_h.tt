@@ -1,0 +1,92 @@
+﻿<#@ template language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="amqplib_generator" #>
+
+<# amqp amqp = Program.LoadAMQPTypes(); #>
+
+#ifndef AMQP_DEFINITIONS_H
+#define AMQP_DEFINITIONS_H
+
+#ifdef __cplusplus
+#include <cstdint>
+#include <cstdbool>
+extern "C" {
+#else
+#include <stdint.h>
+#include <stdbool.h>
+#endif
+
+#include "amqpvalue.h"
+
+<#	foreach (section section in amqp.Items.Where(item => item is section)) #>
+<#	{ #>
+<#		List<type> types = new List<type>(); #>
+<#		types.AddRange(section.Items.Where(item => item is type).Cast<type>()); #>
+<#		foreach (type type in types) #>
+<#		{ #>
+<#			string type_name = type.name.ToLower().Replace('-', '_'); #>
+/* <#=		type.name #> */
+
+<#			if (type.@class == typeClass.composite) #>
+<#			{ #>
+	typedef void* <#= type_name.ToUpper() #>_HANDLE;
+
+<#				string arg_list = Program.GetMandatoryArgList(type); #>
+	extern <#= type_name.ToUpper() #>_HANDLE <#= type_name #>_create(<#= arg_list #>);
+	extern <#= type_name.ToUpper() #>_HANDLE <#= type_name #>_clone(<#= type_name.ToUpper() #>_HANDLE value);
+	extern void <#= type_name #>_destroy(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>);
+	extern bool is_<#= type_name #>_type_by_descriptor(AMQP_VALUE descriptor);
+	extern int amqpvalue_get_<#= type_name #>(AMQP_VALUE value, <#= type_name.ToUpper() #>_HANDLE* <#= type_name.ToUpper() #>_handle);
+	extern AMQP_VALUE amqpvalue_create_<#= type_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>);
+
+<#				foreach (field field in type.Items.Where(item => item is field)) #>
+<#				{ #>
+<#					string field_name = field.name.ToLower().Replace('-', '_'); #>
+<#					string c_type = Program.GetCType(field.type).Replace('-', '_').Replace(':', '_'); #>
+<#					type field_type = Program.GetTypeByName(types, field.type); #>
+<#					if ((field_type != null) && (field_type.@class == typeClass.composite)) c_type = field_type.name.ToUpper().Replace('-', '_').Replace(':', '_') + "_HANDLE"; #>
+	extern int <#= type_name #>_get_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, <#= c_type #>* <#= field_name #>_value);
+	extern int <#= type_name #>_set_<#= field_name #>(<#= type_name.ToUpper() #>_HANDLE <#= type_name #>, <#= c_type #> <#= field_name #>_value);
+<#				} #>
+
+<#			} #>
+<#			else #>
+<#			if (type.@class == typeClass.restricted) #>
+<#			{ #>
+<#				string c_type = Program.GetCType(type.source).Replace('-', '_').Replace(':', '_'); #>
+/* <#=		type.name #> */
+
+	typedef <#= c_type #> <#= type_name.ToLower() #>;
+
+<#				if (c_type != "AMQP_VALUE") #>
+<#				{ #>
+	extern AMQP_VALUE amqpvalue_create_<#= type_name.ToLower() #>(<#= type_name.ToLower() #> value);
+<#				} #>
+<#				else #>
+<#				{ #>
+	extern AMQP_VALUE amqpvalue_create_<#= type_name.ToLower() #>(AMQP_VALUE value);
+	#define <#= type_name.ToLower() #>_clone amqpvalue_clone
+	#define <#= type_name.ToLower() #>_destroy amqpvalue_destroy
+<#				} #>
+	#define amqpvalue_get_<#= type_name.ToLower() #> amqpvalue_get_<#= type.source.Replace('-', '_').Replace(':', '_') #>
+
+<#				if (type.Items != null) #>
+<#              { #>
+<#					foreach (choice choice in type.Items.Where(item => item is choice)) #>
+<#					{ #>
+	#define <#= type_name #>_<#= choice.name.Replace('-', '_').Replace(':', '_') #> <#= choice.value.Replace('-', '_').Replace(':', '_') #>
+<#					} #>
+<#				} #>
+
+<#			} #>
+<#		} #>
+<#	} #>
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* AMQP_DEFINITIONS_H */

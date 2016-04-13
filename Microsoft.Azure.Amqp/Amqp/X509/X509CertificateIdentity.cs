@@ -3,7 +3,6 @@
 
 namespace Microsoft.Azure.Amqp.X509
 {
-    using System;
     using System.Security.Principal;
     using System.Security.Cryptography.X509Certificates;
 
@@ -13,19 +12,16 @@ namespace Microsoft.Azure.Amqp.X509
     public class X509CertificateIdentity : IIdentity
     {
         /// <summary>
-        /// Maximum Clock Skew allowed
-        /// </summary>
-        public static readonly TimeSpan MaxClockSkew = TimeSpan.FromMinutes(5);
-
-        /// <summary>
         /// ctor which takes a X509 certificate
         /// </summary>
         /// <param name="certificate"></param>
-        public X509CertificateIdentity(X509Certificate2 certificate)
+        /// <param name="isAuthenticated"></param>
+        public X509CertificateIdentity(X509Certificate2 certificate, bool isAuthenticated)
         {
             this.Certificate = certificate;
             this.Name = this.Certificate.Subject;
             this.AuthenticationType = "X509Certificate";
+            this.IsAuthenticated = isAuthenticated;
         }
 
         /// <summary>
@@ -41,22 +37,11 @@ namespace Microsoft.Azure.Amqp.X509
         /// <summary>
         ///  IsAuthenticated accessor
         /// </summary>
-        public bool IsAuthenticated => false;
+        public bool IsAuthenticated { get; }
 
         /// <summary>
         ///  Actual X509 Certificate
         /// </summary>
         public X509Certificate2 Certificate { get; }
-
-        /// <summary>
-        ///  Check is the certificate has expired or is too new
-        /// </summary>
-        /// <returns></returns>
-        public bool IsExpiredOrNotValidYet()
-        {
-            var currentTime = DateTime.Now;
-            return (this.Certificate.NotAfter + MaxClockSkew < currentTime ||
-                    this.Certificate.NotBefore - MaxClockSkew > currentTime);
-        }
     }
 }

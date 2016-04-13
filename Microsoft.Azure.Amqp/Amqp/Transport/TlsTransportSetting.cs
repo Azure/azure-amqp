@@ -63,7 +63,7 @@ namespace Microsoft.Azure.Amqp.Transport
             set;
         }
 
-        public bool SurfaceRemoteClientCertificate
+        public bool AllowSelfSignedCertificates
         {
             get;
             set;

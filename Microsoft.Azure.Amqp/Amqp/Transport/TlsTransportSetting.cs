@@ -29,6 +29,7 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             this.innerSettings = innerSettings;
             this.IsInitiator = isInitiator;
+            this.CheckCertificateRevocation = true;
         }
 
         public bool IsInitiator
@@ -63,7 +64,7 @@ namespace Microsoft.Azure.Amqp.Transport
             set;
         }
 
-        public bool AllowSelfSignedCertificates
+        public bool CheckCertificateRevocation
         {
             get;
             set;

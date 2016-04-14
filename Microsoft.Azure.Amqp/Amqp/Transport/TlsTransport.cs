@@ -118,14 +118,14 @@ namespace Microsoft.Azure.Amqp.Transport
                 result = this.tlsSettings.Certificate != null
                     ? this.sslStream.BeginAuthenticateAsClient(
                         this.tlsSettings.TargetHost, GetX509CertificateCollection(this.tlsSettings.Certificate),
-                        DefaultSslProtocols, true, onOpenComplete, this)
+                        DefaultSslProtocols, this.tlsSettings.CheckCertificateRevocation, onOpenComplete, this)
                     : this.sslStream.BeginAuthenticateAsClient(this.tlsSettings.TargetHost, onOpenComplete, this);
             }
             else
             {
                 result = this.tlsSettings.CertificateValidationCallback != null
                     ? this.sslStream.BeginAuthenticateAsServer(
-                        this.tlsSettings.Certificate, true, DefaultSslProtocols, true, onOpenComplete, this)
+                        this.tlsSettings.Certificate, true, DefaultSslProtocols, this.tlsSettings.CheckCertificateRevocation, onOpenComplete, this)
                     : this.sslStream.BeginAuthenticateAsServer(this.tlsSettings.Certificate, onOpenComplete, this);
             }
 
@@ -203,15 +203,7 @@ namespace Microsoft.Azure.Amqp.Transport
                         // Cannot cast from X509Certificate to X509Certificate2
                         // using workaround mentioned here: https://github.com/dotnet/corefx/issues/4510
                         var cert = new X509Certificate2(this.sslStream.RemoteCertificate.Export(X509ContentType.Cert));
-
-                        if (this.sslStream.IsRemoteCertificateValid)
-                        {
-                            this.Principal = new X509Principal(new X509CertificateIdentity(cert, true));
-                        }
-                        else if (this.tlsSettings.AllowSelfSignedCertificates)
-                        {
-                            this.Principal = new X509Principal(new X509CertificateIdentity(cert, false));
-                        }
+                        this.Principal = new X509Principal(new X509CertificateIdentity(cert, this.sslStream.IsRemoteCertificateValid));
                     }
                 }
             }

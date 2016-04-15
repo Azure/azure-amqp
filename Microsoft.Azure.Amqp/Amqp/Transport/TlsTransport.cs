@@ -7,7 +7,7 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Net;
     using System.Security.Authentication;
     using System.Security.Cryptography.X509Certificates;
-    using System.Security.Principal;
+    using Microsoft.Azure.Amqp.X509;
 
     sealed class TlsTransport : TransportBase, IDisposable
     {
@@ -118,14 +118,14 @@ namespace Microsoft.Azure.Amqp.Transport
                 result = this.tlsSettings.Certificate != null
                     ? this.sslStream.BeginAuthenticateAsClient(
                         this.tlsSettings.TargetHost, GetX509CertificateCollection(this.tlsSettings.Certificate),
-                        DefaultSslProtocols, true, onOpenComplete, this)
+                        DefaultSslProtocols, this.tlsSettings.CheckCertificateRevocation, onOpenComplete, this)
                     : this.sslStream.BeginAuthenticateAsClient(this.tlsSettings.TargetHost, onOpenComplete, this);
             }
             else
             {
                 result = this.tlsSettings.CertificateValidationCallback != null
                     ? this.sslStream.BeginAuthenticateAsServer(
-                        this.tlsSettings.Certificate, true, DefaultSslProtocols, true, onOpenComplete, this)
+                        this.tlsSettings.Certificate, true, DefaultSslProtocols, this.tlsSettings.CheckCertificateRevocation, onOpenComplete, this)
                     : this.sslStream.BeginAuthenticateAsServer(this.tlsSettings.Certificate, onOpenComplete, this);
             }
 
@@ -198,10 +198,12 @@ namespace Microsoft.Azure.Amqp.Transport
                 else
                 {
                     this.sslStream.EndAuthenticateAsServer(result);
-                    if (this.sslStream.RequireMutualAuthentication && this.sslStream.IsRemoteCertificateValid && this.sslStream.RemoteCertificate != null)
+                    if (this.sslStream.RequireMutualAuthentication && this.sslStream.RemoteCertificate != null)
                     {
-                        // if the ClientCertAuth succeeds - we set the pricipal on the transport indicating AuthorizationSuccess
-                        this.Principal = new GenericPrincipal(new GenericIdentity(this.sslStream.RemoteCertificate.Subject), null);
+                        // Cannot cast from X509Certificate to X509Certificate2
+                        // using workaround mentioned here: https://github.com/dotnet/corefx/issues/4510
+                        var cert = new X509Certificate2(this.sslStream.RemoteCertificate.Export(X509ContentType.Cert));
+                        this.Principal = new X509Principal(new X509CertificateIdentity(cert, this.sslStream.IsRemoteCertificateValid));
                     }
                 }
             }

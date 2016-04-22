@@ -391,6 +391,11 @@ namespace TestAmqpBroker
                 return new ArraySegment<byte>[] { new ArraySegment<byte>(buffer) };
             }
 
+            public override long GetBodySize()
+            {
+                throw new NotImplementedException();
+            }
+
             protected override void OnCompletePayload(int payloadSize)
             {
                 this.stream.Position += payloadSize;

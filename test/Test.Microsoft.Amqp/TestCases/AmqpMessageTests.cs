@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Text;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Encoding;
     using global::Microsoft.Azure.Amqp.Framing;
@@ -72,6 +73,30 @@
             AddSection(message, SectionFlag.Header | SectionFlag.DeliveryAnnotations);
             message.MessageAnnotations.Map["delivery-count"] = 5;
             ValidateMessage(message, message2);
+        }
+
+        [TestMethod()]
+        public void AmqpMessageBodySizeTest()
+        {
+            // Empty message
+            AmqpMessage msg = AmqpMessage.Create();
+            Assert.AreEqual(0L, msg.GetBodySize());
+
+            // Data message
+            Data data = new Data () { Value = new ArraySegment<byte>(Encoding.UTF8.GetBytes("test body")) };
+            msg = AmqpMessage.Create(data);
+            Assert.AreEqual(9L, msg.GetBodySize());
+
+            // Data list message
+            msg = AmqpMessage.Create(new Data[] { data });
+            Assert.AreEqual(9L, msg.GetBodySize());
+
+            // Stream message
+            msg = AmqpMessage.Create(new MemoryStream(Encoding.UTF8.GetBytes("test body")), true);
+            Assert.AreEqual(9L, msg.GetBodySize());
+
+            msg = AmqpMessage.Create(new MemoryStream(Encoding.UTF8.GetBytes("test body")), false);
+            Assert.AreEqual(9L, msg.GetBodySize());
         }
 
         static ArraySegment<byte>[] ReadMessagePayLoad(AmqpMessage message, int payloadSize)

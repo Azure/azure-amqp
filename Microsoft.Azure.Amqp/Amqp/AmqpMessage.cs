@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Xml;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
@@ -174,6 +175,8 @@ namespace Microsoft.Azure.Amqp
                 return this.sectionFlags & SectionFlag.Body;
             }
         }
+
+        public abstract long GetBodySize();
 
         internal long BodySectionOffset
         {
@@ -431,7 +434,7 @@ namespace Microsoft.Azure.Amqp
                 return new BufferListStream(payload);
             }
 
-            protected abstract int GetBodySize();
+            protected abstract int GetBodySectionSize();
 
             protected abstract void EncodeBody(ByteBuffer buffer);
 
@@ -448,7 +451,7 @@ namespace Microsoft.Azure.Amqp
                     this.GetSectionSize(this.messageAnnotations) +
                     this.GetSectionSize(this.properties) +
                     this.GetSectionSize(this.applicationProperties) +
-                    this.GetBodySize() +
+                    this.GetBodySectionSize() +
                     this.GetSectionSize(this.footer);
 
                 List<ArraySegment<byte>> segmentList = new List<ArraySegment<byte>>(4);
@@ -495,7 +498,12 @@ namespace Microsoft.Azure.Amqp
 
         sealed class AmqpEmptyMessage : AmqpBufferedMessage
         {
-            protected override int GetBodySize()
+            public override long GetBodySize()
+            {
+                return 0L;
+            }
+
+            protected override int GetBodySectionSize()
             {
                 return 0;
             }
@@ -520,7 +528,12 @@ namespace Microsoft.Azure.Amqp
                 get { return this.value; }
             }
 
-            protected override int GetBodySize()
+            public override long GetBodySize()
+            {
+                return (long)this.ValueBody.GetValueEncodeSize();
+            }
+
+            protected override int GetBodySectionSize()
             {
                 return this.GetSectionSize(this.value);
             }
@@ -546,7 +559,21 @@ namespace Microsoft.Azure.Amqp
                 get { return this.dataList; }
             }
 
-            protected override int GetBodySize()
+            public override long GetBodySize()
+            {
+                long size = 0L;
+
+                foreach (Data data in this.DataBody)
+                {
+                    if (data.Value != null)
+                    {
+                        size += ((ArraySegment<byte>) data.Value).Count;
+                    }
+                }
+                return size;
+            }
+
+            protected override int GetBodySectionSize()
             {
                 return 0;
             }
@@ -581,7 +608,17 @@ namespace Microsoft.Azure.Amqp
                 get { return this.sequence; }
             }
 
-            protected override int GetBodySize()
+            public override long GetBodySize()
+            {
+                long size = 0L;
+                foreach (AmqpSequence seq in this.SequenceBody)
+                {
+                    size += seq.Length;
+                }
+                return size;
+            }
+
+            protected override int GetBodySectionSize()
             {
                 int bodySize = 0;
                 foreach (AmqpSequence seq in this.sequence)
@@ -632,6 +669,12 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
+            public override long GetBodySize()
+            {
+                this.EnsureInitialized();
+                return this.BodyStream.Length;
+            }
+
             protected override void OnInitialize()
             {
                 this.bodyData = BufferListStream.ReadStream(this.bodyStream, 1024, out this.bodyLength);
@@ -641,7 +684,7 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            protected override int GetBodySize()
+            protected override int GetBodySectionSize()
             {
                 return 0;
             }
@@ -675,6 +718,11 @@ namespace Microsoft.Azure.Amqp
             {
                 this.messageStream = messageStream;
                 this.ownStream = ownStream;
+            }
+
+            public override long GetBodySize()
+            {
+                return this.messageStream.Length;
             }
 
             protected override void OnInitialize()
@@ -721,7 +769,7 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            protected override int GetBodySize()
+            protected override int GetBodySectionSize()
             {
                 return 0;
             }
@@ -886,6 +934,16 @@ namespace Microsoft.Azure.Amqp
             public override ArraySegment<byte>[] GetPayload(int payloadSize, out bool more)
             {
                 throw new InvalidOperationException();
+            }
+
+            public override long GetBodySize()
+            {
+                long size = 0L;
+                size += this.DataBody?.Aggregate(0L, (acc, data) => acc + ((ArraySegment<byte>)data.Value).Count) ?? 0L;
+                size += this.SequenceBody?.Aggregate(0L, (acc, seq) => acc + seq.Length) ?? 0L;
+                size += this.ValueBody?.Length ?? 0L;
+                size += this.BodyStream?.Length ?? 0L;
+                return size;
             }
 
             protected override void OnCompletePayload(int payloadSize)
@@ -1424,6 +1482,16 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
+            public override long GetBodySize()
+            {
+                long size = 0L;
+                size += this.DataBody?.Aggregate(0L, (acc, data) => acc + ((ArraySegment<byte>) data.Value).Count) ?? 0L;
+                size += this.SequenceBody?.Aggregate(0L, (acc, seq) => acc + seq.Length) ?? 0L;
+                size += this.ValueBody?.Length ?? 0L;
+                size += this.BodyStream?.Length ?? 0L;
+                return size;
+            }
+
             internal override Stream GetNonBodySectionsStream()
             {
                 this.Deserialize(SectionFlag.All);
@@ -1595,6 +1663,11 @@ namespace Microsoft.Azure.Amqp
             public override Stream ToStream()
             {
                 return this.bufferStream;
+            }
+
+            public override long GetBodySize()
+            {
+                return 0L;
             }
 
             internal override Stream GetNonBodySectionsStream()

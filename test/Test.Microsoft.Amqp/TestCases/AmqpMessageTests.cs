@@ -91,6 +91,16 @@
             return buffers.ToArray();
         }
 
+        [TestMethod()]
+        public void AmqpMessageStreamTest()
+        {
+            AmqpMessage message = AmqpMessage.Create(new MemoryStream(new byte[12]), true);
+            Assert.AreEqual(12, message.BodyStream.Length);
+
+            AmqpMessage message2 = AmqpMessage.Create(new MemoryStream(new byte[12]), false);
+            Assert.AreEqual(12, message2.BodyStream.Length);
+        }
+
         static void AddSection(AmqpMessage message, SectionFlag sections)
         {
             if ((sections & SectionFlag.Header) != 0)

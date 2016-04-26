@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Xml;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
@@ -544,6 +545,11 @@ namespace Microsoft.Azure.Amqp
             public override IEnumerable<Data> DataBody
             {
                 get { return this.dataList; }
+            }
+
+            public override Stream BodyStream
+            {
+                get { return new BufferListStream(this.dataList.Select(d => (ArraySegment<byte>) d.Value).ToArray()); }
             }
 
             protected override int GetBodySize()

@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Amqp.Transport
         static readonly AsyncCallback onOpenComplete = OnOpenComplete;
         static readonly AsyncCallback onWriteComplete = OnWriteComplete;
         static readonly AsyncCallback onReadComplete = OnReadComplete;
-        const SslProtocols DefaultSslProtocols = SslProtocols.Tls | SslProtocols.Ssl3; // SslProtocols.Default from .NET 4.5
+        const SslProtocols DefaultSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls11 | SslProtocols.Tls | SslProtocols.Ssl3; 
         readonly TransportBase innerTransport;
         readonly CustomSslStream sslStream;
         TlsTransportSettings tlsSettings;

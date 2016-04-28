@@ -35,6 +35,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -206,7 +207,6 @@
     <Compile Include="InternalBufferManager.cs" />
     <Compile Include="Interop\UnsafeNativeMethods.cs" />
     <Compile Include="IteratorAsyncResult.cs" />
-    <Compile Include="KeyedByTypeCollection.cs" />
     <Compile Include="PartialTrustHelpers.cs" />
     <Compile Include="PlatformSupport.cs" />
     <Compile Include="ResourcesGeneric.Designer.cs">

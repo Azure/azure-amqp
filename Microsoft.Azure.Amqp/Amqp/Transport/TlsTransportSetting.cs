@@ -29,6 +29,9 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             this.innerSettings = innerSettings;
             this.IsInitiator = isInitiator;
+#if !WINDOWS_UWP
+            this.CheckCertificateRevocation = true;
+#endif            
         }
 
         public bool IsInitiator
@@ -62,8 +65,13 @@ namespace Microsoft.Azure.Amqp.Transport
             get;
             set;
         }
-#endif
 
+        public bool CheckCertificateRevocation
+        {
+            get;
+            set;
+        }
+#endif
         public override TransportInitiator CreateInitiator()
         {
             if (this.TargetHost == null)

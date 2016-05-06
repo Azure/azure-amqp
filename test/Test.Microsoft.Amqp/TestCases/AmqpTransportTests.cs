@@ -56,7 +56,7 @@
             int closed = 0;
             TransportBase transport = null;
 
-            Action<TransportAsyncCallbackArgs> onTransport = (a) =>
+            Action<TransportListener, TransportAsyncCallbackArgs> onTransport = (l, a) =>
             {
                 if (a.Exception != null)
                 {

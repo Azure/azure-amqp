@@ -10,14 +10,14 @@ namespace Microsoft.Azure.Amqp.Transport
     public abstract class TransportListener : AmqpObject
     {
         WaitCallback notifyAccept;
-        Action<TransportAsyncCallbackArgs> acceptCallback;
+        Action<TransportListener, TransportAsyncCallbackArgs> acceptCallback;
 
         protected TransportListener(string type)
             : base(type)
         {
         }
 
-        public void Listen(Action<TransportAsyncCallbackArgs> callback)
+        public void Listen(Action<TransportListener, TransportAsyncCallbackArgs> callback)
         {
             this.notifyAccept = this.NotifyAccept;
             this.acceptCallback = callback;
@@ -67,7 +67,7 @@ namespace Microsoft.Azure.Amqp.Transport
         void NotifyAccept(object state)
         {
             TransportAsyncCallbackArgs args = (TransportAsyncCallbackArgs)state;
-            this.acceptCallback(args);
+            this.acceptCallback(this, args);
         }
     }
 }

@@ -13,6 +13,7 @@ namespace Microsoft.Azure.Amqp
             this.ReceiveBufferSize = AmqpConstants.TransportBufferSize;
             this.MaxFrameSize = AmqpConstants.DefaultMaxFrameSize;
             this.ChannelMax = AmqpConstants.DefaultMaxConcurrentChannels - 1;
+            this.WriteBufferFullLimit = int.MaxValue;
         }
 
         public string RemoteContainerId
@@ -45,6 +46,19 @@ namespace Microsoft.Azure.Amqp
             set;
         }
 
+        public int WriteBufferFullLimit
+        {
+            get;
+            set;
+        }
+
+        public int WriteBufferEmptyLimit
+        {
+            get;
+            set;
+        }
+
+        /// <summary> doesn't clone - RemoteSettings: HostName/ContainerId </summary>
         public AmqpConnectionSettings Clone()
         {
             AmqpConnectionSettings newSettings = new AmqpConnectionSettings();
@@ -63,6 +77,8 @@ namespace Microsoft.Azure.Amqp
             newSettings.SendBufferSize = this.SendBufferSize;
             newSettings.ReceiveBufferSize = this.ReceiveBufferSize;
             newSettings.IgnoreMissingSessions = this.IgnoreMissingSessions;
+            newSettings.WriteBufferFullLimit = this.WriteBufferFullLimit;
+            newSettings.WriteBufferEmptyLimit = this.WriteBufferEmptyLimit;
 
             return newSettings;
         }

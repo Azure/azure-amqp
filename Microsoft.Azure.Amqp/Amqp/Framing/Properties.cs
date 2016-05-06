@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp.Framing
 {
     using System;
-    using System.Collections.Generic;
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
@@ -59,27 +58,6 @@ namespace Microsoft.Azure.Amqp.Framing
         protected override int FieldCount
         {
             get { return Fields; }
-        }
-
-        public IDictionary<string, object> ToDictionary()
-        {
-            IDictionary<string, object> properties = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-
-            properties.Add(this.MessageId != null, MessageIdName, this.MessageId);
-            properties.Add(this.UserId.Array != null, UserIdName, this.UserId);
-            properties.Add(this.To != null, ToName, this.To);
-            properties.Add(this.Subject != null, SubjectName, this.Subject);
-            properties.Add(this.ReplyTo != null, ReplyToName, this.ReplyTo);
-            properties.Add(this.CorrelationId != null, CorrelationIdName, this.CorrelationId);
-            properties.Add(this.ContentType.Value != null, ContentTypeName, this.ContentType);
-            properties.Add(this.ContentEncoding.Value != null, ContentEncodingName, this.ContentEncoding);
-            properties.Add(this.AbsoluteExpiryTime != null, AbsoluteExpiryTimeName, this.AbsoluteExpiryTime);
-            properties.Add(this.CreationTime != null, CreationTimeName, this.CreationTime);
-            properties.Add(this.GroupId != null, GroupIdName, this.GroupId);
-            properties.Add(this.GroupSequence != null, GroupSequenceName, this.GroupSequence);
-            properties.Add(this.ReplyToGroupId != null, ReplyToGroupIdName, this.ReplyToGroupId);
-
-            return properties;
         }
 
         public override string ToString()
@@ -209,16 +187,5 @@ namespace Microsoft.Azure.Amqp.Framing
             return valueSize;
         }
 
-    }
-
-    static class IDictionaryExtension
-    {
-        public static void Add(this IDictionary<string, object> dictionary, bool condition, string key, object value)
-        {
-            if (condition)
-            {
-                dictionary.Add(key, value);
-            }
-        }
     }
 }

@@ -19,9 +19,16 @@ namespace Microsoft.Azure.Amqp
         public BufferListStream(IList<ArraySegment<byte>> bufferList)
         {
             this.bufferList = bufferList;
-            for (int i = 0; i < this.bufferList.Count; ++i)
+            for (int i = this.bufferList.Count - 1; i >= 0; i--)
             {
-                this.length += this.bufferList[i].Count;
+                var segment = this.bufferList[i];
+                if (segment.Count == 0 && this.length > 0)
+                {
+                    // empty segment in the middle not allowed
+                    throw new ArgumentException("segment" + i);
+                }
+
+                this.length += segment.Count;
             }
         }
 
@@ -78,7 +85,7 @@ namespace Microsoft.Azure.Amqp
         public override int ReadByte()
         {
             this.ThrowIfDisposed();
-            if (this.readArray == this.bufferList.Count)
+            if (this.position >= this.length)
             {
                 return -1;
             }

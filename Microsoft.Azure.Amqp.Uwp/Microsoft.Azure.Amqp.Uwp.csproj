@@ -129,6 +129,7 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpDebug.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpErrorCode.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpException.cs" />
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpExtensions.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpLink.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpLinkSettings.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpMessage.cs" />
@@ -179,7 +180,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\ULongEncoding.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\UShortEncoding.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\UuidEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Extensions.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\FaultTolerantAmqpObject.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\FrameDecoder.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Accepted.cs" />
@@ -267,7 +267,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Extensions\ExceptionExtensions.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Fx.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\FxCop.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\IAmqpTrace.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\InternalBufferManager.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Interop\UnsafeNativeMethods.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\IteratorAsyncResult.cs" />

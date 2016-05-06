@@ -124,7 +124,7 @@ namespace TestAmqpBroker
             }
         }
 
-        void OnAcceptTransport(TransportAsyncCallbackArgs args)
+        void OnAcceptTransport(TransportListener listener, TransportAsyncCallbackArgs args)
         {
             AmqpConnectionSettings connectionSettings = new AmqpConnectionSettings()
             {

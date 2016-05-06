@@ -18,8 +18,9 @@ namespace Microsoft.Azure.Amqp
     public static class Extensions
     {
 #if DEBUG
-        public static Action<string> TraceCallback = null;
+        public static Action<string> TraceCallback;
         static bool AmqpDebug = string.Equals(Environment.GetEnvironmentVariable("AMQP_DEBUG"), "1", StringComparison.Ordinal);
+        public static Action<bool, AmqpConnection, ushort, Performative, int> PerformativeTraceCallback;
 #endif
 
         public static string GetString(this ArraySegment<byte> binary)
@@ -34,6 +35,21 @@ namespace Microsoft.Azure.Amqp
         }
 
 #if DEBUG
+        public static void Trace(this object target, bool send, AmqpConnection connection, ushort channel, Performative performative, int payload)
+        {
+            if (AmqpDebug)
+            {
+                if (PerformativeTraceCallback != null)
+                {
+                    PerformativeTraceCallback(send, connection, channel, performative, payload);
+                }
+                else
+                {
+                    Trace(target, send);
+                }
+            }
+        }
+
         public static void Trace(this object target, bool send)
         {
             if (AmqpDebug)
@@ -102,7 +118,7 @@ namespace Microsoft.Azure.Amqp
         // attach
         public static bool IsReceiver(this Attach attach)
         {
-            return attach.Role.Value;
+            return attach.Role.HasValue && attach.Role.Value;
         }
 
         public static bool IncompleteUnsettled(this Attach attach)
@@ -112,7 +128,7 @@ namespace Microsoft.Azure.Amqp
 
         public static ulong MaxMessageSize(this Attach attach)
         {
-            return attach.MaxMessageSize == null ? ulong.MaxValue : attach.MaxMessageSize.Value;
+            return attach.MaxMessageSize == null || attach.MaxMessageSize.Value == 0 ? ulong.MaxValue : attach.MaxMessageSize.Value;
         }
 
         public static Terminus Terminus(this Attach attach)

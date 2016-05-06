@@ -121,7 +121,8 @@ namespace Microsoft.Azure.Amqp
                 link.LocalHandle = this.linksByLocalHandle.Add(link);
             }
 
-            AmqpTrace.Provider.AmqpAttachLink(this.connection, this, link, link.LocalHandle.Value, link.RemoteHandle ?? 0u, link.Name, link.IsReceiver ? "receiver" : "sender");
+            AmqpTrace.Provider.AmqpAttachLink(this.connection, this, link, link.LocalHandle.Value,
+                link.RemoteHandle ?? 0u, link.Name, link.IsReceiver ? "receiver" : "sender", link.Settings.Source, link.Settings.Target);
         }
 
         public virtual void ProcessFrame(Frame frame)
@@ -223,6 +224,15 @@ namespace Microsoft.Azure.Amqp
         {
             this.outgoingChannel.Flush();
             this.incomingChannel.Flush();
+        }
+
+        internal void OnIoEvent(IoEvent ioEvent)
+        {
+            IEnumerator<AmqpLink> it = this.linksByLocalHandle.GetSafeEnumerator();
+            while (it.MoveNext())
+            {
+                it.Current.OnIoEvent(ioEvent);
+            }
         }
 
         protected override bool OpenInternal()
@@ -367,6 +377,7 @@ namespace Microsoft.Azure.Amqp
             this.incomingChannel.OnBegin(begin);
             if (stateTransition.To == AmqpObjectState.OpenReceived)
             {
+                this.outgoingChannel.OnBegin(begin);
                 this.UpdateHandleTable(begin);
                 this.Open();
             }
@@ -955,7 +966,7 @@ namespace Microsoft.Azure.Amqp
                     this.nextOutgoingId.Increment();
                     if (this.outgoingWindow < uint.MaxValue)
                     {
-                        --this.outgoingWindow;
+                        this.outgoingWindow--;
                     }
 
                     if (delivery != null)
@@ -995,6 +1006,8 @@ namespace Microsoft.Azure.Amqp
                     {
                         this.outgoingWindow = begin.IncomingWindow.Value - alreadySent;
                     }
+
+                    this.Session.settings.OutgoingWindow = this.outgoingWindow;
                 }
             }
 
@@ -1080,7 +1093,7 @@ namespace Microsoft.Azure.Amqp
                         this.nextIncomingId.Increment();
                         if (this.incomingWindow < uint.MaxValue)
                         {
-                            --this.incomingWindow;
+                            this.incomingWindow--;
                         }
                     }
                 }

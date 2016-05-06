@@ -79,7 +79,6 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-
         public void RegisterMessageListener(Action<AmqpMessage> messageListener)
         {
             if (Interlocked.Exchange(ref this.messageListener, messageListener) != null)
@@ -321,7 +320,7 @@ namespace Microsoft.Azure.Amqp
         protected override void OnProcessTransfer(Delivery delivery, Transfer transfer, Frame frame)
         {
             Fx.Assert(delivery == null || delivery == this.currentMessage, "The delivery must be null or must be the same as the current message.");
-            if (this.Settings.MaxMessageSize.HasValue)
+            if (this.Settings.MaxMessageSize.HasValue && this.Settings.MaxMessageSize.Value > 0)
             {
                 ulong size = (ulong)(this.currentMessage.BytesTransfered + frame.Payload.Count);
                 if (size > this.Settings.MaxMessageSize.Value)
@@ -680,19 +679,37 @@ namespace Microsoft.Azure.Amqp
         /// The different this class from the normal Queue is that
         /// if we specify a size then we will perform Amqp Flow based on 
         /// the size, where:
-        /// - When en-queuing we will keep sending credit flow as long as size is not over the limit.
-        /// - When de-queuing we will issue flow as soon as the size is below the threshold.
+        /// - When en-queuing (cache message from service) we will keep sending credit flow as long as size is not over the cache limit.
+        /// - When de-queuing (return message to user) we will issue flow as soon as the size is below the threshold (70%).
         /// - When issuing credit we always issue in increment of boundedTotalLinkCredit
         /// - boundedTotalLinkCredit is based on [total cache size] / [max message size]
+        /// - [total cache size] has a 90% cap to try to prevent overflow - but does not enforce it.
+        /// - we keep updating [max message size] as we receive message in flow.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         sealed class SizeBasedFlowQueue : Queue<AmqpMessage>
         {
+            // Basically we stop issuing credit at 90% of queue size, and start again at 50%
+            const double IssueCreditThresholdRatio = 0.5;
+            const double StoppCreditThresholdRatio = 0.9;
             const long DefaultMessageSizeForCacheSizeCalulation = 256 * 1024;
+            const uint maxCreditToIssuePerFlow = 500;
             readonly ReceivingAmqpLink receivingLink;
+
+            // the amount of credit that we have, in terms of size. This is used to calculate boundedTotalLinkCredit
+            // Note: think of this as the "free space" that we can still fit message with.
             long cacheSizeCredit;
-            long maxMessageSizeInBytes;
+
+            // average message size that gets updated as message flows in. This is used to calculate boundedTotalLinkCredit
+            long inQueueAverageMessageSizeInBytes;
+
+            // the amount of credit in size at which we will start issuing credit again if amount of data is less than this threshold
             long thresholdCacheSizeInBytes;
+
+            // the amount of credit in size at which we will stop issuing credit to avoid an overflow
+            long overflowBufferCacheSizeInBytes;
+
+            // the actual credit that we issue over the flow. This can be bounded by maxCreditToIssuePerFlow
             uint boundedTotalLinkCredit;
 
             public SizeBasedFlowQueue(ReceivingAmqpLink receivingLink)
@@ -701,6 +718,14 @@ namespace Microsoft.Azure.Amqp
                 Fx.AssertAndThrow(receivingLink.Settings != null, "Setting should not be null");
                 this.receivingLink = receivingLink;
                 this.SetLinkCreditUsingTotalCacheSize(true);
+            }
+
+            internal long AverageMessageSizeInBytes
+            {
+                get
+                {
+                    return this.inQueueAverageMessageSizeInBytes > 0 ? this.inQueueAverageMessageSizeInBytes : DefaultMessageSizeForCacheSizeCalulation;
+                }
             }
 
             internal bool IsPrefetchingBySize
@@ -718,21 +743,15 @@ namespace Microsoft.Azure.Amqp
                     return this.cacheSizeCredit;
                 }
             }
-            
+
             public void SetLinkCreditUsingTotalCacheSize(bool setTotalLinkCredit = false)
             {
                 if (this.receivingLink.Settings != null && this.IsPrefetchingBySize)
                 {
-                    this.maxMessageSizeInBytes = DefaultMessageSizeForCacheSizeCalulation;
                     this.cacheSizeCredit = this.receivingLink.Settings.TotalCacheSizeInBytes ?? 0;
-                    this.thresholdCacheSizeInBytes = this.receivingLink.Settings.TotalCacheSizeInBytes.Value / 2;
-                    if (this.receivingLink.Settings.MaxMessageSize.HasValue &&
-                        this.receivingLink.Settings.MaxMessageSize <= Convert.ToUInt64(long.MaxValue))
-                    {
-                        this.maxMessageSizeInBytes = Convert.ToInt64(this.receivingLink.Settings.MaxMessageSize, CultureInfo.InvariantCulture);
-                    }
-
-                    this.boundedTotalLinkCredit = Convert.ToUInt32(this.receivingLink.Settings.TotalCacheSizeInBytes / this.maxMessageSizeInBytes, CultureInfo.InvariantCulture);
+                    this.thresholdCacheSizeInBytes = (long)(this.cacheSizeCredit * IssueCreditThresholdRatio);
+                    this.overflowBufferCacheSizeInBytes = (long)(this.cacheSizeCredit * (1 - StoppCreditThresholdRatio));
+                    this.boundedTotalLinkCredit = Convert.ToUInt32(this.cacheSizeCredit / this.AverageMessageSizeInBytes);
 
                     this.receivingLink.LinkCredit = this.boundedTotalLinkCredit;
                     if (setTotalLinkCredit)
@@ -751,12 +770,10 @@ namespace Microsoft.Azure.Amqp
                     base.Enqueue(amqpMessage);
                     if (this.IsPrefetchingBySize)
                     {
-                        // Note that currently we don't actively stop prefetch even if cache size credit is reached because
-                        // the original total credit was using the worst case scenario as calculation anyway so we will just
-                        // let credit run dry on its own. cacheSizeCredit can run into negative.
                         this.cacheSizeCredit -= amqpMessage.SerializedMessageSize;
-                        if (this.cacheSizeCredit > 0)
+                        if (this.cacheSizeCredit > 0 && this.cacheSizeCredit > this.overflowBufferCacheSizeInBytes)
                         {
+                            this.UpdateCreditToIssue();
                             this.receivingLink.IssueCredit(this.boundedTotalLinkCredit, false, AmqpConstants.NullBinary);
                         }
                     }
@@ -773,11 +790,36 @@ namespace Microsoft.Azure.Amqp
                     this.cacheSizeCredit += amqpMessage.SerializedMessageSize;
                     if (this.cacheSizeCredit >= this.thresholdCacheSizeInBytes)
                     {
+                        this.UpdateCreditToIssue();
                         this.receivingLink.IssueCredit(this.boundedTotalLinkCredit, false, AmqpConstants.NullBinary);
                     }
                 }
 
                 return amqpMessage;
+            }
+
+            /// <summary>
+            /// This method updates the credit that we will send to service to fetch more
+            /// data based on the current average message size.
+            /// </summary>
+            void UpdateCreditToIssue()
+            {
+                long totalSize = this.receivingLink.Settings.TotalCacheSizeInBytes ?? 0;
+                if (this.Count > 0)
+                {
+                    this.inQueueAverageMessageSizeInBytes = (totalSize - this.cacheSizeCredit) / this.Count;
+                    if (this.inQueueAverageMessageSizeInBytes <= 0)
+                    {
+                        this.inQueueAverageMessageSizeInBytes = DefaultMessageSizeForCacheSizeCalulation;
+                    }
+                }
+
+                // if cacheSizeCredit is negative that means we are already overflowing.
+                this.boundedTotalLinkCredit = this.cacheSizeCredit > 0 ? Convert.ToUInt32(this.cacheSizeCredit / this.AverageMessageSizeInBytes) : 0;
+                if (this.boundedTotalLinkCredit > maxCreditToIssuePerFlow)
+                {
+                    this.boundedTotalLinkCredit = maxCreditToIssuePerFlow;
+                }
             }
         }
     }

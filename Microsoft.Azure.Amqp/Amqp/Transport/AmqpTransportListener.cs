@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
         protected override void OnListen()
         {
-            Action<TransportAsyncCallbackArgs> onTransportAccept = this.OnAcceptTransport;
+            Action<TransportListener, TransportAsyncCallbackArgs> onTransportAccept = this.OnAcceptTransport;
             EventHandler onListenerClose = this.OnListenerClosed;
             foreach (TransportListener listener in this.innerListeners)
             {
@@ -85,7 +85,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
-        void OnAcceptTransport(TransportAsyncCallbackArgs args)
+        void OnAcceptTransport(TransportListener innerListener, TransportAsyncCallbackArgs args)
         {
             AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, "OnAcceptTransport");
             TransportHandler.SpawnHandler(this, args);

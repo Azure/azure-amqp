@@ -41,6 +41,11 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
+        public override void SetMonitor(ITransportMonitor monitor)
+        {
+            throw new NotImplementedException("Not supported in UWP");
+        }
+
         public sealed override bool WriteAsync(TransportAsyncCallbackArgs args)
         {
             throw new NotImplementedException("Not supported in UWP");

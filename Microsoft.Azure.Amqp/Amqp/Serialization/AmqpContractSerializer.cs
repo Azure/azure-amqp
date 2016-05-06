@@ -16,32 +16,52 @@ namespace Microsoft.Azure.Amqp.Serialization
     {
         static readonly Dictionary<Type, SerializableType> builtInTypes = new Dictionary<Type, SerializableType>()
         {
-            { typeof(bool),     SerializableType.CreateSingleValueType(typeof(bool)) },
-            { typeof(byte),     SerializableType.CreateSingleValueType(typeof(byte)) },
-            { typeof(ushort),   SerializableType.CreateSingleValueType(typeof(ushort)) },
-            { typeof(uint),     SerializableType.CreateSingleValueType(typeof(uint)) },
-            { typeof(ulong),    SerializableType.CreateSingleValueType(typeof(ulong)) },
-            { typeof(sbyte),    SerializableType.CreateSingleValueType(typeof(sbyte)) },
-            { typeof(short),    SerializableType.CreateSingleValueType(typeof(short)) },
-            { typeof(int),      SerializableType.CreateSingleValueType(typeof(int)) },
-            { typeof(long),     SerializableType.CreateSingleValueType(typeof(long)) },
-            { typeof(float),    SerializableType.CreateSingleValueType(typeof(float)) },
-            { typeof(double),   SerializableType.CreateSingleValueType(typeof(double)) },
-            { typeof(decimal),  SerializableType.CreateSingleValueType(typeof(decimal)) },
-            { typeof(char),     SerializableType.CreateSingleValueType(typeof(char)) },
-            { typeof(DateTime), SerializableType.CreateSingleValueType(typeof(DateTime)) },
-            { typeof(Guid),     SerializableType.CreateSingleValueType(typeof(Guid)) },
-            { typeof(ArraySegment<byte>), SerializableType.CreateSingleValueType(typeof(ArraySegment<byte>)) },
-            { typeof(string),   SerializableType.CreateSingleValueType(typeof(string)) },
-            { typeof(AmqpSymbol), SerializableType.CreateSingleValueType(typeof(AmqpSymbol)) },
-            { typeof(TimeSpan),   SerializableType.CreateDescribedValueType<TimeSpan, long>(AmqpConstants.TimeSpanName, (ts) => ts.Ticks, (l) => TimeSpan.FromTicks(l)) },
-            { typeof(Uri),      SerializableType.CreateDescribedValueType<Uri, string>(AmqpConstants.UriName, (u) => u.AbsoluteUri, (s) => new Uri(s)) },
-            { typeof(DateTimeOffset),  SerializableType.CreateDescribedValueType<DateTimeOffset, long>(AmqpConstants.DateTimeOffsetName, (d) => d.UtcTicks, (l) => new DateTimeOffset(new DateTime(l, DateTimeKind.Utc))) },
-            { typeof(object),   SerializableType.CreateObjectType(typeof(object)) },
+            { typeof(bool),     SerializableType.CreatePrimitiveType(typeof(bool)) },
+            { typeof(byte),     SerializableType.CreatePrimitiveType(typeof(byte)) },
+            { typeof(ushort),   SerializableType.CreatePrimitiveType(typeof(ushort)) },
+            { typeof(uint),     SerializableType.CreatePrimitiveType(typeof(uint)) },
+            { typeof(ulong),    SerializableType.CreatePrimitiveType(typeof(ulong)) },
+            { typeof(sbyte),    SerializableType.CreatePrimitiveType(typeof(sbyte)) },
+            { typeof(short),    SerializableType.CreatePrimitiveType(typeof(short)) },
+            { typeof(int),      SerializableType.CreatePrimitiveType(typeof(int)) },
+            { typeof(long),     SerializableType.CreatePrimitiveType(typeof(long)) },
+            { typeof(float),    SerializableType.CreatePrimitiveType(typeof(float)) },
+            { typeof(double),   SerializableType.CreatePrimitiveType(typeof(double)) },
+            { typeof(decimal),  SerializableType.CreatePrimitiveType(typeof(decimal)) },
+            { typeof(char),     SerializableType.CreatePrimitiveType(typeof(char)) },
+            { typeof(DateTime), SerializableType.CreatePrimitiveType(typeof(DateTime)) },
+            { typeof(Guid),     SerializableType.CreatePrimitiveType(typeof(Guid)) },
+            { typeof(ArraySegment<byte>), SerializableType.CreatePrimitiveType(typeof(ArraySegment<byte>)) },
+            { typeof(string),   SerializableType.CreatePrimitiveType(typeof(string)) },
+            { typeof(AmqpSymbol), SerializableType.CreatePrimitiveType(typeof(AmqpSymbol)) },
+            { typeof(object),   new SerializableType.Object(typeof(object)) },
         };
 
         static readonly AmqpContractSerializer Instance = new AmqpContractSerializer();
         readonly ConcurrentDictionary<Type, SerializableType> customTypeCache;
+
+        static AmqpContractSerializer()
+        {
+            // register extended .NET types
+            builtInTypes[typeof(TimeSpan)] = new SerializableType.Converted(
+                AmqpType.Described,
+                typeof(TimeSpan),
+                typeof(DescribedType),
+                o => new DescribedType(AmqpConstants.TimeSpanName, ((TimeSpan)o).Ticks),
+                o => TimeSpan.FromTicks((long)((DescribedType)o).Value));
+            builtInTypes[typeof(Uri)] = new SerializableType.Converted(
+                AmqpType.Described,
+                typeof(Uri),
+                typeof(DescribedType),
+                o => new DescribedType(AmqpConstants.UriName, ((Uri)o).AbsoluteUri),
+                o => new Uri((string)((DescribedType)o).Value));
+            builtInTypes[typeof(DateTimeOffset)] = new SerializableType.Converted(
+                AmqpType.Described,
+                typeof(DateTimeOffset),
+                typeof(DescribedType),
+                o => new DescribedType(AmqpConstants.DateTimeOffsetName, ((DateTimeOffset)o).UtcTicks),
+                o => new DateTimeOffset(new DateTime((long)((DescribedType)o).Value, DateTimeKind.Utc)));
+        }
 
         internal AmqpContractSerializer()
         {
@@ -195,15 +215,21 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
 
             AmqpContractAttribute contractAttribute = (AmqpContractAttribute)typeAttributes.First();
-            SerializableType baseType = null;
+            SerializableType.Composite baseType = null;
             if (type.GetTypeInfo().BaseType != typeof(object))
             {
-                baseType = this.CompileType(type.GetTypeInfo().BaseType, true);
-                if (baseType != null)
+                var baseSerializableType = this.CompileType(type.GetTypeInfo().BaseType, true);
+                if (baseSerializableType != null)
                 {
-                    if (baseType.Encoding != contractAttribute.Encoding)
+                    if (baseSerializableType.AmqpType != AmqpType.Composite)
                     {
-                        throw new SerializationException(AmqpResources.GetString(AmqpResources.AmqpEncodingTypeMismatch, type.Name, contractAttribute.Encoding, type.GetTypeInfo().BaseType.Name, baseType.Encoding));
+                        throw new SerializationException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, baseType.GetType().Name));
+                    }
+
+                    baseType = (SerializableType.Composite)baseSerializableType;
+                    if (baseType.EncodingType != contractAttribute.Encoding)
+                    {
+                        throw new SerializationException(AmqpResources.GetString(AmqpResources.AmqpEncodingTypeMismatch, type.Name, contractAttribute.Encoding, type.GetTypeInfo().BaseType.Name, baseType.EncodingType));
                     }
 
                     this.customTypeCache.TryAdd(type.GetTypeInfo().BaseType, baseType);
@@ -218,7 +244,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
 
             List<SerialiableMember> memberList = new List<SerialiableMember>();
-            if (contractAttribute.Encoding == EncodingType.List && baseType != null)
+            if (baseType != null)
             {
                 memberList.AddRange(baseType.Members);
             }
@@ -301,12 +327,12 @@ namespace Microsoft.Azure.Amqp.Serialization
 
             if (contractAttribute.Encoding == EncodingType.List)
             {
-                return SerializableType.CreateDescribedListType(this, type, baseType, descriptorName,
+                return new SerializableType.CompositeList(this, type, baseType, descriptorName,
                     descriptorCode, members, knownTypes, onDeserialized);
             }
             else if (contractAttribute.Encoding == EncodingType.Map)
             {
-                return SerializableType.CreateDescribedMapType(this, type, baseType, descriptorName,
+                return new SerializableType.CompositeMap(this, type, baseType, descriptorName,
                     descriptorCode, members, knownTypes, onDeserialized);
             }
             else
@@ -335,6 +361,13 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         SerializableType CompileInterfaceTypes(Type type)
         {
+            if (type.IsArray)
+            {
+                // validate item type to be AMQP types only
+                AmqpEncoding.GetEncoding(type.GetElementType());
+                return SerializableType.CreatePrimitiveType(type);
+            }
+
             bool isArray = type.IsArray;
             bool isMap = false;
             bool isList = false;
@@ -345,7 +378,7 @@ namespace Microsoft.Azure.Amqp.Serialization
 
             if (type.GetInterfaces().FirstOrDefault(i => i == typeof(IAmqpSerializable)) != null)
             {
-                return SerializableType.CreateAmqpSerializableType(this, type);
+                return new SerializableType.Serializable(this, type);
             }
 
             foreach (Type it in type.GetInterfaces())
@@ -376,14 +409,11 @@ namespace Microsoft.Azure.Amqp.Serialization
 
             if (isMap)
             {
-                return SerializableType.CreateMapType(this, type, keyAccessor, valueAccessor, addAccess);
-            }
-            else if (isArray)
-            {
+                return new SerializableType.Map(this, type, keyAccessor, valueAccessor, addAccess);
             }
             else if (isList)
             {
-                return SerializableType.CreateListType(this, type, itemType, addAccess);
+                return new SerializableType.List(this, type, itemType, addAccess);
             }
 
             return null;

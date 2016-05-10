@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Amqp.Serialization
     using System.Runtime.Serialization;
     using Microsoft.Azure.Amqp.Encoding;
 
-    sealed class AmqpContractSerializer
+    public sealed class AmqpContractSerializer
     {
         static readonly Dictionary<Type, SerializableType> builtInTypes = new Dictionary<Type, SerializableType>()
         {
@@ -63,7 +63,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 o => new DateTimeOffset(new DateTime((long)((DescribedType)o).Value, DateTimeKind.Utc)));
         }
 
-        internal AmqpContractSerializer()
+        public AmqpContractSerializer()
         {
             this.customTypeCache = new ConcurrentDictionary<Type, SerializableType>();
         }
@@ -159,7 +159,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             return (TAs)type.ReadObject(buffer);
         }
 
-        internal SerializableType GetType(Type type)
+        public SerializableType GetType(Type type)
         {
             return this.GetOrCompileType(type, false);
         }

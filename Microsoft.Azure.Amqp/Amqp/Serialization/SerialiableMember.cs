@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.Amqp.Serialization
 {
-    sealed class SerialiableMember
+    public sealed class SerialiableMember
     {
         public string Name
         {

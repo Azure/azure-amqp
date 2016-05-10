@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Amqp.Serialization
     using Microsoft.Azure.Amqp.Encoding;
     using AmqpDescribedType = Microsoft.Azure.Amqp.Encoding.DescribedType;
 
-    enum AmqpType
+    public enum AmqpType
     {
         Primitive,
         Described,
@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Amqp.Serialization
         Serializable
     }
 
-    abstract class SerializableType
+    public abstract class SerializableType
     {
         readonly AmqpContractSerializer serializer;
         readonly Type type;
@@ -30,9 +30,6 @@ namespace Microsoft.Azure.Amqp.Serialization
             this.serializer = serializer;
             this.type = type;
             this.hasDefaultCtor = type.GetConstructor(Type.EmptyTypes) != null;
-#if DNXCORE
-            Fx.AssertAndThrow(this.hasDefaultCtor, "CoreCLR support is only implemented for types with default .ctors.");
-#endif
         }
 
         public AmqpType AmqpType

@@ -270,6 +270,7 @@
     <Compile Include="..\Microsoft.Azure.Amqp\InternalBufferManager.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Interop\UnsafeNativeMethods.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\IteratorAsyncResult.cs" />
+    <Compile Include="..\Microsoft.Azure.Amqp\KeyedByTypeCollection.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\PartialTrustHelpers.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\ResourcesGeneric.Designer.cs">
       <DependentUpon>ResourcesGeneric.resx</DependentUpon>

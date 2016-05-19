@@ -13,8 +13,10 @@
     "allowUnsafe": true,
     "xmlDoc": false,
     "embed": {
-      "Microsoft.Azure.Amqp.ResourcesGeneric": "../Microsoft.Azure.Amqp/ResourcesGeneric.resx",
-      "Microsoft.Azure.Amqp.Amqp.Resources": "../Microsoft.Azure.Amqp/Amqp/Resources.resx"
+      "mappings": {
+        "Microsoft.Azure.Amqp.ResourcesGeneric": "../Microsoft.Azure.Amqp/ResourcesGeneric.resx",
+        "Microsoft.Azure.Amqp.Amqp.Resources": "../Microsoft.Azure.Amqp/Amqp/Resources.resx"
+      }
     },
     "compile": [
       "../Microsoft.Azure.Amqp/*.cs",

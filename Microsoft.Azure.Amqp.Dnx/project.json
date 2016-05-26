@@ -50,6 +50,7 @@
             "frameworkAssemblies": {
                 "System": "",
                 "System.Runtime.Serialization": "",
+                "System.ServiceModel": "",
                 "System.Transactions": "",
                 "System.Xml": ""
             }

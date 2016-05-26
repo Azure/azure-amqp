@@ -354,7 +354,7 @@ namespace Microsoft.Azure.Amqp
                 }
                 else
                 {
-                    link.SafeClose();
+                    link.SafeClose(this.connection.TerminalException);
                 }
             }
         }

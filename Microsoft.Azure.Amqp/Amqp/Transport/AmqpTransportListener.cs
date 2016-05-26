@@ -230,7 +230,20 @@ namespace Microsoft.Azure.Amqp.Transport
                     return;
                 }
 
-                TransportBase newTransport = provider.CreateTransport(this.args.Transport, false);
+                TransportBase newTransport = null;
+                try
+                {
+                    newTransport = provider.CreateTransport(this.args.Transport, false);
+                }
+                catch (InvalidOperationException ioe)
+                {
+                    // treat this the same as protocol ID/version failure
+                    // which are all client config issues
+                    AmqpTrace.Provider.AmqpLogError(this, "CreateTransport", ioe.Message);
+                    this.WriteReplyHeader(ProtocolHeader.Amqp100, true);
+                    return;
+                }
+
                 if (object.ReferenceEquals(newTransport, this.args.Transport))
                 {
                     if ((this.parent.settings.RequireSecureTransport && !newTransport.IsSecure) ||

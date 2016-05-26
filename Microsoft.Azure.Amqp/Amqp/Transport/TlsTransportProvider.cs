@@ -27,6 +27,12 @@ namespace Microsoft.Azure.Amqp.Transport
 
         protected override TransportBase OnCreateTransport(TransportBase innerTransport, bool isInitiator)
         {
+            if (innerTransport.GetType() != typeof(TcpTransport))
+            {
+                throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpTransportUpgradeNotAllowed,
+                    innerTransport.GetType().Name, typeof(TlsTransport).Name));
+            }
+
             return new TlsTransport(innerTransport, this.tlsSettings);
         }
     }

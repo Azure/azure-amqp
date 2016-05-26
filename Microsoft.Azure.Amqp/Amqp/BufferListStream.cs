@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
 
     public sealed class BufferListStream : Stream, ICloneable
     {
@@ -16,9 +17,14 @@ namespace Microsoft.Azure.Amqp
         long position;
         bool disposed;
 
-        public BufferListStream(IList<ArraySegment<byte>> bufferList)
+        public BufferListStream(IList<ArraySegment<byte>> arraySegments)
         {
-            this.bufferList = bufferList;
+            if (arraySegments == null)
+            {
+                throw new ArgumentNullException("arraySegments");
+            }
+
+            this.bufferList = arraySegments;
             for (int i = this.bufferList.Count - 1; i >= 0; i--)
             {
                 var segment = this.bufferList[i];
@@ -314,22 +320,34 @@ namespace Microsoft.Azure.Amqp
                 throw Fx.Exception.ArgumentNull("stream");
             }
 
-            length = 0;
-            List<ArraySegment<byte>> buffers = new List<ArraySegment<byte>>();
-            while (true)
+            ArraySegment<byte>[] result;
+            BufferListStream bufferListStream = stream as BufferListStream;
+            if (bufferListStream != null)
             {
-                byte[] buffer = new byte[segmentSize];
-                int bytesRead = stream.Read(buffer, 0, buffer.Length);
-                if (bytesRead == 0)
+                result = bufferListStream.bufferList.ToArray();
+                length = (int)bufferListStream.length;
+            }
+            else
+            {
+                length = 0;
+                List<ArraySegment<byte>> buffers = new List<ArraySegment<byte>>();
+                while (true)
                 {
-                    break;
+                    byte[] buffer = new byte[segmentSize];
+                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                    if (bytesRead == 0)
+                    {
+                        break;
+                    }
+
+                    buffers.Add(new ArraySegment<byte>(buffer, 0, bytesRead));
+                    length += bytesRead;
                 }
 
-                buffers.Add(new ArraySegment<byte>(buffer, 0, bytesRead));
-                length += bytesRead;
+                result = buffers.ToArray();
             }
 
-            return buffers.ToArray();
+            return result;
         }
     }
 }

@@ -456,6 +456,19 @@ namespace Microsoft.Azure.Amqp
             attach.Properties[symbol] = value;
         }
 
+        public static void UpsertPropertyIfNotDefault<T>(this Attach attach, AmqpSymbol symbol, T value)
+        {
+            if (!object.Equals(value, default(T)))
+            {
+                if (attach.Properties == null)
+                {
+                    attach.Properties = new Fields();
+                }
+
+                attach.Properties[symbol] = value;
+            }
+        }
+
         // open 
         public static void AddProperty(this Open open, AmqpSymbol symbol, object value)
         {
@@ -497,5 +510,30 @@ namespace Microsoft.Azure.Amqp
             return retBufferList;
         }
 
+        public static TValue GetSettingPropertyOrDefault<TValue>(this AmqpLink thisPtr, AmqpSymbol key, TValue defaultValue)
+        {
+            TValue value;
+            if (thisPtr != null && thisPtr.Settings != null && thisPtr.Settings.Properties != null && thisPtr.Settings.Properties.TryGetValue<TValue>(key, out value))
+            {
+                return value;
+            }
+            else
+            {
+                return defaultValue;
+            }
+        }
+
+        public static TValue ExtractSettingPropertyValueOrDefault<TValue>(this AmqpLink thisPtr, AmqpSymbol key, TValue defaultValue)
+        {
+            TValue value;
+            if (thisPtr != null && thisPtr.Settings != null && thisPtr.Settings.Properties != null && thisPtr.Settings.Properties.TryRemoveValue<TValue>(key, out value))
+            {
+                return value;
+            }
+            else
+            {
+                return defaultValue; ;
+            }
+        }
     }
 }

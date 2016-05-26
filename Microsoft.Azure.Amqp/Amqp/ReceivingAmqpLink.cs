@@ -23,6 +23,7 @@ namespace Microsoft.Azure.Amqp
         // To support non-prefetch mode with multiple BeginReceive calls
         const int MaxCreditForOnDemandReceive = 200;
         const int CreditBatchThreshold = 20;    // after this we will batch credit to minimize flows
+        const int PendingReceiversThreshold = 20;    // after this we will batch credit to minimize flows
 
         Action<AmqpMessage> messageListener;
         SizeBasedFlowQueue messageQueue;
@@ -87,7 +88,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        public IAsyncResult BeginReceiveRemoteMessage(TimeSpan timeout, AsyncCallback callback, object state)
+        public IAsyncResult BeginReceiveRemoteMessages(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
         {
             // If the caller expects some messages and pass TimeSpan.Zero, we wait to mimic a service call
             if (timeout == TimeSpan.Zero)
@@ -95,7 +96,7 @@ namespace Microsoft.Azure.Amqp
                 timeout = MinReceiveTimeout;
             }
 
-            return this.BeginReceiveMessage(timeout, callback, state);
+            return this.BeginReceiveMessages(messageCount, batchWaitTimeout, timeout, callback, state);
         }
 
         public Task<AmqpMessage> ReceiveMessageAsync(TimeSpan timeout)
@@ -113,7 +114,7 @@ namespace Microsoft.Azure.Amqp
 
         public IAsyncResult BeginReceiveMessage(TimeSpan timeout, AsyncCallback callback, object state)
         {
-            return this.BeginReceiveMessages(1, timeout, callback, state);
+            return this.BeginReceiveMessages(1, TimeSpan.Zero, timeout, callback, state);
         }
 
         public bool EndReceiveMessage(IAsyncResult result, out AmqpMessage message)
@@ -132,6 +133,11 @@ namespace Microsoft.Azure.Amqp
 
         public IAsyncResult BeginReceiveMessages(int messageCount, TimeSpan timeout, AsyncCallback callback, object state)
         {
+            return BeginReceiveMessages(messageCount, TimeSpan.Zero, timeout, callback, state);
+        }
+
+        IAsyncResult BeginReceiveMessages(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
+        {
             List<AmqpMessage> messages = new List<AmqpMessage>();
             lock (this.SyncRoot)
             {
@@ -146,7 +152,7 @@ namespace Microsoft.Azure.Amqp
 
             if (!messages.Any() && timeout > TimeSpan.Zero)
             {
-                ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, timeout, callback, state);
+                ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, callback, state);
                 bool completeWaiter = true;
                 lock (this.SyncRoot)
                 {
@@ -427,7 +433,7 @@ namespace Microsoft.Azure.Amqp
                             }
                             else
                             {
-                                waiter.Signal(null, false, null);
+                                waiter.Signal(false, null);
                             }
                         }
                     },
@@ -455,11 +461,15 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (this.waiterList != null && this.waiterList.Count > 0)
                     {
-                        waiter = this.waiterList.First.Value;
-                        this.waiterList.RemoveFirst();
-                        waiter.OnRemoved();
-
-                        creditToIssue = this.Settings.AutoSendFlow ? 0 : this.GetOnDemandReceiveCredit();
+                        var firstWaiter = this.waiterList.First.Value;
+                        firstWaiter.Add(message);
+                        if (firstWaiter.RequestedMessageCount == 1 || firstWaiter.MessageCount >= firstWaiter.RequestedMessageCount)
+                        {
+                            this.waiterList.RemoveFirst();
+                            firstWaiter.OnRemoved();
+                            creditToIssue = this.Settings.AutoSendFlow ? 0 : this.GetOnDemandReceiveCredit();
+                            waiter = firstWaiter;
+                        }
                     }
                     else if (!this.Settings.AutoSendFlow && this.Settings.SettleType != SettleMode.SettleOnSend)
                     {
@@ -493,9 +503,7 @@ namespace Microsoft.Azure.Amqp
                 if (waiter != null)
                 {
                     // Schedule the completion on another thread so we don't block the I/O thread
-                    ActionItem.Schedule(
-                        o => { var state = (Tuple<ReceiveAsyncResult, IEnumerable<AmqpMessage>>)o; state.Item1.Signal(state.Item2, false); },
-                        new Tuple<ReceiveAsyncResult, IEnumerable<AmqpMessage>>(waiter, new AmqpMessage[] { message }));
+                    ActionItem.Schedule(o => { var w = (ReceiveAsyncResult)o; w.Signal(false); }, waiter);
                 }
             }
         }
@@ -506,13 +514,33 @@ namespace Microsoft.Azure.Amqp
             Fx.Assert(!this.Settings.AutoSendFlow, "This is only valid when auto-flow is false");
             int credit = 0;
             int currentCredit = (int)this.LinkCredit;
-            if (this.waiterList.Count > currentCredit &&
-                currentCredit < MaxCreditForOnDemandReceive)
+            int totalRequestedMessageCount = 0;
+            foreach (var waiter in this.waiterList)
             {
-                int needCredit = Math.Min(this.waiterList.Count, MaxCreditForOnDemandReceive) - currentCredit;
-                if (this.waiterList.Count <= CreditBatchThreshold || needCredit % CreditBatchThreshold == 0)
+                totalRequestedMessageCount += waiter.RequestedMessageCount;
+            }
+
+            if (this.waiterList.Count == totalRequestedMessageCount)
+            {
+                if (this.waiterList.Count > currentCredit &&
+                    currentCredit < MaxCreditForOnDemandReceive)
                 {
-                    credit = currentCredit + needCredit;
+                    int needCredit = Math.Min(this.waiterList.Count, MaxCreditForOnDemandReceive) - currentCredit;
+                    if (this.waiterList.Count <= CreditBatchThreshold || needCredit % CreditBatchThreshold == 0)
+                    {
+                        credit = currentCredit + needCredit;
+                    }
+                }
+            }
+            else
+            {
+                if (totalRequestedMessageCount > currentCredit)
+                {
+                    int needCredit = totalRequestedMessageCount - currentCredit;
+                    if (this.waiterList.Count <= PendingReceiversThreshold || this.waiterList.Count % PendingReceiversThreshold == 0)
+                    {
+                        credit = currentCredit + needCredit;
+                    }
                 }
             }
 
@@ -522,18 +550,38 @@ namespace Microsoft.Azure.Amqp
         sealed class ReceiveAsyncResult : AsyncResult
         {
             readonly ReceivingAmqpLink parent;
+            readonly int requestedMessageCount;
+            readonly TimeSpan batchWaitTimeout;
             readonly TimeSpan timeout;
             Timer timer;
             LinkedListNode<ReceiveAsyncResult> node;
             int completed;  // 1: signaled, 2: timeout
-            IEnumerable<AmqpMessage> messages;
+            List<AmqpMessage> messages;
 
-            public ReceiveAsyncResult(ReceivingAmqpLink parent, TimeSpan timeout, AsyncCallback callback, object state)
+            public ReceiveAsyncResult(ReceivingAmqpLink parent, int requestedMessageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
                 : base(callback, state)
             {
                 this.parent = parent;
+                this.batchWaitTimeout = batchWaitTimeout;
+                this.requestedMessageCount = requestedMessageCount;
                 Fx.Assert(timeout > TimeSpan.Zero, "must have a non-zero timeout");
                 this.timeout = timeout;
+            }
+
+            public int RequestedMessageCount
+            {
+                get
+                {
+                    return this.requestedMessageCount;
+                }
+            }
+
+            public int MessageCount
+            {
+                get
+                {
+                    return this.messages != null ? this.messages.Count : 0;
+                }
             }
 
             public void Initialize(LinkedListNode<ReceiveAsyncResult> node)
@@ -541,7 +589,25 @@ namespace Microsoft.Azure.Amqp
                 this.node = node;
                 if (this.timeout != TimeSpan.MaxValue)
                 {
-                    timer = new Timer(s => OnTimer(s), this, this.timeout, Timeout.InfiniteTimeSpan);
+                    this.timer = new Timer(s => OnTimer(s), this, this.timeout, Timeout.InfiniteTimeSpan);
+                }
+            }
+
+            // Needs caller to hold lock to ReceivingAmqpLink.SyncRoot
+            public void Add(AmqpMessage message)
+            {
+                if (this.messages == null)
+                {
+                    this.messages = new List<AmqpMessage>();
+                    this.messages.Add(message);
+                    if (this.requestedMessageCount > 1 && this.batchWaitTimeout != TimeSpan.MaxValue)
+                    {
+                        this.timer.Change(this.batchWaitTimeout, Timeout.InfiniteTimeSpan);
+                    }
+                }
+                else
+                {
+                    this.messages.Add(message);
                 }
             }
 
@@ -562,20 +628,34 @@ namespace Microsoft.Azure.Amqp
             {
                 if (this.parent.TerminalException != null)
                 {
-                    this.Signal(null, false, new OperationCanceledException(this.parent.TerminalException.Message, this.parent.TerminalException));
+                    this.Signal(false, new OperationCanceledException(this.parent.TerminalException.Message, this.parent.TerminalException));
                 }
                 else
                 {
-                    this.Signal(null, false, new OperationCanceledException());
+                    this.Signal(false, new OperationCanceledException());
                 }
             }
 
-            public void Signal(IEnumerable<AmqpMessage> messages, bool syncComplete)
+            public void Signal(bool syncComplete)
             {
-                this.Signal(messages, syncComplete, null);
+                this.Signal(syncComplete, null);
             }
 
-            public void Signal(IEnumerable<AmqpMessage> messages, bool syncComplete, Exception exception)
+            public void Signal(List<AmqpMessage> messages, bool syncComplete)
+            {
+                if (this.messages != null)
+                {
+                    this.messages.AddRange(messages);
+                }
+                else
+                {
+                    this.messages = messages;
+                }
+
+                this.Signal(syncComplete, null);
+            }
+
+            public void Signal(bool syncComplete, Exception exception)
             {
                 Timer t = this.timer;
                 if (t != null)
@@ -583,17 +663,16 @@ namespace Microsoft.Azure.Amqp
                     t.Change(Timeout.Infinite, Timeout.Infinite);
                 }
 
-                this.CompleteInternal(messages, syncComplete, 1, exception);
+                this.CompleteInternal(syncComplete, 1, exception);
             }
 
-            void CompleteInternal(IEnumerable<AmqpMessage> messages, bool syncComplete, int code, Exception exception)
+            void CompleteInternal(bool syncComplete, int code, Exception exception)
             {
                 if (Interlocked.CompareExchange(ref this.completed, code, 0) == 0)
                 {
-                    this.messages = messages;
-                    if (messages == null)
+                    if (this.messages == null)
                     {
-                        this.messages = Enumerable.Empty<AmqpMessage>();
+                        this.messages = new List<AmqpMessage>();
                     }
 
                     if(exception != null)
@@ -621,7 +700,7 @@ namespace Microsoft.Azure.Amqp
                     thisPtr.node = null;
                 }
 
-                thisPtr.CompleteInternal(null, false, 2, null);
+                thisPtr.CompleteInternal(false, thisPtr.MessageCount > 0 ? 1 : 2, null); // 1: signaled, 2: timeout
             }
         }
 

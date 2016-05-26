@@ -18,4 +18,9 @@
     <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <Import Project="$(VSToolsPath)\DotNet\Microsoft.DotNet.targets" Condition="'$(VSToolsPath)' != ''" />
+  
+  <Target Name="AfterBuild">
+	<Message Text="Generating nuget package..." Importance="High" />
+	<Exec Command="dotnet.exe pack -o ..\bin\packages\"/>
+  </Target>  
 </Project>

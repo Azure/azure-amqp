@@ -288,4 +288,7 @@
   <data name="AmqpCannotResendMessage" xml:space="preserve">
     <value>A message cannot be sent because it is either received from a link or is already sent over a link.</value>
   </data>
+  <data name="AmqpTransportUpgradeNotAllowed" xml:space="preserve">
+    <value>Cannot upgrade transport from type '{0}' to '{1}'.</value>
+  </data>
 </root>

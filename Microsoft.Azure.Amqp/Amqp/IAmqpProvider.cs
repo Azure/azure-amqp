@@ -48,7 +48,15 @@ namespace Microsoft.Azure.Amqp
     {
     }
 
-    public interface IAmqpUsageMeter
+    public interface ITransportMonitor
+    {
+        void OnTransportWrite(int bufferSize, int writeSize, long queueSize, long latencyTicks);
+
+        void OnTransportRead(int bufferSize, int readSize, int cacheHits, long latencyTicks);
+    }
+
+
+    public interface IAmqpUsageMeter : ITransportMonitor
     {
         void OnRead(AmqpConnection connection, ulong frameCode, int numberOfBytes);
 

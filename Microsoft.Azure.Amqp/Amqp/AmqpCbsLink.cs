@@ -129,16 +129,9 @@ namespace Microsoft.Azure.Amqp
                         yield break;
                     }
 
-                    AmqpLinkSettings settings = new AmqpLinkSettings();
-                    settings.AddProperty(CbsConstants.TimeoutName, (uint)this.RemainingTime().TotalMilliseconds);
-                    settings.Target = new Target() { Address = address };
-                    settings.Source = new Source() { Address = address };
-                    settings.InitialDeliveryCount = 0;
-                    settings.TotalLinkCredit = 50;
-                    settings.AutoSendFlow = true;
-                    settings.SettleType = SettleMode.SettleOnSend;
-
-                    this.Link = new RequestResponseAmqpLink(this.session, settings);
+                    Fields properties = new Fields();
+                    properties.Add(CbsConstants.TimeoutName, (uint)this.RemainingTime().TotalMilliseconds);
+                    this.Link = new RequestResponseAmqpLink("cbs", this.session, address, properties);
                     yield return this.CallAsync(
                         (thisPtr, t, c, s) => thisPtr.Link.BeginOpen(t, c, s),
                         (thisPtr, r) => thisPtr.Link.EndOpen(r),

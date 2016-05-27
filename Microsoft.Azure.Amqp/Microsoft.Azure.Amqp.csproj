@@ -106,7 +106,7 @@
     <Compile Include="Amqp\Encoding\ULongEncoding.cs" />
     <Compile Include="Amqp\Encoding\UShortEncoding.cs" />
     <Compile Include="Amqp\Encoding\UuidEncoding.cs" />
-    <Compile Include="Amqp\Extensions.cs" />
+    <Compile Include="Amqp\AmqpExtensions.cs" />
     <Compile Include="Amqp\FaultTolerantAmqpObject.cs" />
     <Compile Include="Amqp\FrameDecoder.cs" />
     <Compile Include="Amqp\Framing\Accepted.cs" />
@@ -203,7 +203,6 @@
     <Compile Include="Extensions\StreamExtensions.cs" />
     <Compile Include="Fx.cs" />
     <Compile Include="FxCop.cs" />
-    <Compile Include="IAmqpTrace.cs" />
     <Compile Include="InternalBufferManager.cs" />
     <Compile Include="Interop\UnsafeNativeMethods.cs" />
     <Compile Include="IteratorAsyncResult.cs" />

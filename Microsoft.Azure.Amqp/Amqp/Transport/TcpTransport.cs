@@ -21,20 +21,21 @@ namespace Microsoft.Azure.Amqp.Transport
         readonly EndPoint remoteEndPoint;
         readonly WriteAsyncEventArgs sendEventArgs;
         readonly ReadAsyncEventArgs receiveEventArgs;
+        ITransportMonitor monitor;
 
         public TcpTransport(Socket socket, TcpTransportSettings transportSettings)
             : base("tcp")
         {
             this.socket = socket;
             this.socket.NoDelay = true;
-            this.socket.SendBufferSize = 0;
-            this.socket.ReceiveBufferSize = 0;
+            this.socket.SendBufferSize = transportSettings.SendBufferSize;
+            this.socket.ReceiveBufferSize = transportSettings.ReceiveBufferSize;
             this.localEndPoint = this.socket.LocalEndPoint;
             this.remoteEndPoint = this.socket.RemoteEndPoint;
-            this.sendEventArgs = new WriteAsyncEventArgs();
+            this.sendEventArgs = new WriteAsyncEventArgs(transportSettings.SendBufferSize);
             this.sendEventArgs.Transport = this;
             this.sendEventArgs.Completed += onWriteComplete;
-            this.receiveEventArgs = new ReadAsyncEventArgs();
+            this.receiveEventArgs = new ReadAsyncEventArgs(transportSettings.ReceiveBufferSize);
             this.receiveEventArgs.Completed += onReadComplete;
             this.receiveEventArgs.Transport = this;
         }
@@ -53,6 +54,11 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 return this.remoteEndPoint;
             }
+        }
+
+        public override void SetMonitor(ITransportMonitor monitor)
+        {
+            this.monitor = monitor;
         }
 
         public sealed override bool WriteAsync(TransportAsyncCallbackArgs args)
@@ -95,44 +101,50 @@ namespace Microsoft.Azure.Amqp.Transport
             Fx.Assert(args.CompletedCallback != null, "must have a valid callback");
             Fx.Assert(this.receiveEventArgs.Args == null, "read is pending");
 
-            this.receiveEventArgs.AddBytes(args.Count);
-
-            bool pending;
-            if (this.receiveEventArgs.ReadBuffer != null && this.receiveEventArgs.ReadBuffer.Length > 0)
+            ByteBuffer readBuffer = this.receiveEventArgs.PrepareRead(args.Count);
+            if (readBuffer != null)
             {
-                this.HandleReadComplete(args, true, true);
-                pending = false;
+                // ensure the buffer is not reclaimed while read is pending
+                // ref count is decremented in read complete handler
+                this.receiveEventArgs.UserToken = readBuffer.Clone();
+
+                if (readBuffer.Length > 0)
+                {
+                    this.HandleReadComplete(args, true, true);
+                    return false;
+                }
+
+                this.receiveEventArgs.SetBuffer(readBuffer.Buffer, readBuffer.Offset, readBuffer.Size);
             }
             else
             {
-                if (args.Count <= SmallBufferPool.SegmentSize)
-                {
-                    ArraySegment<byte> smallSegment = SmallBufferPool.TakeBuffer(args.Count);
-                    this.receiveEventArgs.SetBuffer(smallSegment.Array, smallSegment.Offset, smallSegment.Count);
-                    this.receiveEventArgs.IsSegment = true;
-                }
-                else
-                {
-                    this.receiveEventArgs.PrepareRead(args.Count);
-                    ByteBuffer buffer = this.receiveEventArgs.ReadBuffer;
-                    Fx.Assert(buffer != null, "read buffer should be initialized");
-                    this.receiveEventArgs.SetBuffer(buffer.Buffer, buffer.Offset, buffer.Size);
-                }
-
-                this.receiveEventArgs.Args = args;
-                Fx.Assert(this.receiveEventArgs.Count > 0, "Must have a count to read");
-                if (!this.socket.ReceiveAsync(this.receiveEventArgs))
-                {
-                    this.HandleReadComplete(args, false, true);
-                    pending = false;
-                }
-                else
-                {
-                    pending = true;
-                }
+                this.receiveEventArgs.SetReadBuffer(args);
             }
 
-            return pending;
+            this.receiveEventArgs.Args = args;
+            Fx.Assert(this.receiveEventArgs.Count > 0, "Must have a count to read");
+            bool pending;
+            try
+            {
+                pending = this.socket.ReceiveAsync(this.receiveEventArgs);
+            }
+            catch
+            {
+                if (readBuffer != null)
+                {
+                    readBuffer.Dispose();
+                }
+
+                throw;
+            }
+
+            if (!pending)
+            {
+                this.HandleReadComplete(args, false, true);
+                return false;
+            }
+
+            return true;
         }
 
         protected override bool CloseInternal()
@@ -179,6 +191,10 @@ namespace Microsoft.Azure.Amqp.Transport
                 args.BytesTransfered = this.sendEventArgs.BytesTransferred;
                 args.Exception = null;
                 Fx.Assert(args.BytesTransfered == args.Count, "Cannot be partialy completed");
+                if (this.monitor != null)
+                {
+                    this.sendEventArgs.ReportWrite(this.monitor);
+                }
             }
             else
             {
@@ -204,69 +220,83 @@ namespace Microsoft.Azure.Amqp.Transport
 
         void HandleReadComplete(TransportAsyncCallbackArgs args, bool fromCache, bool completedSynchronously)
         {
-            if (this.receiveEventArgs.SocketError == SocketError.Success)
+            ByteBuffer readBuffer = this.receiveEventArgs.UserToken as ByteBuffer;
+            try
             {
-                try
+                if (this.receiveEventArgs.SocketError == SocketError.Success)
                 {
-                    int bytesTransferred = fromCache ? this.receiveEventArgs.ReadBuffer.Length : this.receiveEventArgs.BytesTransferred;
-                    int bytesCopied = bytesTransferred;
-                    if (bytesTransferred > 0)
+                    int bytesCopied = 0;
+                    if (this.receiveEventArgs.IsSegment)
                     {
-                        if (this.receiveEventArgs.IsSegment)
+                        bytesCopied = this.receiveEventArgs.BytesTransferred;
+                        Buffer.BlockCopy(this.receiveEventArgs.Buffer, this.receiveEventArgs.Offset,
+                            args.Buffer, args.Offset, bytesCopied);
+                    }
+                    else
+                    {
+                        if (readBuffer != null)
                         {
-                            Fx.Assert(bytesTransferred <= args.Count, "Should not receive more than requested");
-                            Buffer.BlockCopy(this.receiveEventArgs.Buffer, this.receiveEventArgs.Offset,
-                                args.Buffer, args.Offset, bytesTransferred);
-                            var segment = new ArraySegment<byte>(this.receiveEventArgs.Buffer,
-                                this.receiveEventArgs.Offset, this.receiveEventArgs.Count);
-                            SmallBufferPool.ReturnBuffer(segment);
-                        }
-                        else
-                        {
-                            ByteBuffer buffer = this.receiveEventArgs.ReadBuffer;
-                            if (buffer == null)
+                            int bytesTransferred;
+                            if (fromCache)
                             {
-                                // transport is disposed
-                                bytesCopied = 0;
+                                bytesTransferred = readBuffer.Length;
                             }
                             else
                             {
-                                if (!fromCache)
+                                bytesTransferred = this.receiveEventArgs.BytesTransferred;
+                                readBuffer.Append(bytesTransferred);
+                                if (this.monitor != null)
                                 {
-                                    buffer.Append(bytesTransferred);
+                                    this.receiveEventArgs.ReportRead(this.monitor);
                                 }
+                            }
 
+                            if (bytesTransferred > 0)
+                            {
                                 if (bytesTransferred <= args.Count)
                                 {
-                                    Buffer.BlockCopy(buffer.Buffer, buffer.Offset, args.Buffer, args.Offset, bytesTransferred);
-                                    buffer.Reset();
+                                    bytesCopied = bytesTransferred;
+                                    Buffer.BlockCopy(readBuffer.Buffer, readBuffer.Offset, args.Buffer, args.Offset, bytesTransferred);
+                                    readBuffer.Reset();
                                 }
                                 else
                                 {
-                                    Buffer.BlockCopy(buffer.Buffer, buffer.Offset, args.Buffer, args.Offset, args.Count);
                                     bytesCopied = args.Count;
-                                    buffer.Complete(args.Count);
+                                    Buffer.BlockCopy(readBuffer.Buffer, readBuffer.Offset, args.Buffer, args.Offset, bytesCopied);
+                                    readBuffer.Complete(bytesCopied);
                                 }
                             }
+                        }
+                        else
+                        {
+                            bytesCopied = this.receiveEventArgs.BytesTransferred;
                         }
                     }
 
                     args.BytesTransfered = bytesCopied;
                     args.Exception = null;
                 }
-                catch (Exception exception)
+                else
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
-                    args.Exception = exception;
+                    args.Exception = new SocketException((int)this.receiveEventArgs.SocketError);
                 }
             }
-            else
+            catch (Exception exception)
             {
-                args.Exception = new SocketException((int)this.receiveEventArgs.SocketError);
+                if (Fx.IsFatal(exception))
+                {
+                    throw;
+                }
+
+                args.Exception = exception;
+            }
+            finally
+            {
+                if (readBuffer != null)
+                {
+                    // ref count was incremented when read starts
+                    readBuffer.Dispose();
+                }
             }
 
             args.CompletedSynchronously = completedSynchronously;
@@ -288,8 +318,18 @@ namespace Microsoft.Azure.Amqp.Transport
 
         sealed class WriteAsyncEventArgs : SocketAsyncEventArgs
         {
-            BufferSizeTracker writeTracker;
-            private int bufferSize;
+            readonly BufferSizeTracker writeTracker;
+            Timestamp startTime;
+            int bufferSize;
+
+            public WriteAsyncEventArgs(int bufferSize)
+            {
+                this.bufferSize = bufferSize;
+                if (bufferSize == 0)
+                {
+                    this.writeTracker = new BufferSizeTracker(1024);
+                }
+            }
 
             public TcpTransport Transport { get; set; }
 
@@ -297,16 +337,22 @@ namespace Microsoft.Azure.Amqp.Transport
 
             public void PrepareWrite(int writeSize)
             {
-                this.writeTracker.AddBytes(writeSize);
+                this.startTime = Timestamp.Now;
 
                 int newSize;
-                if (this.writeTracker.TryUpdateBufferSize(out newSize))
+                if (this.writeTracker != null &&
+                    this.writeTracker.TryUpdateBufferSize(writeSize, out newSize))
                 {
                     AmqpTrace.Provider.AmqpDynamicBufferSizeChange(this.Transport, "write", this.bufferSize, newSize);
 
                     this.bufferSize = newSize;
                     this.Transport.socket.SendBufferSize = this.bufferSize;
                 }
+            }
+
+            public void ReportWrite(ITransportMonitor monitor)
+            {
+                monitor.OnTransportWrite(this.bufferSize, this.BytesTransferred, 0, this.startTime.ElapsedTicks);
             }
 
             public void Reset()
@@ -319,43 +365,95 @@ namespace Microsoft.Azure.Amqp.Transport
 
         sealed class ReadAsyncEventArgs : SocketAsyncEventArgs
         {
-            BufferSizeTracker readTracker;
+            readonly BufferSizeTracker readTracker;
             int bufferSize;
+            ArraySegment<byte> segment; // read small buffers when bufferSize is 0
+            ByteBuffer readBuffer;
+            Timestamp startTime;
+            int cacheHits;
+
+            public ReadAsyncEventArgs(int bufferSize)
+            {
+                this.bufferSize = bufferSize;
+                this.segment = SmallBufferPool.TakeBuffer(FixedWidth.ULong);
+                if (bufferSize == 0)
+                {
+                    this.readTracker = new BufferSizeTracker(512);
+                }
+                else
+                {
+                    this.readBuffer = new ByteBuffer(bufferSize, false, true);
+                }
+            }
 
             public TcpTransport Transport { get; set; }
 
             public TransportAsyncCallbackArgs Args { get; set; }
 
-            public ByteBuffer ReadBuffer { get; set; }
-
             public bool IsSegment { get; set; }
 
-            public void AddBytes(int bytes)
+            public ByteBuffer PrepareRead(int count)
             {
-                this.readTracker.AddBytes(bytes);
-            }
-
-            public void PrepareRead(int count)
-            {
-                // for read, the bytes is already added
                 int newSize;
-                if (this.readTracker.TryUpdateBufferSize(out newSize))
+                if (this.readTracker != null &&
+                    this.readTracker.TryUpdateBufferSize(count, out newSize))
                 {
                     AmqpTrace.Provider.AmqpDynamicBufferSizeChange(this.Transport, "read", this.bufferSize, newSize);
 
                     this.bufferSize = newSize;
                     this.Transport.socket.ReceiveBufferSize = this.bufferSize;
-                    if (this.ReadBuffer != null)
+                }
+
+                ByteBuffer current = this.readBuffer;
+                if (current == null)
+                {
+                    this.startTime = Timestamp.Now;
+                    if (this.bufferSize > 0)
                     {
-                        this.ReadBuffer.Dispose();
-                        this.ReadBuffer = null;
+                        current = new ByteBuffer(this.bufferSize, false, true);
+                        this.readBuffer = current;
+                    }
+                }
+                else
+                {
+                    if (current.Length == 0)
+                    {
+                        this.startTime = Timestamp.Now;
+                        if (this.bufferSize == 0)
+                        {
+                            current.Dispose();
+                            this.readBuffer = null;
+                            current = null;
+                        }
+                    }
+                    else
+                    {
+                        this.cacheHits++;
                     }
                 }
 
-                if (this.ReadBuffer == null)
+                return current;
+            }
+
+            public void ReportRead(ITransportMonitor monitor)
+            {
+                monitor.OnTransportRead(this.bufferSize, this.BytesTransferred, this.cacheHits, this.startTime.ElapsedTicks);
+                this.cacheHits = 0;
+            }
+
+            public void SetReadBuffer(TransportAsyncCallbackArgs args)
+            {
+                // for most idle connections, the read is pending on reading the frame size
+                // use the segment buffer to avoid heap fragmentation
+                if (args.Count <= SmallBufferPool.SegmentSize)
                 {
-                    int size = this.bufferSize > 0 ? this.bufferSize : Math.Min(count, AmqpConstants.TransportBufferSize);
-                    this.ReadBuffer = new ByteBuffer(size, false, true);
+                    Fx.AssertAndThrow(this.segment.Array != null, "segment buffer already relaimed");
+                    this.SetBuffer(this.segment.Array, this.segment.Offset, args.Count);
+                    this.IsSegment = true;
+                }
+                else
+                {
+                    this.SetBuffer(args.Buffer, args.Offset, args.Count);
                 }
             }
 
@@ -364,52 +462,61 @@ namespace Microsoft.Azure.Amqp.Transport
                 this.IsSegment = false;
                 this.Args = null;
                 this.SetBuffer(null, 0, 0);
-                if (this.bufferSize == 0 && this.ReadBuffer != null)
-                {
-                    this.ReadBuffer.Dispose();
-                    this.ReadBuffer = null;
-                }
+                this.UserToken = null;
             }
 
             public new void Dispose()
             {
-                if (this.ReadBuffer != null)
+                ByteBuffer temp = this.readBuffer;
+                if (temp != null)
                 {
-                    this.ReadBuffer.Dispose();
-                    this.ReadBuffer = null;
+                    temp.Dispose();
+                }
+
+                ArraySegment<byte> copy = this.segment;
+                if (copy.Array != null)
+                {
+                    this.segment = default(ArraySegment<byte>);
+                    SmallBufferPool.ReturnBuffer(copy);
                 }
 
                 base.Dispose();
             }
         }
 
-        struct BufferSizeTracker
+        sealed class BufferSizeTracker
         {
-            static long durationTicks = TimeSpan.FromSeconds(5).Ticks;
-            static int[] thresholds = new int[] { 0, 64 * 1024, 512 * 1024, 2 * 1024 * 1024 };
-            static int[] bufferSizes = new int[] { 0, 4 * 1024, 16 * 1024, 64 * 1024 };
-            Timestamp firstOperation;
+            // level 0: for idle connections (mostly heartbeats)
+            // level 1: active connections (constant I/O activities)
+            // level 2: busy connections (high throughput)
+            // unitSize is the min value to increase to help small messages to reach level 1
+            // level is changed only when the trend is consistent during two consecutive windows
+            // bufferSizes: must match the preallocated buffers in InternalBufferManager.PreallocatedBufferManager
+            static long durationTicks = TimeSpan.FromSeconds(4).Ticks;
+            static int[] thresholds = new int[] { 0, 8 * 1024, 4 * 1024 * 1024 };
+            static int[] bufferSizes = new int[] { 0, 8 * 1024, 64 * 1024 };
+            int unitSize;
+            DateTime firstOperation;
             int transferedBytes;
-            int level;
+            sbyte level;
+            sbyte direction;
 
-            public void AddBytes(int bytes)
+            public BufferSizeTracker(int unitSize)
             {
-                if (this.transferedBytes == 0)
-                {
-                    firstOperation = Timestamp.Now;
-                }
-
-                this.transferedBytes += bytes;
+                this.unitSize = unitSize;
+                this.firstOperation = DateTime.UtcNow;
             }
 
-            public bool TryUpdateBufferSize(out int bufferSize)
+            public bool TryUpdateBufferSize(int bytes, out int bufferSize)
             {
+                this.transferedBytes += Math.Max(bytes, this.unitSize);
+
                 bufferSize = 0;
 
                 int newLevel = 0;
                 bool levelChanged = false;
-                long elapsedTicks = this.firstOperation.ElapsedTicks;
-                if (elapsedTicks >= durationTicks)
+                DateTime now = DateTime.UtcNow;
+                if (now.Ticks - this.firstOperation.Ticks >= durationTicks)
                 {
                     for (int i = thresholds.Length - 1; i >= 0; --i)
                     {
@@ -420,13 +527,39 @@ namespace Microsoft.Azure.Amqp.Transport
                         }
                     }
 
-                    this.transferedBytes = 0;
-                    if (newLevel != this.level)
+                    if (newLevel > this.level)
                     {
-                        this.level = newLevel;
-                        bufferSize = bufferSizes[newLevel];
-                        levelChanged = true;
+                        if (this.direction > 0)
+                        {
+                            this.level++;
+                            bufferSize = bufferSizes[this.level];
+                            levelChanged = true;
+                        }
+                        else
+                        {
+                            this.direction = 1;
+                        }
                     }
+                    else if (newLevel < this.level)
+                    {
+                        if (this.direction < 0)
+                        {
+                            this.level--;
+                            bufferSize = bufferSizes[this.level];
+                            levelChanged = true;
+                        }
+                        else
+                        {
+                            this.direction = -1;
+                        }
+                    }
+                    else
+                    {
+                        this.direction = 0;
+                    }
+
+                    this.transferedBytes = 0;
+                    this.firstOperation = now;
                 }
 
                 return levelChanged;

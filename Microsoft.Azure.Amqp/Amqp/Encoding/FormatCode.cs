@@ -5,7 +5,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 {
     using System.Globalization;
 
-    struct FormatCode
+    public struct FormatCode
     {
         public const byte Described = 0x00;
 

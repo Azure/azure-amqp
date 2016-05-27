@@ -22,7 +22,6 @@ namespace Microsoft.Azure.Amqp
         readonly AmqpSettings amqpSettings;
         readonly HandleTable<AmqpSession> sessionsByLocalHandle;
         readonly HandleTable<AmqpSession> sessionsByRemoteHandle;
-        IAmqpUsageMeter usageMeter;
         HeartBeat heartBeat;
         KeyedByTypeCollection<object> extensions;
 
@@ -64,12 +63,6 @@ namespace Microsoft.Azure.Amqp
             set;
         }
 
-        public IAmqpUsageMeter UsageMeter
-        {
-            get { return this.usageMeter; }
-            set { this.usageMeter = value; }
-        }
-
         public KeyedByTypeCollection<object> Extensions
         {
             get
@@ -106,7 +99,7 @@ namespace Microsoft.Azure.Amqp
             Frame frame = new Frame();
             frame.Channel = channel;
             frame.Command = command;
-            frame.Trace(true);
+            frame.Trace(true, this, channel, command, -1);
             AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Send, frame);
 #endif
 
@@ -137,9 +130,9 @@ namespace Microsoft.Azure.Amqp
             }
 
             this.heartBeat.OnSend();
-            if (this.usageMeter != null)
+            if (this.UsageMeter != null)
             {
-                this.usageMeter.OnWrite(this, command == null ? 0 : command.DescriptorCode, frameSize);
+                this.UsageMeter.OnWrite(this, command == null ? 0 : command.DescriptorCode, frameSize);
             }
         }
 
@@ -209,9 +202,9 @@ namespace Microsoft.Azure.Amqp
             AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Receive, header);
 #endif
             this.heartBeat.OnReceive();
-            if (this.usageMeter != null)
+            if (this.UsageMeter != null)
             {
-                this.usageMeter.OnRead(this, 0, header.EncodeSize);
+                this.UsageMeter.OnRead(this, 0, header.EncodeSize);
             }
 
             this.TransitState("R:HDR", StateTransition.ReceiveHeader);
@@ -252,20 +245,29 @@ namespace Microsoft.Azure.Amqp
             {
                 frame.Decode(buffer);
 #if DEBUG
-                frame.Trace(false);
+                frame.Trace(false, this, frame.Channel, frame.Command, frame.Payload.Count);
                 AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Receive, frame);
 #endif
 
                 this.heartBeat.OnReceive();
-                if (this.usageMeter != null)
+                if (this.UsageMeter != null)
                 {
-                    this.usageMeter.OnRead(this, frame.Command != null ? frame.Command.DescriptorCode : 0, buffer.Length);
+                    this.UsageMeter.OnRead(this, frame.Command != null ? frame.Command.DescriptorCode : 0, buffer.Length);
                 }
 
                 if (frame.Command != null)
                 {
                     this.ProcessFrame(frame);
                 }
+            }
+        }
+
+        protected override void HandleIoEvent(IoEvent ioEvent)
+        {
+            IEnumerator<AmqpSession> it = this.sessionsByLocalHandle.GetSafeEnumerator();
+            while (it.MoveNext())
+            {
+                it.Current.OnIoEvent(ioEvent);
             }
         }
 

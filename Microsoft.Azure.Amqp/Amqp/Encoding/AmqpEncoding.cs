@@ -127,7 +127,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 return describedTypeEncoding;
             }
 
-            throw GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, type.ToString()));
+            throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, type.ToString()));
         }
 
         public static EncodingBase GetEncoding(Type type)
@@ -150,7 +150,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 return describedTypeEncoding;
             }
 
-            throw GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, type.ToString()));
+            throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, type.ToString()));
         }
 
         public static EncodingBase GetEncoding(FormatCode formatCode)

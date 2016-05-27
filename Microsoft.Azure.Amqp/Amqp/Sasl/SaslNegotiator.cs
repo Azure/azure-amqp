@@ -254,6 +254,10 @@ namespace Microsoft.Azure.Amqp.Sasl
             }
         }
 
+        void IIoHandler.OnIoEvent(IoEvent ioEvent, long queueSize)
+        {
+        }
+
         void HandleSaslCommand(Performative command)
         {
             if (command.DescriptorCode == SaslMechanisms.Code)

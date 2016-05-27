@@ -60,8 +60,8 @@ namespace Microsoft.Azure.Amqp
         static int nextId = -1;
 
         readonly SequenceNumber identifier;
-        readonly string name;
         readonly object thisLock = new object();
+        string name;
         OpenAsyncResult pendingOpen;
         CloseAsyncResult pendingClose;
         bool openCalled;
@@ -162,6 +162,11 @@ namespace Microsoft.Azure.Amqp
             {
                 this.OnOpen(timeout);
             }
+        }
+
+        internal void SetName(string name)
+        {
+            this.name = name;
         }
 
         public Task OpenAsync(TimeSpan timeout)
@@ -325,7 +330,7 @@ namespace Microsoft.Azure.Amqp
 
             try
             {
-                this.BeginClose(TimeSpan.FromSeconds(AmqpConstants.DefaultTryCloseTimeout), onSafeCloseComplete, this);
+                this.BeginClose(AmqpConstants.DefaultTimeout, onSafeCloseComplete, this);
             }
             catch (Exception exp)
             {
@@ -620,6 +625,14 @@ namespace Microsoft.Azure.Amqp
 
             protected override bool OnStart()
             {
+                lock (this.Target.thisLock)
+                {
+                    if ((this.Target.closeCalled || this.Target.abortCalled) && !this.IsCompleted)
+                    {
+                        throw new OperationCanceledException();
+                    }
+                }
+
                 return this.Target.OpenInternal();
             }
 

@@ -12,9 +12,13 @@
     using global::Microsoft.Azure.Amqp.Sasl;
     using global::Microsoft.Azure.Amqp.Serialization;
     using global::Microsoft.Azure.Amqp.Transaction;
+#if !DOTNET
     using global::Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
+#if !DOTNET
     [TestClass]
+#endif
     public class AmqpCodecTests
     {
         bool boolTrue = true;
@@ -124,13 +128,11 @@
             bin32ValueBin[4] = 0x00;
         }
 
-
-        [ClassInitialize]
-        public static void ClassInitialize(TestContext context)
-        {
-        }
-
-        [TestMethod()]
+#if DOTNET
+        [Xunit.Fact]
+#else
+        [TestMethod]
+#endif
         public void AmqpCodecSingleValueTest()
         {
             byte[] workBuffer = new byte[2048];
@@ -305,7 +307,11 @@
             Assert.IsTrue(str32Utf8 == strValue, "UTF8 string32 string value is not equal.");
         }
 
-        [TestMethod()]
+#if DOTNET
+        [Xunit.Fact]
+#else
+        [TestMethod]
+#endif
         public void AmqpCodecListTest()
         {
             byte[] workBuffer = new byte[4096];
@@ -406,7 +412,11 @@
             EnsureEqual((IList)described.Value, (IList)described4.Value);
         }
 
-        [TestMethod()]
+#if DOTNET
+        [Xunit.Fact]
+#else
+        [TestMethod]
+#endif
         public void AmqpCodecList0Test()
         {
             byte[] list0Bin = new byte[] { 0x45 };
@@ -421,7 +431,11 @@
             Assert.IsTrue(list0v.Count == 0, "The list should contain 0 items.");
         }
 
-        [TestMethod()]
+#if DOTNET
+        [Xunit.Fact]
+#else
+        [TestMethod]
+#endif
         public void AmqpCodecMapTest()
         {
             byte[] workBuffer = new byte[4096];
@@ -508,7 +522,11 @@
             Assert.IsTrue(described.Value.Equals(described1.Value), "Described value 1 value is different");
         }
 
-        [TestMethod()]
+#if DOTNET
+        [Xunit.Fact]
+#else
+        [TestMethod]
+#endif
         public void AmqpCodecMultipleTest()
         {
             byte[] workBuffer = new byte[2048];
@@ -535,7 +553,11 @@
             Assert.IsTrue(Multiple<AmqpSymbol>.Intersect(threeValues, threeDecoded).Count == 3, "multiple of three symbol values failed");
         }
 
-        [TestMethod()]
+#if DOTNET
+        [Xunit.Fact]
+#else
+        [TestMethod]
+#endif
         public void AmqpCodecFramingTypeTest()
         {
             byte[] workBuffer = new byte[1024 * 16];
@@ -615,7 +637,11 @@
             Assert.IsTrue(buffer.Length == 0, "All bytes in the buffer should be consumed");
         }
 
-        [TestMethod()]
+#if DOTNET
+        [Xunit.Fact]
+#else
+        [TestMethod]
+#endif
         public void AmqpCodecDescribedArrayTest()
         {
             int size = AmqpCodec.GetObjectEncodeSize(described5);
@@ -625,14 +651,18 @@
             Assert.IsTrue(decoded.Descriptor.Equals(described5.Descriptor), "Descriptor value not equal");
             string[] original = (string[])described5.Value;
             string[] array = (string[])decoded.Value;
-            Assert.IsTrue(original.Length == array.Length, "length not equal {0} != {1}", original.Length, array.Length);
+            Assert.IsTrue(original.Length == array.Length, string.Format("length not equal {0} != {1}", original.Length, array.Length));
             for (int i = 0; i < original.Length; ++i)
             {
-                Assert.IsTrue(original[i] == array[i], "index {0}: {1} != {2}", i, original[i], array[i]);
+                Assert.IsTrue(original[i] == array[i], string.Format("index {0}: {1} != {2}", i, original[i], array[i]));
             }
         }
 
-        [TestMethod()]
+#if DOTNET
+        [Xunit.Fact]
+#else
+        [TestMethod]
+#endif
         public void AmqpCodecArrayTest()
         {
             ArrayTest<bool>(
@@ -729,7 +759,11 @@
                 (n1, n2) => { });
         }
 
-        [TestMethod()]
+#if DOTNET
+        [Xunit.Fact]
+#else
+        [TestMethod]
+#endif
         public void AmqpSerializerListEncodingTest()
         {
             Action<Person, Person> personValidator = (p1, p2) =>
@@ -785,7 +819,7 @@
 
             // Inter-op: it should be an AMQP described list as other clients see it
             stream.Seek(0, SeekOrigin.Begin);
-            DescribedType dl1 = DescribedEncoding.Decode(new ByteBuffer(stream.GetBuffer(), 0, (int)stream.Length));
+            DescribedType dl1 = DescribedEncoding.Decode(new ByteBuffer(stream.ToArray(), 0, (int)stream.Length));
             Assert.AreEqual(dl1.Descriptor, 1ul);
             List<object> lv = dl1.Value as List<object>;
             Assert.IsNotNull(lv);
@@ -841,6 +875,7 @@
             Assert.AreEqual(teacher.Classes[205], ((Teacher)p6).Classes[205]);
         }
 
+#if !DOTNET
         [TestMethod]
         public void AmqpExceptionSerializeTest()
         {
@@ -859,6 +894,7 @@
                 Assert.AreEqual(amqpException1.Error.Description, amqpException2.Error.Description, "Error.Description differs!");
             }
         }
+#endif
 
         static void EncodeDescribedList(ByteBuffer buffer, object descriptor, params object[] values)
         {
@@ -871,7 +907,7 @@
 
         static void ArrayTest<T>(T[] array, Action<T, T> validate)
         {
-            Trace.WriteLine(string.Format("Array testing for type {0}", typeof(T).ToString()));
+            Debug.WriteLine(string.Format("Array testing for type {0}", typeof(T).ToString()));
             byte[] workBuffer = new byte[4096];
             ByteBuffer buffer = null;
             AmqpCodec.EncodeArray(array, buffer = new ByteBuffer(workBuffer));

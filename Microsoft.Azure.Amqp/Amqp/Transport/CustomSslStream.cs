@@ -40,17 +40,5 @@ namespace Microsoft.Azure.Amqp.Transport
             get;
             internal set;
         }
-
-#if DNXCORE
-        // This is a work-around to a bug in CoreCLR where calling SslStream.ReadAsync (which doesn't complete yet)
-        // followed by calling SslStream.WriteAsync the WriteAsync call blocks until the ReadAsync completes.
-        // Work around this by overriding the base Stream.WriteAsync implementation to avoid this serialization.
-        // Should be removed once we have the fix in SslStream and related classes.
-        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        {
-            base.Write(buffer, offset, count);
-            return TaskHelpers.CompletedTask;
-        }
-#endif
     }
 }

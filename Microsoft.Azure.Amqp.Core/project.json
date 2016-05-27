@@ -31,6 +31,7 @@
       "../Microsoft.Azure.Amqp/Exceptions/*.cs",
       "../Microsoft.Azure.Amqp/Extensions/*.cs",
       "../Microsoft.Azure.Amqp/Interop/*.cs",
+      "../Microsoft.Azure.Amqp/Properties/InternalVisible.cs",
       "../Microsoft.Azure.Amqp/Tracing/*.cs"
     ]
   },

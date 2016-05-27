@@ -25,3 +25,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyInformationalVersion("1.1.2")]
 
 [assembly: InternalsVisibleTo("Test.Microsoft.Azure.Amqp")]
+[assembly: InternalsVisibleTo("Test.Microsoft.Azure.Amqp.Core")]

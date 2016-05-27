@@ -173,7 +173,7 @@
             initiator.ConnectAsync(TimeSpan.FromSeconds(120), args);
 
             complete.WaitOne();
-            complete.Close();
+            complete.Dispose();
 
             if (args.Exception != null)
             {
@@ -207,7 +207,7 @@
                     sb.AppendFormat("{0:X2}", item.Array[i + item.Offset]);
                 }
 
-                System.Diagnostics.Trace.WriteLine(sb.ToString());
+                System.Diagnostics.Debug.WriteLine(sb.ToString());
             }
         }
 
@@ -220,8 +220,8 @@
             }
             catch (Exception exception)
             {
-                System.Diagnostics.Trace.WriteLine(string.Format("Exception occurred at offset {0}", buffer.Offset));
-                System.Diagnostics.Trace.WriteLine(exception.ToString());
+                System.Diagnostics.Debug.WriteLine(string.Format("Exception occurred at offset {0}", buffer.Offset));
+                System.Diagnostics.Debug.WriteLine(exception.ToString());
             }
         }
 
@@ -246,8 +246,11 @@
                         false);
                 }
 
+#if DOTNET
+                store.Dispose();
+#else
                 store.Close();
-
+#endif
                 if (collection.Count > 0)
                 {
                     return collection[0];
@@ -420,7 +423,7 @@
 
             sb.Append(value);
 
-            System.Diagnostics.Trace.WriteLine(sb.ToString());
+            System.Diagnostics.Debug.WriteLine(sb.ToString());
         }
 
         public static async Task<AmqpMessage> ReceiveMessageAsync(this ReceivingAmqpLink link, TimeSpan timeout)

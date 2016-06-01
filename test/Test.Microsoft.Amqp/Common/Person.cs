@@ -12,6 +12,8 @@
     [KnownType(typeof(Teacher))]
     class Person
     {
+        public Person() { }
+
         public Person(string name)
         {
             this.Name = name;
@@ -60,7 +62,7 @@
     [AmqpContract(Name = "student", Code = 1)]
     class Student : Person
     {
-        Student() : base(null) { }
+        public Student() : base(null) { }
 
         public Student(string name)
             : base(name)
@@ -77,6 +79,8 @@
     [AmqpContract(Name = "teacher", Code = 2)]
     class Teacher : Person
     {
+        public Teacher() { }
+
         public Teacher(string name)
             : base(name)
         {
@@ -122,6 +126,8 @@
         {
             this.uuid = uuid;
         }
+
+        public EmployeeId() { }
 
         public int EncodeSize
         {

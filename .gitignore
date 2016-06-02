@@ -176,3 +176,5 @@
 [Oo]bj/
 [Bb]in/
 project.lock.json
+/.vs
+/packages

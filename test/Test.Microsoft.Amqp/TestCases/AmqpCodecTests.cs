@@ -12,13 +12,8 @@
     using global::Microsoft.Azure.Amqp.Sasl;
     using global::Microsoft.Azure.Amqp.Serialization;
     using global::Microsoft.Azure.Amqp.Transaction;
-#if !DOTNET
-    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
+    using Xunit;
 
-#if !DOTNET
-    [TestClass]
-#endif
     public class AmqpCodecTests
     {
         bool boolTrue = true;
@@ -128,11 +123,7 @@
             bin32ValueBin[4] = 0x00;
         }
 
-#if DOTNET
-        [Xunit.Fact]
-#else
-        [TestMethod]
-#endif
+        [Fact]
         public void AmqpCodecSingleValueTest()
         {
             byte[] workBuffer = new byte[2048];
@@ -142,137 +133,137 @@
             AmqpCodec.EncodeBoolean(boolTrue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(boolTrueBin, 0, boolTrueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             bool? bv = AmqpCodec.DecodeBoolean(new ByteBuffer(new ArraySegment<byte>(boolTrueBin)));
-            Assert.IsTrue(bv.Value, "Boolean value is not true.");
+            Assert.True(bv.Value, "Boolean value is not true.");
 
             // boolean false
             AmqpCodec.EncodeBoolean(boolFalse, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(boolFalseBin, 0, boolFalseBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             bv = AmqpCodec.DecodeBoolean(new ByteBuffer(new ArraySegment<byte>(boolFalseBin)));
-            Assert.IsFalse(bv.Value, "Boolean value is not false.");
+            Assert.False(bv.Value, "Boolean value is not false.");
 
             // ubyte
             AmqpCodec.EncodeUByte(ubyteValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(ubyteValueBin, 0, ubyteValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             byte? bytev = AmqpCodec.DecodeUByte(new ByteBuffer(new ArraySegment<byte>(ubyteValueBin)));
-            Assert.IsTrue(bytev == ubyteValue, "UByte value is not equal.");
+            Assert.True(bytev == ubyteValue, "UByte value is not equal.");
 
             // ushort
             AmqpCodec.EncodeUShort(ushortValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(ushortValueBin, 0, ushortValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             ushort? ushortv = AmqpCodec.DecodeUShort(new ByteBuffer(new ArraySegment<byte>(ushortValueBin)));
-            Assert.IsTrue(ushortv == ushortValue, "UShort value is not equal.");
+            Assert.True(ushortv == ushortValue, "UShort value is not equal.");
 
             // uint0
             AmqpCodec.EncodeUInt(uint0Value, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(uint0ValueBin, 0, uint0ValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             uint? uint0v = AmqpCodec.DecodeUInt(new ByteBuffer(new ArraySegment<byte>(uint0ValueBin)));
-            Assert.IsTrue(uint0v == uint0Value, "UInt0 value is not equal.");
+            Assert.True(uint0v == uint0Value, "UInt0 value is not equal.");
 
             // uint small
             AmqpCodec.EncodeUInt(uintSmallValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(uintSmallValueBin, 0, uintSmallValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             uint? uintSmallV = AmqpCodec.DecodeUInt(new ByteBuffer(new ArraySegment<byte>(uintSmallValueBin)));
-            Assert.IsTrue(uintSmallV == uintSmallValue, "UIntSmall value is not equal.");
+            Assert.True(uintSmallV == uintSmallValue, "UIntSmall value is not equal.");
 
             // uint
             AmqpCodec.EncodeUInt(uintValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(uintValueBin, 0, uintValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             uint? uintv = AmqpCodec.DecodeUInt(new ByteBuffer(new ArraySegment<byte>(uintValueBin)));
-            Assert.IsTrue(uintv == uintValue, "UInt value is not equal.");
+            Assert.True(uintv == uintValue, "UInt value is not equal.");
 
             // ulong0
             AmqpCodec.EncodeULong(ulong0Value, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(ulong0ValueBin, 0, ulong0ValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             ulong? ulong0v = AmqpCodec.DecodeULong(new ByteBuffer(new ArraySegment<byte>(ulong0ValueBin)));
-            Assert.IsTrue(ulong0v == ulong0Value, "ULong0 value is not equal.");
+            Assert.True(ulong0v == ulong0Value, "ULong0 value is not equal.");
 
             // ulong small
             AmqpCodec.EncodeULong(ulongSmallValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(ulongSmallValueBin, 0, ulongSmallValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             ulong? ulongSmallV = AmqpCodec.DecodeULong(new ByteBuffer(new ArraySegment<byte>(ulongSmallValueBin)));
-            Assert.IsTrue(ulongSmallV == ulongSmallValue, "ULong value is not equal.");
+            Assert.True(ulongSmallV == ulongSmallValue, "ULong value is not equal.");
 
             // ulong
             AmqpCodec.EncodeULong(ulongValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(ulongValueBin, 0, ulongValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             ulong? ulongv = AmqpCodec.DecodeULong(new ByteBuffer(new ArraySegment<byte>(ulongValueBin)));
-            Assert.IsTrue(ulongv == ulongValue, "ULong value is not equal.");
+            Assert.True(ulongv == ulongValue, "ULong value is not equal.");
 
             // byte
             AmqpCodec.EncodeByte(byteValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(byteValueBin, 0, byteValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             sbyte? sbytev = AmqpCodec.DecodeByte(new ByteBuffer(new ArraySegment<byte>(byteValueBin)));
-            Assert.IsTrue(sbytev == byteValue, "Byte value is not equal.");
+            Assert.True(sbytev == byteValue, "Byte value is not equal.");
 
             // short
             AmqpCodec.EncodeShort(shortValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(shortValueBin, 0, shortValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             short? shortv = AmqpCodec.DecodeShort(new ByteBuffer(new ArraySegment<byte>(shortValueBin)));
-            Assert.IsTrue(shortv == shortValue, "Short value is not equal.");
+            Assert.True(shortv == shortValue, "Short value is not equal.");
 
             // int small
             AmqpCodec.EncodeInt(intSmallValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(intSmallValueBin, 0, intSmallValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             int? intSmallV = AmqpCodec.DecodeInt(new ByteBuffer(new ArraySegment<byte>(intSmallValueBin)));
-            Assert.IsTrue(intSmallV == intSmallValue, "Int small value is not equal.");
+            Assert.True(intSmallV == intSmallValue, "Int small value is not equal.");
 
             // int
             AmqpCodec.EncodeInt(intValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(intValueBin, 0, intValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             int? intv = AmqpCodec.DecodeInt(new ByteBuffer(new ArraySegment<byte>(intValueBin)));
-            Assert.IsTrue(intv == intValue, "Int value is not equal.");
+            Assert.True(intv == intValue, "Int value is not equal.");
 
             // long
             AmqpCodec.EncodeLong(longSmallValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(longSmallValueBin, 0, longSmallValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             long? longSmallV = AmqpCodec.DecodeLong(new ByteBuffer(new ArraySegment<byte>(longSmallValueBin)));
-            Assert.IsTrue(longSmallV == longSmallValue, "Long small value is not equal.");
+            Assert.True(longSmallV == longSmallValue, "Long small value is not equal.");
 
             // long
             AmqpCodec.EncodeLong(longValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(longValueBin, 0, longValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             long? longv = AmqpCodec.DecodeLong(new ByteBuffer(new ArraySegment<byte>(longValueBin)));
-            Assert.IsTrue(longv == longValue, "Long value is not equal.");
+            Assert.True(longv == longValue, "Long value is not equal.");
 
             // float
             AmqpCodec.EncodeFloat(floatValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(floatValueBin, 0, floatValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             float? floatv = AmqpCodec.DecodeFloat(new ByteBuffer(new ArraySegment<byte>(floatValueBin)));
-            Assert.IsTrue(floatv == floatValue, "Float value is not equal.");
+            Assert.True(floatv == floatValue, "Float value is not equal.");
 
             // double
             AmqpCodec.EncodeDouble(doubleValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(doubleValueBin, 0, doubleValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             double? doublev = AmqpCodec.DecodeDouble(new ByteBuffer(new ArraySegment<byte>(doubleValueBin)));
-            Assert.IsTrue(doublev == doubleValue, "Double value is not equal.");
+            Assert.True(doublev == doubleValue, "Double value is not equal.");
 
             //decimal
             decimal? dec32 = DecimalEncoding.Decode(new ByteBuffer(new ArraySegment<byte>(decimal32ValueBin)), FormatCode.Decimal32);
-            Assert.IsTrue(dec32.Value == decimal32Value, "Decimal32 value is not equal");
+            Assert.True(dec32.Value == decimal32Value, "Decimal32 value is not equal");
 
             decimal? dec64 = DecimalEncoding.Decode(new ByteBuffer(new ArraySegment<byte>(decimal64ValueBin)), FormatCode.Decimal64);
-            Assert.IsTrue(dec64.Value == decimal64Value, "Decimal64 value is not equal");
+            Assert.True(dec64.Value == decimal64Value, "Decimal64 value is not equal");
 
             decimal? dec128 = DecimalEncoding.Decode(new ByteBuffer(new ArraySegment<byte>(decimal128ValueBin)), FormatCode.Decimal128);
-            Assert.IsTrue(dec128.Value == decimal128Value, "Decimal128 value is not equal");
+            Assert.True(dec128.Value == decimal128Value, "Decimal128 value is not equal");
 
             // char
             AmqpCodec.EncodeChar(charValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(charValueBin, 0, charValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             char? charv = AmqpCodec.DecodeChar(new ByteBuffer(new ArraySegment<byte>(charValueBin)));
-            Assert.IsTrue(charv == charValue, "Char value is not equal.");
+            Assert.True(charv == charValue, "Char value is not equal.");
 
             // timestamp
             AmqpCodec.EncodeTimeStamp(dtValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(dtValueBin, 0, dtValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             DateTime? dtv = AmqpCodec.DecodeTimeStamp(new ByteBuffer(new ArraySegment<byte>(dtValueBin)));
-            Assert.IsTrue(dtv == dtValue.ToUniversalTime(), "UByte value is not equal.");
+            Assert.True(dtv == dtValue.ToUniversalTime(), "UByte value is not equal.");
 
             // uuid
             AmqpCodec.EncodeUuid(uuidValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(uuidValueBin, 0, uuidValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             Guid? uuidv = AmqpCodec.DecodeUuid(new ByteBuffer(new ArraySegment<byte>(uuidValueBin)));
-            Assert.IsTrue(uuidv == uuidValue, "Uuid value is not equal.");
+            Assert.True(uuidv == uuidValue, "Uuid value is not equal.");
 
             // binary 8
             AmqpCodec.EncodeBinary(bin8Value, buffer = new ByteBuffer(workBuffer));
@@ -290,28 +281,24 @@
             AmqpCodec.EncodeSymbol(strValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(sym8ValueBin, 0, sym8ValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             AmqpSymbol symbol8v = AmqpCodec.DecodeSymbol(new ByteBuffer(new ArraySegment<byte>(sym8ValueBin)));
-            Assert.IsTrue(symbol8v.Value == strValue, "Symbol8 string value is not equal.");
+            Assert.True(symbol8v.Value == strValue, "Symbol8 string value is not equal.");
 
             // symbol 32
             AmqpSymbol symbol32v = AmqpCodec.DecodeSymbol(new ByteBuffer(new ArraySegment<byte>(sym32ValueBin)));
-            Assert.IsTrue(symbol32v.Value == strValue, "Symbol32 string value is not equal.");
+            Assert.True(symbol32v.Value == strValue, "Symbol32 string value is not equal.");
 
             // string 8 UTF8
             AmqpCodec.EncodeString(strValue, buffer = new ByteBuffer(workBuffer));
             EnsureEqual(str8Utf8ValueBin, 0, str8Utf8ValueBin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
             string str8Utf8 = AmqpCodec.DecodeString(new ByteBuffer(new ArraySegment<byte>(str8Utf8ValueBin)));
-            Assert.IsTrue(str8Utf8 == strValue, "UTF8 string8 string value is not equal.");
+            Assert.True(str8Utf8 == strValue, "UTF8 string8 string value is not equal.");
 
             // string 32 UTF8
             string str32Utf8 = AmqpCodec.DecodeString(new ByteBuffer(new ArraySegment<byte>(str32Utf8ValueBin)));
-            Assert.IsTrue(str32Utf8 == strValue, "UTF8 string32 string value is not equal.");
+            Assert.True(str32Utf8 == strValue, "UTF8 string32 string value is not equal.");
         }
 
-#if DOTNET
-        [Xunit.Fact]
-#else
-        [TestMethod]
-#endif
+        [Fact]
         public void AmqpCodecListTest()
         {
             byte[] workBuffer = new byte[4096];
@@ -356,67 +343,63 @@
             // make sure the size written is correct (it has to be List32)
             // the first byte is FormatCode.List32
             int listSize = (int)AmqpBitConverter.ReadUInt(workBuffer, 1, 4);
-            Assert.AreEqual(buffer.Length - 5, listSize);
+            Assert.Equal(buffer.Length - 5, listSize);
 
             IList decList = AmqpCodec.DecodeList(buffer);
             int index = 0;
 
-            Assert.IsTrue(decList[index++].Equals(true), "Boolean true expected.");
-            Assert.IsTrue(decList[index++].Equals(false), "Boolean false expected.");
-            Assert.IsTrue(decList[index++].Equals(ubyteValue), "UByte value not equal.");
-            Assert.IsTrue(decList[index++].Equals(ushortValue), "UShort value not equal.");
-            Assert.IsTrue(decList[index++].Equals(uintValue), "UInt value not equal.");
-            Assert.IsTrue(decList[index++].Equals(ulongValue), "ULong value not equal.");
-            Assert.IsTrue(decList[index++].Equals(byteValue), "Byte value not equal.");
-            Assert.IsTrue(decList[index++].Equals(shortValue), "Short value not equal.");
-            Assert.IsTrue(decList[index++].Equals(intValue), "Int value not equal.");
-            Assert.IsTrue(decList[index++].Equals(longValue), "Long value not equal.");
-            Assert.IsTrue(decList[index++] == null, "Null object expected.");
-            Assert.IsTrue(decList[index++].Equals(floatValue), "Float value not equal.");
-            Assert.IsTrue(decList[index++].Equals(doubleValue), "Double value not equal.");
-            Assert.IsTrue(decList[index++].Equals(decimal32Value), "Decimal32 value not equal.");
-            Assert.IsTrue(decList[index++].Equals(decimal64Value), "Decimal64 value not equal.");
-            Assert.IsTrue(decList[index++].Equals(decimal128Value), "Decimal128 value not equal.");
-            Assert.IsTrue(decList[index++].Equals(charValue), "Char value not equal.");
-            Assert.IsTrue(decList[index++].Equals(dtValue), "TimeStamp value not equal.");
-            Assert.IsTrue(decList[index++].Equals(uuidValue), "Uuid value not equal.");
+            Assert.True(decList[index++].Equals(true), "Boolean true expected.");
+            Assert.True(decList[index++].Equals(false), "Boolean false expected.");
+            Assert.True(decList[index++].Equals(ubyteValue), "UByte value not equal.");
+            Assert.True(decList[index++].Equals(ushortValue), "UShort value not equal.");
+            Assert.True(decList[index++].Equals(uintValue), "UInt value not equal.");
+            Assert.True(decList[index++].Equals(ulongValue), "ULong value not equal.");
+            Assert.True(decList[index++].Equals(byteValue), "Byte value not equal.");
+            Assert.True(decList[index++].Equals(shortValue), "Short value not equal.");
+            Assert.True(decList[index++].Equals(intValue), "Int value not equal.");
+            Assert.True(decList[index++].Equals(longValue), "Long value not equal.");
+            Assert.True(decList[index++] == null, "Null object expected.");
+            Assert.True(decList[index++].Equals(floatValue), "Float value not equal.");
+            Assert.True(decList[index++].Equals(doubleValue), "Double value not equal.");
+            Assert.True(decList[index++].Equals(decimal32Value), "Decimal32 value not equal.");
+            Assert.True(decList[index++].Equals(decimal64Value), "Decimal64 value not equal.");
+            Assert.True(decList[index++].Equals(decimal128Value), "Decimal128 value not equal.");
+            Assert.True(decList[index++].Equals(charValue), "Char value not equal.");
+            Assert.True(decList[index++].Equals(dtValue), "TimeStamp value not equal.");
+            Assert.True(decList[index++].Equals(uuidValue), "Uuid value not equal.");
 
-            Assert.IsTrue(decList[index++] == null, "Null binary expected.");
+            Assert.True(decList[index++] == null, "Null binary expected.");
             ArraySegment<byte> bin8 = (ArraySegment<byte>)decList[index++];
             EnsureEqual(bin8.Array, bin8.Offset, bin8.Count, bin8Value.Array, bin8Value.Offset, bin8Value.Count);
             ArraySegment<byte> bin32 = (ArraySegment<byte>)decList[index++];
             EnsureEqual(bin32.Array, bin32.Offset, bin32.Count, bin32Value.Array, bin32Value.Offset, bin32Value.Count);
 
-            Assert.IsTrue(decList[index++] == null, "Null symbol expected.");
+            Assert.True(decList[index++] == null, "Null symbol expected.");
             AmqpSymbol symDecode = (AmqpSymbol)decList[index++];
-            Assert.IsTrue(symDecode.Equals(strValue), "AmqpSymbol value not equal.");
+            Assert.True(symDecode.Equals(strValue), "AmqpSymbol value not equal.");
             symDecode = (AmqpSymbol)decList[index++];
-            Assert.IsTrue(symDecode.Equals(strBig), "AmqpSymbol value (big) not equal.");
+            Assert.True(symDecode.Equals(strBig), "AmqpSymbol value (big) not equal.");
 
             string strDecode = (string)decList[index++];
-            Assert.IsTrue(strDecode.Equals(strValue), "string value not equal.");
+            Assert.True(strDecode.Equals(strValue), "string value not equal.");
             strDecode = (string)decList[index++];
-            Assert.IsTrue(strDecode.Equals(strBig), "string value (big) not equal.");
+            Assert.True(strDecode.Equals(strBig), "string value (big) not equal.");
 
             DescribedType described = (DescribedType)decList[index++];
-            Assert.IsTrue(described.Descriptor.Equals(described1.Descriptor), "Described value 1 descriptor is different");
-            Assert.IsTrue(described.Value.Equals(described1.Value), "Described value 1 value is different");
+            Assert.True(described.Descriptor.Equals(described1.Descriptor), "Described value 1 descriptor is different");
+            Assert.True(described.Value.Equals(described1.Value), "Described value 1 value is different");
             described = (DescribedType)decList[index++];
-            Assert.IsTrue(described.Descriptor.Equals(described2.Descriptor), "Described value 2 descriptor is different");
-            Assert.IsTrue(described.Value.Equals(described2.Value), "Described value 2 value is different");
+            Assert.True(described.Descriptor.Equals(described2.Descriptor), "Described value 2 descriptor is different");
+            Assert.True(described.Value.Equals(described2.Value), "Described value 2 value is different");
             described = (DescribedType)decList[index++];
-            Assert.IsTrue(described.Descriptor.Equals(described3.Descriptor), "Described value 3 descriptor is different");
-            Assert.IsTrue(described.Value.Equals(described3.Value), "Described value 3 value is different");
+            Assert.True(described.Descriptor.Equals(described3.Descriptor), "Described value 3 descriptor is different");
+            Assert.True(described.Value.Equals(described3.Value), "Described value 3 value is different");
             described = (DescribedType)decList[index++];
             EnsureEqual((DateTime)described4.Descriptor, (DateTime)described.Descriptor);
             EnsureEqual((IList)described.Value, (IList)described4.Value);
         }
 
-#if DOTNET
-        [Xunit.Fact]
-#else
-        [TestMethod]
-#endif
+        [Fact]
         public void AmqpCodecList0Test()
         {
             byte[] list0Bin = new byte[] { 0x45 };
@@ -428,14 +411,10 @@
             EnsureEqual(list0Bin, 0, list0Bin.Length, buffer.Buffer, buffer.Offset, buffer.Length);
 
             IList list0v = AmqpCodec.DecodeList(buffer);
-            Assert.IsTrue(list0v.Count == 0, "The list should contain 0 items.");
+            Assert.True(list0v.Count == 0, "The list should contain 0 items.");
         }
 
-#if DOTNET
-        [Xunit.Fact]
-#else
-        [TestMethod]
-#endif
+        [Fact]
         public void AmqpCodecMapTest()
         {
             byte[] workBuffer = new byte[4096];
@@ -477,56 +456,52 @@
             // make sure the size written is correct (it has to be Map32)
             // the first byte is FormatCode.Map32
             int mapSize = (int)AmqpBitConverter.ReadUInt(workBuffer, 1, 4);
-            Assert.AreEqual(buffer.Length - 5, mapSize);
+            Assert.Equal(buffer.Length - 5, mapSize);
 
             AmqpMap decMap = AmqpCodec.DecodeMap(buffer);
 
-            Assert.IsTrue(decMap[new MapKey("boolTrue")].Equals(true), "Boolean true expected.");
-            Assert.IsTrue(decMap[new MapKey("boolFalse")].Equals(false), "Boolean false expected.");
-            Assert.IsTrue(decMap[new MapKey("ubyte")].Equals(ubyteValue), "UByte value not equal.");
-            Assert.IsTrue(decMap[new MapKey("ushort")].Equals(ushortValue), "UShort value not equal.");
-            Assert.IsTrue(decMap[new MapKey("uint")].Equals(uintValue), "UInt value not equal.");
-            Assert.IsTrue(decMap[new MapKey("ulong")].Equals(ulongValue), "ULong value not equal.");
-            Assert.IsTrue(decMap[new MapKey("byte")].Equals(byteValue), "Byte value not equal.");
-            Assert.IsTrue(decMap[new MapKey("short")].Equals(shortValue), "Short value not equal.");
-            Assert.IsTrue(decMap[new MapKey("int")].Equals(intValue), "Int value not equal.");
-            Assert.IsTrue(decMap[new MapKey("long")].Equals(longValue), "Long value not equal.");
-            Assert.IsTrue(decMap[new MapKey("null")] == null, "Null object expected.");
-            Assert.IsTrue(decMap[new MapKey("float")].Equals(floatValue), "Float value not equal.");
-            Assert.IsTrue(decMap[new MapKey("double")].Equals(doubleValue), "Double value not equal.");
-            Assert.IsTrue(decMap[new MapKey("decimal32")].Equals(decimal32Value), "Decimal32 value not equal.");
-            Assert.IsTrue(decMap[new MapKey("decimal64")].Equals(decimal64Value), "Decimal64 value not equal.");
-            Assert.IsTrue(decMap[new MapKey("decimal128")].Equals(decimal128Value), "Decimal128 value not equal.");
-            Assert.IsTrue(decMap[new MapKey("char")].Equals(charValue), "Char value not equal.");
-            Assert.IsTrue(decMap[new MapKey("datetime")].Equals(dtValue), "TimeStamp value not equal.");
-            Assert.IsTrue(decMap[new MapKey("uuid")].Equals(uuidValue), "Uuid value not equal.");
-            Assert.IsTrue(decMap[new MapKey("binaryNull")] == null, "Null binary expected.");
+            Assert.True(decMap[new MapKey("boolTrue")].Equals(true), "Boolean true expected.");
+            Assert.True(decMap[new MapKey("boolFalse")].Equals(false), "Boolean false expected.");
+            Assert.True(decMap[new MapKey("ubyte")].Equals(ubyteValue), "UByte value not equal.");
+            Assert.True(decMap[new MapKey("ushort")].Equals(ushortValue), "UShort value not equal.");
+            Assert.True(decMap[new MapKey("uint")].Equals(uintValue), "UInt value not equal.");
+            Assert.True(decMap[new MapKey("ulong")].Equals(ulongValue), "ULong value not equal.");
+            Assert.True(decMap[new MapKey("byte")].Equals(byteValue), "Byte value not equal.");
+            Assert.True(decMap[new MapKey("short")].Equals(shortValue), "Short value not equal.");
+            Assert.True(decMap[new MapKey("int")].Equals(intValue), "Int value not equal.");
+            Assert.True(decMap[new MapKey("long")].Equals(longValue), "Long value not equal.");
+            Assert.True(decMap[new MapKey("null")] == null, "Null object expected.");
+            Assert.True(decMap[new MapKey("float")].Equals(floatValue), "Float value not equal.");
+            Assert.True(decMap[new MapKey("double")].Equals(doubleValue), "Double value not equal.");
+            Assert.True(decMap[new MapKey("decimal32")].Equals(decimal32Value), "Decimal32 value not equal.");
+            Assert.True(decMap[new MapKey("decimal64")].Equals(decimal64Value), "Decimal64 value not equal.");
+            Assert.True(decMap[new MapKey("decimal128")].Equals(decimal128Value), "Decimal128 value not equal.");
+            Assert.True(decMap[new MapKey("char")].Equals(charValue), "Char value not equal.");
+            Assert.True(decMap[new MapKey("datetime")].Equals(dtValue), "TimeStamp value not equal.");
+            Assert.True(decMap[new MapKey("uuid")].Equals(uuidValue), "Uuid value not equal.");
+            Assert.True(decMap[new MapKey("binaryNull")] == null, "Null binary expected.");
             ArraySegment<byte> bin8 = (ArraySegment<byte>)decMap[new MapKey("binary8")];
             EnsureEqual(bin8.Array, bin8.Offset, bin8.Count, bin8Value.Array, bin8Value.Offset, bin8Value.Count);
             ArraySegment<byte> bin32 = (ArraySegment<byte>)decMap[new MapKey("binary32")];
             EnsureEqual(bin32.Array, bin32.Offset, bin32.Count, bin32Value.Array, bin32Value.Offset, bin32Value.Count);
 
-            Assert.IsTrue(decMap[new MapKey("symbolNull")] == null, "Null symbol expected.");
+            Assert.True(decMap[new MapKey("symbolNull")] == null, "Null symbol expected.");
             AmqpSymbol symDecode = (AmqpSymbol)decMap[new MapKey("symbol8")];
-            Assert.IsTrue(symDecode.Equals(strValue), "AmqpSymbol value not equal.");
+            Assert.True(symDecode.Equals(strValue), "AmqpSymbol value not equal.");
             symDecode = (AmqpSymbol)decMap[new MapKey("symbol32")];
-            Assert.IsTrue(symDecode.Equals(strBig), "AmqpSymbol value (big) not equal.");
+            Assert.True(symDecode.Equals(strBig), "AmqpSymbol value (big) not equal.");
 
             string strDecode = (string)decMap[new MapKey("string8")];
-            Assert.IsTrue(strDecode.Equals(strValue), "string value not equal.");
+            Assert.True(strDecode.Equals(strValue), "string value not equal.");
             strDecode = (string)decMap[new MapKey("string32")];
-            Assert.IsTrue(strDecode.Equals(strBig), "string value (big) not equal.");
+            Assert.True(strDecode.Equals(strBig), "string value (big) not equal.");
 
             DescribedType described = (DescribedType)decMap[new MapKey("described1")];
-            Assert.IsTrue(described.Descriptor.Equals(described1.Descriptor), "Described value 1 descriptor is different");
-            Assert.IsTrue(described.Value.Equals(described1.Value), "Described value 1 value is different");
+            Assert.True(described.Descriptor.Equals(described1.Descriptor), "Described value 1 descriptor is different");
+            Assert.True(described.Value.Equals(described1.Value), "Described value 1 value is different");
         }
 
-#if DOTNET
-        [Xunit.Fact]
-#else
-        [TestMethod]
-#endif
+        [Fact]
         public void AmqpCodecMultipleTest()
         {
             byte[] workBuffer = new byte[2048];
@@ -547,17 +522,13 @@
             Multiple<Guid> twoDecoded = AmqpCodec.DecodeMultiple<Guid>(buffer);
             Multiple<AmqpSymbol> threeDecoded = AmqpCodec.DecodeMultiple<AmqpSymbol>(buffer);
 
-            Assert.IsNull(nullDecoded, "the null multiple value is not null");
-            Assert.IsTrue(Multiple<string>.Intersect(oneValue, oneDecoded).Count == 1, "multiple of one string value failed");
-            Assert.IsTrue(Multiple<Guid>.Intersect(twoValues, twoDecoded).Count == 2, "multiple of two uuid values failed");
-            Assert.IsTrue(Multiple<AmqpSymbol>.Intersect(threeValues, threeDecoded).Count == 3, "multiple of three symbol values failed");
+            Assert.True(nullDecoded == null, "the null multiple value is not null");
+            Assert.True(Multiple<string>.Intersect(oneValue, oneDecoded).Count == 1, "multiple of one string value failed");
+            Assert.True(Multiple<Guid>.Intersect(twoValues, twoDecoded).Count == 2, "multiple of two uuid values failed");
+            Assert.True(Multiple<AmqpSymbol>.Intersect(threeValues, threeDecoded).Count == 3, "multiple of three symbol values failed");
         }
 
-#if DOTNET
-        [Xunit.Fact]
-#else
-        [TestMethod]
-#endif
+        [Fact]
         public void AmqpCodecFramingTypeTest()
         {
             byte[] workBuffer = new byte[1024 * 16];
@@ -634,88 +605,80 @@
             AmqpCodec.DecodeKnownType<SaslResponse>(buffer);
             AmqpCodec.DecodeKnownType<SaslOutcome>(buffer);
 
-            Assert.IsTrue(buffer.Length == 0, "All bytes in the buffer should be consumed");
+            Assert.True(buffer.Length == 0, "All bytes in the buffer should be consumed");
         }
 
-#if DOTNET
-        [Xunit.Fact]
-#else
-        [TestMethod]
-#endif
+        [Fact]
         public void AmqpCodecDescribedArrayTest()
         {
             int size = AmqpCodec.GetObjectEncodeSize(described5);
             ByteBuffer buffer = new ByteBuffer(new byte[size]);
             AmqpCodec.EncodeObject(described5, buffer);
             DescribedType decoded = (DescribedType)AmqpCodec.DecodeObject(buffer);
-            Assert.IsTrue(decoded.Descriptor.Equals(described5.Descriptor), "Descriptor value not equal");
+            Assert.True(decoded.Descriptor.Equals(described5.Descriptor), "Descriptor value not equal");
             string[] original = (string[])described5.Value;
             string[] array = (string[])decoded.Value;
-            Assert.IsTrue(original.Length == array.Length, string.Format("length not equal {0} != {1}", original.Length, array.Length));
+            Assert.True(original.Length == array.Length, string.Format("length not equal {0} != {1}", original.Length, array.Length));
             for (int i = 0; i < original.Length; ++i)
             {
-                Assert.IsTrue(original[i] == array[i], string.Format("index {0}: {1} != {2}", i, original[i], array[i]));
+                Assert.True(original[i] == array[i], string.Format("index {0}: {1} != {2}", i, original[i], array[i]));
             }
         }
 
-#if DOTNET
-        [Xunit.Fact]
-#else
-        [TestMethod]
-#endif
+        [Fact]
         public void AmqpCodecArrayTest()
         {
             ArrayTest<bool>(
                 new bool[] { true, false, false, true, false, false, true },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<byte>(
                 new byte[] { 0, 1, 2, 3, 4, 200, 255 },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<ushort>(
                 new ushort[] { 0, 1, 2, 0x1234, 0xab00, 0xffff },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<uint>(
                 new uint[] { 0, 1, 2, 0x1234, 0xab00, 0xffff, 0x239d9e, 0xffffffff },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<ulong>(
                 new ulong[] { 0, 1, 2, 0x1234, 0xab00, 0xffff, 0x239d9e, 0xffffffff, 0x329999999, 0xffffffffffffffff },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<sbyte>(
                 new sbyte[] { -127, -9, 0, 9, 127 },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<short>(
                 new short[] { short.MinValue, -127, -9, 0, 9, 127, short.MaxValue},
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<int>(
                 new int[] { int.MinValue, short.MinValue, - 127, -9, 0, 9, 127, short.MaxValue, int.MaxValue },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<long>(
                 new long[] { long.MinValue, int.MinValue, short.MinValue, -127, -9, 0, 9, 127, short.MaxValue, int.MaxValue, long.MaxValue },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<float>(
                 new float[] { float.MinValue, -238.233453f, 0, 89234.92394f, float.MaxValue },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<double>(
                 new double[] { double.MinValue, float.MinValue, -238.233453f, 0, 89234.92394f, float.MaxValue, double.MaxValue },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<decimal>(
                 new decimal[] { decimal.MinValue, -234934.092348m, 0, 38743947394.2349324m, decimal.MaxValue },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<char>(
                 new char[] { 'a', 'b', 'A', 'C' },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<DateTime>(
                 new DateTime[] { DateTime.Now - TimeSpan.FromDays(100), DateTime.Now, DateTime.Now + TimeSpan.FromDays(100) },
@@ -723,19 +686,19 @@
 
             ArrayTest<Guid>(
                 new Guid[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<ArraySegment<byte>>(
                 new ArraySegment<byte>[] { bin8Value, bin32Value, new ArraySegment<byte>(new byte[0]) },
-                (n1, n2) => { Assert.IsTrue(n1.Count == n2.Count, "Value count not equal."); });
+                (n1, n2) => { Assert.True(n1.Count == n2.Count, "Value count not equal."); });
 
             ArrayTest<string>(
                 new string[] { new string('A', 10), new string('B', 300), new string('C', 100) },
-                (n1, n2) => { Assert.IsTrue(n1 == n2, "Value not equal."); });
+                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
 
             ArrayTest<AmqpSymbol>(
                 new AmqpSymbol[] { new string('A', 10), new string('B', 300), new string('C', 100) },
-                (n1, n2) => { Assert.IsTrue(n1.Equals(n2), "Value not equal."); });
+                (n1, n2) => { Assert.True(n1.Equals(n2), "Value not equal."); });
 
             // array of lists
             Guid uuid = Guid.NewGuid();
@@ -759,23 +722,19 @@
                 (n1, n2) => { });
         }
 
-#if DOTNET
-        [Xunit.Fact]
-#else
-        [TestMethod]
-#endif
+        [Fact]
         public void AmqpSerializerListEncodingTest()
         {
             Action<Person, Person> personValidator = (p1, p2) =>
             {
-                Assert.IsNotNull(p2);
-                Assert.AreEqual(21, p2.Age, "Age should be increased by OnDeserialized");
-                Assert.AreEqual(p1.GetType().Name, p2.GetType().Name);
-                Assert.AreEqual(p1.DateOfBirth.Value, p2.DateOfBirth.Value);
-                Assert.AreEqual(p1.Properties.Count, p2.Properties.Count);
+                Assert.NotNull(p2);
+                Assert.True(21 == p2.Age, "Age should be increased by OnDeserialized");
+                Assert.Equal(p1.GetType().Name, p2.GetType().Name);
+                Assert.Equal(p1.DateOfBirth.Value, p2.DateOfBirth.Value);
+                Assert.Equal(p1.Properties.Count, p2.Properties.Count);
                 foreach (var k in p1.Properties.Keys)
                 {
-                    Assert.AreEqual(p1.Properties[k], p2.Properties[k]);
+                    Assert.Equal(p1.Properties[k], p2.Properties[k]);
                 }
             };
 
@@ -783,14 +742,14 @@
             {
                 if (l1 == null || l2 == null)
                 {
-                    Assert.IsTrue(l1 == null && l2 == null);
+                    Assert.True(l1 == null && l2 == null);
                     return;
                 }
 
-                Assert.AreEqual(l1.Count, l2.Count);
+                Assert.Equal(l1.Count, l2.Count);
                 for (int i = 0; i < l1.Count; ++i)
                 {
-                    Assert.AreEqual(l1[i], l2[i]);
+                    Assert.Equal(l1[i], l2[i]);
                 }
             };
 
@@ -814,26 +773,26 @@
             stream.Seek(0, SeekOrigin.Begin);
             Person p3 = AmqpContractSerializer.ReadObject<Person>(stream);
             personValidator(p, p3);
-            Assert.AreEqual(((Student)p).Address.FullAddress, ((Student)p3).Address.FullAddress);
+            Assert.Equal(((Student)p).Address.FullAddress, ((Student)p3).Address.FullAddress);
             gradesValidator(((Student)p).Grades, ((Student)p3).Grades);
 
             // Inter-op: it should be an AMQP described list as other clients see it
             stream.Seek(0, SeekOrigin.Begin);
             DescribedType dl1 = DescribedEncoding.Decode(new ByteBuffer(stream.ToArray(), 0, (int)stream.Length));
-            Assert.AreEqual(dl1.Descriptor, 1ul);
+            Assert.Equal(dl1.Descriptor, 1ul);
             List<object> lv = dl1.Value as List<object>;
-            Assert.IsNotNull(lv);
-            Assert.AreEqual(p.Name, lv[0]);
-            Assert.AreEqual(p.Age, lv[1]);
-            Assert.AreEqual(p.DateOfBirth.Value, lv[2]);
-            Assert.IsTrue(lv[3] is DescribedType, "Address is decribed type");
-            Assert.AreEqual(((DescribedType)lv[3]).Descriptor, 3ul);
-            Assert.AreEqual(((List<object>)((DescribedType)lv[3]).Value)[0], ((Student)p).Address.FullAddress);
-            Assert.IsTrue(lv[4] is AmqpMap, "Properties should be map");
-            Assert.AreEqual(((AmqpMap)lv[4])[new MapKey("height")], p.Properties["height"]);
-            Assert.AreEqual(((AmqpMap)lv[4])[new MapKey("male")], p.Properties["male"]);
-            Assert.AreEqual(((AmqpMap)lv[4])[new MapKey("nick-name")], p.Properties["nick-name"]);
-            Assert.IsTrue(lv[5] is List<object>);
+            Assert.NotNull(lv);
+            Assert.Equal(p.Name, lv[0]);
+            Assert.Equal(p.Age, lv[1]);
+            Assert.Equal(p.DateOfBirth.Value, lv[2]);
+            Assert.True(lv[3] is DescribedType, "Address is decribed type");
+            Assert.Equal(((DescribedType)lv[3]).Descriptor, 3ul);
+            Assert.Equal(((List<object>)((DescribedType)lv[3]).Value)[0], ((Student)p).Address.FullAddress);
+            Assert.True(lv[4] is AmqpMap, "Properties should be map");
+            Assert.Equal(((AmqpMap)lv[4])[new MapKey("height")], p.Properties["height"]);
+            Assert.Equal(((AmqpMap)lv[4])[new MapKey("male")], p.Properties["male"]);
+            Assert.Equal(((AmqpMap)lv[4])[new MapKey("nick-name")], p.Properties["nick-name"]);
+            Assert.True(lv[5] is List<object>);
 
             // Non-default serializer
             AmqpContractSerializer serializer = new AmqpContractSerializer();
@@ -852,9 +811,9 @@
             ULongEncoding.Encode(100, bf2);
 
             Person p5 = serializer.ReadObjectInternal<Person, Person>(bf2);
-            Assert.IsTrue(p5 is Teacher);
-            Assert.AreEqual(100ul, AmqpCodec.DecodeULong(bf2));   // unknowns should be skipped
-            Assert.AreEqual(0, bf2.Length);
+            Assert.True(p5 is Teacher);
+            Assert.Equal(100ul, AmqpCodec.DecodeULong(bf2));   // unknowns should be skipped
+            Assert.Equal(0, bf2.Length);
 
             // teacher
             Teacher teacher = new Teacher("Han");
@@ -866,17 +825,17 @@
             serializer.WriteObjectInternal(bf3, teacher);
 
             Person p6 = serializer.ReadObjectInternal<Person, Person>(bf3);
-            Assert.IsTrue(p6 is Teacher);
-            Assert.AreEqual(teacher.Age + 1, p6.Age);
-            Assert.AreEqual(teacher.Sallary * 2, ((Teacher)p6).Sallary);
-            Assert.AreEqual(teacher.Id, ((Teacher)p6).Id);
-            Assert.AreEqual(teacher.Classes[101], ((Teacher)p6).Classes[101]);
-            Assert.AreEqual(teacher.Classes[102], ((Teacher)p6).Classes[102]);
-            Assert.AreEqual(teacher.Classes[205], ((Teacher)p6).Classes[205]);
+            Assert.True(p6 is Teacher);
+            Assert.Equal(teacher.Age + 1, p6.Age);
+            Assert.Equal(teacher.Sallary * 2, ((Teacher)p6).Sallary);
+            Assert.Equal(teacher.Id, ((Teacher)p6).Id);
+            Assert.Equal(teacher.Classes[101], ((Teacher)p6).Classes[101]);
+            Assert.Equal(teacher.Classes[102], ((Teacher)p6).Classes[102]);
+            Assert.Equal(teacher.Classes[205], ((Teacher)p6).Classes[205]);
         }
 
 #if !DOTNET
-        [TestMethod]
+        [Fact]
         public void AmqpExceptionSerializeTest()
         {
             const string errorDescription = "No link found...";
@@ -888,10 +847,10 @@
                 formatter.Serialize(memoryStream, amqpException1);
                 memoryStream.Position = 0;
                 AmqpException amqpException2 = (AmqpException)formatter.Deserialize(memoryStream);
-                Assert.IsFalse(object.ReferenceEquals(amqpException1, amqpException2), "Exceptions should not be the same instance!");
-                Assert.AreEqual(amqpException1.Message, amqpException2.Message, "Exception.Message differs!");
-                Assert.AreEqual(amqpException1.Error.Condition, amqpException2.Error.Condition, "Error.Condition differs!");
-                Assert.AreEqual(amqpException1.Error.Description, amqpException2.Error.Description, "Error.Description differs!");
+                Assert.False(object.ReferenceEquals(amqpException1, amqpException2), "Exceptions should not be the same instance!");
+                Assert.Equal(amqpException1.Message, amqpException2.Message);
+                Assert.Equal(amqpException1.Error.Condition, amqpException2.Error.Condition);
+                Assert.Equal(amqpException1.Error.Description, amqpException2.Error.Description);
             }
         }
 #endif
@@ -913,7 +872,7 @@
             AmqpCodec.EncodeArray(array, buffer = new ByteBuffer(workBuffer));
 
             T[] decodedArray = AmqpCodec.DecodeArray<T>(buffer);
-            Assert.IsTrue(array.Length == decodedArray.Length, "Count not equal.");
+            Assert.True(array.Length == decodedArray.Length, "Count not equal.");
             for (int i = 0; i < decodedArray.Length; ++i)
             {
                 validate(array[i], decodedArray[i]);
@@ -922,12 +881,12 @@
 
         void EnsureEqual(byte[] data1, int offset1, int count1, byte[] data2, int offset2, int count2)
         {
-            Assert.IsTrue(count1 == count2, "Count is not equal.");
+            Assert.True(count1 == count2, "Count is not equal.");
             for (int i = 0; i < count1; ++i)
             {
                 byte b1 = data1[offset1 + i];
                 byte b2 = data2[offset2 + i];
-                Assert.IsTrue(b1 == b2, string.Format("The {0}th byte is not equal ({1} != {2}).", i, b1, b2));
+                Assert.True(b1 == b2, string.Format("The {0}th byte is not equal ({1} != {2}).", i, b1, b2));
             }
         }
 
@@ -938,18 +897,18 @@
                 return;
             }
 
-            Assert.IsTrue(list1 != null && list2 != null, "One of the list is null");
+            Assert.True(list1 != null && list2 != null, "One of the list is null");
 
-            Assert.IsTrue(list1.Count == list2.Count, "Count not equal.");
+            Assert.True(list1.Count == list2.Count, "Count not equal.");
             for (int i = 0; i < list1.Count; i++)
             {
-                Assert.IsTrue(list1[i].Equals(list2[i]), "Value not equal.");
+                Assert.True(list1[i].Equals(list2[i]), "Value not equal.");
             }
         }
 
         void EnsureEqual(DateTime d1, DateTime d2)
         {
-            Assert.IsTrue(Math.Abs((d1.ToUniversalTime() - d2.ToUniversalTime()).TotalMilliseconds) < 5, "Datetime difference is greater than 5ms.");
+            Assert.True(Math.Abs((d1.ToUniversalTime() - d2.ToUniversalTime()).TotalMilliseconds) < 5, "Datetime difference is greater than 5ms.");
         }
     }
 }

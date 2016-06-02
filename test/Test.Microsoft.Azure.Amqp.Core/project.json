@@ -9,7 +9,6 @@
     },
     "buildOptions": {
         "compile": [
-            "Assert.cs",
             "../Test.Microsoft.Amqp/Common/*.cs",
             "../Test.Microsoft.Amqp/TestCases/AmqpCodecTests.cs"
         ],

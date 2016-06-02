@@ -9,6 +9,7 @@
     using global::Microsoft.Azure.Amqp.Framing;
     using Xunit;
 
+    [Trait("Category", TestCategory.Current)]
     public class AmqpMessageTests
     {
         [Fact]

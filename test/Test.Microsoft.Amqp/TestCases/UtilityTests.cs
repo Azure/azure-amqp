@@ -9,6 +9,7 @@
     using global::Microsoft.Azure.Amqp.Encoding;
     using Xunit;
 
+    [Trait("Category", TestCategory.Current)]
     public class UtilityTests
     {
         [Fact]

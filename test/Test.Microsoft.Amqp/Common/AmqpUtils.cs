@@ -246,7 +246,7 @@
                         false);
                 }
 
-#if DOTNET
+#if DOTNET_CORE
                 store.Dispose();
 #else
                 store.Close();

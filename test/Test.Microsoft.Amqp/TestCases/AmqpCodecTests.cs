@@ -834,7 +834,7 @@
             Assert.Equal(teacher.Classes[205], ((Teacher)p6).Classes[205]);
         }
 
-#if !DOTNET
+#if !DOTNET_CORE
         [Fact]
         public void AmqpExceptionSerializeTest()
         {

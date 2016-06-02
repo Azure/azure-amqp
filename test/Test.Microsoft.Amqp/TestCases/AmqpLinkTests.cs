@@ -739,7 +739,7 @@
                     }
                     catch (Exception exception)
                     {
-                        Trace.WriteLine(exception.ToString());
+                        Debug.WriteLine(exception.ToString());
                         completed.Set();
                     }
                 });
@@ -774,7 +774,7 @@
             catch (AmqpException exception)
             {
                 gotException = true;
-                Trace.WriteLine(exception.Message);
+                Debug.WriteLine(exception.Message);
             }
 
             Assert.True(gotException);
@@ -1134,7 +1134,7 @@
             Assert.True(Frm(buffer).Command.DescriptorCode == End.Code, "End not received");
             Assert.True(Frm(buffer).Command.DescriptorCode == Close.Code, "Close not received");
 
-            socket.Close();
+            socket.Dispose();
         }
 
         static void Send(Socket socket, byte[] buffer, int offset, int count)

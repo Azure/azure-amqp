@@ -6,6 +6,7 @@
     using global::Microsoft.Azure.Amqp.Transport;
     using Xunit;
 
+    [Trait("Category", TestCategory.Current)]
     public class AmqpTransportTests
     {
         const int TestBytes = 1024;

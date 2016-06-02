@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\AmqpUtils.cs" />
+    <Compile Include="Common\TestCategory.cs" />
     <Compile Include="Common\Person.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestCases\AmqpCodecTests.cs" />

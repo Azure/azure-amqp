@@ -15,6 +15,7 @@
     using TestAmqpBroker;
     using Xunit;
 
+    [Trait("Category", TestCategory.Current)]
     public class AmqpLinkTests : IDisposable
     {
         const string address = "amqp://localhost:15672";

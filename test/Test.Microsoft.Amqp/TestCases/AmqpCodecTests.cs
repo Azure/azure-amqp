@@ -14,6 +14,7 @@
     using global::Microsoft.Azure.Amqp.Transaction;
     using Xunit;
 
+    [Trait("Category", TestCategory.Current)]
     public class AmqpCodecTests
     {
         bool boolTrue = true;

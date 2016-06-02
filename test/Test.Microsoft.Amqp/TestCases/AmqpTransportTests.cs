@@ -4,21 +4,15 @@
     using System.Diagnostics;
     using System.Threading;
     using global::Microsoft.Azure.Amqp.Transport;
-    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Xunit;
 
-    [TestClass]
     public class AmqpTransportTests
     {
         const int TestBytes = 1024;
         const int Iterations = 2;
         const int TestMaxNumber = 9999;
 
-        [ClassInitialize]
-        public static void ClassInitialize(TestContext context)
-        {
-        }
-
-        [TestMethod()]
+        [Fact]
         public void TcpTransportTest()
         {
             const string localHost = "localhost";
@@ -46,8 +40,8 @@
             initiatorThread.Join();
 
             Trace.WriteLine("TCP transport test completed.");
-            Assert.IsTrue(clientContext.Success);
-            Assert.IsTrue(serverContext.Success);
+            Assert.True(clientContext.Success);
+            Assert.True(serverContext.Success);
         }
 
         internal static TransportBase AcceptServerTransport(TransportSettings settings)

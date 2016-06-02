@@ -9,11 +9,10 @@
     },
     "buildOptions": {
         "compile": [
-            "Assert.cs",
             "../Test.Microsoft.Amqp/Common/*.cs",
             "../Test.Microsoft.Amqp/TestCases/AmqpCodecTests.cs"
         ],
-        "define": [ "TRACE", "DOTNET" ]
+        "define": [ "TRACE", "DOTNET_CORE" ]
     },
     "frameworks": {
         "netcoreapp1.0": {

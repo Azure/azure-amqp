@@ -29,7 +29,7 @@
                 // this function should be always called single threaded
                 if (Interlocked.Exchange(ref working, 1) == 1)
                 {
-                    Trace.WriteLine("Should not be called while working");
+                    Debug.WriteLine("Should not be called while working");
                     completeEvent.Set();
                     return false;
                 }
@@ -84,7 +84,7 @@
             }
 
             bool waitOne = completeEvent.WaitOne(30 * 1000);
-            Trace.WriteLine(string.Format("total: {0}, completed: {1}", totalCount, completedCount));
+            Debug.WriteLine(string.Format("total: {0}, completed: {1}", totalCount, completedCount));
             if (!waitOne)
             {
                 Assert.True(false, "Worker did not complete in time");

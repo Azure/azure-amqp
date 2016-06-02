@@ -271,8 +271,11 @@ namespace TestAmqpBroker
                         false);
                 }
 
+#if DOTNET_CORE
+                store.Dispose();
+#else
                 store.Close();
-
+#endif
                 if (collection.Count > 0)
                 {
                     return collection[0];

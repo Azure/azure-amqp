@@ -16,22 +16,15 @@
     using Xunit;
 
     [Trait("Category", TestCategory.Current)]
-    public class AmqpLinkTests : IDisposable
+    public class AmqpLinkTests : IClassFixture<TestAmqpBrokerFixture>
     {
-        const string address = "amqp://localhost:15672";
         Uri addressUri;
         TestAmqpBroker broker;
 
-        public AmqpLinkTests()
+        public AmqpLinkTests(TestAmqpBrokerFixture testAmqpBrokerFixture)
         {
-            addressUri = new Uri(address);
-            broker = new TestAmqpBroker(new string[] { address }, "guest:guest", null, null);
-            broker.Start();
-        }
-
-        public void Dispose()
-        {
-            broker.Stop();
+            addressUri = testAmqpBrokerFixture.Address;            
+            broker = testAmqpBrokerFixture.Broker;
         }
 
         [Fact]

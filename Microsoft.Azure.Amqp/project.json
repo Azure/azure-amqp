@@ -36,7 +36,7 @@
       },
       "imports": [ "net46", "dnxcore50", "portable-net45+win8" ],
       "buildOptions": {
-        "define": [ "DNXCORE" ]
+        "define": [ "NETSTANDARD" ]
       }
     }
   }

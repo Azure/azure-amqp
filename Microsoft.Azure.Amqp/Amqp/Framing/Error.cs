@@ -8,11 +8,11 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
-#if !DNXCORE
+#if !NETSTANDARD
     [Serializable]
 #endif
     public sealed class Error : DescribedList
-#if !DNXCORE
+#if !NETSTANDARD
         , ISerializable
 #endif
     {
@@ -25,7 +25,7 @@ namespace Microsoft.Azure.Amqp.Framing
         {
         }
 
-#if !DNXCORE
+#if !NETSTANDARD
         Error(SerializationInfo info, StreamingContext context)
             : base(Name, Code)
         {
@@ -65,7 +65,7 @@ namespace Microsoft.Azure.Amqp.Framing
             {
                 error.Condition = AmqpErrorCode.NotAllowed;
             }
-#if !DNXCORE
+#if !NETSTANDARD
             else if (exception is System.Transactions.TransactionAbortedException)
             {
                 error.Condition = AmqpErrorCode.TransactionRollback;
@@ -108,7 +108,7 @@ namespace Microsoft.Azure.Amqp.Framing
             return sb.ToString();
         }
 
-#if !DNXCORE
+#if !NETSTANDARD
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
             // The inner types aren't actually serializable, instead we serialize

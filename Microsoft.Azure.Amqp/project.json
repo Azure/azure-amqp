@@ -1,0 +1,43 @@
+﻿{
+  "version": "2.0.0-*",
+  "description": "Microsoft.Azure.Amqp Class Library",
+  "authors": [ "microsoft" ],
+  
+  "packOptions": {
+    "tags": [ "AMQP coreclr .net core Azure" ],
+    "projectUrl": "https://github.com/Azure/azure-amqp",
+    "licenseUrl": "https://github.com/Azure/azure-amqp/blob/master/LICENSE.txt"
+  },
+  
+  "buildOptions": {
+    "allowUnsafe": true,
+    "xmlDoc": false
+  },
+	
+  "frameworks": {
+    "net451": {
+      "frameworkAssemblies": {
+        "System.Runtime.Serialization": "4.0.0.0",
+        "System.Transactions": "4.0.0.0",
+        "System.Xml": "4.0.0.0"
+      }
+    },
+    "netstandard1.3": {
+      "dependencies": {
+        "NETStandard.Library": "1.5.0-rc2-24027",
+        "System.Diagnostics.Process": "4.1.0-rc2-24027",
+        "System.Net.NameResolution": "4.0.0-rc2-24027",
+        "System.Net.Security": "4.0.0-rc2-24027",
+        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-24027",
+        "System.Runtime.Serialization.Xml": "4.1.1-rc2-24027",
+        "System.Security.Claims": "4.0.1-rc2-24027",
+        "System.Threading.Thread": "4.0.0-rc2-24027",
+        "System.Threading.ThreadPool": "4.0.10-rc2-24027"
+      },
+      "imports": [ "net46", "dnxcore50", "portable-net45+win8" ],
+      "buildOptions": {
+        "define": [ "DNXCORE" ]
+      }
+    }
+  }
+}

@@ -20,6 +20,8 @@ namespace System
     }
 }
 
+#endif
+
 namespace System.Collections.Generic
 {
     using System.Collections.ObjectModel;
@@ -169,6 +171,7 @@ namespace System.Collections.Generic
         }
     }
 }
+
 #if WINDOWS_UWP
 
 namespace System.Threading
@@ -195,8 +198,6 @@ class Win32
 }
 
 #endif
-
-#endif // DNXCORE
 
 namespace Diagnostics
 {

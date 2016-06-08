@@ -18,8 +18,8 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("A0D1C509-8C92-4AA1-983C-00E5254F8AE0")]
 
-[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyVersion("2.0.0.0")]
 
 // Version information for an assembly follows semantic versioning 1.0.0 (because
 // NuGet didn't support semver 2.0.0 before VS 2015). See semver.org for details.
-[assembly: AssemblyInformationalVersion("1.1.2")]
+[assembly: AssemblyInformationalVersion("2.0.0")]

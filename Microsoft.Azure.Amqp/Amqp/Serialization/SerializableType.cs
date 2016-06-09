@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         public object CreateInstance()
         {
-#if DNXCORE
+#if NETSTANDARD
             return Activator.CreateInstance(this.type);
 #else
             return this.hasDefaultCtor ?

@@ -68,11 +68,11 @@ namespace Microsoft.Azure.Amqp
                 }
                 else
                 {
-#if DNXCORE
+#if NETSTANDARD
                     System.Diagnostics.Debug.WriteLine(message);
 #else
                     System.Diagnostics.Trace.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}\t{1}", AppDomain.CurrentDomain.FriendlyName, message));
-#endif // DNXCORE
+#endif // NETSTANDARD
                 }
             }
         }

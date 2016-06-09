@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Amqp
     using System.Runtime.Versioning;
     using System.Text;
     using System.Threading;
-#if !DNXCORE
+#if !NETSTANDARD
     using Microsoft.Azure.Amqp.Interop;
 #endif
     using Microsoft.Azure.Amqp.Tracing;
@@ -111,7 +111,7 @@ namespace Microsoft.Azure.Amqp
             ////MessagingClientEtwProvider.Provider.EventWriteUnhandledException(this.eventSourceName + ": " + exception.ToStringSlim());
         }
 
-#if !DNXCORE
+#if !NETSTANDARD
         [ResourceConsumption(ResourceScope.Process)]
 #endif
         [Fx.Tag.SecurityNote(Critical = "Calls 'System.Runtime.Interop.UnsafeNativeMethods.IsDebuggerPresent()' which is a P/Invoke method",
@@ -128,7 +128,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     case EventLevel.Critical:
                     case EventLevel.Error:
-#if DNXCORE
+#if NETSTANDARD
                         Debug.WriteLine("[{0}] An Exception is being thrown: {1}", level, exception);
 #else
                         Trace.TraceError("An Exception is being thrown: {0}", GetDetailsForThrownException(exception));
@@ -143,7 +143,7 @@ namespace Microsoft.Azure.Amqp
 
                         break;
                     case EventLevel.Warning:
-#if DNXCORE
+#if NETSTANDARD
                         Debug.WriteLine("[{0}] An Exception is being thrown: {1}", level, exception);
 #else
                         Trace.TraceWarning("An Exception is being thrown: {0}", GetDetailsForThrownException(exception));
@@ -201,7 +201,7 @@ namespace Microsoft.Azure.Amqp
             Safe = "Safe because it's a no-op in retail builds.")]
         internal void BreakOnException(Exception exception)
         {
-#if DEBUG && !DNXCORE
+#if DEBUG && !NETSTANDARD
             if (Fx.BreakOnExceptionTypes != null)
             {
                 foreach (Type breakType in Fx.BreakOnExceptionTypes)

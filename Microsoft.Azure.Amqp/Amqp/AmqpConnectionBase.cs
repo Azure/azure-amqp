@@ -147,34 +147,45 @@ namespace Microsoft.Azure.Amqp
 
         void OnReceiveFrameBuffer(ByteBuffer buffer)
         {
-            int step = 0;
-
-            try
+            if (this.State <= AmqpObjectState.OpenClosePipe)
             {
-                if (this.State <= AmqpObjectState.OpenClosePipe)
+                Fx.Assert(buffer.Length == AmqpConstants.ProtocolHeaderSize, "protocol header size is wrong");
+                try
                 {
-                    step = 1;
-                    Fx.Assert(buffer.Length == AmqpConstants.ProtocolHeaderSize, "protocol header size is wrong");
                     ProtocolHeader header = new ProtocolHeader();
                     header.Decode(buffer);
                     this.OnProtocolHeader(header);
                 }
-                else
+                catch (Exception exception)
                 {
-                    step = 2;
-                    this.OnFrameBuffer(buffer);
+                    if (Fx.IsFatal(exception))
+                    {
+                        throw;
+                    }
+
+                    AmqpTrace.Provider.AmqpLogError(this, "OnProtocolHeader", exception.Message);
+
+                    this.TerminalException = exception;
+                    this.Abort();
                 }
             }
-            catch (Exception exception)
+            else
             {
-                if (Fx.IsFatal(exception))
+                try
                 {
-                    throw;
+                    this.OnFrameBuffer(buffer);
                 }
+                catch (Exception exception)
+                {
+                    if (Fx.IsFatal(exception))
+                    {
+                        throw;
+                    }
 
-                AmqpTrace.Provider.AmqpLogError(this, step.ToString(CultureInfo.InvariantCulture), exception.Message);
+                    AmqpTrace.Provider.AmqpLogError(this, "OnFrame", exception.Message);
 
-                this.SafeClose(exception);
+                    this.SafeClose(exception);
+                }
             }
         }
     }

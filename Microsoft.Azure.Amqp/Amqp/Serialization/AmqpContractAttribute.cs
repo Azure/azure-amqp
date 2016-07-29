@@ -5,9 +5,12 @@ namespace Microsoft.Azure.Amqp.Serialization
 {
     using System;
 
+    /// <summary>Enumerates the encoding type associated with the serialization.</summary>
     public enum EncodingType
     {
+        /// <summary>The List encoding type.</summary>
         List,
+        /// <summary>The Map encoding type.</summary>
         Map
     }
 

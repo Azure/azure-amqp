@@ -37,7 +37,6 @@ namespace Microsoft.Azure.Amqp
         public RequestResponseAmqpLink(string type, string name, AmqpSession session, string address, Fields properties)
             : base(type)
         {
-            this.LinkId = Guid.NewGuid().ToString("N");
             this.Name = name ?? string.Format(CultureInfo.InvariantCulture, "{0}:{1}:{2}", session.Connection.Identifier, session.Identifier, this.Identifier);
             this.replyTo = Guid.NewGuid().ToString("N");
 
@@ -45,7 +44,7 @@ namespace Microsoft.Azure.Amqp
             senderSettings.Role = false;
             senderSettings.LinkName = this.Name + ":sender";
             senderSettings.SettleType = SettleMode.SettleOnSend;
-            senderSettings.Source = new Source() { Address = this.LinkId };
+            senderSettings.Source = new Source() { Address = Guid.NewGuid().ToString("N") };
             senderSettings.Target = new Target() { Address = address };
             senderSettings.Properties = properties;
             this.sender = new SendingAmqpLink(session, senderSettings);
@@ -66,8 +65,6 @@ namespace Microsoft.Azure.Amqp
 
             this.inflightRequests = new WorkCollection<MessageId, RequestAsyncResult, AmqpMessage>();
         }
-
-        public string LinkId { get; private set; }
 
         public string Name { get; private set; }
 

@@ -17,6 +17,13 @@ namespace Microsoft.Azure.Amqp.Sasl
         {
             this.ProtocolId = ProtocolId.AmqpSasl;
             this.handlers = new Dictionary<string, SaslHandler>();
+            this.MaxFrameSize = int.MaxValue;
+        }
+
+        public int MaxFrameSize
+        {
+            get;
+            set;
         }
 
         public IEnumerable<string> Mechanisms

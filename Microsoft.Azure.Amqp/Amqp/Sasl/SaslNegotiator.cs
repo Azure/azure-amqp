@@ -46,7 +46,7 @@ namespace Microsoft.Azure.Amqp.Sasl
 
         public bool Start()
         {
-            this.reader = new AsyncIO.FrameBufferReader(this, transport);
+            this.reader = new AsyncIO.FrameBufferReader(this, transport, this.provider.MaxFrameSize);
             this.writer = new AsyncIO.AsyncBufferWriter(transport);
 
             if (!this.isInitiator)

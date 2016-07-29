@@ -428,13 +428,15 @@ namespace Microsoft.Azure.Amqp
             static readonly Action<TransportAsyncCallbackArgs> onSizeComplete = OnReadSizeComplete;
             static readonly Action<TransportAsyncCallbackArgs> onFrameComplete = OnReadFrameComplete;
             readonly TransportBase transport;
+            readonly int maxFrameSize;
             readonly byte[] sizeBuffer;
             IIoHandler parent;
 
-            public FrameBufferReader(IIoHandler parent, TransportBase transport)
+            public FrameBufferReader(IIoHandler parent, TransportBase transport, int maxFrameSize)
             {
                 this.parent = parent;
                 this.transport = transport;
+                this.maxFrameSize = maxFrameSize;
                 this.sizeBuffer = new byte[FixedWidth.UInt];
             }
 
@@ -526,11 +528,20 @@ namespace Microsoft.Azure.Amqp
                     {
                         // read size completed ok
                         uint size = AmqpBitConverter.ReadUInt(this.sizeBuffer, 0, this.sizeBuffer.Length);
-                        byte[] frameBuffer = new byte[size];
-                        Buffer.BlockCopy(this.sizeBuffer, 0, frameBuffer, 0, this.sizeBuffer.Length);
-                        args.SetBuffer(frameBuffer, this.sizeBuffer.Length, (int)size - this.sizeBuffer.Length);
-                        args.CompletedCallback = onFrameComplete;
-                        completed = false;
+                        if (size > this.maxFrameSize)
+                        {
+                            completed = true;
+                            exception = new AmqpException(AmqpErrorCode.FramingError, CommonResources.GetString(CommonResources.InvalidFrameSize, size, this.maxFrameSize));
+                            this.parent.OnIoFault(exception);
+                        }
+                        else
+                        {
+                            byte[] frameBuffer = new byte[size];
+                            Buffer.BlockCopy(this.sizeBuffer, 0, frameBuffer, 0, this.sizeBuffer.Length);
+                            args.SetBuffer(frameBuffer, this.sizeBuffer.Length, (int)size - this.sizeBuffer.Length);
+                            args.CompletedCallback = onFrameComplete;
+                            completed = false;
+                        }
                     }
                 }
 

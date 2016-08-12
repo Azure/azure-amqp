@@ -444,6 +444,19 @@ namespace Microsoft.Azure.Amqp
         // Returns true if this is a new delivery
         public abstract bool CreateDelivery(Transfer transfer, out Delivery delivery);
 
+        internal virtual void OnIoEvent(IoEvent ioEvent)
+        {
+            EventHandler temp = this.PropertyReceived;
+            if (temp != null)
+            {
+                AmqpTrace.Provider.AmqpIoEvent(this, (int)ioEvent, (long)this.linkCredit);
+
+                Fields properties = new Fields();
+                properties.Add(AmqpConstants.IoEvent, (int)ioEvent);
+                temp(properties, EventArgs.Empty);
+            }
+        }
+
         public bool Invoke(Delivery delivery)
         {
             return this.DoActionIfNotClosed(
@@ -512,7 +525,7 @@ namespace Microsoft.Azure.Amqp
 
         protected void ProcessTransfer(Transfer transfer, Frame rawFrame, Delivery delivery, bool newDelivery)
         {
-            if (newDelivery)
+            if (newDelivery && this.linkCredit < uint.MaxValue)
             {
                 bool creditAvailable = true;
                 lock (this.syncRoot)
@@ -1009,7 +1022,7 @@ namespace Microsoft.Azure.Amqp
             this.SendFlow(echo, drain, properties);
         }
 
-        void SendFlow(bool echo, bool drain, Fields properties)
+        protected void SendFlow(bool echo, bool drain, Fields properties)
         {
             this.DoActionIfNotClosed(
                 (thisPtr, paramEcho, paramDrain, paramProperties, p5) =>

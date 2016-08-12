@@ -5,10 +5,18 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
 
+    public enum IoEvent
+    {
+        WriteBufferQueueFull,
+        WriteBufferQueueEmpty
+    }
+
     public interface IIoHandler
     {
         void OnReceiveBuffer(ByteBuffer buffer);
 
         void OnIoFault(Exception exception);
+
+        void OnIoEvent(IoEvent ioEvent, long queueSize);
     }
 }

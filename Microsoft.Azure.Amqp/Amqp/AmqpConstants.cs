@@ -26,6 +26,7 @@ namespace Microsoft.Azure.Amqp
         public const string BadCommand = "BadCommand";
         public const string AddRule = "AddRule";
         public const string DeleteRule = "DeleteRule";
+        public const string GetMessageSessions = "GetMessageSessions";
         public const string Publish = "Publish";
         public const string Consume = "Consume";
         public const string Dispose = "Dispose";
@@ -36,6 +37,7 @@ namespace Microsoft.Azure.Amqp
         public static readonly AmqpSymbol Port = "port";
         public static readonly AmqpSymbol Address = "address";
         public static readonly AmqpSymbol PublisherId = "publisher-id";
+        public static readonly AmqpSymbol IoEvent = "io-event";
 
         public static readonly ArraySegment<byte> NullBinary = new ArraySegment<byte>();
         public static readonly ArraySegment<byte> EmptyBinary = new ArraySegment<byte>(new byte[0]);
@@ -65,7 +67,7 @@ namespace Microsoft.Azure.Amqp
         public const int DefaultPort = 5672;
         public const int DefaultSecurePort = 5671;
         public const int ProtocolHeaderSize = 8;
-        public const int TransportBufferSize = 64 * 1024;
+        public const int TransportBufferSize = 8 * 1024;
         public const int MinMaxFrameSize = 512;
         public const uint DefaultMaxFrameSize = 64 * 1024;
         public const ushort DefaultMaxConcurrentChannels = 8 * 1024;
@@ -73,7 +75,6 @@ namespace Microsoft.Azure.Amqp
         public const uint DefaultHeartBeatInterval = 90000;
         public const uint MinimumHeartBeatIntervalMs = 60 * 1000;
         public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
-        public const int DefaultTryCloseTimeout = 15;   // seconds
         public const uint DefaultWindowSize = 5000;
         public const uint DefaultLinkCredit = 1000;
         public const uint DefaultNextTransferId = 1;

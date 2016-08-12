@@ -12,31 +12,22 @@
     using global::Microsoft.Azure.Amqp.Encoding;
     using global::Microsoft.Azure.Amqp.Framing;
     using global::Microsoft.Azure.Amqp.Transaction;
-    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestAmqpBroker;
+    using Xunit;
 
-    [TestClass]
-    public class AmqpLinkTests
+    [Trait("Category", TestCategory.Current)]
+    public class AmqpLinkTests : IClassFixture<TestAmqpBrokerFixture>
     {
-        const string address = "amqp://localhost:15672";
-        static Uri addressUri;
-        static TestAmqpBroker broker;
+        Uri addressUri;
+        TestAmqpBroker broker;
 
-        [ClassInitialize]
-        public static void ClassInitialize(TestContext context)
+        public AmqpLinkTests(TestAmqpBrokerFixture testAmqpBrokerFixture)
         {
-            addressUri = new Uri(address);
-            broker = new TestAmqpBroker(new string[] { address }, "guest:guest", null, null);
-            broker.Start();
+            addressUri = testAmqpBrokerFixture.Address;            
+            broker = testAmqpBrokerFixture.Broker;
         }
 
-        [ClassCleanup]
-        public static void ClassCleanup()
-        {
-            broker.Stop();
-        }
-
-        [TestMethod()]
+        [Fact]
         public void AmqpLinkSyncSendReceiveTest()
         {
             const int messageCount = 10;
@@ -46,7 +37,7 @@
             this.SendReceive(queue, messageCount, true, true, false);
         }
         
-        [TestMethod()]
+        [Fact]
         public void AmqpLinkAsyncSendReceiveTest()
         {
             const int messageCount = 10;
@@ -56,7 +47,7 @@
             this.SendReceive(queue, messageCount);
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpLinkSettleOnSendTest()
         {
             const int messageCount = 30;
@@ -76,7 +67,7 @@
                 (s) => { s.TotalLinkCredit = 26; s.SettleType = SettleMode.SettleOnSend; });
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpLinkSettleOnReceiveTest()
         {
             const int messageCount = 30;
@@ -96,7 +87,7 @@
                 (s) => { s.TotalLinkCredit = 26; s.SettleType = SettleMode.SettleOnReceive; });
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpLinkSettleOnDisposeTest()
         {
             const int messageCount = 30;
@@ -116,7 +107,7 @@
                 (s) => { s.TotalLinkCredit = 26; s.SettleType = SettleMode.SettleOnDispose; });
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpLinkBestEffortSendTest()
         {
             const int messageCount = 10;
@@ -139,7 +130,7 @@
                 (s) => { s.TotalLinkCredit = 50; s.SettleType = SettleMode.SettleOnSend; });
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpAsyncAndOrderTest()
         {
             const int messageCount = 100;
@@ -196,7 +187,7 @@
                 {
                     if (m.Properties.MessageId.ToString() != receiveCount.ToString())
                     {
-                        lastException = new InternalTestFailureException(string.Format("received message id is not in order, expect: {0}, actual:{1}", receiveCount, m.Properties.MessageId));
+                        lastException = new Exception(string.Format("received message id is not in order, expect: {0}, actual:{1}", receiveCount, m.Properties.MessageId));
                     }
                     else
                     {
@@ -237,13 +228,13 @@
             sThread.Join();
             rThread.Join();
 
-            Assert.IsNull(lastException, "Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString());
+            Assert.True(lastException == null, string.Format("Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString()));
 
             session.Close();
             connection.Close();
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpMessageTest()
         {
             string queue = "AmqpMessageTest";
@@ -276,19 +267,19 @@
             ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnReceive, 100));
             rLink.Open();
             bool hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(60), null, null), out message);
-            Assert.IsTrue(hasMessage);
-            Assert.IsNotNull(message);
-            Assert.IsNotNull(message.ApplicationProperties);
-            Assert.AreEqual(SectionFlag.Data, message.BodyType);
+            Assert.True(hasMessage);
+            Assert.NotNull(message);
+            Assert.NotNull(message.ApplicationProperties);
+            Assert.Equal(SectionFlag.Data, message.BodyType);
             ArraySegment<byte> bytes = (ArraySegment<byte>)message.DataBody.First().Value;
-            Assert.AreEqual(data, System.Text.Encoding.UTF8.GetString(bytes.Array, bytes.Offset, bytes.Count));
+            Assert.Equal(data, System.Text.Encoding.UTF8.GetString(bytes.Array, bytes.Offset, bytes.Count));
 
             message.Dispose();
             rLink.Close();
             connection.Close();
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpDynamicNodeTest()
         {
             AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
@@ -308,14 +299,14 @@
             AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = messageBody });
             message.Batchable = false;
             Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, new ArraySegment<byte>(new byte[2]), new ArraySegment<byte>(), TimeSpan.FromSeconds(5), null, null));
-            Assert.IsTrue(outcome.DescriptorCode == Accepted.Code, "message is not accepted.");
+            Assert.True(outcome.DescriptorCode == Accepted.Code, "message is not accepted.");
 
             AmqpMessage message2;
             bool hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(10), null, null), out message2);
-            Assert.IsTrue(hasMessage, "receive should return true");
-            Assert.IsNotNull(message2, "The received message cannot be null.");
-            Assert.IsNotNull(message.ValueBody, "the message body should have a valid value");
-            Assert.IsTrue(message.ValueBody.Value.Equals(messageBody), "Received a different message.");
+            Assert.True(hasMessage, "receive should return true");
+            Assert.True(message2 != null, "The received message cannot be null.");
+            Assert.True(message.ValueBody != null, "the message body should have a valid value");
+            Assert.True(message.ValueBody.Value.Equals(messageBody), "Received a different message.");
             rLink.AcceptMessage(message, true, false);
             message.Dispose();
 
@@ -325,7 +316,7 @@
             connection.Close();
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpMessageFragmentationTest()
         {
             const int sendMaxFrameSize = 512;
@@ -339,7 +330,7 @@
             this.SendReceive(queue, messageCount, false, true, true, receiveMaxFrameSize, bodySize);
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpMultipleSettleModeLinksTest()
         {
             const int messageCount = 29;
@@ -398,7 +389,7 @@
 
                     if (sentCount < messageCount)
                     {
-                        throw new InternalTestFailureException("sent count is less than the totoal count");
+                        throw new Exception("sent count is less than the totoal count");
                     }
 
                     sLink.Close();
@@ -422,13 +413,13 @@
                 threads[i].Join();
             }
 
-            Assert.IsNull(lastException, "Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString());
+            Assert.True(lastException == null, string.Format("Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString()));
 
             session.Close();
             connection.Close();
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpConcurrentConnectionsTest()
         {
             Exception lastException = null;
@@ -463,10 +454,10 @@
                 threads[i].Join();
             }
 
-            Assert.IsNull(lastException, "Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString());
+            Assert.True(lastException == null, string.Format("Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString()));
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpSequenceNumberWrapAroundTest()
         {
             const int messageCount = 24;
@@ -486,7 +477,7 @@
                 (s) => { s.InitialDeliveryCount = uint.MaxValue - 2; s.TotalLinkCredit = 18; });
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpPipeLineModeUsingAPITest()
         {
             string queue = "AmqpPipeLineModeUsingAPITestQueue";
@@ -515,7 +506,7 @@
             foreach (var item in results) item();
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpTransactionTest()
         {
             const int messageCount = 6;
@@ -543,7 +534,7 @@
                 AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "Hello AMQP!" });
                 message.Properties.MessageId = (ulong)i;
                 Outcome outcome = sendLink.EndSendMessage(sendLink.BeginSendMessage(message, tag, txnId, TimeSpan.FromSeconds(10), null, null));
-                Assert.IsTrue(outcome.DescriptorCode == Accepted.Code, "message is not accepted.");
+                Assert.True(outcome.DescriptorCode == Accepted.Code, "message is not accepted.");
             }
 
             // rollback txn
@@ -558,7 +549,7 @@
                 AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "Hello AMQP!" });
                 message.Properties.MessageId = (ulong)i;
                 Outcome outcome = sendLink.EndSendMessage(sendLink.BeginSendMessage(message, tag, txnId, TimeSpan.FromSeconds(10), null, null));
-                Assert.IsTrue(outcome.DescriptorCode == Accepted.Code, "message is not accepted.");
+                Assert.True(outcome.DescriptorCode == Accepted.Code, "message is not accepted.");
             }
 
             // commit txn
@@ -601,7 +592,7 @@
             connection.Close();
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpDynamicLinkCreditTest()
         {
             AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
@@ -614,7 +605,7 @@
             var settings = AmqpUtils.GetLinkSettings(false, "dummy", SettleMode.SettleOnDispose, 10);
             var link = new ReceivingAmqpLink(session, settings);
             settings.AutoSendFlow = false;
-            Assert.AreEqual(10u, link.LinkCredit);
+            Assert.Equal(10u, link.LinkCredit);
 
             FieldInfo bufferedCredit = typeof(AmqpLink).GetField("bufferedCredit", BindingFlags.NonPublic | BindingFlags.Instance);
 
@@ -638,58 +629,58 @@
 
             // run 4 messages through the link
             sendMessages(4, 0);
-            Assert.AreEqual(6u, link.LinkCredit);
+            Assert.Equal(6u, link.LinkCredit);
 
             // reduce credit
             link.SetTotalLinkCredit(6, true);
-            Assert.AreEqual(2u, link.LinkCredit);
-            Assert.AreEqual(4u, bufferedCredit.GetValue(link));
+            Assert.Equal(2u, link.LinkCredit);
+            Assert.Equal(4u, bufferedCredit.GetValue(link));
 
             // consume partial buffered credit
             sendMessages(2, 4);
-            Assert.AreEqual(2u, link.LinkCredit);
-            Assert.AreEqual(2u, bufferedCredit.GetValue(link));
+            Assert.Equal(2u, link.LinkCredit);
+            Assert.Equal(2u, bufferedCredit.GetValue(link));
 
             // increase credit
             link.SetTotalLinkCredit(7, true);
-            Assert.AreEqual(3u, link.LinkCredit);
-            Assert.AreEqual(1u, bufferedCredit.GetValue(link));
+            Assert.Equal(3u, link.LinkCredit);
+            Assert.Equal(1u, bufferedCredit.GetValue(link));
 
             // consume all credits
             sendMessages(4, 6);
-            Assert.AreEqual(0u, link.LinkCredit);
-            Assert.AreEqual(0u, bufferedCredit.GetValue(link));
+            Assert.Equal(0u, link.LinkCredit);
+            Assert.Equal(0u, bufferedCredit.GetValue(link));
 
             // reset credit to 10
             link.IssueCredit(10, false, AmqpConstants.NullBinary);
-            Assert.AreEqual(10u, link.LinkCredit);
-            Assert.AreEqual(0u, bufferedCredit.GetValue(link));
+            Assert.Equal(10u, link.LinkCredit);
+            Assert.Equal(0u, bufferedCredit.GetValue(link));
 
             // delayed udpate
             link.SetTotalLinkCredit(0, false);
-            Assert.AreEqual(10u, link.LinkCredit);
-            Assert.AreEqual(0u, bufferedCredit.GetValue(link));
+            Assert.Equal(10u, link.LinkCredit);
+            Assert.Equal(0u, bufferedCredit.GetValue(link));
             sendMessages(1, 10);
-            Assert.AreEqual(0u, link.LinkCredit);
-            Assert.AreEqual(9u, bufferedCredit.GetValue(link));
+            Assert.Equal(0u, link.LinkCredit);
+            Assert.Equal(9u, bufferedCredit.GetValue(link));
 
             link.SetTotalLinkCredit(3, true);
-            Assert.AreEqual(3u, link.LinkCredit);
-            Assert.AreEqual(6u, bufferedCredit.GetValue(link));
+            Assert.Equal(3u, link.LinkCredit);
+            Assert.Equal(6u, bufferedCredit.GetValue(link));
 
             // no flow control
             link.SetTotalLinkCredit(uint.MaxValue, true);
-            Assert.AreEqual(uint.MaxValue, link.LinkCredit);
-            Assert.AreEqual(0u, bufferedCredit.GetValue(link));
+            Assert.Equal(uint.MaxValue, link.LinkCredit);
+            Assert.Equal(0u, bufferedCredit.GetValue(link));
 
             sendMessages(10, 11);
-            Assert.AreEqual(uint.MaxValue, link.LinkCredit);
-            Assert.AreEqual(0u, bufferedCredit.GetValue(link));
+            Assert.Equal(uint.MaxValue, link.LinkCredit);
+            Assert.Equal(0u, bufferedCredit.GetValue(link));
 
             connection.Close();
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpTransferWithFlowControlTest()
         {
             string entity = "AmqpTransferWithFlowControlTest";
@@ -742,7 +733,7 @@
                     }
                     catch (Exception exception)
                     {
-                        Trace.WriteLine(exception.ToString());
+                        Debug.WriteLine(exception.ToString());
                         completed.Set();
                     }
                 });
@@ -750,12 +741,12 @@
             receiver.Open();
 
             completed.WaitOne(TimeSpan.FromSeconds(30));
-            Assert.AreEqual(100, messageReceived);
+            Assert.Equal(100, messageReceived);
 
             connection.Close();
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpConnectionIdleTimeoutTest()
         {
             string queue = "AmqpConnectionIdleTimeoutTest";
@@ -777,13 +768,13 @@
             catch (AmqpException exception)
             {
                 gotException = true;
-                Trace.WriteLine(exception.Message);
+                Debug.WriteLine(exception.Message);
             }
 
-            Assert.IsTrue(gotException);
+            Assert.True(gotException);
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpMessageCloneForResendTest()
         {
             string queue = "AmqpMessageCloneForResendTest" + Guid.NewGuid().ToString("N");
@@ -813,30 +804,29 @@
             message.Footer.Map.Add("signature", "foo");
 
             Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10), null, null));
-            Assert.AreEqual(Accepted.Code, outcome.DescriptorCode, "Message not accepted");
+            Assert.Equal(Accepted.Code, outcome.DescriptorCode);
 
             for (int i = 0; i < 10; i++)
             {
                 bool hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(60), null, null), out message);
-                Assert.IsTrue(hasMessage);
-                Assert.IsNotNull(message);
+                Assert.True(hasMessage);
+                Assert.NotNull(message);
 
                 AmqpMessage newMessage = message.Clone();
                 rLink.DisposeMessage(message, AmqpConstants.AcceptedOutcome, true, false);
 
                 outcome = sLink.EndSendMessage(sLink.BeginSendMessage(newMessage, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10), null, null));
-                Assert.AreEqual(Accepted.Code, outcome.DescriptorCode, "Message not accepted");
+                Assert.Equal(Accepted.Code, outcome.DescriptorCode);
             }
 
             rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(60), null, null), out message);
-            Assert.IsNotNull(message);
+            Assert.NotNull(message);
             rLink.DisposeMessage(message, AmqpConstants.AcceptedOutcome, true, false);
 
             connection.Close();
         }
 
-        [Description("AMQP peeklock release and accept Test")]
-        [TestMethod()]
+        [Fact]
         public void AmqpPeekLockReleaseAcceptTest()
         {
             string queue = "AmqpPeekLockReleaseAcceptTest" + Guid.NewGuid().ToString("N");
@@ -853,29 +843,29 @@
 
             AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "test" });
             Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10), null, null));
-            Assert.AreEqual(Accepted.Code, outcome.DescriptorCode, "Message not accepted");
+            Assert.Equal(Accepted.Code, outcome.DescriptorCode);
 
             ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnReceive, 100));
             rLink.Open();
 
             bool hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(20), null, null), out message);
-            Assert.IsTrue(hasMessage);
-            Assert.IsNotNull(message);
+            Assert.True(hasMessage);
+            Assert.NotNull(message);
             rLink.ReleaseMessage(message);
 
             hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(20), null, null), out message);
-            Assert.IsTrue(hasMessage);
-            Assert.IsNotNull(message);
+            Assert.True(hasMessage);
+            Assert.NotNull(message);
             rLink.AcceptMessage(message, false);
 
             hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromMilliseconds(500), null, null), out message);
-            Assert.IsFalse(hasMessage);
-            Assert.IsNull(message);
+            Assert.False(hasMessage);
+            Assert.Null(message);
 
             connection.Close();
         }
 
-        [TestMethod]
+        [Fact]
         public async Task OpenSequentialConnectionsToFindRaceConditions()
         {
             // NOTE: Increment this number to make it more likely to hit race conditions.
@@ -894,6 +884,7 @@
                 var timeout = TimeSpan.FromSeconds(10);
                 for (int i = 0; i < NumberOfRuns; i++)
                 {
+                    Debug.WriteLine("Iteration " + i);
                     AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 1024);
                     await connection.OpenAsync(timeout);
 
@@ -931,7 +922,7 @@
 
                     var message2 = await receiver.ReceiveMessageAsync(timeout);
                     await Task.Yield();
-                    Assert.IsNotNull(message2, "Message should not be null. Failed in iteration #{0}.", i);
+                    Assert.NotNull(message2);
 
                     receiver.AcceptMessage(message2, false);
                     message2.Dispose();
@@ -1030,8 +1021,8 @@
 
                 if (sendAsync)
                 {
-                    Assert.IsTrue(sendDone.WaitOne(10 * 1000), "Send did not complete in time.");
-                    Assert.IsTrue(sendCompleted == messageCount, "Sent count is less than the totoal count.");
+                    Assert.True(sendDone.WaitOne(10 * 1000), "Send did not complete in time.");
+                    Assert.True(sendCompleted == messageCount, "Sent count is less than the totoal count.");
                 }
 
                 sLink.Close();
@@ -1057,11 +1048,11 @@
                     IAsyncResult result = rLink.BeginReceiveMessage(TimeSpan.FromSeconds(100), null, null);
                     AmqpMessage message;
                     bool hasMessage = rLink.EndReceiveMessage(result, out message);
-                    Assert.IsTrue(hasMessage, "receive should return true");
-                    Assert.IsNotNull(message, "The received message cannot be null.");
-                    Assert.IsNotNull(message.ValueBody, "the message body should have a valid value");
-                    Assert.IsTrue(message.ValueBody.Value.Equals(messageBody), "Received a different message.");
-                    //Assert.IsTrue(message.Properties.MessageId.ToString() == i.ToString(), "message id must be the same");
+                    Assert.True(hasMessage, "receive should return true");
+                    Assert.True(message != null, "The received message cannot be null.");
+                    Assert.True(message.ValueBody != null, "the message body should have a valid value");
+                    Assert.True(message.ValueBody.Value.Equals(messageBody), "Received a different message.");
+                    //Assert.True(message.Properties.MessageId.ToString() == i.ToString(), "message id must be the same");
                     message.Dispose();
                     rLink.AcceptMessage(message, true, true);
                 }
@@ -1128,16 +1119,16 @@
             // receive the frames
             int count = Receive(socket, bytes, 0);
             buffer = new ByteBuffer(bytes, 0, count);
-            Assert.IsTrue(Frm(buffer).Command.DescriptorCode == Open.Code, "Open not received");
-            Assert.IsTrue(Frm(buffer).Command.DescriptorCode == Begin.Code, "Begin not received");
-            Assert.IsTrue(Frm(buffer).Command.DescriptorCode == Attach.Code, "Attach not received");
-            Assert.IsTrue(Frm(buffer).Command.DescriptorCode == Flow.Code, "Flow not received");
-            Assert.IsTrue(Frm(buffer).Command.DescriptorCode == Disposition.Code, "Disposition not received");
-            Assert.IsTrue(Frm(buffer).Command.DescriptorCode == Detach.Code, "Detach not received");
-            Assert.IsTrue(Frm(buffer).Command.DescriptorCode == End.Code, "End not received");
-            Assert.IsTrue(Frm(buffer).Command.DescriptorCode == Close.Code, "Close not received");
+            Assert.True(Frm(buffer).Command.DescriptorCode == Open.Code, "Open not received");
+            Assert.True(Frm(buffer).Command.DescriptorCode == Begin.Code, "Begin not received");
+            Assert.True(Frm(buffer).Command.DescriptorCode == Attach.Code, "Attach not received");
+            Assert.True(Frm(buffer).Command.DescriptorCode == Flow.Code, "Flow not received");
+            Assert.True(Frm(buffer).Command.DescriptorCode == Disposition.Code, "Disposition not received");
+            Assert.True(Frm(buffer).Command.DescriptorCode == Detach.Code, "Detach not received");
+            Assert.True(Frm(buffer).Command.DescriptorCode == End.Code, "End not received");
+            Assert.True(Frm(buffer).Command.DescriptorCode == Close.Code, "Close not received");
 
-            socket.Close();
+            socket.Dispose();
         }
 
         static void Send(Socket socket, byte[] buffer, int offset, int count)

@@ -46,8 +46,6 @@ namespace Microsoft.Azure.Amqp
         public static AmqpSessionSettings Create(Begin begin)
         {
             AmqpSessionSettings settings = new AmqpSessionSettings();
-            settings.IncomingWindow = Math.Min(settings.IncomingWindow.Value, begin.OutgoingWindow.Value);
-            settings.OutgoingWindow = Math.Min(settings.OutgoingWindow.Value, begin.IncomingWindow.Value);
             settings.Properties = begin.Properties;
 
             return settings;

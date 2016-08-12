@@ -7,7 +7,7 @@ namespace Microsoft.Azure.Amqp
     using System.Diagnostics.CodeAnalysis;
     using System.Runtime.Serialization;
 
-#if !DNXCORE
+#if !NETSTANDARD
     [Serializable]
 #endif
     [SuppressMessage(FxCop.Category.Design, FxCop.Rule.ExceptionsShouldBePublic, Justification = "Asserts should not be seen by users.", Scope = "Type", Target = "Microsoft.Azure.Amqp.AssertionFailedException")]
@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Amqp
         {
         }
 
-#if !DNXCORE
+#if !NETSTANDARD
         protected AssertionFailedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {

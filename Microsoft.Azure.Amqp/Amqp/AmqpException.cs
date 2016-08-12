@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
-#if !DNXCORE
+#if !NETSTANDARD
     [Serializable]
 #endif
     public sealed class AmqpException : Exception
@@ -24,7 +24,7 @@ namespace Microsoft.Azure.Amqp
         {
         }
 
-#if !DNXCORE
+#if !NETSTANDARD
         AmqpException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
@@ -48,7 +48,7 @@ namespace Microsoft.Azure.Amqp
             return new AmqpException(error);
         }
 
-#if !DNXCORE
+#if !NETSTANDARD
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);

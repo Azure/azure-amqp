@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Amqp.Transport
         static readonly AsyncCallback onOpenComplete = OnOpenComplete;
         static readonly AsyncCallback onWriteComplete = OnWriteComplete;
         static readonly AsyncCallback onReadComplete = OnReadComplete;
-        const SslProtocols DefaultSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls11 | SslProtocols.Tls | SslProtocols.Ssl3; 
+        const SslProtocols DefaultSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls11 | SslProtocols.Tls;
         readonly TransportBase innerTransport;
         readonly CustomSslStream sslStream;
         TlsTransportSettings tlsSettings;
@@ -46,6 +46,11 @@ namespace Microsoft.Azure.Amqp.Transport
         public override bool IsSecure
         {
             get { return true; }
+        }
+
+        public override void SetMonitor(ITransportMonitor usageMeter)
+        {
+            this.innerTransport.SetMonitor(usageMeter);
         }
 
         public override bool WriteAsync(TransportAsyncCallbackArgs args)

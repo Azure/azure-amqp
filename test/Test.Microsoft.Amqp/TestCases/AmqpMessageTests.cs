@@ -7,17 +7,12 @@
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Encoding;
     using global::Microsoft.Azure.Amqp.Framing;
-    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Xunit;
 
-    [TestClass]
+    [Trait("Category", TestCategory.Current)]
     public class AmqpMessageTests
     {
-        [ClassInitialize]
-        public static void ClassInitialize(TestContext context)
-        {
-        }
-
-        [TestMethod()]
+        [Fact]
         public void AmqpMessageSerializationTest()
         {
             // empty message
@@ -91,14 +86,14 @@
             return buffers.ToArray();
         }
 
-        [TestMethod()]
+        [Fact]
         public void AmqpMessageStreamTest()
         {
             AmqpMessage message = AmqpMessage.Create(new MemoryStream(new byte[12]), true);
-            Assert.AreEqual(12, message.BodyStream.Length);
+            Assert.Equal(12, message.BodyStream.Length);
 
             AmqpMessage message2 = AmqpMessage.Create(new MemoryStream(new byte[12]), false);
-            Assert.AreEqual(12, message2.BodyStream.Length);
+            Assert.Equal(12, message2.BodyStream.Length);
         }
 
         static void AddSection(AmqpMessage message, SectionFlag sections)
@@ -143,52 +138,52 @@
 
         static void ValidateMessage(AmqpMessage original, AmqpMessage deserialized)
         {
-            Assert.AreEqual(original.Sections, deserialized.Sections);
+            Assert.Equal(original.Sections, deserialized.Sections);
 
             if ((original.Sections & SectionFlag.Header) != 0)
             {
-                Assert.AreEqual(original.Header.Priority.Value, deserialized.Header.Priority.Value);
-                Assert.AreEqual(original.Header.Ttl.Value, deserialized.Header.Ttl.Value);
+                Assert.Equal(original.Header.Priority.Value, deserialized.Header.Priority.Value);
+                Assert.Equal(original.Header.Ttl.Value, deserialized.Header.Ttl.Value);
             }
 
             if ((original.Sections & SectionFlag.DeliveryAnnotations) != 0)
             {
-                Assert.AreEqual(original.DeliveryAnnotations.Map.Count(), deserialized.DeliveryAnnotations.Map.Count());
+                Assert.Equal(original.DeliveryAnnotations.Map.Count(), deserialized.DeliveryAnnotations.Map.Count());
                 foreach (var pair in original.DeliveryAnnotations.Map)
                 {
-                    Assert.AreEqual(original.DeliveryAnnotations.Map[pair.Key], deserialized.DeliveryAnnotations.Map[pair.Key]);
+                    Assert.Equal(original.DeliveryAnnotations.Map[pair.Key], deserialized.DeliveryAnnotations.Map[pair.Key]);
                 }
             }
 
             if ((original.Sections & SectionFlag.MessageAnnotations) != 0)
             {
-                Assert.AreEqual(original.MessageAnnotations.Map.Count(), deserialized.MessageAnnotations.Map.Count());
+                Assert.Equal(original.MessageAnnotations.Map.Count(), deserialized.MessageAnnotations.Map.Count());
                 foreach (var pair in original.MessageAnnotations.Map)
                 {
-                    Assert.AreEqual(original.MessageAnnotations.Map[pair.Key], deserialized.MessageAnnotations.Map[pair.Key]);
+                    Assert.Equal(original.MessageAnnotations.Map[pair.Key], deserialized.MessageAnnotations.Map[pair.Key]);
                 }
             }
 
             if ((original.Sections & SectionFlag.Properties) != 0)
             {
-                Assert.AreEqual(original.Properties.MessageId.ToString(), deserialized.Properties.MessageId.ToString());
+                Assert.Equal(original.Properties.MessageId.ToString(), deserialized.Properties.MessageId.ToString());
             }
 
             if ((original.Sections & SectionFlag.ApplicationProperties) != 0)
             {
-                Assert.AreEqual(original.ApplicationProperties.Map.Count(), deserialized.ApplicationProperties.Map.Count());
+                Assert.Equal(original.ApplicationProperties.Map.Count(), deserialized.ApplicationProperties.Map.Count());
                 foreach (var pair in original.ApplicationProperties.Map)
                 {
-                    Assert.AreEqual(original.ApplicationProperties.Map[pair.Key], deserialized.ApplicationProperties.Map[pair.Key]);
+                    Assert.Equal(original.ApplicationProperties.Map[pair.Key], deserialized.ApplicationProperties.Map[pair.Key]);
                 }
             }
 
             if ((original.Sections & SectionFlag.Footer) != 0)
             {
-                Assert.AreEqual(original.Footer.Map.Count(), deserialized.Footer.Map.Count());
+                Assert.Equal(original.Footer.Map.Count(), deserialized.Footer.Map.Count());
                 foreach (var pair in original.Footer.Map)
                 {
-                    Assert.AreEqual(original.Footer.Map[pair.Key], deserialized.Footer.Map[pair.Key]);
+                    Assert.Equal(original.Footer.Map[pair.Key], deserialized.Footer.Map[pair.Key]);
                 }
             }
 
@@ -196,7 +191,7 @@
             {
                 try
                 {
-                    Assert.AreEqual(original.DataBody.Count(), deserialized.DataBody.Count());
+                    Assert.Equal(original.DataBody.Count(), deserialized.DataBody.Count());
                     using (IEnumerator<Data> enumerator1 = original.DataBody.GetEnumerator())
                     using (IEnumerator<Data> enumerator2 = deserialized.DataBody.GetEnumerator())
                     {
@@ -204,7 +199,7 @@
                         {
                             ArraySegment<byte> data1 = (ArraySegment<byte>)enumerator1.Current.Value;
                             ArraySegment<byte> data2 = (ArraySegment<byte>)enumerator1.Current.Value;
-                            Assert.AreEqual(data1.Count, data2.Count);
+                            Assert.Equal(data1.Count, data2.Count);
                         }
                     }
                 }
@@ -213,27 +208,27 @@
                     // some messages do not support DataBody property
                     Stream bodyStream1 = original.BodyStream;
                     Stream bodyStream2 = deserialized.BodyStream;
-                    Assert.AreEqual(bodyStream1.Length, bodyStream2.Length);
+                    Assert.Equal(bodyStream1.Length, bodyStream2.Length);
                 }
             }
 
             if ((original.Sections & SectionFlag.AmqpValue) != 0)
             {
-                Assert.AreEqual(original.ValueBody.Value, deserialized.ValueBody.Value);
+                Assert.Equal(original.ValueBody.Value, deserialized.ValueBody.Value);
             }
 
             if ((original.Sections & SectionFlag.AmqpSequence) != 0)
             {
-                Assert.AreEqual(original.SequenceBody.Count(), deserialized.SequenceBody.Count());
+                Assert.Equal(original.SequenceBody.Count(), deserialized.SequenceBody.Count());
                 using(IEnumerator<AmqpSequence> enumerator1 = original.SequenceBody.GetEnumerator())
                 using(IEnumerator<AmqpSequence> enumerator2 = deserialized.SequenceBody.GetEnumerator())
                 {
                     while (enumerator1.MoveNext() && enumerator2.MoveNext())
                     {
-                        Assert.AreEqual(enumerator1.Current.List.Count, enumerator2.Current.List.Count);
+                        Assert.Equal(enumerator1.Current.List.Count, enumerator2.Current.List.Count);
                         for(int i = 0; i < enumerator1.Current.List.Count; i++)
                         {
-                            Assert.AreEqual(enumerator1.Current.List[i], enumerator2.Current.List[i]); 
+                            Assert.Equal(enumerator1.Current.List[i], enumerator2.Current.List[i]); 
                         }
                     }
                 }

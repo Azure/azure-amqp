@@ -17,6 +17,13 @@ namespace Microsoft.Azure.Amqp.Sasl
         {
             this.ProtocolId = ProtocolId.AmqpSasl;
             this.handlers = new Dictionary<string, SaslHandler>();
+            this.MaxFrameSize = int.MaxValue;
+        }
+
+        public int MaxFrameSize
+        {
+            get;
+            set;
         }
 
         public IEnumerable<string> Mechanisms
@@ -49,6 +56,12 @@ namespace Microsoft.Azure.Amqp.Sasl
 
         protected override TransportBase OnCreateTransport(TransportBase innerTransport, bool isInitiator)
         {
+            if (innerTransport.GetType() == typeof(SaslTransport))
+            {
+                throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpTransportUpgradeNotAllowed,
+                    innerTransport.GetType().Name, typeof(SaslTransport).Name));
+            }
+
             return new SaslTransport(innerTransport, this, isInitiator);
         }
     }

@@ -12,17 +12,19 @@ function GetAssemblyVersionFromFile($filename) {
 }
 
 if (-Not (Test-Path 'NuGet.exe')) {
-    Invoke-WebRequest 'https://nuget.org/nuget.exe' -OutFile 'NuGet.exe'
+    Invoke-WebRequest 'https://dist.nuget.org/win-x86-commandline/latest/nuget.exe' -OutFile 'NuGet.exe'
 }
 
-$dotNetFile = "..\Properties\AssemblyInfo.cs"
+$PSScriptRoot = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
+$AssemblyInfoFile = "$PSScriptRoot\..\Properties\AssemblyInfo.cs"
+$BuildConfig = "Release"
+$OutputDirectory = [IO.Path]::GetFullPath("$PSScriptRoot\..\..\bin\$BuildConfig\")
 
 # Delete existing packages to force rebuild
-ls Microsoft.Azure.Amqp.*.nupkg | % { del $_ }
+ls "$OutputDirectory\Microsoft.Azure.Amqp.*.nupkg" | % { del $_ }
 
-$v1 = GetAssemblyVersionFromFile($dotNetFile)
+$ver = GetAssemblyVersionFromFile($AssemblyInfoFile)
 $id='Microsoft.Azure.Amqp'
 
-echo "Creating NuGet package $id version $v1"
-
-.\NuGet.exe pack "$id.nuspec" -Prop Configuration=Release -Prop Version=$v1
+echo "Creating NuGet package $id version $ver"
+.\NuGet.exe pack "$PSScriptRoot\$id.nuspec" -Prop Configuration=$BuildConfig -Prop Version=$ver -OutputDirectory $OutputDirectory

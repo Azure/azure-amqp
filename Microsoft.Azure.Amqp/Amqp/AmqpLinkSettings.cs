@@ -82,6 +82,8 @@ namespace Microsoft.Azure.Amqp
             settings.SndSettleMode = attach.SndSettleMode;
             settings.RcvSettleMode = attach.RcvSettleMode;
             settings.MaxMessageSize = attach.MaxMessageSize;
+            settings.DesiredCapabilities = attach.DesiredCapabilities;
+            settings.OfferedCapabilities = attach.OfferedCapabilities;
             settings.Properties = attach.Properties;
             if (settings.Role.Value)
             {

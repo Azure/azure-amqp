@@ -3,121 +3,125 @@
 
 namespace Microsoft.Azure.Amqp
 {
-    static class AmqpTrace
+    class AmqpTrace
     {
-        public static IAmqpTrace Provider = new EmptyAmqpTrace();
+        // Replace this with your own implementation to enable tracing.
+        public static AmqpTrace Provider = new AmqpTrace();
 
-        class EmptyAmqpTrace : IAmqpTrace
+        protected AmqpTrace()
         {
-            public void AmqpOpenConnection(object source, object connection)
-            {
-                
-            }
+        }
 
-            public void AmqpCloseConnection(object source, object connection, bool abort)
-            {
-                
-            }
+        public virtual void AmqpOpenConnection(object source, object connection)
+        {
+        }
 
-            public void AmqpAddSession(object source, object session, ushort localChannel, ushort remoteChannel)
-            {
-            }
+        public virtual void AmqpCloseConnection(object source, object connection, bool abort)
+        {
+        }
 
-            public void AmqpAttachLink(object connection, object session, object link, uint localHandle, uint remoteHandle, string linkName, string role)
-            {
-            }
+        public virtual void AmqpAddSession(object source, object session, ushort localChannel, ushort remoteChannel)
+        {
+        }
 
-            public void AmqpCacheMessage(object source, uint deliveryId, int count, bool isPrefecthingBySize, long totalCacheSizeInBytes, uint totalLinkCredit, uint linkCredit)
-            {
-            }
+        public virtual void AmqpAttachLink(object connection, object session, object link, uint localHandle, uint remoteHandle, string linkName, string role, object source, object target)
+        {
+        }
 
-            public void AmqpDeliveryNotFound(object source, string deliveryTag)
-            {
-            }
+        public virtual void AmqpDeliveryNotFound(object source, string deliveryTag)
+        {
+        }
 
-            public void AmqpDispose(object source, uint deliveryId, bool settled, object state)
-            {
-            }
+        public virtual void AmqpDispose(object source, uint deliveryId, bool settled, object state)
+        {
+        }
 
-            public void AmqpDynamicBufferSizeChange(object source, string type, int oldSize, int newSize)
-            {
-            }
+        public virtual void AmqpDynamicBufferSizeChange(object source, string type, int oldSize, int newSize)
+        {
+        }
 
-            public void AmqpInsecureTransport(object source, object transport, bool isSecure, bool isAuthenticated)
-            {
-            }
+        public virtual void AmqpInsecureTransport(object source, object transport, bool isSecure, bool isAuthenticated)
+        {
+        }
 
-            public void AmqpLinkDetach(object source, string name, uint handle, string action, string error)
-            {
-            }
+        public virtual void AmqpLinkDetach(object source, string name, uint handle, string action, string error)
+        {
+        }
 
-            public void AmqpListenSocketAcceptError(object source, bool willRetry, string error)
-            {
-            }
+        public virtual void AmqpListenSocketAcceptError(object source, bool willRetry, string error)
+        {
+        }
 
-            public void AmqpLogError(object source, string operation, string message)
-            {
-            }
+        public virtual void AmqpLogError(object source, string operation, string message)
+        {
+        }
 
-            public void AmqpLogOperationInformational(object source, TraceOperation operation, object detail)
-            {
-            }
+        public virtual void AmqpLogOperationInformational(object source, TraceOperation operation, object detail)
+        {
+        }
 
-            public void AmqpLogOperationVerbose(object source, TraceOperation operation, object detail)
-            {
-            }
+        public virtual void AmqpLogOperationVerbose(object source, TraceOperation operation, object detail)
+        {
+        }
 
-            public void AmqpManageLink(string action, object link, string info)
-            {
-            }
+        public virtual void AmqpManageLink(string action, object link, string info)
+        {
+        }
 
-            public void AmqpMissingHandle(object source, string type, uint handle)
-            {
-            }
+        public virtual void AmqpMissingHandle(object source, string type, uint handle)
+        {
+        }
 
-            public void AmqpOpenEntityFailed(object source, object obj, string name, string entityName, string error)
-            {
-            }
+        public virtual void AmqpOpenEntityFailed(object source, object obj, string name, string entityName, string error)
+        {
+        }
 
-            public void AmqpOpenEntitySucceeded(object source, object obj, string name, string entityName)
-            {
-            }
+        public virtual void AmqpOpenEntitySucceeded(object source, object obj, string name, string entityName)
+        {
+        }
 
-            public void AmqpReceiveMessage(object source, uint deliveryId, int transferCount)
-            {
-            }
+        public virtual void AmqpReceiveMessage(object source, uint deliveryId, int transferCount)
+        {
+        }
 
-            public void AmqpRemoveLink(object connection, object session, object link, uint localHandle, uint remoteHandle, string linkName)
-            {
-            }
+        public virtual void AmqpRemoveLink(object connection, object session, object link, uint localHandle, uint remoteHandle, string linkName)
+        {
+        }
 
-            public void AmqpRemoveSession(object source, object session, ushort localChannel, ushort remoteChannel)
-            {
-            }
+        public virtual void AmqpRemoveSession(object source, object session, ushort localChannel, ushort remoteChannel)
+        {
+        }
 
-            public void AmqpSessionWindowClosed(object source, int nextId)
-            {
-            }
+        public virtual void AmqpSessionWindowClosed(object source, int nextId)
+        {
+        }
 
-            public void AmqpSettle(object source, int settleCount, uint lwm, uint next)
-            {
-            }
+        public virtual void AmqpSettle(object source, int settleCount, uint lwm, uint next)
+        {
+        }
 
-            public void AmqpStateTransition(object source, string operation, object fromState, object toState)
-            {
-            }
+        public virtual void AmqpStateTransition(object source, string operation, object fromState, object toState)
+        {
+        }
 
-            public void AmqpUpgradeTransport(object source, object from, object to)
-            {
-            }
+        public virtual void AmqpUpgradeTransport(object source, object from, object to)
+        {
+        }
 
-            public void AmqpThrowingExceptionError(string exception)
-            {
-            }
+        public virtual void AmqpThrowingExceptionError(string exception)
+        {
+        }
 
-            public void AmqpThrowingExceptionWarning(string exception)
-            {
-            }
+        public virtual void AmqpThrowingExceptionWarning(string exception)
+        {
+        }
+
+        public virtual void AmqpCacheMessage(object source, uint deliveryId, int count, bool isPrefecthingBySize, long totalCacheSizeInBytes, uint totalLinkCredit, uint linkCredit)
+        {
+        }
+
+        public virtual void AmqpIoEvent(object source, int ioEvent, long queueSize)
+        {
         }
     }
 }

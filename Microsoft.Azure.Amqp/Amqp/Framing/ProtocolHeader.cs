@@ -65,13 +65,13 @@ namespace Microsoft.Azure.Amqp.Framing
         {
             if (buffer.Length < this.EncodeSize)
             {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInsufficientBufferSize, this.EncodeSize, buffer.Length));
+                throw new AmqpException(AmqpErrorCode.DecodeError, AmqpResources.GetString(AmqpResources.AmqpInsufficientBufferSize, this.EncodeSize, buffer.Length));
             }
 
             uint prefix = AmqpBitConverter.ReadUInt(buffer);
             if (prefix != ProtocolHeader.AmqpPrefix)
             {
-                throw AmqpEncoding.GetEncodingException("ProtocolName");
+                throw new AmqpException(AmqpErrorCode.DecodeError, "ProtocolName" + prefix.ToString("X8"));
             }
 
             this.protocolId = (ProtocolId)AmqpBitConverter.ReadUByte(buffer);

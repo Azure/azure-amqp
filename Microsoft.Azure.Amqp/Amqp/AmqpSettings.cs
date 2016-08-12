@@ -19,7 +19,6 @@ namespace Microsoft.Azure.Amqp
             this.MaxLinksPerSession = int.MaxValue;
             this.DefaultLinkCredit = AmqpConstants.DefaultLinkCredit;
             this.AllowAnonymousConnection = true;
-            this.AuthorizationDisabled = true;
         }
 
         public int MaxConcurrentConnections
@@ -47,12 +46,6 @@ namespace Microsoft.Azure.Amqp
         }
 
         public bool AllowAnonymousConnection
-        {
-            get;
-            set;
-        }
-
-        public bool AuthorizationDisabled
         {
             get;
             set;
@@ -148,7 +141,6 @@ namespace Microsoft.Azure.Amqp
             settings.RuntimeProvider = this.RuntimeProvider;
             settings.RequireSecureTransport = this.RequireSecureTransport;
             settings.AllowAnonymousConnection = this.AllowAnonymousConnection;
-            settings.AuthorizationDisabled = this.AuthorizationDisabled;
             return settings;
         }
 

@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Generic;
     using System.Globalization;
     using System.Threading;
     using System.Threading.Tasks;
@@ -20,53 +21,96 @@ namespace Microsoft.Azure.Amqp
         readonly SendingAmqpLink sender;
         readonly ReceivingAmqpLink receiver;
         readonly WorkCollection<MessageId, RequestAsyncResult, AmqpMessage> inflightRequests;
+        Dictionary<string, object> requestProperties;
         long nextRequestId;
 
-        public RequestResponseAmqpLink(AmqpLinkSettings settings)
-            : this(null, settings)
+        public RequestResponseAmqpLink(string type, AmqpSession session, string address, Fields properties)
+            : this(type, null, session, address, properties)
         {
         }
 
-        public RequestResponseAmqpLink(AmqpSession session, AmqpLinkSettings settings)
-            : base("requestresponseamqplink")
+        public RequestResponseAmqpLink(string type, string name, AmqpSession session, string address)
+            : this(type, name, session, address, null)
         {
-            this.Name = string.Format(CultureInfo.InvariantCulture, "{0}:{1}:{2}", session.Connection.Identifier, session.Identifier, this.Identifier);
+        }
+
+        public RequestResponseAmqpLink(string type, string name, AmqpSession session, string address, Fields properties)
+            : base(type)
+        {
+            this.Name = name ?? string.Format(CultureInfo.InvariantCulture, "{0}:{1}:{2}", session.Connection.Identifier, session.Identifier, this.Identifier);
             this.replyTo = Guid.NewGuid().ToString("N");
 
             AmqpLinkSettings senderSettings = new AmqpLinkSettings();
             senderSettings.Role = false;
             senderSettings.LinkName = this.Name + ":sender";
-            senderSettings.SettleType = settings.SettleType;
+            senderSettings.SettleType = SettleMode.SettleOnSend;
             senderSettings.Source = new Source() { Address = Guid.NewGuid().ToString("N") };
-            senderSettings.Target = settings.Target;
-            senderSettings.Properties = settings.Properties;
+            senderSettings.Target = new Target() { Address = address };
+            senderSettings.Properties = properties;
             this.sender = new SendingAmqpLink(session, senderSettings);
             this.sender.Closed += new EventHandler(OnLinkClosed);
 
             AmqpLinkSettings receiverSettings = new AmqpLinkSettings();
             receiverSettings.Role = true;
             receiverSettings.LinkName = this.Name + ":receiver";
-            receiverSettings.SettleType = settings.SettleType;
-            receiverSettings.Source = settings.Source;
-            receiverSettings.TotalLinkCredit = settings.TotalLinkCredit;
-            receiverSettings.TotalCacheSizeInBytes = settings.TotalCacheSizeInBytes;
-            receiverSettings.AutoSendFlow = settings.AutoSendFlow;
+            receiverSettings.SettleType = SettleMode.SettleOnSend;
+            receiverSettings.Source = new Source() { Address = address };
+            receiverSettings.TotalLinkCredit = 50;
+            receiverSettings.AutoSendFlow = true;
             receiverSettings.Target = new Target() { Address = this.replyTo };
-            receiverSettings.Properties = settings.Properties;
+            receiverSettings.Properties = properties;
             this.receiver = new ReceivingAmqpLink(session, receiverSettings);
-            this.receiver.SetTotalLinkCredit(receiverSettings.TotalLinkCredit, applyNow: true);
             this.receiver.RegisterMessageListener(this.OnResponseMessage);
             this.receiver.Closed += new EventHandler(OnLinkClosed);
 
             this.inflightRequests = new WorkCollection<MessageId, RequestAsyncResult, AmqpMessage>();
         }
 
-        public AmqpSession Session
+        public string Name { get; private set; }
+
+        public SendingAmqpLink SendingLink
         {
-            get { return this.sender.Session; }
+            get
+            {
+                return this.sender;
+            }
         }
 
-        public string Name { get; private set; }
+        public ReceivingAmqpLink ReceivingLink
+        {
+            get
+            {
+                return this.receiver;
+            }
+        }
+
+        public Dictionary<string, object> RequestProperties
+        {
+            get
+            {
+                if (this.requestProperties == null)
+                {
+                    lock (ThisLock)
+                    {
+                        if (this.requestProperties == null)
+                        {
+                            this.requestProperties = new Dictionary<string, object>();
+                        }
+
+                    }
+                }
+
+                return this.requestProperties;
+            }
+        }
+
+        public AmqpSession Session
+        {
+            get
+            {
+                return this.sender.Session;
+            }
+        }
 
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, TimeSpan timeout)
         {
@@ -101,6 +145,7 @@ namespace Microsoft.Azure.Amqp
 
         protected override bool CloseInternal()
         {
+            this.inflightRequests.Abort();
             IAsyncResult senderResult = this.sender.BeginClose(OperationTimeout, onSenderClose, this);
             IAsyncResult receiverResult = this.receiver.BeginClose(OperationTimeout, onReceiverClose, this);
             return senderResult.CompletedSynchronously && receiverResult.CompletedSynchronously;
@@ -110,6 +155,7 @@ namespace Microsoft.Azure.Amqp
         {
             this.sender.Abort();
             this.receiver.Abort();
+            this.inflightRequests.Abort();
         }
 
         static void OnSenderOpen(IAsyncResult result)
@@ -198,7 +244,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        sealed class RequestAsyncResult : TimeoutAsyncResult<RequestResponseAmqpLink>, IWork<AmqpMessage>
+        sealed class RequestAsyncResult : TimeoutAsyncResult<MessageId>, IWork<AmqpMessage>
         {
             readonly RequestResponseAmqpLink parent;
             readonly MessageId requestId;
@@ -211,15 +257,15 @@ namespace Microsoft.Azure.Amqp
                 this.parent = parent;
                 this.request = request;
 
-                this.requestId = (ulong)Interlocked.Increment(ref this.parent.nextRequestId);
+                this.requestId = "r" + (ulong)Interlocked.Increment(ref this.parent.nextRequestId);
                 this.request.Properties.MessageId = this.requestId;
                 this.request.Properties.ReplyTo = this.parent.replyTo;
                 this.parent.inflightRequests.StartWork(this.requestId, this);
             }
 
-            protected override RequestResponseAmqpLink Target
+            protected override MessageId Target
             {
-                get { return this.parent; }
+                get { return this.requestId; }
             }
 
             public static AmqpMessage End(IAsyncResult result)

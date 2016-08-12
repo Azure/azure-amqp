@@ -157,15 +157,13 @@ namespace Microsoft.Azure.Amqp
 
         protected override bool CloseInternal()
         {
-            this.pendingDeliveries.Abort();
-            this.inflightSends.Abort();
+            this.AbortDeliveries();
             return base.CloseInternal();
         }
 
         protected override void AbortInternal()
         {
-            this.pendingDeliveries.Abort();
-            this.inflightSends.Abort();
+            this.AbortDeliveries();
             base.AbortInternal();
         }
 
@@ -189,10 +187,20 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        void SendMessageInternal(
-            AmqpMessage message, 
-            ArraySegment<byte> deliveryTag, 
-            ArraySegment<byte> txnId)
+        void AbortDeliveries()
+        {
+            if (this.pendingDeliveries != null)
+            {
+                this.pendingDeliveries.Abort();
+            }
+
+            if (this.inflightSends != null)
+            {
+                this.inflightSends.Abort();
+            }
+        }
+
+        void SendMessageInternal(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId)
         {
             message.DeliveryTag = deliveryTag;
             message.Settled = this.Settings.SettleType == SettleMode.SettleOnSend;

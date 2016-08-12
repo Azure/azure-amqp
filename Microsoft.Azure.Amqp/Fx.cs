@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Amqp
     using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
     using System.Runtime.CompilerServices;
-#if !DNXCORE
+#if !NETSTANDARD
     using System.Runtime.ConstrainedExecution;
 #endif
     using System.Runtime.InteropServices;
@@ -103,13 +103,13 @@ namespace Microsoft.Azure.Amqp
 
         public static byte[] AllocateByteArray(int size)
         {
-#if !DNXCORE
+#if !NETSTANDARD
             try
             {
 #endif
                 // Safe to catch OOM from this as long as the ONLY thing it does is a simple allocation of a primitive type (no method calls).
                 return new byte[size];
-#if !DNXCORE
+#if !NETSTANDARD
             }
             catch (OutOfMemoryException exception)
             {
@@ -244,7 +244,7 @@ namespace Microsoft.Azure.Amqp
             {
                 // FYI, CallbackException is-a FatalException
                 if (exception is FatalException ||
-#if !DNXCORE
+#if !NETSTANDARD
                     (exception is OutOfMemoryException && !(exception is InsufficientMemoryException)) ||
                     exception is ThreadAbortException ||
                     exception is AccessViolationException ||
@@ -355,7 +355,7 @@ namespace Microsoft.Azure.Amqp
         static bool TryGetDebugSwitch(string name, out object value)
         {
             value = null;
-#if !DNXCORE
+#if !NETSTANDARD
             try
             {
                 RegistryKey key = Registry.LocalMachine.OpenSubKey(Fx.SBRegistryKey);
@@ -371,7 +371,7 @@ namespace Microsoft.Azure.Amqp
             {
                 // This debug-only code shouldn't trace.
             }
-#endif // !DNXCORE
+#endif // !NETSTANDARD
             return value != null;
         }
 #endif // DEBUG
@@ -379,7 +379,7 @@ namespace Microsoft.Azure.Amqp
         [SuppressMessage(FxCop.Category.Design, FxCop.Rule.DoNotCatchGeneralExceptionTypes,
             Justification = "Don't want to hide the exception which is about to crash the process.")]
         [Fx.Tag.SecurityNote(Miscellaneous = "Must not call into PT code as it is called within a CER.")]
-#if !DNXCORE
+#if !NETSTANDARD
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
 #endif
         static void TraceExceptionNoThrow(Exception exception)
@@ -402,7 +402,7 @@ namespace Microsoft.Azure.Amqp
         [SuppressMessage(FxCop.Category.ReliabilityBasic, FxCop.Rule.IsFatalRule,
             Justification = "Don't want to hide the exception which is about to crash the process.")]
         [Fx.Tag.SecurityNote(Miscellaneous = "Must not call into PT code as it is called within a CER.")]
-#if !DNXCORE
+#if !NETSTANDARD
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
 #endif
         static bool HandleAtThreadBase(Exception exception)

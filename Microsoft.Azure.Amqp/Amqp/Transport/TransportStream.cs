@@ -58,20 +58,12 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-#if DNXCORE
-            return this.EndRead(this.BeginRead(buffer, offset, count, null, null));
-#else
             throw new InvalidOperationException();
-#endif
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-#if DNXCORE
-            this.EndWrite(this.BeginWrite(buffer, offset, count, null, null));
-#else
             throw new InvalidOperationException();
-#endif
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -92,7 +84,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 this);
         }
 
-#if DNXCORE
+#if NETSTANDARD
         IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
 #else
         public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
@@ -111,7 +103,7 @@ namespace Microsoft.Azure.Amqp.Transport
             return args;
         }
 
-#if DNXCORE
+#if NETSTANDARD
         void EndWrite(IAsyncResult asyncResult)
 #else
         public override void EndWrite(IAsyncResult asyncResult)
@@ -132,7 +124,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 this);
         }
 
-#if DNXCORE
+#if NETSTANDARD
         IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
 #else
         public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
@@ -152,7 +144,7 @@ namespace Microsoft.Azure.Amqp.Transport
             return args;
         }
 
-#if DNXCORE
+#if NETSTANDARD
         int EndRead(IAsyncResult asyncResult)
 #else
         public override int EndRead(IAsyncResult asyncResult)

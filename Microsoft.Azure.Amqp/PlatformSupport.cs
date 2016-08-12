@@ -9,7 +9,7 @@ using Windows.Networking;
 using Windows.Networking.Sockets;
 #endif
 
-#if DNXCORE
+#if NETSTANDARD
 
 // This interface doesn't exist in DNXCORE50, define it manually
 namespace System
@@ -19,6 +19,8 @@ namespace System
         object Clone();
     }
 }
+
+#endif
 
 namespace System.Collections.Generic
 {
@@ -169,6 +171,7 @@ namespace System.Collections.Generic
         }
     }
 }
+
 #if WINDOWS_UWP
 
 namespace System.Threading
@@ -195,8 +198,6 @@ class Win32
 }
 
 #endif
-
-#endif // DNXCORE
 
 namespace Diagnostics
 {

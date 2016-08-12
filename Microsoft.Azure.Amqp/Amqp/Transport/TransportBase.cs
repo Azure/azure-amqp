@@ -50,6 +50,8 @@ namespace Microsoft.Azure.Amqp.Transport
             get { return false; }
         }
 
+        public abstract void SetMonitor(ITransportMonitor usageMeter);
+
         public abstract bool WriteAsync(TransportAsyncCallbackArgs args);
 
         public abstract bool ReadAsync(TransportAsyncCallbackArgs args);

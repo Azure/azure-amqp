@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Amqp
                 return exception;
             }
 
-#if !DNXCORE
+#if !NETSTANDARD
             if (PartialTrustHelpers.UnsafeIsInFullTrust())
 #endif
             {

@@ -53,6 +53,11 @@ namespace Microsoft.Azure.Amqp.Transport
             get { return true; }
         }
 
+        public override void SetMonitor(ITransportMonitor usageMeter)
+        {
+            this.innerTransport.SetMonitor(usageMeter);
+        }
+
         public override bool WriteAsync(TransportAsyncCallbackArgs args)
         {
             Fx.Assert(this.writeState.Args == null, "Cannot write when a write is still in progress");

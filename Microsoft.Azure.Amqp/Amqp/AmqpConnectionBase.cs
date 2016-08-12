@@ -14,10 +14,11 @@ namespace Microsoft.Azure.Amqp
     /// <summary>
     /// The base class for AMQP connection. It should be version independent.
     /// </summary>
-    public abstract class AmqpConnectionBase : AmqpObject, IIoHandler
+    public abstract class AmqpConnectionBase : AmqpObject, IIoHandler, ITransportMonitor
     {
         readonly AmqpConnectionSettings settings;
         readonly AsyncIO asyncIO;
+        IAmqpUsageMeter usageMeter;
         
         protected AmqpConnectionBase(string type, TransportBase transport, AmqpConnectionSettings settings, bool isInitiator)
             : base(type, transport.Identifier)
@@ -29,7 +30,8 @@ namespace Microsoft.Azure.Amqp
 
             Fx.Assert(transport != null, "transport must not be null.");
             this.settings = settings;
-            this.asyncIO = new AsyncIO(this, (int)this.settings.MaxFrameSize(), transport, isInitiator);
+            this.asyncIO = new AsyncIO(this, (int)this.settings.MaxFrameSize(), this.settings.WriteBufferFullLimit,
+                this.settings.WriteBufferEmptyLimit, transport, isInitiator);
         }
 
         public AmqpConnectionSettings Settings
@@ -50,6 +52,23 @@ namespace Microsoft.Azure.Amqp
         public EndPoint RemoteEndpoint
         {
             get { return this.asyncIO.Transport.RemoteEndPoint; }
+        }
+
+        public IAmqpUsageMeter UsageMeter
+        {
+            get
+            {
+                return this.usageMeter;
+            }
+
+            set
+            {
+                this.usageMeter = value;
+                if (value != null)
+                {
+                    this.asyncIO.Transport.SetMonitor(this);
+                }
+            }
         }
 
         protected AsyncIO AsyncIO
@@ -87,12 +106,26 @@ namespace Microsoft.Azure.Amqp
 
         protected abstract void OnFrameBuffer(ByteBuffer buffer);
 
-        public void OnReceiveBuffer(ByteBuffer buffer)
+        protected virtual void HandleIoEvent(IoEvent ioEvent)
+        {
+        }
+
+        void ITransportMonitor.OnTransportWrite(int bufferSize, int writeSize, long queueSize, long latencyTicks)
+        {
+            this.UsageMeter.OnTransportWrite(bufferSize, writeSize, this.asyncIO.WriteBufferQueueSize, latencyTicks);
+        }
+
+        void ITransportMonitor.OnTransportRead(int bufferSize, int readSize, int cacheHits, long latencyTicks)
+        {
+            this.UsageMeter.OnTransportRead(bufferSize, readSize, cacheHits, latencyTicks);
+        }
+
+        void IIoHandler.OnReceiveBuffer(ByteBuffer buffer)
         {
             this.OnReceiveFrameBuffer(buffer);
         }
 
-        public void OnIoFault(Exception exception)
+        void IIoHandler.OnIoFault(Exception exception)
         {
             if (!this.IsClosing())
             {
@@ -103,36 +136,56 @@ namespace Microsoft.Azure.Amqp
             this.Abort();
         }
 
+        void IIoHandler.OnIoEvent(IoEvent ioEvent, long queueSize)
+        {
+            if (!this.IsClosing())
+            {
+                AmqpTrace.Provider.AmqpIoEvent(this, (int)ioEvent, queueSize);
+                this.HandleIoEvent(ioEvent);
+            }
+        }
+
         void OnReceiveFrameBuffer(ByteBuffer buffer)
         {
-            int step = 0;
-
-            try
+            if (this.State <= AmqpObjectState.OpenClosePipe)
             {
-                if (this.State <= AmqpObjectState.OpenClosePipe)
+                Fx.Assert(buffer.Length == AmqpConstants.ProtocolHeaderSize, "protocol header size is wrong");
+                try
                 {
-                    step = 1;
-                    Fx.Assert(buffer.Length == AmqpConstants.ProtocolHeaderSize, "protocol header size is wrong");
                     ProtocolHeader header = new ProtocolHeader();
                     header.Decode(buffer);
                     this.OnProtocolHeader(header);
                 }
-                else
+                catch (Exception exception)
                 {
-                    step = 2;
-                    this.OnFrameBuffer(buffer);
+                    if (Fx.IsFatal(exception))
+                    {
+                        throw;
+                    }
+
+                    AmqpTrace.Provider.AmqpLogError(this, "OnProtocolHeader", exception.Message);
+
+                    this.TerminalException = exception;
+                    this.Abort();
                 }
             }
-            catch (Exception exception)
+            else
             {
-                if (Fx.IsFatal(exception))
+                try
                 {
-                    throw;
+                    this.OnFrameBuffer(buffer);
                 }
+                catch (Exception exception)
+                {
+                    if (Fx.IsFatal(exception))
+                    {
+                        throw;
+                    }
 
-                AmqpTrace.Provider.AmqpLogError(this, step.ToString(CultureInfo.InvariantCulture), exception.Message);
+                    AmqpTrace.Provider.AmqpLogError(this, "OnFrame", exception.Message);
 
-                this.SafeClose(exception);
+                    this.SafeClose(exception);
+                }
             }
         }
     }

@@ -68,7 +68,7 @@ namespace Microsoft.Azure.Amqp
         void CompleteInternal(bool syncComplete, Exception exception)
         {
 #if DEBUG
-            Fx.AssertAndThrow(this.setTimerCalled, "Must call SetTimer.");
+            Fx.AssertAndThrow(exception != null || this.setTimerCalled, "Must call SetTimer.");
 #endif
 
 #pragma warning disable 0420

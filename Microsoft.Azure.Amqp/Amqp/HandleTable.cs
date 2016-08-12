@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
 
     /// <summary>
@@ -44,6 +45,11 @@ namespace Microsoft.Azure.Amqp
         public void SetMaxHandle(uint maxHandle)
         {
             this.maxHandle = maxHandle;
+        }
+
+        public IEnumerator<T> GetSafeEnumerator()
+        {
+            return new SafeEnumerator(this);
         }
 
         public bool TryGetObject(uint handle, out T value)
@@ -153,6 +159,64 @@ namespace Microsoft.Azure.Amqp
             }
 
             return from;
+        }
+
+        /// <summary>
+        /// Use this only if the enumeration is best effort only
+        /// </summary>
+        class SafeEnumerator : IEnumerator<T>
+        {
+            readonly HandleTable<T> table;
+            int index;
+            T current;
+
+            public SafeEnumerator(HandleTable<T> table)
+            {
+                this.table = table;
+                this.index = -1;
+            }
+
+            T IEnumerator<T>.Current
+            {
+                get { return this.current; }
+            }
+
+            object IEnumerator.Current
+            {
+                get { return this.current; }
+            }
+
+            bool IEnumerator.MoveNext()
+            {
+                try
+                {
+                    for (this.index++; this.index < this.table.handleArray.Length; this.index++)
+                    {
+                        this.current = this.table.handleArray[this.index];
+                        if (this.current != null)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    // the array might be shrinked in rare cases
+                }
+
+                this.current = null;
+                return false;
+            }
+
+            void IEnumerator.Reset()
+            {
+                this.index = -1;
+                this.current = null;
+            }
+
+            void IDisposable.Dispose()
+            {
+            }
         }
     }
 }

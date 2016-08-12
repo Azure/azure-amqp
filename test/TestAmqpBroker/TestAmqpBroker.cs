@@ -124,7 +124,7 @@ namespace TestAmqpBroker
             }
         }
 
-        void OnAcceptTransport(TransportAsyncCallbackArgs args)
+        void OnAcceptTransport(TransportListener listener, TransportAsyncCallbackArgs args)
         {
             AmqpConnectionSettings connectionSettings = new AmqpConnectionSettings()
             {
@@ -271,8 +271,11 @@ namespace TestAmqpBroker
                         false);
                 }
 
+#if DOTNET_CORE
+                store.Dispose();
+#else
                 store.Close();
-
+#endif
                 if (collection.Count > 0)
                 {
                     return collection[0];

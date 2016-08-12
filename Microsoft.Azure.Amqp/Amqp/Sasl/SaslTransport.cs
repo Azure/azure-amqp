@@ -47,6 +47,11 @@ namespace Microsoft.Azure.Amqp.Sasl
             get { return this.innerTransport.RequiresCompleteFrames; }
         }
 
+        public override void SetMonitor(ITransportMonitor usageMeter)
+        {
+            this.innerTransport.SetMonitor(usageMeter);
+        }
+
         public override bool WriteAsync(TransportAsyncCallbackArgs args)
         {
             return this.innerTransport.WriteAsync(args);

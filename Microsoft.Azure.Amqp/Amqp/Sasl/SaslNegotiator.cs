@@ -46,7 +46,7 @@ namespace Microsoft.Azure.Amqp.Sasl
 
         public bool Start()
         {
-            this.reader = new AsyncIO.FrameBufferReader(this, transport);
+            this.reader = new AsyncIO.FrameBufferReader(this, transport, this.provider.MaxFrameSize);
             this.writer = new AsyncIO.AsyncBufferWriter(transport);
 
             if (!this.isInitiator)
@@ -252,6 +252,10 @@ namespace Microsoft.Azure.Amqp.Sasl
                 AmqpTrace.Provider.AmqpLogError(this, "HandleSaslCommand", exp.Message);
                 this.CompleteNegotiation(SaslCode.Sys, exp);
             }
+        }
+
+        void IIoHandler.OnIoEvent(IoEvent ioEvent, long queueSize)
+        {
         }
 
         void HandleSaslCommand(Performative command)

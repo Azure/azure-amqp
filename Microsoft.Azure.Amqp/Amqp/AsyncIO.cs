@@ -18,19 +18,27 @@ namespace Microsoft.Azure.Amqp
         readonly AsyncWriter writer;
         readonly AsyncReader reader;
 
-        public AsyncIO(IIoHandler parent, int maxFrameSize, TransportBase transport, bool isInitiator)
+        public AsyncIO(IIoHandler parent, int maxFrameSize, int writeQueueFullLimit,
+            int writeQueueEmptyLimit, TransportBase transport, bool isInitiator)
             : base("async-io", transport.Identifier)
         {
             Fx.Assert(transport != null, "transport required");
             this.ioHandler = parent;
             this.transport = transport;
-            this.writer = this.transport.RequiresCompleteFrames ? new AsyncFrameWriter(this.transport, parent) : new AsyncWriter(this.transport, parent);    
+            this.writer = this.transport.RequiresCompleteFrames ?
+                new AsyncFrameWriter(this.transport, writeQueueFullLimit, writeQueueEmptyLimit, parent) :
+                new AsyncWriter(this.transport, writeQueueFullLimit, writeQueueEmptyLimit, parent);
             this.reader = new AsyncReader(this, maxFrameSize, isInitiator);
         }
 
         public TransportBase Transport
         {
             get { return this.transport; }
+        }
+
+        public long WriteBufferQueueSize
+        {
+            get { return this.writer.BufferQueueSize; }
         }
 
         public void WriteBuffer(ByteBuffer buffer)
@@ -420,13 +428,15 @@ namespace Microsoft.Azure.Amqp
             static readonly Action<TransportAsyncCallbackArgs> onSizeComplete = OnReadSizeComplete;
             static readonly Action<TransportAsyncCallbackArgs> onFrameComplete = OnReadFrameComplete;
             readonly TransportBase transport;
+            readonly int maxFrameSize;
             readonly byte[] sizeBuffer;
             IIoHandler parent;
 
-            public FrameBufferReader(IIoHandler parent, TransportBase transport)
+            public FrameBufferReader(IIoHandler parent, TransportBase transport, int maxFrameSize)
             {
                 this.parent = parent;
                 this.transport = transport;
+                this.maxFrameSize = maxFrameSize;
                 this.sizeBuffer = new byte[FixedWidth.UInt];
             }
 
@@ -518,11 +528,20 @@ namespace Microsoft.Azure.Amqp
                     {
                         // read size completed ok
                         uint size = AmqpBitConverter.ReadUInt(this.sizeBuffer, 0, this.sizeBuffer.Length);
-                        byte[] frameBuffer = new byte[size];
-                        Buffer.BlockCopy(this.sizeBuffer, 0, frameBuffer, 0, this.sizeBuffer.Length);
-                        args.SetBuffer(frameBuffer, this.sizeBuffer.Length, (int)size - this.sizeBuffer.Length);
-                        args.CompletedCallback = onFrameComplete;
-                        completed = false;
+                        if (size > this.maxFrameSize)
+                        {
+                            completed = true;
+                            exception = new AmqpException(AmqpErrorCode.FramingError, CommonResources.GetString(CommonResources.InvalidFrameSize, size, this.maxFrameSize));
+                            this.parent.OnIoFault(exception);
+                        }
+                        else
+                        {
+                            byte[] frameBuffer = new byte[size];
+                            Buffer.BlockCopy(this.sizeBuffer, 0, frameBuffer, 0, this.sizeBuffer.Length);
+                            args.SetBuffer(frameBuffer, this.sizeBuffer.Length, (int)size - this.sizeBuffer.Length);
+                            args.CompletedCallback = onFrameComplete;
+                            completed = false;
+                        }
                     }
                 }
 
@@ -538,19 +557,30 @@ namespace Microsoft.Azure.Amqp
             const int MaxBatchSize = 32 * 1024;
             static readonly Action<TransportAsyncCallbackArgs> writeCompleteCallback = WriteCompleteCallback;
             readonly TransportBase transport;
+            readonly int writeQueueFullLimit;
+            readonly int writeQueueEmptyLimit;
             readonly TransportAsyncCallbackArgs writeAsyncEventArgs;
             readonly Queue<ByteBuffer> bufferQueue;
             readonly IIoHandler parent;
+            long bufferQueueSize;
             bool writing;
             bool closed;
+            bool isQueueFull;
 
-            public AsyncWriter(TransportBase transport, IIoHandler parent)
+            public AsyncWriter(TransportBase transport, int writeQueueFullLimit, int writeQueueEmptyLimit, IIoHandler parent)
             {
                 this.transport = transport;
+                this.writeQueueFullLimit = writeQueueFullLimit;
+                this.writeQueueEmptyLimit = writeQueueEmptyLimit;
                 this.parent = parent;
                 this.bufferQueue = new Queue<ByteBuffer>();
                 this.writeAsyncEventArgs = new TransportAsyncCallbackArgs();
                 this.writeAsyncEventArgs.CompletedCallback = writeCompleteCallback;
+            }
+
+            public long BufferQueueSize
+            {
+                get { return this.bufferQueueSize; }
             }
 
             object SyncRoot
@@ -564,7 +594,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (this.writing)
                     {
-                        this.bufferQueue.Enqueue(buffer);
+                        this.EnqueueBuffer(buffer);
                         return;
                     }
 
@@ -586,7 +616,7 @@ namespace Microsoft.Azure.Amqp
                     {
                         for (int i = 0; i < buffers.Count; i++)
                         {
-                            this.bufferQueue.Enqueue(buffers[i]);
+                            this.EnqueueBuffer(buffers[i]);
                         }
 
                         return;
@@ -625,6 +655,29 @@ namespace Microsoft.Azure.Amqp
                 }
 
                 thisPtr.ContinueWrite();
+            }
+
+            // call this under lock
+            void EnqueueBuffer(ByteBuffer buffer)
+            {
+                this.bufferQueueSize += buffer.Length;
+                this.bufferQueue.Enqueue(buffer);
+                if (this.bufferQueueSize >= this.writeQueueFullLimit && !this.isQueueFull)
+                {
+                    this.isQueueFull = true;
+                    this.parent.OnIoEvent(IoEvent.WriteBufferQueueFull, this.bufferQueueSize);
+                }
+            }
+
+            // call this under lock
+            void OnBufferDequeued(int size)
+            {
+                this.bufferQueueSize -= size;
+                if (this.bufferQueueSize <= this.writeQueueEmptyLimit && this.isQueueFull)
+                {
+                    this.isQueueFull = false;
+                    this.parent.OnIoEvent(IoEvent.WriteBufferQueueEmpty, this.bufferQueueSize);
+                }
             }
 
             bool WriteCore()
@@ -677,25 +730,29 @@ namespace Microsoft.Azure.Amqp
                         }
                         else if (count == 1)
                         {
-                            this.writeAsyncEventArgs.SetBuffer(this.bufferQueue.Dequeue());
+                            ByteBuffer buffer = this.bufferQueue.Dequeue();
+                            this.OnBufferDequeued(buffer.Length);
+                            this.writeAsyncEventArgs.SetBuffer(buffer);
                         }
                         else
                         {
                             var buffers = new List<ByteBuffer>(Math.Min(count, 64));
-                            for (int i = 0, size = 0; i < count && size < MaxBatchSize; i++)
+                            int size = 0;
+                            for (int i = 0; i < count && size < MaxBatchSize; i++)
                             {
                                 ByteBuffer buffer = this.bufferQueue.Dequeue();
                                 buffers.Add(buffer);
                                 size += buffer.Length;
                             }
 
+                            this.OnBufferDequeued(size);
                             this.writeAsyncEventArgs.SetBuffer(buffers);
                         }
                     }
                 }
                 while (this.WriteCore());
             }
-            
+
             bool HandleWriteBufferComplete(TransportAsyncCallbackArgs args)
             {
                 bool shouldContinue;
@@ -720,8 +777,8 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public class AsyncFrameWriter : AsyncWriter
         {
-            public AsyncFrameWriter(TransportBase transport, IIoHandler parent)
-                : base(transport, parent)
+            public AsyncFrameWriter(TransportBase transport, int writeQueueFullLimit, int writeQueueEmptyLimit, IIoHandler parent)
+                : base(transport, writeQueueFullLimit, writeQueueEmptyLimit, parent)
             {
             }
 

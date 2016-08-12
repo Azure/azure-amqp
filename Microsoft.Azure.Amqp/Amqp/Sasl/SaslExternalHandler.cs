@@ -19,22 +19,15 @@ namespace Microsoft.Azure.Amqp.Sasl
     public class SaslExternalHandler : SaslHandler
     {
         public static readonly string Name = "EXTERNAL";
-        readonly IPrincipal principal;
 
         public SaslExternalHandler()
-            : this(new GenericPrincipal(new GenericIdentity("dummy-identity", "dummy-identity"), null))
-        {
-        }
-
-        public SaslExternalHandler(IPrincipal principal)
         {
             this.Mechanism = Name;
-            this.principal = principal;
         }
 
         public override SaslHandler Clone()
         {
-            return new SaslExternalHandler(this.principal);
+            return new SaslExternalHandler();
         }
 
         public override void OnChallenge(SaslChallenge challenge)
@@ -56,14 +49,13 @@ namespace Microsoft.Azure.Amqp.Sasl
             else
             {
                 // need a principal to mark the transport as 'authenticated'
-                this.SetPrincipal();
+                this.Principal = new GenericPrincipal(new GenericIdentity("dummy-identity", "dummy-identity"), null);
+                // at this point we should check if the client id is established
+                // by other means (e.g. cert) and set a Pricipal, but we have
+                // been using EXTERNAL to do CBS which is anonymous so we cannot
+                // do the check here without breaking old clients
                 this.Negotiator.CompleteNegotiation(SaslCode.Ok, null);
             }
-        }
-
-        void SetPrincipal()
-        {
-            this.Principal = this.principal;
         }
     }
 }

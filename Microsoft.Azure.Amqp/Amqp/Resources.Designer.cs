@@ -547,6 +547,15 @@ namespace Microsoft.Azure.Amqp.Amqp {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot upgrade transport from type &apos;{0}&apos; to &apos;{1}&apos;..
+        /// </summary>
+        internal static string AmqpTransportUpgradeNotAllowed {
+            get {
+                return ResourceManager.GetString("AmqpTransportUpgradeNotAllowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The descriptor {0} is unknown while deserializing {1}. This usually happens if a wrong type is given to the ReadObject method or KnownTypesAttribute is not defined..
         /// </summary>
         internal static string AmqpUnknownDescriptor {

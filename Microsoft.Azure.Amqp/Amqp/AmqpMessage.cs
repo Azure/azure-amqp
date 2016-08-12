@@ -193,6 +193,12 @@ namespace Microsoft.Azure.Amqp
             get;
         }
 
+        public ArraySegment<byte>[] GetPayload()
+        {
+            bool more;
+            return this.GetPayload(int.MaxValue, out more);
+        }
+
         // Public factory methods
         public static AmqpMessage Create()
         {

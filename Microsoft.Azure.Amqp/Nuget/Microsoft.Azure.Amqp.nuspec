@@ -12,8 +12,10 @@
         <language>en-US</language>
     </metadata>
     <files>
-        <file src="..\..\bin\release\Microsoft.Azure.Amqp.dll" target="lib\net451\Microsoft.Azure.Amqp.dll" />
-        <file src="..\..\bin\release\Microsoft.Azure.Amqp.XML" target="lib\net451\Microsoft.Azure.Amqp.XML" />
+        <file src="..\bin\release\net451\Microsoft.Azure.Amqp.dll" target="lib\net451\Microsoft.Azure.Amqp.dll" />
+        <file src="..\bin\release\net451\Microsoft.Azure.Amqp.XML" target="lib\net451\Microsoft.Azure.Amqp.XML" />
+        <file src="..\bin\release\netstandard1.3\Microsoft.Azure.Amqp.dll" target="lib\netstandard1.3\Microsoft.Azure.Amqp.dll" />
+        <file src="..\bin\release\netstandard1.3\Microsoft.Azure.Amqp.XML" target="lib\netstandard1.3\Microsoft.Azure.Amqp.XML" />
         <file src="..\..\Microsoft.Azure.Amqp.Uwp\bin\Release\Microsoft.Azure.Amqp.Uwp.dll" target="lib\uap10.0\Microsoft.Azure.Amqp.Uwp.dll" />
     </files>
 </package>

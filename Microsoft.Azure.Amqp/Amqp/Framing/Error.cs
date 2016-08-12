@@ -8,11 +8,11 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
-#if !DNXCORE
+#if !NETSTANDARD
     [Serializable]
 #endif
     public sealed class Error : DescribedList
-#if !DNXCORE
+#if !NETSTANDARD
         , ISerializable
 #endif
     {
@@ -25,7 +25,7 @@ namespace Microsoft.Azure.Amqp.Framing
         {
         }
 
-#if !DNXCORE
+#if !NETSTANDARD
         Error(SerializationInfo info, StreamingContext context)
             : base(Name, Code)
         {
@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Amqp.Framing
 
         // This list should have non-SB related exceptions. The contract that handles SB exceptions
         // are in ExceptionHelper
-        public static Error FromException(Exception exception, bool includeDetail = true)
+        public static Error FromException(Exception exception)
         {
             AmqpException amqpException = exception as AmqpException;
             if (amqpException != null)
@@ -56,6 +56,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
 
             Error error = new Error();
+            error.Description = exception.Message;
             if (exception is UnauthorizedAccessException)
             {
                 error.Condition = AmqpErrorCode.UnauthorizedAccess;
@@ -64,7 +65,7 @@ namespace Microsoft.Azure.Amqp.Framing
             {
                 error.Condition = AmqpErrorCode.NotAllowed;
             }
-#if !DNXCORE
+#if !NETSTANDARD
             else if (exception is System.Transactions.TransactionAbortedException)
             {
                 error.Condition = AmqpErrorCode.TransactionRollback;
@@ -77,22 +78,21 @@ namespace Microsoft.Azure.Amqp.Framing
             else
             {
                 error.Condition = AmqpErrorCode.InternalError;
+                error.Description = AmqpResources.GetString(AmqpResources.AmqpErrorOccurred, AmqpErrorCode.InternalError);
             }
 
-            error.Description = exception.Message;
-            if (includeDetail)
+#if DEBUG
+            error.Info = new Fields();
+
+            // Limit the size of the exception string as it may exceed the conneciton max frame size
+            string exceptionString = exception.ToString();
+            if (exceptionString.Length > MaxSizeInInfoMap)
             {
-                error.Info = new Fields();
-
-                // Limit the size of the exception string as it may exceed the conneciton max frame size
-                string exceptionString = exception.ToString();
-                if (exceptionString.Length > MaxSizeInInfoMap)
-                {
-                    exceptionString = exceptionString.Substring(0, MaxSizeInInfoMap);
-                }
-
-                error.Info.Add("exception", exceptionString);
+                exceptionString = exceptionString.Substring(0, MaxSizeInInfoMap);
             }
+
+            error.Info.Add("exception", exceptionString);
+#endif
 
             return error;
         }
@@ -108,7 +108,7 @@ namespace Microsoft.Azure.Amqp.Framing
             return sb.ToString();
         }
 
-#if !DNXCORE
+#if !NETSTANDARD
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
             // The inner types aren't actually serializable, instead we serialize

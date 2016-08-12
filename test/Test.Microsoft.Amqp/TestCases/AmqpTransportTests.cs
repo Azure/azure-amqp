@@ -4,21 +4,16 @@
     using System.Diagnostics;
     using System.Threading;
     using global::Microsoft.Azure.Amqp.Transport;
-    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Xunit;
 
-    [TestClass]
+    [Trait("Category", TestCategory.Current)]
     public class AmqpTransportTests
     {
         const int TestBytes = 1024;
         const int Iterations = 2;
         const int TestMaxNumber = 9999;
 
-        [ClassInitialize]
-        public static void ClassInitialize(TestContext context)
-        {
-        }
-
-        [TestMethod()]
+        [Fact]
         public void TcpTransportTest()
         {
             const string localHost = "localhost";
@@ -45,9 +40,9 @@
             listenerThread.Join();
             initiatorThread.Join();
 
-            Trace.WriteLine("TCP transport test completed.");
-            Assert.IsTrue(clientContext.Success);
-            Assert.IsTrue(serverContext.Success);
+            Debug.WriteLine("TCP transport test completed.");
+            Assert.True(clientContext.Success);
+            Assert.True(serverContext.Success);
         }
 
         internal static TransportBase AcceptServerTransport(TransportSettings settings)
@@ -56,15 +51,15 @@
             int closed = 0;
             TransportBase transport = null;
 
-            Action<TransportAsyncCallbackArgs> onTransport = (a) =>
+            Action<TransportListener, TransportAsyncCallbackArgs> onTransport = (l, a) =>
             {
                 if (a.Exception != null)
                 {
-                    Trace.WriteLine(a.Exception.Message);
+                    Debug.WriteLine(a.Exception.Message);
                 }
                 else
                 {
-                    Trace.WriteLine("Listener accepted a transport.");
+                    Debug.WriteLine("Listener accepted a transport.");
                     transport = a.Transport;
                 }
 
@@ -75,16 +70,16 @@
             };
 
             TransportListener listener = settings.CreateListener();
-            Trace.WriteLine("Listeners are waiting for connections...");
+            Debug.WriteLine("Listeners are waiting for connections...");
             listener.Listen(onTransport);
 
             complete.WaitOne();
-            complete.Close();
+            complete.Dispose();
 
             transport.Closed += (s, a) =>
             {
                 listener.Close();
-                Trace.WriteLine("Listeners Closed.");
+                Debug.WriteLine("Listeners Closed.");
             };
 
             return transport;
@@ -99,11 +94,11 @@
             {
                 if (a.Exception != null)
                 {
-                    Trace.WriteLine(a.Exception.Message);
+                    Debug.WriteLine(a.Exception.Message);
                 }
                 else
                 {
-                    Trace.WriteLine("Initiator established a transport.");
+                    Debug.WriteLine("Initiator established a transport.");
                     transport = a.Transport;
                 }
 
@@ -111,13 +106,13 @@
             };
 
             TransportInitiator initiator = settings.CreateInitiator();
-            Trace.WriteLine("Initiator is connecting to the server...");
+            Debug.WriteLine("Initiator is connecting to the server...");
             TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();
             args.CompletedCallback = onTransport;
             initiator.ConnectAsync(TimeSpan.FromSeconds(10), args);
 
             complete.WaitOne();
-            complete.Close();
+            complete.Dispose();
 
             return transport;
         }
@@ -125,13 +120,13 @@
         static void ListenerThread(object state)
         {
             new TransportTestHelper().RunServerTest((TransportTestContext)state);
-            Trace.WriteLine("ListenerThread done.");
+            Debug.WriteLine("ListenerThread done.");
         }
 
         static void InitiatorThread(object state)
         {
             new TransportTestHelper().RunClientTest((TransportTestContext)state);
-            Trace.WriteLine("InitiatorThread done.");
+            Debug.WriteLine("InitiatorThread done.");
         }
 
         class TransportTestContext
@@ -166,7 +161,7 @@
                         {
                             if (expect < this.testContext.MaxNumber)
                             {
-                                Trace.WriteLine(string.Format("Got eof before finishing all numbers (expect={0})", expect));
+                                Debug.WriteLine(string.Format("Got eof before finishing all numbers (expect={0})", expect));
                                 this.testContext.Success = false;
                             }
 
@@ -174,7 +169,7 @@
                         }
                         else if (num != expect)
                         {
-                            Trace.WriteLine(string.Format("Expect {0} but got {1}", expect, num));
+                            Debug.WriteLine(string.Format("Expect {0} but got {1}", expect, num));
                             this.testContext.Success = false;
                             break;
                         }
@@ -185,12 +180,12 @@
                 }
                 catch (Exception exception)
                 {
-                    Trace.WriteLine("Server got exception: " + exception.ToString());
+                    Debug.WriteLine("Server got exception: " + exception.ToString());
                     this.testContext.Success = false;
                 }
 
                 this.transport.Close();
-                Trace.WriteLine("Done server.");
+                Debug.WriteLine("Done server.");
             }
 
             public void RunClientTest(TransportTestContext testContext)
@@ -207,7 +202,7 @@
                         int num = this.Read();
                         if (num != i * 2)
                         {
-                            Trace.WriteLine(string.Format("Wrote {0} but got {1}", i, num));
+                            Debug.WriteLine(string.Format("Wrote {0} but got {1}", i, num));
                             this.testContext.Success = false;
                             break;
                         }
@@ -215,12 +210,12 @@
                 }
                 catch(Exception exception)
                 {
-                    Trace.WriteLine("Client got exception: " + exception.ToString());
+                    Debug.WriteLine("Client got exception: " + exception.ToString());
                     this.testContext.Success = false;
                 }
 
                 this.transport.Close();
-                Trace.WriteLine("Done client.");
+                Debug.WriteLine("Done client.");
             }
 
             void Write(int number)
@@ -264,7 +259,7 @@
 
                 if (args.BytesTransfered == 0)
                 {
-                    Trace.WriteLine("Read got eof.");
+                    Debug.WriteLine("Read got eof.");
                     return 0;
                 }
                 else

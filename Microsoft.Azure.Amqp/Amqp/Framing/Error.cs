@@ -8,15 +8,15 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
     [Serializable]
 #endif
     public sealed class Error : DescribedList
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
         , ISerializable
 #endif
     {
-    public static readonly string Name = "amqp:error:list";
+        public static readonly string Name = "amqp:error:list";
         public static readonly ulong Code = 0x000000000000001d;
         const int Fields = 3;
         const int MaxSizeInInfoMap = 8 * 1024;
@@ -25,7 +25,7 @@ namespace Microsoft.Azure.Amqp.Framing
         {
         }
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
         Error(SerializationInfo info, StreamingContext context)
             : base(Name, Code)
         {
@@ -65,7 +65,7 @@ namespace Microsoft.Azure.Amqp.Framing
             {
                 error.Condition = AmqpErrorCode.NotAllowed;
             }
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONOANDROID && !PCL
             else if (exception is System.Transactions.TransactionAbortedException)
             {
                 error.Condition = AmqpErrorCode.TransactionRollback;
@@ -108,7 +108,7 @@ namespace Microsoft.Azure.Amqp.Framing
             return sb.ToString();
         }
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
             // The inner types aren't actually serializable, instead we serialize

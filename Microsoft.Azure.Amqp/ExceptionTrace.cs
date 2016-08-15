@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Amqp
     using System.Runtime.Versioning;
     using System.Text;
     using System.Threading;
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONOANDROID && !PCL
     using Microsoft.Azure.Amqp.Interop;
 #endif
     using Microsoft.Azure.Amqp.Tracing;
@@ -111,7 +111,7 @@ namespace Microsoft.Azure.Amqp
             ////MessagingClientEtwProvider.Provider.EventWriteUnhandledException(this.eventSourceName + ": " + exception.ToStringSlim());
         }
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
         [ResourceConsumption(ResourceScope.Process)]
 #endif
         [Fx.Tag.SecurityNote(Critical = "Calls 'System.Runtime.Interop.UnsafeNativeMethods.IsDebuggerPresent()' which is a P/Invoke method",
@@ -128,7 +128,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     case EventLevel.Critical:
                     case EventLevel.Error:
-#if NETSTANDARD
+#if NETSTANDARD || PCL
                         Debug.WriteLine("[{0}] An Exception is being thrown: {1}", level, exception);
 #else
                         Trace.TraceError("An Exception is being thrown: {0}", GetDetailsForThrownException(exception));
@@ -143,7 +143,7 @@ namespace Microsoft.Azure.Amqp
 
                         break;
                     case EventLevel.Warning:
-#if NETSTANDARD
+#if NETSTANDARD || PCL
                         Debug.WriteLine("[{0}] An Exception is being thrown: {1}", level, exception);
 #else
                         Trace.TraceWarning("An Exception is being thrown: {0}", GetDetailsForThrownException(exception));
@@ -184,7 +184,11 @@ namespace Microsoft.Azure.Amqp
             {
                 // Include the current callstack (this ensures we see the Stack in case exception is not output when caught)
                 const int MaxStackTraceLength = 2000;
+#if !PCL
                 string stackTraceString = Environment.StackTrace;
+#else
+                string stackTraceString = "";
+#endif
                 if (stackTraceString.Length > MaxStackTraceLength)
                 {
                     stackTraceString = stackTraceString.Substring(0, MaxStackTraceLength) + "...";
@@ -201,7 +205,7 @@ namespace Microsoft.Azure.Amqp
             Safe = "Safe because it's a no-op in retail builds.")]
         internal void BreakOnException(Exception exception)
         {
-#if DEBUG && !NETSTANDARD
+#if DEBUG && !NETSTANDARD && !MONOANDROID && !PCL
             if (Fx.BreakOnExceptionTypes != null)
             {
                 foreach (Type breakType in Fx.BreakOnExceptionTypes)

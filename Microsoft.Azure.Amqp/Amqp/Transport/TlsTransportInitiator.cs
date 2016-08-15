@@ -90,6 +90,7 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 Fx.Assert(innerArgs.Transport != null, "must have a valid inner transport");
                 // upgrade transport
+#if !PCL
                 this.callbackArgs.Transport = new TlsTransport(innerArgs.Transport, this.transportSettings);
                 try
                 {
@@ -110,6 +111,9 @@ namespace Microsoft.Azure.Amqp.Transport
                     this.callbackArgs.Exception = exception;
                     this.Complete();
                 }
+#else
+                throw new NotImplementedException();
+#endif
             }
         }
 

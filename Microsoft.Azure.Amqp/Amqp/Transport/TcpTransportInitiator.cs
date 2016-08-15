@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Amqp.Transport
     using System;
     using System.Net;
     using System.Net.Sockets;
-    
+
     sealed class TcpTransportInitiator : TransportInitiator
     {
         readonly TcpTransportSettings transportSettings;
@@ -22,12 +22,14 @@ namespace Microsoft.Azure.Amqp.Transport
             // TODO: set socket connect timeout to timeout
             this.callbackArgs = callbackArgs;
 
-            DnsEndPoint dnsEndPoint = new DnsEndPoint(this.transportSettings.Host, this.transportSettings.Port);
+            DnsEndPoint dnsEndPoint = new DnsEndPoint(this.transportSettings.Host, this.transportSettings.Port, AddressFamily.InterNetwork);
             SocketAsyncEventArgs connectEventArgs = new SocketAsyncEventArgs();
             connectEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnConnectComplete);
             connectEventArgs.RemoteEndPoint = dnsEndPoint;
             connectEventArgs.UserToken = this;
-            if (Socket.ConnectAsync(SocketType.Stream, ProtocolType.Tcp, connectEventArgs))
+
+            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            if (socket.ConnectAsync(connectEventArgs))
             {
                 return true;
             }

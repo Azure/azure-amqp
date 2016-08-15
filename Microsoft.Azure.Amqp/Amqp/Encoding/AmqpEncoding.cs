@@ -141,6 +141,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 return arrayEncoding;
             }
+#if !PCL
             else if (typeof(IList).IsAssignableFrom(type))
             {
                 return listEncoding;
@@ -149,7 +150,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 return describedTypeEncoding;
             }
-
+#endif
             throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, type.ToString()));
         }
 

@@ -209,6 +209,8 @@ namespace Diagnostics
             {
 #if WINDOWS_UWP
                 return Win32.GetCurrentProcessId();
+#elif PCL
+                throw new System.NotImplementedException();
 #else
                 return System.Diagnostics.Process.GetCurrentProcess().Id;
 #endif

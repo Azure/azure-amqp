@@ -14,7 +14,11 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static int GetValueSize(AmqpSymbol value)
         {
+#if !PCL
             return value.Value == null ? FixedWidth.Null : Encoding.ASCII.GetByteCount(value.Value);
+#else
+            throw new System.NotImplementedException();
+#endif
         }
 
         public static int GetEncodeSize(AmqpSymbol value)
@@ -32,10 +36,14 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
             else
             {
+#if !PCL
                 byte[] encodedData = Encoding.ASCII.GetBytes(value.Value);
                 int encodeWidth = AmqpEncoding.GetEncodeWidthBySize(encodedData.Length);
                 AmqpBitConverter.WriteUByte(buffer, encodeWidth == FixedWidth.UByte ? FormatCode.Symbol8 : FormatCode.Symbol32);
                 SymbolEncoding.Encode(encodedData, encodeWidth, buffer);
+#else
+                throw new System.NotImplementedException();
+#endif
             }
         }
 
@@ -48,17 +56,25 @@ namespace Microsoft.Azure.Amqp.Encoding
 
             int count;
             AmqpEncoding.ReadCount(buffer, formatCode, FormatCode.Symbol8, FormatCode.Symbol32, out count);
+#if !PCL
             string value = Encoding.ASCII.GetString(buffer.Buffer, buffer.Offset, count);
             buffer.Complete(count);
 
             return new AmqpSymbol(value);
+#else
+            throw new System.NotImplementedException();
+#endif
         }
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
         {
             if (arrayEncoding)
             {
+#if !PCL
                 return FixedWidth.UInt + Encoding.ASCII.GetByteCount(((AmqpSymbol)value).Value);
+#else
+                throw new System.NotImplementedException();
+#endif
             }
             else
             {
@@ -70,7 +86,11 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (arrayEncoding)
             {
+#if !PCL
                 SymbolEncoding.Encode(Encoding.ASCII.GetBytes(((AmqpSymbol)value).Value), FixedWidth.UInt, buffer);
+#else
+                throw new System.NotImplementedException();
+#endif
             }
             else
             {

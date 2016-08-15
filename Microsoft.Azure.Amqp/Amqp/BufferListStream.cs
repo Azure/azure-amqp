@@ -8,7 +8,10 @@ namespace Microsoft.Azure.Amqp
     using System.IO;
     using System.Linq;
 
-    public sealed class BufferListStream : Stream, ICloneable
+    public sealed class BufferListStream : Stream
+#if !PCL
+        , ICloneable
+#endif
     {
         IList<ArraySegment<byte>> bufferList;
         int readArray;

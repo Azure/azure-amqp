@@ -58,12 +58,32 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+#if MONOANDROID
+            int result = 0;
+            using (var doneEvent = new ManualResetEventSlim())
+            {
+                var asyncResult = this.BeginRead(buffer, offset, count, ar => ((ManualResetEventSlim)ar.AsyncState).Set(), doneEvent);
+                doneEvent.Wait();
+                result = this.EndRead(asyncResult);
+            }
+            return result;
+#else
             throw new InvalidOperationException();
+#endif
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
+#if MONOANDROID
+            using (var doneEvent = new ManualResetEventSlim())
+            {
+                var asyncResult = this.BeginWrite(buffer, offset, count, ar => ((ManualResetEventSlim)ar.AsyncState).Set(), doneEvent);
+                doneEvent.Wait();
+                this.EndWrite(asyncResult);
+            }
+#else
             throw new InvalidOperationException();
+#endif
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -84,7 +104,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 this);
         }
 
-#if NETSTANDARD
+#if NETSTANDARD || PCL
         IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
 #else
         public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
@@ -103,7 +123,7 @@ namespace Microsoft.Azure.Amqp.Transport
             return args;
         }
 
-#if NETSTANDARD
+#if NETSTANDARD || PCL
         void EndWrite(IAsyncResult asyncResult)
 #else
         public override void EndWrite(IAsyncResult asyncResult)
@@ -124,7 +144,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 this);
         }
 
-#if NETSTANDARD
+#if NETSTANDARD || PCL
         IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
 #else
         public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
@@ -144,7 +164,7 @@ namespace Microsoft.Azure.Amqp.Transport
             return args;
         }
 
-#if NETSTANDARD
+#if NETSTANDARD || PCL
         int EndRead(IAsyncResult asyncResult)
 #else
         public override int EndRead(IAsyncResult asyncResult)

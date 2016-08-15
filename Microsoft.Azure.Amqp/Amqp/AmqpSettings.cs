@@ -165,7 +165,11 @@ namespace Microsoft.Azure.Amqp
             TransportProvider provider = null;
             if (this.RequireSecureTransport)
             {
+#if !PCL
                 provider = this.GetTransportProvider<TlsTransportProvider>();
+#else
+                throw new NotImplementedException();
+#endif
             }
             else if (!this.AllowAnonymousConnection)
             {

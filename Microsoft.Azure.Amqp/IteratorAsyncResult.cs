@@ -231,7 +231,7 @@ namespace Microsoft.Azure.Amqp
                 policy);
         }
 
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !PCL
         protected AsyncStep CallAsyncSleep(TimeSpan amountToSleep)
         {
             return this.CallAsyncSleep(amountToSleep, CancellationToken.None);

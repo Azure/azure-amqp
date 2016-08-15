@@ -10,13 +10,15 @@ namespace Microsoft.Azure.Amqp
     using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
     using System.Runtime.CompilerServices;
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
     using System.Runtime.ConstrainedExecution;
 #endif
     using System.Runtime.InteropServices;
     using System.Security;
     using System.Threading;
+#if !PCL
     using Microsoft.Win32;
+#endif
 
     static class Fx
     {
@@ -103,13 +105,13 @@ namespace Microsoft.Azure.Amqp
 
         public static byte[] AllocateByteArray(int size)
         {
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
             try
             {
 #endif
                 // Safe to catch OOM from this as long as the ONLY thing it does is a simple allocation of a primitive type (no method calls).
                 return new byte[size];
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
             }
             catch (OutOfMemoryException exception)
             {
@@ -203,7 +205,7 @@ namespace Microsoft.Azure.Amqp
                     // Mark that a FailFast is in progress, so that we can take ourselves out of the NLB if for
                     // any reason we can't kill ourselves quickly.  Wait 15 seconds so this state gets picked up for sure.
                     Fx.FailFastInProgress = true;
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !PCL
                     Thread.Sleep(TimeSpan.FromSeconds(15));
 #endif
                 }
@@ -213,7 +215,7 @@ namespace Microsoft.Azure.Amqp
                     // Environment.FailFast does not collect crash dumps when used in Azure services. 
                     // Environment.FailFast(failFastMessage);
 
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !PCL
                     // ################## WORKAROUND #############################
                     // Workaround for the issue above. Throwing an unhandled exception on a separate thread to trigger process crash and crash dump collection
                     // Throwing FatalException since our service does not morph/eat up fatal exceptions
@@ -244,7 +246,7 @@ namespace Microsoft.Azure.Amqp
             {
                 // FYI, CallbackException is-a FatalException
                 if (exception is FatalException ||
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
                     (exception is OutOfMemoryException && !(exception is InsufficientMemoryException)) ||
                     exception is ThreadAbortException ||
                     exception is AccessViolationException ||
@@ -293,6 +295,7 @@ namespace Microsoft.Azure.Amqp
         }
 
 #if DEBUG
+#if !PCL
         internal static bool AssertsFailFast
         {
             get
@@ -302,7 +305,7 @@ namespace Microsoft.Azure.Amqp
                     typeof(int).IsAssignableFrom(value.GetType()) && ((int)value) != 0;
             }
         }
-
+#endif
         internal static Type[] BreakOnExceptionTypes
         {
             get
@@ -331,7 +334,7 @@ namespace Microsoft.Azure.Amqp
                 return Fx.breakOnExceptionTypesCache;
             }
         }
-
+#if !PCL
         internal static bool FastDebug
         {
             get
@@ -351,11 +354,11 @@ namespace Microsoft.Azure.Amqp
                 return Fx.fastDebugCache;
             }
         }
-
+#endif
         static bool TryGetDebugSwitch(string name, out object value)
         {
             value = null;
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONOANDROID && !PCL
             try
             {
                 RegistryKey key = Registry.LocalMachine.OpenSubKey(Fx.SBRegistryKey);
@@ -379,7 +382,7 @@ namespace Microsoft.Azure.Amqp
         [SuppressMessage(FxCop.Category.Design, FxCop.Rule.DoNotCatchGeneralExceptionTypes,
             Justification = "Don't want to hide the exception which is about to crash the process.")]
         [Fx.Tag.SecurityNote(Miscellaneous = "Must not call into PT code as it is called within a CER.")]
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
 #endif
         static void TraceExceptionNoThrow(Exception exception)
@@ -402,7 +405,7 @@ namespace Microsoft.Azure.Amqp
         [SuppressMessage(FxCop.Category.ReliabilityBasic, FxCop.Rule.IsFatalRule,
             Justification = "Don't want to hide the exception which is about to crash the process.")]
         [Fx.Tag.SecurityNote(Miscellaneous = "Must not call into PT code as it is called within a CER.")]
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
 #endif
         static bool HandleAtThreadBase(Exception exception)

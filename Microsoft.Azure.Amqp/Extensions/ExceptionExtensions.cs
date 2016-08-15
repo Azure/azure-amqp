@@ -27,12 +27,12 @@ namespace Microsoft.Azure.Amqp
                 exception = exception.InnerException;
             }
         }
-
+#if !PCL
         public static IEnumerable<Exception> Unwind(this Exception exception, params Type[] targetTypes)
         {
             return exception.Unwind().Where(e => targetTypes.Any(t => t.IsInstanceOfType(e)));
         }
-
+#endif
         public static IEnumerable<TException> Unwind<TException>(this Exception exception)
         {
             return exception.Unwind().OfType<TException>();
@@ -47,6 +47,7 @@ namespace Microsoft.Azure.Amqp
                 return exception;
             }
 
+#if !PCL
 #if !NETSTANDARD
             if (PartialTrustHelpers.UnsafeIsInFullTrust())
 #endif
@@ -66,7 +67,7 @@ namespace Microsoft.Azure.Amqp
                     prepForRemotingMethodInfo.Invoke(exception, new object[] { });
                 }
             }
-
+#endif
             return exception;
         }
 

@@ -46,8 +46,9 @@ namespace Microsoft.Azure.Amqp.Tracing
 
         public static EventTraceActivity CreateFromThread()
         {
+#if !PCL
             Guid id;
-#if NETSTANDARD || PCL
+#if NETSTANDARD
             id = Guid.NewGuid();
 #else
             id = Trace.CorrelationManager.ActivityId;
@@ -58,6 +59,9 @@ namespace Microsoft.Azure.Amqp.Tracing
             }
 
             return new EventTraceActivity(id);
+#else
+            throw new NotImplementedException();
+#endif
         }
     }
 }

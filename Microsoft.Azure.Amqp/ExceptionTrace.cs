@@ -178,17 +178,14 @@ namespace Microsoft.Azure.Amqp
 
         public static string GetDetailsForThrownException(Exception e)
         {
+#if !PCL
             StringBuilder details = new StringBuilder(2048);
             details.AppendLine(e.ToStringSlim());
             if (string.IsNullOrWhiteSpace(e.StackTrace))
             {
                 // Include the current callstack (this ensures we see the Stack in case exception is not output when caught)
                 const int MaxStackTraceLength = 2000;
-#if !PCL
                 string stackTraceString = Environment.StackTrace;
-#else
-                string stackTraceString = "";
-#endif
                 if (stackTraceString.Length > MaxStackTraceLength)
                 {
                     stackTraceString = stackTraceString.Substring(0, MaxStackTraceLength) + "...";
@@ -198,6 +195,9 @@ namespace Microsoft.Azure.Amqp
             }
 
             return details.ToString();
+#else
+            throw new NotImplementedException();
+#endif
         }
 
         [SuppressMessage(FxCop.Category.Performance, FxCop.Rule.MarkMembersAsStatic, Justification = "CSDMain #183668")]

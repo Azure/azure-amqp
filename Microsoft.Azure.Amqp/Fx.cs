@@ -190,6 +190,7 @@ namespace Microsoft.Azure.Amqp
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static Exception AssertAndFailFastService(string description)
         {
+#if !PCL
             Fx.Assert(description);
             string failFastMessage = CommonResources.GetString(CommonResources.FailFastMessage, description);
 
@@ -205,7 +206,7 @@ namespace Microsoft.Azure.Amqp
                     // Mark that a FailFast is in progress, so that we can take ourselves out of the NLB if for
                     // any reason we can't kill ourselves quickly.  Wait 15 seconds so this state gets picked up for sure.
                     Fx.FailFastInProgress = true;
-#if !WINDOWS_UWP && !PCL
+#if !WINDOWS_UWP
                     Thread.Sleep(TimeSpan.FromSeconds(15));
 #endif
                 }
@@ -215,7 +216,7 @@ namespace Microsoft.Azure.Amqp
                     // Environment.FailFast does not collect crash dumps when used in Azure services. 
                     // Environment.FailFast(failFastMessage);
 
-#if !WINDOWS_UWP && !PCL
+#if !WINDOWS_UWP
                     // ################## WORKAROUND #############################
                     // Workaround for the issue above. Throwing an unhandled exception on a separate thread to trigger process crash and crash dump collection
                     // Throwing FatalException since our service does not morph/eat up fatal exceptions
@@ -236,17 +237,20 @@ namespace Microsoft.Azure.Amqp
             }
 
             return null; // we'll never get here since we've just fail-fasted
+#else
+            throw new NotImplementedException();
+#endif
         }
 
         internal static bool FailFastInProgress { get; private set; }
-
         public static bool IsFatal(Exception exception)
         {
+#if !PCL
             while (exception != null)
             {
                 // FYI, CallbackException is-a FatalException
                 if (exception is FatalException ||
-#if !NETSTANDARD && !PCL
+#if !NETSTANDARD
                     (exception is OutOfMemoryException && !(exception is InsufficientMemoryException)) ||
                     exception is ThreadAbortException ||
                     exception is AccessViolationException ||
@@ -292,6 +296,9 @@ namespace Microsoft.Azure.Amqp
             }
 
             return false;
+#else
+            throw new NotImplementedException();
+#endif
         }
 
 #if DEBUG

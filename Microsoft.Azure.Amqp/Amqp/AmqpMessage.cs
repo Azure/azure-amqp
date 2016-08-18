@@ -1199,6 +1199,7 @@ namespace Microsoft.Azure.Amqp
 
             ulong ReadDescriptorCode()
             {
+#if !PCL
                 FormatCode formatCode = this.ReadFormatCode();
                 ulong descriptorCode = 0;
                 if (formatCode == FormatCode.SmallULong)
@@ -1214,15 +1215,14 @@ namespace Microsoft.Azure.Amqp
                 {
                     int count = this.ReadInt(formatCode == FormatCode.Symbol8);
                     ArraySegment<byte> nameBuffer = this.ReadBytes(count);
-#if !PCL
                     string descriptorName = System.Text.Encoding.ASCII.GetString(nameBuffer.Array, nameBuffer.Offset, count);
                     sectionCodeByName.TryGetValue(descriptorName, out descriptorCode);
-#else
-                    throw new NotImplementedException();
-#endif
                 }
 
                 return descriptorCode;
+#else
+                throw new NotImplementedException();
+#endif
             }
 
             int ReadInt(bool smallEncoding)

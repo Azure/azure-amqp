@@ -34,9 +34,10 @@ namespace Microsoft.Azure.Amqp
             Safe = "Schedule invoke of the given delegate under the current context")]
         public static void Schedule(WaitCallback callback, object state)
         {
+#if !PCL
             Fx.Assert(callback != null, "A null callback was passed for Schedule!");
 
-#if !NETSTANDARD && !PCL
+#if !NETSTANDARD
             if (PartialTrustHelpers.ShouldFlowSecurityContext || WaitCallbackActionItem.ShouldUseActivity)
             {
                 new DefaultActionItem(callback, state).Schedule();
@@ -46,6 +47,9 @@ namespace Microsoft.Azure.Amqp
             {
                 ScheduleCallback(callback, state);
             }
+#else
+            throw new NotImplementedException();
+#endif
         }
 
         [Fx.Tag.SecurityNote(Critical = "Called after applying the user context on the stack or (potentially) " +
@@ -61,13 +65,14 @@ namespace Microsoft.Azure.Amqp
         [SecurityCritical]
         protected void Schedule()
         {
+#if !PCL
             if (isScheduled)
             {
                 throw Fx.Exception.AsError(new InvalidOperationException(CommonResources.ActionItemIsAlreadyScheduled));
             }
 
             this.isScheduled = true;
-#if !NETSTANDARD && !PCL
+#if !NETSTANDARD
             if (PartialTrustHelpers.ShouldFlowSecurityContext)
             {
                 this.context = PartialTrustHelpers.CaptureSecurityContextNoIdentityFlow();
@@ -77,10 +82,13 @@ namespace Microsoft.Azure.Amqp
                 ScheduleCallback(CallbackHelper.InvokeWithContextCallback);
             }
             else
-#endif // !NETSTANDARD && !PCL
+#endif // !NETSTANDARD
             {
                 ScheduleCallback(CallbackHelper.InvokeWithoutContextCallback);
             }
+#else
+            throw new NotImplementedException();
+#endif
         }
 
 #if !NETSTANDARD && !PCL
@@ -124,16 +132,18 @@ namespace Microsoft.Azure.Amqp
         [SecurityCritical]
         static void ScheduleCallback(WaitCallback callback, object state)
         {
+#if !PCL
             Fx.Assert(callback != null, "Cannot schedule a null callback");
 #if WINDOWS_UWP
             Windows.System.Threading.ThreadPool.RunAsync((workitem) =>
             {
                 callback(state);
             });
-#elif PCL
-            throw new System.NotImplementedException();
 #else
             ThreadPool.QueueUserWorkItem(callback, state);
+#endif
+#else
+            throw new NotImplementedException();
 #endif
         }
 

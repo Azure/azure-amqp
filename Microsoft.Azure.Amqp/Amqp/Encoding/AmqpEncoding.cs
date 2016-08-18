@@ -132,6 +132,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static EncodingBase GetEncoding(Type type)
         {
+#if !PCL
             EncodingBase encoding = null;
             if (encodingsByType.TryGetValue(type, out encoding))
             {
@@ -141,7 +142,6 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 return arrayEncoding;
             }
-#if !PCL
             else if (typeof(IList).IsAssignableFrom(type))
             {
                 return listEncoding;

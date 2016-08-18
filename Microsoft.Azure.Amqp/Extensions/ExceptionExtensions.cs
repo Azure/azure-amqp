@@ -40,6 +40,7 @@ namespace Microsoft.Azure.Amqp
 
         public static Exception PrepareForRethrow(this Exception exception)
         {
+#if !PCL
             Fx.Assert(exception != null, "The specified Exception is null.");
 
             if (!ShouldPrepareForRethrow(exception))
@@ -47,7 +48,6 @@ namespace Microsoft.Azure.Amqp
                 return exception;
             }
 
-#if !PCL
 #if !NETSTANDARD
             if (PartialTrustHelpers.UnsafeIsInFullTrust())
 #endif
@@ -67,8 +67,10 @@ namespace Microsoft.Azure.Amqp
                     prepForRemotingMethodInfo.Invoke(exception, new object[] { });
                 }
             }
-#endif
             return exception;
+#else
+            throw new NotImplementedException();
+#endif
         }
 
         public static Exception DisablePrepareForRethrow(this Exception exception)

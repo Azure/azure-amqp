@@ -29,10 +29,14 @@ namespace Microsoft.Azure.Amqp.Transport
         public TlsTransportSettings(TransportSettings innerSettings, bool isInitiator)
             : base()
         {
+#if !PCL
             this.innerSettings = innerSettings;
             this.IsInitiator = isInitiator;
-#if !WINDOWS_UWP && !PCL
+#if !WINDOWS_UWP
             this.CheckCertificateRevocation = true;
+#endif
+#else
+        throw new NotImplementedException();
 #endif
         }
 

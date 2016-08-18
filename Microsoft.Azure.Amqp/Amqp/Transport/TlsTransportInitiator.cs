@@ -80,6 +80,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
         void HandleInnerTransportConnected(TransportAsyncCallbackArgs innerArgs)
         {
+#if !PCL
             this.callbackArgs.CompletedSynchronously = innerArgs.CompletedSynchronously;
             if (innerArgs.Exception != null)
             {
@@ -90,7 +91,6 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 Fx.Assert(innerArgs.Transport != null, "must have a valid inner transport");
                 // upgrade transport
-#if !PCL
                 this.callbackArgs.Transport = new TlsTransport(innerArgs.Transport, this.transportSettings);
                 try
                 {
@@ -111,10 +111,10 @@ namespace Microsoft.Azure.Amqp.Transport
                     this.callbackArgs.Exception = exception;
                     this.Complete();
                 }
-#else
-                throw new NotImplementedException();
-#endif
             }
+#else
+            throw new NotImplementedException();
+#endif
         }
 
         void HandleTransportOpened(IAsyncResult result)

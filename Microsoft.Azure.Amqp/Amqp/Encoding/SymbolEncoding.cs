@@ -30,25 +30,26 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static void Encode(AmqpSymbol value, ByteBuffer buffer)
         {
+#if !PCL
             if (value.Value == null)
             {
                 AmqpEncoding.EncodeNull(buffer);
             }
             else
             {
-#if !PCL
                 byte[] encodedData = Encoding.ASCII.GetBytes(value.Value);
                 int encodeWidth = AmqpEncoding.GetEncodeWidthBySize(encodedData.Length);
                 AmqpBitConverter.WriteUByte(buffer, encodeWidth == FixedWidth.UByte ? FormatCode.Symbol8 : FormatCode.Symbol32);
                 SymbolEncoding.Encode(encodedData, encodeWidth, buffer);
-#else
-                throw new System.NotImplementedException();
-#endif
             }
+#else
+            throw new System.NotImplementedException();
+#endif
         }
 
         public static AmqpSymbol Decode(ByteBuffer buffer, FormatCode formatCode)
         {
+#if !PCL
             if (formatCode == 0 && (formatCode = AmqpEncoding.ReadFormatCode(buffer)) == FormatCode.Null)
             {
                 return new AmqpSymbol();
@@ -56,7 +57,6 @@ namespace Microsoft.Azure.Amqp.Encoding
 
             int count;
             AmqpEncoding.ReadCount(buffer, formatCode, FormatCode.Symbol8, FormatCode.Symbol32, out count);
-#if !PCL
             string value = Encoding.ASCII.GetString(buffer.Buffer, buffer.Offset, count);
             buffer.Complete(count);
 
@@ -68,34 +68,34 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
         {
+#if !PCL
             if (arrayEncoding)
             {
-#if !PCL
                 return FixedWidth.UInt + Encoding.ASCII.GetByteCount(((AmqpSymbol)value).Value);
-#else
-                throw new System.NotImplementedException();
-#endif
             }
             else
             {
                 return SymbolEncoding.GetEncodeSize((AmqpSymbol)value);
             }
+#else
+                throw new System.NotImplementedException();
+#endif
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
         {
+#if !PCL
             if (arrayEncoding)
             {
-#if !PCL
                 SymbolEncoding.Encode(Encoding.ASCII.GetBytes(((AmqpSymbol)value).Value), FixedWidth.UInt, buffer);
-#else
-                throw new System.NotImplementedException();
-#endif
             }
             else
             {
                 SymbolEncoding.Encode((AmqpSymbol)value, buffer);
             }
+#else
+            throw new System.NotImplementedException();
+#endif
         }
 
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)

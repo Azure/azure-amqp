@@ -15,49 +15,24 @@ namespace System.Threading
         internal Timer(TimerCallback callback, object state, TimeSpan dueTime, TimeSpan period) :
             this(callback, state, (int)dueTime.TotalMilliseconds, (int)period.TotalMilliseconds)
         {
+            throw new NotImplementedException();
         }
 
         internal Timer(TimerCallback callback, object state, int dueTime, int period)
         {
-            if (dueTime != -1 || period != -1)
-            {
-                throw new NotImplementedException("This stub implementation does not support this scenario.");
-            }
-
-            _callback = callback;
-            _state = state;
+            throw new NotImplementedException();
         }
 
         internal bool Change(TimeSpan dueTime, TimeSpan period)
         {
-            return this.Change((int)dueTime.TotalMilliseconds, (int)period.TotalMilliseconds);
+            throw new NotImplementedException();
         }
 
         internal bool Change(int dueTime, int period)
         {
-            if (period != -1)
-            {
-                throw new NotImplementedException("This stub implementation does not support this scenario.");
-            }
-
-            Task.Delay(dueTime, Token).ContinueWith(
-                (t, s) =>
-                {
-                    var tuple = (Tuple<TimerCallback, object>)s;
-                    tuple.Item1(tuple.Item2);
-                },
-                Tuple.Create(_callback, _state),
-                CancellationToken.None,
-                TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
-                TaskScheduler.Default);
-
-            return true;
+            throw new NotImplementedException();
         }
 
         public new void Dispose() { base.Cancel(); }
-
-        // private data members
-        private TimerCallback _callback;
-        private object _state;
     }
 }

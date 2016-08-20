@@ -238,7 +238,7 @@ namespace Microsoft.Azure.Amqp
 
             return null; // we'll never get here since we've just fail-fasted
 #else
-            throw new NotImplementedException();
+            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
 #endif
         }
 
@@ -297,7 +297,7 @@ namespace Microsoft.Azure.Amqp
 
             return false;
 #else
-            throw new NotImplementedException();
+            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
 #endif
         }
 

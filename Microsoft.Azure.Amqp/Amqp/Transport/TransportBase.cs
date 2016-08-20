@@ -11,7 +11,7 @@ namespace System.Net
     {
         public EndPoint()
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
         }
     }
 }

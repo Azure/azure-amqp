@@ -60,7 +60,7 @@ namespace Microsoft.Azure.Amqp.Tracing
 
             return new EventTraceActivity(id);
 #else
-            throw new NotImplementedException();
+            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
 #endif
         }
     }

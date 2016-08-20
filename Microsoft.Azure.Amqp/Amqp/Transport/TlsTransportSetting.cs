@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Amqp.Transport
             this.CheckCertificateRevocation = true;
 #endif
 #else
-        throw new NotImplementedException();
+        throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
 #endif
         }
 

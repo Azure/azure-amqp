@@ -48,7 +48,7 @@ namespace Microsoft.Azure.Amqp
                 ScheduleCallback(callback, state);
             }
 #else
-            throw new NotImplementedException();
+            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
 #endif
         }
 
@@ -87,7 +87,7 @@ namespace Microsoft.Azure.Amqp
                 ScheduleCallback(CallbackHelper.InvokeWithoutContextCallback);
             }
 #else
-            throw new NotImplementedException();
+            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
 #endif
         }
 
@@ -143,7 +143,7 @@ namespace Microsoft.Azure.Amqp
             ThreadPool.QueueUserWorkItem(callback, state);
 #endif
 #else
-            throw new NotImplementedException();
+            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
 #endif
         }
 

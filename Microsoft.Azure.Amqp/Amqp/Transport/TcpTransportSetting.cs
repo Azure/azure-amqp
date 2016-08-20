@@ -42,7 +42,7 @@ namespace Microsoft.Azure.Amqp.Transport
 #if !PCL
             return new TcpTransportInitiator(this);
 #else
-            throw new NotImplementedException();
+            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
 #endif
         }
         // No support for TCP listener in UWP

@@ -179,7 +179,7 @@ namespace Microsoft.Azure.Amqp
 
             return provider;
 #else
-            throw new NotImplementedException();
+            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
 #endif
         }
     }

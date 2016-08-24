@@ -14,11 +14,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static int GetValueSize(AmqpSymbol value)
         {
-#if !PCL
-            return value.Value == null ? FixedWidth.Null : System.Text.Encoding.ASCII.GetByteCount(value.Value);
-#else
-            throw new System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
-#endif
+            return value.Value == null ? FixedWidth.Null : Platform.System.Text.Encoding.ASCII.GetByteCount(value.Value);
         }
 
         public static int GetEncodeSize(AmqpSymbol value)
@@ -30,26 +26,21 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static void Encode(AmqpSymbol value, ByteBuffer buffer)
         {
-#if !PCL
             if (value.Value == null)
             {
                 AmqpEncoding.EncodeNull(buffer);
             }
             else
             {
-                byte[] encodedData = Encoding.ASCII.GetBytes(value.Value);
+                byte[] encodedData = Platform.System.Text.Encoding.ASCII.GetBytes(value.Value);
                 int encodeWidth = AmqpEncoding.GetEncodeWidthBySize(encodedData.Length);
                 AmqpBitConverter.WriteUByte(buffer, encodeWidth == FixedWidth.UByte ? FormatCode.Symbol8 : FormatCode.Symbol32);
                 SymbolEncoding.Encode(encodedData, encodeWidth, buffer);
             }
-#else
-            throw new System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
-#endif
         }
 
         public static AmqpSymbol Decode(ByteBuffer buffer, FormatCode formatCode)
         {
-#if !PCL
             if (formatCode == 0 && (formatCode = AmqpEncoding.ReadFormatCode(buffer)) == FormatCode.Null)
             {
                 return new AmqpSymbol();
@@ -57,45 +48,34 @@ namespace Microsoft.Azure.Amqp.Encoding
 
             int count;
             AmqpEncoding.ReadCount(buffer, formatCode, FormatCode.Symbol8, FormatCode.Symbol32, out count);
-            string value = Encoding.ASCII.GetString(buffer.Buffer, buffer.Offset, count);
+            string value = Platform.System.Text.Encoding.ASCII.GetString(buffer.Buffer, buffer.Offset, count);
             buffer.Complete(count);
 
             return new AmqpSymbol(value);
-#else
-            throw new System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
-#endif
         }
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
         {
-#if !PCL
             if (arrayEncoding)
             {
-                return FixedWidth.UInt + Encoding.ASCII.GetByteCount(((AmqpSymbol)value).Value);
+                return FixedWidth.UInt + Platform.System.Text.Encoding.ASCII.GetByteCount(((AmqpSymbol)value).Value);
             }
             else
             {
                 return SymbolEncoding.GetEncodeSize((AmqpSymbol)value);
             }
-#else
-            throw new System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
-#endif
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
         {
-#if !PCL
             if (arrayEncoding)
             {
-                SymbolEncoding.Encode(Encoding.ASCII.GetBytes(((AmqpSymbol)value).Value), FixedWidth.UInt, buffer);
+                SymbolEncoding.Encode(Platform.System.Text.Encoding.ASCII.GetBytes(((AmqpSymbol)value).Value), FixedWidth.UInt, buffer);
             }
             else
             {
                 SymbolEncoding.Encode((AmqpSymbol)value, buffer);
             }
-#else
-            throw new System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
-#endif
         }
 
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)

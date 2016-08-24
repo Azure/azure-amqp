@@ -218,30 +218,3 @@ namespace Diagnostics
         }
     }
 }
-
-namespace Platform.System.Text
-{
-#if PCL
-    class Encoding
-    {
-        public static global::System.Text.Encoding ASCII
-        {
-            get
-            {
-                throw new global::System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyMessage);
-            }
-        }
-    }
-#else
-    class Encoding
-    {
-        public static global::System.Text.Encoding ASCII
-        {
-            get
-            {
-                return global::System.Text.Encoding.ASCII;
-            }
-        }
-    }
-#endif
-}

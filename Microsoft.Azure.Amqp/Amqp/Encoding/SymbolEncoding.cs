@@ -14,7 +14,11 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static int GetValueSize(AmqpSymbol value)
         {
-            return value.Value == null ? FixedWidth.Null : Platform.System.Text.Encoding.ASCII.GetByteCount(value.Value);
+#if !PCL
+            return value.Value == null ? FixedWidth.Null : System.Text.Encoding.ASCII.GetByteCount(value.Value);
+#else
+            throw new System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
+#endif
         }
 
         public static int GetEncodeSize(AmqpSymbol value)
@@ -39,7 +43,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 SymbolEncoding.Encode(encodedData, encodeWidth, buffer);
             }
 #else
-            throw new System.NotImplementedException();
+            throw new System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
 #endif
         }
 
@@ -58,7 +62,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
             return new AmqpSymbol(value);
 #else
-            throw new System.NotImplementedException();
+            throw new System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
 #endif
         }
 
@@ -74,7 +78,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 return SymbolEncoding.GetEncodeSize((AmqpSymbol)value);
             }
 #else
-                throw new System.NotImplementedException();
+            throw new System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
 #endif
         }
 
@@ -90,7 +94,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 SymbolEncoding.Encode((AmqpSymbol)value, buffer);
             }
 #else
-            throw new System.NotImplementedException();
+            throw new System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
 #endif
         }
 

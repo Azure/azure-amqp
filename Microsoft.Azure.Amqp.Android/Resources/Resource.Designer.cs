@@ -9,9 +9,9 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[assembly: global::Android.Runtime.ResourceDesignerAttribute("Microsoft.Azure.Amqp.Resource", IsApplication=false)]
+[assembly: global::Android.Runtime.ResourceDesignerAttribute("Microsoft.Azure.Amqp.Amqp.Resource", IsApplication=false)]
 
-namespace Microsoft.Azure.Amqp
+namespace Microsoft.Azure.Amqp.Amqp
 {
 	
 	

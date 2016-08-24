@@ -5,7 +5,7 @@ namespace Microsoft.Azure.Amqp.PCL
 {
     class Resources
     {
-        public static string ReferenceAssemblyMessage
+        public static string ReferenceAssemblyInvalidUse
         {
             get
             {
@@ -22,7 +22,7 @@ namespace PlatformExtensions
         // IsAssignableFrom is an extension method on other platform. So, avoid ambiguity, we protect this definition under a PCL block.
         public static bool IsAssignableFrom(this global::System.Type t, global::System.Type c)
         {
-            throw new global::System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyMessage);
+            throw new global::System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
         }
     }
 }
@@ -35,7 +35,7 @@ namespace System.Net
     {
         public EndPoint()
         {
-            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyMessage);
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
         }
     }
 }

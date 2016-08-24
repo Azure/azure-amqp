@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Amqp
     {
         public static void Schedule(WaitCallback callback, object state)
         {
-            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyMessage);
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
         }
     }
 }

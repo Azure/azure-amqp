@@ -160,7 +160,7 @@ namespace Microsoft.Azure.Amqp
         public static bool IsFatal(Exception exception)
         {
 #if PCL
-            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyMessage);
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
 #else
             while (exception != null)
             {

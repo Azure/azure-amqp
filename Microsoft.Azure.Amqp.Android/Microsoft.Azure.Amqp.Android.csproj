@@ -9,7 +9,7 @@
     <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.Azure.Amqp</RootNamespace>
+    <RootNamespace>Microsoft.Azure.Amqp.Amqp</RootNamespace>
     <AssemblyName>Microsoft.Azure.Amqp</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <AndroidResgenFile>Resources\Resource.Designer.cs</AndroidResgenFile>
@@ -46,6 +46,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Microsoft.Azure.Amqp\ResourcesGeneric.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>..\Microsoft.Azure.Amqp\ResourcesGeneric.resx</DependentUpon>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Resources.Designer.cs" >
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>..\Microsoft.Azure.Amqp\Amqp\Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\Microsoft.Azure.Amqp\ResourcesGeneric.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>..\Microsoft.Azure.Amqp\ResourcesGeneric.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Microsoft.Azure.Amqp\Amqp\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>..\Microsoft.Azure.Amqp\Amqp\Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="Resources\Resource.Designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\ActionItem.cs" />
@@ -61,8 +83,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\IteratorAsyncResult.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\PartialTrustHelpers.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\PlatformSupport.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Resources.UWP.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\ResourcesGeneric.Designer.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Singleton.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\SynchronizedPool.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\TaskHelpers.cs" />
@@ -112,7 +132,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ProtocolId.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ReceivingAmqpLink.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\RequestResponseAmqpLink.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Resources.Designer.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SegmentBufferPool.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SendingAmqpLink.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SequenceNumber.cs" />
@@ -239,13 +258,10 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportProvider.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\CustomSslStream.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransport.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransport.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportInitiator.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportInitiator.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportListener.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportSetting.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransport.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransport.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportInitiator.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportListener.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportProvider.cs" />

@@ -179,7 +179,7 @@ namespace Microsoft.Azure.Amqp
 
             return provider;
 #else
-            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyMessage);
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
 #endif
         }
     }

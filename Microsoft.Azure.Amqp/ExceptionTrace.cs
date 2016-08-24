@@ -196,7 +196,7 @@ namespace Microsoft.Azure.Amqp
 
             return details.ToString();
 #else
-            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyMessage);
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
 #endif
         }
 

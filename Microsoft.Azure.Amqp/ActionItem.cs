@@ -1,15 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if PCL
-
-namespace System.Threading
-{
-    delegate void WaitCallback(object state);
-}
-
-#endif
-
 namespace Microsoft.Azure.Amqp
 {
     using System;
@@ -18,7 +9,7 @@ namespace Microsoft.Azure.Amqp
 
     abstract class ActionItem
     {
-#if !NETSTANDARD && !PCL
+#if !NETSTANDARD
         [Fx.Tag.SecurityNote(Critical = "Stores the security context, used later in binding back into")]
         [SecurityCritical]
         SecurityContext context;
@@ -34,7 +25,6 @@ namespace Microsoft.Azure.Amqp
             Safe = "Schedule invoke of the given delegate under the current context")]
         public static void Schedule(WaitCallback callback, object state)
         {
-#if !PCL
             Fx.Assert(callback != null, "A null callback was passed for Schedule!");
 
 #if !NETSTANDARD
@@ -47,9 +37,6 @@ namespace Microsoft.Azure.Amqp
             {
                 ScheduleCallback(callback, state);
             }
-#else
-            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
-#endif
         }
 
         [Fx.Tag.SecurityNote(Critical = "Called after applying the user context on the stack or (potentially) " +
@@ -65,7 +52,6 @@ namespace Microsoft.Azure.Amqp
         [SecurityCritical]
         protected void Schedule()
         {
-#if !PCL
             if (isScheduled)
             {
                 throw Fx.Exception.AsError(new InvalidOperationException(CommonResources.ActionItemIsAlreadyScheduled));
@@ -86,12 +72,9 @@ namespace Microsoft.Azure.Amqp
             {
                 ScheduleCallback(CallbackHelper.InvokeWithoutContextCallback);
             }
-#else
-            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
-#endif
         }
 
-#if !NETSTANDARD && !PCL
+#if !NETSTANDARD
         [Fx.Tag.SecurityNote(Critical = "Access critical field context and critical property " +
             "CallbackHelper.InvokeWithContextCallback, calls into critical method ScheduleCallback; " +
             "since nothing is known about the given context, can't be treated as safe")]
@@ -111,7 +94,7 @@ namespace Microsoft.Azure.Amqp
             this.context = contextToSchedule.CreateCopy();
             ScheduleCallback(CallbackHelper.InvokeWithContextCallback);
         }
-#endif // !NETSTANDARD && !PCL
+#endif // !NETSTANDARD
 
         [Fx.Tag.SecurityNote(Critical = "Access critical property CallbackHelper.InvokeWithoutContextCallback, " +
             "Calls into critical method ScheduleCallback; not bound to a security context")]
@@ -132,7 +115,6 @@ namespace Microsoft.Azure.Amqp
         [SecurityCritical]
         static void ScheduleCallback(WaitCallback callback, object state)
         {
-#if !PCL
             Fx.Assert(callback != null, "Cannot schedule a null callback");
 #if WINDOWS_UWP
             Windows.System.Threading.ThreadPool.RunAsync((workitem) =>
@@ -142,12 +124,9 @@ namespace Microsoft.Azure.Amqp
 #else
             ThreadPool.QueueUserWorkItem(callback, state);
 #endif
-#else
-            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
-#endif
         }
 
-#if !NETSTANDARD && !PCL
+#if !NETSTANDARD
         [Fx.Tag.SecurityNote(Critical = "Extract the security context stored and reset the critical field")]
         [SecurityCritical]
         SecurityContext ExtractContext()
@@ -158,7 +137,7 @@ namespace Microsoft.Azure.Amqp
             this.context = null;
             return result;
         }
-#endif // !NETSTANDARD && !PCL
+#endif // !NETSTANDARD
 
         [Fx.Tag.SecurityNote(Critical = "Calls into critical static method ScheduleCallback")]
         [SecurityCritical]
@@ -177,11 +156,11 @@ namespace Microsoft.Azure.Amqp
 
             [Fx.Tag.SecurityNote(Critical = "Stores a delegate to a critical method")]
             static WaitCallback invokeWithoutContextCallback;
-#if !PCL
+
             [Fx.Tag.SecurityNote(Critical = "Stores a delegate to a critical method")]
             static ContextCallback onContextAppliedCallback;
-#endif
-#if !NETSTANDARD && !PCL
+
+#if !NETSTANDARD
             [Fx.Tag.SecurityNote(Critical = "Provides access to a critical field; Initialize it with a delegate to a critical method")]
             public static WaitCallback InvokeWithContextCallback
             {
@@ -194,7 +173,7 @@ namespace Microsoft.Azure.Amqp
                     return invokeWithContextCallback;
                 }
             }
-#endif // !NETSTANDARD && !PCL
+#endif // !NETSTANDARD
 
             [Fx.Tag.SecurityNote(Critical = "Provides access to a critical field; Initialize it with a delegate to a critical method")]
             public static WaitCallback InvokeWithoutContextCallback
@@ -209,7 +188,6 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-#if !PCL
             [Fx.Tag.SecurityNote(Critical = "Provides access to a critical field; Initialize it with a delegate to a critical method")]
             public static ContextCallback OnContextAppliedCallback
             {
@@ -222,16 +200,15 @@ namespace Microsoft.Azure.Amqp
                     return onContextAppliedCallback;
                 }
             }
-#endif
 
-#if !NETSTANDARD && !PCL
+#if !NETSTANDARD
             [Fx.Tag.SecurityNote(Critical = "Called by the scheduler without any user context on the stack")]
             static void InvokeWithContext(object state)
             {
                 SecurityContext context = ((ActionItem)state).ExtractContext();
                 SecurityContext.Run(context, OnContextAppliedCallback, state);
             }
-#endif // !NETSTANDARD && !PCL
+#endif // !NETSTANDARD
 
             [Fx.Tag.SecurityNote(Critical = "Called by the scheduler without any user context on the stack")]
             static void InvokeWithoutContext(object state)

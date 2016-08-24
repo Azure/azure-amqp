@@ -231,7 +231,6 @@ namespace Microsoft.Azure.Amqp
                 policy);
         }
 
-#if !WINDOWS_UWP && !PCL
         protected AsyncStep CallAsyncSleep(TimeSpan amountToSleep)
         {
             return this.CallAsyncSleep(amountToSleep, CancellationToken.None);
@@ -244,10 +243,10 @@ namespace Microsoft.Azure.Amqp
             return this.CallAsync(
                 (thisPtr, t, c, s) => new SleepAsyncResult(amountToSleep, cancellationToken, c, s),
                 (thisPtr, r) => SleepAsyncResult.End(r),
-                (thisPtr, t) => Thread.Sleep(amountToSleep),
+                (thisPtr, t) => Task.Delay(amountToSleep).Wait(),
                 ExceptionPolicy.Transfer);
         }
-#endif
+
         protected AsyncStep CallCompletedAsyncStep()
         {
             return this.CallAsync(

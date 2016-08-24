@@ -104,7 +104,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 this);
         }
 
-#if NETSTANDARD || PCL
+#if NETSTANDARD
         IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
 #else
         public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
@@ -123,7 +123,7 @@ namespace Microsoft.Azure.Amqp.Transport
             return args;
         }
 
-#if NETSTANDARD || PCL
+#if NETSTANDARD
         void EndWrite(IAsyncResult asyncResult)
 #else
         public override void EndWrite(IAsyncResult asyncResult)
@@ -144,7 +144,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 this);
         }
 
-#if NETSTANDARD || PCL
+#if NETSTANDARD
         IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
 #else
         public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
@@ -164,7 +164,7 @@ namespace Microsoft.Azure.Amqp.Transport
             return args;
         }
 
-#if NETSTANDARD || PCL
+#if NETSTANDARD
         int EndRead(IAsyncResult asyncResult)
 #else
         public override int EndRead(IAsyncResult asyncResult)

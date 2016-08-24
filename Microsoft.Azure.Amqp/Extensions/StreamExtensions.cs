@@ -1,21 +1,20 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETSTANDARD
+
 namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.IO;
-#if !PCL
     using System.Net.Security;
     using System.Security.Authentication;
     using System.Security.Cryptography.X509Certificates;
-#endif
 
     static class StreamExtensions
     {
 // DNXCORE50 removes Stream's BeginRead/EndRead/BeginWrite/EndWrite as well as SslStream IAsyncResult methods.
 // Define them here in terms of the Task *Async versions to allow cross-compilation.
-#if NETSTANDARD
         public static IAsyncResult BeginRead(this Stream stream, byte[] buffer, int offset, int count, AsyncCallback callback, object state)
         {
             return stream.ReadAsync(buffer, offset, count).ToAsyncResult<int>(callback, state);
@@ -82,6 +81,6 @@ namespace Microsoft.Azure.Amqp
             TaskHelpers.EndAsyncResult(asyncResult);
         }
 
-#endif // NETSTANDARD
     }
 }
+#endif // NETSTANDARD

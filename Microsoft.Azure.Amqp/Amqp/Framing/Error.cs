@@ -49,7 +49,6 @@ namespace Microsoft.Azure.Amqp.Framing
         // are in ExceptionHelper
         public static Error FromException(Exception exception)
         {
-#if !PCL
             AmqpException amqpException = exception as AmqpException;
             if (amqpException != null)
             {
@@ -66,7 +65,7 @@ namespace Microsoft.Azure.Amqp.Framing
             {
                 error.Condition = AmqpErrorCode.NotAllowed;
             }
-#if !NETSTANDARD && !MONOANDROID
+#if !NETSTANDARD && !MONOANDROID && !PCL
             else if (exception is System.Transactions.TransactionAbortedException)
             {
                 error.Condition = AmqpErrorCode.TransactionRollback;
@@ -96,9 +95,6 @@ namespace Microsoft.Azure.Amqp.Framing
 #endif
 
             return error;
-#else
-            throw new System.NotImplementedException();
-#endif
         }
 
         public override string ToString()

@@ -14,11 +14,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static int GetValueSize(AmqpSymbol value)
         {
-#if !PCL
-            return value.Value == null ? FixedWidth.Null : Encoding.ASCII.GetByteCount(value.Value);
-#else
-            throw new System.NotImplementedException();
-#endif
+            return value.Value == null ? FixedWidth.Null : Platform.System.Text.Encoding.ASCII.GetByteCount(value.Value);
         }
 
         public static int GetEncodeSize(AmqpSymbol value)

@@ -196,7 +196,7 @@ namespace Microsoft.Azure.Amqp
 
             return details.ToString();
 #else
-            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyMessage);
 #endif
         }
 

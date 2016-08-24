@@ -264,7 +264,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Exceptions\FatalException.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Extensions\ExceptionExtensions.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Extensions\StreamExtensions.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Interop\UnsafeNativeMethods.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Tracing\EventTraceActivity.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Tracing\TrackingContext.cs" />

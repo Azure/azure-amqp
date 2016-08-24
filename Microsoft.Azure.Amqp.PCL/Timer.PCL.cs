@@ -15,22 +15,22 @@ namespace System.Threading
         internal Timer(TimerCallback callback, object state, TimeSpan dueTime, TimeSpan period) :
             this(callback, state, (int)dueTime.TotalMilliseconds, (int)period.TotalMilliseconds)
         {
-            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyMessage);
         }
 
         internal Timer(TimerCallback callback, object state, int dueTime, int period)
         {
-            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyMessage);
         }
 
         internal bool Change(TimeSpan dueTime, TimeSpan period)
         {
-            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyMessage);
         }
 
         internal bool Change(int dueTime, int period)
         {
-            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyMessage);
         }
 
         public new void Dispose() { base.Cancel(); }

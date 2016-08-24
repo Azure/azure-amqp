@@ -7,7 +7,9 @@ namespace Microsoft.Azure.Amqp.Encoding
     using System.Collections;
     using System.Collections.Generic;
     using System.Reflection;
-
+#if PCL
+    using PlatformExtensions;
+#endif
     /// <summary>
     /// Encode and decode data within the AMQP type system.
     /// </summary>
@@ -132,7 +134,6 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static EncodingBase GetEncoding(Type type)
         {
-#if !PCL
             EncodingBase encoding = null;
             if (encodingsByType.TryGetValue(type, out encoding))
             {
@@ -150,7 +151,6 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 return describedTypeEncoding;
             }
-#endif
             throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, type.ToString()));
         }
 

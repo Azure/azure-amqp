@@ -6,9 +6,9 @@ namespace Microsoft.Azure.Amqp.Transport
     using System;
 #if !PCL
     using System.Net.Security;
-#if !WINDOWS_UWP
-    using System.Security.Cryptography.X509Certificates;
 #endif
+#if !WINDOWS_UWP && !PCL
+    using System.Security.Cryptography.X509Certificates;
 #endif
     public sealed class TlsTransportSettings : TransportSettings
     {
@@ -29,14 +29,10 @@ namespace Microsoft.Azure.Amqp.Transport
         public TlsTransportSettings(TransportSettings innerSettings, bool isInitiator)
             : base()
         {
-#if !PCL
             this.innerSettings = innerSettings;
             this.IsInitiator = isInitiator;
 #if !WINDOWS_UWP
             this.CheckCertificateRevocation = true;
-#endif
-#else
-        throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
 #endif
         }
 
@@ -65,13 +61,14 @@ namespace Microsoft.Azure.Amqp.Transport
             get { return this.innerSettings; }
         }
 
-#if !WINDOWS_UWP && !PCL
+#if !WINDOWS_UWP
+#if !PCL
         public RemoteCertificateValidationCallback CertificateValidationCallback
         {
             get;
             set;
         }
-
+#endif
         public bool CheckCertificateRevocation
         {
             get;
@@ -80,12 +77,16 @@ namespace Microsoft.Azure.Amqp.Transport
 #endif
         public override TransportInitiator CreateInitiator()
         {
+#if !PCL
             if (this.TargetHost == null)
             {
                 throw new InvalidOperationException(CommonResources.TargetHostNotSet);
             }
 
             return new TlsTransportInitiator(this);
+#else
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyMessage);
+#endif
         }
 
 #if !WINDOWS_UWP && !PCL

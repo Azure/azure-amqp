@@ -12,72 +12,6 @@ namespace Microsoft.Azure.Amqp
     internal static class ExceptionExtensions
     {
         const string ExceptionIdentifierName = "Microsoft.Azure.Amqp.ExceptionId";
-        static MethodInfo prepForRemotingMethodInfo;
-        
-        public static bool IsFatal(this Exception exception)
-        {
-            return Fx.IsFatal(exception);
-        }
-
-        public static IEnumerable<Exception> Unwind(this Exception exception)
-        {
-            while (exception != null)
-            {
-                yield return exception;
-                exception = exception.InnerException;
-            }
-        }
-#if !PCL
-        public static IEnumerable<Exception> Unwind(this Exception exception, params Type[] targetTypes)
-        {
-            return exception.Unwind().Where(e => targetTypes.Any(t => t.IsInstanceOfType(e)));
-        }
-#endif
-        public static IEnumerable<TException> Unwind<TException>(this Exception exception)
-        {
-            return exception.Unwind().OfType<TException>();
-        }
-
-        public static Exception PrepareForRethrow(this Exception exception)
-        {
-#if !PCL
-            Fx.Assert(exception != null, "The specified Exception is null.");
-
-            if (!ShouldPrepareForRethrow(exception))
-            {
-                return exception;
-            }
-
-#if !NETSTANDARD
-            if (PartialTrustHelpers.UnsafeIsInFullTrust())
-#endif
-            {
-                // Racing here is harmless
-                if (ExceptionExtensions.prepForRemotingMethodInfo == null)
-                {
-                    ExceptionExtensions.prepForRemotingMethodInfo =
-                        typeof(Exception).GetMethod("PrepForRemoting", BindingFlags.Instance | BindingFlags.NonPublic);
-                }
-
-                if (ExceptionExtensions.prepForRemotingMethodInfo != null)
-                {
-                    // PrepForRemoting is not thread-safe. When the same exception instance is thrown by multiple threads
-                    // the remote stack trace string may not format correctly. However, We don't lock this to protect us from it given
-                    // it is discouraged to throw the same exception instance from multiple threads and the side impact is ignorable.
-                    prepForRemotingMethodInfo.Invoke(exception, new object[] { });
-                }
-            }
-            return exception;
-#else
-            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
-#endif
-        }
-
-        public static Exception DisablePrepareForRethrow(this Exception exception)
-        {
-            exception.Data[AsyncResult.DisablePrepareForRethrow] = string.Empty;
-            return exception;
-        }
 
         public static string ToStringSlim(this Exception exception)
         {
@@ -103,33 +37,6 @@ namespace Microsoft.Azure.Amqp
 
             // In case Data collection in the exception is nullified.
             return exception.ToString();
-        }
-
-        public static string GetReferenceCode(this Exception exception)
-        {
-            if (exception.Data != null && exception.Data.Contains(ExceptionIdentifierName))
-            {
-                return (string)exception.Data[ExceptionIdentifierName];
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        static bool ShouldPrepareForRethrow(Exception exception)
-        {
-            while (exception != null)
-            {
-                if (exception.Data != null && exception.Data.Contains(AsyncResult.DisablePrepareForRethrow))
-                {
-                    return false;
-                }
-
-                exception = exception.InnerException;
-            }
-
-            return true;
         }
     }
 }

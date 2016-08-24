@@ -1199,7 +1199,6 @@ namespace Microsoft.Azure.Amqp
 
             ulong ReadDescriptorCode()
             {
-#if !PCL
                 FormatCode formatCode = this.ReadFormatCode();
                 ulong descriptorCode = 0;
                 if (formatCode == FormatCode.SmallULong)
@@ -1215,14 +1214,11 @@ namespace Microsoft.Azure.Amqp
                 {
                     int count = this.ReadInt(formatCode == FormatCode.Symbol8);
                     ArraySegment<byte> nameBuffer = this.ReadBytes(count);
-                    string descriptorName = System.Text.Encoding.ASCII.GetString(nameBuffer.Array, nameBuffer.Offset, count);
+                    string descriptorName = Platform.System.Text.Encoding.ASCII.GetString(nameBuffer.Array, nameBuffer.Offset, count);
                     sectionCodeByName.TryGetValue(descriptorName, out descriptorCode);
                 }
 
                 return descriptorCode;
-#else
-            throw new NotImplementedException("AMQP reference assembly cannot be loaded at runtime.");
-#endif
             }
 
             int ReadInt(bool smallEncoding)

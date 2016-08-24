@@ -21,14 +21,19 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             // TODO: set socket connect timeout to timeout
             this.callbackArgs = callbackArgs;
+            DnsEndPoint dnsEndPoint = new DnsEndPoint(this.transportSettings.Host, this.transportSettings.Port);
 
-            DnsEndPoint dnsEndPoint = new DnsEndPoint(this.transportSettings.Host, this.transportSettings.Port, AddressFamily.InterNetwork);
             SocketAsyncEventArgs connectEventArgs = new SocketAsyncEventArgs();
             connectEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnConnectComplete);
             connectEventArgs.RemoteEndPoint = dnsEndPoint;
             connectEventArgs.UserToken = this;
 
+#if MONOANDROID
+            // Work around for Mono issue: https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/171
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+#else
+            Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+#endif
             if (socket.ConnectAsync(connectEventArgs))
             {
                 return true;

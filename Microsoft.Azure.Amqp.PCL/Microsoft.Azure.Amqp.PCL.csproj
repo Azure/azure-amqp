@@ -40,7 +40,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\ActionItem.cs" />
+    <Compile Include="ActionItem.PCL.cs" />
+    <Compile Include="Timer.PCL.cs" />
+    <Compile Include="PlatformSupport.PCL.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\AmqpTrace.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\AsyncResult.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\CommonResources.cs" />
@@ -220,22 +222,18 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportListener.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportProvider.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportSetting.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportInitiator.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportSetting.cs" />
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportProvider.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportAsyncEventArgs.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportBase.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportInitiator.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportListener.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportProvider.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportSettings.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportStream.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Common\Timer.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Exceptions\AssertionFailedException.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Exceptions\CallbackException.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Exceptions\FatalException.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Extensions\ExceptionExtensions.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Extensions\StreamExtensions.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Interop\UnsafeNativeMethods.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Tracing\EventTraceActivity.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Tracing\TrackingContext.cs" />

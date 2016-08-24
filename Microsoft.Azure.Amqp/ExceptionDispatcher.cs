@@ -12,8 +12,6 @@ namespace Microsoft.Azure.Amqp
         {
             ExceptionDispatchInfo exceptionDispatchInfo = ExceptionDispatchInfo.Capture(exception);
             exceptionDispatchInfo.Throw();
-            //exception.PrepareForRethrow();
-            //throw exception;
         }
     }
 }

@@ -80,7 +80,6 @@ namespace Microsoft.Azure.Amqp.Transport
 
         void HandleInnerTransportConnected(TransportAsyncCallbackArgs innerArgs)
         {
-#if !PCL
             this.callbackArgs.CompletedSynchronously = innerArgs.CompletedSynchronously;
             if (innerArgs.Exception != null)
             {
@@ -112,9 +111,6 @@ namespace Microsoft.Azure.Amqp.Transport
                     this.Complete();
                 }
             }
-#else
-            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
-#endif
         }
 
         void HandleTransportOpened(IAsyncResult result)

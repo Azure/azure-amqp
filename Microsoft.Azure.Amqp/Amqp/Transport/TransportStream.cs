@@ -58,12 +58,32 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+#if MONOANDROID
+            int result = 0;
+            using (var doneEvent = new ManualResetEventSlim())
+            {
+                var asyncResult = this.BeginRead(buffer, offset, count, ar => ((ManualResetEventSlim)ar.AsyncState).Set(), doneEvent);
+                doneEvent.Wait();
+                result = this.EndRead(asyncResult);
+            }
+            return result;
+#else
             throw new InvalidOperationException();
+#endif
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
+#if MONOANDROID
+            using (var doneEvent = new ManualResetEventSlim())
+            {
+                var asyncResult = this.BeginWrite(buffer, offset, count, ar => ((ManualResetEventSlim)ar.AsyncState).Set(), doneEvent);
+                doneEvent.Wait();
+                this.EndWrite(asyncResult);
+            }
+#else
             throw new InvalidOperationException();
+#endif
         }
 
         public override long Seek(long offset, SeekOrigin origin)

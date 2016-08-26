@@ -162,6 +162,7 @@ namespace Microsoft.Azure.Amqp
 
         TransportProvider GetDefaultProvider()
         {
+#if !PCL
             TransportProvider provider = null;
             if (this.RequireSecureTransport)
             {
@@ -177,6 +178,9 @@ namespace Microsoft.Azure.Amqp
             }
 
             return provider;
+#else
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
+#endif
         }
     }
 }

@@ -39,11 +39,14 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override TransportInitiator CreateInitiator()
         {
+#if !PCL
             return new TcpTransportInitiator(this);
+#else
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
+#endif
         }
-
-// No support for TCP listener in UWP
-#if !WINDOWS_UWP
+        // No support for TCP listener in UWP
+#if !WINDOWS_UWP && !PCL
         public override TransportListener CreateListener()
         {
             return new TcpTransportListener(this);

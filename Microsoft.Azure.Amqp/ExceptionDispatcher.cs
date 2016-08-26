@@ -4,13 +4,14 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Runtime.ExceptionServices;
 
     sealed class ExceptionDispatcher
     {
         public static void Throw(Exception exception)
         {
-            exception.PrepareForRethrow();
-            throw exception;
+            ExceptionDispatchInfo exceptionDispatchInfo = ExceptionDispatchInfo.Capture(exception);
+            exceptionDispatchInfo.Throw();
         }
     }
 }

@@ -31,10 +31,14 @@ namespace Microsoft.Azure.Amqp.Transport
 #if MONOANDROID
             // Work around for Mono issue: https://github.com/rabbitmq/rabbitmq-dotnet-client/issues/171
             Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            bool connectResult = socket.ConnectAsync(connectEventArgs);
 #else
-            Socket socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            // On Linux platform, socket connections are allowed to be initiated on the socket instance 
+            // with hostname due to multiple IP address DNS resolution possibility.
+            // They suggest either using static Connect API or IP address directly.
+            bool connectResult = Socket.ConnectAsync(SocketType.Stream, ProtocolType.Tcp, connectEventArgs);
 #endif
-            if (socket.ConnectAsync(connectEventArgs))
+            if (connectResult)
             {
                 return true;
             }

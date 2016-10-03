@@ -130,7 +130,10 @@ namespace Microsoft.Azure.Amqp.Transport
                 this.callbackArgs.Transport = null;
             }
 
-            this.callbackArgs.CompletedCallback(this.callbackArgs);
+            if (!this.callbackArgs.CompletedSynchronously)
+            {
+                this.callbackArgs.CompletedCallback(this.callbackArgs);
+            }
         }
     }
 }

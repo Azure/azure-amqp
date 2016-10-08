@@ -34,6 +34,18 @@ namespace Microsoft.Azure.Amqp.Transport
             this.transportSettings = transportSettings;
         }
 
+        static int CurrentThreadId
+        {
+            get
+            {
+#if WINDOWS_UWP
+                return Environment.CurrentManagedThreadId;
+#else
+                return Thread.CurrentThread.ManagedThreadId;
+#endif
+            }
+        }
+
         public override bool ConnectAsync(TimeSpan timeout, TransportAsyncCallbackArgs callbackArgs)
         {
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Connect, this.transportSettings);
@@ -48,7 +60,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 return true;
             }
 
-            int currentThread = Thread.CurrentThread.ManagedThreadId;
+            int currentThread = CurrentThreadId;
             Interlocked.Exchange(ref this.completingThread, currentThread);
             this.OnConnectComplete(args);
             return Interlocked.Exchange(ref this.completingThread, -1) != 0;
@@ -253,7 +265,7 @@ namespace Microsoft.Azure.Amqp.Transport
             innerArgs.Transport = args.Transport;
             innerArgs.Exception = args.Exception;
 
-            int currentThread = Thread.CurrentThread.ManagedThreadId;
+            int currentThread = CurrentThreadId;
             innerArgs.CompletedSynchronously = Interlocked.Add(ref this.completingThread, -currentThread) == 0;
             if (!innerArgs.CompletedSynchronously)
             {

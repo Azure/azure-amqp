@@ -14,6 +14,7 @@ namespace Microsoft.Azure.Amqp
             this.MaxFrameSize = AmqpConstants.DefaultMaxFrameSize;
             this.ChannelMax = AmqpConstants.DefaultMaxConcurrentChannels - 1;
             this.WriteBufferFullLimit = int.MaxValue;
+            this.MinIdleTimeout = AmqpConstants.MinimumHeartBeatIntervalMs;
         }
 
         public string RemoteContainerId
@@ -58,6 +59,12 @@ namespace Microsoft.Azure.Amqp
             set;
         }
 
+        public uint MinIdleTimeout
+        {
+            get;
+            set;
+        }
+
         /// <summary> doesn't clone - RemoteSettings: HostName/ContainerId </summary>
         public AmqpConnectionSettings Clone()
         {
@@ -79,6 +86,7 @@ namespace Microsoft.Azure.Amqp
             newSettings.IgnoreMissingSessions = this.IgnoreMissingSessions;
             newSettings.WriteBufferFullLimit = this.WriteBufferFullLimit;
             newSettings.WriteBufferEmptyLimit = this.WriteBufferEmptyLimit;
+            newSettings.MinIdleTimeout = this.MinIdleTimeout;
 
             return newSettings;
         }

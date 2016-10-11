@@ -358,16 +358,17 @@ namespace Microsoft.Azure.Amqp
         void OnReceiveOpen(Open open)
         {
             StateTransition stateTransition = this.TransitState("R:OPEN", StateTransition.ReceiveOpen);
-            this.Negotiate(open);
-            this.NotifyOpening(open);
 
             uint peerIdleTimeout = open.IdleTimeOut();
-            if (peerIdleTimeout < AmqpConstants.MinimumHeartBeatIntervalMs)
+            if (peerIdleTimeout < this.Settings.MinIdleTimeout)
             {
                 this.CompleteOpen(false,
-                    new AmqpException(AmqpErrorCode.NotAllowed, AmqpResources.GetString(AmqpResources.AmqpIdleTimeoutNotSupported, peerIdleTimeout, AmqpConstants.MinimumHeartBeatIntervalMs)));
+                    new AmqpException(AmqpErrorCode.NotAllowed, AmqpResources.GetString(AmqpResources.AmqpIdleTimeoutNotSupported, peerIdleTimeout, this.Settings.MinIdleTimeout)));
                 return;
             }
+
+            this.Negotiate(open);
+            this.NotifyOpening(open);
 
             if (stateTransition.To == AmqpObjectState.OpenReceived)
             {
@@ -385,9 +386,11 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            if (peerIdleTimeout != uint.MaxValue)
+            uint myIdleTimeout = this.Settings.IdleTimeOut();
+            peerIdleTimeout = open.IdleTimeOut();
+            if (peerIdleTimeout != uint.MaxValue || myIdleTimeout != uint.MaxValue)
             {
-                this.heartBeat = HeartBeat.Initialize(this, peerIdleTimeout);
+                this.heartBeat = HeartBeat.Initialize(this, myIdleTimeout, peerIdleTimeout);
             }
 
             this.CompleteOpen(stateTransition.From == AmqpObjectState.Start, null);
@@ -530,10 +533,9 @@ namespace Microsoft.Azure.Amqp
 
             public abstract void Stop();
 
-            public static HeartBeat Initialize(AmqpConnection connection, uint interval)
+            public static HeartBeat Initialize(AmqpConnection connection, uint local, uint remote)
             {
-                Fx.Assert(interval < uint.MaxValue, "invalid interval");
-                return new TimedHeartBeat(connection, interval);
+                return new TimedHeartBeat(connection, local, remote);
             }
 
             sealed class NoneHeartBeat : HeartBeat
@@ -555,32 +557,65 @@ namespace Microsoft.Azure.Amqp
             {
                 readonly AmqpConnection connection;
                 readonly Timer heartBeatTimer;
-                readonly int heartBeatInterval;
+                readonly uint localInterval;     // idle-timeout for receive (maxValue=infinite)
+                readonly uint remoteInterval;    // idle-timeout for send (maxValue=infinite)
                 DateTime lastSendTime;
                 DateTime lastReceiveTime;
 
-                public TimedHeartBeat(AmqpConnection connection, uint interval)
+                public TimedHeartBeat(AmqpConnection connection, uint local, uint remote)
                 {
+                    Fx.Assert(local > 0 || remote > 0, "At least one idle timeout must be set");
                     this.connection = connection;
-                    this.lastReceiveTime = DateTime.UtcNow;
-                    this.lastSendTime = DateTime.UtcNow;
-                    this.heartBeatInterval = (int)(interval * 7 / 8);
-                    this.heartBeatTimer = new Timer(OnHeartBeatTimer, this, this.heartBeatInterval, Timeout.Infinite);
+                    this.lastReceiveTime = this.lastSendTime = DateTime.UtcNow;
+                    this.localInterval = local;
+                    this.remoteInterval = remote < uint.MaxValue ? remote * 7 / 8 : uint.MaxValue;
+                    this.heartBeatTimer = new Timer(OnHeartBeatTimer, this, Timeout.Infinite, Timeout.Infinite);
+
+                    this.SetTimer(this.lastSendTime);
                 }
 
                 public override void OnSend()
                 {
-                    this.lastSendTime = DateTime.UtcNow;
+                    if (this.remoteInterval < uint.MaxValue)
+                    {
+                        this.lastSendTime = DateTime.UtcNow;
+                    }
                 }
 
                 public override void OnReceive()
                 {
-                    this.lastReceiveTime = DateTime.UtcNow;
+                    if (this.localInterval < uint.MaxValue)
+                    {
+                        this.lastReceiveTime = DateTime.UtcNow;
+                    }
                 }
 
                 public override void Stop()
                 {
-                    this.heartBeatTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                    this.heartBeatTimer.Dispose();
+                }
+
+                void SetTimer(DateTime time)
+                {
+                    uint remote = GetNextInterval(this.remoteInterval, time, this.lastSendTime);
+                    uint local = GetNextInterval(this.localInterval, time, this.lastReceiveTime);
+                    uint interval = Math.Min(remote, local);
+#if NETSTANDARD
+                    this.heartBeatTimer.Change(interval > int.MaxValue ? int.MaxValue : (int)interval, Timeout.Infinite);
+#else
+                    this.heartBeatTimer.Change(interval, uint.MaxValue);
+#endif
+                }
+
+                static uint GetNextInterval(uint interval, DateTime now, DateTime previous)
+                {
+                    if (interval == uint.MaxValue)
+                    {
+                        return interval;
+                    }
+
+                    uint elapsed = (uint)(now > previous ? (now - previous).TotalMilliseconds : 0.0);
+                    return interval > elapsed ? interval - elapsed : 0;
                 }
 
                 static void OnHeartBeatTimer(object state)
@@ -591,24 +626,28 @@ namespace Microsoft.Azure.Amqp
                         return;
                     }
 
-                    bool wasActive = false;
-                    DateTime capturedLastActive = thisPtr.lastSendTime;
                     DateTime now = DateTime.UtcNow;
-                    DateTime scheduleAfterTime = now;
-                    if (now.Subtract(capturedLastActive) < TimeSpan.FromMilliseconds(thisPtr.heartBeatInterval))
-                    {
-                        wasActive = true;
-                        scheduleAfterTime = capturedLastActive;
-                    }
 
                     try
                     {
-                        if (!wasActive)
+                        if (thisPtr.localInterval < uint.MaxValue &&
+                            now.Subtract(thisPtr.lastReceiveTime).TotalMilliseconds > thisPtr.localInterval)
+                        {
+                            string message = AmqpResources.GetString(AmqpResources.AmqpConnectionInactive, thisPtr.localInterval);
+                            AmqpTrace.Provider.AmqpLogError(thisPtr.connection, "OnHeartBeatTimer", message);
+
+                            thisPtr.connection.SafeClose(new AmqpException(AmqpErrorCode.ConnectionForced, message));
+
+                            return;
+                        }
+
+                        if (thisPtr.remoteInterval < uint.MaxValue &&
+                            now.Subtract(thisPtr.lastSendTime).TotalMilliseconds >= thisPtr.remoteInterval)
                         {
                             thisPtr.connection.SendCommand(null, 0, null);
                         }
 
-                        thisPtr.heartBeatTimer.Change(scheduleAfterTime.AddMilliseconds(thisPtr.heartBeatInterval).Subtract(now), Timeout.InfiniteTimeSpan);
+                        thisPtr.SetTimer(now);
                     }
                     catch (Exception exception)
                     {
@@ -617,18 +656,11 @@ namespace Microsoft.Azure.Amqp
                             throw;
                         }
 
-                        AmqpTrace.Provider.AmqpLogError(thisPtr.connection, "OnHeartBeatTimer", exception.Message);
-                    }
-
-                    // idle timeout can be different for the peers. but instead of creating another timer,
-                    // we use the sending timer to also check if we have received anything just in case
-                    uint thisIdletimeout = thisPtr.connection.Settings.IdleTimeOut();
-                    if (thisIdletimeout < uint.MaxValue &&
-                        now > thisPtr.lastReceiveTime.AddMilliseconds((int)thisIdletimeout))
-                    {
-                        AmqpTrace.Provider.AmqpLogError(thisPtr.connection, "OnHeartBeatTimer", AmqpResources.GetString(AmqpResources.AmqpTimeout, thisIdletimeout, thisPtr.connection));
-
-                        thisPtr.connection.SafeClose(new AmqpException(AmqpErrorCode.ConnectionForced, AmqpResources.AmqpConnectionInactive));
+                        if (!thisPtr.connection.IsClosing())
+                        {
+                            AmqpTrace.Provider.AmqpLogError(thisPtr.connection, "OnHeartBeatTimer", exception.Message);
+                            thisPtr.connection.SafeClose(exception);
+                        }
                     }
                 }
             }

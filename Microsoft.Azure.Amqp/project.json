@@ -11,7 +11,7 @@
   
   "buildOptions": {
     "allowUnsafe": true,
-    "xmlDoc": true
+	"warningsAsErrors": true
   },
 	
   "frameworks": {

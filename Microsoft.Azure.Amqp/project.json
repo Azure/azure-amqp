@@ -15,7 +15,7 @@
   },
 	
   "frameworks": {
-    "net451": {
+    "net45": {
       "frameworkAssemblies": {
         "System.Runtime.Serialization": "4.0.0.0",
         "System.Transactions": "4.0.0.0",

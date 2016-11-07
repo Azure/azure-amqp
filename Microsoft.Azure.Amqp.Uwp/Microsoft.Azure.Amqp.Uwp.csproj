@@ -7,8 +7,8 @@
     <ProjectGuid>{F127EF83-0EDB-45EF-B719-78703B7FC29C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.Azure.Amqp.Uwp</RootNamespace>
-    <AssemblyName>Microsoft.Azure.Amqp.Uwp</AssemblyName>
+    <RootNamespace>Microsoft.Azure.Amqp</RootNamespace>
+    <AssemblyName>Microsoft.Azure.Amqp</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion>10.0.10586.0</TargetPlatformVersion>

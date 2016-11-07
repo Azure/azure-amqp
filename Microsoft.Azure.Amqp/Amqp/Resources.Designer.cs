@@ -113,9 +113,9 @@ namespace Microsoft.Azure.Amqp.Amqp {
                 return ResourceManager.GetString("AmqpChannelNotFound", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to The connection was inactive for more than the allowed period of time..
+        ///   Looks up a localized string similar to The connection was inactive for more than the allowed {0} milliseconds and is closed by container '{1}'..
         /// </summary>
         internal static string AmqpConnectionInactive {
             get {

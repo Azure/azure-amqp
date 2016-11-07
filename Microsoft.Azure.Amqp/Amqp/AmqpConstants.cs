@@ -73,7 +73,7 @@ namespace Microsoft.Azure.Amqp
         public const ushort DefaultMaxConcurrentChannels = 8 * 1024;
         public const uint DefaultMaxLinkHandles = 256 * 1024;
         public const uint DefaultHeartBeatInterval = 90000;
-        public const uint MinimumHeartBeatIntervalMs = 60 * 1000;
+        public const uint MinimumHeartBeatIntervalMs = 5 * 1000;
         public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
         public const uint DefaultWindowSize = 5000;
         public const uint DefaultLinkCredit = 1000;

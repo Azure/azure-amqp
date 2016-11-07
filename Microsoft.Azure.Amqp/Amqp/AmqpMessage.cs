@@ -635,7 +635,6 @@ namespace Microsoft.Azure.Amqp
             {
                 get
                 {
-                    this.EnsureInitialized();
                     return new BufferListStream(this.bodyData);
                 }
 

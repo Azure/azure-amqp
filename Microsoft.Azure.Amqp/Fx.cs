@@ -33,8 +33,6 @@ namespace Microsoft.Azure.Amqp
 
         static bool breakOnExceptionTypesRetrieved;
         static Type[] breakOnExceptionTypesCache;
-        static bool fastDebugRetrieved;
-        static bool fastDebugCache;
 #endif
 
 #if UNUSED

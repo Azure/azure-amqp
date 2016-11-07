@@ -1022,7 +1022,7 @@
                 if (sendAsync)
                 {
                     Assert.True(sendDone.WaitOne(10 * 1000), "Send did not complete in time.");
-                    Assert.True(sendCompleted == messageCount, "Sent count is less than the totoal count.");
+                    Assert.True(sendCompleted >= messageCount, "Sent count is less than the totoal count.");
                 }
 
                 sLink.Close();

@@ -4,9 +4,9 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
-    using Microsoft.Azure.Amqp.Tracing;
 
     public sealed class AmqpTransportInitiator : TransportInitiator
     {
@@ -17,6 +17,7 @@ namespace Microsoft.Azure.Amqp.Transport
         TimeoutHelper timeoutHelper;
         int providerIndex;
         ProtocolHeader sentHeader;
+        int completingThread;
 
         /// <summary>
         /// This initiator establishes a base transport using the transport settings
@@ -32,6 +33,20 @@ namespace Microsoft.Azure.Amqp.Transport
             this.transportSettings = transportSettings;
         }
 
+        static int CurrentThreadId
+        {
+            get
+            {
+#if WINDOWS_UWP
+                return Environment.CurrentManagedThreadId;
+#elif PCL
+                throw null;
+#else
+                return Thread.CurrentThread.ManagedThreadId;
+#endif
+            }
+        }
+
         public override bool ConnectAsync(TimeSpan timeout, TransportAsyncCallbackArgs callbackArgs)
         {
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Connect, this.transportSettings);
@@ -41,8 +56,15 @@ namespace Microsoft.Azure.Amqp.Transport
             args.UserToken = callbackArgs;
             callbackArgs.CompletedSynchronously = false;
             this.timeoutHelper = new TimeoutHelper(timeout);
-            innerInitiator.ConnectAsync(timeout, args);
-            return true;
+            if (innerInitiator.ConnectAsync(timeout, args))
+            {
+                return true;
+            }
+
+            int currentThread = CurrentThreadId;
+            Interlocked.Exchange(ref this.completingThread, currentThread);
+            this.OnConnectComplete(args);
+            return Interlocked.Exchange(ref this.completingThread, -1) != 0;
         }
 
         public IAsyncResult BeginConnect(TimeSpan timeout, AsyncCallback callback, object state)
@@ -78,7 +100,11 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
             };
 
-            this.ConnectAsync(timeout, args);
+            if (!this.ConnectAsync(timeout, args))
+            {
+                args.CompletedCallback(args);
+            }
+
             return tcs.Task;
         }
 
@@ -239,7 +265,13 @@ namespace Microsoft.Azure.Amqp.Transport
             TransportAsyncCallbackArgs innerArgs = (TransportAsyncCallbackArgs)args.UserToken;
             innerArgs.Transport = args.Transport;
             innerArgs.Exception = args.Exception;
-            innerArgs.CompletedCallback(innerArgs);
+
+            int currentThread = CurrentThreadId;
+            innerArgs.CompletedSynchronously = Interlocked.Add(ref this.completingThread, -currentThread) == 0;
+            if (!innerArgs.CompletedSynchronously)
+            {
+                innerArgs.CompletedCallback(innerArgs);
+            }
         }
 
         sealed class ConnectAsyncResult : AsyncResult

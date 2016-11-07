@@ -7,15 +7,11 @@
 namespace Microsoft.Azure.Amqp.Amqp
 {
     using System;
-    using System.Threading.Tasks;
-    using Windows.Foundation;
-    using System.Linq;
     using Windows.ApplicationModel.Resources.Core;
 
     class ResourceManagerImpl
     {
         private readonly ResourceMap stringResourceMap;
-        private readonly ResourceContext resourceContext;
         public ResourceManagerImpl()
         {
             stringResourceMap = Windows.ApplicationModel.Resources.Core.ResourceManager.Current.MainResourceMap.GetSubtree("Microsoft.Azure.Amqp.Uwp/AmqpResources.UWP");
@@ -28,6 +24,7 @@ namespace Microsoft.Azure.Amqp.Amqp
             var value = stringResourceMap.GetValue(name).ValueAsString;
             return ValidateNotEmpty(value);
         }
+
         private static string ValidateNotEmpty(string value)
         {
             if (string.IsNullOrEmpty(value))
@@ -50,7 +47,6 @@ namespace Microsoft.Azure.Amqp.Amqp
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources
     {
-        private static global::System.Resources.ResourceManager resourceMan;
         private static global::System.Globalization.CultureInfo resourceCulture = global::System.Globalization.CultureInfo.CurrentUICulture;
 
         /// <summary>
@@ -135,7 +131,7 @@ namespace Microsoft.Azure.Amqp.Amqp
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The connection was inactive for more than the allowed period of time..
+        ///   Looks up a localized string similar to The connection was inactive for more than the allowed {0} milliseconds and is closed by container '{1}'..
         /// </summary>
         internal static string AmqpConnectionInactive
         {

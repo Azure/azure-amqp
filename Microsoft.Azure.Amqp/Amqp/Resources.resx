@@ -175,7 +175,7 @@
     <value>Dynamic terminus is not currently supported.</value>
   </data>
   <data name="AmqpConnectionInactive" xml:space="preserve">
-    <value>The connection was inactive for more than the allowed period of time.</value>
+    <value>The connection was inactive for more than the allowed {0} milliseconds and is closed by container '{1}'.</value>
   </data>
   <data name="AmqpTransferLimitExceeded" xml:space="preserve">
     <value>There is no link credit to accept the delivery (id={0}).</value>

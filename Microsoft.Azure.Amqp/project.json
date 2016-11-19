@@ -2,47 +2,47 @@
   "version": "2.0.0-*",
   "description": "Microsoft.Azure.Amqp Class Library",
   "authors": [ "microsoft" ],
-  
   "packOptions": {
     "tags": [ "AMQP coreclr .net core Azure" ],
     "projectUrl": "https://github.com/Azure/azure-amqp",
     "licenseUrl": "https://github.com/Azure/azure-amqp/blob/master/LICENSE.txt"
   },
-  
   "buildOptions": {
     "allowUnsafe": true,
     "warningsAsErrors": true,
     "xmlDoc": true,
     "nowarn": [ "1591", "1734" ]
   },
-	
-  "frameworks": {
-    "net45": {
-      "frameworkAssemblies": {
-        "System.Runtime.Serialization": "4.0.0.0",
-        "System.Transactions": "4.0.0.0",
-        "System.Xml": "4.0.0.0"
-      }
+    "frameworks": {
+        "net45": {
+            "frameworkAssemblies": {
+                "System.Runtime.Serialization": "4.0.0.0",
+                "System.Transactions": "4.0.0.0",
+                "System.Xml": "4.0.0.0"
+            }
+        },
+        "netstandard1.3": {
+            "dependencies": {
+                "NETStandard.Library": "1.6.0",
+                "System.Diagnostics.Process": "4.1.0",
+                "System.Net.NameResolution": "4.0.0",
+                "System.Net.Security": "4.0.0",
+                "System.Reflection.TypeExtensions": "4.1.0",
+                "System.Reflection.Emit.ILGeneration": "4.0.1",
+                "System.Reflection.Emit.Lightweight": "4.0.1",
+                "System.Runtime.Serialization.Xml": "4.1.1",
+                "System.Security.Claims": "4.0.1",
+                "System.Security.Principal": "4.0.1",
+                "System.Threading.Thread": "4.0.0",
+                "System.Threading.ThreadPool": "4.0.10"
+            },
+            "imports": [ "dnxcore50" ],
+            "buildOptions": {
+                "define": [ "NETSTANDARD" ]
+            }
+        }
     },
-    "netstandard1.3": {
-      "dependencies": {
-        "NETStandard.Library": "1.6.0",
-        "System.Diagnostics.Process": "4.1.0",
-        "System.Net.NameResolution": "4.0.0",
-        "System.Net.Security": "4.0.0",
-        "System.Reflection.TypeExtensions": "4.1.0",
-        "System.Reflection.Emit.ILGeneration": "4.0.1",
-        "System.Reflection.Emit.Lightweight": "4.0.1",
-        "System.Runtime.Serialization.Xml": "4.1.1",
-        "System.Security.Claims": "4.0.1",
-        "System.Security.Principal": "4.0.1",
-        "System.Threading.Thread": "4.0.0",
-        "System.Threading.ThreadPool": "4.0.10"
-      },
-      "imports": [ "dnxcore50" ],
-      "buildOptions": {
-        "define": [ "NETSTANDARD" ]
-      }
+    "configurations": {
+        "Signed": {}
     }
-  }
 }

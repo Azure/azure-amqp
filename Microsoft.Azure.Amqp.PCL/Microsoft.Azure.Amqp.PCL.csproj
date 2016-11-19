@@ -38,7 +38,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Signed|AnyCPU'">
     <OutputPath>bin\Signed\</OutputPath>
-    <DefineConstants>TRACE;PCL</DefineConstants>
+    <DefineConstants>TRACE;PCL;RELEASE_DELAY_SIGN</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>bin\Release\Microsoft.Azure.Amqp.XML</DocumentationFile>
     <Optimize>true</Optimize>

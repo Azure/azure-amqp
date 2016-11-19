@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "2.0.0-*",
   "description": "Microsoft.Azure.Amqp Class Library",
   "authors": [ "microsoft" ],
@@ -11,7 +11,9 @@
   
   "buildOptions": {
     "allowUnsafe": true,
-	"warningsAsErrors": true
+    "warningsAsErrors": true,
+    "xmlDoc": true,
+    "nowarn": [ "1591", "1734" ]
   },
 	
   "frameworks": {

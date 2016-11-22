@@ -48,10 +48,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <!-- A reference to the entire .NET Framework is automatically included -->
-    <None Include="35MSSharedLib1024.snk" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ActionItem.PCL.cs" />
     <Compile Include="Timer.PCL.cs" />
@@ -250,6 +246,11 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Tracing\EventTraceActivity.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Tracing\TrackingContext.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\35MSSharedLib1024.snk">
+      <Link>35MSSharedLib1024.snk</Link>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -115,7 +115,9 @@
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
     <PRIResource Include="..\Microsoft.Azure.Amqp\Amqp\AmqpResources.UWP.resw" />
-    <None Include="35MSSharedLib1024.snk" />
+    <None Include="..\35MSSharedLib1024.snk">
+      <Link>35MSSharedLib1024.snk</Link>
+    </None>
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>

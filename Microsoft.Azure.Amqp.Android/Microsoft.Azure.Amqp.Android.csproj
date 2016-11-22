@@ -298,7 +298,9 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Tracing\TrackingContext.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="35MSSharedLib1024.snk" />
+    <None Include="..\35MSSharedLib1024.snk">
+      <Link>35MSSharedLib1024.snk</Link>
+    </None>
     <None Include="Resources\AboutResources.txt" />
   </ItemGroup>
   <ItemGroup>

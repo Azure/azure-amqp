@@ -35,6 +35,19 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>bin\Release\Microsoft.Azure.Amqp.XML</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Signed|AnyCPU'">
+    <OutputPath>bin\Signed\</OutputPath>
+    <DefineConstants>TRACE;MONOANDROID;RELEASE_DELAY_SIGN</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>bin\Release\Microsoft.Azure.Amqp.XML</DocumentationFile>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Mono.Android" />
@@ -51,7 +64,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>..\Microsoft.Azure.Amqp\ResourcesGeneric.resx</DependentUpon>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Resources.Designer.cs" >
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>..\Microsoft.Azure.Amqp\Amqp\Resources.resx</DependentUpon>
@@ -285,6 +298,9 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Tracing\TrackingContext.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\35MSSharedLib1024.snk">
+      <Link>35MSSharedLib1024.snk</Link>
+    </None>
     <None Include="Resources\AboutResources.txt" />
   </ItemGroup>
   <ItemGroup>

@@ -19,7 +19,11 @@ namespace Microsoft.Azure.Amqp
     {
 #if DEBUG
         public static Action<string> TraceCallback;
+#if !PCL
         static bool AmqpDebug = string.Equals(Environment.GetEnvironmentVariable("AMQP_DEBUG"), "1", StringComparison.Ordinal);
+#else
+        static bool AmqpDebug = false;
+#endif
         public static Action<bool, AmqpConnection, ushort, Performative, int> PerformativeTraceCallback;
 #endif
 
@@ -68,7 +72,7 @@ namespace Microsoft.Azure.Amqp
                 }
                 else
                 {
-#if NETSTANDARD
+#if NETSTANDARD || PCL
                     System.Diagnostics.Debug.WriteLine(message);
 #else
                     System.Diagnostics.Trace.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}\t{1}", AppDomain.CurrentDomain.FriendlyName, message));

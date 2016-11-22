@@ -33,9 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Azure.Amqp, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Azure.Amqp">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Microsoft.Azure.Amqp\bin\Debug\net451\Microsoft.Azure.Amqp.dll</HintPath>
+      <HintPath>..\..\Microsoft.Azure.Amqp\bin\Debug\net45\Microsoft.Azure.Amqp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />

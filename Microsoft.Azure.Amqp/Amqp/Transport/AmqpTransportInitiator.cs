@@ -7,7 +7,6 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
-    using Microsoft.Azure.Amqp.Tracing;
 
     public sealed class AmqpTransportInitiator : TransportInitiator
     {
@@ -40,6 +39,8 @@ namespace Microsoft.Azure.Amqp.Transport
             {
 #if WINDOWS_UWP
                 return Environment.CurrentManagedThreadId;
+#elif PCL
+                throw null;
 #else
                 return Thread.CurrentThread.ManagedThreadId;
 #endif

@@ -10,13 +10,15 @@ namespace Microsoft.Azure.Amqp
     using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
     using System.Runtime.CompilerServices;
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
     using System.Runtime.ConstrainedExecution;
 #endif
     using System.Runtime.InteropServices;
     using System.Security;
     using System.Threading;
+#if !PCL
     using Microsoft.Win32;
+#endif
 
     static class Fx
     {
@@ -31,8 +33,6 @@ namespace Microsoft.Azure.Amqp
 
         static bool breakOnExceptionTypesRetrieved;
         static Type[] breakOnExceptionTypesCache;
-        static bool fastDebugRetrieved;
-        static bool fastDebugCache;
 #endif
 
 #if UNUSED
@@ -97,27 +97,9 @@ namespace Microsoft.Azure.Amqp
         ////            diagnosticTrace = InitializeTracing();
         ////        }
 
-        ////        return diagnosticTrace;
-        ////    }
-        ////}
-
-        public static byte[] AllocateByteArray(int size)
-        {
-#if !NETSTANDARD
-            try
-            {
-#endif
-                // Safe to catch OOM from this as long as the ONLY thing it does is a simple allocation of a primitive type (no method calls).
-                return new byte[size];
-#if !NETSTANDARD
-            }
-            catch (OutOfMemoryException exception)
-            {
-                // Convert OOM into an exception that can be safely handled by higher layers.
-                throw Fx.Exception.AsError(new InsufficientMemoryException(CommonResources.GetString(CommonResources.BufferAllocationFailed, size), exception));
-            }
-#endif
-        }
+////        return diagnosticTrace;
+////    }
+////}
 
         // Do not call the parameter "message" or else FxCop thinks it should be localized.
         [Conditional("DEBUG")]
@@ -173,73 +155,11 @@ namespace Microsoft.Azure.Amqp
             throw Fx.Exception.AsError(new FatalException(description));
         }
 
-        public static void AssertAndFailFastService(bool condition, string description)
-        {
-            if (!condition)
-            {
-                AssertAndFailFastService(description);
-            }
-        }
-
-        // This never returns.  The Exception return type lets you write 'throw AssertAndFailFast()' which tells the compiler/tools that
-        // execution stops.
-        [Fx.Tag.SecurityNote(Critical = "Calls into critical method Environment.FailFast",
-            Safe = "The side affect of the app crashing is actually intended here")]
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static Exception AssertAndFailFastService(string description)
-        {
-            Fx.Assert(description);
-            string failFastMessage = CommonResources.GetString(CommonResources.FailFastMessage, description);
-
-            // The catch is here to force the finally to run, as finallys don't run until the stack walk gets to a catch.  
-            // The catch makes sure that the finally will run before the stack-walk leaves the frame, but the code inside is impossible to reach.
-            try
-            {
-                try
-                {
-                    ////MessagingClientEtwProvider.Provider.EventWriteFailFastOccurred(description);
-                    Fx.Exception.TraceFailFast(failFastMessage);
-
-                    // Mark that a FailFast is in progress, so that we can take ourselves out of the NLB if for
-                    // any reason we can't kill ourselves quickly.  Wait 15 seconds so this state gets picked up for sure.
-                    Fx.FailFastInProgress = true;
-#if !WINDOWS_UWP
-                    Thread.Sleep(TimeSpan.FromSeconds(15));
-#endif
-                }
-                finally
-                {
-                    // ########################## NOTE ###########################
-                    // Environment.FailFast does not collect crash dumps when used in Azure services. 
-                    // Environment.FailFast(failFastMessage);
-
-#if !WINDOWS_UWP
-                    // ################## WORKAROUND #############################
-                    // Workaround for the issue above. Throwing an unhandled exception on a separate thread to trigger process crash and crash dump collection
-                    // Throwing FatalException since our service does not morph/eat up fatal exceptions
-                    // We should find the tracking bug in Azure for this issue, and remove the workaround when fixed by Azure
-                    Thread failFastWorkaroundThread = new Thread(delegate()
-                    {
-                        throw new FatalException(failFastMessage);
-                    });
-
-                    failFastWorkaroundThread.Start();
-                    failFastWorkaroundThread.Join();
-#endif
-                }
-            }
-            catch
-            {
-                throw;
-            }
-
-            return null; // we'll never get here since we've just fail-fasted
-        }
-
-        internal static bool FailFastInProgress { get; private set; }
-
         public static bool IsFatal(Exception exception)
         {
+#if PCL
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
+#else
             while (exception != null)
             {
                 // FYI, CallbackException is-a FatalException
@@ -290,19 +210,10 @@ namespace Microsoft.Azure.Amqp
             }
 
             return false;
+#endif
         }
 
 #if DEBUG
-        internal static bool AssertsFailFast
-        {
-            get
-            {
-                object value;
-                return TryGetDebugSwitch(Fx.AssertsFailFastName, out value) &&
-                    typeof(int).IsAssignableFrom(value.GetType()) && ((int)value) != 0;
-            }
-        }
-
         internal static Type[] BreakOnExceptionTypes
         {
             get
@@ -332,30 +243,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal static bool FastDebug
-        {
-            get
-            {
-                if (!Fx.fastDebugRetrieved)
-                {
-                    object value;
-                    if (TryGetDebugSwitch(Fx.FastDebugName, out value))
-                    {
-                        Fx.fastDebugCache = typeof(int).IsAssignableFrom(value.GetType()) && ((int)value) != 0;
-                    }
-
-                    Fx.fastDebugRetrieved = true;
-                    ////MessagingClientEtwProvider.Provider.EventWriteLogAsWarning(string.Format(CultureInfo.InvariantCulture, "AppDomain({0}).Fx.FastDebug={1}", AppDomain.CurrentDomain.FriendlyName, Fx.fastDebugCache.ToString()));
-                }
-
-                return Fx.fastDebugCache;
-            }
-        }
-
         static bool TryGetDebugSwitch(string name, out object value)
         {
             value = null;
-#if !NETSTANDARD
+#if !NETSTANDARD && !MONOANDROID && !PCL
             try
             {
                 RegistryKey key = Registry.LocalMachine.OpenSubKey(Fx.SBRegistryKey);
@@ -379,7 +270,7 @@ namespace Microsoft.Azure.Amqp
         [SuppressMessage(FxCop.Category.Design, FxCop.Rule.DoNotCatchGeneralExceptionTypes,
             Justification = "Don't want to hide the exception which is about to crash the process.")]
         [Fx.Tag.SecurityNote(Miscellaneous = "Must not call into PT code as it is called within a CER.")]
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
 #endif
         static void TraceExceptionNoThrow(Exception exception)
@@ -402,7 +293,7 @@ namespace Microsoft.Azure.Amqp
         [SuppressMessage(FxCop.Category.ReliabilityBasic, FxCop.Rule.IsFatalRule,
             Justification = "Don't want to hide the exception which is about to crash the process.")]
         [Fx.Tag.SecurityNote(Miscellaneous = "Must not call into PT code as it is called within a CER.")]
-#if !NETSTANDARD
+#if !NETSTANDARD && !PCL
         [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
 #endif
         static bool HandleAtThreadBase(Exception exception)

@@ -58,7 +58,12 @@ namespace Microsoft.Azure.Amqp
             receiverSettings.TotalLinkCredit = 50;
             receiverSettings.AutoSendFlow = true;
             receiverSettings.Target = new Target() { Address = this.replyTo };
-            receiverSettings.Properties = properties;
+            if (properties != null)
+            {
+                receiverSettings.Properties = new Fields();
+                receiverSettings.Properties.Merge(properties);
+            }
+
             this.receiver = new ReceivingAmqpLink(session, receiverSettings);
             this.receiver.RegisterMessageListener(this.OnResponseMessage);
             this.receiver.Closed += new EventHandler(OnLinkClosed);

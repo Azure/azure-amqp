@@ -4,8 +4,10 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
+#if !PCL
     using System.Net.Security;
-#if !WINDOWS_UWP
+#endif
+#if !WINDOWS_UWP && !PCL
     using System.Security.Cryptography.X509Certificates;
 #endif
     public sealed class TlsTransportSettings : TransportSettings
@@ -31,7 +33,7 @@ namespace Microsoft.Azure.Amqp.Transport
             this.IsInitiator = isInitiator;
 #if !WINDOWS_UWP
             this.CheckCertificateRevocation = true;
-#endif            
+#endif
         }
 
         public bool IsInitiator
@@ -46,7 +48,7 @@ namespace Microsoft.Azure.Amqp.Transport
             set;
         }
 
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !PCL
         public X509Certificate2 Certificate
         {
             get;
@@ -60,12 +62,13 @@ namespace Microsoft.Azure.Amqp.Transport
         }
 
 #if !WINDOWS_UWP
+#if !PCL
         public RemoteCertificateValidationCallback CertificateValidationCallback
         {
             get;
             set;
         }
-
+#endif
         public bool CheckCertificateRevocation
         {
             get;
@@ -74,15 +77,19 @@ namespace Microsoft.Azure.Amqp.Transport
 #endif
         public override TransportInitiator CreateInitiator()
         {
+#if !PCL
             if (this.TargetHost == null)
             {
                 throw new InvalidOperationException(CommonResources.TargetHostNotSet);
             }
 
             return new TlsTransportInitiator(this);
+#else
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
+#endif
         }
 
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !PCL
         public override TransportListener CreateListener()
         {
             if (this.Certificate == null)

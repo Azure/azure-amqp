@@ -602,7 +602,7 @@ namespace Microsoft.Azure.Amqp
                     uint interval = Math.Min(remote, local);
 #if NETSTANDARD
                     this.heartBeatTimer.Change(interval > int.MaxValue ? int.MaxValue : (int)interval, Timeout.Infinite);
-#else
+#elif !PCL
                     this.heartBeatTimer.Change(interval, uint.MaxValue);
 #endif
                 }

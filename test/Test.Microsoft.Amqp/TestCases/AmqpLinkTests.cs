@@ -866,6 +866,40 @@
         }
 
         [Fact]
+        public void AmqpLinkCreditMaxValueTest()
+        {
+            string queue = "AmqpLinkCreditMaxValueTest-" + Guid.NewGuid().ToString("N").Substring(6);
+            broker.AddQueue(queue);
+
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            connection.Open();
+
+            AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+            session.Open();
+
+            SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnSend));
+            sLink.Open();
+
+            AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "test" });
+            Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10), null, null));
+            Assert.Equal(Accepted.Code, outcome.DescriptorCode);
+
+            var settings = AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnReceive, 0);
+            settings.TotalLinkCredit = uint.MaxValue;
+            settings.AutoSendFlow = true;
+            ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, settings);
+            rLink.Open();
+
+            bool hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(20), null, null), out message);
+            Assert.True(hasMessage);
+            Assert.NotNull(message);
+            outcome = rLink.DisposeMessageAsync(message.DeliveryTag, new Accepted(), false, TimeSpan.FromSeconds(15)).Result;
+            Assert.Equal(Accepted.Code, outcome.DescriptorCode);
+
+            connection.Close();
+        }
+
+        [Fact]
         public async Task OpenSequentialConnectionsToFindRaceConditions()
         {
             // NOTE: Increment this number to make it more likely to hit race conditions.

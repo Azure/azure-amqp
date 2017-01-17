@@ -525,42 +525,45 @@ namespace Microsoft.Azure.Amqp
 
         protected void ProcessTransfer(Transfer transfer, Frame rawFrame, Delivery delivery, bool newDelivery)
         {
-            if (newDelivery && this.linkCredit < uint.MaxValue)
+            if (newDelivery)
             {
-                bool creditAvailable = true;
-                lock (this.syncRoot)
+                if (this.linkCredit < uint.MaxValue)
                 {
-                    // Updating new total credit is delayed to avoid flooding
-                    // the network with flows when there are many links that are
-                    // frequently opened/closed
-                    if (this.tempTotalCredit != null &&
-                        this.ApplyTempTotalLinkCredit())
+                    bool creditAvailable = true;
+                    lock (this.syncRoot)
                     {
-                        this.SendFlow(false, false, null);
+                        // Updating new total credit is delayed to avoid flooding
+                        // the network with flows when there are many links that are
+                        // frequently opened/closed
+                        if (this.tempTotalCredit != null &&
+                            this.ApplyTempTotalLinkCredit())
+                        {
+                            this.SendFlow(false, false, null);
+                        }
+
+                        if (this.linkCredit == 0 && this.bufferedCredit == 0)
+                        {
+                            creditAvailable = false;
+                        }
+                        else
+                        {
+                            this.deliveryCount.Increment();
+                            if (this.bufferedCredit > 0)
+                            {
+                                --this.bufferedCredit;
+                            }
+                            else if (this.linkCredit < uint.MaxValue)
+                            {
+                                --this.linkCredit;
+                            }
+                        }
                     }
 
-                    if (this.linkCredit == 0 && this.bufferedCredit == 0)
+                    if (!creditAvailable)
                     {
-                        creditAvailable = false;
+                        throw new AmqpException(AmqpErrorCode.TransferLimitExceeded,
+                            AmqpResources.GetString(AmqpResources.AmqpTransferLimitExceeded, delivery.DeliveryId.Value));
                     }
-                    else
-                    {
-                        this.deliveryCount.Increment();
-                        if (this.bufferedCredit > 0)
-                        {
-                            --this.bufferedCredit;
-                        }
-                        else if (this.linkCredit < uint.MaxValue)
-                        {
-                            --this.linkCredit;
-                        }
-                    }
-                }
-
-                if (!creditAvailable)
-                {
-                    throw new AmqpException(AmqpErrorCode.TransferLimitExceeded,
-                        AmqpResources.GetString(AmqpResources.AmqpTransferLimitExceeded, delivery.DeliveryId.Value));
                 }
 
                 if (!delivery.Settled)

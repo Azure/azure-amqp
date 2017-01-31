@@ -113,7 +113,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
             t.ContinueWith(completion =>
             {
-                var args2 = this.readState.Args;
+                var args2 = this.writeState.Args;
                 if (completion.IsFaulted)
                 {
                     if (Fx.IsFatal(completion.Exception))

@@ -16,7 +16,7 @@ namespace Microsoft.Azure.Amqp.Amqp
 
         public ResourceManagerImpl()
         {
-            stringResourceMap =ResourceManager.Current.MainResourceMap.GetSubtree("Microsoft.Azure.Amqp/AmqpResources.UWP");
+            stringResourceMap = ResourceManager.Current.MainResourceMap.GetSubtree("Microsoft.Azure.Amqp/AmqpResources.UWP");
         }
 
         public string GetString(string name, System.Globalization.CultureInfo culture)

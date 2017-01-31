@@ -98,9 +98,22 @@ namespace Microsoft.Azure.Amqp.Transport
             }
 
             var t = this.socket.OutputStream.WriteAsync(ibuffer).AsTask();
+
+            if (t.IsCompleted)
+            {
+                args.BytesTransfered = args.Count;
+                args.CompletedSynchronously = true;
+                this.writeState.Reset();
+                if (this.writeState.Buffer != null)
+                {
+                    this.writeState.Buffer.Dispose();
+                }
+                return false;
+            }
+
             t.ContinueWith(completion =>
             {
-                var args2 = this.readState.Args;
+                var args2 = this.writeState.Args;
                 if (completion.IsFaulted)
                 {
                     if (Fx.IsFatal(completion.Exception))
@@ -145,6 +158,15 @@ namespace Microsoft.Azure.Amqp.Transport
 
             var buffer = args.Buffer.AsBuffer(args.Offset, args.Count);
             var t = this.socket.InputStream.ReadAsync(buffer, (uint)args.Count, Windows.Storage.Streams.InputStreamOptions.Partial).AsTask();
+
+            if (t.IsCompleted)
+            {
+                args.BytesTransfered = (int)t.Result.Length;
+                args.CompletedSynchronously = true;
+                this.readState.Reset();
+                return false;
+            }
+
             t.ContinueWith(completion =>
             {
                 var args2 = this.readState.Args;
@@ -172,8 +194,8 @@ namespace Microsoft.Azure.Amqp.Transport
                     args2.CompletedCallback(args2);
                 }
             });
-            return true;
 
+            return true;
         }
 
         protected override bool OpenInternal()

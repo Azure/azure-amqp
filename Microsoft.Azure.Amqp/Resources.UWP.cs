@@ -3,6 +3,7 @@
 //
 // This file is NOT generated
 //
+
 #if WINDOWS_UWP
 namespace Microsoft.Azure.Amqp.Amqp
 {
@@ -12,15 +13,14 @@ namespace Microsoft.Azure.Amqp.Amqp
     class ResourceManagerImpl
     {
         private readonly ResourceMap stringResourceMap;
+
         public ResourceManagerImpl()
         {
-            stringResourceMap = Windows.ApplicationModel.Resources.Core.ResourceManager.Current.MainResourceMap.GetSubtree("Microsoft.Azure.Amqp.Uwp/AmqpResources.UWP");
-//            resourceContext = Windows.ApplicationModel.Resources.Core.ResourceContext.GetForCurrentView();
+            stringResourceMap = ResourceManager.Current.MainResourceMap.GetSubtree("Microsoft.Azure.Amqp/AmqpResources.UWP");
         }
 
         public string GetString(string name, System.Globalization.CultureInfo culture)
         {
-            //var value = stringResourceMap.GetValue(name, resourceContext).ValueAsString;
             var value = stringResourceMap.GetValue(name).ValueAsString;
             return ValidateNotEmpty(value);
         }

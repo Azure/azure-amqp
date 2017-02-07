@@ -633,7 +633,8 @@ namespace Microsoft.Azure.Amqp
                         if (thisPtr.localInterval < uint.MaxValue &&
                             now.Subtract(thisPtr.lastReceiveTime).TotalMilliseconds > thisPtr.localInterval)
                         {
-                            string message = AmqpResources.GetString(AmqpResources.AmqpConnectionInactive, thisPtr.localInterval);
+                            string message = AmqpResources.GetString(AmqpResources.AmqpConnectionInactive,
+                                thisPtr.localInterval, thisPtr.connection.Settings.ContainerId);
                             AmqpTrace.Provider.AmqpLogError(thisPtr.connection, "OnHeartBeatTimer", message);
 
                             thisPtr.connection.SafeClose(new AmqpException(AmqpErrorCode.ConnectionForced, message));

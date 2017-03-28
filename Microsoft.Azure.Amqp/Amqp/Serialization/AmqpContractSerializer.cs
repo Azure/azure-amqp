@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Serialization
 {
     using System;
+    using System.Collections;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO;
@@ -39,33 +40,40 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         static readonly AmqpContractSerializer Instance = new AmqpContractSerializer();
         readonly ConcurrentDictionary<Type, SerializableType> customTypeCache;
+        readonly List<Func<Type, SerializableType>> externalCompilers;
 
         static AmqpContractSerializer()
         {
             // register extended .NET types
             builtInTypes[typeof(TimeSpan)] = new SerializableType.Converted(
-                AmqpType.Described,
+                AmqpType.Converted,
                 typeof(TimeSpan),
                 typeof(DescribedType),
-                o => new DescribedType(AmqpConstants.TimeSpanName, ((TimeSpan)o).Ticks),
-                o => TimeSpan.FromTicks((long)((DescribedType)o).Value));
+                (o, t) => new DescribedType(AmqpConstants.TimeSpanName, ((TimeSpan)o).Ticks),
+                (o, t) => TimeSpan.FromTicks((long)((DescribedType)o).Value));
             builtInTypes[typeof(Uri)] = new SerializableType.Converted(
-                AmqpType.Described,
+                AmqpType.Converted,
                 typeof(Uri),
                 typeof(DescribedType),
-                o => new DescribedType(AmqpConstants.UriName, ((Uri)o).AbsoluteUri),
-                o => new Uri((string)((DescribedType)o).Value));
+                (o, t) => new DescribedType(AmqpConstants.UriName, ((Uri)o).AbsoluteUri),
+                (o, t) => new Uri((string)((DescribedType)o).Value));
             builtInTypes[typeof(DateTimeOffset)] = new SerializableType.Converted(
-                AmqpType.Described,
+                AmqpType.Converted,
                 typeof(DateTimeOffset),
                 typeof(DescribedType),
-                o => new DescribedType(AmqpConstants.DateTimeOffsetName, ((DateTimeOffset)o).UtcTicks),
-                o => new DateTimeOffset(new DateTime((long)((DescribedType)o).Value, DateTimeKind.Utc)));
+                (o, t) => new DescribedType(AmqpConstants.DateTimeOffsetName, ((DateTimeOffset)o).UtcTicks),
+                (o, t) => new DateTimeOffset(new DateTime((long)((DescribedType)o).Value, DateTimeKind.Utc)));
         }
 
         public AmqpContractSerializer()
         {
             this.customTypeCache = new ConcurrentDictionary<Type, SerializableType>();
+        }
+
+        public AmqpContractSerializer(Func<Type, SerializableType> compiler)
+            : this()
+        {
+            this.externalCompilers = new List<Func<Type, SerializableType>>() { compiler };
         }
 
         public static void WriteObject(Stream stream, object graph)
@@ -201,6 +209,18 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         SerializableType CompileType(Type type, bool describedOnly)
         {
+            if (this.externalCompilers != null)
+            {
+                foreach (var compiler in this.externalCompilers)
+                {
+                    SerializableType serializable = compiler(type);
+                    if (serializable != null)
+                    {
+                        return serializable;
+                    }
+                }
+            }
+
             var typeAttributes = type.GetTypeInfo().GetCustomAttributes(typeof(AmqpContractAttribute), false);
             if (!typeAttributes.Any())
             {
@@ -259,8 +279,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                     continue;
                 }
 
-                if (memberInfo is FieldInfo ||
-                    memberInfo is PropertyInfo)
+                if (memberInfo is FieldInfo || memberInfo is PropertyInfo)
                 {
                     var memberAttributes = memberInfo.GetCustomAttributes(typeof(AmqpMemberAttribute), true);
                     if (memberAttributes.Count() != 1)
@@ -309,19 +328,14 @@ namespace Microsoft.Azure.Amqp.Serialization
 
             SerialiableMember[] members = memberList.ToArray();
 
-            Dictionary<Type, SerializableType> knownTypes = null;
+            List<Type> knownTypes = new List<Type>();
             foreach (object o in type.GetTypeInfo().GetCustomAttributes(typeof(KnownTypeAttribute), false))
             {
                 KnownTypeAttribute knownAttribute = (KnownTypeAttribute)o;
                 if (knownAttribute.Type.GetTypeInfo().GetCustomAttributes(typeof(AmqpContractAttribute), false).Any())
                 {
-                    if (knownTypes == null)
-                    {
-                        knownTypes = new Dictionary<Type, SerializableType>();
-                    }
-
                     // KnownType compilation is delayed and non-recursive to avoid circular references
-                    knownTypes.Add(knownAttribute.Type, null);
+                    knownTypes.Add(knownAttribute.Type);
                 }
             }
 
@@ -343,11 +357,6 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         SerializableType CompileNonContractTypes(Type type)
         {
-            return this.CompileNullableTypes(type) ?? this.CompileInterfaceTypes(type);
-        }
-
-        SerializableType CompileNullableTypes(Type type)
-        {
             if (type.GetTypeInfo().IsGenericType &&
                 type.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
@@ -356,29 +365,50 @@ namespace Microsoft.Azure.Amqp.Serialization
                 return this.GetType(argTypes[0]);
             }
 
-            return null;
-        }
+            if (type.GetTypeInfo().IsInterface)
+            {
+                if (typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(type.GetTypeInfo()))
+                {
+                    // if a member is defined as enumerable interface, we have to change it
+                    // to list, otherwise the decoder cannot initialize an object of an interface
+                    Type itemType = typeof(object);
+                    Type listType = typeof(List<object>);
+                    if (type.GetTypeInfo().IsGenericType)
+                    {
+                        Type[] argTypes = type.GetGenericArguments();
+                        Fx.Assert(argTypes.Length == 1, "IEnumerable type must have one argument");
+                        itemType = argTypes[0];
+                        listType = typeof(List<>).MakeGenericType(argTypes);
+                    }
 
-        SerializableType CompileInterfaceTypes(Type type)
-        {
+                    MethodAccessor addAccess = MethodAccessor.Create(listType.GetMethod("Add", new Type[] { itemType }));
+                    return new SerializableType.List(this, listType, itemType, addAccess) { Final = true };
+                }
+
+                return null;
+            }
+
+            if (type.GetTypeInfo().IsEnum)
+            {
+                Type underlyingType = Enum.GetUnderlyingType(type);
+                return new SerializableType.Converted(
+                    AmqpType.Converted,
+                    type,
+                    underlyingType,
+                    (o, t) => Convert.ChangeType(o, t),
+                    (o, t) => Enum.ToObject(t, o));
+            }
+
+            if (type.GetInterfaces().Any(it => it == typeof(IAmqpSerializable)))
+            {
+                return new SerializableType.Serializable(this, type);
+            }
+
             if (type.IsArray)
             {
                 // validate item type to be AMQP types only
                 AmqpEncoding.GetEncoding(type.GetElementType());
                 return SerializableType.CreatePrimitiveType(type);
-            }
-
-            bool isArray = type.IsArray;
-            bool isMap = false;
-            bool isList = false;
-            MemberAccessor keyAccessor = null;
-            MemberAccessor valueAccessor = null;
-            MethodAccessor addAccess = null;
-            Type itemType = null;
-
-            if (type.GetInterfaces().FirstOrDefault(i => i == typeof(IAmqpSerializable)) != null)
-            {
-                return new SerializableType.Serializable(this, type);
             }
 
             foreach (Type it in type.GetInterfaces())
@@ -388,32 +418,24 @@ namespace Microsoft.Azure.Amqp.Serialization
                     Type genericTypeDef = it.GetGenericTypeDefinition();
                     if (genericTypeDef == typeof(IDictionary<,>))
                     {
-                        isMap = true;
                         Type[] argTypes = it.GetGenericArguments();
-                        itemType = typeof(KeyValuePair<,>).MakeGenericType(argTypes);
-                        keyAccessor = MemberAccessor.Create(itemType.GetProperty("Key"), false);
-                        valueAccessor = MemberAccessor.Create(itemType.GetProperty("Value"), false);
-                        addAccess = MethodAccessor.Create(type.GetMethod("Add", argTypes));
-                        break;
+                        Type itemType = typeof(KeyValuePair<,>).MakeGenericType(argTypes);
+                        MemberAccessor keyAccessor = MemberAccessor.Create(itemType.GetProperty("Key"), false);
+                        MemberAccessor valueAccessor = MemberAccessor.Create(itemType.GetProperty("Value"), false);
+                        MethodAccessor addAccess = MethodAccessor.Create(type.GetMethod("Add", argTypes));
+
+                        return new SerializableType.Map(this, type, keyAccessor, valueAccessor, addAccess);
                     }
-                    else if (genericTypeDef == typeof(IList<>))
+
+                    if (genericTypeDef == typeof(ICollection<>))
                     {
-                        isList = true;
                         Type[] argTypes = it.GetGenericArguments();
-                        itemType = argTypes[0];
-                        addAccess = MethodAccessor.Create(type.GetMethod("Add", argTypes));
-                        break;
+                        Type itemType = argTypes[0];
+                        MethodAccessor addAccess = MethodAccessor.Create(type.GetMethod("Add", argTypes));
+
+                        return new SerializableType.List(this, type, itemType, addAccess);
                     }
                 }
-            }
-
-            if (isMap)
-            {
-                return new SerializableType.Map(this, type, keyAccessor, valueAccessor, addAccess);
-            }
-            else if (isList)
-            {
-                return new SerializableType.List(this, type, itemType, addAccess);
             }
 
             return null;

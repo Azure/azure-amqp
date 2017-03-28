@@ -14,7 +14,6 @@ namespace Microsoft.Azure.Amqp.Transport
         static readonly AsyncCallback onOpenComplete = OnOpenComplete;
         static readonly AsyncCallback onWriteComplete = OnWriteComplete;
         static readonly AsyncCallback onReadComplete = OnReadComplete;
-        const SslProtocols DefaultSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls11 | SslProtocols.Tls;
         readonly TransportBase innerTransport;
         readonly CustomSslStream sslStream;
         TlsTransportSettings tlsSettings;
@@ -120,18 +119,22 @@ namespace Microsoft.Azure.Amqp.Transport
             IAsyncResult result;
             if (this.tlsSettings.IsInitiator)
             {
-                result = this.tlsSettings.Certificate != null
-                    ? this.sslStream.BeginAuthenticateAsClient(
-                        this.tlsSettings.TargetHost, GetX509CertificateCollection(this.tlsSettings.Certificate),
-                        DefaultSslProtocols, this.tlsSettings.CheckCertificateRevocation, onOpenComplete, this)
-                    : this.sslStream.BeginAuthenticateAsClient(this.tlsSettings.TargetHost, onOpenComplete, this);
+                bool checkRevocation = false;
+                X509CertificateCollection certCollection = new X509CertificateCollection();
+                if (this.tlsSettings.Certificate != null)
+                {
+                    certCollection.Add(this.tlsSettings.Certificate);
+                    checkRevocation = true;
+                }
+
+                result = this.sslStream.BeginAuthenticateAsClient(this.tlsSettings.TargetHost,
+                    certCollection, this.tlsSettings.Protocols, checkRevocation, onOpenComplete, this);
             }
             else
             {
-                result = this.tlsSettings.CertificateValidationCallback != null
-                    ? this.sslStream.BeginAuthenticateAsServer(
-                        this.tlsSettings.Certificate, true, DefaultSslProtocols, this.tlsSettings.CheckCertificateRevocation, onOpenComplete, this)
-                    : this.sslStream.BeginAuthenticateAsServer(this.tlsSettings.Certificate, onOpenComplete, this);
+                bool clientCert = this.tlsSettings.CertificateValidationCallback != null;
+                result = this.sslStream.BeginAuthenticateAsServer(this.tlsSettings.Certificate,
+                    clientCert, this.tlsSettings.Protocols, clientCert, onOpenComplete, this);
             }
 
             bool completedSynchronously = result.CompletedSynchronously;
@@ -179,14 +182,6 @@ namespace Microsoft.Azure.Amqp.Transport
                 var thisPtr = (TlsTransport)result.AsyncState;
                 thisPtr.HandleOperationComplete(result, true, false);
             }
-        }
-
-        static X509CertificateCollection GetX509CertificateCollection(X509Certificate2 certificate)
-        {
-            X509CertificateCollection certCollection = new X509CertificateCollection();
-            certCollection.Add(certificate);
-
-            return certCollection;
         }
 
         void HandleOpenComplete(IAsyncResult result, bool syncComplete)

@@ -132,6 +132,9 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpCodec.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnection.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionBase.cs" />
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionFactory.cs">
+      <Link>AmqpConnectionFactory.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionSettings.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionState.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConstants.cs" />

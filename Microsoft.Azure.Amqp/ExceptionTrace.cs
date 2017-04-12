@@ -5,16 +5,10 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Diagnostics;
-    using System.Diagnostics.CodeAnalysis;
     using System.Diagnostics.Tracing;
     using System.Globalization;
-    using System.Runtime.CompilerServices;
     using System.Runtime.Versioning;
     using System.Text;
-    using System.Threading;
-#if !NETSTANDARD && !MONOANDROID && !PCL
-    using Microsoft.Azure.Amqp.Interop;
-#endif
     using Microsoft.Azure.Amqp.Tracing;
 
     class ExceptionTrace
@@ -99,16 +93,10 @@ namespace Microsoft.Azure.Amqp
                 exception.GetType(),
                 exception.ToStringSlim()));
 #endif
-
-            ////MessagingClientEtwProvider.Provider.HandledExceptionWithFunctionName(
-            ////    activity, catchLocation, exception.ToStringSlim(), string.Empty);
-
-            this.BreakOnException(exception);
         }
 
         public void TraceUnhandled(Exception exception)
         {
-            ////MessagingClientEtwProvider.Provider.EventWriteUnhandledException(this.eventSourceName + ": " + exception.ToStringSlim());
         }
 
 #if !NETSTANDARD && !PCL
@@ -172,7 +160,6 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            BreakOnException(exception);
             return exception;
         }
 
@@ -199,88 +186,5 @@ namespace Microsoft.Azure.Amqp
             throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
 #endif
         }
-
-        [SuppressMessage(FxCop.Category.Performance, FxCop.Rule.MarkMembersAsStatic, Justification = "CSDMain #183668")]
-        [Fx.Tag.SecurityNote(Critical = "Calls into critical method UnsafeNativeMethods.IsDebuggerPresent and UnsafeNativeMethods.DebugBreak",
-            Safe = "Safe because it's a no-op in retail builds.")]
-        internal void BreakOnException(Exception exception)
-        {
-#if DEBUG && !NETSTANDARD && !MONOANDROID && !PCL
-            if (Fx.BreakOnExceptionTypes != null)
-            {
-                foreach (Type breakType in Fx.BreakOnExceptionTypes)
-                {
-                    if (breakType.IsAssignableFrom(exception.GetType()))
-                    {
-                        // This is intended to "crash" the process so that a debugger can be attached.  If a managed
-                        // debugger is already attached, it will already be able to hook these exceptions.  We don't
-                        // want to simulate an unmanaged crash (DebugBreak) in that case.
-                        if (!Debugger.IsAttached && !UnsafeNativeMethods.IsDebuggerPresent())
-                        {
-                            Debugger.Launch();
-                        }
-                    }
-                }
-            }
-#endif
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public void TraceFailFast(string message)
-        {
-////            EventLogger logger = null;
-////#pragma warning disable 618
-////            logger = new EventLogger(this.eventSourceName, Fx.Trace);
-////#pragma warning restore 618
-////            TraceFailFast(message, logger);
-        }
-
-        // Generate an event Log entry for failfast purposes
-        // To force a Watson on a dev machine, do the following:
-        // 1. Set \HKLM\SOFTWARE\Microsoft\PCHealth\ErrorReporting ForceQueueMode = 0 
-        // 2. In the command environment, set COMPLUS_DbgJitDebugLaunchSetting=0
-        ////[SuppressMessage(FxCop.Category.Performance, FxCop.Rule.MarkMembersAsStatic, Justification = "CSDMain #183668")]
-        ////[MethodImpl(MethodImplOptions.NoInlining)]
-        ////internal void TraceFailFast(string message, EventLogger logger)
-        ////{
-        ////    if (logger != null)
-        ////    {
-        ////        try
-        ////        {
-        ////            string stackTrace = null;
-        ////            try
-        ////            {
-        ////                stackTrace = new StackTrace().ToString();
-        ////            }
-        ////            catch (Exception exception)
-        ////            {
-        ////                stackTrace = exception.Message;
-        ////                if (Fx.IsFatal(exception))
-        ////                {
-        ////                    throw;
-        ////                }
-        ////            }
-        ////            finally
-        ////            {
-        ////                logger.LogEvent(TraceEventType.Critical,
-        ////                    FailFastEventLogCategory,
-        ////                    (uint)EventLogEventId.FailFast,
-        ////                    message,
-        ////                    stackTrace);
-        ////            }
-        ////        }
-        ////        catch (Exception ex)
-        ////        {
-        ////            logger.LogEvent(TraceEventType.Critical,
-        ////                FailFastEventLogCategory,
-        ////                (uint)EventLogEventId.FailFastException,
-        ////                ex.ToString());
-        ////            if (Fx.IsFatal(ex))
-        ////            {
-        ////                throw;
-        ////            }
-        ////        }
-        ////    }
-        ////}
     }
 }

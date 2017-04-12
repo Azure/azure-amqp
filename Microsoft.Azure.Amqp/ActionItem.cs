@@ -54,7 +54,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (isScheduled)
             {
-                throw Fx.Exception.AsError(new InvalidOperationException(CommonResources.ActionItemIsAlreadyScheduled));
+                throw new InvalidOperationException(CommonResources.ActionItemIsAlreadyScheduled);
             }
 
             this.isScheduled = true;
@@ -83,11 +83,11 @@ namespace Microsoft.Azure.Amqp
         {
             if (contextToSchedule == null)
             {
-                throw Fx.Exception.ArgumentNull("context");
+                throw new ArgumentNullException("context");
             }
             if (isScheduled)
             {
-                throw Fx.Exception.AsError(new InvalidOperationException(CommonResources.ActionItemIsAlreadyScheduled));
+                throw new InvalidOperationException(CommonResources.ActionItemIsAlreadyScheduled);
             }
 
             this.isScheduled = true;
@@ -103,7 +103,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (isScheduled)
             {
-                throw Fx.Exception.AsError(new InvalidOperationException(CommonResources.ActionItemIsAlreadyScheduled));
+                throw new InvalidOperationException(CommonResources.ActionItemIsAlreadyScheduled);
             }
 
             this.isScheduled = true;

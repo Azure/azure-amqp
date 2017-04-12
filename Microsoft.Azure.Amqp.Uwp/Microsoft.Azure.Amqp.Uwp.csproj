@@ -556,7 +556,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Exceptions\FatalException.cs">
       <Link>Exceptions\FatalException.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\ExceptionTrace.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Extensions\ExceptionExtensions.cs">
       <Link>Extensions\ExceptionExtensions.cs</Link>
     </Compile>

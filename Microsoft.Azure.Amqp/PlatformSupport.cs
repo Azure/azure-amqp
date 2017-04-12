@@ -44,7 +44,7 @@ namespace System.Collections.Generic
         {
             if (items == null)
             {
-                throw Fx.Exception.ArgumentNull("items");
+                throw new ArgumentNullException("items");
             }
             foreach (TItem current in items)
             {
@@ -130,7 +130,7 @@ namespace System.Collections.Generic
         {
             if (item == null)
             {
-                throw Fx.Exception.ArgumentNull("item");
+                throw new ArgumentNullException("item");
             }
             return item.GetType();
         }
@@ -144,14 +144,14 @@ namespace System.Collections.Generic
         {
             if (item == null)
             {
-                throw Fx.Exception.ArgumentNull("item");
+                throw new ArgumentNullException("item");
             }
             if (base.Contains(item.GetType()))
             {
                 string message = string.Format(
                     "The value could not be added to the collection, as the collection already contains an item of the same type: '{0}'. This collection only supports one instance of each type.",
                     item.GetType().FullName);
-                throw Fx.Exception.Argument("item", message);
+                throw new ArgumentNullException("item", message);
             }
             base.InsertItem(index, item);
         }
@@ -165,7 +165,7 @@ namespace System.Collections.Generic
         {
             if (item == null)
             {
-                throw Fx.Exception.ArgumentNull("item");
+                throw new ArgumentNullException("item");
             }
             base.SetItem(index, item);
         }

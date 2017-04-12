@@ -1279,7 +1279,7 @@ namespace Microsoft.Azure.Amqp
             {
                 if (messageStream == null)
                 {
-                    throw Fx.Exception.ArgumentNullOrEmpty("bufferStream");
+                    throw new ArgumentNullException("bufferStream");
                 }
 
                 this.messageStream = messageStream;
@@ -1295,7 +1295,7 @@ namespace Microsoft.Azure.Amqp
                 // Currently message always has header stream, may change in the future
                 if (nonBodySections == null)
                 {
-                    throw Fx.Exception.ArgumentNull("nonBodySections");
+                    throw new ArgumentNullException("nonBodySections");
                 }
 
                 this.messageStream = BufferListStream.Create(nonBodySections, AmqpConstants.SegmentSize, forceCopyStream);
@@ -1574,7 +1574,7 @@ namespace Microsoft.Azure.Amqp
             {
                 if (headerStream == null)
                 {
-                    throw Fx.Exception.ArgumentNullOrEmpty("headerStream");
+                    throw new ArgumentNullException("headerStream");
                 }
 
                 this.bufferStream = headerStream;

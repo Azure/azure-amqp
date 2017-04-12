@@ -3,6 +3,8 @@
 
 namespace Microsoft.Azure.Amqp
 {
+    using System;
+
     class AmqpTrace
     {
         // Replace this with your own implementation to enable tracing.
@@ -109,6 +111,10 @@ namespace Microsoft.Azure.Amqp
         }
 
         public virtual void AmqpIoEvent(object source, int ioEvent, long queueSize)
+        {
+        }
+
+        public virtual void AmqpHandleException(Exception exception, string traceInfo)
         {
         }
     }

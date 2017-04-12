@@ -4,21 +4,12 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Diagnostics;
-    using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
     using System.Runtime.CompilerServices;
-#if !NETSTANDARD && !PCL
-    using System.Runtime.ConstrainedExecution;
-#endif
     using System.Runtime.InteropServices;
-    using System.Security;
     using System.Threading;
-#if !PCL
-    using Microsoft.Win32;
-#endif
 
     static class Fx
     {
@@ -30,76 +21,7 @@ namespace Microsoft.Azure.Amqp
         const string AssertsFailFastName = "AssertsFailFast";
         const string BreakOnExceptionTypesName = "BreakOnExceptionTypes";
         const string FastDebugName = "FastDebug";
-
-        static bool breakOnExceptionTypesRetrieved;
-        static Type[] breakOnExceptionTypesCache;
 #endif
-
-#if UNUSED
-        [Fx.Tag.SecurityNote(Critical = "This delegate is called from within a ConstrainedExecutionRegion, must not be settable from PT code")]
-        [SecurityCritical]
-        static ExceptionHandler asynchronousThreadExceptionHandler;
-#endif // UNUSED
-
-        static ExceptionTrace exceptionTrace;
-
-        ////static DiagnosticTrace diagnosticTrace;
-
-        ////[Fx.Tag.SecurityNote(Critical = "Accesses SecurityCritical field EtwProvider",
-        ////    Safe = "Doesn't leak info\\resources")]
-        ////[SuppressMessage(FxCop.Category.ReliabilityBasic, FxCop.Rule.UseNewGuidHelperRule,
-        ////    Justification = "This is a method that creates ETW provider passing Guid Provider ID.")]
-        ////static DiagnosticTrace InitializeTracing()
-        ////{
-        ////    DiagnosticTrace trace = new DiagnosticTrace(DefaultEventSource, DiagnosticTrace.DefaultEtwProviderId);
-        ////    return trace;
-        ////}
-
-#if UNUSED
-        public static ExceptionHandler AsynchronousThreadExceptionHandler
-        {
-            [Fx.Tag.SecurityNote(Critical = "access critical field", Safe = "ok for get-only access")]
-            [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-            get
-            {
-                return Fx.asynchronousThreadExceptionHandler;
-            }
-
-            [Fx.Tag.SecurityNote(Critical = "sets a critical field")]
-            [SecurityCritical]
-            set
-            {
-                Fx.asynchronousThreadExceptionHandler = value;
-            }
-        }
-#endif // UNUSED
-
-        public static ExceptionTrace Exception
-        {
-            get
-            {
-                if (exceptionTrace == null)
-                {
-                    //need not be a true singleton. No locking needed here.
-                    exceptionTrace = new ExceptionTrace(DefaultEventSource);
-                }
-
-                return exceptionTrace;
-            }
-        }
-
-        ////public static DiagnosticTrace Trace
-        ////{
-        ////    get
-        ////    {
-        ////        if (diagnosticTrace == null)
-        ////        {
-        ////            diagnosticTrace = InitializeTracing();
-        ////        }
-
-////        return diagnosticTrace;
-////    }
-////}
 
         // Do not call the parameter "message" or else FxCop thinks it should be localized.
         [Conditional("DEBUG")]
@@ -137,7 +59,7 @@ namespace Microsoft.Azure.Amqp
         public static Exception AssertAndThrow(string description)
         {
             Fx.Assert(description);
-            throw Fx.Exception.AsError(new AssertionFailedException(description));
+            throw new AssertionFailedException(description);
         }
 
         public static void AssertAndThrowFatal(bool condition, string description)
@@ -152,7 +74,7 @@ namespace Microsoft.Azure.Amqp
         public static Exception AssertAndThrowFatal(string description)
         {
             Fx.Assert(description);
-            throw Fx.Exception.AsError(new FatalException(description));
+            throw new FatalException(description);
         }
 
         public static bool IsFatal(Exception exception)
@@ -200,7 +122,6 @@ namespace Microsoft.Azure.Amqp
                 }
                 else if (exception is NullReferenceException)
                 {
-                    ////MessagingClientEtwProvider.Provider.EventWriteNullReferenceErrorOccurred(exception.ToString());
                     break;
                 }
                 else
@@ -211,116 +132,6 @@ namespace Microsoft.Azure.Amqp
 
             return false;
 #endif
-        }
-
-#if DEBUG
-        internal static Type[] BreakOnExceptionTypes
-        {
-            get
-            {
-                if (!Fx.breakOnExceptionTypesRetrieved)
-                {
-                    object value;
-                    if (TryGetDebugSwitch(Fx.BreakOnExceptionTypesName, out value))
-                    {
-                        string[] typeNames = value as string[];
-                        if (typeNames != null && typeNames.Length > 0)
-                        {
-                            List<Type> types = new List<Type>(typeNames.Length);
-                            for (int i = 0; i < typeNames.Length; i++)
-                            {
-                                types.Add(Type.GetType(typeNames[i], false));
-                            }
-                            if (types.Count != 0)
-                            {
-                                Fx.breakOnExceptionTypesCache = types.ToArray();
-                            }
-                        }
-                    }
-                    Fx.breakOnExceptionTypesRetrieved = true;
-                }
-                return Fx.breakOnExceptionTypesCache;
-            }
-        }
-
-        static bool TryGetDebugSwitch(string name, out object value)
-        {
-            value = null;
-#if !NETSTANDARD && !MONOANDROID && !PCL
-            try
-            {
-                RegistryKey key = Registry.LocalMachine.OpenSubKey(Fx.SBRegistryKey);
-                if (key != null)
-                {
-                    using (key)
-                    {
-                        value = key.GetValue(name);
-                    }
-                }
-            }
-            catch (SecurityException)
-            {
-                // This debug-only code shouldn't trace.
-            }
-#endif // !NETSTANDARD
-            return value != null;
-        }
-#endif // DEBUG
-
-        [SuppressMessage(FxCop.Category.Design, FxCop.Rule.DoNotCatchGeneralExceptionTypes,
-            Justification = "Don't want to hide the exception which is about to crash the process.")]
-        [Fx.Tag.SecurityNote(Miscellaneous = "Must not call into PT code as it is called within a CER.")]
-#if !NETSTANDARD && !PCL
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-#endif
-        static void TraceExceptionNoThrow(Exception exception)
-        {
-            try
-            {
-                // This call exits the CER.  However, when still inside a catch, normal ThreadAbort is prevented.
-                // Rude ThreadAbort will still be allowed to terminate processing.
-                Fx.Exception.TraceUnhandled(exception);
-            }
-            catch
-            {
-                // This empty catch is only acceptable because we are a) in a CER and b) processing an exception
-                // which is about to crash the process anyway.
-            }
-        }
-
-        [SuppressMessage(FxCop.Category.Design, FxCop.Rule.DoNotCatchGeneralExceptionTypes,
-            Justification = "Don't want to hide the exception which is about to crash the process.")]
-        [SuppressMessage(FxCop.Category.ReliabilityBasic, FxCop.Rule.IsFatalRule,
-            Justification = "Don't want to hide the exception which is about to crash the process.")]
-        [Fx.Tag.SecurityNote(Miscellaneous = "Must not call into PT code as it is called within a CER.")]
-#if !NETSTANDARD && !PCL
-        [ReliabilityContract(Consistency.WillNotCorruptState, Cer.Success)]
-#endif
-        static bool HandleAtThreadBase(Exception exception)
-        {
-            // This area is too sensitive to do anything but return.
-            if (exception == null)
-            {
-                Fx.Assert("Null exception in HandleAtThreadBase.");
-                return false;
-            }
-
-            TraceExceptionNoThrow(exception);
-
-#if UNUSED
-            try
-            {
-                ExceptionHandler handler = Fx.AsynchronousThreadExceptionHandler;
-                return handler == null ? false : handler.HandleException(exception);
-            }
-            catch (Exception secondException)
-            {
-                // Don't let a new exception hide the original exception.
-                TraceExceptionNoThrow(secondException);
-            }
-#endif // UNUSED
-
-            return false;
         }
 
         public static class Tag
@@ -394,113 +205,6 @@ namespace Microsoft.Azure.Amqp
                 internal const string DeclaringInstance = "instance of declaring class";
                 internal const string Unbounded = "unbounded";
                 internal const string Infinite = "infinite";
-            }
-
-            [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Constructor,
-                AllowMultiple = true, Inherited = false)]
-            [Conditional("CODE_ANALYSIS")]
-            public sealed class ExternalResourceAttribute : Attribute
-            {
-                readonly Location location;
-                readonly string description;
-
-                public ExternalResourceAttribute(Location location, string description)
-                {
-                    this.location = location;
-                    this.description = description;
-                }
-
-                public Location Location
-                {
-                    get
-                    {
-                        return this.location;
-                    }
-                }
-
-                public string Description
-                {
-                    get
-                    {
-                        return this.description;
-                    }
-                }
-            }
-
-            [AttributeUsage(AttributeTargets.Field)]
-            [Conditional("CODE_ANALYSIS")]
-            public sealed class CacheAttribute : Attribute
-            {
-                readonly Type elementType;
-                readonly CacheAttrition cacheAttrition;
-
-                public CacheAttribute(Type elementType, CacheAttrition cacheAttrition)
-                {
-                    Scope = Strings.DeclaringInstance;
-                    SizeLimit = Strings.Unbounded;
-                    Timeout = Strings.Infinite;
-
-                    if (elementType == null)
-                    {
-                        throw Fx.Exception.ArgumentNull("elementType");
-                    }
-
-                    this.elementType = elementType;
-                    this.cacheAttrition = cacheAttrition;
-                }
-
-                public Type ElementType
-                {
-                    get
-                    {
-                        return this.elementType;
-                    }
-                }
-
-                public CacheAttrition CacheAttrition
-                {
-                    get
-                    {
-                        return this.cacheAttrition;
-                    }
-                }
-
-                public string Scope { get; set; }
-                public string SizeLimit { get; set; }
-                public string Timeout { get; set; }
-            }
-
-            [AttributeUsage(AttributeTargets.Field)]
-            [Conditional("CODE_ANALYSIS")]
-            public sealed class QueueAttribute : Attribute
-            {
-                readonly Type elementType;
-
-                public QueueAttribute(Type elementType)
-                {
-                    Scope = Strings.DeclaringInstance;
-                    SizeLimit = Strings.Unbounded;
-
-                    if (elementType == null)
-                    {
-                        throw Fx.Exception.ArgumentNull("elementType");
-                    }
-
-                    this.elementType = elementType;
-                }
-
-                public Type ElementType
-                {
-                    get
-                    {
-                        return this.elementType;
-                    }
-                }
-
-                public string Scope { get; set; }
-                public string SizeLimit { get; set; }
-                public bool StaleElementsRemovedImmediately { get; set; }
-                public bool EnqueueThrowsIfFull { get; set; }
             }
 
             // Set on a class when that class uses lock (this) - acts as though it were on a field
@@ -606,77 +310,6 @@ namespace Microsoft.Azure.Amqp
             {
                 public GuaranteeNonBlockingAttribute()
                 {
-                }
-            }
-
-            [AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, Inherited = false)]
-            [Conditional("CODE_ANALYSIS")]
-            public sealed class NonThrowingAttribute : Attribute
-            {
-                public NonThrowingAttribute()
-                {
-                }
-            }
-
-            [SuppressMessage(FxCop.Category.Performance, "CA1813:AvoidUnsealedAttributes",
-                Justification = "This is intended to be an attribute heirarchy. It does not affect product perf.")]
-            [AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor,
-                AllowMultiple = true, Inherited = false)]
-            [Conditional("CODE_ANALYSIS")]
-            public class ThrowsAttribute : Attribute
-            {
-                readonly Type exceptionType;
-                readonly string diagnosis;
-
-                public ThrowsAttribute(Type exceptionType, string diagnosis)
-                {
-                    if (exceptionType == null)
-                    {
-                        throw Fx.Exception.ArgumentNull("exceptionType");
-                    }
-                    if (string.IsNullOrEmpty(diagnosis))
-                    {
-                        throw Fx.Exception.ArgumentNullOrEmpty("diagnosis");
-                    }
-
-                    this.exceptionType = exceptionType;
-                    this.diagnosis = diagnosis;
-                }
-
-                public Type ExceptionType
-                {
-                    get
-                    {
-                        return this.exceptionType;
-                    }
-                }
-
-                public string Diagnosis
-                {
-                    get
-                    {
-                        return this.diagnosis;
-                    }
-                }
-            }
-
-            [AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor, Inherited = false)]
-            [Conditional("CODE_ANALYSIS")]
-            public sealed class InheritThrowsAttribute : Attribute
-            {
-                public InheritThrowsAttribute()
-                {
-                }
-
-                public Type FromDeclaringType
-                {
-                    get;
-                    set;
-                }
-                public string From
-                {
-                    get;
-                    set;
                 }
             }
 

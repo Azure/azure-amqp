@@ -60,7 +60,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\CommonResources.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\CompletedAsyncResult.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\ExceptionDispatcher.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\ExceptionTrace.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Fx.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\FxCop.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\InternalBufferManager.cs" />

@@ -64,10 +64,6 @@ namespace Microsoft.Azure.Amqp
         {
         }
 
-        public virtual void AmqpManageLink(string action, object link, string info)
-        {
-        }
-
         public virtual void AmqpMissingHandle(object source, string type, uint handle)
         {
         }
@@ -96,10 +92,6 @@ namespace Microsoft.Azure.Amqp
         {
         }
 
-        public virtual void AmqpSettle(object source, int settleCount, uint lwm, uint next)
-        {
-        }
-
         public virtual void AmqpStateTransition(object source, string operation, object fromState, object toState)
         {
         }
@@ -108,11 +100,7 @@ namespace Microsoft.Azure.Amqp
         {
         }
 
-        public virtual void AmqpThrowingExceptionError(string exception)
-        {
-        }
-
-        public virtual void AmqpThrowingExceptionWarning(string exception)
+        public virtual void AmqpAbortThrowingException(string exception)
         {
         }
 

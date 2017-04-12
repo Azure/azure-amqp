@@ -253,9 +253,7 @@ namespace Microsoft.Azure.Amqp
             if (Interlocked.Increment(ref this.references) == 1)
             {
                 Interlocked.Decrement(ref this.references);
-                var exception = new InvalidOperationException(AmqpResources.AmqpBufferAlreadyReclaimed);
-                AmqpTrace.Provider.AmqpThrowingExceptionError(ExceptionTrace.GetDetailsForThrownException(exception));
-                throw Fx.Exception.AsError(exception);
+                throw new InvalidOperationException(AmqpResources.AmqpBufferAlreadyReclaimed);
             }
         }
 

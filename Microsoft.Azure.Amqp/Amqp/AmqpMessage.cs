@@ -288,9 +288,7 @@ namespace Microsoft.Azure.Amqp
             {
                 if (this.BytesTransfered > 0)
                 {
-                    var exception = new InvalidOperationException(AmqpResources.AmqpCannotCloneSentMessage);
-                    AmqpTrace.Provider.AmqpThrowingExceptionWarning(ExceptionTrace.GetDetailsForThrownException(exception));
-                    throw Fx.Exception.AsWarning(exception);
+                    throw new InvalidOperationException(AmqpResources.AmqpCannotCloneSentMessage);
                 }
 
                 bool more;

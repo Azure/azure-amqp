@@ -108,7 +108,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        internal void WriteObjectInternal(ByteBuffer buffer, object graph)
+        public void WriteObjectInternal(ByteBuffer buffer, object graph)
         {
             if (graph == null)
             {
@@ -161,7 +161,13 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        internal TAs ReadObjectInternal<T, TAs>(ByteBuffer buffer)
+        public T ReadObjectInternal<T>(ByteBuffer buffer)
+        {
+            SerializableType type = this.GetType(typeof(T));
+            return (T)type.ReadObject(buffer);
+        }
+
+        public TAs ReadObjectInternal<T, TAs>(ByteBuffer buffer)
         {
             SerializableType type = this.GetType(typeof(T));
             return (TAs)type.ReadObject(buffer);

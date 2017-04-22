@@ -74,8 +74,8 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Timestamp.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\TraceOperation.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\WaitCallbackActionItem.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpCbsLink.cs">
-      <Link>Amqp\AmqpCbsLink.cs</Link>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Cbs\AmqpCbsLink.cs">
+      <Link>Amqp\Cbs\AmqpCbsLink.cs</Link>
     </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpCodec.cs">
       <Link>Amqp\AmqpCodec.cs</Link>
@@ -149,11 +149,11 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ByteBuffer.cs">
       <Link>Amqp\ByteBuffer.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\CbsConstants.cs">
-      <Link>Amqp\CbsConstants.cs</Link>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Cbs\CbsConstants.cs">
+      <Link>Amqp\Cbs\CbsConstants.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\CbsToken.cs">
-      <Link>Amqp\CbsToken.cs</Link>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Cbs\CbsToken.cs">
+      <Link>Amqp\Cbs\CbsToken.cs</Link>
     </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Delivery.cs">
       <Link>Amqp\Delivery.cs</Link>
@@ -173,8 +173,8 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\IAmqpProvider.cs">
       <Link>Amqp\IAmqpProvider.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ICbsTokenProvider.cs">
-      <Link>Amqp\ICbsTokenProvider.cs</Link>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Cbs\ICbsTokenProvider.cs">
+      <Link>Amqp\Cbs\ICbsTokenProvider.cs</Link>
     </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ICloseable.cs">
       <Link>Amqp\ICloseable.cs</Link>

@@ -46,36 +46,35 @@ namespace Microsoft.Azure.Amqp
 
         public async Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, SaslHandler saslHandler, TimeSpan timeout)
         {
-            bool isSsl;
+            TransportSettings transportSettings;
             if (addressUri.Scheme.Equals(AmqpConstants.SchemeAmqp, StringComparison.OrdinalIgnoreCase))
             {
-                isSsl = false;
+                transportSettings = new TcpTransportSettings()
+                {
+                    Host = addressUri.Host,
+                    Port = addressUri.Port > -1 ? addressUri.Port : AmqpConstants.DefaultPort
+                };
             }
-            else if (addressUri.Scheme.Equals(AmqpConstants.SchemeAmqp, StringComparison.OrdinalIgnoreCase))
+            else if (addressUri.Scheme.Equals(AmqpConstants.SchemeAmqps, StringComparison.OrdinalIgnoreCase))
             {
-                isSsl = true;
+                TcpTransportSettings tcpSettings = new TcpTransportSettings()
+                {
+                    Host = addressUri.Host,
+                    Port = addressUri.Port > -1 ? addressUri.Port : AmqpConstants.DefaultSecurePort
+                };
+
+                transportSettings = new TlsTransportSettings(tcpSettings) { TargetHost = addressUri.Host };
             }
+#if NET45
+            else if (addressUri.Scheme.Equals(WebSocketTransport.WebSockets, StringComparison.OrdinalIgnoreCase) ||
+                addressUri.Scheme.Equals(WebSocketTransport.SecureWebSockets, StringComparison.OrdinalIgnoreCase))
+            {
+                transportSettings = new WebSocketTransportSettings() { Uri = addressUri };
+            }
+#endif
             else
             {
                 throw new NotSupportedException(addressUri.Scheme);
-            }
-
-            TransportSettings transportSettings;
-            TcpTransportSettings tcpSettings = new TcpTransportSettings()
-            {
-                Host = addressUri.Host,
-                Port = addressUri.Port > -1 ? addressUri.Port : (isSsl ? AmqpConstants.DefaultSecurePort : AmqpConstants.DefaultPort)
-            };
-
-            if (isSsl)
-            {
-                TlsTransportSettings tlsSettings = new TlsTransportSettings(tcpSettings);
-                tlsSettings.TargetHost = addressUri.Host;
-                transportSettings = tlsSettings;
-            }
-            else
-            {
-                transportSettings = tcpSettings;
             }
 
             AmqpSettings settings = new AmqpSettings();

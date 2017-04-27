@@ -18,6 +18,7 @@ namespace Microsoft.Azure.Amqp.Framing
     {
         public static readonly string Name = "amqp:error:list";
         public static readonly ulong Code = 0x000000000000001d;
+        public static bool IncludeErrorDetails;
         const int Fields = 3;
         const int MaxSizeInInfoMap = 8 * 1024;
 
@@ -79,6 +80,12 @@ namespace Microsoft.Azure.Amqp.Framing
             {
                 error.Condition = AmqpErrorCode.InternalError;
                 error.Description = AmqpResources.GetString(AmqpResources.AmqpErrorOccurred, AmqpErrorCode.InternalError);
+            }
+
+            // Set the error details if 'IncludeErrorDetails' is set explicitly
+            if (IncludeErrorDetails)
+            {
+                error.Description = exception.Message;
             }
 
 #if DEBUG

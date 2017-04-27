@@ -27,4 +27,4 @@ using System.Runtime.InteropServices;
 
 // Version information for an assembly follows semantic versioning 1.0.0 (because
 // NuGet didn't support semver 2.0.0 before VS 2015). See semver.org for details.
-[assembly: AssemblyInformationalVersion("2.0.3")]
+[assembly: AssemblyInformationalVersion("2.0.5")]

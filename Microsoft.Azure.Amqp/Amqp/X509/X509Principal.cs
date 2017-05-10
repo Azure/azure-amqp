@@ -12,6 +12,8 @@ namespace Microsoft.Azure.Amqp.X509
     /// </summary>
     public class X509Principal : IPrincipal
     {
+        X509Chain certificateChain;
+
         /// <summary>
         /// Constructor which takes X509 certificate identity and its certificate chain as input
         /// </summary>
@@ -20,7 +22,7 @@ namespace Microsoft.Azure.Amqp.X509
         public X509Principal(X509CertificateIdentity identity, X509Chain certificateChain)
         {
             this.CertificateIdentity = identity;
-            this.CertificateChain = certificateChain;
+            this.certificateChain = certificateChain;
         }
 
         /// <summary>
@@ -34,9 +36,17 @@ namespace Microsoft.Azure.Amqp.X509
         public X509CertificateIdentity CertificateIdentity { get; }
 
         /// <summary>
-        ///  CertificateChain get accessor
+        ///  retrieve CertificateChain 
+        ///  use only once
+        ///  will return null if invoked more than once 
         /// </summary>
-        public X509Chain CertificateChain { get;  }
+        public X509Chain GetCertificateChain()
+        {
+            var certChain = this.certificateChain;
+            // release local copy
+            this.certificateChain = null;
+            return certChain;
+        }
 
         /// <summary>
         ///  Method not implemented

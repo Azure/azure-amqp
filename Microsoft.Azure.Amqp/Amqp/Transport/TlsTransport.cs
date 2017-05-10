@@ -211,6 +211,8 @@ namespace Microsoft.Azure.Amqp.Transport
                         // using workaround mentioned here: https://github.com/dotnet/corefx/issues/4510
                         var cert = new X509Certificate2(this.sslStream.RemoteCertificate.Export(X509ContentType.Cert));
                         this.Principal = new X509Principal(new X509CertificateIdentity(cert, this.sslStream.IsRemoteCertificateValid), this.remoteCertificateChain);
+                        // release remote certificate chain once it is sent to application
+                        this.remoteCertificateChain = null;
                     }
                 }
             }
@@ -281,13 +283,12 @@ namespace Microsoft.Azure.Amqp.Transport
 
         bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            this.remoteCertificateChain = chain;
-            if (this.tlsSettings?.CertificateValidationCallback != null)
+            if (tlsSettings.ProvideCertificateChain)
             {
-                return this.tlsSettings.CertificateValidationCallback(sender, certificate, chain, sslPolicyErrors);
+                this.remoteCertificateChain = chain;
             }
 
-            return true;
+            return this.tlsSettings.CertificateValidationCallback(sender, certificate, chain, sslPolicyErrors);
         }
 
         /// <inheritdoc/>

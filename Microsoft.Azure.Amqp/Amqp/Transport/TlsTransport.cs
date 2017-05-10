@@ -30,7 +30,9 @@ namespace Microsoft.Azure.Amqp.Transport
                 tlsSettings.IsInitiator ? "Must have a target host for the client." : "Must have a certificate for the server.");
             this.innerTransport = innerTransport;
             this.tlsSettings = tlsSettings;
-            this.sslStream = new CustomSslStream(new TransportStream(this.innerTransport), false, this.RemoteCertificateValidationCallback, tlsSettings.IsInitiator);
+            this.sslStream = tlsSettings.CertificateValidationCallback == null ?
+                new CustomSslStream(new TransportStream(this.innerTransport), false, tlsSettings.IsInitiator) :
+                new CustomSslStream(new TransportStream(this.innerTransport), false, this.RemoteCertificateValidationCallback, tlsSettings.IsInitiator);
         }
 
         public override EndPoint LocalEndPoint

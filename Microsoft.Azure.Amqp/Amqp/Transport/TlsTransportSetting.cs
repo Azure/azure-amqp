@@ -69,7 +69,7 @@ namespace Microsoft.Azure.Amqp.Transport
             set;
         }
 
-        public bool ProvideCertificateChain 
+        public bool ProvideCertificateChainElements
         {
             get;
             set;

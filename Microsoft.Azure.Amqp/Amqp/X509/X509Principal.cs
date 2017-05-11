@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+
 namespace Microsoft.Azure.Amqp.X509
 {
     using System;
+    using System.Collections.Generic;
     using System.Security.Principal;
     using System.Security.Cryptography.X509Certificates;
 
@@ -12,17 +14,17 @@ namespace Microsoft.Azure.Amqp.X509
     /// </summary>
     public class X509Principal : IPrincipal
     {
-        X509Chain certificateChain;
+        IList<X509ChainElement> certificateChainElements;
 
         /// <summary>
-        /// Constructor which takes X509 certificate identity and its certificate chain as input
+        /// Constructor which takes X509 certificate identity and a list of its certificate chain elements as input
         /// </summary>
         /// <param name="identity"></param>
-        /// <param name="certificateChain"></param>
-        public X509Principal(X509CertificateIdentity identity, X509Chain certificateChain)
+        /// <param name="certificateChainElements"></param>
+        public X509Principal(X509CertificateIdentity identity, IList<X509ChainElement> certificateChainElements)
         {
             this.CertificateIdentity = identity;
-            this.certificateChain = certificateChain;
+            this.certificateChainElements = certificateChainElements;
         }
 
         /// <summary>
@@ -36,16 +38,16 @@ namespace Microsoft.Azure.Amqp.X509
         public X509CertificateIdentity CertificateIdentity { get; }
 
         /// <summary>
-        ///  retrieve CertificateChain 
+        ///  retrieve CertificateChainElements
         ///  use only once
         ///  will return null if invoked more than once 
         /// </summary>
-        public X509Chain GetCertificateChain()
+        public IList<X509ChainElement> GetCertificateChainElements()
         {
-            var certChain = this.certificateChain;
+            var certChainElements = this.certificateChainElements;
             // release local copy
-            this.certificateChain = null;
-            return certChain;
+            this.certificateChainElements = null;
+            return certChainElements;
         }
 
         /// <summary>

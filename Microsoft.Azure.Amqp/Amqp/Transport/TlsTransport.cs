@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
+    using System.Collections.Generic;
     using System.Net;
     using System.Net.Security;
     using System.Security.Authentication;
@@ -21,7 +22,7 @@ namespace Microsoft.Azure.Amqp.Transport
         TlsTransportSettings tlsSettings;
         OperationState writeState;
         OperationState readState;
-        X509Chain remoteCertificateChain;
+        IList<X509ChainElement> remoteCertificateChainElements;
 
         public TlsTransport(TransportBase innerTransport, TlsTransportSettings tlsSettings)
             : base("tls", innerTransport.Identifier)
@@ -210,9 +211,9 @@ namespace Microsoft.Azure.Amqp.Transport
                         // Cannot cast from X509Certificate to X509Certificate2
                         // using workaround mentioned here: https://github.com/dotnet/corefx/issues/4510
                         var cert = new X509Certificate2(this.sslStream.RemoteCertificate.Export(X509ContentType.Cert));
-                        this.Principal = new X509Principal(new X509CertificateIdentity(cert, this.sslStream.IsRemoteCertificateValid), this.remoteCertificateChain);
-                        // release remote certificate chain once it is sent to application
-                        this.remoteCertificateChain = null;
+                        this.Principal = new X509Principal(new X509CertificateIdentity(cert, this.sslStream.IsRemoteCertificateValid), this.remoteCertificateChainElements);
+                        // release remote certificate chain elements once they are sent to application
+                        this.remoteCertificateChainElements = null;
                     }
                 }
             }
@@ -283,9 +284,14 @@ namespace Microsoft.Azure.Amqp.Transport
 
         bool RemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
-            if (tlsSettings.ProvideCertificateChain)
+            if (tlsSettings.ProvideCertificateChainElements && chain != null)
             {
-                this.remoteCertificateChain = chain;
+                // Make a copy of the chain elements since they are destroyed after this method completes 
+                this.remoteCertificateChainElements = new List<X509ChainElement>(chain.ChainElements.Count);
+                foreach (var chainElement in chain.ChainElements)
+                {
+                    this.remoteCertificateChainElements.Add(chainElement);
+                }
             }
 
             return this.tlsSettings.CertificateValidationCallback(sender, certificate, chain, sslPolicyErrors);

@@ -68,6 +68,12 @@ namespace Microsoft.Azure.Amqp.Transport
             get;
             set;
         }
+
+        public bool ProvideCertificateChainElements
+        {
+            get;
+            set;
+        } 
 #endif
         public bool CheckCertificateRevocation
         {

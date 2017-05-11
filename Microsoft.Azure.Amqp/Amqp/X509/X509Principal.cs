@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 namespace Microsoft.Azure.Amqp.X509
 {
     using System;
@@ -42,7 +41,7 @@ namespace Microsoft.Azure.Amqp.X509
         ///  use only once
         ///  will return null if invoked more than once 
         /// </summary>
-        public IList<X509ChainElement> GetCertificateChainElements()
+        public IList<X509ChainElement> GetCertificateChainElementsAndRelease()
         {
             var certChainElements = this.certificateChainElements;
             // release local copy

@@ -8,11 +8,11 @@ namespace Microsoft.Azure.Amqp.Transport
     /// <summary>
     /// This listener accepts SSL transport directly (no AMQP security upgrade)
     /// </summary>
-    sealed class TlsTransportListener : TransportListener
+    public class TlsTransportListener : TransportListener
     {
         readonly AsyncCallback onTransportOpened;
-        readonly TlsTransportSettings transportSettings;
-        TransportListener innerListener;
+        protected readonly TlsTransportSettings transportSettings;
+        protected TransportListener innerListener;
 
         public TlsTransportListener(TlsTransportSettings transportSettings)
             : base("tls-listener")
@@ -47,6 +47,11 @@ namespace Microsoft.Azure.Amqp.Transport
             this.innerListener.Listen(this.OnAcceptInnerTransport);
         }
 
+        protected virtual TlsTransport OnCreateInnerTransport(TransportAsyncCallbackArgs innerArgs)
+        {
+            return new TlsTransport(innerArgs.Transport, this.transportSettings);
+        }
+
         void OnInnerListenerClosed(object sender, EventArgs e)
         {
             if (!this.IsClosing())
@@ -65,7 +70,7 @@ namespace Microsoft.Azure.Amqp.Transport
             try
             {
                 // upgrade transport
-                innerArgs.Transport = new TlsTransport(innerArgs.Transport, this.transportSettings);
+                innerArgs.Transport = this.OnCreateInnerTransport(innerArgs);
                 IAsyncResult result = innerArgs.Transport.BeginOpen(
                     innerArgs.Transport.DefaultOpenTimeout, 
                     this.onTransportOpened,

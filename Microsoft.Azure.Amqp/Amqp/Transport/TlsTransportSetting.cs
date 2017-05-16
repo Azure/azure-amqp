@@ -10,9 +10,9 @@ namespace Microsoft.Azure.Amqp.Transport
 #if !WINDOWS_UWP && !PCL
     using System.Security.Cryptography.X509Certificates;
 #endif
-    public sealed class TlsTransportSettings : TransportSettings
+    public class TlsTransportSettings : TransportSettings
     {
-        readonly TransportSettings innerSettings;
+        protected readonly TransportSettings innerSettings;
 
         public TlsTransportSettings()
             : this(null, true)

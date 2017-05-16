@@ -6,12 +6,10 @@ namespace Microsoft.Azure.Amqp.Transport
     using System;
     using System.Net;
     using System.Security.Authentication;
-    using System.Security.Principal;
     using System.Runtime.InteropServices.WindowsRuntime;
     using Windows.Networking.Sockets;
-    using System.Threading.Tasks;
 
-    sealed class TlsTransport : TransportBase, IDisposable
+    public class TlsTransport : TransportBase, IDisposable
     {
         const SslProtocols DefaultSslProtocols = SslProtocols.Tls | SslProtocols.Ssl3; // SslProtocols.Default from .NET 4.5
         readonly TransportBase innerTransport;

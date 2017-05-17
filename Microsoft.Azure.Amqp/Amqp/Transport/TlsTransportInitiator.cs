@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Amqp.Transport
     {
         static readonly AsyncCallback onTransportOpened = OnTransportOpened;
 
-        protected TlsTransportSettings transportSettings;
+        readonly TlsTransportSettings transportSettings;
         TransportAsyncCallbackArgs callbackArgs;
         TimeoutHelper timeoutHelper;
 
@@ -47,9 +47,9 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
-        protected virtual TlsTransport OnCreateInnerTransport(TransportAsyncCallbackArgs innerArgs)
+        protected virtual TlsTransport OnCreateTransport(TransportBase innerTransport, TlsTransportSettings tlsTransportSettings)
         {
-            return new TlsTransport(innerArgs.Transport, this.transportSettings);
+            return new TlsTransport(innerTransport, tlsTransportSettings);
         }
 
         static void OnInnerTransportConnected(TransportAsyncCallbackArgs innerArgs)
@@ -95,7 +95,7 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 Fx.Assert(innerArgs.Transport != null, "must have a valid inner transport");
                 // upgrade transport
-                this.callbackArgs.Transport = this.OnCreateInnerTransport(innerArgs);
+                this.callbackArgs.Transport = this.OnCreateTransport(innerArgs.Transport, this.transportSettings);
                 try
                 {
                     IAsyncResult result = this.callbackArgs.Transport.BeginOpen(this.timeoutHelper.RemainingTime(), onTransportOpened, this);

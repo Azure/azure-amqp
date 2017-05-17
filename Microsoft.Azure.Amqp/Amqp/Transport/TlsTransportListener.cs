@@ -11,8 +11,8 @@ namespace Microsoft.Azure.Amqp.Transport
     public class TlsTransportListener : TransportListener
     {
         readonly AsyncCallback onTransportOpened;
-        protected readonly TlsTransportSettings transportSettings;
-        protected TransportListener innerListener;
+        readonly TlsTransportSettings transportSettings;
+        TransportListener innerListener;
 
         public TlsTransportListener(TlsTransportSettings transportSettings)
             : base("tls-listener")
@@ -47,9 +47,9 @@ namespace Microsoft.Azure.Amqp.Transport
             this.innerListener.Listen(this.OnAcceptInnerTransport);
         }
 
-        protected virtual TlsTransport OnCreateInnerTransport(TransportAsyncCallbackArgs innerArgs)
+        protected virtual TlsTransport OnCreateTransport(TransportBase innerTransport, TlsTransportSettings tlsTransportSettings)
         {
-            return new TlsTransport(innerArgs.Transport, this.transportSettings);
+            return new TlsTransport(innerTransport, tlsTransportSettings);
         }
 
         void OnInnerListenerClosed(object sender, EventArgs e)
@@ -70,7 +70,7 @@ namespace Microsoft.Azure.Amqp.Transport
             try
             {
                 // upgrade transport
-                innerArgs.Transport = this.OnCreateInnerTransport(innerArgs);
+                innerArgs.Transport = this.OnCreateTransport(innerArgs.Transport, this.transportSettings);
                 IAsyncResult result = innerArgs.Transport.BeginOpen(
                     innerArgs.Transport.DefaultOpenTimeout, 
                     this.onTransportOpened,

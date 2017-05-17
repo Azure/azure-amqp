@@ -11,12 +11,12 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Security.Authentication;
     using System.Security.Cryptography.X509Certificates;
 #endif
-    public sealed class TlsTransportSettings : TransportSettings
+    public class TlsTransportSettings : TransportSettings
     {
 #if !WINDOWS_UWP && !PCL
         const SslProtocols DefaultSslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
 #endif
-        readonly TransportSettings innerSettings;
+        protected readonly TransportSettings innerSettings;
 
         public TlsTransportSettings()
             : this(null, true)

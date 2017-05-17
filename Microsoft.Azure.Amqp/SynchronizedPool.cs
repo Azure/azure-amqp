@@ -336,10 +336,6 @@ namespace Microsoft.Azure.Amqp
         {
             public static readonly int ProcessorCount = GetProcessorCount();
 
-            [Fx.Tag.SecurityNote(Critical = "Asserts in order to get the processor count from the environment", Safe = "This data isn't actually protected so it's ok to leak")]
-#if !NETSTANDARD && !PCL
-            [EnvironmentPermission(SecurityAction.Assert, Read = "NUMBER_OF_PROCESSORS")]
-#endif
             static int GetProcessorCount()
             {
                 return Environment.ProcessorCount;

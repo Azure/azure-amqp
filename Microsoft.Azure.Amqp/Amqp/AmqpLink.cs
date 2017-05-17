@@ -8,7 +8,6 @@ namespace Microsoft.Azure.Amqp
     using System.Threading;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
-    using Microsoft.Azure.Amqp.Tracing;
 
     /// <summary>
     /// Implements the transport-layer link, including
@@ -207,7 +206,6 @@ namespace Microsoft.Azure.Amqp
         public bool TrySendDelivery(Delivery delivery)
         {
             Fx.Assert(delivery.DeliveryTag.Array != null, "delivery-tag must be set.");
-            bool settled = this.settings.SettleType == SettleMode.SettleOnSend;
 
             // check link credit first
             bool canSend = false;
@@ -230,19 +228,23 @@ namespace Microsoft.Azure.Amqp
                 return false;
             }
 
-            delivery.PrepareForSend();
-            delivery.Settled = settled;
-            if (!delivery.Settled)
+            this.StartSendDelivery(delivery);
+            return true;
+        }
+
+        public void ForceSendDelivery(Delivery delivery)
+        {
+            // Send the delivery even if there is no link credit
+            lock (this.syncRoot)
             {
-                lock (this.syncRoot)
+                this.deliveryCount.Increment();
+                if (this.linkCredit > 0 && this.linkCredit < uint.MaxValue)
                 {
-                    this.unsettledMap.Add(delivery.DeliveryTag, delivery);
+                    --this.linkCredit;
                 }
             }
 
-            delivery.Link = this;
-            this.inflightDeliveries.DoWork(delivery);
-            return true;
+            this.StartSendDelivery(delivery);
         }
 
         // up-down: from application to link to session (to send a disposition)
@@ -457,7 +459,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        public bool Invoke(Delivery delivery)
+        bool IWorkDelegate<Delivery>.Invoke(Delivery delivery)
         {
             return this.DoActionIfNotClosed(
                 (thisPtr, paramDelivery, p1, p2, p3) => thisPtr.SendDelivery(paramDelivery),
@@ -682,6 +684,22 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        void StartSendDelivery(Delivery delivery)
+        {
+            delivery.PrepareForSend();
+            delivery.Settled = this.settings.SettleType == SettleMode.SettleOnSend;
+            if (!delivery.Settled)
+            {
+                lock (this.syncRoot)
+                {
+                    this.unsettledMap.Add(delivery.DeliveryTag, delivery);
+                }
+            }
+
+            delivery.Link = this;
+            this.inflightDeliveries.DoWork(delivery);
+        }
+
         void DisposeDeliveryInternal(Delivery delivery, bool settled, DeliveryState state, bool noFlush)
         {
             AmqpTrace.Provider.AmqpDispose(this, delivery.DeliveryId.Value, settled, state);
@@ -750,7 +768,8 @@ namespace Microsoft.Azure.Amqp
 
             this.Session.SendCommand(detach);
 
-            AmqpTrace.Provider.AmqpLinkDetach(this, this.Name, this.LocalHandle ?? 0u, "S:DETACH", detach.Error != null ? detach.Error.Condition.Value : string.Empty);
+            AmqpTrace.Provider.AmqpLinkDetach(this, this.Name, this.LocalHandle ?? 0u, "S:DETACH",
+                detach.Error != null ? detach.Error.Condition.Value : string.Empty);
 
             return transition.To;
         }
@@ -846,7 +865,8 @@ namespace Microsoft.Azure.Amqp
 
         void OnReceiveDetach(Detach detach)
         {
-            AmqpTrace.Provider.AmqpLinkDetach(this, this.Name, this.LocalHandle ?? 0u, "R:DETACH", detach.Error != null ? detach.Error.Condition.Value : string.Empty);
+            AmqpTrace.Provider.AmqpLinkDetach(this, this.Name, this.LocalHandle ?? 0u, "R:DETACH",
+                detach.Error != null ? detach.Error.Condition.Value : string.Empty);
 
             this.OnReceiveCloseCommand("R:DETACH", detach.Error);
         }

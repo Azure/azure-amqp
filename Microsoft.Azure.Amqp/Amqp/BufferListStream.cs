@@ -295,7 +295,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (stream == null)
             {
-                throw Fx.Exception.ArgumentNull("stream");
+                throw new ArgumentNullException("stream");
             }
 
             BufferListStream bufferStream;
@@ -317,7 +317,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (stream == null)
             {
-                throw Fx.Exception.ArgumentNull("stream");
+                throw new ArgumentNullException("stream");
             }
 
             ArraySegment<byte>[] result;

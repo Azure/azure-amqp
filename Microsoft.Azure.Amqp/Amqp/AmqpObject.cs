@@ -141,9 +141,7 @@ namespace Microsoft.Azure.Amqp
             {
                 if (this.openCalled)
                 {
-                    var exception = new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpInvalidReOpenOperation, this, this.State));
-                    AmqpTrace.Provider.AmqpThrowingExceptionWarning(ExceptionTrace.GetDetailsForThrownException(exception));
-                    throw Fx.Exception.AsWarning(exception);
+                    throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpInvalidReOpenOperation, this, this.State));
                 }
 
                 this.openCalled = true;
@@ -180,9 +178,7 @@ namespace Microsoft.Azure.Amqp
             {
                 if (this.openCalled)
                 {
-                    var exception = new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpInvalidReOpenOperation, this, this.State));
-                    AmqpTrace.Provider.AmqpThrowingExceptionWarning(ExceptionTrace.GetDetailsForThrownException(exception));
-                    throw Fx.Exception.AsWarning(exception);
+                    throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpInvalidReOpenOperation, this, this.State));
                 }
 
                 this.openCalled = true;
@@ -297,7 +293,7 @@ namespace Microsoft.Azure.Amqp
             catch (Exception exception)
             {
                 // No one is supposed to throw but it someone does, we need to investigate
-                AmqpTrace.Provider.AmqpThrowingExceptionError(exception.ToStringSlim());
+                AmqpTrace.Provider.AmqpAbortThrowingException(exception.ToStringSlim());
                 throw;
             }
             finally

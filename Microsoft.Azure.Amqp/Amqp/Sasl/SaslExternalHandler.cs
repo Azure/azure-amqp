@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp.Sasl
 {
     using System;
-    using System.Security.Principal;
 
     // http://tools.ietf.org/html/rfc4422#appendix-A
     //
@@ -48,8 +47,6 @@ namespace Microsoft.Azure.Amqp.Sasl
             }
             else
             {
-                // need a principal to mark the transport as 'authenticated'
-                this.Principal = new GenericPrincipal(new GenericIdentity("dummy-identity", "dummy-identity"), null);
                 // at this point we should check if the client id is established
                 // by other means (e.g. cert) and set a Pricipal, but we have
                 // been using EXTERNAL to do CBS which is anonymous so we cannot

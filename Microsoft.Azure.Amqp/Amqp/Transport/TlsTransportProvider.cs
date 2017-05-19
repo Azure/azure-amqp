@@ -5,7 +5,7 @@ namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
 
-    public sealed class TlsTransportProvider : TransportProvider
+    public class TlsTransportProvider : TransportProvider
     {
         TlsTransportSettings tlsSettings;
 

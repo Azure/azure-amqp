@@ -159,4 +159,14 @@
             return this.uuid.GetHashCode();
         }
     }
+
+    [AmqpContract(Name = "named-list", Code = 4, Encoding = EncodingType.Map)]
+    class NamedList<T>
+    {
+        [AmqpMember]
+        public string Name { get; set; }
+
+        [AmqpMember]
+        public IEnumerable<T> List { get; set; }
+    }
 }

@@ -17,6 +17,7 @@ namespace Microsoft.Azure.Amqp
     public class AmqpConnection : AmqpConnectionBase, ISessionFactory
     {
         static readonly EventHandler onSessionClosed = OnSessionClosed;
+        static AmqpConnectionFactory defaultFactory;
         readonly bool isInitiator;
         readonly ProtocolHeader initialHeader;
         readonly AmqpSettings amqpSettings;
@@ -24,6 +25,19 @@ namespace Microsoft.Azure.Amqp
         readonly HandleTable<AmqpSession> sessionsByRemoteHandle;
         HeartBeat heartBeat;
         KeyedByTypeCollection<object> extensions;
+
+        public static AmqpConnectionFactory Factory
+        {
+            get
+            {
+                if (defaultFactory == null)
+                {
+                    Interlocked.CompareExchange(ref defaultFactory, new AmqpConnectionFactory(), null);
+                }
+
+                return defaultFactory;
+            }
+        }
 
         public AmqpConnection(TransportBase transport, AmqpSettings amqpSettings, AmqpConnectionSettings connectionSettings) :
             this(transport, amqpSettings.GetDefaultHeader(), true, amqpSettings, connectionSettings)

@@ -59,6 +59,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionFactory.cs">
+      <Link>Amqp\AmqpConnectionFactory.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\ResourcesGeneric.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -67,7 +70,7 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>..\Microsoft.Azure.Amqp\Amqp\Resources.resx</DependentUpon>
+      <Link>Amqp\Resources.Designer.cs</Link>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -77,7 +80,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="..\Microsoft.Azure.Amqp\Amqp\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>..\Microsoft.Azure.Amqp\Amqp\Resources.Designer.cs</LastGenOutput>
+      <Link>Amqp\Resources.resx</Link>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
@@ -89,7 +92,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\CommonResources.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\CompletedAsyncResult.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\ExceptionDispatcher.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\ExceptionTrace.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Fx.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\FxCop.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\InternalBufferManager.cs" />
@@ -104,198 +106,580 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Timestamp.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\TraceOperation.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\WaitCallbackActionItem.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpCbsLink.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpCodec.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnection.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionBase.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionSettings.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionState.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConstants.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpDebug.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpErrorCode.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpException.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpExtensions.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpLink.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpLinkSettings.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpMessage.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpObject.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpResources.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpResponseStatusCode.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpSession.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpSessionSettings.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpSettings.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpVersion.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AsyncIO.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\BufferListStream.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ByteArrayComparer.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ByteBuffer.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\CbsConstants.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\CbsToken.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Delivery.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\DuplexAmqpLink.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\FaultTolerantAmqpObject.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\FrameDecoder.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\HandleTable.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\IAmqpProvider.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ICbsTokenProvider.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ICloseable.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\IIoHandler.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\IWorkDelegate.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\OpenEventArgs.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ProtocolId.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ReceivingAmqpLink.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\RequestResponseAmqpLink.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SegmentBufferPool.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SendingAmqpLink.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SequenceNumber.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SerializedBatchableWorker.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SerializedWorker.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SettleMode.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\StateTransition.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\TimeoutAsyncResult.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\WorkCollection.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\AmqpBitConverter.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\AmqpEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\AmqpMap.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\AmqpSymbol.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\ArrayEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\BinaryEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\BooleanEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\ByteEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\CharEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\DecimalEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\DescribedEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\DescribedType.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\DoubleEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\EncodingBase.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\FixedWidth.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\FloatEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\FormatCode.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\IAmqpSerializable.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\IntEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\ListEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\LongEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\MapEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\MapKey.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\ShortEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\StringEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\SymbolEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\TimeStampEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\UByteEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\UIntEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\ULongEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\UShortEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\UuidEncoding.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Accepted.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Address.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\AmqpDescribed.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\AmqpSequence.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\AmqpValue.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\ApplicationProperties.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Attach.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Begin.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Close.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Data.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DeleteOnClose.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DeleteOnNoLinks.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DeleteOnNoLinksOrMessages.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DeleteOnNoMessages.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DeliveryAnnotations.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DeliveryState.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DescribedAnnotations.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DescribedList.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DescribedMap.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Detach.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Disposition.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DistributionMode.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\End.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Error.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Flow.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Footer.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Frame.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\FrameType.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Header.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\LifetimePolicy.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\LinkPerformative.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\MessageAnnotations.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\MessageId.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Modified.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Multiple.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Open.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Outcome.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Performative.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Properties.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\ProtocolHeader.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Received.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\ReceiverSettleMode.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Rejected.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Released.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\RestrictedMap.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\SenderSettleMode.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Source.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Target.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Terminus.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\TerminusDurability.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\TerminusExpiryPolicy.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Transfer.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\ISaslPlainAuthenticator.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslAnonymousHandler.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslChallenge.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslCode.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslExternalHandler.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslHandler.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslInit.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslMechanisms.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslNegotiator.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslOutcome.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslPlainHandler.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslResponse.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslTransport.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslTransportProvider.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\AmqpContractAttribute.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\AmqpContractSerializer.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\AmqpMemberAttribute.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\MemberAccessor.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\MethodAccessor.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\SerialiableMember.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\SerializableType.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\Controller.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\Coordinator.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\Declare.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\Declared.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\Discharge.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\TransactionalState.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\TxnCapabilities.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportInitiator.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportListener.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportProvider.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\CustomSslStream.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransport.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportInitiator.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportListener.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportSetting.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransport.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportInitiator.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportListener.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportProvider.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportSetting.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportAsyncEventArgs.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportBase.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportInitiator.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportListener.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportProvider.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportSettings.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportStream.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\X509\X509CertificateIdentity.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\X509\X509Principal.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Exceptions\AssertionFailedException.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Exceptions\CallbackException.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Exceptions\FatalException.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Extensions\ExceptionExtensions.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Extensions\StreamExtensions.cs" />
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Cbs\AmqpCbsLink.cs">
+      <Link>Amqp\Cbs\AmqpCbsLink.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpCodec.cs">
+      <Link>Amqp\AmqpCodec.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnection.cs">
+      <Link>Amqp\AmqpConnection.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionBase.cs">
+      <Link>Amqp\AmqpConnectionBase.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionSettings.cs">
+      <Link>Amqp\AmqpConnectionSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionState.cs">
+      <Link>Amqp\AmqpConnectionState.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConstants.cs">
+      <Link>Amqp\AmqpConstants.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpDebug.cs">
+      <Link>Amqp\AmqpDebug.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpErrorCode.cs">
+      <Link>Amqp\AmqpErrorCode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpException.cs">
+      <Link>Amqp\AmqpException.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpExtensions.cs">
+      <Link>Amqp\AmqpExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpLink.cs">
+      <Link>Amqp\AmqpLink.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpLinkSettings.cs">
+      <Link>Amqp\AmqpLinkSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpMessage.cs">
+      <Link>Amqp\AmqpMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpObject.cs">
+      <Link>Amqp\AmqpObject.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpResources.cs">
+      <Link>Amqp\AmqpResources.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpResponseStatusCode.cs">
+      <Link>Amqp\AmqpResponseStatusCode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpSession.cs">
+      <Link>Amqp\AmqpSession.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpSessionSettings.cs">
+      <Link>Amqp\AmqpSessionSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpSettings.cs">
+      <Link>Amqp\AmqpSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpVersion.cs">
+      <Link>Amqp\AmqpVersion.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AsyncIO.cs">
+      <Link>Amqp\AsyncIO.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\BufferListStream.cs">
+      <Link>Amqp\BufferListStream.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ByteArrayComparer.cs">
+      <Link>Amqp\ByteArrayComparer.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ByteBuffer.cs">
+      <Link>Amqp\ByteBuffer.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Cbs\CbsConstants.cs">
+      <Link>Amqp\Cbs\CbsConstants.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Cbs\CbsToken.cs">
+      <Link>Amqp\Cbs\CbsToken.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Delivery.cs">
+      <Link>Amqp\Delivery.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\DuplexAmqpLink.cs">
+      <Link>Amqp\DuplexAmqpLink.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\FaultTolerantAmqpObject.cs">
+      <Link>Amqp\FaultTolerantAmqpObject.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\FrameDecoder.cs">
+      <Link>Amqp\FrameDecoder.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\HandleTable.cs">
+      <Link>Amqp\HandleTable.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\IAmqpProvider.cs">
+      <Link>Amqp\IAmqpProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Cbs\ICbsTokenProvider.cs">
+      <Link>Amqp\Cbs\ICbsTokenProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ICloseable.cs">
+      <Link>Amqp\ICloseable.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\IIoHandler.cs">
+      <Link>Amqp\IIoHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\IWorkDelegate.cs">
+      <Link>Amqp\IWorkDelegate.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\OpenEventArgs.cs">
+      <Link>Amqp\OpenEventArgs.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ProtocolId.cs">
+      <Link>Amqp\ProtocolId.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ReceivingAmqpLink.cs">
+      <Link>Amqp\ReceivingAmqpLink.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\RequestResponseAmqpLink.cs">
+      <Link>Amqp\RequestResponseAmqpLink.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SegmentBufferPool.cs">
+      <Link>Amqp\SegmentBufferPool.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SendingAmqpLink.cs">
+      <Link>Amqp\SendingAmqpLink.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SequenceNumber.cs">
+      <Link>Amqp\SequenceNumber.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SerializedBatchableWorker.cs">
+      <Link>Amqp\SerializedBatchableWorker.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SerializedWorker.cs">
+      <Link>Amqp\SerializedWorker.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\SettleMode.cs">
+      <Link>Amqp\SettleMode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\StateTransition.cs">
+      <Link>Amqp\StateTransition.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\TimeoutAsyncResult.cs">
+      <Link>Amqp\TimeoutAsyncResult.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\WorkCollection.cs">
+      <Link>Amqp\WorkCollection.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\AmqpBitConverter.cs">
+      <Link>Amqp\Encoding\AmqpBitConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\AmqpEncoding.cs">
+      <Link>Amqp\Encoding\AmqpEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\AmqpMap.cs">
+      <Link>Amqp\Encoding\AmqpMap.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\AmqpSymbol.cs">
+      <Link>Amqp\Encoding\AmqpSymbol.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\ArrayEncoding.cs">
+      <Link>Amqp\Encoding\ArrayEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\BinaryEncoding.cs">
+      <Link>Amqp\Encoding\BinaryEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\BooleanEncoding.cs">
+      <Link>Amqp\Encoding\BooleanEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\ByteEncoding.cs">
+      <Link>Amqp\Encoding\ByteEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\CharEncoding.cs">
+      <Link>Amqp\Encoding\CharEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\DecimalEncoding.cs">
+      <Link>Amqp\Encoding\DecimalEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\DescribedEncoding.cs">
+      <Link>Amqp\Encoding\DescribedEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\DescribedType.cs">
+      <Link>Amqp\Encoding\DescribedType.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\DoubleEncoding.cs">
+      <Link>Amqp\Encoding\DoubleEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\EncodingBase.cs">
+      <Link>Amqp\Encoding\EncodingBase.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\FixedWidth.cs">
+      <Link>Amqp\Encoding\FixedWidth.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\FloatEncoding.cs">
+      <Link>Amqp\Encoding\FloatEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\FormatCode.cs">
+      <Link>Amqp\Encoding\FormatCode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\IAmqpSerializable.cs">
+      <Link>Amqp\Encoding\IAmqpSerializable.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\IntEncoding.cs">
+      <Link>Amqp\Encoding\IntEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\ListEncoding.cs">
+      <Link>Amqp\Encoding\ListEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\LongEncoding.cs">
+      <Link>Amqp\Encoding\LongEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\MapEncoding.cs">
+      <Link>Amqp\Encoding\MapEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\MapKey.cs">
+      <Link>Amqp\Encoding\MapKey.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\ShortEncoding.cs">
+      <Link>Amqp\Encoding\ShortEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\StringEncoding.cs">
+      <Link>Amqp\Encoding\StringEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\SymbolEncoding.cs">
+      <Link>Amqp\Encoding\SymbolEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\TimeStampEncoding.cs">
+      <Link>Amqp\Encoding\TimeStampEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\UByteEncoding.cs">
+      <Link>Amqp\Encoding\UByteEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\UIntEncoding.cs">
+      <Link>Amqp\Encoding\UIntEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\ULongEncoding.cs">
+      <Link>Amqp\Encoding\ULongEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\UShortEncoding.cs">
+      <Link>Amqp\Encoding\UShortEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\UuidEncoding.cs">
+      <Link>Amqp\Encoding\UuidEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Accepted.cs">
+      <Link>Amqp\Framing\Accepted.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Address.cs">
+      <Link>Amqp\Framing\Address.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\AmqpDescribed.cs">
+      <Link>Amqp\Framing\AmqpDescribed.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\AmqpSequence.cs">
+      <Link>Amqp\Framing\AmqpSequence.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\AmqpValue.cs">
+      <Link>Amqp\Framing\AmqpValue.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\ApplicationProperties.cs">
+      <Link>Amqp\Framing\ApplicationProperties.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Attach.cs">
+      <Link>Amqp\Framing\Attach.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Begin.cs">
+      <Link>Amqp\Framing\Begin.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Close.cs">
+      <Link>Amqp\Framing\Close.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Data.cs">
+      <Link>Amqp\Framing\Data.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DeleteOnClose.cs">
+      <Link>Amqp\Framing\DeleteOnClose.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DeleteOnNoLinks.cs">
+      <Link>Amqp\Framing\DeleteOnNoLinks.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DeleteOnNoLinksOrMessages.cs">
+      <Link>Amqp\Framing\DeleteOnNoLinksOrMessages.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DeleteOnNoMessages.cs">
+      <Link>Amqp\Framing\DeleteOnNoMessages.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DeliveryAnnotations.cs">
+      <Link>Amqp\Framing\DeliveryAnnotations.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DeliveryState.cs">
+      <Link>Amqp\Framing\DeliveryState.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DescribedAnnotations.cs">
+      <Link>Amqp\Framing\DescribedAnnotations.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DescribedList.cs">
+      <Link>Amqp\Framing\DescribedList.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DescribedMap.cs">
+      <Link>Amqp\Framing\DescribedMap.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Detach.cs">
+      <Link>Amqp\Framing\Detach.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Disposition.cs">
+      <Link>Amqp\Framing\Disposition.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\DistributionMode.cs">
+      <Link>Amqp\Framing\DistributionMode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\End.cs">
+      <Link>Amqp\Framing\End.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Error.cs">
+      <Link>Amqp\Framing\Error.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Flow.cs">
+      <Link>Amqp\Framing\Flow.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Footer.cs">
+      <Link>Amqp\Framing\Footer.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Frame.cs">
+      <Link>Amqp\Framing\Frame.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\FrameType.cs">
+      <Link>Amqp\Framing\FrameType.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Header.cs">
+      <Link>Amqp\Framing\Header.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\LifetimePolicy.cs">
+      <Link>Amqp\Framing\LifetimePolicy.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\LinkPerformative.cs">
+      <Link>Amqp\Framing\LinkPerformative.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\MessageAnnotations.cs">
+      <Link>Amqp\Framing\MessageAnnotations.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\MessageId.cs">
+      <Link>Amqp\Framing\MessageId.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Modified.cs">
+      <Link>Amqp\Framing\Modified.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Multiple.cs">
+      <Link>Amqp\Framing\Multiple.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Open.cs">
+      <Link>Amqp\Framing\Open.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Outcome.cs">
+      <Link>Amqp\Framing\Outcome.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Performative.cs">
+      <Link>Amqp\Framing\Performative.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Properties.cs">
+      <Link>Amqp\Framing\Properties.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\ProtocolHeader.cs">
+      <Link>Amqp\Framing\ProtocolHeader.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Received.cs">
+      <Link>Amqp\Framing\Received.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\ReceiverSettleMode.cs">
+      <Link>Amqp\Framing\ReceiverSettleMode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Rejected.cs">
+      <Link>Amqp\Framing\Rejected.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Released.cs">
+      <Link>Amqp\Framing\Released.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\RestrictedMap.cs">
+      <Link>Amqp\Framing\RestrictedMap.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\SenderSettleMode.cs">
+      <Link>Amqp\Framing\SenderSettleMode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Source.cs">
+      <Link>Amqp\Framing\Source.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Target.cs">
+      <Link>Amqp\Framing\Target.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Terminus.cs">
+      <Link>Amqp\Framing\Terminus.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\TerminusDurability.cs">
+      <Link>Amqp\Framing\TerminusDurability.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\TerminusExpiryPolicy.cs">
+      <Link>Amqp\Framing\TerminusExpiryPolicy.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Framing\Transfer.cs">
+      <Link>Amqp\Framing\Transfer.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\ISaslPlainAuthenticator.cs">
+      <Link>Amqp\Sasl\ISaslPlainAuthenticator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslAnonymousHandler.cs">
+      <Link>Amqp\Sasl\SaslAnonymousHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslChallenge.cs">
+      <Link>Amqp\Sasl\SaslChallenge.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslCode.cs">
+      <Link>Amqp\Sasl\SaslCode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslExternalHandler.cs">
+      <Link>Amqp\Sasl\SaslExternalHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslHandler.cs">
+      <Link>Amqp\Sasl\SaslHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslInit.cs">
+      <Link>Amqp\Sasl\SaslInit.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslMechanisms.cs">
+      <Link>Amqp\Sasl\SaslMechanisms.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslNegotiator.cs">
+      <Link>Amqp\Sasl\SaslNegotiator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslOutcome.cs">
+      <Link>Amqp\Sasl\SaslOutcome.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslPlainHandler.cs">
+      <Link>Amqp\Sasl\SaslPlainHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslResponse.cs">
+      <Link>Amqp\Sasl\SaslResponse.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslTransport.cs">
+      <Link>Amqp\Sasl\SaslTransport.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslTransportProvider.cs">
+      <Link>Amqp\Sasl\SaslTransportProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\AmqpContractAttribute.cs">
+      <Link>Amqp\Serialization\AmqpContractAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\AmqpContractSerializer.cs">
+      <Link>Amqp\Serialization\AmqpContractSerializer.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\AmqpMemberAttribute.cs">
+      <Link>Amqp\Serialization\AmqpMemberAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\MemberAccessor.cs">
+      <Link>Amqp\Serialization\MemberAccessor.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\MethodAccessor.cs">
+      <Link>Amqp\Serialization\MethodAccessor.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\SerialiableMember.cs">
+      <Link>Amqp\Serialization\SerialiableMember.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\SerializableType.cs">
+      <Link>Amqp\Serialization\SerializableType.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\Controller.cs">
+      <Link>Amqp\Transaction\Controller.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\Coordinator.cs">
+      <Link>Amqp\Transaction\Coordinator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\Declare.cs">
+      <Link>Amqp\Transaction\Declare.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\Declared.cs">
+      <Link>Amqp\Transaction\Declared.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\Discharge.cs">
+      <Link>Amqp\Transaction\Discharge.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\TransactionalState.cs">
+      <Link>Amqp\Transaction\TransactionalState.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transaction\TxnCapabilities.cs">
+      <Link>Amqp\Transaction\TxnCapabilities.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportInitiator.cs">
+      <Link>Amqp\Transport\AmqpTransportInitiator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportListener.cs">
+      <Link>Amqp\Transport\AmqpTransportListener.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportProvider.cs">
+      <Link>Amqp\Transport\AmqpTransportProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\CustomSslStream.cs">
+      <Link>Amqp\Transport\CustomSslStream.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransport.cs">
+      <Link>Amqp\Transport\TcpTransport.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportInitiator.cs">
+      <Link>Amqp\Transport\TcpTransportInitiator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportListener.cs">
+      <Link>Amqp\Transport\TcpTransportListener.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportSetting.cs">
+      <Link>Amqp\Transport\TcpTransportSetting.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransport.cs">
+      <Link>Amqp\Transport\TlsTransport.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportInitiator.cs">
+      <Link>Amqp\Transport\TlsTransportInitiator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportListener.cs">
+      <Link>Amqp\Transport\TlsTransportListener.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportProvider.cs">
+      <Link>Amqp\Transport\TlsTransportProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportSetting.cs">
+      <Link>Amqp\Transport\TlsTransportSetting.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportAsyncEventArgs.cs">
+      <Link>Amqp\Transport\TransportAsyncEventArgs.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportBase.cs">
+      <Link>Amqp\Transport\TransportBase.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportInitiator.cs">
+      <Link>Amqp\Transport\TransportInitiator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportListener.cs">
+      <Link>Amqp\Transport\TransportListener.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportProvider.cs">
+      <Link>Amqp\Transport\TransportProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportSettings.cs">
+      <Link>Amqp\Transport\TransportSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportStream.cs">
+      <Link>Amqp\Transport\TransportStream.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\X509\X509CertificateIdentity.cs">
+      <Link>Amqp\X509\X509CertificateIdentity.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\X509\X509Principal.cs">
+      <Link>Amqp\X509\X509Principal.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Exceptions\AssertionFailedException.cs">
+      <Link>Exceptions\AssertionFailedException.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Exceptions\CallbackException.cs">
+      <Link>Exceptions\CallbackException.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Exceptions\FatalException.cs">
+      <Link>Exceptions\FatalException.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Extensions\ExceptionExtensions.cs">
+      <Link>Extensions\ExceptionExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Extensions\StreamExtensions.cs">
+      <Link>Extensions\StreamExtensions.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Tracing\EventTraceActivity.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Tracing\TrackingContext.cs" />
+    <Compile Include="..\Microsoft.Azure.Amqp\Tracing\EventTraceActivity.cs">
+      <Link>Tracing\EventTraceActivity.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Tracing\TrackingContext.cs">
+      <Link>Tracing\TrackingContext.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\35MSSharedLib1024.snk">
@@ -306,6 +690,7 @@
   <ItemGroup>
     <AndroidResource Include="Resources\Values\Strings.xml" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

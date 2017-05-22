@@ -176,7 +176,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (timeout < TimeSpan.Zero)
             {
-                throw Fx.Exception.ArgumentOutOfRange(argumentName, timeout, CommonResources.GetString(CommonResources.TimeoutMustBeNonNegative, argumentName, timeout));
+                throw new ArgumentOutOfRangeException(argumentName, timeout, CommonResources.GetString(CommonResources.TimeoutMustBeNonNegative, argumentName, timeout));
             }
         }
 
@@ -189,7 +189,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (timeout <= TimeSpan.Zero)
             {
-                throw Fx.Exception.ArgumentOutOfRange(argumentName, timeout, CommonResources.GetString(CommonResources.TimeoutMustBePositive, argumentName, timeout));
+                throw new ArgumentOutOfRangeException(argumentName, timeout, CommonResources.GetString(CommonResources.TimeoutMustBePositive, argumentName, timeout));
             }
         }
 

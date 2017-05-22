@@ -37,7 +37,7 @@ namespace Microsoft.Azure.Amqp
         public RequestResponseAmqpLink(string type, string name, AmqpSession session, string address, Fields properties)
             : base(type)
         {
-            this.Name = name ?? string.Format(CultureInfo.InvariantCulture, "{0}:{1}:{2}", session.Connection.Identifier, session.Identifier, this.Identifier);
+            this.Name = name ?? string.Format(CultureInfo.InvariantCulture, "duplex{0}:{1}:{2}", session.Connection.Identifier, session.Identifier, this.Identifier);
             this.replyTo = Guid.NewGuid().ToString("N");
 
             AmqpLinkSettings senderSettings = new AmqpLinkSettings();
@@ -143,16 +143,18 @@ namespace Microsoft.Azure.Amqp
 
         protected override bool OpenInternal()
         {
-            IAsyncResult senderResult = this.sender.BeginOpen(OperationTimeout, onSenderOpen, this);
-            IAsyncResult receiverResult = this.receiver.BeginOpen(OperationTimeout, onReceiverOpen, this);
+            var state = new OperationState() { Owner = this };
+            IAsyncResult senderResult = this.sender.BeginOpen(OperationTimeout, onSenderOpen, state);
+            IAsyncResult receiverResult = this.receiver.BeginOpen(OperationTimeout, onReceiverOpen, state);
             return senderResult.CompletedSynchronously && receiverResult.CompletedSynchronously;
         }
 
         protected override bool CloseInternal()
         {
             this.inflightRequests.Abort();
-            IAsyncResult senderResult = this.sender.BeginClose(OperationTimeout, onSenderClose, this);
-            IAsyncResult receiverResult = this.receiver.BeginClose(OperationTimeout, onReceiverClose, this);
+            var state = new OperationState() { Owner = this };
+            IAsyncResult senderResult = this.sender.BeginClose(OperationTimeout, onSenderClose, state);
+            IAsyncResult receiverResult = this.receiver.BeginClose(OperationTimeout, onReceiverClose, state);
             return senderResult.CompletedSynchronously && receiverResult.CompletedSynchronously;
         }
 
@@ -165,26 +167,22 @@ namespace Microsoft.Azure.Amqp
 
         static void OnSenderOpen(IAsyncResult result)
         {
-            RequestResponseAmqpLink thisPtr = (RequestResponseAmqpLink)result.AsyncState;
-            thisPtr.OnOperationComplete(thisPtr.sender, result, true);
+            OnOperationComplete(result, true, true);
         }
 
         static void OnReceiverOpen(IAsyncResult result)
         {
-            RequestResponseAmqpLink thisPtr = (RequestResponseAmqpLink)result.AsyncState;
-            thisPtr.OnOperationComplete(thisPtr.receiver, result, true);
+            OnOperationComplete(result, false, true);
         }
 
         static void OnSenderClose(IAsyncResult result)
         {
-            RequestResponseAmqpLink thisPtr = (RequestResponseAmqpLink)result.AsyncState;
-            thisPtr.OnOperationComplete(thisPtr.sender, result, false);
+            OnOperationComplete(result, true, false);
         }
 
         static void OnReceiverClose(IAsyncResult result)
         {
-            RequestResponseAmqpLink thisPtr = (RequestResponseAmqpLink)result.AsyncState;
-            thisPtr.OnOperationComplete(thisPtr.receiver, result, false);
+            OnOperationComplete(result, false, false);
         }
 
         void OnLinkClosed(object sender, EventArgs e)
@@ -192,8 +190,12 @@ namespace Microsoft.Azure.Amqp
             this.SafeClose();
         }
 
-        void OnOperationComplete(AmqpObject link, IAsyncResult result, bool isOpen)
+        static void OnOperationComplete(IAsyncResult result, bool isSender, bool isOpen)
         {
+            OperationState state = (OperationState)result.AsyncState;
+            RequestResponseAmqpLink thisPtr = state.Owner;
+            AmqpLink link = isSender ? (AmqpLink)thisPtr.sender : thisPtr.receiver;
+
             Exception completeException = null;
             try
             {
@@ -216,25 +218,15 @@ namespace Microsoft.Azure.Amqp
                 completeException = exception;
             }
 
-            bool shouldComplete = true;
-            if (completeException == null)
-            {
-                AmqpObjectState initialState = isOpen ? AmqpObjectState.OpenSent : AmqpObjectState.CloseSent;
-                lock (this.ThisLock)
-                {
-                    shouldComplete = this.sender.State != initialState && this.receiver.State != initialState;
-                }
-            }
-
-            if (shouldComplete)
+            if (state.Complete() || completeException != null)
             {
                 if (isOpen)
                 {
-                    this.CompleteOpen(false, completeException);
+                    thisPtr.CompleteOpen(false, completeException);
                 }
                 else
                 {
-                    this.CompleteClose(false, completeException);
+                    thisPtr.CompleteClose(false, completeException);
                 }
             }
         }
@@ -246,6 +238,18 @@ namespace Microsoft.Azure.Amqp
                 response.Properties.CorrelationId != null)
             {
                 this.inflightRequests.CompleteWork(response.Properties.CorrelationId, false, response);
+            }
+        }
+
+        sealed class OperationState
+        {
+            int pending = 2;
+
+            public RequestResponseAmqpLink Owner { get; set; }
+
+            public bool Complete()
+            {
+                return Interlocked.Decrement(ref this.pending) <= 0;
             }
         }
 
@@ -262,7 +266,7 @@ namespace Microsoft.Azure.Amqp
                 this.parent = parent;
                 this.request = request;
 
-                this.requestId = "r" + (ulong)Interlocked.Increment(ref this.parent.nextRequestId);
+                this.requestId = "request" + (ulong)Interlocked.Increment(ref this.parent.nextRequestId);
                 this.request.Properties.MessageId = this.requestId;
                 this.request.Properties.ReplyTo = this.parent.replyTo;
                 this.parent.inflightRequests.StartWork(this.requestId, this);

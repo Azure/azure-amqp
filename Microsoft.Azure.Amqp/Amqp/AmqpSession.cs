@@ -752,11 +752,21 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            protected void AddDelivery(Delivery delivery)
+            protected void OnSendDelivery(Delivery delivery)
             {
                 // Caller should hold the lock
                 delivery.DeliveryId = this.nextDeliveryId;
                 this.nextDeliveryId.Increment();
+                if (!delivery.Settled)
+                {
+                    Delivery.Add(ref this.firstUnsettled, ref this.lastUnsettled, delivery);
+                }
+            }
+
+            protected void OnReceiveDelivery(Delivery delivery)
+            {
+                // this is always the next expected delivery id
+                this.nextDeliveryId = delivery.DeliveryId + 1;
                 if (!delivery.Settled)
                 {
                     Delivery.Add(ref this.firstUnsettled, ref this.lastUnsettled, delivery);
@@ -971,7 +981,7 @@ namespace Microsoft.Azure.Amqp
 
                     if (delivery != null)
                     {
-                        this.AddDelivery(delivery);
+                        this.OnSendDelivery(delivery);
                         transfer.DeliveryId = delivery.DeliveryId.Value;
                     }
 
@@ -1087,7 +1097,7 @@ namespace Microsoft.Azure.Amqp
                         canAccept = true;
                         if (newDelivery)
                         {
-                            this.AddDelivery(delivery);
+                            this.OnReceiveDelivery(delivery);
                         }
 
                         this.nextIncomingId.Increment();

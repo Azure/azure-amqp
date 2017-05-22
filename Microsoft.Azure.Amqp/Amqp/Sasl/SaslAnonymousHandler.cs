@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Amqp.Sasl
         {
             if (string.IsNullOrEmpty(name))
             {
-                throw Fx.Exception.ArgumentNullOrEmpty("name");
+                throw new ArgumentNullException ("name");
             }
 
             // Allow users to create anonymous handler with other names

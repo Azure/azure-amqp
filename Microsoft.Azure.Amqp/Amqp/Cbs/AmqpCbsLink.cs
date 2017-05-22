@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (connection == null)
             {
-                throw Fx.Exception.ArgumentNull("connection");
+                throw new ArgumentNullException("connection");
             }
 
             this.connection = connection;
@@ -55,7 +55,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (tokenProvider == null || namespaceAddress == null || audience == null || resource == null || requiredClaims == null)
             {
-                throw Fx.Exception.ArgumentNull(
+                throw new ArgumentNullException(
                     tokenProvider == null ? "tokenProvider" : namespaceAddress == null ? "namespaceAddress" : audience == null ? "audience" : resource == null ? "resource" : "requiredClaims");
             }
 

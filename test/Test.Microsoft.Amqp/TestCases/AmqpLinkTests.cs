@@ -973,6 +973,35 @@
             }
         }
 
+        [Fact]
+        public async Task AmqpConnectionFactoryTest()
+        {
+            string queue = "AmqpConnectionFactoryTest-" + Guid.NewGuid().ToString("N").Substring(6);
+            broker.AddQueue(queue);
+
+            AmqpConnection connection = await AmqpConnection.Factory.OpenConnectionAsync(addressUri, TimeSpan.FromSeconds(20));
+
+            AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+            await session.OpenAsync(TimeSpan.FromSeconds(20));
+
+            SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnSend));
+            await sLink.OpenAsync(TimeSpan.FromSeconds(20));
+
+            AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "AmqpConnectionFactoryTest" });
+            Outcome outcome = await sLink.SendMessageAsync(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10));
+            Assert.Equal(Accepted.Code, outcome.DescriptorCode);
+
+            ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnDispose, 10));
+            await rLink.OpenAsync(TimeSpan.FromSeconds(20));
+
+            var receivedMessage = await rLink.ReceiveMessageAsync(TimeSpan.FromSeconds(20));
+            Assert.NotNull(receivedMessage);
+            outcome = await rLink.DisposeMessageAsync(receivedMessage.DeliveryTag, new Accepted(), false, TimeSpan.FromSeconds(20));
+            Assert.Equal(Accepted.Code, outcome.DescriptorCode);
+
+            await connection.CloseAsync(TimeSpan.FromSeconds(20));
+        }
+
         void SendReceive(
             string queue,
             int messageCount = 1,

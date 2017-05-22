@@ -77,7 +77,6 @@ namespace Microsoft.Azure.Amqp
             newSettings.IdleTimeOut = this.IdleTimeOut;
             newSettings.OutgoingLocales = this.OutgoingLocales;
             newSettings.IncomingLocales = this.IncomingLocales;
-            newSettings.Properties = this.Properties;
             newSettings.OfferedCapabilities = this.OfferedCapabilities;
             newSettings.DesiredCapabilities = this.DesiredCapabilities;
             newSettings.Properties = this.Properties;

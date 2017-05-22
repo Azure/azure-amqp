@@ -330,7 +330,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (buffer.Length != bufferPool.BufferSize)
                     {
-                        throw Fx.Exception.Argument("buffer", CommonResources.BufferIsNotRightSizeForBufferManager);
+                        throw new ArgumentException("buffer", CommonResources.BufferIsNotRightSizeForBufferManager);
                     }
 
                     if (bufferPool.Return(buffer))

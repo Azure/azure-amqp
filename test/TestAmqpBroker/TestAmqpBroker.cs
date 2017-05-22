@@ -80,7 +80,6 @@ namespace TestAmqpBroker
             {
                 Uri addressUri = new Uri(endpoints[i]);
 
-                TcpTransportSettings tcpSettings = new TcpTransportSettings() { Host = addressUri.Host, Port = addressUri.Port };
                 if (addressUri.Scheme.Equals(AmqpConstants.SchemeAmqps, StringComparison.OrdinalIgnoreCase))
                 {
                     if (certificate == null)
@@ -88,12 +87,25 @@ namespace TestAmqpBroker
                         throw new InvalidOperationException("/cert option was not set when amqps address is specified.");
                     }
 
+                    TcpTransportSettings tcpSettings = new TcpTransportSettings() { Host = addressUri.Host, Port = addressUri.Port };
                     TlsTransportSettings tlsSettings = new TlsTransportSettings(tcpSettings) { Certificate = certificate, IsInitiator = false };
                     listeners[i] = tlsSettings.CreateListener();
                 }
+                else if (addressUri.Scheme.Equals(AmqpConstants.SchemeAmqp, StringComparison.OrdinalIgnoreCase))
+                {
+                    TcpTransportSettings tcpSettings = new TcpTransportSettings() { Host = addressUri.Host, Port = addressUri.Port };
+                    listeners[i] = tcpSettings.CreateListener();
+                }
+#if NET45
+                else if (addressUri.Scheme.Equals("ws", StringComparison.OrdinalIgnoreCase))
+                {
+                    WebSocketTransportSettings wsSettings = new WebSocketTransportSettings() { Uri = addressUri };
+                    listeners[i] = wsSettings.CreateListener();
+                }
+#endif
                 else
                 {
-                    listeners[i] = tcpSettings.CreateListener();
+                    throw new NotSupportedException(addressUri.Scheme);
                 }
             }
 

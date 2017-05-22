@@ -835,6 +835,24 @@
             Assert.Equal(teacher.Classes[205], ((Teacher)p6).Classes[205]);
         }
 
+        [Fact]
+        public void AmqpSerializerMapEncodingTest()
+        {
+            NamedList<string> list = new NamedList<string>()
+            {
+                Name = "test-list",
+                List = new string[] { "v1", "v2" }
+            };
+
+            AmqpContractSerializer serializer = new AmqpContractSerializer();
+            ByteBuffer b = new ByteBuffer(1024, true);
+            serializer.WriteObjectInternal(b, list);
+
+            var result = serializer.ReadObjectInternal<NamedList<string>, NamedList<string>>(b);
+            Assert.Equal(list.Name, result.Name);
+            EnsureEqual((IList)list.List, (IList)result.List);
+        }
+
 #if !DOTNET_CORE
         [Fact]
         public void AmqpExceptionSerializeTest()

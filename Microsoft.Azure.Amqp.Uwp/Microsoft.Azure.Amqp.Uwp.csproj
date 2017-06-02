@@ -114,11 +114,10 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <PRIResource Include="..\Microsoft.Azure.Amqp\Amqp\AmqpResources.UWP.resw">
+    <PRIResource Include="Amqp\AmqpResources.UWP.resw">
       <SubType>Designer</SubType>
-      <Link>Amqp\AmqpResources.UWP.resw</Link>
     </PRIResource>
-    <PRIResource Include="..\Microsoft.Azure.Amqp\ResourcesGeneric.UWP.resw">
+    <PRIResource Include="ResourcesGeneric.UWP.resw">
       <SubType>Designer</SubType>
     </PRIResource>
     <None Include="..\35MSSharedLib1024.snk">
@@ -564,7 +563,7 @@
     <Compile Include="..\Microsoft.Azure.Amqp\InternalBufferManager.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\IteratorAsyncResult.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\PartialTrustHelpers.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\ResourcesGeneric.UWP.cs" />
+    <Compile Include="ResourcesGeneric.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Singleton.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\SynchronizedPool.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\TaskHelpers.cs" />
@@ -633,18 +632,12 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportProvider.cs">
       <Link>Amqp\Transport\AmqpTransportProvider.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransport.UWP.cs">
-      <Link>Amqp\Transport\TcpTransport.UWP.cs</Link>
-    </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportInitiator.UWP.cs">
-      <Link>Amqp\Transport\TcpTransportInitiator.UWP.cs</Link>
-    </Compile>
+    <Compile Include="Amqp\Transport\TcpTransport.UWP.cs" />
+    <Compile Include="Amqp\Transport\TcpTransportInitiator.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportSetting.cs">
       <Link>Amqp\Transport\TcpTransportSetting.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransport.UWP.cs">
-      <Link>Amqp\Transport\TlsTransport.UWP.cs</Link>
-    </Compile>
+    <Compile Include="Amqp\Transport\TlsTransport.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportInitiator.cs">
       <Link>Amqp\Transport\TlsTransportInitiator.cs</Link>
     </Compile>
@@ -676,7 +669,7 @@
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\PlatformSupport.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Resources.UWP.cs" />
+    <Compile Include="Resources.UWP.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Microsoft.Azure.Amqp.Uwp.rd.xml" />

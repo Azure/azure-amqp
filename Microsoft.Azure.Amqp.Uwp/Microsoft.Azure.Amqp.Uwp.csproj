@@ -562,7 +562,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\FxCop.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\InternalBufferManager.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\IteratorAsyncResult.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\PartialTrustHelpers.cs" />
     <Compile Include="ResourcesGeneric.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Singleton.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\SynchronizedPool.cs" />

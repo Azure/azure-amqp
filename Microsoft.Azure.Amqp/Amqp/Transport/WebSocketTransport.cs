@@ -3,7 +3,6 @@
 
 namespace Microsoft.Azure.Amqp.Transport
 {
-#if NET45
     using System;
     using System.Net;
     using System.Net.WebSockets;
@@ -194,5 +193,4 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
     }
-#endif
 }

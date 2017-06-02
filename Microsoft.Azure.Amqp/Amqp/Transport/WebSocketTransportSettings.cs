@@ -3,7 +3,6 @@
 
 namespace Microsoft.Azure.Amqp.Transport
 {
-#if NET45
     using System;
 
     public sealed class WebSocketTransportSettings : TransportSettings
@@ -34,8 +33,11 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override TransportListener CreateListener()
         {
+#if NET45
             return new WebSocketTransportListener(this.Uri.AbsoluteUri);
+#else
+            throw new NotSupportedException();
+#endif
         }
     }
-#endif
 }

@@ -3,7 +3,6 @@
 
 namespace Microsoft.Azure.Amqp.Transport
 {
-#if NET45
     using System;
     using System.Net.WebSockets;
     using System.Threading;
@@ -24,7 +23,9 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             ClientWebSocket cws = new ClientWebSocket();
             cws.Options.AddSubProtocol(this.webSocketTransportSettings.SubProtocol);
+#if NET45
             cws.Options.SetBuffer(this.webSocketTransportSettings.ReceiveBufferSize, this.webSocketTransportSettings.SendBufferSize);
+#endif
 
             Task task = cws.ConnectAsync(uri, CancellationToken.None).WithTimeout(timeout, () => "timeout");
             if (task.IsCompleted)
@@ -53,5 +54,4 @@ namespace Microsoft.Azure.Amqp.Transport
             return true;
         }
     }
-#endif
 }

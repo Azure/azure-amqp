@@ -16,7 +16,10 @@ namespace Microsoft.Azure.Amqp.Serialization
         Primitive,
         Described,
         Composite,
-        Serializable
+        Serializable,
+        List,
+        Map,
+        Converted,
     }
 
     public abstract class SerializableType
@@ -36,6 +39,17 @@ namespace Microsoft.Azure.Amqp.Serialization
         {
             get;
             protected set;
+        }
+
+        public Type UnderlyingType
+        {
+            get { return this.type; }
+        }
+
+        internal bool Final
+        {
+            get;
+            set;
         }
 
         public static SerializableType CreatePrimitiveType(Type type)
@@ -125,29 +139,29 @@ namespace Microsoft.Azure.Amqp.Serialization
             readonly EncodingBase encoder;
             readonly Type source;
             readonly Type target;
+            readonly Func<object, Type, object> getTarget;
+            readonly Func<object, Type, object> getSource;
 
             public Converted(AmqpType amqpType, Type source, Type target,
-                Func<object, object> getTarget, Func<object, object> getSource)
+                Func<object, Type, object> getTarget, Func<object, Type, object> getSource)
                 : base(null, target)
             {
                 this.AmqpType = amqpType;
                 this.source = source;
                 this.target = target;
-                this.GetTarget = getTarget;
-                this.GetSource = getSource;
+                this.getTarget = getTarget;
+                this.getSource = getSource;
                 this.encoder = AmqpEncoding.GetEncoding(target);
             }
 
-            public Func<object, object> GetTarget
+            public object GetTarget(object value)
             {
-                get;
-                private set;
+                return this.getTarget(value, this.target);
             }
 
-            public Func<object, object> GetSource
+            public object GetSource(object value)
             {
-                get;
-                private set;
+                return this.getSource(value, this.source);
             }
 
             public override void WriteObject(ByteBuffer buffer, object value)
@@ -158,7 +172,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 }
                 else
                 {
-                    this.encoder.EncodeObject(this.GetTarget(value), false, buffer);
+                    this.encoder.EncodeObject(this.getTarget(value, this.target), false, buffer);
                 }
             }
 
@@ -272,7 +286,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             public List(AmqpContractSerializer serializer, Type type, Type itemType, MethodAccessor addAccessor)
                 : base(serializer, type)
             {
-                this.AmqpType = AmqpType.Primitive;
+                this.AmqpType = AmqpType.List;
                 this.itemType = serializer.GetType(itemType);
                 this.addMethodAccessor = addAccessor;
             }
@@ -280,6 +294,11 @@ namespace Microsoft.Azure.Amqp.Serialization
             public SerializableType ItemType
             {
                 get { return this.itemType; }
+            }
+
+            public MethodAccessor Add
+            {
+                get { return this.addMethodAccessor; }
             }
 
             protected override bool WriteFormatCode(ByteBuffer buffer)
@@ -353,13 +372,19 @@ namespace Microsoft.Azure.Amqp.Serialization
                 MemberAccessor valueAccessor, MethodAccessor addAccessor)
                 : base(serializer, type)
             {
-                this.AmqpType = AmqpType.Primitive;
+                this.AmqpType = AmqpType.Map;
                 this.keyType = this.serializer.GetType(keyAccessor.Type);
                 this.valueType = this.serializer.GetType(valueAccessor.Type);
                 this.keyAccessor = keyAccessor;
                 this.valueAccessor = valueAccessor;
                 this.addMethodAccessor = addAccessor;
             }
+
+            public MemberAccessor Key { get { return this.keyAccessor; } }
+
+            public MemberAccessor Value { get { return this.valueAccessor; } }
+
+            public MethodAccessor Add { get { return this.addMethodAccessor; } }
 
             protected override bool WriteFormatCode(ByteBuffer buffer)
             {
@@ -422,7 +447,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             readonly ulong? descriptorCode;
             readonly SerialiableMember[] members;
             readonly MethodAccessor onDeserialized;
-            readonly KeyValuePair<Type, SerializableType>[] knownTypes;
+            IList<Type> knownTypes;
 
             protected Composite(
                 AmqpContractSerializer serializer,
@@ -431,7 +456,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 string descriptorName,
                 ulong? descriptorCode,
                 SerialiableMember[] members,
-                Dictionary<Type, SerializableType> knownTypes,
+                IList<Type> knownTypes,
                 MethodAccessor onDesrialized)
                 : base(serializer, type)
             {
@@ -441,7 +466,12 @@ namespace Microsoft.Azure.Amqp.Serialization
                 this.descriptorCode = descriptorCode;
                 this.members = members;
                 this.onDeserialized = onDesrialized;
-                this.knownTypes = GetKnownTypes(knownTypes);
+                this.knownTypes = knownTypes;
+            }
+
+            public AmqpSymbol Name
+            {
+                get { return this.descriptorName; }
             }
 
             public SerialiableMember[] Members
@@ -453,6 +483,11 @@ namespace Microsoft.Azure.Amqp.Serialization
             {
                 get;
                 protected set;
+            }
+
+            public IList<Type> KnownTypes
+            {
+                get { return this.knownTypes; }
             }
 
             protected abstract byte Code
@@ -512,19 +547,12 @@ namespace Microsoft.Azure.Amqp.Serialization
                 }
                 else if (this.knownTypes != null)
                 {
-                    for (int i = 0; i < this.knownTypes.Length; ++i)
+                    for (int i = 0; i < this.knownTypes.Count; ++i)
                     {
-                        var kvp = this.knownTypes[i];
-                        if (kvp.Value == null)
+                        Composite knownType = (Composite)this.serializer.GetType(this.knownTypes[i]);
+                        if (this.AreEqual(knownType.descriptorCode, knownType.descriptorName, code, symbol))
                         {
-                            SerializableType knownType = this.serializer.GetType(kvp.Key);
-                            this.knownTypes[i] = kvp = new KeyValuePair<Type, SerializableType>(kvp.Key, knownType);
-                        }
-
-                        Composite describedKnownType = (Composite)kvp.Value;
-                        if (this.AreEqual(describedKnownType.descriptorCode, describedKnownType.descriptorName, code, symbol))
-                        {
-                            effectiveType = describedKnownType;
+                            effectiveType = knownType;
                             break;
                         }
                     }
@@ -570,23 +598,6 @@ namespace Microsoft.Azure.Amqp.Serialization
                 }
             }
 
-            static KeyValuePair<Type, SerializableType>[] GetKnownTypes(Dictionary<Type, SerializableType> types)
-            {
-                if (types == null || types.Count == 0)
-                {
-                    return null;
-                }
-
-                var kt = new KeyValuePair<Type, SerializableType>[types.Count];
-                int i = 0;
-                foreach (var kvp in types)
-                {
-                    kt[i++] = kvp;
-                }
-
-                return kt;
-            }
-
             bool AreEqual(ulong? code1, AmqpSymbol symbol1, ulong? code2, AmqpSymbol symbol2)
             {
                 if (code1 != null && code2 != null)
@@ -612,7 +623,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 string descriptorName,
                 ulong? descriptorCode,
                 SerialiableMember[] members,
-                Dictionary<Type, SerializableType> knownTypes,
+                IList<Type> knownTypes,
                 MethodAccessor onDesrialized)
                 : base(serializer, type, baseType, descriptorName, descriptorCode, members, knownTypes, onDesrialized)
             {
@@ -636,7 +647,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                     else
                     {
                         SerializableType effectiveType = member.Type;
-                        if (memberValue.GetType() != effectiveType.type)
+                        if (!effectiveType.Final && memberValue.GetType() != effectiveType.type)
                         {
                             effectiveType = this.serializer.GetType(memberValue.GetType());
                         }
@@ -669,7 +680,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 string descriptorName,
                 ulong? descriptorCode,
                 SerialiableMember[] members,
-                Dictionary<Type, SerializableType> knownTypes,
+                IList<Type> knownTypes,
                 MethodAccessor onDesrialized)
                 : base(serializer, type, baseType, descriptorName, descriptorCode, members, knownTypes, onDesrialized)
             {
@@ -690,7 +701,7 @@ namespace Microsoft.Azure.Amqp.Serialization
 
                     object memberValue = member.Accessor.Get(container);
                     SerializableType effectiveType = member.Type;
-                    if (memberValue.GetType() != effectiveType.type)
+                    if (!effectiveType.Final && memberValue.GetType() != effectiveType.type)
                     {
                         effectiveType = this.serializer.GetType(memberValue.GetType());
                     }

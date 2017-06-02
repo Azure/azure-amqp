@@ -151,7 +151,12 @@ namespace Microsoft.Azure.Amqp
 
         public static Address Address(this Attach attach)
         {
-            if (attach.IsReceiver())
+            return Address(attach, attach.IsReceiver());
+        }
+
+        public static Address Address(this Attach attach, bool role)
+        {
+            if (role)
             {
                 Fx.Assert(attach.Source != null && attach.Source is Source, "Source is not valid.");
                 return ((Source)attach.Source).Address;

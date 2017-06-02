@@ -52,21 +52,26 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                return this.messageQueue != null ? this.messageQueue.Count : 0;
+                SizeBasedFlowQueue queue = this.messageQueue;
+                return queue != null ? queue.Count : 0;
             }
         }
 
         internal long AvgMessageSize
         {
-            get { return this.messageQueue != null ? this.messageQueue.AverageMessageSizeInBytes : 0; }
+            get
+            {
+                SizeBasedFlowQueue queue = this.messageQueue;
+                return queue != null ? queue.AverageMessageSizeInBytes : 0;
+            }
         }
 
         internal long MessageQueueSize
         {
             get
             {
-                if (this.messageQueue != null &&
-                    this.messageQueue.IsPrefetchingBySize)
+                SizeBasedFlowQueue queue = this.messageQueue;
+                if (queue != null && queue.IsPrefetchingBySize)
                 {
                     long totalSize = 0;
                     if (this.TotalCacheSizeInBytes.HasValue)
@@ -74,7 +79,7 @@ namespace Microsoft.Azure.Amqp
                         totalSize = this.TotalCacheSizeInBytes.Value;
                     }
 
-                    return totalSize - this.messageQueue.CacheSizeCredit;
+                    return totalSize - queue.CacheSizeCredit;
                 }
 
                 return 0;
@@ -86,7 +91,11 @@ namespace Microsoft.Azure.Amqp
             if (cacheSizeInBytes != this.Settings.TotalCacheSizeInBytes)
             {
                 this.Settings.TotalCacheSizeInBytes = cacheSizeInBytes;
-                this.messageQueue.SetLinkCreditUsingTotalCacheSize();
+                SizeBasedFlowQueue queue = this.messageQueue;
+                if (queue != null)
+                {
+                    queue.SetLinkCreditUsingTotalCacheSize();
+                }
             }
         }
 
@@ -863,6 +872,11 @@ namespace Microsoft.Azure.Amqp
                         this.boundedTotalLinkCredit = 1;
                     }
 
+                    if (this.boundedTotalLinkCredit > maxCreditToIssuePerFlow)
+                    {
+                        this.boundedTotalLinkCredit = maxCreditToIssuePerFlow;
+                    }
+
                     this.receivingLink.LinkCredit = this.boundedTotalLinkCredit;
                     if (setTotalLinkCredit)
                     {
@@ -938,7 +952,7 @@ namespace Microsoft.Azure.Amqp
             /// <summary>
             /// This method updates the credit that we will send to service to fetch more
             /// data based on the current average message size. Only call this method if
-            /// we already check and cache credit is within range (0%-90%).
+            /// we already check and cache credit is within range (&gt; 0%, &lt; 90%).
             /// </summary>
             internal bool UpdateCreditToIssue(AmqpMessage externalMessage = null)
             {

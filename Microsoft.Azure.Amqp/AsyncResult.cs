@@ -208,7 +208,7 @@ namespace Microsoft.Azure.Amqp
                         throw;
                     }
 
-                    throw Fx.Exception.AsError(new CallbackException(CommonResources.AsyncCallbackThrewException, e));
+                    throw new CallbackException(CommonResources.AsyncCallbackThrewException, e);
                 }
 #pragma warning restore 1634
             }
@@ -230,7 +230,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (!this.TryComplete(didCompleteSynchronously, e))
             {
-                throw Fx.Exception.AsError(new InvalidOperationException(CommonResources.GetString(CommonResources.AsyncResultCompletedTwice, this.GetType())));
+                throw new InvalidOperationException(CommonResources.GetString(CommonResources.AsyncResultCompletedTwice, this.GetType()));
             }
         }
 
@@ -238,7 +238,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (result == null)
             {
-                throw Fx.Exception.AsError(new InvalidOperationException(CommonResources.InvalidNullAsyncResult));
+                throw new InvalidOperationException(CommonResources.InvalidNullAsyncResult);
             }
             if (result.CompletedSynchronously)
             {
@@ -303,7 +303,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (result == null)
             {
-                throw Fx.Exception.AsError(new InvalidOperationException(CommonResources.InvalidNullAsyncResult));
+                throw new InvalidOperationException(CommonResources.InvalidNullAsyncResult);
             }
 
             callback = null;
@@ -338,7 +338,7 @@ namespace Microsoft.Azure.Amqp
 
         protected static void ThrowInvalidAsyncResult(IAsyncResult result)
         {
-            throw Fx.Exception.AsError(new InvalidOperationException(CommonResources.GetString(CommonResources.InvalidAsyncResultImplementation, result.GetType())));
+            throw new InvalidOperationException(CommonResources.GetString(CommonResources.InvalidAsyncResultImplementation, result.GetType()));
         }
 
         protected static void ThrowInvalidAsyncResult(string debugText)
@@ -350,7 +350,7 @@ namespace Microsoft.Azure.Amqp
                 message += " " + debugText;
 #endif
             }
-            throw Fx.Exception.AsError(new InvalidOperationException(message));
+            throw new InvalidOperationException(message);
         }
 
         [Fx.Tag.Blocking(Conditional = "!asyncResult.isCompleted")]
@@ -359,19 +359,19 @@ namespace Microsoft.Azure.Amqp
         {
             if (result == null)
             {
-                throw Fx.Exception.ArgumentNull("result");
+                throw new ArgumentNullException("result");
             }
 
             TAsyncResult asyncResult = result as TAsyncResult;
 
             if (asyncResult == null)
             {
-                throw Fx.Exception.Argument("result", CommonResources.InvalidAsyncResult);
+                throw new ArgumentException("result", CommonResources.InvalidAsyncResult);
             }
 
             if (asyncResult.endCalled)
             {
-                throw Fx.Exception.AsError(new InvalidOperationException(CommonResources.AsyncResultAlreadyEnded));
+                throw new InvalidOperationException(CommonResources.AsyncResultAlreadyEnded);
             }
 
             asyncResult.endCalled = true;
@@ -395,9 +395,6 @@ namespace Microsoft.Azure.Amqp
 
             if (asyncResult.exception != null)
             {
-                // Trace before PrepareForRethrow to avoid weird callstack strings
-                Fx.Exception.TraceException(asyncResult.exception, asyncResult.EventLevel, asyncResult.Activity);
-
                 ExceptionDispatcher.Throw(asyncResult.exception);
             }
 

@@ -5,10 +5,8 @@ namespace Microsoft.Azure.Amqp.Transport
 {
     using System.IO;
     using System.Net.Security;
-    using System.Threading;
-    using System.Threading.Tasks;
 
-    sealed class CustomSslStream : SslStream
+    public sealed class CustomSslStream : SslStream
     {
         public CustomSslStream(Stream innerStream, bool leaveInnerStreamOpen, bool isClient)
             : base(innerStream, leaveInnerStreamOpen)

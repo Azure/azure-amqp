@@ -8,11 +8,15 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Net.Security;
 #endif
 #if !WINDOWS_UWP && !PCL
+    using System.Security.Authentication;
     using System.Security.Cryptography.X509Certificates;
 #endif
-    public sealed class TlsTransportSettings : TransportSettings
+    public class TlsTransportSettings : TransportSettings
     {
-        readonly TransportSettings innerSettings;
+#if !WINDOWS_UWP && !PCL
+        const SslProtocols DefaultSslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
+#endif
+        protected readonly TransportSettings innerSettings;
 
         public TlsTransportSettings()
             : this(null, true)
@@ -31,7 +35,8 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             this.innerSettings = innerSettings;
             this.IsInitiator = isInitiator;
-#if !WINDOWS_UWP
+#if !WINDOWS_UWP && !PCL
+            this.Protocols = DefaultSslProtocols;
             this.CheckCertificateRevocation = true;
 #endif
         }
@@ -49,6 +54,12 @@ namespace Microsoft.Azure.Amqp.Transport
         }
 
 #if !WINDOWS_UWP && !PCL
+        public SslProtocols Protocols
+        {
+            get;
+            set;
+        }
+
         public X509Certificate2 Certificate
         {
             get;

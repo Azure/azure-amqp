@@ -119,7 +119,7 @@ namespace Microsoft.Azure.Amqp
         public static void Fork(this Task thisTask, string tracingInfo)
         {
             Fx.Assert(thisTask != null, "task is required!");
-            thisTask.ContinueWith(t => Fx.Exception.TraceHandled(t.Exception, tracingInfo), TaskContinuationOptions.OnlyOnFaulted);
+            thisTask.ContinueWith(t => AmqpTrace.Provider.AmqpHandleException(t.Exception, tracingInfo), TaskContinuationOptions.OnlyOnFaulted);
         }
 
         public static IAsyncResult ToAsyncResult(this Task task, AsyncCallback callback, object state)
@@ -209,7 +209,7 @@ namespace Microsoft.Azure.Amqp
             Task task = asyncResult as Task;
             if (task == null)
             {
-                throw Fx.Exception.AsError(new ArgumentException(CommonResources.InvalidAsyncResult));
+                throw new ArgumentException(CommonResources.InvalidAsyncResult);
             }
 
             task.GetAwaiter().GetResult();
@@ -220,7 +220,7 @@ namespace Microsoft.Azure.Amqp
             Task<TResult> task = asyncResult as Task<TResult>;
             if (task == null)
             {
-                throw Fx.Exception.AsError(new ArgumentException(CommonResources.InvalidAsyncResult));
+                throw new ArgumentException(CommonResources.InvalidAsyncResult);
             }
 
             return task.GetAwaiter().GetResult();

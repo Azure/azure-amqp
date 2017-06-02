@@ -8,11 +8,11 @@ namespace Microsoft.Azure.Amqp.Transport
     /// <summary>
     /// This initiator establishes an SSL connection (no AMQP security upgrade)
     /// </summary>
-    sealed class TlsTransportInitiator : TransportInitiator
+    public class TlsTransportInitiator : TransportInitiator
     {
         static readonly AsyncCallback onTransportOpened = OnTransportOpened;
 
-        TlsTransportSettings transportSettings;
+        readonly TlsTransportSettings transportSettings;
         TransportAsyncCallbackArgs callbackArgs;
         TimeoutHelper timeoutHelper;
 
@@ -45,6 +45,11 @@ namespace Microsoft.Azure.Amqp.Transport
                 this.HandleInnerTransportConnected(innerArgs);
                 return !this.callbackArgs.CompletedSynchronously;
             }
+        }
+
+        protected virtual TlsTransport OnCreateTransport(TransportBase innerTransport, TlsTransportSettings tlsTransportSettings)
+        {
+            return new TlsTransport(innerTransport, tlsTransportSettings);
         }
 
         static void OnInnerTransportConnected(TransportAsyncCallbackArgs innerArgs)
@@ -90,7 +95,7 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 Fx.Assert(innerArgs.Transport != null, "must have a valid inner transport");
                 // upgrade transport
-                this.callbackArgs.Transport = new TlsTransport(innerArgs.Transport, this.transportSettings);
+                this.callbackArgs.Transport = this.OnCreateTransport(innerArgs.Transport, this.transportSettings);
                 try
                 {
                     IAsyncResult result = this.callbackArgs.Transport.BeginOpen(this.timeoutHelper.RemainingTime(), onTransportOpened, this);

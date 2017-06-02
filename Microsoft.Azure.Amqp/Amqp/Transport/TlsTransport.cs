@@ -5,16 +5,16 @@ namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
     using System.Net;
+    using System.Net.Security;
     using System.Security.Authentication;
     using System.Security.Cryptography.X509Certificates;
     using Microsoft.Azure.Amqp.X509;
 
-    sealed class TlsTransport : TransportBase, IDisposable
+    public class TlsTransport : TransportBase, IDisposable
     {
         static readonly AsyncCallback onOpenComplete = OnOpenComplete;
         static readonly AsyncCallback onWriteComplete = OnWriteComplete;
         static readonly AsyncCallback onReadComplete = OnReadComplete;
-        const SslProtocols DefaultSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls11 | SslProtocols.Tls;
         readonly TransportBase innerTransport;
         readonly CustomSslStream sslStream;
         TlsTransportSettings tlsSettings;
@@ -30,23 +30,14 @@ namespace Microsoft.Azure.Amqp.Transport
             this.tlsSettings = tlsSettings;
             this.sslStream = tlsSettings.CertificateValidationCallback == null ?
                 new CustomSslStream(new TransportStream(this.innerTransport), false, tlsSettings.IsInitiator) :
-                new CustomSslStream(new TransportStream(this.innerTransport), false, tlsSettings.CertificateValidationCallback, tlsSettings.IsInitiator);
+                new CustomSslStream(new TransportStream(this.innerTransport), false, this.ValidateRemoteCertificate, tlsSettings.IsInitiator);
         }
 
-        public override EndPoint LocalEndPoint
-        {
-            get { return this.innerTransport.LocalEndPoint; }
-        }
+        public override EndPoint LocalEndPoint => this.innerTransport.LocalEndPoint;
 
-        public override EndPoint RemoteEndPoint
-        {
-            get { return this.innerTransport.RemoteEndPoint; }
-        }
+        public override EndPoint RemoteEndPoint => this.innerTransport.RemoteEndPoint;
 
-        public override bool IsSecure
-        {
-            get { return true; }
-        }
+        public override bool IsSecure => true;
 
         public override void SetMonitor(ITransportMonitor usageMeter)
         {
@@ -115,23 +106,32 @@ namespace Microsoft.Azure.Amqp.Transport
             return !completedSynchronously;
         }
 
+        protected TlsTransportSettings TlsSettings
+        {
+            get { return this.tlsSettings; }
+        }
+
         protected override bool OpenInternal()
         {
             IAsyncResult result;
             if (this.tlsSettings.IsInitiator)
             {
-                result = this.tlsSettings.Certificate != null
-                    ? this.sslStream.BeginAuthenticateAsClient(
-                        this.tlsSettings.TargetHost, GetX509CertificateCollection(this.tlsSettings.Certificate),
-                        DefaultSslProtocols, this.tlsSettings.CheckCertificateRevocation, onOpenComplete, this)
-                    : this.sslStream.BeginAuthenticateAsClient(this.tlsSettings.TargetHost, onOpenComplete, this);
+                bool checkRevocation = false;
+                X509CertificateCollection certCollection = new X509CertificateCollection();
+                if (this.tlsSettings.Certificate != null)
+                {
+                    certCollection.Add(this.tlsSettings.Certificate);
+                    checkRevocation = true;
+                }
+
+                result = this.sslStream.BeginAuthenticateAsClient(this.tlsSettings.TargetHost,
+                    certCollection, this.tlsSettings.Protocols, checkRevocation, onOpenComplete, this);
             }
             else
             {
-                result = this.tlsSettings.CertificateValidationCallback != null
-                    ? this.sslStream.BeginAuthenticateAsServer(
-                        this.tlsSettings.Certificate, true, DefaultSslProtocols, this.tlsSettings.CheckCertificateRevocation, onOpenComplete, this)
-                    : this.sslStream.BeginAuthenticateAsServer(this.tlsSettings.Certificate, onOpenComplete, this);
+                bool clientCert = this.tlsSettings.CertificateValidationCallback != null;
+                result = this.sslStream.BeginAuthenticateAsServer(this.tlsSettings.Certificate,
+                    clientCert, this.tlsSettings.Protocols, clientCert, onOpenComplete, this);
             }
 
             bool completedSynchronously = result.CompletedSynchronously;
@@ -152,6 +152,16 @@ namespace Microsoft.Azure.Amqp.Transport
         protected override void AbortInternal()
         {
             this.innerTransport.Abort();
+        }
+
+        protected virtual X509Principal CreateX509Principal(X509Certificate2 certificate)
+        {
+            return new X509Principal(new X509CertificateIdentity(certificate, this.sslStream.IsRemoteCertificateValid));
+        }
+
+        protected virtual bool ValidateRemoteCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            return this.tlsSettings.CertificateValidationCallback(sender, certificate, chain, sslPolicyErrors);
         }
 
         static void OnOpenComplete(IAsyncResult result)
@@ -181,14 +191,6 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
-        static X509CertificateCollection GetX509CertificateCollection(X509Certificate2 certificate)
-        {
-            X509CertificateCollection certCollection = new X509CertificateCollection();
-            certCollection.Add(certificate);
-
-            return certCollection;
-        }
-
         void HandleOpenComplete(IAsyncResult result, bool syncComplete)
         {
             Exception exception = null;
@@ -207,8 +209,8 @@ namespace Microsoft.Azure.Amqp.Transport
                     {
                         // Cannot cast from X509Certificate to X509Certificate2
                         // using workaround mentioned here: https://github.com/dotnet/corefx/issues/4510
-                        var cert = new X509Certificate2(this.sslStream.RemoteCertificate.Export(X509ContentType.Cert));
-                        this.Principal = new X509Principal(new X509CertificateIdentity(cert, this.sslStream.IsRemoteCertificateValid));
+                        var certificate = new X509Certificate2(sslStream.RemoteCertificate.Export(X509ContentType.Cert));
+                        this.Principal = this.CreateX509Principal(certificate);
                     }
                 }
             }
@@ -280,10 +282,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// <inheritdoc/>
         public void Dispose()
         {
-            if (this.sslStream != null)
-            {
-                this.sslStream.Dispose();
-            }
+            this.sslStream?.Dispose();
         }
 
         struct OperationState

@@ -5,18 +5,14 @@ namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
     using System.Net;
-    using System.Net.WebSockets;
-    using System.Threading;
+    using System.Runtime.InteropServices.WindowsRuntime;
     using System.Threading.Tasks;
+    using Windows.Networking.Sockets;
+    using Windows.Storage.Streams;
 
     public class WebSocketTransport : TransportBase
     {
-        internal const string WebSocketSubProtocol = "amqp";
-        internal const string WebSockets = "ws";
-        internal const string SecureWebSockets = "wss";
-        internal const int WebSocketsPort = 80;
-        internal const int SecureWebSocketsPort = 443;
-        readonly WebSocket webSocket;
+        readonly StreamWebSocket webSocket;
         readonly Uri uri;
         ITransportMonitor usageMeter;
 
@@ -36,8 +32,8 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
-        internal WebSocketTransport(WebSocket webSocket, Uri uri)
-            : base(WebSockets)
+        internal WebSocketTransport(StreamWebSocket webSocket, Uri uri)
+            : base(WebSocketTransportSettings.WebSockets)
         {
             this.webSocket = webSocket;
             this.uri = uri;
@@ -45,12 +41,12 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public sealed override bool WriteAsync(TransportAsyncCallbackArgs args)
         {
-            ArraySegment<byte> buffer;
+            ArraySegment<byte> segment;
             ByteBuffer mergedBuffer = null;
             DateTime startTime = DateTime.UtcNow;
             if (args.Buffer != null)
             {
-                buffer = new ArraySegment<byte>(args.Buffer, args.Offset, args.Count);
+                segment = new ArraySegment<byte>(args.Buffer, args.Offset, args.Count);
             }
             else
             {
@@ -58,7 +54,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 if (args.ByteBufferList.Count == 1)
                 {
                     ByteBuffer byteBuffer = args.ByteBufferList[0];
-                    buffer = new ArraySegment<byte>(byteBuffer.Buffer, byteBuffer.Offset, byteBuffer.Length);
+                    segment = new ArraySegment<byte>(byteBuffer.Buffer, byteBuffer.Offset, byteBuffer.Length);
                 }
                 else
                 {
@@ -67,18 +63,19 @@ namespace Microsoft.Azure.Amqp.Transport
                     for (int i = 0; i < args.ByteBufferList.Count; ++i)
                     {
                         ByteBuffer byteBuffer = args.ByteBufferList[i];
-                        Buffer.BlockCopy(byteBuffer.Buffer, byteBuffer.Offset, mergedBuffer.Buffer, mergedBuffer.Length, byteBuffer.Length);
+                        System.Buffer.BlockCopy(byteBuffer.Buffer, byteBuffer.Offset,
+                            mergedBuffer.Buffer, mergedBuffer.Length, byteBuffer.Length);
                         mergedBuffer.Append(byteBuffer.Length);
                     }
 
-                    buffer = new ArraySegment<byte>(mergedBuffer.Buffer, 0, mergedBuffer.Length);
+                    segment = new ArraySegment<byte>(mergedBuffer.Buffer, 0, mergedBuffer.Length);
                 }
             }
 
-            Task task = this.webSocket.SendAsync(buffer, WebSocketMessageType.Binary, true, CancellationToken.None);
+            Task task = this.webSocket.OutputStream.WriteAsync(segment.Array.AsBuffer(segment.Offset, segment.Count)).AsTask();
             if (task.IsCompleted)
             {
-                this.OnWriteComplete(args, buffer, mergedBuffer, startTime);
+                this.OnWriteComplete(args, segment, mergedBuffer, startTime);
                 return false;
             }
 
@@ -94,7 +91,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 else
                 {
-                    this.OnWriteComplete(args, buffer, mergedBuffer, startTime);
+                    this.OnWriteComplete(args, segment, mergedBuffer, startTime);
                 }
 
                 args.CompletedCallback(args);
@@ -105,11 +102,11 @@ namespace Microsoft.Azure.Amqp.Transport
         public sealed override bool ReadAsync(TransportAsyncCallbackArgs args)
         {
             DateTime startTime = DateTime.UtcNow;
-            ArraySegment<byte> buffer = new ArraySegment<byte>(args.Buffer, args.Offset, args.Count);
-            Task<WebSocketReceiveResult> task = this.webSocket.ReceiveAsync(buffer, CancellationToken.None);
+            IBuffer buffer = args.Buffer.AsBuffer(args.Offset, args.Count);
+            var task = this.webSocket.InputStream.ReadAsync(buffer, (uint)args.Count, InputStreamOptions.None).AsTask();
             if (task.IsCompleted)
             {
-                this.OnReadComplete(args, task.Result.Count, startTime);
+                this.OnReadComplete(args, (int)task.Result.Length, startTime);
                 return false;
             }
 
@@ -125,7 +122,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 else
                 {
-                    this.OnReadComplete(args, t.Result.Count, startTime);
+                    this.OnReadComplete(args, (int)t.Result.Length, startTime);
                 }
 
                 args.CompletedCallback(args);
@@ -140,17 +137,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
         protected override bool CloseInternal()
         {
-            Task task = webSocket.CloseAsync(WebSocketCloseStatus.Empty, string.Empty, CancellationToken.None);
-            if (task.IsCompleted)
-            {
-                return false;
-            }
-
-            task.ContinueWith(t =>
-            {
-                Exception exception = t.IsFaulted ? t.Exception.InnerException : (t.IsCanceled ? new OperationCanceledException() : null);
-                this.CompleteClose(false, exception);
-            });
+            this.webSocket.Close(0, "close");
             return true;
         }
 
@@ -162,12 +149,6 @@ namespace Microsoft.Azure.Amqp.Transport
         public override void SetMonitor(ITransportMonitor usageMeter)
         {
             this.usageMeter = usageMeter;
-        }
-
-        internal static bool MatchScheme(string scheme)
-        {
-            return string.Equals(scheme, WebSockets, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(scheme, SecureWebSockets, StringComparison.OrdinalIgnoreCase);
         }
 
         void OnWriteComplete(TransportAsyncCallbackArgs args, ArraySegment<byte> buffer, ByteBuffer byteBuffer, DateTime startTime)

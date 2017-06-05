@@ -10,27 +10,25 @@ namespace Microsoft.Azure.Amqp.Transport
 
     sealed class WebSocketTransportInitiator : TransportInitiator
     {
-        readonly Uri uri;
-        readonly WebSocketTransportSettings webSocketTransportSettings;
+        readonly WebSocketTransportSettings settings;
 
-        internal WebSocketTransportInitiator(Uri uri, WebSocketTransportSettings webSocketTransportSettings)
+        internal WebSocketTransportInitiator(WebSocketTransportSettings settings)
         {
-            this.uri = uri;
-            this.webSocketTransportSettings = webSocketTransportSettings;
+            this.settings = settings;
         }
 
         public override bool ConnectAsync(TimeSpan timeout, TransportAsyncCallbackArgs callbackArgs)
         {
             ClientWebSocket cws = new ClientWebSocket();
-            cws.Options.AddSubProtocol(this.webSocketTransportSettings.SubProtocol);
-#if NET45
-            cws.Options.SetBuffer(this.webSocketTransportSettings.ReceiveBufferSize, this.webSocketTransportSettings.SendBufferSize);
+            cws.Options.AddSubProtocol(this.settings.SubProtocol);
+#if NET45 || MONOANDROID
+            cws.Options.SetBuffer(this.settings.ReceiveBufferSize, this.settings.SendBufferSize);
 #endif
 
-            Task task = cws.ConnectAsync(uri, CancellationToken.None).WithTimeout(timeout, () => "timeout");
+            Task task = cws.ConnectAsync(this.settings.Uri, CancellationToken.None).WithTimeout(timeout, () => "timeout");
             if (task.IsCompleted)
             {
-                callbackArgs.Transport = new WebSocketTransport(cws, uri);
+                callbackArgs.Transport = new WebSocketTransport(cws, this.settings.Uri);
                 return false;
             }
 
@@ -46,7 +44,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 else
                 {
-                    callbackArgs.Transport = new WebSocketTransport(cws, uri);
+                    callbackArgs.Transport = new WebSocketTransport(cws, this.settings.Uri);
                 }
 
                 callbackArgs.CompletedCallback(callbackArgs);

@@ -4,33 +4,26 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
-    using System.Net.WebSockets;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using Windows.Networking.Sockets;
 
     sealed class WebSocketTransportInitiator : TransportInitiator
     {
-        readonly Uri uri;
-        readonly WebSocketTransportSettings webSocketTransportSettings;
+        readonly WebSocketTransportSettings settings;
 
-        internal WebSocketTransportInitiator(Uri uri, WebSocketTransportSettings webSocketTransportSettings)
+        internal WebSocketTransportInitiator(WebSocketTransportSettings settings)
         {
-            this.uri = uri;
-            this.webSocketTransportSettings = webSocketTransportSettings;
+            this.settings = settings;
         }
 
         public override bool ConnectAsync(TimeSpan timeout, TransportAsyncCallbackArgs callbackArgs)
         {
-            ClientWebSocket cws = new ClientWebSocket();
-            cws.Options.AddSubProtocol(this.webSocketTransportSettings.SubProtocol);
-#if NET45
-            cws.Options.SetBuffer(this.webSocketTransportSettings.ReceiveBufferSize, this.webSocketTransportSettings.SendBufferSize);
-#endif
+            StreamWebSocket sws = new StreamWebSocket();
+            sws.Control.SupportedProtocols.Add(this.settings.SubProtocol);
 
-            Task task = cws.ConnectAsync(uri, CancellationToken.None).WithTimeout(timeout, () => "timeout");
+            var task = sws.ConnectAsync(this.settings.Uri).AsTask().WithTimeout(timeout, () => "timeout");
             if (task.IsCompleted)
             {
-                callbackArgs.Transport = new WebSocketTransport(cws, uri);
+                callbackArgs.Transport = new WebSocketTransport(sws, this.settings.Uri);
                 return false;
             }
 
@@ -46,7 +39,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 else
                 {
-                    callbackArgs.Transport = new WebSocketTransport(cws, uri);
+                    callbackArgs.Transport = new WebSocketTransport(sws, this.settings.Uri);
                 }
 
                 callbackArgs.CompletedCallback(callbackArgs);

@@ -11,11 +11,6 @@ namespace Microsoft.Azure.Amqp.Transport
 
     public class WebSocketTransport : TransportBase
     {
-        internal const string WebSocketSubProtocol = "amqp";
-        internal const string WebSockets = "ws";
-        internal const string SecureWebSockets = "wss";
-        internal const int WebSocketsPort = 80;
-        internal const int SecureWebSocketsPort = 443;
         readonly WebSocket webSocket;
         readonly Uri uri;
         ITransportMonitor usageMeter;
@@ -37,7 +32,7 @@ namespace Microsoft.Azure.Amqp.Transport
         }
 
         internal WebSocketTransport(WebSocket webSocket, Uri uri)
-            : base(WebSockets)
+            : base(WebSocketTransportSettings.WebSockets)
         {
             this.webSocket = webSocket;
             this.uri = uri;
@@ -166,8 +161,8 @@ namespace Microsoft.Azure.Amqp.Transport
 
         internal static bool MatchScheme(string scheme)
         {
-            return string.Equals(scheme, WebSockets, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(scheme, SecureWebSockets, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(scheme, WebSocketTransportSettings.WebSockets, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(scheme, WebSocketTransportSettings.SecureWebSockets, StringComparison.OrdinalIgnoreCase);
         }
 
         void OnWriteComplete(TransportAsyncCallbackArgs args, ArraySegment<byte> buffer, ByteBuffer byteBuffer, DateTime startTime)

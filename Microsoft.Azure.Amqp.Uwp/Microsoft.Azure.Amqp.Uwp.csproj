@@ -542,6 +542,9 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslResponse.cs">
       <Link>Amqp\Sasl\SaslResponse.cs</Link>
     </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\WebSocketTransportSettings.cs">
+      <Link>Amqp\Transport\WebSocketTransportSettings.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\AsyncResult.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\CommonResources.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\CompletedAsyncResult.cs" />
@@ -564,7 +567,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\IteratorAsyncResult.cs" />
     <Compile Include="Amqp\Transport\WebSocketTransport.UWP.cs" />
     <Compile Include="Amqp\Transport\WebSocketTransportInitiator.UWP.cs" />
-    <Compile Include="Amqp\Transport\WebSocketTransportSettings.cs" />
     <Compile Include="ResourcesGeneric.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Singleton.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\SynchronizedPool.cs" />

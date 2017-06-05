@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.Amqp.Transport
 {
-#if NET45
+#if NET45 || MONOANDROID
     using System;
     using System.Net;
     using System.Net.WebSockets;
@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Amqp.Transport
         bool closed;
 
         public WebSocketTransportListener(string address)
-            : base(WebSocketTransport.WebSockets)
+            : base(WebSocketTransportSettings.WebSockets)
         {
             this.uri = GetHttpUri(address);
             this.httpListener = new HttpListener();
@@ -49,15 +49,15 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             UriBuilder ub = new UriBuilder(address);
 
-            if (string.Equals(ub.Scheme, WebSocketTransport.WebSockets, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(ub.Scheme, WebSocketTransportSettings.WebSockets, StringComparison.OrdinalIgnoreCase))
             {
                 ub.Scheme = "http";
-                ub.Port = ub.Port > 0 ? ub.Port : WebSocketTransport.WebSocketsPort;
+                ub.Port = ub.Port > 0 ? ub.Port : WebSocketTransportSettings.WebSocketsPort;
             }
-            else if (string.Equals(ub.Scheme, WebSocketTransport.SecureWebSockets, StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(ub.Scheme, WebSocketTransportSettings.SecureWebSockets, StringComparison.OrdinalIgnoreCase))
             {
                 ub.Scheme = "https";
-                ub.Port = ub.Port > 0 ? ub.Port : WebSocketTransport.SecureWebSocketsPort;
+                ub.Port = ub.Port > 0 ? ub.Port : WebSocketTransportSettings.SecureWebSocketsPort;
             }
             else
             {
@@ -93,7 +93,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 string[] subProtocols = context.Request.Headers.GetValues("Sec-WebSocket-Protocol");
                 for (int i = 0; i < subProtocols.Length; i++)
                 {
-                    if (subProtocols[i].Equals(WebSocketTransport.WebSocketSubProtocol) ||
+                    if (subProtocols[i].Equals(WebSocketTransportSettings.WebSocketSubProtocol) ||
                         subProtocols[i].Equals("AMQPWSB10")     // defined by the previous draft
                         )
                     {

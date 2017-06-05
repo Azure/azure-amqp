@@ -86,7 +86,7 @@ namespace Microsoft.Azure.Amqp
             {
                 // FYI, CallbackException is-a FatalException
                 if (exception is FatalException ||
-#if !NETSTANDARD
+#if NET45 || MONOANDROID
                     (exception is OutOfMemoryException && !(exception is InsufficientMemoryException)) ||
                     exception is ThreadAbortException ||
                     exception is AccessViolationException ||

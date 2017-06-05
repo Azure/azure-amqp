@@ -31,12 +31,10 @@ namespace Microsoft.Azure.Amqp
 #if DEBUG
             this.setTimerCalled = true;
 #endif
-#if !NOTIMEOUT
             if (this.timeout != TimeSpan.MaxValue)
             {
                 this.timer = new Timer(s => OnTimerCallback(s), this, this.timeout, Timeout.InfiniteTimeSpan);
             }
-#endif
         }
 
         protected virtual void CompleteOnTimer()

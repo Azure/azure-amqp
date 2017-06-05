@@ -1,38 +1,34 @@
-// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp.Transport
 {
-    public abstract class TransportSettings
+    using System;
+
+    public sealed class WebSocketTransportSettings : TransportSettings
     {
-        protected TransportSettings()
+        public WebSocketTransportSettings()
         {
             this.SendBufferSize = AmqpConstants.TransportBufferSize;
             this.ReceiveBufferSize = AmqpConstants.TransportBufferSize;
+            this.SubProtocol = WebSocketTransport.WebSocketSubProtocol;
         }
 
-        public int ListenerAcceptorCount
+        public Uri Uri
         {
             get;
             set;
         }
 
-        public int SendBufferSize
+        public string SubProtocol
         {
             get;
             set;
         }
 
-        public int ReceiveBufferSize
+        public override TransportInitiator CreateInitiator()
         {
-            get;
-            set;
+            return new WebSocketTransportInitiator(this.Uri, this);
         }
-
-        public abstract TransportInitiator CreateInitiator();
-
-#if NET45 || NETSTANDARD || MONOANDROID
-        public abstract TransportListener CreateListener();
-#endif
     }
 }

@@ -7,7 +7,7 @@ namespace Microsoft.Azure.Amqp
     using System.Diagnostics.CodeAnalysis;
     using System.Runtime.Serialization;
 
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
     [Serializable]
 #endif
     [SuppressMessage(FxCop.Category.Design, "CA1064:ExceptionsShouldBePublic", Justification = "CSDMain Bug 43142")]
@@ -30,7 +30,7 @@ namespace Microsoft.Azure.Amqp
             Fx.Assert(innerException == null || !Fx.IsFatal(innerException), "FatalException can't be used to wrap fatal exceptions.");
         }
 
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
         protected FatalException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {

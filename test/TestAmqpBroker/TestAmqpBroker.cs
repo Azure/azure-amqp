@@ -283,7 +283,7 @@ namespace TestAmqpBroker
                         false);
                 }
 
-#if DOTNET_CORE
+#if NETSTANDARD
                 store.Dispose();
 #else
                 store.Close();

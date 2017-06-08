@@ -65,7 +65,7 @@ namespace Microsoft.Azure.Amqp
 
                 transportSettings = new TlsTransportSettings(tcpSettings) { TargetHost = addressUri.Host };
             }
-#if NET45
+#if !PCL
             else if (addressUri.Scheme.Equals(WebSocketTransportSettings.WebSockets, StringComparison.OrdinalIgnoreCase) ||
                 addressUri.Scheme.Equals(WebSocketTransportSettings.SecureWebSockets, StringComparison.OrdinalIgnoreCase))
             {

@@ -96,7 +96,7 @@ namespace TestAmqpBroker
                     TcpTransportSettings tcpSettings = new TcpTransportSettings() { Host = addressUri.Host, Port = addressUri.Port };
                     listeners[i] = tcpSettings.CreateListener();
                 }
-#if NET45
+#if !NETSTANDARD
                 else if (addressUri.Scheme.Equals("ws", StringComparison.OrdinalIgnoreCase))
                 {
                     WebSocketTransportSettings wsSettings = new WebSocketTransportSettings() { Uri = addressUri };
@@ -248,7 +248,6 @@ namespace TestAmqpBroker
 
                     queue = new TestQueue(this);
                     this.queues.Add(address, queue);
-                    link.Closed += (s, e) => this.queues.Remove(address);
                 }
 
                 queue.CreateClient(link);

@@ -1,18 +1,24 @@
 namespace Test.Microsoft.Azure.Amqp
 {
     using System;
+    using System.Diagnostics;
     using TestAmqpBroker;
-    using Xunit;
 
     public class TestAmqpBrokerFixture : IDisposable
     {
         const string address = "amqp://localhost:15672";
+        bool started;
 
         public TestAmqpBrokerFixture()
         {
             this.Address = new Uri(address);
             this.Broker = new TestAmqpBroker(new string[] { address }, "guest:guest", null, null);
-            this.Broker.Start();
+
+            if (Process.GetProcessesByName("TestAmqpBroker").Length == 0)
+            {
+                this.Broker.Start();
+                this.started = true;
+            }
         }
 
         public Uri Address { get; }
@@ -21,7 +27,10 @@ namespace Test.Microsoft.Azure.Amqp
 
         public void Dispose()
         {
-            this.Broker.Stop();
+            if (this.started)
+            {
+                this.Broker.Stop();
+            }
         }
     }
 }

@@ -565,6 +565,9 @@
     <Compile Include="..\Microsoft.Azure.Amqp\FxCop.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\InternalBufferManager.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\IteratorAsyncResult.cs" />
+    <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs">
+      <Link>Properties\InternalVisible.cs</Link>
+    </Compile>
     <Compile Include="Amqp\Transport\WebSocketTransport.UWP.cs" />
     <Compile Include="Amqp\Transport\WebSocketTransportInitiator.UWP.cs" />
     <Compile Include="ResourcesGeneric.UWP.cs" />

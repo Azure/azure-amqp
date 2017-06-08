@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
 #if !RELEASE_DELAY_SIGN
-[assembly: InternalsVisibleTo("Test.Microsoft.Azure.Amqp")]
-[assembly: InternalsVisibleTo("Test.Microsoft.Azure.Amqp.Core")]
+[assembly: InternalsVisibleTo("Test.Microsoft.Amqp")]
+[assembly: InternalsVisibleTo("Test.Microsoft.Amqp.Uwp")]
 #endif

@@ -25,6 +25,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{0D7D9775
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Microsoft.Amqp", "test\Test.Microsoft.Amqp\Test.Microsoft.Amqp.csproj", "{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Microsoft.Amqp.Uwp", "test\Test.Microsoft.Amqp.Uwp\Test.Microsoft.Amqp.Uwp.csproj", "{2F827371-C1A6-4795-A298-3CE9A255F3B5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -181,6 +183,38 @@ Global
 		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}.Signed|x64.Build.0 = Debug|Any CPU
 		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}.Signed|x86.ActiveCfg = Debug|Any CPU
 		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}.Signed|x86.Build.0 = Debug|Any CPU
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Debug|ARM.ActiveCfg = Debug|ARM
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Debug|ARM.Build.0 = Debug|ARM
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Debug|ARM.Deploy.0 = Debug|ARM
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Debug|x64.ActiveCfg = Debug|x64
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Debug|x64.Build.0 = Debug|x64
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Debug|x64.Deploy.0 = Debug|x64
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Debug|x86.ActiveCfg = Debug|x86
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Debug|x86.Build.0 = Debug|x86
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Debug|x86.Deploy.0 = Debug|x86
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Release|Any CPU.ActiveCfg = Release|x86
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Release|ARM.ActiveCfg = Release|ARM
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Release|ARM.Build.0 = Release|ARM
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Release|ARM.Deploy.0 = Release|ARM
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Release|x64.ActiveCfg = Release|x64
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Release|x64.Build.0 = Release|x64
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Release|x64.Deploy.0 = Release|x64
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Release|x86.ActiveCfg = Release|x86
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Release|x86.Build.0 = Release|x86
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Release|x86.Deploy.0 = Release|x86
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|Any CPU.ActiveCfg = Release|x64
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|Any CPU.Build.0 = Release|x64
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|Any CPU.Deploy.0 = Release|x64
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|ARM.ActiveCfg = Release|ARM
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|ARM.Build.0 = Release|ARM
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|ARM.Deploy.0 = Release|ARM
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|x64.ActiveCfg = Release|x64
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|x64.Build.0 = Release|x64
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|x64.Deploy.0 = Release|x64
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|x86.ActiveCfg = Release|x86
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|x86.Build.0 = Release|x86
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|x86.Deploy.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -188,6 +222,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{124A25C1-CFE3-47E5-8B0A-564FBCD6C319} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
 		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
+		{2F827371-C1A6-4795-A298-3CE9A255F3B5} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\TransientFaultHandling.Core.5.1.1209.1\lib\NET4

@@ -120,7 +120,7 @@ namespace TestAmqpBroker
 
         public void Stop()
         {
-            this.transportListener.Close();
+            this.transportListener?.Close();
         }
 
         public void AddQueue(string queue)

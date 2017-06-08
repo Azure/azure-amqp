@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net452;netcoreapp1.0</TargetFrameworks>
-    <AssemblyName>Test.Microsoft.Azure.Amqp</AssemblyName>
+    <AssemblyName>Test.Microsoft.Amqp</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">

@@ -1,4 +1,7 @@
-﻿namespace Test.Microsoft.Azure.Amqp
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Test.Microsoft.Azure.Amqp
 {
     using System;
     using global::Microsoft.Azure.Amqp;
@@ -17,6 +20,7 @@
             string queue = "AmqpWebSocketTransportTest";
             TestAmqpBroker broker = null;
 
+#if !WINDOWS_UWP
             if (Process.GetProcessesByName("TestAmqpBroker").Length == 0)
             {
 #if NETSTANDARD
@@ -26,7 +30,8 @@
             broker.Start();
             broker.AddQueue(queue);
 #endif
-            }
+        }
+#endif
 
             try
             {

@@ -44,12 +44,12 @@ namespace Microsoft.Azure.Amqp
             get { return this.asyncIO.Transport.Principal; }
         }
 
-        public EndPoint LocalEndpoint
+        public string LocalEndpoint
         {
             get { return this.asyncIO.Transport.LocalEndPoint; }
         }
 
-        public EndPoint RemoteEndpoint
+        public string RemoteEndpoint
         {
             get { return this.asyncIO.Transport.RemoteEndPoint; }
         }

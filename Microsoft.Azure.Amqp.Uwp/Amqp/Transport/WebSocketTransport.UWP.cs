@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
-    using System.Net;
     using System.Runtime.InteropServices.WindowsRuntime;
     using System.Threading.Tasks;
     using Windows.Networking.Sockets;
@@ -16,19 +15,19 @@ namespace Microsoft.Azure.Amqp.Transport
         readonly Uri uri;
         ITransportMonitor usageMeter;
 
-        public override EndPoint LocalEndPoint
+        public override string LocalEndPoint
         {
             get
             {
-                return new IPEndPoint(IPAddress.Any, -1);
+                return this.webSocket.Information.LocalAddress.CanonicalName;
             }
         }
 
-        public override EndPoint RemoteEndPoint
+        public override string RemoteEndPoint
         {
             get
             {
-                return new DnsEndPoint(this.uri.Host, this.uri.Port);
+                return this.uri.OriginalString;
             }
         }
 

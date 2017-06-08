@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-#if WINDOWS_UWP
+
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
     using System.Net;
+    using Windows.Networking;
+    using Windows.Networking.Sockets;
 
     sealed class TcpTransportInitiator : TransportInitiator
     {
@@ -18,12 +20,12 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override bool ConnectAsync(TimeSpan timeout, TransportAsyncCallbackArgs callbackArgs)
         {
-            var streamSocket = new Windows.Networking.Sockets.StreamSocket();
+            var streamSocket = new StreamSocket();
             var addr = this.transportSettings.Host;
 
             this.callbackArgs = callbackArgs;
 
-            var connectTask = streamSocket.ConnectAsync(new Windows.Networking.HostName(addr), this.transportSettings.Port.ToString(), Windows.Networking.Sockets.SocketProtectionLevel.PlainSocket).AsTask();
+            var connectTask = streamSocket.ConnectAsync(new HostName(addr), this.transportSettings.Port.ToString(), SocketProtectionLevel.PlainSocket).AsTask();
             connectTask.ContinueWith(_ =>
             {
                 TransportBase transport = null;
@@ -63,4 +65,3 @@ namespace Microsoft.Azure.Amqp.Transport
         }
     }
 }
-#endif

@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
-    using System.Net;
     using Windows.Networking;
     using Windows.Networking.Sockets;
 
@@ -26,40 +25,34 @@ namespace Microsoft.Azure.Amqp.Transport
             this.callbackArgs = callbackArgs;
 
             var connectTask = streamSocket.ConnectAsync(new HostName(addr), this.transportSettings.Port.ToString(), SocketProtectionLevel.PlainSocket).AsTask();
-            connectTask.ContinueWith(_ =>
+            if (connectTask.IsCompleted)
             {
-                TransportBase transport = null;
-                Exception exception = null;
+                var transport = new TcpTransport(streamSocket, this.transportSettings);
+                transport.Open();
+                callbackArgs.CompletedSynchronously = true;
+                callbackArgs.Transport = transport;
+                return false;
+            }
 
-                try
+            connectTask.ContinueWith(_t =>
+            {
+                if (_t.IsFaulted)
                 {
-                    transport = new TcpTransport(streamSocket, this.transportSettings);
+                    this.callbackArgs.Exception = _t.Exception.InnerException;
+                }
+                else if (_t.IsCanceled)
+                {
+                    this.callbackArgs.Exception = new OperationCanceledException();
+                }
+                else
+                {
+                    var transport = new TcpTransport(streamSocket, this.transportSettings);
                     transport.Open();
-                }
-                catch (Exception exp)
-                {
-                    if (Fx.IsFatal(exp))
-                    {
-                        throw;
-                    }
-
-                    exception = exp;
-                    if (transport != null)
-                    {
-                        transport.SafeClose();
-                    }
-                    transport = null;
+                    this.callbackArgs.CompletedSynchronously = false;
+                    this.callbackArgs.Transport = transport;
                 }
 
-                var completeSynchronously = false;
-                this.callbackArgs.CompletedSynchronously = completeSynchronously;
-                this.callbackArgs.Exception = exception;
-                this.callbackArgs.Transport = transport;
-
-                if (!completeSynchronously)
-                {
-                    this.callbackArgs.CompletedCallback(this.callbackArgs);
-                }
+                this.callbackArgs.CompletedCallback(this.callbackArgs);
             });
             return true;
         }

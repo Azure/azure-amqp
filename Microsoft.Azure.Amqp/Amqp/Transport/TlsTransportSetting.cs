@@ -7,13 +7,13 @@ namespace Microsoft.Azure.Amqp.Transport
 #if !PCL
     using System.Net.Security;
 #endif
-#if !WINDOWS_UWP && !PCL
+#if NET45 || NETSTANDARD || MONOANDROID
     using System.Security.Authentication;
     using System.Security.Cryptography.X509Certificates;
 #endif
     public class TlsTransportSettings : TransportSettings
     {
-#if !WINDOWS_UWP && !PCL
+#if NET45 || NETSTANDARD || MONOANDROID
         const SslProtocols DefaultSslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
 #endif
         protected readonly TransportSettings innerSettings;
@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             this.innerSettings = innerSettings;
             this.IsInitiator = isInitiator;
-#if !WINDOWS_UWP && !PCL
+#if NET45 || NETSTANDARD || MONOANDROID
             this.Protocols = DefaultSslProtocols;
             this.CheckCertificateRevocation = true;
 #endif
@@ -53,7 +53,7 @@ namespace Microsoft.Azure.Amqp.Transport
             set;
         }
 
-#if !WINDOWS_UWP && !PCL
+#if NET45 || NETSTANDARD || MONOANDROID
         public SslProtocols Protocols
         {
             get;
@@ -72,14 +72,13 @@ namespace Microsoft.Azure.Amqp.Transport
             get { return this.innerSettings; }
         }
 
-#if !WINDOWS_UWP
-#if !PCL
+#if NET45 || NETSTANDARD || MONOANDROID
         public RemoteCertificateValidationCallback CertificateValidationCallback
         {
             get;
             set;
         }
-#endif
+
         public bool CheckCertificateRevocation
         {
             get;
@@ -100,7 +99,7 @@ namespace Microsoft.Azure.Amqp.Transport
 #endif
         }
 
-#if !WINDOWS_UWP && !PCL
+#if NET45 || NETSTANDARD || MONOANDROID
         public override TransportListener CreateListener()
         {
             if (this.Certificate == null)

@@ -1,0 +1,16 @@
+version: 2.0.{build}
+branches:
+  only:
+  - develop
+  - master
+skip_tags: true
+image: Visual Studio 2017
+before_build:
+- cmd: nuget.exe restore
+build:
+  project: Microsoft_Azure_Amqp.sln
+  parallel: true
+  verbosity: minimal
+test_script:
+- cmd: >-
+    dotnet.exe test test\Test.Microsoft.Amqp\Test.Microsoft.Amqp.csproj

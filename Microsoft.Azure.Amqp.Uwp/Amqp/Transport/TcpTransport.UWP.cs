@@ -1,65 +1,58 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-#if WINDOWS_UWP
+
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
-    using System.Net;
-    using System.Security.Authentication;
     using System.Runtime.InteropServices.WindowsRuntime;
     using Windows.Networking.Sockets;
+    using Windows.Storage.Streams;
 
-    public class TlsTransport : TransportBase, IDisposable
+    sealed class TcpTransport : TransportBase
     {
-        const SslProtocols DefaultSslProtocols = SslProtocols.Tls | SslProtocols.Ssl3; // SslProtocols.Default from .NET 4.5
-        readonly TransportBase innerTransport;
-        StreamSocket socket;
-
-        TlsTransportSettings tlsSettings;
+        readonly StreamSocket socket;
+        readonly TcpTransportSettings settings;
+        ITransportMonitor monitor;
         OperationState writeState;
         OperationState readState;
 
-        public TlsTransport(TransportBase innerTransport, TlsTransportSettings tlsSettings)
-            : base("tls", innerTransport.Identifier)
+        public TcpTransport(StreamSocket socket, TcpTransportSettings settings)
+            : base("tcp")
         {
-            this.innerTransport = innerTransport;
-            this.tlsSettings = tlsSettings;
+            this.socket = socket;
+            this.settings = settings;
+        }
 
-            var tcpTransport = innerTransport as TcpTransport;
-            if (tcpTransport != null)
+        public StreamSocket Socket
+        {
+            get { return this.socket; }
+        }
+
+        public override string LocalEndPoint
+        {
+            get
             {
-                this.socket = tcpTransport.Socket;
+                return $"{this.socket.Information.LocalAddress.CanonicalName}:{this.socket.Information.LocalPort}";
             }
-            else
+        }
+
+        public override string RemoteEndPoint
+        {
+            get
             {
-                throw new NotSupportedException("Only TCP transport is supported");
+                return $"{this.settings.Host}:{this.settings.Port}";
             }
         }
 
-        public override EndPoint LocalEndPoint
+        public override void SetMonitor(ITransportMonitor monitor)
         {
-            get { return this.innerTransport.LocalEndPoint; }
+            this.monitor = monitor;
         }
 
-        public override EndPoint RemoteEndPoint
-        {
-            get { return this.innerTransport.RemoteEndPoint; }
-        }
-
-        public override bool IsSecure
-        {
-            get { return true; }
-        }
-
-        public override void SetMonitor(ITransportMonitor usageMeter)
-        {
-            this.innerTransport.SetMonitor(usageMeter);
-        }
-
-        public override bool WriteAsync(TransportAsyncCallbackArgs args)
+        public sealed override bool WriteAsync(TransportAsyncCallbackArgs args)
         {
             Fx.Assert(this.writeState.Args == null, "Cannot write when a write is still in progress");
-            Windows.Storage.Streams.IBuffer ibuffer;
+            IBuffer ibuffer;
             if (args.Buffer != null)
             {
                 this.writeState.Args = args;
@@ -77,13 +70,12 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 else
                 {
-                    // Copy all buffers into one big buffer to avoid SSL overhead
                     Fx.Assert(args.Count > 0, "args.Count should be set");
                     ByteBuffer temp = new ByteBuffer(args.Count, false, false);
                     for (int i = 0; i < args.ByteBufferList.Count; ++i)
                     {
                         ByteBuffer byteBuffer = args.ByteBufferList[i];
-                        Buffer.BlockCopy(byteBuffer.Buffer, byteBuffer.Offset, temp.Buffer, temp.Length, byteBuffer.Length);
+                        System.Buffer.BlockCopy(byteBuffer.Buffer, byteBuffer.Offset, temp.Buffer, temp.Length, byteBuffer.Length);
                         temp.Append(byteBuffer.Length);
                     }
 
@@ -106,6 +98,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 {
                     this.writeState.Buffer.Dispose();
                 }
+
                 return false;
             }
 
@@ -114,11 +107,11 @@ namespace Microsoft.Azure.Amqp.Transport
                 var args2 = this.writeState.Args;
                 if (completion.IsFaulted)
                 {
-                    if (Fx.IsFatal(completion.Exception))
-                    {
-                        throw completion.Exception;
-                    }
                     args2.Exception = completion.Exception;
+                }
+                else if (completion.IsCanceled)
+                {
+                    args2.Exception = new OperationCanceledException();
                 }
                 else
                 {
@@ -147,7 +140,7 @@ namespace Microsoft.Azure.Amqp.Transport
             return true;
         }
 
-        public override bool ReadAsync(TransportAsyncCallbackArgs args)
+        public sealed override bool ReadAsync(TransportAsyncCallbackArgs args)
         {
             // Read with buffer list not supported
             Fx.Assert(args.Buffer != null, "must have buffer to read");
@@ -155,7 +148,7 @@ namespace Microsoft.Azure.Amqp.Transport
             this.readState.Args = args;
 
             var buffer = args.Buffer.AsBuffer(args.Offset, args.Count);
-            var t = this.socket.InputStream.ReadAsync(buffer, (uint)args.Count, Windows.Storage.Streams.InputStreamOptions.Partial).AsTask();
+            var t = this.socket.InputStream.ReadAsync(buffer, (uint)args.Count, InputStreamOptions.Partial).AsTask();
 
             if (t.IsCompleted)
             {
@@ -170,18 +163,16 @@ namespace Microsoft.Azure.Amqp.Transport
                 var args2 = this.readState.Args;
                 if (completion.IsFaulted)
                 {
-                    if (Fx.IsFatal(completion.Exception))
-                    {
-                        throw completion.Exception;
-                    }
                     args2.Exception = completion.Exception;
+                }
+                else if (completion.IsCanceled)
+                {
+                    args2.BytesTransfered = 0;
                 }
                 else
                 {
                     this.readState.Reset();
-
-                    Fx.Assert(args2.Count == completion.Result.Length, "completion must have the same write count");
-                    args2.BytesTransfered = args2.Count;
+                    args2.BytesTransfered = (int)completion.Result.Length;
                 }
 
                 args2.CompletedSynchronously = false;
@@ -196,45 +187,15 @@ namespace Microsoft.Azure.Amqp.Transport
             return true;
         }
 
-        protected override bool OpenInternal()
-        {
-            var t = this.socket.UpgradeToSslAsync(SocketProtectionLevel.Tls12, new Windows.Networking.HostName(this.tlsSettings.TargetHost)).AsTask();
-            t.ContinueWith(completion =>
-            {
-                if (completion.IsFaulted)
-                {
-                    if (Fx.IsFatal(completion.Exception))
-                    {
-                        throw completion.Exception;
-                    }
-                }
-
-                this.CompleteOpen(false, completion.Exception);
-            });
-            return false;
-        }
-
         protected override bool CloseInternal()
         {
-            if (this.socket != null)
-            {
-                this.socket.Dispose();
-            }
+            this.socket.Dispose();
             return true;
         }
 
         protected override void AbortInternal()
         {
-            this.innerTransport.Abort();
-        }
-
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            if (this.socket != null)
-            {
-                this.socket.Dispose();
-            }
+            this.socket.Dispose();
         }
 
         struct OperationState
@@ -251,4 +212,3 @@ namespace Microsoft.Azure.Amqp.Transport
         }
     }
 }
-#endif

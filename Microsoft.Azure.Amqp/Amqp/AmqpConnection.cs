@@ -614,7 +614,7 @@ namespace Microsoft.Azure.Amqp
                     uint remote = GetNextInterval(this.remoteInterval, time, this.lastSendTime);
                     uint local = GetNextInterval(this.localInterval, time, this.lastReceiveTime);
                     uint interval = Math.Min(remote, local);
-#if NETSTANDARD
+#if NETSTANDARD || WINDOWS_UWP
                     this.heartBeatTimer.Change(interval > int.MaxValue ? int.MaxValue : (int)interval, Timeout.Infinite);
 #elif !PCL
                     this.heartBeatTimer.Change(interval, uint.MaxValue);

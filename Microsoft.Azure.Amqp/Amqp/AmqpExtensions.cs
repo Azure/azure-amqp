@@ -72,7 +72,7 @@ namespace Microsoft.Azure.Amqp
                 }
                 else
                 {
-#if NETSTANDARD || PCL
+#if NETSTANDARD || PCL || WINDOWS_UWP
                     System.Diagnostics.Debug.WriteLine(message);
 #else
                     System.Diagnostics.Trace.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}\t{1}", AppDomain.CurrentDomain.FriendlyName, message));

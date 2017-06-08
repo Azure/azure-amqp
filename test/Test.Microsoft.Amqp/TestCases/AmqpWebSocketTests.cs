@@ -1,11 +1,14 @@
-﻿namespace Test.Microsoft.Azure.Amqp
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Test.Microsoft.Azure.Amqp
 {
-#if NET45
     using System;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Framing;
     using Xunit;
     using TestAmqpBroker;
+    using System.Diagnostics;
 
     [Trait("Category", TestCategory.Current)]
     public class AmqpWebSocketTests
@@ -14,14 +17,24 @@
         public void AmqpWebSocketTransportTest()
         {
             string address = "ws://localhost:28088";
-            var broker = new TestAmqpBroker(new string[] { address }, null, null, null);
+            string queue = "AmqpWebSocketTransportTest";
+            TestAmqpBroker broker = null;
+
+#if !WINDOWS_UWP
+            if (Process.GetProcessesByName("TestAmqpBroker").Length == 0)
+            {
+#if NETSTANDARD
+                return;
+#else
+            broker = new TestAmqpBroker(new string[] { address }, null, null, null);
+            broker.Start();
+            broker.AddQueue(queue);
+#endif
+        }
+#endif
+
             try
             {
-                broker.Start();
-
-                string queue = "AmqpWebSocketTransportTest";
-                broker.AddQueue(queue);
-
                 AmqpConnection connection = AmqpConnection.Factory.OpenConnectionAsync(address).GetAwaiter().GetResult();
 
                 AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
@@ -30,7 +43,7 @@
                 SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnSend));
                 sLink.Open();
 
-                int messageCount = 100;
+                int messageCount = 1800;
                 for (int i = 0; i < messageCount; i++)
                 {
                     AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "message" + i });
@@ -58,9 +71,11 @@
             }
             finally
             {
-                broker.Stop();
+                if (broker != null)
+                {
+                    broker.Stop();
+                }
             }
         }
     }
-#endif
 }

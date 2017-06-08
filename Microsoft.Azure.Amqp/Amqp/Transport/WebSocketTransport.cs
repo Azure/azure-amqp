@@ -3,42 +3,35 @@
 
 namespace Microsoft.Azure.Amqp.Transport
 {
-#if NET45
     using System;
-    using System.Net;
     using System.Net.WebSockets;
     using System.Threading;
     using System.Threading.Tasks;
 
     public class WebSocketTransport : TransportBase
     {
-        internal const string WebSocketSubProtocol = "amqp";
-        internal const string WebSockets = "ws";
-        internal const string SecureWebSockets = "wss";
-        internal const int WebSocketsPort = 80;
-        internal const int SecureWebSocketsPort = 443;
         readonly WebSocket webSocket;
         readonly Uri uri;
         ITransportMonitor usageMeter;
 
-        public override EndPoint LocalEndPoint
+        public override string LocalEndPoint
         {
             get
             {
-                return new IPEndPoint(IPAddress.Any, -1);
+                return string.Empty;
             }
         }
 
-        public override EndPoint RemoteEndPoint
+        public override string RemoteEndPoint
         {
             get
             {
-                return new DnsEndPoint(this.uri.Host, this.uri.Port);
+                return this.uri.OriginalString;
             }
         }
 
         internal WebSocketTransport(WebSocket webSocket, Uri uri)
-            : base(WebSockets)
+            : base(WebSocketTransportSettings.WebSockets)
         {
             this.webSocket = webSocket;
             this.uri = uri;
@@ -167,8 +160,8 @@ namespace Microsoft.Azure.Amqp.Transport
 
         internal static bool MatchScheme(string scheme)
         {
-            return string.Equals(scheme, WebSockets, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(scheme, SecureWebSockets, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(scheme, WebSocketTransportSettings.WebSockets, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(scheme, WebSocketTransportSettings.SecureWebSockets, StringComparison.OrdinalIgnoreCase);
         }
 
         void OnWriteComplete(TransportAsyncCallbackArgs args, ArraySegment<byte> buffer, ByteBuffer byteBuffer, DateTime startTime)
@@ -194,5 +187,4 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
     }
-#endif
 }

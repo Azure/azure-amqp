@@ -4,21 +4,17 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Net;
     using System.Net.Sockets;
     using Microsoft.Azure.Amqp.Encoding;
 
-    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
-        Justification = "Uses custom scheme for cleanup")]
     sealed class TcpTransport : TransportBase
     {
         static readonly SegmentBufferPool SmallBufferPool = new SegmentBufferPool(FixedWidth.ULong, 100000);
         static readonly EventHandler<SocketAsyncEventArgs> onWriteComplete = OnWriteComplete;
         static readonly EventHandler<SocketAsyncEventArgs> onReadComplete = OnReadComplete;
         readonly Socket socket;
-        readonly EndPoint localEndPoint;
-        readonly EndPoint remoteEndPoint;
+        readonly string localEndPoint;
+        readonly string remoteEndPoint;
         readonly WriteAsyncEventArgs sendEventArgs;
         readonly ReadAsyncEventArgs receiveEventArgs;
         ITransportMonitor monitor;
@@ -30,8 +26,8 @@ namespace Microsoft.Azure.Amqp.Transport
             this.socket.NoDelay = true;
             this.socket.SendBufferSize = transportSettings.SendBufferSize;
             this.socket.ReceiveBufferSize = transportSettings.ReceiveBufferSize;
-            this.localEndPoint = this.socket.LocalEndPoint;
-            this.remoteEndPoint = this.socket.RemoteEndPoint;
+            this.localEndPoint = this.socket.LocalEndPoint.ToString();
+            this.remoteEndPoint = this.socket.RemoteEndPoint.ToString();
             this.sendEventArgs = new WriteAsyncEventArgs(transportSettings.SendBufferSize);
             this.sendEventArgs.Transport = this;
             this.sendEventArgs.Completed += onWriteComplete;
@@ -40,7 +36,7 @@ namespace Microsoft.Azure.Amqp.Transport
             this.receiveEventArgs.Transport = this;
         }
 
-        public override EndPoint LocalEndPoint
+        public override string LocalEndPoint
         {
             get
             {
@@ -48,7 +44,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
-        public override EndPoint RemoteEndPoint
+        public override string RemoteEndPoint
         {
             get
             {

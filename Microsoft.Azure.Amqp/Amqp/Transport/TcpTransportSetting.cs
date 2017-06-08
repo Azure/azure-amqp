@@ -45,8 +45,8 @@ namespace Microsoft.Azure.Amqp.Transport
             throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
 #endif
         }
-        // No support for TCP listener in UWP
-#if !WINDOWS_UWP && !PCL
+
+#if NET45 || NETSTANDARD || MONOANDROID
         public override TransportListener CreateListener()
         {
             return new TcpTransportListener(this);

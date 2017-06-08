@@ -5,7 +5,7 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
     using System.Security.Permissions;
 #endif
     using System.Threading;

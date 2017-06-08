@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
 
     // An AsyncResult that completes as soon as it is instantiated.
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
     [Serializable]
 #endif
     class CompletedAsyncResult : AsyncResult
@@ -31,7 +31,7 @@ namespace Microsoft.Azure.Amqp
         }
     }
 
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
     [Serializable]
 #endif
     class CompletedAsyncResult<T> : AsyncResult
@@ -54,7 +54,7 @@ namespace Microsoft.Azure.Amqp
         }
     }
 
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
     [Serializable]
 #endif
     class CompletedAsyncResult<TResult, TParameter> : AsyncResult

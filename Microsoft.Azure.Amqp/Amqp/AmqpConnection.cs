@@ -108,11 +108,6 @@ namespace Microsoft.Azure.Amqp
 
         public AmqpSession CreateSession(AmqpSessionSettings sessionSettings)
         {
-            if (this.IsClosing())
-            {
-                throw new InvalidOperationException(CommonResources.CreateSessionOnClosingConnection);
-            }
-
             AmqpSession session = this.SessionFactory.CreateSession(this, sessionSettings);
             this.AddSession(session, null);
             return session;
@@ -516,9 +511,14 @@ namespace Microsoft.Azure.Amqp
 
         public void AddSession(AmqpSession session, ushort? channel)
         {
-            session.Closed += onSessionClosed;
             lock (this.ThisLock)
             {
+                if (this.IsClosing())
+                {
+                    throw new InvalidOperationException(CommonResources.CreateSessionOnClosingConnection);
+                }
+
+                session.Closed += onSessionClosed;
                 session.LocalChannel = (ushort)this.sessionsByLocalHandle.Add(session);
                 if (channel != null)
                 {

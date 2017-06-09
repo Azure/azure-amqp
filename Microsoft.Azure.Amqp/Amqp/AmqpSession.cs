@@ -108,15 +108,20 @@ namespace Microsoft.Azure.Amqp
         public void AttachLink(AmqpLink link)
         {
             Fx.Assert(link.Session == this, "The link is not owned by this session.");
-            link.Closed += onLinkClosed;
 
             lock (this.ThisLock)
             {
+                if (this.IsClosing())
+                {
+                    throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpIllegalOperationState, "attach", this.State));
+                }
+
                 if (this.links.ContainsKey(link.Name))
                 {
                     throw new AmqpException(AmqpErrorCode.ResourceLocked, AmqpResources.GetString(AmqpResources.AmqpLinkNameInUse, link.Name, this.LocalChannel));
                 }
 
+                link.Closed += onLinkClosed;
                 this.links.Add(link.Name, link);
                 link.LocalHandle = this.linksByLocalHandle.Add(link);
             }

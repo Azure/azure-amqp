@@ -274,39 +274,60 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
-        sealed class ConnectAsyncResult : AsyncResult
+        sealed class ConnectAsyncResult : TimeoutAsyncResult<string>
         {
             static Action<TransportAsyncCallbackArgs> onConnect = OnConnect;
-            TransportBase transport;
+            readonly AmqpTransportInitiator initiator;
+            readonly TransportAsyncCallbackArgs args;
 
             public ConnectAsyncResult(AmqpTransportInitiator initiator, TimeSpan timeout, AsyncCallback callback, object state)
-                : base(callback, state)
+                : base(timeout, callback, state)
             {
-                TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();
-                args.CompletedCallback = onConnect;
-                args.UserToken = this;
-                if (!initiator.ConnectAsync(timeout, args))
+                this.initiator = initiator;
+                this.args = new TransportAsyncCallbackArgs();
+                this.args.CompletedCallback = onConnect;
+                this.args.UserToken = this;
+                this.SetTimer();
+
+                if (!initiator.ConnectAsync(timeout, this.args))
                 {
-                    OnConnect(args);
+                    OnConnect(this.args);
+                }
+            }
+
+            protected override string Target
+            {
+                get
+                {
+                    return this.initiator.transportSettings.ToString();
                 }
             }
 
             public static TransportBase End(IAsyncResult result)
             {
-                return AsyncResult.End<ConnectAsyncResult>(result).transport;
+                return AsyncResult.End<ConnectAsyncResult>(result).args.Transport;
+            }
+
+            protected override void CompleteOnTimer()
+            {
+                if (this.args.Transport != null)
+                {
+                    this.args.Transport.Abort();
+                }
+
+                base.CompleteOnTimer();
             }
 
             static void OnConnect(TransportAsyncCallbackArgs args)
             {
                 ConnectAsyncResult thisPtr = (ConnectAsyncResult)args.UserToken;
-                if (args.Exception != null)
+                if (!thisPtr.CompleteSelf(args.CompletedSynchronously, args.Exception))
                 {
-                    thisPtr.Complete(args.CompletedSynchronously, args.Exception);
-                }
-                else
-                {
-                    thisPtr.transport = args.Transport;
-                    thisPtr.Complete(args.CompletedSynchronously);
+                    if (args.Transport != null)
+                    {
+                        // completed by timer
+                        args.Transport.Abort();
+                    }
                 }
             }
         }

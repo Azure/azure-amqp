@@ -50,7 +50,12 @@ namespace Microsoft.Azure.Amqp
         }
 
         public AmqpConnection(TransportBase transport, ProtocolHeader protocolHeader, bool isInitiator, AmqpSettings amqpSettings, AmqpConnectionSettings connectionSettings) :
-            base((isInitiator ? "out" : "in") + "-connection", transport, connectionSettings, isInitiator)
+            this((isInitiator ? "out" : "in") + "-connection", transport, protocolHeader, isInitiator, amqpSettings, connectionSettings)
+        {
+        }
+
+        protected AmqpConnection(string type, TransportBase transport, ProtocolHeader protocolHeader, bool isInitiator, AmqpSettings amqpSettings, AmqpConnectionSettings connectionSettings) :
+            base(type, transport, connectionSettings, isInitiator)
         {
             if (amqpSettings == null)
             {
@@ -99,11 +104,6 @@ namespace Microsoft.Azure.Amqp
                     return this.sessionsByLocalHandle.Values;
                 }
             }
-        }
-
-        public object SessionLock
-        {
-            get { return this.ThisLock; }
         }
 
         public AmqpSession CreateSession(AmqpSessionSettings sessionSettings)

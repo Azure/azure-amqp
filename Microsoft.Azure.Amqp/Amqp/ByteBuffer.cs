@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Encoding;
 
     // This class is not thread safe
-    public sealed class ByteBuffer : IDisposable, ICloneable
+    public sealed class ByteBuffer : IDisposable, ICloneable, IAmqpSerializable
     {
         static readonly InternalBufferManager BufferManager = InternalBufferManager.Create(50 * 1024 * 1024, int.MaxValue, false);
 
@@ -35,6 +35,7 @@ namespace Microsoft.Azure.Amqp
         bool autoGrow;
         int references;
         InternalBufferManager bufferManager;
+        ByteBuffer innerBuffer;
 
         public static void InitBufferManagers()
         {
@@ -77,6 +78,11 @@ namespace Microsoft.Azure.Amqp
 
         public ByteBuffer(byte[] buffer, int offset, int count)
             : this(buffer, offset, count, count, false, null)
+        {
+        }
+
+        // the constructor for serializer
+        ByteBuffer()
         {
         }
 
@@ -218,9 +224,9 @@ namespace Microsoft.Azure.Amqp
 
         public void Seek(int seekPosition)
         {
-            Fx.Assert(seekPosition >= 0, "seekPosition must not be negative.");
-            Fx.Assert((this.start + seekPosition) <= this.write, "seekPosition too large.");
-            this.read = this.start + seekPosition;
+            Fx.Assert(seekPosition >= this.start, "seekPosition must not be before start.");
+            Fx.Assert(seekPosition <= this.write, "seekPosition must not be after write.");
+            this.read = seekPosition;
         }
 
         public void Reset()
@@ -233,6 +239,15 @@ namespace Microsoft.Azure.Amqp
         {
             this.AddReference();
             return this;
+        }
+
+        public ByteBuffer GetSlice(int position, int length)
+        {
+            ByteBuffer wrapped = this.AddReference();
+            return new ByteBuffer(wrapped.buffer, position, length, length, false, null)
+            {
+                innerBuffer = wrapped
+            };
         }
 
         public void AdjustPosition(int offset, int length)
@@ -248,16 +263,28 @@ namespace Microsoft.Azure.Amqp
             this.RemoveReference();
         }
 
-        void AddReference()
+        internal bool TryAddReference()
         {
             if (Interlocked.Increment(ref this.references) == 1)
             {
                 Interlocked.Decrement(ref this.references);
-                throw new InvalidOperationException(AmqpResources.AmqpBufferAlreadyReclaimed);
+                return false;
             }
+
+            return true;
         }
 
-        void RemoveReference()
+        internal ByteBuffer AddReference()
+        {
+            if (!this.TryAddReference())
+            {
+                throw new InvalidOperationException(AmqpResources.AmqpBufferAlreadyReclaimed);
+            }
+
+            return this;
+        }
+
+        internal void RemoveReference()
         {
             if (this.references > 0)
             {
@@ -269,8 +296,33 @@ namespace Microsoft.Azure.Amqp
                     {
                         this.bufferManager.ReturnBuffer(bufferToRelease);
                     }
+                    else if (this.innerBuffer != null)
+                    {
+                        this.innerBuffer.Dispose();
+                    }
                 }
             }
+        }
+
+        int IAmqpSerializable.EncodeSize
+        {
+            get { return BinaryEncoding.GetEncodeSize(new ArraySegment<byte>(this.buffer, this.Offset, this.Length)); }
+        }
+
+        void IAmqpSerializable.Encode(ByteBuffer buffer)
+        {
+            BinaryEncoding.Encode(new ArraySegment<byte>(this.buffer, this.Offset, this.Length), buffer);
+        }
+
+        void IAmqpSerializable.Decode(ByteBuffer buffer)
+        {
+            ArraySegment<byte> segment = BinaryEncoding.Decode(buffer, 0, false);
+
+            this.innerBuffer = buffer.AddReference();
+            this.references = 1;
+            this.buffer = segment.Array;
+            this.start = this.read = segment.Offset;
+            this.write = this.end = segment.Offset + segment.Count;
         }
 
         struct ManagedBuffer

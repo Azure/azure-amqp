@@ -90,6 +90,17 @@ namespace Microsoft.Azure.Amqp
             get { return this.isInitiator; }
         }
 
+        public IEnumerable<AmqpSession> Sessions
+        {
+            get
+            {
+                lock (this.ThisLock)
+                {
+                    return this.sessionsByLocalHandle.Values;
+                }
+            }
+        }
+
         public object SessionLock
         {
             get { return this.ThisLock; }

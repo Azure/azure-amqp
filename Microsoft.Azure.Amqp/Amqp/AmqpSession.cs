@@ -415,7 +415,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        void OnReceiveFlow(Flow flow)
+        protected virtual void OnReceiveFlow(Flow flow)
         {
             this.outgoingChannel.OnFlow(flow);
             this.incomingChannel.OnFlow(flow);

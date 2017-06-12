@@ -5,9 +5,7 @@ namespace Microsoft.Azure.Amqp.Sasl
 {
     using System;
     using System.Collections.Generic;
-    using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transport;
-    using Microsoft.Azure.Amqp.Tracing;
 
     public sealed class SaslTransportProvider : TransportProvider
     {
@@ -17,7 +15,7 @@ namespace Microsoft.Azure.Amqp.Sasl
         {
             this.ProtocolId = ProtocolId.AmqpSasl;
             this.handlers = new Dictionary<string, SaslHandler>();
-            this.MaxFrameSize = int.MaxValue;
+            this.MaxFrameSize = AmqpConstants.MinMaxFrameSize;
         }
 
         public int MaxFrameSize

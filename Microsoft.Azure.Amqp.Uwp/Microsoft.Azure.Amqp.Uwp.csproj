@@ -570,6 +570,7 @@
     </Compile>
     <Compile Include="Amqp\Transport\WebSocketTransport.UWP.cs" />
     <Compile Include="Amqp\Transport\WebSocketTransportInitiator.UWP.cs" />
+    <Compile Include="ResourceManager.cs" />
     <Compile Include="ResourcesGeneric.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Singleton.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\SynchronizedPool.cs" />

@@ -562,7 +562,6 @@
       <Link>Extensions\ExceptionExtensions.cs</Link>
     </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Fx.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\FxCop.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\InternalBufferManager.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\IteratorAsyncResult.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs">

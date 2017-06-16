@@ -10,7 +10,6 @@ namespace Microsoft.Azure.Amqp
 #if NET45 || MONOANDROID
     [Serializable]
 #endif
-    [SuppressMessage(FxCop.Category.Design, "CA1064:ExceptionsShouldBePublic", Justification = "CSDMain Bug 43142")]
     class FatalException : Exception
     {
         public FatalException()

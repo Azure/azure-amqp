@@ -423,8 +423,6 @@ namespace Microsoft.Azure.Amqp
                 AsyncResult = result;
             }
 
-            [SuppressMessage(FxCop.Category.Performance, FxCop.Rule.AvoidUncalledPrivateCode,
-                Justification = "Debug-only facility")]
             public AsyncResult AsyncResult { get; set; }
         }
 #endif

@@ -10,7 +10,6 @@ namespace Microsoft.Azure.Amqp
 #if NET45 || MONOANDROID
     [Serializable]
 #endif
-    [SuppressMessage(FxCop.Category.Design, FxCop.Rule.ExceptionsShouldBePublic, Justification = "Asserts should not be seen by users.", Scope = "Type", Target = "Microsoft.Azure.Amqp.AssertionFailedException")]
     class AssertionFailedException : Exception
     {
         public AssertionFailedException(string description)

@@ -583,9 +583,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Tracing\EventTraceActivity.cs">
       <Link>Tracing\EventTraceActivity.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Tracing\TrackingContext.cs">
-      <Link>Tracing\TrackingContext.cs</Link>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\35MSSharedLib1024.snk">

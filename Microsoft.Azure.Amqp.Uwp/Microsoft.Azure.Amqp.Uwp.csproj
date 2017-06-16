@@ -581,9 +581,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Tracing\EventTraceActivity.cs">
       <Link>Tracing\EventTraceActivity.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Tracing\TrackingContext.cs">
-      <Link>Tracing\TrackingContext.cs</Link>
-    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\WaitCallbackActionItem.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslTransport.cs">
       <Link>Amqp\Sasl\SaslTransport.cs</Link>

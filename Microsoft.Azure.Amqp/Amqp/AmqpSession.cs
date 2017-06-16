@@ -7,7 +7,6 @@ namespace Microsoft.Azure.Amqp
     using System.Collections.Generic;
     using System.Threading;
     using Microsoft.Azure.Amqp.Framing;
-    using Microsoft.Azure.Amqp.Tracing;
 
     public class AmqpSession : AmqpObject
     {

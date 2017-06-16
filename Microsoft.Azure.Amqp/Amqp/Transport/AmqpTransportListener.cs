@@ -7,7 +7,6 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Collections.Generic;
     using Microsoft.Azure.Amqp;
     using Microsoft.Azure.Amqp.Framing;
-    using Microsoft.Azure.Amqp.Tracing;
 
     /// <summary>
     /// This listener supports protocol upgrade (e.g. tcp -> tls -> sasl)

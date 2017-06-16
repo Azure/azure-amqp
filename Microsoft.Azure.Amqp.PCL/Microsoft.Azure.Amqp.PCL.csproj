@@ -580,9 +580,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs">
       <Link>Properties\InternalVisible.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Tracing\EventTraceActivity.cs">
-      <Link>Tracing\EventTraceActivity.cs</Link>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\35MSSharedLib1024.snk">

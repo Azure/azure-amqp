@@ -6,9 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
-    using System.Diagnostics.Tracing;
     using System.Threading;
-    using Microsoft.Azure.Amqp.Tracing;
 
     // AsyncResult starts acquired; Complete releases.
     [Fx.Tag.SynchronizationPrimitive(Fx.Tag.BlocksUsing.ManualResetEvent, SupportsAsync = true, ReleaseMethod = "Complete")]
@@ -105,18 +103,6 @@ namespace Microsoft.Azure.Amqp
 
         // used in conjunction with PrepareAsyncCompletion to allow for finally blocks
         protected Action<AsyncResult, Exception> OnCompleting { get; set; }
-
-        // Override this property to provide the ActivityId when completing with exception
-        protected internal virtual EventTraceActivity Activity
-        {
-            get { return null; }
-        }
-
-        // Override this property to change the trace level when completing with exception
-        protected virtual EventLevel EventLevel
-        {
-            get { return EventLevel.Verbose; }
-        }
 
         protected object ThisLock
         {

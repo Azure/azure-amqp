@@ -9,7 +9,6 @@ namespace Microsoft.Azure.Amqp
     using System.Threading;
 
     // AsyncResult starts acquired; Complete releases.
-    [Fx.Tag.SynchronizationPrimitive(Fx.Tag.BlocksUsing.ManualResetEvent, SupportsAsync = true, ReleaseMethod = "Complete")]
     [DebuggerStepThrough]
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Uses custom scheme for cleanup")]
@@ -26,11 +25,7 @@ namespace Microsoft.Azure.Amqp
         AsyncCompletion nextAsyncCompletion;
         IAsyncResult deferredTransactionalResult;
         object state;
-
-        [Fx.Tag.SynchronizationObject]
         ManualResetEvent manualResetEvent;
-
-        [Fx.Tag.SynchronizationObject(Blocking = false)]
         object thisLock;
 
 #if DEBUG
@@ -339,7 +334,6 @@ namespace Microsoft.Azure.Amqp
             throw new InvalidOperationException(message);
         }
 
-        [Fx.Tag.Blocking(Conditional = "!asyncResult.isCompleted")]
         protected static TAsyncResult End<TAsyncResult>(IAsyncResult result)
             where TAsyncResult : AsyncResult
         {

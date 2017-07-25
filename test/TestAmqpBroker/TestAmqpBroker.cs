@@ -234,12 +234,18 @@ namespace TestAmqpBroker
             }
             else
             {
-                string address = link.IsReceiver ?
-                    ((Target)link.Settings.Target).Address.ToString() :
-                    ((Source)link.Settings.Source).Address.ToString();
+                Address address = link.IsReceiver ?
+                    ((Target)link.Settings.Target).Address :
+                    ((Source)link.Settings.Source).Address;
 
+                if (address == null)
+                {
+                    throw new AmqpException(AmqpErrorCode.InvalidField, "Address not set");
+                }
+
+                string node = address.ToString();
                 TestQueue queue;
-                if (!this.queues.TryGetValue(address, out queue))
+                if (!this.queues.TryGetValue(node, out queue))
                 {
                     if (!this.implicitQueue)
                     {
@@ -247,7 +253,7 @@ namespace TestAmqpBroker
                     }
 
                     queue = new TestQueue(this);
-                    this.queues.Add(address, queue);
+                    this.queues.Add(node, queue);
                 }
 
                 queue.CreateClient(link);

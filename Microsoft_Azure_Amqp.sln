@@ -27,6 +27,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Microsoft.Amqp", "test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Microsoft.Amqp.Uwp", "test\Test.Microsoft.Amqp.Uwp\Test.Microsoft.Amqp.Uwp.csproj", "{2F827371-C1A6-4795-A298-3CE9A255F3B5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAmqpClient", "test\TestAmqpClient\TestAmqpClient.csproj", "{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -215,6 +217,30 @@ Global
 		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|x86.ActiveCfg = Release|x86
 		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|x86.Build.0 = Release|x86
 		{2F827371-C1A6-4795-A298-3CE9A255F3B5}.Signed|x86.Deploy.0 = Release|x86
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Debug|ARM.Build.0 = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Debug|x64.Build.0 = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Debug|x86.Build.0 = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Release|ARM.ActiveCfg = Release|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Release|ARM.Build.0 = Release|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Release|x64.ActiveCfg = Release|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Release|x64.Build.0 = Release|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Release|x86.ActiveCfg = Release|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Release|x86.Build.0 = Release|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|Any CPU.ActiveCfg = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|Any CPU.Build.0 = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|ARM.ActiveCfg = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|ARM.Build.0 = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|x64.ActiveCfg = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|x64.Build.0 = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|x86.ActiveCfg = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|x86.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -223,6 +249,7 @@ Global
 		{124A25C1-CFE3-47E5-8B0A-564FBCD6C319} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
 		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
 		{2F827371-C1A6-4795-A298-3CE9A255F3B5} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\TransientFaultHandling.Core.5.1.1209.1\lib\NET4

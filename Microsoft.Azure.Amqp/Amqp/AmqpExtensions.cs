@@ -445,6 +445,16 @@ namespace Microsoft.Azure.Amqp
         }
 
         // settings
+        public static void UpsertProperty(this Begin begin, AmqpSymbol symbol, object value)
+        {
+            if (begin.Properties == null)
+            {
+                begin.Properties = new Fields();
+            }
+
+            begin.Properties[symbol] = value;
+        }
+
         public static void AddProperty(this Attach attach, AmqpSymbol symbol, object value)
         {
             if (attach.Properties == null)

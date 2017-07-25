@@ -10,7 +10,6 @@ namespace Microsoft.Azure.Amqp.Sasl
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transport;
-    using Microsoft.Azure.Amqp.Tracing;
 
     public sealed class SaslNegotiator : IIoHandler
     {

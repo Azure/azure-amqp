@@ -562,7 +562,6 @@
       <Link>Extensions\ExceptionExtensions.cs</Link>
     </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Fx.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\FxCop.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\InternalBufferManager.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\IteratorAsyncResult.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs">
@@ -570,6 +569,7 @@
     </Compile>
     <Compile Include="Amqp\Transport\WebSocketTransport.UWP.cs" />
     <Compile Include="Amqp\Transport\WebSocketTransportInitiator.UWP.cs" />
+    <Compile Include="ResourceManager.cs" />
     <Compile Include="ResourcesGeneric.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Singleton.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\SynchronizedPool.cs" />
@@ -578,12 +578,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\TimeoutHelper.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Timestamp.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\TraceOperation.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Tracing\EventTraceActivity.cs">
-      <Link>Tracing\EventTraceActivity.cs</Link>
-    </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Tracing\TrackingContext.cs">
-      <Link>Tracing\TrackingContext.cs</Link>
-    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\WaitCallbackActionItem.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslTransport.cs">
       <Link>Amqp\Sasl\SaslTransport.cs</Link>

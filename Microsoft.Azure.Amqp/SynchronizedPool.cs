@@ -46,7 +46,6 @@ namespace Microsoft.Azure.Amqp
     // Since the statistics are a heuristic as to how often something is happening, they 
     // do not need to be perfect.
     // 
-    [Fx.Tag.SynchronizationObject(Blocking = false)]
     class SynchronizedPool<T> where T : class
     {
         const int maxPendingEntries = 128;
@@ -342,7 +341,6 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        [Fx.Tag.SynchronizationObject(Blocking = false)]
         class GlobalPool
         {
             Stack<T> items;

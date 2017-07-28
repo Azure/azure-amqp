@@ -6,7 +6,6 @@
     using System.Threading;
     using System.Threading.Tasks;
     using global::Microsoft.Azure.Amqp;
-    using global::Microsoft.Azure.Amqp.Amqp;
     using global::Microsoft.Azure.Amqp.Encoding;
     using Xunit;
 
@@ -47,7 +46,7 @@
 
                 if (!workCompleted)
                 {
-                    ActionItem.Schedule(callContinue, null);
+                    ThreadPool.QueueUserWorkItem(callContinue, null);
                 }
 
                 Interlocked.Exchange(ref working, 0);
@@ -397,13 +396,6 @@
                 buffer.Reset();
                 AssertBufferProperties(buffer, capacity: 580, size: 580, length: 0, offset: 0, writePos: 0);
             }
-        }
-
-        [Fact]
-        public void CanAccessStringResources()
-        {
-            // access some random resource from each resx file.
-            Assert.NotNull(Resources.AmqpApplicationProperties);
         }
 
         [Fact]

@@ -131,17 +131,17 @@
 
         public int EncodeSize
         {
-            get { return FixedWidth.UuidEncoded; }
+            get { return AmqpCodec.GetUuidEncodeSize(this.uuid); }
         }
 
         public void Encode(ByteBuffer buffer)
         {
-            UuidEncoding.Encode(this.uuid, buffer);
+            AmqpCodec.EncodeUuid(this.uuid, buffer);
         }
 
         public void Decode(ByteBuffer buffer)
         {
-            this.uuid = UuidEncoding.Decode(buffer, 0).Value;
+            this.uuid = AmqpCodec.DecodeUuid(buffer).Value;
         }
 
         public static EmployeeId New()

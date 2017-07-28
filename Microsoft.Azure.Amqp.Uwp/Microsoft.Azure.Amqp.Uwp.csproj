@@ -564,9 +564,10 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Fx.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\InternalBufferManager.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\IteratorAsyncResult.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs">
-      <Link>Properties\InternalVisible.cs</Link>
+    <Compile Include="..\Microsoft.Azure.Amqp\Properties\Version.cs">
+      <Link>Properties\Version.cs</Link>
     </Compile>
+    <Compile Include="Amqp\Resources.UWP.cs" />
     <Compile Include="Amqp\Transport\WebSocketTransport.UWP.cs" />
     <Compile Include="Amqp\Transport\WebSocketTransportInitiator.UWP.cs" />
     <Compile Include="ResourceManager.cs" />
@@ -670,7 +671,6 @@
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\PlatformSupport.cs" />
-    <Compile Include="Resources.UWP.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Microsoft.Azure.Amqp.Uwp.rd.xml" />

@@ -5,7 +5,7 @@ namespace Microsoft.Azure.Amqp.Framing
 {
     using Microsoft.Azure.Amqp.Encoding;
 
-    abstract class LifeTimePolicy : DescribedList
+    public abstract class LifeTimePolicy : DescribedList
     {
         const int Fields = 0;
 

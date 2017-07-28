@@ -315,6 +315,11 @@ namespace Microsoft.Azure.Amqp
             DoubleEncoding.Encode(data, buffer);
         }
 
+        public static void EncodeDecimal(decimal? data, ByteBuffer buffer)
+        {
+            DecimalEncoding.Encode(data, buffer);
+        }
+
         public static void EncodeTimeStamp(DateTime? data, ByteBuffer buffer)
         {
             TimeStampEncoding.Encode(data, buffer);
@@ -432,6 +437,11 @@ namespace Microsoft.Azure.Amqp
         public static double? DecodeDouble(ByteBuffer buffer)
         {
             return DoubleEncoding.Decode(buffer, 0);
+        }
+
+        public static decimal? DecodeDecimal(ByteBuffer buffer)
+        {
+            return DecimalEncoding.Decode(buffer, 0);
         }
 
         public static char? DecodeChar(ByteBuffer buffer)

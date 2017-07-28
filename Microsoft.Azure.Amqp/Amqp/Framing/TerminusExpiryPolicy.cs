@@ -5,7 +5,7 @@ namespace Microsoft.Azure.Amqp.Framing
 {
     using Microsoft.Azure.Amqp.Encoding;
 
-    class TerminusExpiryPolicy
+    public class TerminusExpiryPolicy
     {
         TerminusExpiryPolicy()
         {

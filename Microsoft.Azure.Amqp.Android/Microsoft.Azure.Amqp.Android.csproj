@@ -74,6 +74,9 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\WebSocketTransportSettings.cs">
       <Link>Amqp\Transport\WebSocketTransportSettings.cs</Link>
     </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Properties\Version.cs">
+      <Link>Properties\Version.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\ResourcesGeneric.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -683,7 +686,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Extensions\StreamExtensions.cs">
       <Link>Extensions\StreamExtensions.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\35MSSharedLib1024.snk">

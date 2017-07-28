@@ -4,38 +4,8 @@
 // This file is NOT generated
 //
 
-#if WINDOWS_UWP
 namespace Microsoft.Azure.Amqp
 {
-    using System;
-    using Windows.ApplicationModel.Resources.Core;
-
-    class ResourceManagerImpl
-    {
-        private readonly ResourceMap stringResourceMap;
-
-        public ResourceManagerImpl()
-        {
-            stringResourceMap = Windows.ApplicationModel.Resources.Core.ResourceManager.Current.MainResourceMap.GetSubtree("Microsoft.Azure.Amqp/ResourcesGeneric.UWP");
-        }
-
-        public string GetString(string name, System.Globalization.CultureInfo culture)
-        {
-            //var value = stringResourceMap.GetValue(name, resourceContext).ValueAsString;
-            var value = stringResourceMap.GetValue(name).ValueAsString;
-            return ValidateNotEmpty(value);
-        }
-
-        private static string ValidateNotEmpty(string value)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                throw new NotImplementedException("Resource string not found. Did you add the string to Resources.resw?");
-            }
-            return value;
-        }
-    }
-    
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -54,7 +24,7 @@ namespace Microsoft.Azure.Amqp
         internal ResourcesGeneric() {
         }
 
-        private static readonly ResourceManagerImpl ResourceManager = new ResourceManagerImpl();
+        private static readonly ResourceManagerImpl ResourceManager = new ResourceManagerImpl("ResourcesGeneric.UWP");
 
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
@@ -413,4 +383,3 @@ namespace Microsoft.Azure.Amqp
         }
     }
 }
-#endif

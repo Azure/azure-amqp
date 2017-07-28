@@ -5,7 +5,7 @@ namespace Microsoft.Azure.Amqp.Framing
 {
     using Microsoft.Azure.Amqp.Encoding;
 
-    sealed class DeleteOnNoLinks : LifeTimePolicy
+    public sealed class DeleteOnNoLinks : LifeTimePolicy
     {
         public static readonly string Name = "amqp:delete-on-no-links:list";
         public static readonly ulong Code = 0x000000000000002c;

@@ -9,7 +9,7 @@ using Windows.Networking;
 using Windows.Networking.Sockets;
 #endif
 
-#if NETSTANDARD || PCL
+#if NETSTANDARD || PCL || WINDOWS_UWP
 
 // This interface doesn't exist in DNXCORE50, define it manually
 namespace System

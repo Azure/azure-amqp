@@ -7,10 +7,9 @@ namespace Microsoft.Azure.Amqp
     using System.Diagnostics.CodeAnalysis;
     using System.Runtime.Serialization;
 
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
     [Serializable]
 #endif
-    [SuppressMessage(FxCop.Category.Design, FxCop.Rule.ExceptionsShouldBePublic, Justification = "Asserts should not be seen by users.", Scope = "Type", Target = "Microsoft.Azure.Amqp.AssertionFailedException")]
     class AssertionFailedException : Exception
     {
         public AssertionFailedException(string description)
@@ -18,7 +17,7 @@ namespace Microsoft.Azure.Amqp
         {
         }
 
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
         protected AssertionFailedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {

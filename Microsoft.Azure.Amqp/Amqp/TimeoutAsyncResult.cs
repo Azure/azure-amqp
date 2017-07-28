@@ -10,7 +10,6 @@ namespace Microsoft.Azure.Amqp
     {
         readonly TimeSpan timeout;
         Timer timer;
-        int completed;
 #if DEBUG
         bool setTimerCalled;  // make sure derived class always call SetTimer
 #endif
@@ -31,12 +30,10 @@ namespace Microsoft.Azure.Amqp
 #if DEBUG
             this.setTimerCalled = true;
 #endif
-#if !NOTIMEOUT
             if (this.timeout != TimeSpan.MaxValue)
             {
                 this.timer = new Timer(s => OnTimerCallback(s), this, this.timeout, Timeout.InfiniteTimeSpan);
             }
-#endif
         }
 
         protected virtual void CompleteOnTimer()
@@ -44,19 +41,19 @@ namespace Microsoft.Azure.Amqp
             this.CompleteInternal(false, new TimeoutException(AmqpResources.GetString(AmqpResources.AmqpTimeout, this.timeout, this.Target)));
         }
 
-        protected void CompleteSelf(bool syncComplete)
+        protected bool CompleteSelf(bool syncComplete)
         {
-            this.CompleteSelf(syncComplete, null);
+            return this.CompleteSelf(syncComplete, null);
         }
 
-        protected void CompleteSelf(bool syncComplete, Exception exception)
+        protected bool CompleteSelf(bool syncComplete, Exception exception)
         {
             if (this.timer != null)
             {
                 this.timer.Change(Timeout.Infinite, Timeout.Infinite);
             }
 
-            this.CompleteInternal(syncComplete, exception);
+            return this.CompleteInternal(syncComplete, exception);
         }
 
         static void OnTimerCallback(object state)
@@ -65,25 +62,12 @@ namespace Microsoft.Azure.Amqp
             thisPtr.CompleteOnTimer();
         }
 
-        void CompleteInternal(bool syncComplete, Exception exception)
+        bool CompleteInternal(bool syncComplete, Exception exception)
         {
 #if DEBUG
             Fx.AssertAndThrow(exception != null || this.setTimerCalled, "Must call SetTimer.");
 #endif
-
-#pragma warning disable 0420
-            if (Interlocked.CompareExchange(ref this.completed, 1, 0) == 0)
-#pragma warning restore 0420
-            {
-                if (exception == null)
-                {
-                    base.Complete(syncComplete);
-                }
-                else
-                {
-                    base.Complete(syncComplete, exception);
-                }
-            }
+            return this.TryComplete(syncComplete, exception);
         }
     }
 }

@@ -9,7 +9,6 @@ namespace Microsoft.Azure.Amqp
     {
         public static long Now
         {
-            [Fx.Tag.SecurityNote(Miscellaneous = "Why isn't the SuppressUnmanagedCodeSecurity attribute working in this case?")]
             get
             {
                 long time;

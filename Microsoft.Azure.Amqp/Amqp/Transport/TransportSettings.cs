@@ -31,7 +31,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public abstract TransportInitiator CreateInitiator();
 
-#if !WINDOWS_UWP && !PCL
+#if NET45 || NETSTANDARD || MONOANDROID
         public abstract TransportListener CreateListener();
 #endif
     }

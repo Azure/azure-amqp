@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Amqp.Encoding
     /// <summary>
     /// Encode and decode data within the AMQP type system.
     /// </summary>
-    static class AmqpEncoding
+    public static class AmqpEncoding
     {
         static Dictionary<Type, EncodingBase> encodingsByType;
         static Dictionary<FormatCode, EncodingBase> encodingsByCode;

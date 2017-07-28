@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Amqp
             senderSettings.Role = false;
             senderSettings.LinkName = this.Name + ":sender";
             senderSettings.SettleType = SettleMode.SettleOnSend;
-            senderSettings.Source = new Source() { Address = Guid.NewGuid().ToString("N") };
+            senderSettings.Source = new Source();
             senderSettings.Target = new Target() { Address = address };
             senderSettings.Properties = properties;
             this.sender = new SendingAmqpLink(session, senderSettings);

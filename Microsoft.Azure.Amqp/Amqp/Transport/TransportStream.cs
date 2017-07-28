@@ -58,32 +58,26 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-#if MONOANDROID
-            int result = 0;
+            // TransportAsyncCallbackArgs only supports AsyncCallback. EndRead does not block
+            // until the operation is completed. So need an event here. The sync Read method
+            // is called in mono environment.
             using (var doneEvent = new ManualResetEventSlim())
             {
                 var asyncResult = this.BeginRead(buffer, offset, count, ar => ((ManualResetEventSlim)ar.AsyncState).Set(), doneEvent);
                 doneEvent.Wait();
-                result = this.EndRead(asyncResult);
+                return this.EndRead(asyncResult);
             }
-            return result;
-#else
-            throw new InvalidOperationException();
-#endif
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
-#if MONOANDROID
+            // This should not be called but implement it anyway
             using (var doneEvent = new ManualResetEventSlim())
             {
                 var asyncResult = this.BeginWrite(buffer, offset, count, ar => ((ManualResetEventSlim)ar.AsyncState).Set(), doneEvent);
                 doneEvent.Wait();
                 this.EndWrite(asyncResult);
             }
-#else
-            throw new InvalidOperationException();
-#endif
         }
 
         public override long Seek(long offset, SeekOrigin origin)

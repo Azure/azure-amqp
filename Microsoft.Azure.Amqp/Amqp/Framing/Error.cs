@@ -8,11 +8,11 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
     [Serializable]
 #endif
     public sealed class Error : DescribedList
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
         , ISerializable
 #endif
     {
@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Amqp.Framing
         {
         }
 
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
         Error(SerializationInfo info, StreamingContext context)
             : base(Name, Code)
         {
@@ -66,7 +66,7 @@ namespace Microsoft.Azure.Amqp.Framing
             {
                 error.Condition = AmqpErrorCode.NotAllowed;
             }
-#if !NETSTANDARD && !MONOANDROID && !PCL
+#if NET45
             else if (exception is System.Transactions.TransactionAbortedException)
             {
                 error.Condition = AmqpErrorCode.TransactionRollback;
@@ -115,7 +115,7 @@ namespace Microsoft.Azure.Amqp.Framing
             return sb.ToString();
         }
 
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
             // The inner types aren't actually serializable, instead we serialize

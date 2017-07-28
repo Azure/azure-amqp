@@ -9,7 +9,6 @@ namespace Microsoft.Azure.Amqp
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
-    using Microsoft.Azure.Amqp.Tracing;
 
     // ============= State Diagram ====================
     //

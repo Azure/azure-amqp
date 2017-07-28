@@ -21,6 +21,8 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             // TODO: set socket connect timeout to timeout
             this.callbackArgs = callbackArgs;
+            this.callbackArgs.Exception = null;
+            this.callbackArgs.Transport = null;
             DnsEndPoint dnsEndPoint = new DnsEndPoint(this.transportSettings.Host, this.transportSettings.Port);
 
             SocketAsyncEventArgs connectEventArgs = new SocketAsyncEventArgs();
@@ -52,7 +54,12 @@ namespace Microsoft.Azure.Amqp.Transport
         static void OnConnectComplete(object sender, SocketAsyncEventArgs e)
         {
             TcpTransportInitiator thisPtr = (TcpTransportInitiator)e.UserToken;
-            thisPtr.Complete(e, false);
+            if (thisPtr.callbackArgs.Transport == null && thisPtr.callbackArgs.Exception == null)
+            {
+                // Mono invokes the callback twice from the callback event handler
+                // Ignore the second one as a workaround.
+                thisPtr.Complete(e, false);
+            }
         }
 
         void Complete(SocketAsyncEventArgs e, bool completeSynchronously)

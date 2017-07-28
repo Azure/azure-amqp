@@ -96,7 +96,7 @@ namespace TestAmqpBroker
                     TcpTransportSettings tcpSettings = new TcpTransportSettings() { Host = addressUri.Host, Port = addressUri.Port };
                     listeners[i] = tcpSettings.CreateListener();
                 }
-#if NET45
+#if !NETSTANDARD
                 else if (addressUri.Scheme.Equals("ws", StringComparison.OrdinalIgnoreCase))
                 {
                     WebSocketTransportSettings wsSettings = new WebSocketTransportSettings() { Uri = addressUri };
@@ -120,7 +120,7 @@ namespace TestAmqpBroker
 
         public void Stop()
         {
-            this.transportListener.Close();
+            this.transportListener?.Close();
         }
 
         public void AddQueue(string queue)
@@ -234,12 +234,18 @@ namespace TestAmqpBroker
             }
             else
             {
-                string address = link.IsReceiver ?
-                    ((Target)link.Settings.Target).Address.ToString() :
-                    ((Source)link.Settings.Source).Address.ToString();
+                Address address = link.IsReceiver ?
+                    ((Target)link.Settings.Target).Address :
+                    ((Source)link.Settings.Source).Address;
 
+                if (address == null)
+                {
+                    throw new AmqpException(AmqpErrorCode.InvalidField, "Address not set");
+                }
+
+                string node = address.ToString();
                 TestQueue queue;
-                if (!this.queues.TryGetValue(address, out queue))
+                if (!this.queues.TryGetValue(node, out queue))
                 {
                     if (!this.implicitQueue)
                     {
@@ -247,8 +253,7 @@ namespace TestAmqpBroker
                     }
 
                     queue = new TestQueue(this);
-                    this.queues.Add(address, queue);
-                    link.Closed += (s, e) => this.queues.Remove(address);
+                    this.queues.Add(node, queue);
                 }
 
                 queue.CreateClient(link);
@@ -283,7 +288,7 @@ namespace TestAmqpBroker
                         false);
                 }
 
-#if DOTNET_CORE
+#if NETSTANDARD
                 store.Dispose();
 #else
                 store.Close();

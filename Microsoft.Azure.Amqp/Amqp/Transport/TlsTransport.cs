@@ -4,9 +4,7 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
-    using System.Net;
     using System.Net.Security;
-    using System.Security.Authentication;
     using System.Security.Cryptography.X509Certificates;
     using Microsoft.Azure.Amqp.X509;
 
@@ -33,9 +31,9 @@ namespace Microsoft.Azure.Amqp.Transport
                 new CustomSslStream(new TransportStream(this.innerTransport), false, this.ValidateRemoteCertificate, tlsSettings.IsInitiator);
         }
 
-        public override EndPoint LocalEndPoint => this.innerTransport.LocalEndPoint;
+        public override string LocalEndPoint => this.innerTransport.LocalEndPoint;
 
-        public override EndPoint RemoteEndPoint => this.innerTransport.RemoteEndPoint;
+        public override string RemoteEndPoint => this.innerTransport.RemoteEndPoint;
 
         public override bool IsSecure => true;
 

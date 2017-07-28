@@ -1,21 +1,26 @@
 namespace Test.Microsoft.Azure.Amqp
 {
     using System;
+    using System.Diagnostics;
     using TestAmqpBroker;
-    using Xunit;
 
     public class TestAmqpBrokerFixture : IDisposable
     {
         const string address = "amqp://localhost:15672";
 
+        public static Uri Address = new Uri(address);
+
         public TestAmqpBrokerFixture()
         {
-            this.Address = new Uri(address);
             this.Broker = new TestAmqpBroker(new string[] { address }, "guest:guest", null, null);
-            this.Broker.Start();
-        }
 
-        public Uri Address { get; }
+#if !WINDOWS_UWP
+            if (Process.GetProcessesByName("TestAmqpBroker").Length == 0)
+            {
+                this.Broker.Start();
+            }
+#endif
+        }
 
         public TestAmqpBroker Broker { get; }
 

@@ -193,7 +193,6 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        [Fx.Tag.Blocking]
         public static bool WaitOne(WaitHandle waitHandle, TimeSpan timeout)
         {
             ThrowIfNegativeArgument(timeout);

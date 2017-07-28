@@ -50,7 +50,12 @@ namespace Microsoft.Azure.Amqp
         }
 
         public AmqpConnection(TransportBase transport, ProtocolHeader protocolHeader, bool isInitiator, AmqpSettings amqpSettings, AmqpConnectionSettings connectionSettings) :
-            base((isInitiator ? "out" : "in") + "-connection", transport, connectionSettings, isInitiator)
+            this((isInitiator ? "out" : "in") + "-connection", transport, protocolHeader, isInitiator, amqpSettings, connectionSettings)
+        {
+        }
+
+        protected AmqpConnection(string type, TransportBase transport, ProtocolHeader protocolHeader, bool isInitiator, AmqpSettings amqpSettings, AmqpConnectionSettings connectionSettings) :
+            base(type, transport, connectionSettings, isInitiator)
         {
             if (amqpSettings == null)
             {
@@ -90,18 +95,19 @@ namespace Microsoft.Azure.Amqp
             get { return this.isInitiator; }
         }
 
-        public object SessionLock
+        public IEnumerable<AmqpSession> Sessions
         {
-            get { return this.ThisLock; }
+            get
+            {
+                lock (this.ThisLock)
+                {
+                    return this.sessionsByLocalHandle.Values;
+                }
+            }
         }
 
         public AmqpSession CreateSession(AmqpSessionSettings sessionSettings)
         {
-            if (this.IsClosing())
-            {
-                throw new InvalidOperationException(CommonResources.CreateSessionOnClosingConnection);
-            }
-
             AmqpSession session = this.SessionFactory.CreateSession(this, sessionSettings);
             this.AddSession(session, null);
             return session;
@@ -505,9 +511,14 @@ namespace Microsoft.Azure.Amqp
 
         public void AddSession(AmqpSession session, ushort? channel)
         {
-            session.Closed += onSessionClosed;
             lock (this.ThisLock)
             {
+                if (this.IsClosing())
+                {
+                    throw new InvalidOperationException(CommonResources.CreateSessionOnClosingConnection);
+                }
+
+                session.Closed += onSessionClosed;
                 session.LocalChannel = (ushort)this.sessionsByLocalHandle.Add(session);
                 if (channel != null)
                 {
@@ -614,7 +625,7 @@ namespace Microsoft.Azure.Amqp
                     uint remote = GetNextInterval(this.remoteInterval, time, this.lastSendTime);
                     uint local = GetNextInterval(this.localInterval, time, this.lastReceiveTime);
                     uint interval = Math.Min(remote, local);
-#if NETSTANDARD
+#if NETSTANDARD || WINDOWS_UWP
                     this.heartBeatTimer.Change(interval > int.MaxValue ? int.MaxValue : (int)interval, Timeout.Infinite);
 #elif !PCL
                     this.heartBeatTimer.Change(interval, uint.MaxValue);

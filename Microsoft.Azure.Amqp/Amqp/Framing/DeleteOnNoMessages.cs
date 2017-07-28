@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
-    sealed class DeleteOnNoMessages : LifeTimePolicy
+    public sealed class DeleteOnNoMessages : LifeTimePolicy
     {
         public static readonly string Name = "amqp:delete-on-no-messages:list";
         public static readonly ulong Code = 0x000000000000002d;

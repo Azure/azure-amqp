@@ -11,6 +11,20 @@ namespace Microsoft.Azure.Amqp
 
     public class AmqpConnectionFactory
     {
+        TlsTransportSettings tlsSettings;
+        public TlsTransportSettings TlsSettings
+        {
+            get
+            {
+                if (this.tlsSettings == null)
+                {
+                    this.tlsSettings = new TlsTransportSettings();
+                }
+
+                return this.tlsSettings;
+            }
+        }
+
         public Task<AmqpConnection> OpenConnectionAsync(string address)
         {
             return this.OpenConnectionAsync(address, AmqpConstants.DefaultTimeout);
@@ -63,11 +77,22 @@ namespace Microsoft.Azure.Amqp
                     Port = addressUri.Port > -1 ? addressUri.Port : AmqpConstants.DefaultSecurePort
                 };
 
-                transportSettings = new TlsTransportSettings(tcpSettings) { TargetHost = addressUri.Host };
+                var tls = new TlsTransportSettings(tcpSettings) { TargetHost = addressUri.Host };
+                if (this.tlsSettings != null)
+                {
+#if NET45 || NETSTANDARD || MONOANDROID
+                    tls.CertificateValidationCallback = this.tlsSettings.CertificateValidationCallback;
+                    tls.CheckCertificateRevocation = this.tlsSettings.CheckCertificateRevocation;
+                    tls.Certificate = this.tlsSettings.Certificate;
+                    tls.Protocols = this.tlsSettings.Protocols;
+#endif
+                }
+
+                transportSettings = tls;
             }
-#if NET45
-            else if (addressUri.Scheme.Equals(WebSocketTransport.WebSockets, StringComparison.OrdinalIgnoreCase) ||
-                addressUri.Scheme.Equals(WebSocketTransport.SecureWebSockets, StringComparison.OrdinalIgnoreCase))
+#if !PCL
+            else if (addressUri.Scheme.Equals(WebSocketTransportSettings.WebSockets, StringComparison.OrdinalIgnoreCase) ||
+                addressUri.Scheme.Equals(WebSocketTransportSettings.SecureWebSockets, StringComparison.OrdinalIgnoreCase))
             {
                 transportSettings = new WebSocketTransportSettings() { Uri = addressUri };
             }

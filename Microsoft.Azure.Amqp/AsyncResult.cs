@@ -6,12 +6,9 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
-    using System.Diagnostics.Tracing;
     using System.Threading;
-    using Microsoft.Azure.Amqp.Tracing;
 
     // AsyncResult starts acquired; Complete releases.
-    [Fx.Tag.SynchronizationPrimitive(Fx.Tag.BlocksUsing.ManualResetEvent, SupportsAsync = true, ReleaseMethod = "Complete")]
     [DebuggerStepThrough]
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Uses custom scheme for cleanup")]
@@ -28,11 +25,7 @@ namespace Microsoft.Azure.Amqp
         AsyncCompletion nextAsyncCompletion;
         IAsyncResult deferredTransactionalResult;
         object state;
-
-        [Fx.Tag.SynchronizationObject]
         ManualResetEvent manualResetEvent;
-
-        [Fx.Tag.SynchronizationObject(Blocking = false)]
         object thisLock;
 
 #if DEBUG
@@ -105,18 +98,6 @@ namespace Microsoft.Azure.Amqp
 
         // used in conjunction with PrepareAsyncCompletion to allow for finally blocks
         protected Action<AsyncResult, Exception> OnCompleting { get; set; }
-
-        // Override this property to provide the ActivityId when completing with exception
-        protected internal virtual EventTraceActivity Activity
-        {
-            get { return null; }
-        }
-
-        // Override this property to change the trace level when completing with exception
-        protected virtual EventLevel EventLevel
-        {
-            get { return EventLevel.Verbose; }
-        }
 
         protected object ThisLock
         {
@@ -353,7 +334,6 @@ namespace Microsoft.Azure.Amqp
             throw new InvalidOperationException(message);
         }
 
-        [Fx.Tag.Blocking(Conditional = "!asyncResult.isCompleted")]
         protected static TAsyncResult End<TAsyncResult>(IAsyncResult result)
             where TAsyncResult : AsyncResult
         {
@@ -423,8 +403,6 @@ namespace Microsoft.Azure.Amqp
                 AsyncResult = result;
             }
 
-            [SuppressMessage(FxCop.Category.Performance, FxCop.Rule.AvoidUncalledPrivateCode,
-                Justification = "Debug-only facility")]
             public AsyncResult AsyncResult { get; set; }
         }
 #endif

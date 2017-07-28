@@ -16,7 +16,7 @@ if (-Not (Test-Path 'NuGet.exe')) {
 }
 
 $PSScriptRoot = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
-$AssemblyInfoFile = "$PSScriptRoot\..\Properties\AssemblyInfo.cs"
+$AssemblyInfoFile = "$PSScriptRoot\..\Properties\Version.cs"
 $BuildConfig = "Release"
 $OutputDirectory = [IO.Path]::GetFullPath("$PSScriptRoot\..\..\bin\$BuildConfig\")
 

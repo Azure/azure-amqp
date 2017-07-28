@@ -61,7 +61,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\CompletedAsyncResult.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\ExceptionDispatcher.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Fx.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\FxCop.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\InternalBufferManager.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\IteratorAsyncResult.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\PlatformSupport.cs" />
@@ -580,12 +579,6 @@
     </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs">
       <Link>Properties\InternalVisible.cs</Link>
-    </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Tracing\EventTraceActivity.cs">
-      <Link>Tracing\EventTraceActivity.cs</Link>
-    </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Tracing\TrackingContext.cs">
-      <Link>Tracing\TrackingContext.cs</Link>
     </Compile>
   </ItemGroup>
   <ItemGroup>

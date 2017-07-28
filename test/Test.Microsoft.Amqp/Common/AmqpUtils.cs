@@ -1,4 +1,7 @@
-﻿namespace Test.Microsoft.Azure.Amqp
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Test.Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
@@ -41,12 +44,16 @@
                 if (client)
                 {
                     tlsSettings.TargetHost = sslValue;
+#if !WINDOWS_UWP
                     tlsSettings.CertificateValidationCallback = (s, c, h, e) => { return true; };
+#endif
                 }
                 else
                 {
                     tlsSettings.IsInitiator = false;
+#if !WINDOWS_UWP
                     tlsSettings.Certificate = GetCertificate(sslValue); ;
+#endif
                 }
 
                 TlsTransportProvider tlsProvider = new TlsTransportProvider(tlsSettings);
@@ -77,7 +84,7 @@
         {
             return new AmqpConnectionSettings()
             {
-                ContainerId = "M" + Math.Abs(Environment.MachineName.GetHashCode()).ToString() + "P" + Process.GetCurrentProcess().Id.ToString(),
+                ContainerId = "AMQP-" + Guid.NewGuid().ToString().Substring(0, 8),
                 MaxFrameSize = (uint)maxFrameSize,
             };
         }
@@ -137,6 +144,7 @@
             return AmqpMessage.Create(new Data[] { new Data() { Value = binaryData } });
         }
 
+#if !WINDOWS_UWP
         public static AmqpTransportListener CreateListener(string host, int port, string certFindValue, bool doSslUpgrade, SaslHandler saslHandler)
         {
             AmqpSettings settings = GetAmqpSettings(false, certFindValue, doSslUpgrade, saslHandler);
@@ -152,6 +160,7 @@
             TransportListener listener = transportSettings.CreateListener();
             return new AmqpTransportListener(new TransportListener[] { listener }, settings);
         }
+#endif
 
         public static TransportBase CreateTransport(string host, int port, string sslHost, bool doSslUpgrade, SaslHandler saslHandler)
         {
@@ -162,7 +171,9 @@
             {
                 TlsTransportSettings tlsSettings = new TlsTransportSettings(transportSettings);
                 tlsSettings.TargetHost = sslHost;
+#if !WINDOWS_UWP
                 tlsSettings.CertificateValidationCallback = (s, c, h, e) => { return true; };
+#endif
                 transportSettings = tlsSettings;
             }
 
@@ -246,7 +257,7 @@
                         false);
                 }
 
-#if DOTNET_CORE
+#if NETSTANDARD || WINDOWS_UWP
                 store.Dispose();
 #else
                 store.Close();

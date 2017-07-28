@@ -3,16 +3,21 @@
 
 namespace Microsoft.Azure.Amqp.Transport
 {
-#if NET45
     using System;
 
     public sealed class WebSocketTransportSettings : TransportSettings
     {
+        internal const string WebSocketSubProtocol = "amqp";
+        internal const string WebSockets = "ws";
+        internal const string SecureWebSockets = "wss";
+        internal const int WebSocketsPort = 80;
+        internal const int SecureWebSocketsPort = 443;
+
         public WebSocketTransportSettings()
         {
             this.SendBufferSize = AmqpConstants.TransportBufferSize;
             this.ReceiveBufferSize = AmqpConstants.TransportBufferSize;
-            this.SubProtocol = WebSocketTransport.WebSocketSubProtocol;
+            this.SubProtocol = WebSocketSubProtocol;
         }
 
         public Uri Uri
@@ -29,13 +34,20 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override TransportInitiator CreateInitiator()
         {
-            return new WebSocketTransportInitiator(this.Uri, this);
+            return new WebSocketTransportInitiator(this);
         }
 
+#if NET45 || MONOANDROID
         public override TransportListener CreateListener()
         {
             return new WebSocketTransportListener(this.Uri.AbsoluteUri);
         }
-    }
 #endif
+#if NETSTANDARD
+        public override TransportListener CreateListener()
+        {
+            throw new NotSupportedException();
+        }
+#endif
+    }
 }

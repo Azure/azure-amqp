@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
 
     // An AsyncResult that completes as soon as it is instantiated.
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
     [Serializable]
 #endif
     class CompletedAsyncResult : AsyncResult
@@ -23,7 +23,6 @@ namespace Microsoft.Azure.Amqp
             Complete(true, exception);
         }
 
-        [Fx.Tag.GuaranteeNonBlocking]
         public static void End(IAsyncResult result)
         {
             Fx.AssertAndThrowFatal(result.IsCompleted, "CompletedAsyncResult was not completed!");
@@ -31,7 +30,7 @@ namespace Microsoft.Azure.Amqp
         }
     }
 
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
     [Serializable]
 #endif
     class CompletedAsyncResult<T> : AsyncResult
@@ -45,7 +44,6 @@ namespace Microsoft.Azure.Amqp
             Complete(true);
         }
 
-        [Fx.Tag.GuaranteeNonBlocking]
         public static T End(IAsyncResult result)
         {
             Fx.AssertAndThrowFatal(result.IsCompleted, "CompletedAsyncResult<T> was not completed!");
@@ -54,7 +52,7 @@ namespace Microsoft.Azure.Amqp
         }
     }
 
-#if !NETSTANDARD && !PCL
+#if NET45 || MONOANDROID
     [Serializable]
 #endif
     class CompletedAsyncResult<TResult, TParameter> : AsyncResult
@@ -70,7 +68,6 @@ namespace Microsoft.Azure.Amqp
             Complete(true);
         }
 
-        [Fx.Tag.GuaranteeNonBlocking]
         public static TResult End(IAsyncResult result, out TParameter parameter)
         {
             Fx.AssertAndThrowFatal(result.IsCompleted, "CompletedAsyncResult<T> was not completed!");

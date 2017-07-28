@@ -7,7 +7,6 @@ namespace Microsoft.Azure.Amqp
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
-    using Microsoft.Azure.Amqp.Tracing;
 
     sealed class DuplexAmqpLink : AmqpObject
     {

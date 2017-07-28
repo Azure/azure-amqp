@@ -15,7 +15,7 @@ namespace TestAmqpBroker
             Console.WriteLine("  creds=username:passwrod");
             Console.WriteLine("  cert=ssl cert find value (thumbprint or subject), default to url.host");
             Console.WriteLine("  queues: semicolon seperated queue names. If not specified, the broker implicitly");
-            Console.WriteLine("          creates a new node for any address and deletes it when the link is closed.");
+            Console.WriteLine("          creates a new node for any non-existing address.");
         }
 
         static void Main(string[] args)

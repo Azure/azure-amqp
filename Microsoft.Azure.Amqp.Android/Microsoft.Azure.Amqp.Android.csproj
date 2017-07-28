@@ -62,6 +62,18 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionFactory.cs">
       <Link>Amqp\AmqpConnectionFactory.cs</Link>
     </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\WebSocketTransport.cs">
+      <Link>Amqp\Transport\WebSocketTransport.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\WebSocketTransportInitiator.cs">
+      <Link>Amqp\Transport\WebSocketTransportInitiator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\WebSocketTransportListener.cs">
+      <Link>Amqp\Transport\WebSocketTransportListener.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\WebSocketTransportSettings.cs">
+      <Link>Amqp\Transport\WebSocketTransportSettings.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\ResourcesGeneric.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -93,10 +105,8 @@
     <Compile Include="..\Microsoft.Azure.Amqp\CompletedAsyncResult.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\ExceptionDispatcher.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Fx.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\FxCop.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\InternalBufferManager.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\IteratorAsyncResult.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\PartialTrustHelpers.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\PlatformSupport.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Singleton.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\SynchronizedPool.cs" />
@@ -674,12 +684,6 @@
       <Link>Extensions\StreamExtensions.cs</Link>
     </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Tracing\EventTraceActivity.cs">
-      <Link>Tracing\EventTraceActivity.cs</Link>
-    </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Tracing\TrackingContext.cs">
-      <Link>Tracing\TrackingContext.cs</Link>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\35MSSharedLib1024.snk">

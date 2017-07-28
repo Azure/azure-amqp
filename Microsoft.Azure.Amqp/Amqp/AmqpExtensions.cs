@@ -72,7 +72,7 @@ namespace Microsoft.Azure.Amqp
                 }
                 else
                 {
-#if NETSTANDARD || PCL
+#if NETSTANDARD || PCL || WINDOWS_UWP
                     System.Diagnostics.Debug.WriteLine(message);
 #else
                     System.Diagnostics.Trace.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}\t{1}", AppDomain.CurrentDomain.FriendlyName, message));
@@ -445,6 +445,16 @@ namespace Microsoft.Azure.Amqp
         }
 
         // settings
+        public static void UpsertProperty(this Begin begin, AmqpSymbol symbol, object value)
+        {
+            if (begin.Properties == null)
+            {
+                begin.Properties = new Fields();
+            }
+
+            begin.Properties[symbol] = value;
+        }
+
         public static void AddProperty(this Attach attach, AmqpSymbol symbol, object value)
         {
             if (attach.Properties == null)

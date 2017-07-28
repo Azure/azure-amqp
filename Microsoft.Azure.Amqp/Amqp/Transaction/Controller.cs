@@ -7,7 +7,6 @@ namespace Microsoft.Azure.Amqp.Transaction
     using System.Threading;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
-    using Microsoft.Azure.Amqp.Tracing;
 
     sealed class Controller
     {

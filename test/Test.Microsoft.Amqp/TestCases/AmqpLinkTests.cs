@@ -1,4 +1,7 @@
-﻿namespace Test.Microsoft.Azure.Amqp
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Test.Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
@@ -23,7 +26,7 @@
 
         public AmqpLinkTests(TestAmqpBrokerFixture testAmqpBrokerFixture)
         {
-            addressUri = testAmqpBrokerFixture.Address;            
+            addressUri = TestAmqpBrokerFixture.Address;
             broker = testAmqpBrokerFixture.Broker;
         }
 
@@ -146,7 +149,7 @@
             string messageBody = "Hello AMQP!";
             Exception lastException = null;
 
-            ParameterizedThreadStart sendThread = (o) =>
+            Action sendAction = () =>
             {
                 ManualResetEvent doneEvent = new ManualResetEvent(false);
                 int sentCount = 0;
@@ -179,7 +182,7 @@
                 }
             };
 
-            ParameterizedThreadStart receiveThread = (o) =>
+            Action receiveAction = () =>
             {
                 ManualResetEvent doneEvent = new ManualResetEvent(false);
                 int receiveCount = 0;
@@ -220,13 +223,7 @@
                 }
             };
 
-            Thread sThread = new Thread(sendThread);
-            sThread.Start();
-            Thread rThread = new Thread(receiveThread);
-            rThread.Start();
-
-            sThread.Join();
-            rThread.Join();
+            Task.WhenAll(Task.Run(sendAction), Task.Run(receiveAction)).Wait();
 
             Assert.True(lastException == null, string.Format("Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString()));
 
@@ -344,7 +341,7 @@
             session.Open();
 
             Exception lastException = null;
-            ParameterizedThreadStart threadStart = (o) =>
+            Action<SettleMode> sendAction = (mode) =>
             {
                 ManualResetEvent doneEvent = new ManualResetEvent(false);
                 int sentCount = 0;
@@ -369,7 +366,7 @@
 
                 try
                 {
-                    SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, (SettleMode)o));
+                    SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, mode));
                     sLink.RegisterDispositionListener(dispositionHandler);
                     sLink.Open();
 
@@ -400,18 +397,8 @@
                 }
             };
 
-            Thread[] threads = new Thread[3];
             SettleMode[] modes = new SettleMode[] { SettleMode.SettleOnSend, SettleMode.SettleOnReceive, SettleMode.SettleOnDispose };
-            for (int i = 0; i < threads.Length; ++i)
-            {
-                threads[i] = new Thread(threadStart);
-                threads[i].Start(modes[i]);
-            }
-
-            for (int i = 0; i < threads.Length; ++i)
-            {
-                threads[i].Join();
-            }
+            Task.WhenAll(modes.Select(m => Task.Run(() => sendAction(m)))).Wait();
 
             Assert.True(lastException == null, string.Format("Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString()));
 
@@ -423,7 +410,7 @@
         public void AmqpConcurrentConnectionsTest()
         {
             Exception lastException = null;
-            ParameterizedThreadStart threadStart = (o) =>
+            Action action = () =>
             {
                 try
                 {
@@ -442,17 +429,13 @@
                 }
             };
 
-            Thread[] threads = new Thread[32];
-            for (int i = 0; i < threads.Length; ++i)
+            Task[] tasks = new Task[32];
+            for (int i = 0; i < tasks.Length; ++i)
             {
-                threads[i] = new Thread(threadStart);
-                threads[i].Start();
+                tasks[i] = Task.Run(action);
             }
 
-            for (int i = 0; i < threads.Length; ++i)
-            {
-                threads[i].Join();
-            }
+            Task.WaitAll(tasks);
 
             Assert.True(lastException == null, string.Format("Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString()));
         }
@@ -506,6 +489,7 @@
             foreach (var item in results) item();
         }
 
+#if !WINDOWS_UWP
         [Fact]
         public void AmqpTransactionTest()
         {
@@ -591,6 +575,7 @@
             session.Close();
             connection.Close();
         }
+#endif
 
         [Fact]
         public void AmqpDynamicLinkCreditTest()
@@ -714,7 +699,7 @@
                         else if (messageReceived == 13)
                         {
                             receiver.SetTotalLinkCredit(0, true);
-                            Thread.Sleep(200);
+                            Task.Delay(200).Wait();
                             receiver.SetTotalLinkCredit(10, false);
                         }
                         else if (messageReceived == 33)
@@ -905,11 +890,12 @@
             // NOTE: Increment this number to make it more likely to hit race conditions.
             const int NumberOfRuns = 500;
 
+#if !WINDOWS_UWP
             Process proc = Process.GetCurrentProcess();
             long affinityMask = (long)proc.ProcessorAffinity;
             var newAffinityMask = affinityMask &= 0x000F; // use only any of the first 4 available processors to make repro similar in most systems
             proc.ProcessorAffinity = (IntPtr)newAffinityMask;
-
+#endif
             try
             {
                 string queue = "OpenSequentialConnectionsToFindRaceConditions";
@@ -969,7 +955,9 @@
             }
             finally
             {
+#if !WINDOWS_UWP
                 proc.ProcessorAffinity = (IntPtr)affinityMask;
+#endif
             }
         }
 

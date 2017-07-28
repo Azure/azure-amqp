@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static void Encode(DescribedType value, ByteBuffer buffer)
         {
-            if (value.Value == null)
+            if (value == null)
             {
                 AmqpEncoding.EncodeNull(buffer);
             }

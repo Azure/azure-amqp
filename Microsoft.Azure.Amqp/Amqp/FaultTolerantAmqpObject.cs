@@ -45,8 +45,7 @@ namespace Microsoft.Azure.Amqp
         protected override async Task<T> OnCreateAsync(TimeSpan timeout)
         {
             T amqpObject = await this.createObjectAsync(timeout);
-            amqpObject.SafeAddClosed((s, e) => this.Invalidate(amqpObject));
-
+            amqpObject.SafeAddClosed(OnObjectClosed);
             return amqpObject;
         }
 

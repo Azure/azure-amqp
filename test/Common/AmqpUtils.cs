@@ -25,6 +25,11 @@ namespace Test.Microsoft.Azure.Amqp
 
         public static AmqpConnection CreateConnection(Uri uri, string sslHost, bool doSslUpgrade, SaslHandler saslHandler, int maxFrameSize, uint? idleTimeoutMs = null)
         {
+            if (uri.IsSecureTransport() && sslHost == null)
+            {
+                sslHost = uri.Host;
+            }
+
             return AmqpUtils.CreateConnection(uri.Host, uri.Port, sslHost, doSslUpgrade, saslHandler, maxFrameSize, idleTimeoutMs);
         }
 
@@ -38,28 +43,26 @@ namespace Test.Microsoft.Azure.Amqp
         public static AmqpSettings GetAmqpSettings(bool client, string sslValue, bool doSslUpgrade, params SaslHandler[] saslHandlers)
         {
             AmqpSettings settings = new AmqpSettings();
+#if !WINDOWS_UWP
             if ((client && doSslUpgrade) || (!client && sslValue != null))
             {
                 TlsTransportSettings tlsSettings = new TlsTransportSettings();
                 if (client)
                 {
                     tlsSettings.TargetHost = sslValue;
-#if !WINDOWS_UWP
                     tlsSettings.CertificateValidationCallback = (s, c, h, e) => { return true; };
-#endif
                 }
                 else
                 {
                     tlsSettings.IsInitiator = false;
-#if !WINDOWS_UWP
                     tlsSettings.Certificate = GetCertificate(sslValue); ;
-#endif
                 }
 
                 TlsTransportProvider tlsProvider = new TlsTransportProvider(tlsSettings);
                 tlsProvider.Versions.Add(new AmqpVersion(1, 0, 0));
                 settings.TransportProviders.Add(tlsProvider);
             }
+#endif
 
             if (saslHandlers != null && saslHandlers.Length >= 1 && saslHandlers[0] != null)
             {

@@ -1,4 +1,4 @@
-version: 2.0.{build}
+version: 2.1.{build}
 branches:
   only:
   - develop
@@ -13,4 +13,9 @@ build:
   verbosity: minimal
 test_script:
 - cmd: >-
-    dotnet.exe test test\Test.Microsoft.Amqp\Test.Microsoft.Amqp.csproj
+    %xunit20%\xunit.console.x86.exe test\Test.Microsoft.Amqp\bin\Debug\net452\Test.Microsoft.Amqp.dll
+
+
+    dotnet.exe test test\Test.Microsoft.Amqp.Core\Test.Microsoft.Amqp.Core.csproj
+on_failure:
+- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

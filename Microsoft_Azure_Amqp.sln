@@ -20,6 +20,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Azure.Amqp.PCL", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{0D7D9775-844A-407D-980A-4E0FA53F1D01}"
 	ProjectSection(SolutionItems) = preProject
+		appveyor.yml = appveyor.yml
 		build\build.cmd = build\build.cmd
 		build\make_nuget_package.ps1 = build\make_nuget_package.ps1
 		build\Microsoft.Azure.Amqp.nuspec = build\Microsoft.Azure.Amqp.nuspec
@@ -281,8 +282,8 @@ Global
 		{F2A0CB73-B9DB-4898-A103-40213F83366D} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {5982C678-B29E-487B-9B3E-7F547EC1222D}
-		EnterpriseLibraryConfigurationToolBinariesPath = packages\TransientFaultHandling.Core.5.1.1209.1\lib\NET4
 		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.TransientFaultHandling.6.0.1304.0\lib\portable-net45+win+wp8;packages\EnterpriseLibrary.TransientFaultHandling.WindowsAzure.Storage.6.0.1304.1\lib\NET45;packages\EnterpriseLibrary.TransientFaultHandling.Data.6.0.1304.1\lib\NET45
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\TransientFaultHandling.Core.5.1.1209.1\lib\NET4
+		SolutionGuid = {5982C678-B29E-487B-9B3E-7F547EC1222D}
 	EndGlobalSection
 EndGlobal

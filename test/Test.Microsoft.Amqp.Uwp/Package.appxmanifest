@@ -5,11 +5,11 @@
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   IgnorableNamespaces="uap mp">
 
-  <Identity Name="954a6985-9e2b-4b71-827a-82bb5842ba94"
+  <Identity Name="14b219f9-88b2-4d3b-8395-670b6741074c"
             Publisher="CN=xinchen"
             Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="954a6985-9e2b-4b71-827a-82bb5842ba94" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="14b219f9-88b2-4d3b-8395-670b6741074c" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>Test.Microsoft.Amqp.Uwp</DisplayName>

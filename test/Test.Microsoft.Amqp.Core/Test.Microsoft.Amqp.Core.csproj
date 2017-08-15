@@ -1,8 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net452</TargetFrameworks>
-    <AssemblyName>Test.Microsoft.Amqp</AssemblyName>
+    <TargetFrameworks>netcoreapp1.0</TargetFrameworks>
+    <AssemblyName>Test.Microsoft.Amqp.Core</AssemblyName>
+    <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
+    <PackageId>Test.Microsoft.Azure.Amqp</PackageId>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <RuntimeFrameworkVersion>1.0.5</RuntimeFrameworkVersion>
+    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
   </PropertyGroup>
 
   <ItemGroup>

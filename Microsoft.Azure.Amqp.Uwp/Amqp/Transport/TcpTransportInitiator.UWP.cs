@@ -7,7 +7,7 @@ namespace Microsoft.Azure.Amqp.Transport
     using Windows.Networking;
     using Windows.Networking.Sockets;
 
-    sealed class TcpTransportInitiator : TransportInitiator
+    class TcpTransportInitiator : TransportInitiator
     {
         readonly TcpTransportSettings transportSettings;
         TransportAsyncCallbackArgs callbackArgs;
@@ -15,6 +15,13 @@ namespace Microsoft.Azure.Amqp.Transport
         internal TcpTransportInitiator(TcpTransportSettings transportSettings)
         {
             this.transportSettings = transportSettings;
+            this.ProtectionLevel = SocketProtectionLevel.PlainSocket;
+        }
+
+        protected SocketProtectionLevel ProtectionLevel
+        {
+            get;
+            set;
         }
 
         public override bool ConnectAsync(TimeSpan timeout, TransportAsyncCallbackArgs callbackArgs)
@@ -24,7 +31,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
             this.callbackArgs = callbackArgs;
 
-            var connectTask = streamSocket.ConnectAsync(new HostName(addr), this.transportSettings.Port.ToString(), SocketProtectionLevel.PlainSocket).AsTask();
+            var connectTask = streamSocket.ConnectAsync(new HostName(addr), this.transportSettings.Port.ToString(), this.ProtectionLevel).AsTask();
             if (connectTask.IsCompleted)
             {
                 var transport = new TcpTransport(streamSocket, this.transportSettings);

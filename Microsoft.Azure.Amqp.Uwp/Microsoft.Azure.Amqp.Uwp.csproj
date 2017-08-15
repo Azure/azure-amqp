@@ -542,6 +542,9 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslResponse.cs">
       <Link>Amqp\Sasl\SaslResponse.cs</Link>
     </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportProvider.cs">
+      <Link>Amqp\Transport\TlsTransportProvider.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\WebSocketTransportSettings.cs">
       <Link>Amqp\Transport\WebSocketTransportSettings.cs</Link>
     </Compile>
@@ -568,6 +571,7 @@
       <Link>Properties\Version.cs</Link>
     </Compile>
     <Compile Include="Amqp\Resources.UWP.cs" />
+    <Compile Include="Amqp\Transport\TlsTransportInitiator.UWP.cs" />
     <Compile Include="Amqp\Transport\WebSocketTransport.UWP.cs" />
     <Compile Include="Amqp\Transport\WebSocketTransportInitiator.UWP.cs" />
     <Compile Include="ResourceManager.cs" />
@@ -638,13 +642,6 @@
     <Compile Include="Amqp\Transport\TcpTransportInitiator.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportSetting.cs">
       <Link>Amqp\Transport\TcpTransportSetting.cs</Link>
-    </Compile>
-    <Compile Include="Amqp\Transport\TlsTransport.UWP.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportInitiator.cs">
-      <Link>Amqp\Transport\TlsTransportInitiator.cs</Link>
-    </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportProvider.cs">
-      <Link>Amqp\Transport\TlsTransportProvider.cs</Link>
     </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportSetting.cs">
       <Link>Amqp\Transport\TlsTransportSetting.cs</Link>

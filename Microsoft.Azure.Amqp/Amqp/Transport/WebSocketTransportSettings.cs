@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
+    using System.Net;
 
     public sealed class WebSocketTransportSettings : TransportSettings
     {
@@ -27,6 +28,12 @@ namespace Microsoft.Azure.Amqp.Transport
         }
 
         public string SubProtocol
+        {
+            get;
+            set;
+        }
+
+        public IWebProxy Proxy
         {
             get;
             set;

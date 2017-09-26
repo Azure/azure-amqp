@@ -21,6 +21,7 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    <Configurations>Debug;Release;Signed</Configurations>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">

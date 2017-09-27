@@ -110,8 +110,8 @@ Global
 		{A0D1C509-8C92-4AA1-983C-00E5254F8AE0}.Release|x64.Build.0 = Release|Any CPU
 		{A0D1C509-8C92-4AA1-983C-00E5254F8AE0}.Release|x86.ActiveCfg = Release|Any CPU
 		{A0D1C509-8C92-4AA1-983C-00E5254F8AE0}.Release|x86.Build.0 = Release|Any CPU
-		{A0D1C509-8C92-4AA1-983C-00E5254F8AE0}.Signed|Any CPU.ActiveCfg = Release|Any CPU
-		{A0D1C509-8C92-4AA1-983C-00E5254F8AE0}.Signed|Any CPU.Build.0 = Release|Any CPU
+		{A0D1C509-8C92-4AA1-983C-00E5254F8AE0}.Signed|Any CPU.ActiveCfg = Signed|Any CPU
+		{A0D1C509-8C92-4AA1-983C-00E5254F8AE0}.Signed|Any CPU.Build.0 = Signed|Any CPU
 		{A0D1C509-8C92-4AA1-983C-00E5254F8AE0}.Signed|ARM.ActiveCfg = Debug|Any CPU
 		{A0D1C509-8C92-4AA1-983C-00E5254F8AE0}.Signed|ARM.Build.0 = Debug|Any CPU
 		{A0D1C509-8C92-4AA1-983C-00E5254F8AE0}.Signed|x64.ActiveCfg = Debug|Any CPU
@@ -182,8 +182,8 @@ Global
 		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}.Release|x64.Build.0 = Release|Any CPU
 		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}.Release|x86.ActiveCfg = Release|Any CPU
 		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}.Release|x86.Build.0 = Release|Any CPU
-		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}.Signed|Any CPU.ActiveCfg = Debug|Any CPU
-		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}.Signed|Any CPU.Build.0 = Debug|Any CPU
+		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}.Signed|Any CPU.ActiveCfg = Release|Any CPU
+		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}.Signed|Any CPU.Build.0 = Release|Any CPU
 		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}.Signed|ARM.ActiveCfg = Debug|Any CPU
 		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}.Signed|ARM.Build.0 = Debug|Any CPU
 		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B}.Signed|x64.ActiveCfg = Debug|Any CPU
@@ -206,8 +206,8 @@ Global
 		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Release|x64.Build.0 = Release|Any CPU
 		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Release|x86.ActiveCfg = Release|Any CPU
 		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Release|x86.Build.0 = Release|Any CPU
-		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|Any CPU.ActiveCfg = Debug|Any CPU
-		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|Any CPU.Build.0 = Debug|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|Any CPU.ActiveCfg = Release|Any CPU
+		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|Any CPU.Build.0 = Release|Any CPU
 		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|ARM.ActiveCfg = Debug|Any CPU
 		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|ARM.Build.0 = Debug|Any CPU
 		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|x64.ActiveCfg = Debug|Any CPU
@@ -230,8 +230,8 @@ Global
 		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Release|x64.Build.0 = Release|Any CPU
 		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Release|x86.ActiveCfg = Release|Any CPU
 		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Release|x86.Build.0 = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|Any CPU.ActiveCfg = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|Any CPU.Build.0 = Debug|Any CPU
+		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|Any CPU.ActiveCfg = Release|Any CPU
+		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|Any CPU.Build.0 = Release|Any CPU
 		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|ARM.ActiveCfg = Debug|Any CPU
 		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|ARM.Build.0 = Debug|Any CPU
 		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|x64.ActiveCfg = Debug|Any CPU
@@ -282,8 +282,8 @@ Global
 		{F2A0CB73-B9DB-4898-A103-40213F83366D} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.TransientFaultHandling.6.0.1304.0\lib\portable-net45+win+wp8;packages\EnterpriseLibrary.TransientFaultHandling.WindowsAzure.Storage.6.0.1304.1\lib\NET45;packages\EnterpriseLibrary.TransientFaultHandling.Data.6.0.1304.1\lib\NET45
-		EnterpriseLibraryConfigurationToolBinariesPath = packages\TransientFaultHandling.Core.5.1.1209.1\lib\NET4
 		SolutionGuid = {5982C678-B29E-487B-9B3E-7F547EC1222D}
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\TransientFaultHandling.Core.5.1.1209.1\lib\NET4
+		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.TransientFaultHandling.6.0.1304.0\lib\portable-net45+win+wp8;packages\EnterpriseLibrary.TransientFaultHandling.WindowsAzure.Storage.6.0.1304.1\lib\NET45;packages\EnterpriseLibrary.TransientFaultHandling.Data.6.0.1304.1\lib\NET45
 	EndGlobalSection
 EndGlobal

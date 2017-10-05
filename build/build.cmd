@@ -68,19 +68,9 @@ if %build-clean%==1 (
 call :build-a-solution "%build-root%\microsoft_azure_amqp.sln" "%build-config%" "%build-platform%"
 if not !errorlevel!==0 exit /b !errorlevel!
 
-set dest-path=%build-root%\bin\Payload
-if /I "%build-config%" == "Signed" (
-	rd /s /q "%dest-path%"
-	mkdir "%dest-path%"
-	xcopy "%build-root%\Microsoft.Azure.Amqp\bin\signed\net45\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\net45\" /F
-	xcopy "%build-root%\Microsoft.Azure.Amqp\bin\signed\net45\Microsoft.Azure.Amqp.xml" "%dest-path%\lib\net45\" /F
-	xcopy "%build-root%\Microsoft.Azure.Amqp\bin\signed\netstandard1.3\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\netstandard1.3\" /F
-	xcopy "%build-root%\Microsoft.Azure.Amqp\bin\signed\netstandard1.3\Microsoft.Azure.Amqp.xml" "%dest-path%\lib\netstandard1.3\" /F
-	xcopy "%build-root%\Microsoft.Azure.Amqp.Uwp\bin\signed\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\uap10.0\" /F
-	xcopy "%build-root%\Microsoft.Azure.Amqp.Uwp\bin\signed\Microsoft.Azure.Amqp.pri" "%dest-path%\lib\uap10.0\" /F
-	xcopy "%build-root%\Microsoft.Azure.Amqp.Android\bin\signed\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\monoandroid\" /F
-	xcopy "%build-root%\Microsoft.Azure.Amqp.Pcl\bin\signed\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\portable-net45+wp8+wpa81+win8+MonoAndroid10+MonoTouch10+Xamarin.iOS10+UAP10\" /F
-)
+if /I "%build-config%" == "Release" call :package %build-root%\bin\Payload
+if /I "%build-config%" == "Signed" call :package %build-root%\bin\Payload
+
 rem -----------------------------------------------------------------------------
 rem -- done
 rem -----------------------------------------------------------------------------
@@ -109,6 +99,20 @@ echo  --config ^<value^>      [Debug] build configuration (e.g. Debug, Release, 
 echo  --platform ^<value^>    [Win32] build platform (e.g. Win32, x64, ...)
 goto :eof
 
+:package
+set dest-path=%1
+rd /s /q "%dest-path%"
+mkdir "%dest-path%"
+xcopy "%build-root%\Microsoft.Azure.Amqp\bin\%build-config%\net45\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\net45\" /F
+xcopy "%build-root%\Microsoft.Azure.Amqp\bin\%build-config%\net45\Microsoft.Azure.Amqp.xml" "%dest-path%\lib\net45\" /F
+xcopy "%build-root%\Microsoft.Azure.Amqp\bin\%build-config%\netstandard1.3\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\netstandard1.3\" /F
+xcopy "%build-root%\Microsoft.Azure.Amqp\bin\%build-config%\netstandard1.3\Microsoft.Azure.Amqp.xml" "%dest-path%\lib\netstandard1.3\" /F
+xcopy "%build-root%\Microsoft.Azure.Amqp.Uwp\bin\%build-config%\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\uap10.0\" /F
+xcopy "%build-root%\Microsoft.Azure.Amqp.Uwp\bin\%build-config%\Microsoft.Azure.Amqp.pri" "%dest-path%\lib\uap10.0\" /F
+xcopy "%build-root%\Microsoft.Azure.Amqp.Android\bin\%build-config%\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\monoandroid\" /F
+xcopy "%build-root%\Microsoft.Azure.Amqp.Pcl\bin\%build-config%\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\portable-net45+wp8+wpa81+win8+MonoAndroid10+MonoTouch10+Xamarin.iOS10+UAP10\" /F
+powershell %current-path%\make_nuget_package.ps1
+goto :eof
 
 rem -----------------------------------------------------------------------------
 rem -- helper subroutines

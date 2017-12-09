@@ -96,7 +96,7 @@ namespace Microsoft.Azure.Amqp
 
                 if (this.TryGet(out tcs))
                 {
-                    return await tcs.Task;
+                    return await tcs.Task.ConfigureAwait(false);
                 }
 
                 tcs = new TaskCompletionSource<TValue>();
@@ -175,7 +175,7 @@ namespace Microsoft.Azure.Amqp
         {
             try
             {
-                TValue value = await OnCreateAsync(timeout);
+                TValue value = await OnCreateAsync(timeout).ConfigureAwait(false);
                 tcs.SetResult(value);
 
                 if (this.disposed)

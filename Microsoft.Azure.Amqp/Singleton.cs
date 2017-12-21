@@ -183,7 +183,7 @@ namespace Microsoft.Azure.Amqp
                     OnSafeClose(value);
                 }
             }
-            catch (Exception e) when (!Fx.IsFatal(e))
+            catch (Exception ex) when (!Fx.IsFatal(ex))
             {
                 this.TryRemove();
                 tcs.SetException(ex);

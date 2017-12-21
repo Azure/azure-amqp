@@ -183,14 +183,14 @@ namespace Microsoft.Azure.Amqp
                 this.openCalled = true;
             }
 
-            AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, "BeginOpen");
+            AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(BeginOpen));
             return new OpenAsyncResult(this, timeout, callback, state);
         }
 
         public void EndOpen(IAsyncResult result)
         {
             OpenAsyncResult.End(result);
-            AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, "EndOpen");
+            AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(EndOpen));
         }
 
         public void Close()
@@ -251,7 +251,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, "BeginClose");
+                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(BeginClose));
                 return new CloseAsyncResult(this, timeout, callback, state);
             }
         }
@@ -264,7 +264,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, "EndClose");
+                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(EndClose));
                 CloseAsyncResult.End(result);
             }
         }
@@ -329,7 +329,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception exp) when (!Fx.IsFatal(exp))
             {
-                AmqpTrace.Provider.AmqpLogError(this, "SafeClose", exp.ToString());
+                AmqpTrace.Provider.AmqpLogError(this, nameof(SafeClose), exp.ToString());
 
                 this.Abort();
             }
@@ -529,10 +529,7 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            if (closed != null)
-            {
-                closed(this, EventArgs.Empty);
-            }
+            closed?.Invoke(this, EventArgs.Empty);
         }
 
         abstract class AmqpObjectAsyncResult : TimeoutAsyncResult<AmqpObject>

@@ -17,11 +17,11 @@ namespace Microsoft.Azure.Amqp
         {
             if (tokenValue == null)
             {
-                throw new ArgumentNullException("tokenValue");
+                throw new ArgumentNullException(nameof(tokenValue));
             }
             else if (string.IsNullOrWhiteSpace(tokenType))
             {
-                throw new ArgumentNullException("tokenType");
+                throw new ArgumentNullException(nameof(tokenType));
             }
 
             this.TokenValue = tokenValue;

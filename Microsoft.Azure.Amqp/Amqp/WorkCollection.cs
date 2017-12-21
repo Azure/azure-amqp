@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
-    
+
     interface IWork<TOutcome>
     {
         void Start();

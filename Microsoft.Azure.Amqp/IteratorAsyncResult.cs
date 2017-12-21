@@ -571,7 +571,7 @@ namespace Microsoft.Azure.Amqp
 
         sealed class ParallelAsyncResult<TWorkItem> : AsyncResult<ParallelAsyncResult<TWorkItem>>
         {
-            static AsyncCallback completed = new AsyncCallback(OnCompleted);
+            static readonly AsyncCallback completed = new AsyncCallback(OnCompleted);
 
             readonly TIteratorAsyncResult iteratorAsyncResult;
             readonly ICollection<TWorkItem> workItems;

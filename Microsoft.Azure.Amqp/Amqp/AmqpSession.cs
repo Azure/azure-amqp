@@ -567,20 +567,20 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            protected AmqpSession Session 
-            { 
-                get { return this.session; } 
-            }
-
-            protected bool IsReceiver 
-            { 
-                get; 
-                set; 
-            }
-
-            protected object SyncRoot 
+            protected AmqpSession Session
             {
-                get { return this.syncRoot; } 
+                get { return this.session; }
+            }
+
+            protected bool IsReceiver
+            {
+                get;
+                set;
+            }
+
+            protected object SyncRoot
+            {
+                get { return this.syncRoot; }
             }
 
             public void OnLinkClosed(AmqpLink link)
@@ -792,7 +792,7 @@ namespace Microsoft.Azure.Amqp
                     return;
                 }
 
-                AmqpTrace.Provider.AmqpLogOperationVerbose(thisPtr, TraceOperation.Execute, "DispositionTimerCallback");
+                AmqpTrace.Provider.AmqpLogOperationVerbose(thisPtr, TraceOperation.Execute, nameof(DispositionTimerCallback));
 
                 lock (thisPtr.syncRoot)
                 {

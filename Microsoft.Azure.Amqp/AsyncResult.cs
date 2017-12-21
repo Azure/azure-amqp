@@ -330,14 +330,14 @@ namespace Microsoft.Azure.Amqp
         {
             if (result == null)
             {
-                throw new ArgumentNullException("result");
+                throw new ArgumentNullException(nameof(result));
             }
 
             TAsyncResult asyncResult = result as TAsyncResult;
 
             if (asyncResult == null)
             {
-                throw new ArgumentException("result", CommonResources.InvalidAsyncResult);
+                throw new ArgumentException(nameof(result), CommonResources.InvalidAsyncResult);
             }
 
             if (asyncResult.endCalled)

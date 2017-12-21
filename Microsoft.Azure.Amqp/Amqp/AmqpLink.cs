@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (linkSettings == null)
             {
-                throw new ArgumentNullException("linkSettings");
+                throw new ArgumentNullException(nameof(linkSettings));
             }
 
             this.references = 1;
@@ -894,7 +894,7 @@ namespace Microsoft.Azure.Amqp
                 return;
             }
 
-            this.ProcessTransfer(transfer, rawFrame, delivery, newDelivery);            
+            this.ProcessTransfer(transfer, rawFrame, delivery, newDelivery);
         }
 
         ArraySegment<byte> GetTxnIdFromFlow(Flow flow)
@@ -922,7 +922,7 @@ namespace Microsoft.Azure.Amqp
         static void OnProviderLinkOpened(IAsyncResult result)
         {
             var thisPtr = (AmqpLink)result.AsyncState;
-            AmqpTrace.Provider.AmqpLogOperationVerbose(thisPtr, TraceOperation.Execute, "OnProviderLinkOpened");
+            AmqpTrace.Provider.AmqpLogOperationVerbose(thisPtr, TraceOperation.Execute, nameof(OnProviderLinkOpened));
             Exception openException = null;
 
             // Capture the exception from provider first

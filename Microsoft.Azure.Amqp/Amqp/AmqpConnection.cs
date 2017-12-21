@@ -59,7 +59,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (amqpSettings == null)
             {
-                throw new ArgumentNullException("amqpSettings");
+                throw new ArgumentNullException(nameof(amqpSettings));
             }
 
             this.initialHeader = protocolHeader;

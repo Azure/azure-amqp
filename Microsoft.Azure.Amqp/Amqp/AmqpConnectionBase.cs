@@ -4,8 +4,6 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using System.Globalization;
-    using System.Net;
     using System.Security.Principal;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
@@ -19,13 +17,13 @@ namespace Microsoft.Azure.Amqp
         readonly AmqpConnectionSettings settings;
         readonly AsyncIO asyncIO;
         IAmqpUsageMeter usageMeter;
-        
+
         protected AmqpConnectionBase(string type, TransportBase transport, AmqpConnectionSettings settings, bool isInitiator)
             : base(type, transport.Identifier)
         {
             if (settings == null)
             {
-                throw new ArgumentNullException("settings");
+                throw new ArgumentNullException(nameof(settings));
             }
 
             Fx.Assert(transport != null, "transport must not be null.");

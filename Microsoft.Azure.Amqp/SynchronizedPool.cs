@@ -8,7 +8,6 @@ namespace Microsoft.Azure.Amqp
 #if NET45 || MONOANDROID
     using System.Security.Permissions;
 #endif
-    using System.Threading;
 
     // A simple synchronized pool would simply lock a stack and push/pop on return/take.
     //
@@ -46,15 +45,17 @@ namespace Microsoft.Azure.Amqp
     // Since the statistics are a heuristic as to how often something is happening, they 
     // do not need to be perfect.
     // 
-    class SynchronizedPool<T> where T : class
+    sealed class SynchronizedPool<T> where T : class
     {
         const int maxPendingEntries = 128;
         const int maxPromotionFailures = 64;
         const int maxReturnsBeforePromotion = 64;
         const int maxThreadItemsPerProcessor = 16;
+
+        readonly GlobalPool globalPool;
+        readonly int maxCount;
+
         Entry[] entries;
-        GlobalPool globalPool;
-        int maxCount;
         PendingEntry[] pending;
         int promotionFailures;
 
@@ -210,7 +211,6 @@ namespace Microsoft.Azure.Amqp
 
         public bool Return(T value)
         {
-
             int thisThreadID = Environment.CurrentManagedThreadId;
 
             if (thisThreadID == 0)
@@ -341,9 +341,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        class GlobalPool
+        sealed class GlobalPool
         {
-            Stack<T> items;
+            readonly Stack<T> items;
 
             int maxCount;
 

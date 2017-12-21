@@ -76,7 +76,7 @@ namespace Microsoft.Azure.Amqp
                 if (callback != null)
                 {
                     task.ContinueWith(
-                        t => callback(task),
+                        t => callback(t),
                         TaskContinuationOptions.ExecuteSynchronously);
                 }
 
@@ -85,13 +85,13 @@ namespace Microsoft.Azure.Amqp
 
             var tcs = new TaskCompletionSource<object>(state);
             task.ContinueWith(
-                _ =>
+                t =>
                 {
-                    if (task.IsFaulted)
+                    if (t.IsFaulted)
                     {
-                        tcs.TrySetException(task.Exception.InnerExceptions);
+                        tcs.TrySetException(t.Exception.InnerExceptions);
                     }
-                    else if (task.IsCanceled)
+                    else if (t.IsCanceled)
                     {
                         tcs.TrySetCanceled();
                     }
@@ -114,7 +114,7 @@ namespace Microsoft.Azure.Amqp
                 if (callback != null)
                 {
                     task.ContinueWith(
-                        t => callback(task),
+                        t => callback(t),
                         TaskContinuationOptions.ExecuteSynchronously);
                 }
 
@@ -123,19 +123,19 @@ namespace Microsoft.Azure.Amqp
 
             var tcs = new TaskCompletionSource<TResult>(state);
             task.ContinueWith(
-                _ =>
+                t =>
                 {
-                    if (task.IsFaulted)
+                    if (t.IsFaulted)
                     {
-                        tcs.TrySetException(task.Exception.InnerExceptions);
+                        tcs.TrySetException(t.Exception.InnerExceptions);
                     }
-                    else if (task.IsCanceled)
+                    else if (t.IsCanceled)
                     {
                         tcs.TrySetCanceled();
                     }
                     else
                     {
-                        tcs.TrySetResult(task.Result);
+                        tcs.TrySetResult(t.Result);
                     }
 
                     callback?.Invoke(tcs.Task);

@@ -55,13 +55,8 @@ namespace Microsoft.Azure.Amqp
             {
                 work.Start();
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 if (this.pendingWork.TryRemove(key, out work))
                 {
                     work.Cancel(true, exception);

@@ -158,13 +158,8 @@ namespace Microsoft.Azure.Amqp.Transport
                 {
                     thisPtr.HandleTransportOpened(result);
                 }
-                catch (Exception exp)
+                catch (Exception exp) when (!Fx.IsFatal(exp))
                 {
-                    if (Fx.IsFatal(exp))
-                    {
-                        throw;
-                    }
-
                     AmqpTrace.Provider.AmqpLogError(thisPtr, "HandleTransportOpened", exp.Message);
                     thisPtr.args.Exception = exp;
                     thisPtr.parent.OnHandleTransportComplete(thisPtr.args);
@@ -193,13 +188,8 @@ namespace Microsoft.Azure.Amqp.Transport
                 {
                     thisPtr.OnProtocolHeader(buffer);
                 }
-                catch (Exception exp)
+                catch (Exception exp) when (!Fx.IsFatal(exp))
                 {
-                    if (Fx.IsFatal(exp))
-                    {
-                        throw;
-                    }
-
                     AmqpTrace.Provider.AmqpLogError(thisPtr, "OnProtocolHeader", exp.Message);
                     args.Exception = exp;
                     thisPtr.parent.OnHandleTransportComplete(args);

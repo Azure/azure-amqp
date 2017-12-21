@@ -327,13 +327,8 @@ namespace Microsoft.Azure.Amqp
             {
                 this.BeginClose(AmqpConstants.DefaultTimeout, onSafeCloseComplete, this);
             }
-            catch (Exception exp)
+            catch (Exception exp) when (!Fx.IsFatal(exp))
             {
-                if (Fx.IsFatal(exp))
-                {
-                    throw;
-                }
-
                 AmqpTrace.Provider.AmqpLogError(this, "SafeClose", exp.ToString());
 
                 this.Abort();
@@ -494,13 +489,8 @@ namespace Microsoft.Azure.Amqp
             {
                 thisPtr.EndClose(result);
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 AmqpTrace.Provider.AmqpLogError(thisPtr, "SafeCloseComplete", exception.ToStringSlim());
 
                 thisPtr.Abort();
@@ -577,13 +567,8 @@ namespace Microsoft.Azure.Amqp
                 {
                     shouldComplete = this.OnStart();
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     AmqpTrace.Provider.AmqpLogError(this.amqpObject, "OnStart", exception.ToStringSlim());
 
                     shouldComplete = true;

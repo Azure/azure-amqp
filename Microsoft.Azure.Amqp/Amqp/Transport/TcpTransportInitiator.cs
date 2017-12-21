@@ -83,13 +83,8 @@ namespace Microsoft.Azure.Amqp.Transport
                     transport = new TcpTransport(e.ConnectSocket, this.transportSettings);
                     transport.Open();
                 }
-                catch (Exception exp)
+                catch (Exception exp) when (!Fx.IsFatal(exp))
                 {
-                    if (Fx.IsFatal(exp))
-                    {
-                        throw;
-                    }
-
                     exception = exp;
                     if (transport != null)
                     {

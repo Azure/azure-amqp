@@ -158,13 +158,8 @@ namespace Microsoft.Azure.Amqp
                     this.OnReceiveLinkFrame(frame);
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 AmqpTrace.Provider.AmqpLogError(this, "ProcessFrame", exception.Message);
                 this.SafeClose(exception);
             }
@@ -301,13 +296,8 @@ namespace Microsoft.Azure.Amqp
             {
                 link = this.LinkFactory.CreateLink(this, linkSettings);
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 AmqpException amqpException = exception as AmqpException;
                 if (amqpException != null &&
                     amqpException.Error != null &&
@@ -819,13 +809,8 @@ namespace Microsoft.Azure.Amqp
                 {
                     thisPtr.SendDisposition();
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     thisPtr.session.SafeClose(exception);
                 }
             }

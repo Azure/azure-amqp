@@ -212,13 +212,8 @@ namespace Microsoft.Azure.Amqp.Transport
                     }
                 }
             }
-            catch (Exception exp)
+            catch (Exception exp) when (!Fx.IsFatal(exp) && !syncComplete)
             {
-                if (Fx.IsFatal(exp) || syncComplete)
-                {
-                    throw;
-                }
-
                 exception = exp;
             }
 
@@ -255,13 +250,8 @@ namespace Microsoft.Azure.Amqp.Transport
                     args.BytesTransfered = this.sslStream.EndRead(result);
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 args.Exception = exception;
             }
 

@@ -122,7 +122,7 @@ namespace Microsoft.Azure.Amqp
             TransportBase transport = await Task.Factory.FromAsync(
                 (c, s) => initiator.BeginConnect(timeout, c, s),
                 (r) => initiator.EndConnect(r),
-                null);
+                null).ConfigureAwait(false);
 
             try
             {
@@ -133,7 +133,7 @@ namespace Microsoft.Azure.Amqp
                 };
 
                 AmqpConnection connection = new AmqpConnection(transport, settings, connectionSettings);
-                await connection.OpenAsync(timeout);
+                await connection.OpenAsync(timeout).ConfigureAwait(false);
 
                 return connection;
             }

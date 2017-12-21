@@ -156,13 +156,8 @@ namespace Microsoft.Azure.Amqp
                     header.Decode(buffer);
                     this.OnProtocolHeader(header);
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     AmqpTrace.Provider.AmqpLogError(this, "OnProtocolHeader", exception.Message);
 
                     this.TerminalException = exception;
@@ -175,13 +170,8 @@ namespace Microsoft.Azure.Amqp
                 {
                     this.OnFrameBuffer(buffer);
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     AmqpTrace.Provider.AmqpLogError(this, "OnFrame", exception.Message);
 
                     this.SafeClose(exception);

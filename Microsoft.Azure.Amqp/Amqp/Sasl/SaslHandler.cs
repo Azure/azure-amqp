@@ -35,13 +35,8 @@ namespace Microsoft.Azure.Amqp.Sasl
             {
                 this.OnStart(init, isClient);
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 this.saslNegotiator.CompleteNegotiation(SaslCode.Sys, exception);
             }
         }

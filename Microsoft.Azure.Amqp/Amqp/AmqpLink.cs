@@ -186,14 +186,9 @@ namespace Microsoft.Azure.Amqp
                     throw new AmqpException(AmqpErrorCode.InvalidField, AmqpResources.GetString(AmqpResources.AmqpInvalidPerformativeCode, command.DescriptorCode));
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
-                AmqpTrace.Provider.AmqpLogError(this, "ProcessFrame", exception.Message);
+                AmqpTrace.Provider.AmqpLogError(this, nameof(ProcessFrame), exception.Message);
                 this.SafeClose(exception);
             }
         }
@@ -851,13 +846,8 @@ namespace Microsoft.Azure.Amqp
                 {
                     this.Session.LinkFactory.BeginOpenLink(this, this.DefaultOpenTimeout, onProviderLinkOpened, this);
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     this.OnLinkOpenFailed(exception);
                 }
             }
@@ -940,13 +930,8 @@ namespace Microsoft.Azure.Amqp
             {
                 thisPtr.Session.LinkFactory.EndOpenLink(result);
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 AmqpTrace.Provider.AmqpLogError(thisPtr, "EndOpenLink", exception.Message);
                 openException = exception;
             }
@@ -964,13 +949,8 @@ namespace Microsoft.Azure.Amqp
                     thisPtr.Open();
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 AmqpTrace.Provider.AmqpLogError(thisPtr, "CompleteOpenLink", exception.Message);
                 thisPtr.OnLinkOpenFailed(exception);
             }

@@ -31,13 +31,8 @@ namespace Microsoft.Azure.Amqp
             {
                 retval = Task.Factory.FromAsync(begin, end, state);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!Fx.IsFatal(ex))
             {
-                if (Fx.IsFatal(ex))
-                {
-                    throw;
-                }
-
                 var completionSource = new TaskCompletionSource<object>(state);
                 completionSource.SetException(ex);
                 retval = completionSource.Task;
@@ -53,62 +48,14 @@ namespace Microsoft.Azure.Amqp
             {
                 retval = Task<T>.Factory.FromAsync(begin, end, state);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!Fx.IsFatal(ex))
             {
-                if (Fx.IsFatal(ex))
-                {
-                    throw;
-                }
-
                 var completionSource = new TaskCompletionSource<T>(state);
                 completionSource.SetException(ex);
                 retval = completionSource.Task;
             }
 
             return retval;
-        }
-
-        public static Task ExecuteAndGetCompletedTask(Action action)
-        {
-            TaskCompletionSource<object> completedTcs = new TaskCompletionSource<object>();
-
-            try
-            {
-                action();
-                completedTcs.SetResult(null);
-            }
-            catch (Exception e)
-            {
-                if (Fx.IsFatal(e))
-                {
-                    throw;
-                }
-
-                completedTcs.SetException(e);
-            }
-
-            return completedTcs.Task;
-        }
-
-        public static Task<TResult> ExecuteAndGetCompletedTask<TResult>(Func<TResult> function)
-        {
-            TaskCompletionSource<TResult> completedTcs = new TaskCompletionSource<TResult>();
-
-            try
-            {
-                completedTcs.SetResult(function());
-            }
-            catch (Exception e)
-            {
-                if (Fx.IsFatal(e))
-                {
-                    throw;
-                }
-
-                completedTcs.SetException(e);
-            }
-
-            return completedTcs.Task;
         }
 
         public static void Fork(this Task thisTask)
@@ -153,10 +100,7 @@ namespace Microsoft.Azure.Amqp
                         tcs.TrySetResult(null);
                     }
 
-                    if (callback != null)
-                    {
-                        callback(tcs.Task);
-                    }
+                    callback?.Invoke(tcs.Task);
                 },
                 TaskContinuationOptions.ExecuteSynchronously);
 
@@ -194,10 +138,7 @@ namespace Microsoft.Azure.Amqp
                         tcs.TrySetResult(task.Result);
                     }
 
-                    if (callback != null)
-                    {
-                        callback(tcs.Task);
-                    }
+                    callback?.Invoke(tcs.Task);
                 },
                 TaskContinuationOptions.ExecuteSynchronously);
 
@@ -226,58 +167,6 @@ namespace Microsoft.Azure.Amqp
             return task.GetAwaiter().GetResult();
         }
 
-        internal static void MarshalTaskResults<TResult>(Task source, TaskCompletionSource<TResult> proxy)
-        {
-            switch (source.Status)
-            {
-                case TaskStatus.Faulted:
-                    var exception = source.Exception.GetBaseException();
-                    proxy.TrySetException(exception);
-                    break;
-                case TaskStatus.Canceled:
-                    proxy.TrySetCanceled();
-                    break;
-                case TaskStatus.RanToCompletion:
-                    Task<TResult> castedSource = source as Task<TResult>;
-                    proxy.TrySetResult(
-                        castedSource == null ? default(TResult) : // source is a Task
-                            castedSource.Result); // source is a Task<TResult>
-                    break;
-            }
-        }
-
-        public static Task WithTimeoutNoException(this Task task, TimeSpan timeout)
-        {
-            return WithTimeoutNoException(task, timeout, CancellationToken.None);
-        }
-
-        public static async Task WithTimeoutNoException(this Task task, TimeSpan timeout, CancellationToken token)
-        {
-            if (timeout == TimeSpan.MaxValue)
-            {
-                timeout = Timeout.InfiniteTimeSpan;
-            }
-            else if (timeout.TotalMilliseconds > Int32.MaxValue)
-            {
-                timeout = TimeSpan.FromMilliseconds(Int32.MaxValue);
-            }
-
-            if (task.IsCompleted || (timeout == Timeout.InfiniteTimeSpan && token == CancellationToken.None))
-            {
-                await task;
-                return;
-            }
-
-            using (var cts = CancellationTokenSource.CreateLinkedTokenSource(token))
-            {
-                if (task == await Task.WhenAny(task, CreateDelayTask(timeout, cts.Token)))
-                {
-                    cts.Cancel();
-                    await task;
-                }
-            }
-        }
-
         public static Task WithTimeout(this Task task, TimeSpan timeout, Func<string> errorMessage)
         {
             return WithTimeout(task, timeout, errorMessage, CancellationToken.None);
@@ -296,50 +185,17 @@ namespace Microsoft.Azure.Amqp
 
             if (task.IsCompleted || (timeout == Timeout.InfiniteTimeSpan && token == CancellationToken.None))
             {
-                await task;
+                await task.ConfigureAwait(false);
                 return;
             }
 
             using (var cts = CancellationTokenSource.CreateLinkedTokenSource(token))
             {
-                if (task == await Task.WhenAny(task, CreateDelayTask(timeout, cts.Token)))
+                if (task == await Task.WhenAny(task, CreateDelayTask(timeout, cts.Token)).ConfigureAwait(false))
                 {
                     cts.Cancel();
-                    await task;
+                    await task.ConfigureAwait(false);
                     return;
-                }
-            }
-
-            throw new TimeoutException(errorMessage());
-        }
-
-        public static Task<T> WithTimeout<T>(this Task<T> task, TimeSpan timeout, Func<string> errorMessage)
-        {
-            return WithTimeout(task, timeout, errorMessage, CancellationToken.None);
-        }
-
-        public static async Task<T> WithTimeout<T>(this Task<T> task, TimeSpan timeout, Func<string> errorMessage, CancellationToken token)
-        {
-            if (timeout == TimeSpan.MaxValue)
-            {
-                timeout = Timeout.InfiniteTimeSpan;
-            }
-            else if (timeout.TotalMilliseconds > Int32.MaxValue)
-            {
-                timeout = TimeSpan.FromMilliseconds(Int32.MaxValue);
-            }
-
-            if (task.IsCompleted || (timeout == Timeout.InfiniteTimeSpan && token == CancellationToken.None))
-            {
-                return await task;
-            }
-
-            using (var cts = CancellationTokenSource.CreateLinkedTokenSource(token))
-            {
-                if (task == await Task.WhenAny(task, CreateDelayTask(timeout, cts.Token)))
-                {
-                    cts.Cancel();
-                    return await task;
                 }
             }
 
@@ -350,7 +206,7 @@ namespace Microsoft.Azure.Amqp
         {
             try
             {
-                await Task.Delay(timeout, token);
+                await Task.Delay(timeout, token).ConfigureAwait(false);
             }
             catch (TaskCanceledException)
             {

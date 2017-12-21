@@ -139,13 +139,8 @@ namespace Microsoft.Azure.Amqp.Transport
                         break;
                     }
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     AmqpTrace.Provider.AmqpListenSocketAcceptError(this, false, exception.Message);
                     args.Dispose();
                     this.SafeClose(exception);

@@ -70,13 +70,8 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 thisPtr.HandleTransportOpened(result);
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 thisPtr.callbackArgs.Exception = exception;
             }
 
@@ -105,13 +100,8 @@ namespace Microsoft.Azure.Amqp.Transport
                         this.Complete();
                     }
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     this.callbackArgs.Exception = exception;
                     this.Complete();
                 }

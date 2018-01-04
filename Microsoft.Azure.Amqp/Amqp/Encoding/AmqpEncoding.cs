@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 { typeof(float),            floatEncoding },
                 { typeof(double),           doubleEncoding },
                 { typeof(decimal),          decimal128Encoding },
-                { typeof(char),         charEncoding },
+                { typeof(char),             charEncoding },
                 { typeof(DateTime),         timeStampEncoding },
                 { typeof(Guid),             uuidEncoding },
                 { typeof(ArraySegment<byte>), binaryEncoding },

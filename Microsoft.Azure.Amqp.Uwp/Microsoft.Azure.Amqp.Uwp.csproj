@@ -578,7 +578,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\TimeoutHelper.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Timestamp.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\TraceOperation.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\WaitCallbackActionItem.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslTransport.cs">
       <Link>Amqp\Sasl\SaslTransport.cs</Link>
     </Compile>

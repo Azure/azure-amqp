@@ -25,7 +25,6 @@ namespace System
 namespace System.Collections.Generic
 {
     using System.Collections.ObjectModel;
-    using Microsoft.Azure.Amqp;
 
     /// <summary>Provides a collection whose items are types that serve as keys.</summary>
     /// <typeparam name="TItem">The item types contained in the collection that also serve as the keys for the collection.</typeparam>
@@ -44,7 +43,7 @@ namespace System.Collections.Generic
         {
             if (items == null)
             {
-                throw new ArgumentNullException("items");
+                throw new ArgumentNullException(nameof(items));
             }
             foreach (TItem current in items)
             {
@@ -57,7 +56,7 @@ namespace System.Collections.Generic
         /// <typeparam name="T">The type of item in the collection to find.</typeparam>
         public T Find<T>()
         {
-            return this.Find<T>(false);
+            return this.Find<T>(remove: false);
         }
 
         /// <summary>Removes an object of a specified type from the collection.</summary>
@@ -65,7 +64,7 @@ namespace System.Collections.Generic
         /// <typeparam name="T">The type of item in the collection to remove.</typeparam>
         public T Remove<T>()
         {
-            return this.Find<T>(true);
+            return this.Find<T>(remove: true);
         }
 
         T Find<T>(bool remove)
@@ -90,7 +89,7 @@ namespace System.Collections.Generic
         /// <typeparam name="T">The type of item in the collection to find.</typeparam>
         public Collection<T> FindAll<T>()
         {
-            return this.FindAll<T>(false);
+            return this.FindAll<T>(remove: false);
         }
 
         /// <summary>Removes all of the elements of a specified type from the collection.</summary>
@@ -98,7 +97,7 @@ namespace System.Collections.Generic
         /// <typeparam name="T">The type of item in the collection to remove.</typeparam>
         public Collection<T> RemoveAll<T>()
         {
-            return this.FindAll<T>(true);
+            return this.FindAll<T>(remove: true);
         }
 
         Collection<T> FindAll<T>(bool remove)
@@ -130,7 +129,7 @@ namespace System.Collections.Generic
         {
             if (item == null)
             {
-                throw new ArgumentNullException("item");
+                throw new ArgumentNullException(nameof(item));
             }
             return item.GetType();
         }
@@ -144,14 +143,14 @@ namespace System.Collections.Generic
         {
             if (item == null)
             {
-                throw new ArgumentNullException("item");
+                throw new ArgumentNullException(nameof(item));
             }
             if (base.Contains(item.GetType()))
             {
                 string message = string.Format(
                     "The value could not be added to the collection, as the collection already contains an item of the same type: '{0}'. This collection only supports one instance of each type.",
                     item.GetType().FullName);
-                throw new ArgumentNullException("item", message);
+                throw new ArgumentNullException(nameof(item), message);
             }
             base.InsertItem(index, item);
         }
@@ -165,7 +164,7 @@ namespace System.Collections.Generic
         {
             if (item == null)
             {
-                throw new ArgumentNullException("item");
+                throw new ArgumentNullException(nameof(item));
             }
             base.SetItem(index, item);
         }
@@ -220,28 +219,28 @@ namespace Diagnostics
 }
 
 namespace Platform.System.Text
-{  
-#if PCL  
+{
+#if PCL
     class Encoding
-    {  
+    {
         public static global::System.Text.Encoding ASCII
-        {  
-            get  
-            {  
-                throw new global::System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);  
-            }  
-        }  
-    }  
-#else  
-    class Encoding  
-    {  
-        public static global::System.Text.Encoding ASCII  
-        {  
-            get  
-            {  
-                return global::System.Text.Encoding.ASCII;  
-            }  
-        }  
-    }  
-#endif  
-}  
+        {
+            get
+            {
+                throw new global::System.NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
+            }
+        }
+    }
+#else
+    class Encoding
+    {
+        public static global::System.Text.Encoding ASCII
+        {
+            get
+            {
+                return global::System.Text.Encoding.ASCII;
+            }
+        }
+    }
+#endif
+}

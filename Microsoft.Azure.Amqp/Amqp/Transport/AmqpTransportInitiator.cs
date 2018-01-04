@@ -195,13 +195,8 @@ namespace Microsoft.Azure.Amqp.Transport
                     this.HandleTransportOpened(result);
                 }
             }
-            catch (Exception exp)
+            catch (Exception exp) when (!Fx.IsFatal(exp))
             {
-                if (Fx.IsFatal(exp))
-                {
-                    throw;
-                }
-
                 AmqpTrace.Provider.AmqpLogError(this, "OnProtocolHeader", exp.Message);
                 args.Exception = exp;
                 this.Complete(args);
@@ -219,13 +214,8 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 this.HandleTransportOpened(result);
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 TransportAsyncCallbackArgs args = (TransportAsyncCallbackArgs)result.AsyncState;
                 args.Exception = exception;
                 this.Complete(args);

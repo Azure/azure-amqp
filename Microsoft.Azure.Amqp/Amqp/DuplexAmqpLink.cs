@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
 
@@ -173,13 +172,8 @@ namespace Microsoft.Azure.Amqp
                     link.EndClose(result);
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 completeException = exception;
             }
 

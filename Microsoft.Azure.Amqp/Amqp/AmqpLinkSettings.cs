@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using System.Collections.Generic;
     using Microsoft.Azure.Amqp.Framing;
 
     public sealed class AmqpLinkSettings : Attach

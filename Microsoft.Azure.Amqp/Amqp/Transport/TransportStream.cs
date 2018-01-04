@@ -194,10 +194,7 @@ namespace Microsoft.Azure.Amqp.Transport
             AsyncCallback callback = userState.Item1;
             object state = userState.Item2;
             args.UserToken = state;
-            if (callback != null)
-            {
-                callback(args);
-            }
+            callback?.Invoke(args);
         }
     }
 }

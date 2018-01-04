@@ -8,9 +8,9 @@ namespace Microsoft.Azure.Amqp
 
     public struct AmqpVersion : IEquatable<AmqpVersion>
     {
-        byte major;
-        byte minor;
-        byte revision;
+        readonly byte major;
+        readonly byte minor;
+        readonly byte revision;
 
         public AmqpVersion(byte major, byte minor, byte revision)
         {

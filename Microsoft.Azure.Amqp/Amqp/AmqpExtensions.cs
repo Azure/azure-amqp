@@ -551,7 +551,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                return defaultValue; ;
+                return defaultValue;
             }
         }
     }

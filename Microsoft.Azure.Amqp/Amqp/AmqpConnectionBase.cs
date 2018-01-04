@@ -4,8 +4,6 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using System.Globalization;
-    using System.Net;
     using System.Security.Principal;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
@@ -19,13 +17,13 @@ namespace Microsoft.Azure.Amqp
         readonly AmqpConnectionSettings settings;
         readonly AsyncIO asyncIO;
         IAmqpUsageMeter usageMeter;
-        
+
         protected AmqpConnectionBase(string type, TransportBase transport, AmqpConnectionSettings settings, bool isInitiator)
             : base(type, transport.Identifier)
         {
             if (settings == null)
             {
-                throw new ArgumentNullException("settings");
+                throw new ArgumentNullException(nameof(settings));
             }
 
             Fx.Assert(transport != null, "transport must not be null.");
@@ -156,13 +154,8 @@ namespace Microsoft.Azure.Amqp
                     header.Decode(buffer);
                     this.OnProtocolHeader(header);
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     AmqpTrace.Provider.AmqpLogError(this, "OnProtocolHeader", exception.Message);
 
                     this.TerminalException = exception;
@@ -175,13 +168,8 @@ namespace Microsoft.Azure.Amqp
                 {
                     this.OnFrameBuffer(buffer);
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     AmqpTrace.Provider.AmqpLogError(this, "OnFrame", exception.Message);
 
                     this.SafeClose(exception);

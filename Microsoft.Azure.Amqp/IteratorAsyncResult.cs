@@ -150,13 +150,8 @@ namespace Microsoft.Azure.Amqp
 
                 this.EnumerateSteps(CurrentThreadType.StartingThread);
             }
-            catch (Exception e)
+            catch (Exception e) when (!Fx.IsFatal(e))
             {
-                if (Fx.IsFatal(e))
-                {
-                    throw;
-                }
-
                 this.Complete(e);
             }
 
@@ -171,13 +166,8 @@ namespace Microsoft.Azure.Amqp
                 this.steps = this.GetAsyncSteps();
                 this.EnumerateSteps(CurrentThreadType.Synchronous);
             }
-            catch (Exception e)
+            catch (Exception e) when (!Fx.IsFatal(e))
             {
-                if (Fx.IsFatal(e))
-                {
-                    throw;
-                }
-
                 this.Complete(e);
             }
 
@@ -286,12 +276,8 @@ namespace Microsoft.Azure.Amqp
                     // Don't refactor this into a seperate method. It adds one extra call stack reducing readibility of call stack in trace.
                     thisPtr.steps.Current.EndCall((TIteratorAsyncResult)thisPtr, result);
                 }
-                catch (Exception e)
+                catch (Exception e) when (!Fx.IsFatal(e) && thisPtr.HandleException(e))
                 {
-                    if (Fx.IsFatal(e) || !thisPtr.HandleException(e))
-                    {
-                        throw;
-                    }
                 }
 
                 thisPtr.EnumerateSteps(CurrentThreadType.Callback);
@@ -311,13 +297,8 @@ namespace Microsoft.Azure.Amqp
                     steps.Dispose();
                 }
             }
-            catch (Exception e)
+            catch (Exception e) when (!Fx.IsFatal(e))
             {
-                if (Fx.IsFatal(e))
-                {
-                    throw;
-                }
-
                 ////MessagingClientEtwProvider.Provider.EventWriteExceptionAsWarning(e.ToStringSlim());
                 if (exception == null)
                 {
@@ -355,12 +336,8 @@ namespace Microsoft.Azure.Amqp
                             {
                                 step.Call((TIteratorAsyncResult)this, this.timeoutHelper.RemainingTime());
                             }
-                            catch (Exception e)
+                            catch (Exception e) when (!Fx.IsFatal(e) && this.HandleException(e))
                             {
-                                if (Fx.IsFatal(e) || !this.HandleException(e))
-                                {
-                                    throw;
-                                }
                             }
                         }
                     }
@@ -386,12 +363,8 @@ namespace Microsoft.Azure.Amqp
                                     this.PrepareAsyncCompletion(IteratorAsyncResult<TIteratorAsyncResult>.StepCallbackDelegate),
                                     this);
                             }
-                            catch (Exception e)
+                            catch (Exception e) when (!Fx.IsFatal(e) && this.HandleException(e))
                             {
-                                if (Fx.IsFatal(e) || !this.HandleException(e))
-                                {
-                                    throw;
-                                }
                             }
                         }
                     }
@@ -408,12 +381,8 @@ namespace Microsoft.Azure.Amqp
                             // Don't refactor this into a seperate method. It adds one extra call stack reducing readibility of call stack in trace.
                             this.steps.Current.EndCall((TIteratorAsyncResult)this, result);
                         }
-                        catch (Exception e)
+                        catch (Exception e) when (!Fx.IsFatal(e) && this.HandleException(e))
                         {
-                            if (Fx.IsFatal(e) || !this.HandleException(e))
-                            {
-                                throw;
-                            }
                         }
                     }
                 }
@@ -602,7 +571,7 @@ namespace Microsoft.Azure.Amqp
 
         sealed class ParallelAsyncResult<TWorkItem> : AsyncResult<ParallelAsyncResult<TWorkItem>>
         {
-            static AsyncCallback completed = new AsyncCallback(OnCompleted);
+            static readonly AsyncCallback completed = new AsyncCallback(OnCompleted);
 
             readonly TIteratorAsyncResult iteratorAsyncResult;
             readonly ICollection<TWorkItem> workItems;
@@ -624,13 +593,8 @@ namespace Microsoft.Azure.Amqp
                     {
                         beginCall(iteratorAsyncResult, source, timeout, completed, new CallbackState(this, source));
                     }
-                    catch (Exception e)
+                    catch (Exception e) when (!Fx.IsFatal(e))
                     {
-                        if (Fx.IsFatal(e))
-                        {
-                            throw;
-                        }
-
                         TryComplete(e, true);
                     }
                 }
@@ -661,13 +625,8 @@ namespace Microsoft.Azure.Amqp
                     thisPtr.endCall(thisPtr.iteratorAsyncResult, state.AsyncData, ar);
                     thisPtr.TryComplete(null, ar.CompletedSynchronously);
                 }
-                catch (Exception e)
+                catch (Exception e) when (!Fx.IsFatal(e))
                 {
-                    if (Fx.IsFatal(e))
-                    {
-                        throw;
-                    }
-
                     thisPtr.TryComplete(e, ar.CompletedSynchronously);
                 }
             }

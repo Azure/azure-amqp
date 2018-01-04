@@ -47,17 +47,17 @@ namespace Microsoft.Azure.Amqp
             return new byte[size];
         }
 
-        class PreallocatedBufferManager : InternalBufferManager
+        sealed class PreallocatedBufferManager : InternalBufferManager
         {
-            int maxBufferSize;
-            int medBufferSize;
-            int smallBufferSize;
+            readonly int maxBufferSize;
+            readonly int medBufferSize;
+            readonly int smallBufferSize;
 
             byte[][] buffersList;
-            GCHandle[] handles;
-            ConcurrentStack<byte[]> freeSmallBuffers;
-            ConcurrentStack<byte[]> freeMedianBuffers;
-            ConcurrentStack<byte[]> freeLargeBuffers;
+            readonly GCHandle[] handles;
+            readonly ConcurrentStack<byte[]> freeSmallBuffers;
+            readonly ConcurrentStack<byte[]> freeMedianBuffers;
+            readonly ConcurrentStack<byte[]> freeLargeBuffers;
 
             internal PreallocatedBufferManager(long maxMemoryToPool, int maxBufferSize)
             {
@@ -163,15 +163,15 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        class PooledBufferManager : InternalBufferManager
+        sealed class PooledBufferManager : InternalBufferManager
         {
             const int minBufferSize = 128;
             const int maxMissesBeforeTuning = 8;
             const int initialBufferCount = 1;
             readonly object tuningLock;
 
-            int[] bufferSizes;
-            BufferPool[] bufferPools;
+            readonly int[] bufferSizes;
+            readonly BufferPool[] bufferPools;
             long remainingMemory;
             bool areQuotasBeingTuned;
             int totalMisses;
@@ -434,9 +434,10 @@ namespace Microsoft.Azure.Amqp
 
             abstract class BufferPool
             {
-                int bufferSize;
+                readonly int bufferSize;
+                readonly int limit;
+
                 int count;
-                int limit;
                 int misses;
                 int peak;
 
@@ -515,9 +516,9 @@ namespace Microsoft.Azure.Amqp
                     }
                 }
 
-                class SynchronizedBufferPool : BufferPool
+                sealed class SynchronizedBufferPool : BufferPool
                 {
-                    SynchronizedPool<byte[]> innerPool;
+                    readonly SynchronizedPool<byte[]> innerPool;
 
                     internal SynchronizedBufferPool(int bufferSize, int limit)
                         : base(bufferSize, limit)
@@ -541,9 +542,9 @@ namespace Microsoft.Azure.Amqp
                     }
                 }
 
-                class LargeBufferPool : BufferPool
+                sealed class LargeBufferPool : BufferPool
                 {
-                    Stack<byte[]> items;
+                    readonly Stack<byte[]> items;
 
                     internal LargeBufferPool(int bufferSize, int limit)
                         : base(bufferSize, limit)
@@ -597,9 +598,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        class GCBufferManager : InternalBufferManager
+        sealed class GCBufferManager : InternalBufferManager
         {
-            static GCBufferManager value = new GCBufferManager();
+            static readonly GCBufferManager value = new GCBufferManager();
 
             GCBufferManager()
             {

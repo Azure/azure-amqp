@@ -178,12 +178,8 @@ namespace Microsoft.Azure.Amqp
                     thisPtr.SendFlow(true);
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
             }
         }
 

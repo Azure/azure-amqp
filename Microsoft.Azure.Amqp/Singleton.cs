@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using System.Collections.Generic;
     using System.Globalization;
     using System.Threading;
     using System.Threading.Tasks;
@@ -183,13 +182,8 @@ namespace Microsoft.Azure.Amqp
                     OnSafeClose(value);
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!Fx.IsFatal(ex))
             {
-                if (Fx.IsFatal(ex))
-                {
-                    throw;
-                }
-
                 this.TryRemove();
                 tcs.SetException(ex);
             }

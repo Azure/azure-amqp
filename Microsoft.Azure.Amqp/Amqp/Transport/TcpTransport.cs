@@ -277,13 +277,8 @@ namespace Microsoft.Azure.Amqp.Transport
                     args.Exception = new SocketException((int)this.receiveEventArgs.SocketError);
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 args.Exception = exception;
             }
             finally

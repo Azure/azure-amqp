@@ -81,13 +81,8 @@ namespace Microsoft.Azure.Amqp.Transport
                     return;
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 innerArgs.Transport.SafeClose(exception);
             }
         }
@@ -103,13 +98,8 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 this.HandleTransportOpened(result);
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 TransportAsyncCallbackArgs innerArgs = (TransportAsyncCallbackArgs)result.AsyncState;
                 innerArgs.Transport.SafeClose(exception);
             }

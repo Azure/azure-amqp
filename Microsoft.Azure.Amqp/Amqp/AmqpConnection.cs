@@ -59,7 +59,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (amqpSettings == null)
             {
-                throw new ArgumentNullException("amqpSettings");
+                throw new ArgumentNullException(nameof(amqpSettings));
             }
 
             this.initialHeader = protocolHeader;
@@ -675,13 +675,8 @@ namespace Microsoft.Azure.Amqp
 
                         thisPtr.SetTimer(now);
                     }
-                    catch (Exception exception)
+                    catch (Exception exception) when (!Fx.IsFatal(exception))
                     {
-                        if (Fx.IsFatal(exception))
-                        {
-                            throw;
-                        }
-
                         if (!thisPtr.connection.IsClosing())
                         {
                             AmqpTrace.Provider.AmqpLogError(thisPtr.connection, "OnHeartBeatTimer", exception.Message);

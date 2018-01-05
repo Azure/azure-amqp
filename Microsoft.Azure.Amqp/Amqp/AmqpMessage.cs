@@ -278,7 +278,7 @@ namespace Microsoft.Azure.Amqp
                 ArraySegment<byte>[] segments = new ArraySegment<byte>[this.RawByteBuffers.Count];
                 for (int i = 0; i < this.RawByteBuffers.Count; ++i)
                 {
-                    ByteBuffer clone = (ByteBuffer)this.RawByteBuffers[i].Clone();
+                    ByteBuffer clone = this.RawByteBuffers[i].AddReference();
                     segments[i] = new ArraySegment<byte>(clone.Buffer, clone.Offset, clone.Length);
                 }
 

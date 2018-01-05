@@ -102,7 +102,7 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 // ensure the buffer is not reclaimed while read is pending
                 // ref count is decremented in read complete handler
-                this.receiveEventArgs.UserToken = readBuffer.Clone();
+                this.receiveEventArgs.UserToken = readBuffer.AddReference();
 
                 if (readBuffer.Length > 0)
                 {

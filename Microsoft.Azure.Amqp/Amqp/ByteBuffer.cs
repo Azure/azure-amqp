@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Encoding;
 
     // This class is not thread safe
-    public sealed class ByteBuffer : IDisposable, ICloneable, IAmqpSerializable
+    public sealed class ByteBuffer : IDisposable, IAmqpSerializable
     {
         static readonly InternalBufferManager BufferManager = InternalBufferManager.Create(50 * 1024 * 1024, int.MaxValue, false);
 
@@ -235,6 +235,7 @@ namespace Microsoft.Azure.Amqp
             this.write = this.start;
         }
 
+        [Obsolete("Call AddReference instead.")]
         public object Clone()
         {
             this.AddReference();
@@ -274,7 +275,7 @@ namespace Microsoft.Azure.Amqp
             return true;
         }
 
-        internal ByteBuffer AddReference()
+        public ByteBuffer AddReference()
         {
             if (!this.TryAddReference())
             {
@@ -284,7 +285,7 @@ namespace Microsoft.Azure.Amqp
             return this;
         }
 
-        internal void RemoveReference()
+        public void RemoveReference()
         {
             if (this.references > 0)
             {

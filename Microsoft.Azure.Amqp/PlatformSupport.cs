@@ -9,19 +9,6 @@ using Windows.Networking;
 using Windows.Networking.Sockets;
 #endif
 
-#if NETSTANDARD || PCL || WINDOWS_UWP
-
-// This interface doesn't exist in DNXCORE50, define it manually
-namespace System
-{
-    public interface ICloneable
-    {
-        object Clone();
-    }
-}
-
-#endif
-
 namespace System.Collections.Generic
 {
     using System.Collections.ObjectModel;

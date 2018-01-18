@@ -164,7 +164,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Use this only if the enumeration is best effort only
         /// </summary>
-        class SafeEnumerator : IEnumerator<T>
+        sealed class SafeEnumerator : IEnumerator<T>
         {
             readonly HandleTable<T> table;
             int index;

@@ -365,7 +365,7 @@ namespace Microsoft.Azure.Amqp
             Fx.Assert(this.currentMessage != null, "Current message must have been created!");
             ArraySegment<byte> payload = frame.Payload;
             frame.RawByteBuffer.AdjustPosition(payload.Offset, payload.Count);
-            frame.RawByteBuffer.Clone();    // Message also owns the buffer from now on
+            frame.RawByteBuffer.AddReference();    // Message also owns the buffer from now on
             this.currentMessage.AddPayload(frame.RawByteBuffer, !transfer.More());
             if (!transfer.More())
             {

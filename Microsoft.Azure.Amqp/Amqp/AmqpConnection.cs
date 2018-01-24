@@ -161,9 +161,9 @@ namespace Microsoft.Azure.Amqp
             AmqpTrace.Provider.AmqpOpenConnection(this, this);
             if (this.isInitiator)
             {
-                this.AsyncIO.Open();
                 this.SendProtocolHeader(this.initialHeader);
                 this.SendOpen();
+                this.AsyncIO.Open();
             }
             else if (this.initialHeader != null)
             {

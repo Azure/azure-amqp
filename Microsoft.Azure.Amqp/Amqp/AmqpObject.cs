@@ -482,6 +482,14 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        protected void ThrowIfClosed()
+        {
+            if (this.closeCalled)
+            {
+                throw new AmqpException(AmqpErrorCode.IllegalState, $"'{this.name}' is closed");
+            }
+        }
+
         static void OnSafeCloseComplete(IAsyncResult result)
         {
             AmqpObject thisPtr = (AmqpObject)result.AsyncState;

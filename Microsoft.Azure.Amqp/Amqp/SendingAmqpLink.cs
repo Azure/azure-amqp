@@ -24,7 +24,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         public SendingAmqpLink(AmqpSession session, AmqpLinkSettings settings)
-            : base(session, settings)
+            : base("sender", session, settings)
         {
             // TODO: Add capability negotiation logic for BatchedMessageFormat to this.Settings
             this.pendingDeliveries = new SerializedWorker<AmqpMessage>(this);
@@ -76,6 +76,7 @@ namespace Microsoft.Azure.Amqp
             AsyncCallback callback, 
             object state)
         {
+            this.ThrowIfClosed();
             if (this.dispositionListener != null)
             {
                 throw new InvalidOperationException(CommonResources.DispositionListenerSetNotSupported);

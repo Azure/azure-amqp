@@ -13,6 +13,40 @@
     public class AmqpMessageTests
     {
         [Fact]
+        public void AmqpMessageReceiveResendTest()
+        {
+            var message = AmqpMessage.Create(new AmqpValue { Value = "Hello, AMQP!" });
+            message.MessageAnnotations.Map["key"] = "old";
+
+            // send the message and receive it on remote side
+            var payload = message.GetPayload();
+            var streamMessage = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(payload));
+
+            //new OutputMessage for resending with modified sections
+            var stream = BufferListStream.Create(streamMessage.ToStream(), AmqpConstants.SegmentSize, streamMessage.Settled);
+            stream.Seek(0, System.IO.SeekOrigin.Begin);
+            var outMessage = AmqpMessage.CreateOutputMessage(stream, false);
+            outMessage.Settled = streamMessage.Settled;
+            //explicitly assign
+            outMessage.Header.Priority = 99;
+            outMessage.DeliveryAnnotations.Map["key"] = "da-update";
+            outMessage.MessageAnnotations.Map["key"] = "update";
+
+            // send
+            var payload2 = outMessage.GetPayload();
+            var value = (string)outMessage.MessageAnnotations.Map["key"];
+            Assert.Equal("update", value);
+
+            // receive
+            var streamMessage2 = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(payload2));
+            Assert.Equal(99, streamMessage2.Header.Priority.Value);
+            value = (string)outMessage.DeliveryAnnotations.Map["key"];
+            Assert.Equal("da-update", value);
+            value = (string)outMessage.MessageAnnotations.Map["key"];
+            Assert.Equal("update", value);
+        }
+
+        [Fact]
         public void AmqpMessageSerializationTest()
         {
             // empty message

@@ -27,7 +27,11 @@ namespace Microsoft.Azure.Amqp.Transport
 
         protected override TransportBase OnCreateTransport(TransportBase innerTransport, bool isInitiator)
         {
-#if !PCL
+#if PCL
+            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
+#elif WINDOWS_UWP
+            throw new NotImplementedException("Upgrading from tcp to tls is not supported");
+#else
             if (innerTransport.GetType() != typeof(TcpTransport))
             {
                 throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpTransportUpgradeNotAllowed,
@@ -35,8 +39,6 @@ namespace Microsoft.Azure.Amqp.Transport
             }
 
             return new TlsTransport(innerTransport, this.tlsSettings);
-#else
-            throw new NotImplementedException(Microsoft.Azure.Amqp.PCL.Resources.ReferenceAssemblyInvalidUse);
 #endif
         }
     }

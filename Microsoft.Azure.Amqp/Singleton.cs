@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using System.Collections.Generic;
     using System.Globalization;
     using System.Threading;
     using System.Threading.Tasks;
@@ -96,7 +95,7 @@ namespace Microsoft.Azure.Amqp
 
                 if (this.TryGet(out tcs))
                 {
-                    return await tcs.Task;
+                    return await tcs.Task.ConfigureAwait(false);
                 }
 
                 tcs = new TaskCompletionSource<TValue>();
@@ -175,7 +174,7 @@ namespace Microsoft.Azure.Amqp
         {
             try
             {
-                TValue value = await OnCreateAsync(timeout);
+                TValue value = await OnCreateAsync(timeout).ConfigureAwait(false);
                 tcs.SetResult(value);
 
                 if (this.disposed)
@@ -183,13 +182,8 @@ namespace Microsoft.Azure.Amqp
                     OnSafeClose(value);
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!Fx.IsFatal(ex))
             {
-                if (Fx.IsFatal(ex))
-                {
-                    throw;
-                }
-
                 this.TryRemove();
                 tcs.SetException(ex);
             }

@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
-    sealed class End : Performative
+    public sealed class End : Performative
     {
         public static readonly string Name = "amqp:end:list";
         public static readonly ulong Code = 0x0000000000000017;

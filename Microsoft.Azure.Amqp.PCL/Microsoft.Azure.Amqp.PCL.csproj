@@ -15,6 +15,7 @@
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <TargetFrameworkProfile>Profile111</TargetFrameworkProfile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <NoWarn>CS1734,CS1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -51,7 +52,12 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionFactory.cs">
       <Link>Amqp\AmqpConnectionFactory.cs</Link>
     </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="..\Microsoft.Azure.Amqp\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Properties\Version.cs">
+      <Link>Properties\Version.cs</Link>
+    </Compile>
     <Compile Include="ActionItem.PCL.cs" />
     <Compile Include="Timer.PCL.cs" />
     <Compile Include="PlatformSupport.PCL.cs" />
@@ -72,7 +78,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\TimeoutHelper.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Timestamp.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\TraceOperation.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\WaitCallbackActionItem.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Cbs\AmqpCbsLink.cs">
       <Link>Amqp\Cbs\AmqpCbsLink.cs</Link>
     </Compile>
@@ -576,9 +581,6 @@
     </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Extensions\ExceptionExtensions.cs">
       <Link>Extensions\ExceptionExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs">
-      <Link>Properties\InternalVisible.cs</Link>
     </Compile>
   </ItemGroup>
   <ItemGroup>

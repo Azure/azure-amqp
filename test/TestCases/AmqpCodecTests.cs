@@ -74,13 +74,13 @@
         byte[] doubleValueBin = new byte[] { 0x82, 0x42, 0xd9, 0x43, 0x84, 0x93, 0xbc, 0x71, 0xce };
 
         decimal decimal32Value = 123.4567M; // 0x12D687 * 10 (0x61 - 101)
-        byte[] decimal32ValueBin = new byte[] { 0x30, 0x92, 0xd6, 0x87 };
+        byte[] decimal32ValueBin = new byte[] { 0x74, 0x30, 0x92, 0xd6, 0x87 };
 
         decimal decimal64Value = -1234567899.999988M; // s=0x462D53D216EF4, e = 0x188
-        byte[] decimal64ValueBin = new byte[] { 0xb1, 0x04, 0x62, 0xd5, 0x3d, 0x21, 0x6e, 0xf4 };
+        byte[] decimal64ValueBin = new byte[] { 0x84, 0xb1, 0x04, 0x62, 0xd5, 0x3d, 0x21, 0x6e, 0xf4 };
 
         decimal decimal128Value = decimal.MaxValue; // s=0xffffffffffff, e = 6176
-        byte[] decimal128ValueBin = new byte[] { 0x30, 0x40, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+        byte[] decimal128ValueBin = new byte[] { 0x94, 0x30, 0x40, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
         char charValue = 'A';
         byte[] charValueBin = new byte[] { 0x73, 0x00, 0x00, 0x00, 0x41 };
@@ -239,13 +239,13 @@
             Assert.True(doublev == doubleValue, "Double value is not equal.");
 
             //decimal
-            decimal? dec32 = DecimalEncoding.Decode(new ByteBuffer(new ArraySegment<byte>(decimal32ValueBin)), FormatCode.Decimal32);
+            decimal? dec32 = AmqpCodec.DecodeDecimal(new ByteBuffer(new ArraySegment<byte>(decimal32ValueBin)));
             Assert.True(dec32.Value == decimal32Value, "Decimal32 value is not equal");
 
-            decimal? dec64 = DecimalEncoding.Decode(new ByteBuffer(new ArraySegment<byte>(decimal64ValueBin)), FormatCode.Decimal64);
+            decimal? dec64 = AmqpCodec.DecodeDecimal(new ByteBuffer(new ArraySegment<byte>(decimal64ValueBin)));
             Assert.True(dec64.Value == decimal64Value, "Decimal64 value is not equal");
 
-            decimal? dec128 = DecimalEncoding.Decode(new ByteBuffer(new ArraySegment<byte>(decimal128ValueBin)), FormatCode.Decimal128);
+            decimal? dec128 = AmqpCodec.DecodeDecimal(new ByteBuffer(new ArraySegment<byte>(decimal128ValueBin)));
             Assert.True(dec128.Value == decimal128Value, "Decimal128 value is not equal");
 
             // char
@@ -779,7 +779,7 @@
 
             // Inter-op: it should be an AMQP described list as other clients see it
             stream.Seek(0, SeekOrigin.Begin);
-            DescribedType dl1 = DescribedEncoding.Decode(new ByteBuffer(stream.ToArray(), 0, (int)stream.Length));
+            DescribedType dl1 = (DescribedType)AmqpEncoding.DecodeObject(new ByteBuffer(stream.ToArray(), 0, (int)stream.Length));
             Assert.Equal(dl1.Descriptor, 1ul);
             List<object> lv = dl1.Value as List<object>;
             Assert.NotNull(lv);
@@ -808,8 +808,8 @@
                 new AmqpSymbol("teacher"),
                 new List<object>() { "Jerry", 40, null, 50000, lv[4], null, null, "unknown-string", true, new AmqpSymbol("unknown-symbol")});
             ByteBuffer bf2 = new ByteBuffer(1024, true);
-            DescribedEncoding.Encode(dl2, bf2);
-            ULongEncoding.Encode(100, bf2);
+            AmqpEncoding.EncodeObject(dl2, bf2);
+            AmqpCodec.EncodeULong(100ul, bf2);
 
             Person p5 = serializer.ReadObjectInternal<Person, Person>(bf2);
             Assert.True(p5 is Teacher);
@@ -880,7 +880,7 @@
             object[] values2 = values ?? new object[] { null };
 
             DescribedType describedType = new DescribedType(descriptor2, new List<object>(values2));
-            DescribedEncoding.Encode(describedType, buffer);
+            AmqpEncoding.EncodeObject(describedType, buffer);
         }
 
         static void ArrayTest<T>(T[] array, Action<T, T> validate)

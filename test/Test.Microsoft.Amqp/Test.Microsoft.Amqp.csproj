@@ -1,20 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net452;netcoreapp1.0</TargetFrameworks>
+    <TargetFrameworks>net452</TargetFrameworks>
     <AssemblyName>Test.Microsoft.Amqp</AssemblyName>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">
-    <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
-    <PackageId>Test.Microsoft.Azure.Amqp</PackageId>
-    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <RuntimeFrameworkVersion>1.0.5</RuntimeFrameworkVersion>
-    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
-  </PropertyGroup>
-
   <ItemGroup>
+    <Compile Include="..\Common\AmqpUtils.cs" Link="Common\AmqpUtils.cs" />
+    <Compile Include="..\Common\Person.cs" Link="Common\Person.cs" />
+    <Compile Include="..\Common\TestAmqpBrokerFixture.cs" Link="Common\TestAmqpBrokerFixture.cs" />
+    <Compile Include="..\Common\TestCategory.cs" Link="Common\TestCategory.cs" />
     <Compile Include="..\TestAmqpBroker\TestAmqpBroker.cs" Link="TestAmqpBroker.cs" />
+    <Compile Include="..\TestCases\AmqpCodecTests.cs" Link="TestCases\AmqpCodecTests.cs" />
+    <Compile Include="..\TestCases\AmqpLinkTests.cs" Link="TestCases\AmqpLinkTests.cs" />
+    <Compile Include="..\TestCases\AmqpMessageTests.cs" Link="TestCases\AmqpMessageTests.cs" />
+    <Compile Include="..\TestCases\AmqpTransportTests.cs" Link="TestCases\AmqpTransportTests.cs" />
+    <Compile Include="..\TestCases\AmqpWebSocketTests.cs" Link="TestCases\AmqpWebSocketTests.cs" />
+    <Compile Include="..\TestCases\ResourcesTests.cs" Link="TestCases\ResourcesTests.cs" />
+    <Compile Include="..\TestCases\UtilityTests.cs" Link="TestCases\UtilityTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,6 +32,11 @@
 
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Common\" />
+    <Folder Include="TestCases\" />
   </ItemGroup>
 
 </Project>

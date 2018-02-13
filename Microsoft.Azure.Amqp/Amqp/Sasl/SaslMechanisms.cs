@@ -7,7 +7,7 @@ namespace Microsoft.Azure.Amqp.Sasl
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
-    sealed class SaslMechanisms : Performative
+    public sealed class SaslMechanisms : Performative
     {
         public static readonly string Name = "amqp:sasl-mechanisms:list";
         public static readonly ulong Code = 0x0000000000000040;

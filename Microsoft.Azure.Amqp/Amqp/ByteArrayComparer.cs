@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp
 
     sealed class ByteArrayComparer : IEqualityComparer<ArraySegment<byte>>
     {
-        static ByteArrayComparer instance = new ByteArrayComparer();
+        static readonly ByteArrayComparer instance = new ByteArrayComparer();
 
         ByteArrayComparer()
         {

@@ -4,7 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    
+
     sealed class SegmentBufferPool
     {
         readonly int segmentSize;
@@ -31,7 +31,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (bufferSize > this.segmentSize)
             {
-                throw new ArgumentOutOfRangeException("bufferSize");
+                throw new ArgumentOutOfRangeException(nameof(bufferSize));
             }
 
             lock (this.lockObject)

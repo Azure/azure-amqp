@@ -278,7 +278,7 @@ namespace Microsoft.Azure.Amqp
                 ArraySegment<byte>[] segments = new ArraySegment<byte>[this.RawByteBuffers.Count];
                 for (int i = 0; i < this.RawByteBuffers.Count; ++i)
                 {
-                    ByteBuffer clone = (ByteBuffer)this.RawByteBuffers[i].Clone();
+                    ByteBuffer clone = this.RawByteBuffers[i].AddReference();
                     segments[i] = new ArraySegment<byte>(clone.Buffer, clone.Offset, clone.Length);
                 }
 
@@ -749,62 +749,58 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            void UpdateHeader(Header header)
+            void UpdateHeader(Header modified)
             {
-                if (header != null)
+                if (modified != null)
                 {
                     if (this.header == null)
                     {
-                        this.Header = header;
+                        this.Header = modified;
                     }
                     else
                     {
                         // update this header only if it is null
-                        this.header.Durable = this.header.Durable ?? header.Durable;
-                        this.header.Priority = this.header.Priority ?? header.Priority;
-                        this.header.Ttl = this.header.Ttl ?? header.Ttl;
-                        this.header.FirstAcquirer = this.header.FirstAcquirer ?? header.FirstAcquirer;
-                        this.header.DeliveryCount = this.header.DeliveryCount ?? header.DeliveryCount;
+                        if (modified.Durable != null) this.header.Durable = modified.Durable;
+                        if (modified.Priority != null) this.header.Priority = this.header.Priority;
+                        if (modified.Ttl != null) this.header.Ttl = modified.Ttl;
+                        if (modified.FirstAcquirer != null) this.header.FirstAcquirer = modified.FirstAcquirer;
+                        if (modified.DeliveryCount != null) this.header.DeliveryCount = modified.DeliveryCount;
                     }
                 }
             }
 
-            void UpdateDeliveryAnnotations(DeliveryAnnotations deliveryAnnotations)
+            void UpdateDeliveryAnnotations(DeliveryAnnotations modified)
             {
-                if (deliveryAnnotations != null)
+                if (modified != null)
                 {
                     if (this.deliveryAnnotations == null)
                     {
-                        this.DeliveryAnnotations = deliveryAnnotations;
+                        this.DeliveryAnnotations = modified;
                     }
                     else
                     {
-                        foreach (KeyValuePair<MapKey, object> pair in this.deliveryAnnotations.Map)
+                        foreach (KeyValuePair<MapKey, object> pair in modified.Map)
                         {
-                            deliveryAnnotations.Map[pair.Key] = pair.Value;
+                            this.deliveryAnnotations.Map[pair.Key] = pair.Value;
                         }
-
-                        this.deliveryAnnotations = deliveryAnnotations;
                     }
                 }
             }
 
-            void UpdateMessageAnnotations(MessageAnnotations messageAnnotations)
+            void UpdateMessageAnnotations(MessageAnnotations modified)
             {
-                if (messageAnnotations != null)
+                if (modified != null)
                 {
                     if (this.messageAnnotations == null)
                     {
-                        this.MessageAnnotations = messageAnnotations;
+                        this.MessageAnnotations = modified;
                     }
                     else
                     {
-                        foreach (KeyValuePair<MapKey, object> pair in this.messageAnnotations.Map)
+                        foreach (KeyValuePair<MapKey, object> pair in modified.Map)
                         {
-                            messageAnnotations.Map[pair.Key] = pair.Value;
+                            this.messageAnnotations.Map[pair.Key] = pair.Value;
                         }
-
-                        this.messageAnnotations = messageAnnotations;
                     }
                 }
             }
@@ -1279,7 +1275,7 @@ namespace Microsoft.Azure.Amqp
             {
                 if (messageStream == null)
                 {
-                    throw new ArgumentNullException("bufferStream");
+                    throw new ArgumentNullException(nameof(messageStream));
                 }
 
                 this.messageStream = messageStream;
@@ -1295,7 +1291,7 @@ namespace Microsoft.Azure.Amqp
                 // Currently message always has header stream, may change in the future
                 if (nonBodySections == null)
                 {
-                    throw new ArgumentNullException("nonBodySections");
+                    throw new ArgumentNullException(nameof(nonBodySections));
                 }
 
                 this.messageStream = BufferListStream.Create(nonBodySections, AmqpConstants.SegmentSize, forceCopyStream);
@@ -1574,7 +1570,7 @@ namespace Microsoft.Azure.Amqp
             {
                 if (headerStream == null)
                 {
-                    throw new ArgumentNullException("headerStream");
+                    throw new ArgumentNullException(nameof(headerStream));
                 }
 
                 this.bufferStream = headerStream;

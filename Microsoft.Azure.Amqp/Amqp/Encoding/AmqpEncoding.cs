@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Amqp.Encoding
     /// <summary>
     /// Encode and decode data within the AMQP type system.
     /// </summary>
-    static class AmqpEncoding
+    public static class AmqpEncoding
     {
         static Dictionary<Type, EncodingBase> encodingsByType;
         static Dictionary<FormatCode, EncodingBase> encodingsByCode;
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 { typeof(float),            floatEncoding },
                 { typeof(double),           doubleEncoding },
                 { typeof(decimal),          decimal128Encoding },
-                { typeof(char),         charEncoding },
+                { typeof(char),             charEncoding },
                 { typeof(DateTime),         timeStampEncoding },
                 { typeof(Guid),             uuidEncoding },
                 { typeof(ArraySegment<byte>), binaryEncoding },

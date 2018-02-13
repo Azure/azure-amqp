@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp.Transaction
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
-    sealed class Controller
+    public sealed class Controller
     {
         SendingAmqpLink sendLink;
         long messageTag;

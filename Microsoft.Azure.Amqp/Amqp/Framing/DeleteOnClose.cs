@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
-    sealed class DeleteOnClose : LifeTimePolicy
+    public sealed class DeleteOnClose : LifeTimePolicy
     {
         public static readonly string Name = "amqp:delete-on-close:list";
         public static readonly ulong Code = 0x000000000000002b;

@@ -5,7 +5,7 @@ namespace Microsoft.Azure.Amqp
 {
     using System.Threading;
 
-    class ActionItem
+    static class ActionItem
     {
         public static void Schedule(WaitCallback callback, object state)
         {

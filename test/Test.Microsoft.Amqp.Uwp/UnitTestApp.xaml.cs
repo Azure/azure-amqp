@@ -4,7 +4,6 @@ using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using global::Microsoft.VisualStudio.TestPlatform.TestExecutor;
 
 namespace Test.Microsoft.Amqp.Uwp
 {
@@ -57,13 +56,13 @@ namespace Test.Microsoft.Amqp.Uwp
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
             }
-            
-            UnitTestClient.CreateDefaultUI();
+
+            global::Microsoft.VisualStudio.TestPlatform.TestExecutor.UnitTestClient.CreateDefaultUI();
 
             // Ensure the current window is active
             Window.Current.Activate();
 
-            UnitTestClient.Run(e.Arguments);
+            global::Microsoft.VisualStudio.TestPlatform.TestExecutor.UnitTestClient.Run(e.Arguments);
         }
 
         /// <summary>

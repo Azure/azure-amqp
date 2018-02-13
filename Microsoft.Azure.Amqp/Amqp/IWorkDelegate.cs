@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.Amqp
 {
-    public interface IWorkDelegate<T>
+    public interface IWorkDelegate<in T>
     {
         bool Invoke(T work);
     }

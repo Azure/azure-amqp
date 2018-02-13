@@ -4,8 +4,8 @@
     using System.Diagnostics;
     using System.IO;
     using System.Threading;
+    using System.Threading.Tasks;
     using global::Microsoft.Azure.Amqp;
-    using global::Microsoft.Azure.Amqp.Amqp;
     using global::Microsoft.Azure.Amqp.Encoding;
     using Xunit;
 
@@ -46,7 +46,7 @@
 
                 if (!workCompleted)
                 {
-                    ActionItem.Schedule(callContinue, null);
+                    ThreadPool.QueueUserWorkItem(callContinue, null);
                 }
 
                 Interlocked.Exchange(ref working, 0);
@@ -399,10 +399,15 @@
         }
 
         [Fact]
-        public void CanAccessStringResources()
+        public void FaultTolerantAmqpObjectShouldInvokeCloseMethodOnClose()
         {
-            // access some random resource from each resx file.
-            Assert.NotNull(Resources.AmqpApplicationProperties);
+            bool isCloseHandlerInvoked = false;
+            var faultTolerantObject = new FaultTolerantAmqpObject<TestAmqpObject>(
+                span => Task.FromResult(new TestAmqpObject("string")),
+                amqpObject => { isCloseHandlerInvoked = true; });
+            var testAmqpObject = faultTolerantObject.GetOrCreateAsync(TimeSpan.FromSeconds(3)).Result;
+            testAmqpObject.Close();
+            Assert.True(isCloseHandlerInvoked);
         }
 
         static void AssertBufferProperties(ByteBuffer buffer, int capacity, int size, int length, int offset, int writePos)
@@ -449,6 +454,31 @@
             bool IWorkDelegate<T>.Invoke(T work)
             {
                 return this.func(work);
+            }
+        }
+
+        sealed class TestAmqpObject : AmqpObject
+        {
+            public TestAmqpObject(string type) : base(type)
+            {
+            }
+
+            public TestAmqpObject(string type, SequenceNumber identifier) : base(type, identifier)
+            {
+            }
+
+            protected override bool OpenInternal()
+            {
+                return true;
+            }
+
+            protected override bool CloseInternal()
+            {
+                return true;
+            }
+
+            protected override void AbortInternal()
+            {
             }
         }
     }

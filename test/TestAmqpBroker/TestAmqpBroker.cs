@@ -361,8 +361,12 @@ namespace TestAmqpBroker
 
             public BrokerMessage(AmqpMessage message)
             {
+                foreach (var buffer in message.RawByteBuffers)
+                {
+                    buffer.AddReference();
+                }
+
                 this.stream = (BufferListStream)message.ToStream();
-                foreach (var buffer in message.RawByteBuffers) buffer.Clone();
                 this.RawByteBuffers = message.RawByteBuffers;
             }
 

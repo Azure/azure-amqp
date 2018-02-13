@@ -503,10 +503,10 @@ namespace Test.Microsoft.Azure.Amqp
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
             session.Open();
 
-            Controller txController = new Controller();
-            txController.Open(session, TimeSpan.FromSeconds(10));
+            Controller txController = new Controller(session, TimeSpan.FromSeconds(10));
+            txController.Open();
 
-            ArraySegment<byte> txnId = txController.EndDeclare(txController.BeginDeclare(TimeSpan.FromSeconds(10), null, null));
+            ArraySegment<byte> txnId = txController.DeclareAsync().Result;
 
             SendingAmqpLink sendLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnReceive));
             sendLink.Open();
@@ -522,9 +522,9 @@ namespace Test.Microsoft.Azure.Amqp
             }
 
             // rollback txn
-            txController.EndDischarge(txController.BeginDischange(txnId, true, TimeSpan.FromSeconds(10), null, null));
+            txController.DischargeAsync(txnId, true).Wait(TimeSpan.FromSeconds(10));
 
-            txnId = txController.EndDeclare(txController.BeginDeclare(TimeSpan.FromSeconds(10), null, null));
+            txnId = txController.DeclareAsync().Result;
 
             // send message again
             for (int i = 0; i < messageCount; ++i)
@@ -537,13 +537,13 @@ namespace Test.Microsoft.Azure.Amqp
             }
 
             // commit txn
-            txController.EndDischarge(txController.BeginDischange(txnId, false, TimeSpan.FromSeconds(10), null, null));
+            txController.DischargeAsync(txnId, false).Wait(TimeSpan.FromSeconds(10));
 
             ReceivingAmqpLink receiveLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnReceive, 20));
             receiveLink.Open();
 
             TransactionalState txnState = new TransactionalState() { Outcome = AmqpConstants.AcceptedOutcome };
-            txnState.TxnId = txController.EndDeclare(txController.BeginDeclare(TimeSpan.FromSeconds(10), null, null));
+            txnState.TxnId = txController.DeclareAsync().Result;
 
             // receive message
             AmqpMessage[] messages = new AmqpMessage[messageCount];
@@ -556,9 +556,9 @@ namespace Test.Microsoft.Azure.Amqp
             receiveLink.Session.Flush();    // force dispositions out before discharge frames
 
             // rollback txn
-            txController.EndDischarge(txController.BeginDischange(txnState.TxnId, true, TimeSpan.FromSeconds(10), null, null));
+            txController.DischargeAsync(txnId, true).Wait(TimeSpan.FromSeconds(10));
 
-            txnState.TxnId = txController.EndDeclare(txController.BeginDeclare(TimeSpan.FromSeconds(10), null, null));
+            txnState.TxnId = txController.DeclareAsync().Result;
 
             // complete message again
             for (int i = 0; i < messageCount; ++i)
@@ -568,7 +568,7 @@ namespace Test.Microsoft.Azure.Amqp
             receiveLink.Session.Flush();
 
             // commit txn
-            txController.EndDischarge(txController.BeginDischange(txnState.TxnId, false, TimeSpan.FromSeconds(10), null, null));
+            txController.DischargeAsync(txnId, false).Wait(TimeSpan.FromSeconds(10));
 
             txController.Close(TimeSpan.FromSeconds(5));
             sendLink.Close();

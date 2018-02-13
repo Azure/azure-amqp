@@ -611,6 +611,7 @@ namespace Microsoft.Azure.Amqp
                     transfer.DeliveryTag = delivery.DeliveryTag;
                     transfer.MessageFormat = delivery.MessageFormat ?? AmqpConstants.AmqpMessageFormat;
                     transfer.Batchable = delivery.Batchable;
+                    transfer.State = delivery.State;
                     if (delivery.Settled)
                     {
                         transfer.Settled = true;
@@ -885,6 +886,7 @@ namespace Microsoft.Azure.Amqp
                 delivery.Settled = transfer.Settled();
                 delivery.Batchable = transfer.Batchable();
                 delivery.MessageFormat = transfer.MessageFormat;
+                delivery.State = transfer.State;
                 TransactionalState txnState = transfer.State as TransactionalState;
                 if (txnState != null)
                 {

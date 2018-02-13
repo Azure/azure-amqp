@@ -36,7 +36,6 @@ namespace Microsoft.Azure.Amqp
         protected AmqpLink(AmqpSession session, AmqpLinkSettings linkSettings)
             : this("link", session, linkSettings)
         {
-            this.inflightDeliveries = new SerializedWorker<Delivery>(this);
         }
 
         protected AmqpLink(string type, AmqpSession session, AmqpLinkSettings linkSettings)
@@ -67,6 +66,11 @@ namespace Microsoft.Azure.Amqp
             if (session != null)
             {
                 this.AttachTo(session);
+            }
+
+            if (!linkSettings.IsReceiver())
+            {
+                this.inflightDeliveries = new SerializedWorker<Delivery>(this);
             }
         }
 

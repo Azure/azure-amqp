@@ -140,12 +140,8 @@ namespace Microsoft.Azure.Amqp
                 {
                     this.OnCompleting(this, this.exception);
                 }
-                catch (Exception e)
+                catch (Exception e) when (!Fx.IsFatal(e))
                 {
-                    if (Fx.IsFatal(e))
-                    {
-                        throw;
-                    }
                     this.exception = e;
                 }
             }
@@ -182,13 +178,8 @@ namespace Microsoft.Azure.Amqp
                 }
 #pragma warning disable 1634
 #pragma warning suppress 56500 // transferring exception to another thread
-                catch (Exception e)
+                catch (Exception e) when (!Fx.IsFatal(e))
                 {
-                    if (Fx.IsFatal(e))
-                    {
-                        throw;
-                    }
-
                     throw new CallbackException(CommonResources.AsyncCallbackThrewException, e);
                 }
 #pragma warning restore 1634
@@ -339,14 +330,14 @@ namespace Microsoft.Azure.Amqp
         {
             if (result == null)
             {
-                throw new ArgumentNullException("result");
+                throw new ArgumentNullException(nameof(result));
             }
 
             TAsyncResult asyncResult = result as TAsyncResult;
 
             if (asyncResult == null)
             {
-                throw new ArgumentException("result", CommonResources.InvalidAsyncResult);
+                throw new ArgumentException(nameof(result), CommonResources.InvalidAsyncResult);
             }
 
             if (asyncResult.endCalled)

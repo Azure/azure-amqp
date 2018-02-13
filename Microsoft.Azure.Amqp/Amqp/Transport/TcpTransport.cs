@@ -102,7 +102,7 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 // ensure the buffer is not reclaimed while read is pending
                 // ref count is decremented in read complete handler
-                this.receiveEventArgs.UserToken = readBuffer.Clone();
+                this.receiveEventArgs.UserToken = readBuffer.AddReference();
 
                 if (readBuffer.Length > 0)
                 {
@@ -277,13 +277,8 @@ namespace Microsoft.Azure.Amqp.Transport
                     args.Exception = new SocketException((int)this.receiveEventArgs.SocketError);
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 args.Exception = exception;
             }
             finally

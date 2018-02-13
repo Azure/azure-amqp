@@ -15,7 +15,7 @@ namespace Microsoft.Azure.Amqp
         /// The Property name for setting timeouts
         /// </summary>
         public static readonly AmqpSymbol TimeoutName = AmqpConstants.Vendor + ":timeout";
-        
+
         /// <summary>
         /// The address of the CBS Node ($cbs)
         /// </summary>

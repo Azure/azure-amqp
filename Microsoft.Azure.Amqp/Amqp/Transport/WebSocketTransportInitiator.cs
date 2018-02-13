@@ -21,6 +21,10 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             ClientWebSocket cws = new ClientWebSocket();
             cws.Options.AddSubProtocol(this.settings.SubProtocol);
+            if (this.settings.Proxy != null)
+            {
+                cws.Options.Proxy = this.settings.Proxy;
+            }
 #if NET45 || MONOANDROID
             cws.Options.SetBuffer(this.settings.ReceiveBufferSize, this.settings.SendBufferSize);
 #endif

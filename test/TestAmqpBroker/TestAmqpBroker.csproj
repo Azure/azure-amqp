@@ -35,7 +35,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.Azure.Amqp">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Microsoft.Azure.Amqp\bin\Debug\net45\Microsoft.Azure.Amqp.dll</HintPath>
+      <HintPath>..\..\Microsoft.Azure.Amqp\bin\$(Configuration)\net45\Microsoft.Azure.Amqp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />

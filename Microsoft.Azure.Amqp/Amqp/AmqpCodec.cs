@@ -36,11 +36,11 @@ namespace Microsoft.Azure.Amqp
                 { Flow.Name, () => new Flow() },
 
                 // transaction performatives and types
-                { Coordinator.Name, () => { return new Coordinator(); } },
-                { Declare.Name, () => { return new Declare(); } },
-                { Declared.Name, () => { return new Declared(); } },
-                { Discharge.Name, () => { return new Discharge(); } },
-                { TransactionalState.Name, () => { return new TransactionalState(); }},
+                { Coordinator.Name, () => new Coordinator() },
+                { Declare.Name, () => new Declare() },
+                { Declared.Name, () => new Declared() },
+                { Discharge.Name, () => new Discharge() },
+                { TransactionalState.Name, () => new TransactionalState() },
 
                 // sasl performatives
                 { SaslMechanisms.Name, () => new SaslMechanisms() },
@@ -78,11 +78,11 @@ namespace Microsoft.Azure.Amqp
                 { Flow.Code, () => new Flow() },
 
                 // transaction performatives and types
-                { Coordinator.Code, () => { return new Coordinator(); } },
-                { Declare.Code, () => { return new Declare(); } },
-                { Discharge.Code, () => { return new Discharge(); } },
-                { Declared.Code, () => { return new Declared(); } },
-                { TransactionalState.Code, () => { return new TransactionalState(); }},
+                { Coordinator.Code, () => new Coordinator() },
+                { Declare.Code, () => new Declare() },
+                { Discharge.Code, () => new Discharge() },
+                { Declared.Code, () => new Declared() },
+                { TransactionalState.Code, () => new TransactionalState() },
 
                 // sasl frames
                 { SaslMechanisms.Code, () => new SaslMechanisms() },
@@ -315,6 +315,11 @@ namespace Microsoft.Azure.Amqp
             DoubleEncoding.Encode(data, buffer);
         }
 
+        public static void EncodeDecimal(decimal? data, ByteBuffer buffer)
+        {
+            DecimalEncoding.Encode(data, buffer);
+        }
+
         public static void EncodeTimeStamp(DateTime? data, ByteBuffer buffer)
         {
             TimeStampEncoding.Encode(data, buffer);
@@ -432,6 +437,11 @@ namespace Microsoft.Azure.Amqp
         public static double? DecodeDouble(ByteBuffer buffer)
         {
             return DoubleEncoding.Decode(buffer, 0);
+        }
+
+        public static decimal? DecodeDecimal(ByteBuffer buffer)
+        {
+            return DecimalEncoding.Decode(buffer, 0);
         }
 
         public static char? DecodeChar(ByteBuffer buffer)

@@ -10,10 +10,12 @@ namespace Microsoft.Azure.Amqp
     [DebuggerStepThrough]
     struct TimeoutHelper
     {
+        public static readonly TimeSpan MaxWait = TimeSpan.FromMilliseconds(Int32.MaxValue);
+
+        readonly TimeSpan originalTimeout;
+
         DateTime deadline;
         bool deadlineSet;
-        TimeSpan originalTimeout;
-        public static readonly TimeSpan MaxWait = TimeSpan.FromMilliseconds(Int32.MaxValue);
 
         public TimeoutHelper(TimeSpan timeout) :
             this(timeout, false)
@@ -169,7 +171,7 @@ namespace Microsoft.Azure.Amqp
 
         public static void ThrowIfNegativeArgument(TimeSpan timeout)
         {
-            ThrowIfNegativeArgument(timeout, "timeout");
+            ThrowIfNegativeArgument(timeout, nameof(timeout));
         }
 
         public static void ThrowIfNegativeArgument(TimeSpan timeout, string argumentName)
@@ -182,7 +184,7 @@ namespace Microsoft.Azure.Amqp
 
         public static void ThrowIfNonPositiveArgument(TimeSpan timeout)
         {
-            ThrowIfNonPositiveArgument(timeout, "timeout");
+            ThrowIfNonPositiveArgument(timeout, nameof(timeout));
         }
 
         public static void ThrowIfNonPositiveArgument(TimeSpan timeout, string argumentName)

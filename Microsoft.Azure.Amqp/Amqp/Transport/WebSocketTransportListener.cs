@@ -74,7 +74,7 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 try
                 {
-                    HttpListenerContext context = await this.httpListener.GetContextAsync();
+                    HttpListenerContext context = await this.httpListener.GetContextAsync().ConfigureAwait(false);
 
                     var task = this.HandleListenerContextAsync(context);
                 }
@@ -110,7 +110,7 @@ namespace Microsoft.Azure.Amqp.Transport
                     return;
                 }
 
-                var wsContext = await context.AcceptWebSocketAsync(subProtocol);
+                var wsContext = await context.AcceptWebSocketAsync(subProtocol).ConfigureAwait(false);
                 var transport = new WebSocketTransport(wsContext.WebSocket, this.uri);
 
                 TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();

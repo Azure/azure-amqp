@@ -7,7 +7,7 @@ namespace Microsoft.Azure.Amqp
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
-    
+
     /// <summary>
     /// Encapsulates a pair of links to '$cbs' for managing CBS tokens
     /// </summary>
@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (connection == null)
             {
-                throw new ArgumentNullException("connection");
+                throw new ArgumentNullException(nameof(connection));
             }
 
             this.connection = connection;

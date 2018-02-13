@@ -5,9 +5,6 @@ namespace Test.Microsoft.Azure.Amqp
 {
     using System;
     using System.Reflection;
-    using System.Threading.Tasks;
-    using global::Microsoft.Azure.Amqp;
-    using global::Microsoft.Azure.Amqp.Amqp;
     using Xunit;
 
     [Trait("Category", TestCategory.Current)]
@@ -16,12 +13,13 @@ namespace Test.Microsoft.Azure.Amqp
         [Fact]
         public void AmqpResourcesTest()
         {
-            TestResource(typeof(Resources));
-            TestResource(typeof(ResourcesGeneric));
+            TestResource(Type.GetType("Microsoft.Azure.Amqp.Amqp.Resources, Microsoft.Azure.Amqp"));
+            TestResource(Type.GetType("Microsoft.Azure.Amqp.ResourcesGeneric, Microsoft.Azure.Amqp"));
         }
 
         static void TestResource(Type type)
         {
+            int count = 0;
             PropertyInfo[] properties = type.GetProperties(BindingFlags.Static | BindingFlags.NonPublic);
             foreach (PropertyInfo pi in properties)
             {
@@ -29,10 +27,12 @@ namespace Test.Microsoft.Azure.Amqp
                 {
                     object value = pi.GetValue(null);
                     System.Diagnostics.Debug.WriteLine("{0}={1}", pi.Name, value);
+                    count++;
                     Assert.NotNull(value);
                     Assert.True(value is string);
                 }
             }
+            Assert.True(count > 0, "didn't find any resource strings.");
         }
     }
 }

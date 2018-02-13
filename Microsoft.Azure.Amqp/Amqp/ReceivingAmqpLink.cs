@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         public ReceivingAmqpLink(AmqpSession session, AmqpLinkSettings settings) :
-            base(session, settings)
+            base("receiver", session, settings)
         {
         }
 
@@ -157,6 +157,7 @@ namespace Microsoft.Azure.Amqp
 
         IAsyncResult BeginReceiveMessages(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
         {
+            this.ThrowIfClosed();
             List<AmqpMessage> messages = new List<AmqpMessage>();
             lock (this.SyncRoot)
             {
@@ -259,6 +260,7 @@ namespace Microsoft.Azure.Amqp
 
         public IAsyncResult BeginDisposeMessage(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable, TimeSpan timeout, AsyncCallback callback, object state)
         {
+            this.ThrowIfClosed();
             return new DisposeAsyncResult(this, deliveryTag, txnId, outcome, batchable, timeout, callback, state);
         }
 
@@ -303,6 +305,7 @@ namespace Microsoft.Azure.Amqp
 
         public void DisposeMessage(AmqpMessage message, DeliveryState state, bool settled, bool batchable)
         {
+            this.ThrowIfClosed();
             message.Batchable = batchable;
             this.DisposeDelivery(message, settled, state);
         }
@@ -371,7 +374,7 @@ namespace Microsoft.Azure.Amqp
             Fx.Assert(this.currentMessage != null, "Current message must have been created!");
             ArraySegment<byte> payload = frame.Payload;
             frame.RawByteBuffer.AdjustPosition(payload.Offset, payload.Count);
-            frame.RawByteBuffer.Clone();    // Message also owns the buffer from now on
+            frame.RawByteBuffer.AddReference();    // Message also owns the buffer from now on
             this.currentMessage.AddPayload(frame.RawByteBuffer, !transfer.More());
             if (!transfer.More())
             {

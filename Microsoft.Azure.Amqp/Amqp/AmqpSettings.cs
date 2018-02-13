@@ -56,14 +56,14 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public IList<TransportProvider> TransportProviders
         {
-            get 
+            get
             {
                 if (this.transportProviders == null)
                 {
                     this.transportProviders = new List<TransportProvider>();
                 }
 
-                return this.transportProviders; 
+                return this.transportProviders;
             }
         }
 
@@ -90,7 +90,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (this.TransportProviders.Count == 0)
             {
-                throw new ArgumentException("TransportProviders");
+                throw new ArgumentException(nameof(TransportProviders));
             }
 
             provider = null;
@@ -148,7 +148,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (this.TransportProviders.Count == 0)
             {
-                throw new ArgumentException("TransportProviders");
+                throw new ArgumentException(nameof(TransportProviders));
             }
         }
 
@@ -156,7 +156,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (this.TransportProviders.Count == 0)
             {
-                throw new ArgumentException("TransportProviders");
+                throw new ArgumentException(nameof(TransportProviders));
             }
         }
 

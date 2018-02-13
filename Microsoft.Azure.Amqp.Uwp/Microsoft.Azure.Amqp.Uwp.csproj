@@ -16,6 +16,7 @@
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <NoWarn>CS1734,CS1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -45,7 +46,6 @@
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;WINDOWS_UWP</DefineConstants>
-    <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
@@ -57,7 +57,6 @@
     <OutputPath>bin\x86\Release\</OutputPath>
     <DefineConstants>TRACE;WINDOWS_UWP</DefineConstants>
     <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
@@ -69,7 +68,6 @@
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\ARM\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;WINDOWS_UWP</DefineConstants>
-    <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>ARM</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
@@ -81,7 +79,6 @@
     <OutputPath>bin\ARM\Release\</OutputPath>
     <DefineConstants>TRACE;WINDOWS_UWP</DefineConstants>
     <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>ARM</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
@@ -93,7 +90,6 @@
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;WINDOWS_UWP</DefineConstants>
-    <NoWarn>;2008</NoWarn>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
@@ -105,7 +101,6 @@
     <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>TRACE;WINDOWS_UWP</DefineConstants>
     <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <UseVSHostingProcess>false</UseVSHostingProcess>
@@ -542,6 +537,9 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslResponse.cs">
       <Link>Amqp\Sasl\SaslResponse.cs</Link>
     </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportProvider.cs">
+      <Link>Amqp\Transport\TlsTransportProvider.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\WebSocketTransportSettings.cs">
       <Link>Amqp\Transport\WebSocketTransportSettings.cs</Link>
     </Compile>
@@ -564,9 +562,11 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Fx.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\InternalBufferManager.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\IteratorAsyncResult.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs">
-      <Link>Properties\InternalVisible.cs</Link>
+    <Compile Include="..\Microsoft.Azure.Amqp\Properties\Version.cs">
+      <Link>Properties\Version.cs</Link>
     </Compile>
+    <Compile Include="Amqp\Resources.UWP.cs" />
+    <Compile Include="Amqp\Transport\TlsTransportInitiator.UWP.cs" />
     <Compile Include="Amqp\Transport\WebSocketTransport.UWP.cs" />
     <Compile Include="Amqp\Transport\WebSocketTransportInitiator.UWP.cs" />
     <Compile Include="ResourceManager.cs" />
@@ -578,7 +578,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\TimeoutHelper.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Timestamp.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\TraceOperation.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\WaitCallbackActionItem.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslTransport.cs">
       <Link>Amqp\Sasl\SaslTransport.cs</Link>
     </Compile>
@@ -638,13 +637,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportSetting.cs">
       <Link>Amqp\Transport\TcpTransportSetting.cs</Link>
     </Compile>
-    <Compile Include="Amqp\Transport\TlsTransport.UWP.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportInitiator.cs">
-      <Link>Amqp\Transport\TlsTransportInitiator.cs</Link>
-    </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportProvider.cs">
-      <Link>Amqp\Transport\TlsTransportProvider.cs</Link>
-    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportSetting.cs">
       <Link>Amqp\Transport\TlsTransportSetting.cs</Link>
     </Compile>
@@ -670,7 +662,6 @@
       <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\PlatformSupport.cs" />
-    <Compile Include="Resources.UWP.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Microsoft.Azure.Amqp.Uwp.rd.xml" />
@@ -697,7 +688,6 @@
     <DefineConstants>TRACE;WINDOWS_UWP</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
     <NoStdLib>true</NoStdLib>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
@@ -710,7 +700,6 @@
     <DefineConstants>TRACE;WINDOWS_UWP</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
     <NoStdLib>true</NoStdLib>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>ARM</PlatformTarget>
@@ -723,7 +712,6 @@
     <DefineConstants>TRACE;WINDOWS_UWP</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
     <NoStdLib>true</NoStdLib>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x64</PlatformTarget>

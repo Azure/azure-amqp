@@ -68,14 +68,9 @@ namespace Microsoft.Azure.Amqp.Sasl
             {
                 this.reader.ReadFrame();
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
-                this.HandleException("ReadFrame", exception);
+                this.HandleException(nameof(ReadFrame), exception);
             }
         }
 
@@ -97,13 +92,8 @@ namespace Microsoft.Azure.Amqp.Sasl
                 args.UserToken2 = needReply;
                 this.writer.WriteBuffer(args);
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 this.HandleException("WriteFrame", exception);
             }
         }
@@ -141,7 +131,7 @@ namespace Microsoft.Azure.Amqp.Sasl
             var thisPtr = (SaslNegotiator)args.UserToken;
             if (args.Exception != null)
             {
-                thisPtr.HandleException("OnWriteFrameComplete", args.Exception);
+                thisPtr.HandleException(nameof(OnWriteFrameComplete), args.Exception);
             }
             else
             {
@@ -220,13 +210,8 @@ namespace Microsoft.Azure.Amqp.Sasl
                     throw new AmqpException(AmqpErrorCode.InvalidField, "sasl-frame-body");
                 }
             }
-            catch (Exception exp)
+            catch (Exception exp) when (!Fx.IsFatal(exp))
             {
-                if (Fx.IsFatal(exp))
-                {
-                    throw;
-                }
-
                 AmqpTrace.Provider.AmqpLogError(this, "SaslDecode", exp.Message);
                 this.CompleteNegotiation(SaslCode.Sys, exp);
                 return;
@@ -241,13 +226,8 @@ namespace Microsoft.Azure.Amqp.Sasl
                 AmqpTrace.Provider.AmqpLogError(this, "Authorize", authzExp.Message);
                 this.CompleteNegotiation(SaslCode.Auth, authzExp);
             }
-            catch (Exception exp)
+            catch (Exception exp) when (!Fx.IsFatal(exp))
             {
-                if (Fx.IsFatal(exp))
-                {
-                    throw;
-                }
-
                 AmqpTrace.Provider.AmqpLogError(this, "HandleSaslCommand", exp.Message);
                 this.CompleteNegotiation(SaslCode.Sys, exp);
             }

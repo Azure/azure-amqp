@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProjectGuid>{2F827371-C1A6-4795-A298-3CE9A255F3B5}</ProjectGuid>
+    <ProjectGuid>{F2A0CB73-B9DB-4898-A103-40213F83366D}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Test.Microsoft.Amqp.Uwp</RootNamespace>
@@ -40,7 +40,6 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
-    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
     <DebugSymbols>true</DebugSymbols>
@@ -63,7 +62,6 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
-    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -86,7 +84,6 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
-    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
   </PropertyGroup>
   <PropertyGroup>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
@@ -95,24 +92,26 @@
     <SDKReference Include="TestPlatform.Universal, Version=$(UnitTestPlatformVersion)" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Test.Microsoft.Amqp\Common\AmqpUtils.cs">
+    <Compile Include="..\Common\AmqpUtils.cs">
       <Link>Common\AmqpUtils.cs</Link>
     </Compile>
-    <Compile Include="..\Test.Microsoft.Amqp\Common\TestAmqpBrokerFixture.cs">
+    <Compile Include="..\Common\TestAmqpBrokerFixture.cs">
       <Link>Common\TestAmqpBrokerFixture.cs</Link>
     </Compile>
-    <Compile Include="..\Test.Microsoft.Amqp\Common\TestCategory.cs">
+    <Compile Include="..\Common\TestCategory.cs">
       <Link>Common\TestCategory.cs</Link>
     </Compile>
-    <Compile Include="..\Test.Microsoft.Amqp\TestCases\AmqpLinkTests.cs">
+    <Compile Include="..\TestCases\AmqpLinkTests.cs">
       <Link>TestCases\AmqpLinkTests.cs</Link>
     </Compile>
-    <Compile Include="..\Test.Microsoft.Amqp\TestCases\AmqpWebSocketTests.cs">
+    <Compile Include="..\TestCases\AmqpWebSocketTests.cs">
       <Link>TestCases\AmqpWebSocketTests.cs</Link>
     </Compile>
-    <Compile Include="Common\TestAmqpBroker.cs" />
+    <Compile Include="..\TestCases\ResourcesTests.cs">
+      <Link>TestCases\ResourcesTests.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestCases\ResourcesTests.cs" />
+    <Compile Include="TestAmqpBroker.cs" />
     <Compile Include="UnitTestApp.xaml.cs">
       <DependentUpon>UnitTestApp.xaml</DependentUpon>
     </Compile>
@@ -141,7 +140,13 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
-      <Version>5.2.3</Version>
+      <Version>5.4.0</Version>
+    </PackageReference>
+    <PackageReference Include="MSTest.TestAdapter">
+      <Version>1.1.18</Version>
+    </PackageReference>
+    <PackageReference Include="MSTest.TestFramework">
+      <Version>1.1.18</Version>
     </PackageReference>
     <PackageReference Include="xunit">
       <Version>2.2.0</Version>
@@ -151,13 +156,13 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\Microsoft.Azure.Amqp.Uwp\Microsoft.Azure.Amqp.Uwp.csproj">
       <Project>{f127ef83-0edb-45ef-b719-78703b7fc29c}</Project>
       <Name>Microsoft.Azure.Amqp.Uwp</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

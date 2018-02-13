@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp
     using System.IO;
     using System.Linq;
 
-    public sealed class BufferListStream : Stream, ICloneable
+    public sealed class BufferListStream : Stream
     {
         IList<ArraySegment<byte>> bufferList;
         int readArray;
@@ -21,7 +21,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (arraySegments == null)
             {
-                throw new ArgumentNullException("arraySegments");
+                throw new ArgumentNullException(nameof(arraySegments));
             }
 
             this.bufferList = arraySegments;
@@ -248,7 +248,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (pos < 0)
             {
-                throw new ArgumentOutOfRangeException("position");
+                throw new ArgumentOutOfRangeException(nameof(position));
             }
 
             this.position = pos;
@@ -274,7 +274,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (count > segmentCount)
             {
-                throw new ArgumentOutOfRangeException("count");
+                throw new ArgumentOutOfRangeException(nameof(count));
             }
 
             this.position += count;
@@ -295,7 +295,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (stream == null)
             {
-                throw new ArgumentNullException("stream");
+                throw new ArgumentNullException(nameof(stream));
             }
 
             BufferListStream bufferStream;
@@ -317,7 +317,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (stream == null)
             {
-                throw new ArgumentNullException("stream");
+                throw new ArgumentNullException(nameof(stream));
             }
 
             ArraySegment<byte>[] result;

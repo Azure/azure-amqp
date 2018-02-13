@@ -499,36 +499,6 @@ namespace Microsoft.Azure.Amqp
             open.Properties.Add(symbol, value);
         }
 
-        internal static IEnumerable<ByteBuffer> GetClones(this IEnumerable<ByteBuffer> buffers)
-        {
-            if (buffers == null)
-            {
-                return null;
-            }
-
-            List<ByteBuffer> retBufferList = new List<ByteBuffer>();
-            foreach (ByteBuffer byteBuffer in buffers)
-            {
-                retBufferList.Add((ByteBuffer)byteBuffer.Clone());
-            }
-            return retBufferList;
-        }
-
-        internal static ByteBuffer[] ToByteBufferArray(this ArraySegment<byte>[] bufferList)
-        {
-            if (bufferList == null)
-            {
-                return null;
-            }
-
-            ByteBuffer[] retBufferList = new ByteBuffer[bufferList.Length];
-            for (int i = 0; i < bufferList.Length; i++)
-            {
-                retBufferList[i] = new ByteBuffer(bufferList[i]);
-            }
-            return retBufferList;
-        }
-
         public static TValue GetSettingPropertyOrDefault<TValue>(this AmqpLink thisPtr, AmqpSymbol key, TValue defaultValue)
         {
             TValue value;
@@ -551,7 +521,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                return defaultValue; ;
+                return defaultValue;
             }
         }
     }

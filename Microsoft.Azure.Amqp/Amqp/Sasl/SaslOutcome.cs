@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp.Sasl
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Encoding;
 
-    sealed class SaslOutcome : Performative
+    public sealed class SaslOutcome : Performative
     {
         public static readonly string Name = "amqp:sasl-outcome:list";
         public static readonly ulong Code = 0x0000000000000044;

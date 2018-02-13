@@ -181,13 +181,8 @@ namespace Microsoft.Azure.Amqp
                 {
                     shouldContine = thisPtr.HandleReadBufferComplete(args);
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     thisPtr.asyncIo.ioHandler.OnIoFault(exception);
                     thisPtr.Cleanup();
                     shouldContine = false;
@@ -230,13 +225,8 @@ namespace Microsoft.Azure.Amqp
                         }
                     }
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     this.asyncIo.ioHandler.OnIoFault(exception);
                     this.Cleanup();
                 }
@@ -369,13 +359,8 @@ namespace Microsoft.Azure.Amqp
                         }
                     }
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     args.Exception = exception;
                     this.HandleReadComplete(args);
                 }
@@ -461,13 +446,8 @@ namespace Microsoft.Azure.Amqp
                         }
                     }
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     args.Exception = exception;
                     this.HandleReadComplete(args);
                 }
@@ -698,13 +678,8 @@ namespace Microsoft.Azure.Amqp
                         return this.HandleWriteBufferComplete(this.writeAsyncEventArgs);
                     }
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     this.writeAsyncEventArgs.Exception = exception;
                     this.writeAsyncEventArgs.UserToken = this;
                     return this.HandleWriteBufferComplete(this.writeAsyncEventArgs);
@@ -845,13 +820,8 @@ namespace Microsoft.Azure.Amqp
                         }
                     }
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     args.Exception = exception;
                     this.HandleWriteComplete(args);
                 }

@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -44,9 +43,8 @@ namespace Microsoft.Azure.Amqp
 
         protected override async Task<T> OnCreateAsync(TimeSpan timeout)
         {
-            T amqpObject = await this.createObjectAsync(timeout);
-            amqpObject.SafeAddClosed((s, e) => this.Invalidate(amqpObject));
-
+            T amqpObject = await this.createObjectAsync(timeout).ConfigureAwait(false);
+            amqpObject.SafeAddClosed(OnObjectClosed);
             return amqpObject;
         }
 

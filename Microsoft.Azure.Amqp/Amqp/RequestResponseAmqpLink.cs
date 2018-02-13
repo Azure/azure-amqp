@@ -213,13 +213,8 @@ namespace Microsoft.Azure.Amqp
                     link.EndClose(result);
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 completeException = exception;
             }
 

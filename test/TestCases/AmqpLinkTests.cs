@@ -1129,12 +1129,12 @@ namespace Test.Microsoft.Azure.Amqp
 
         static void Frm(ByteBuffer buffer, ushort channel, DescribedType command, ArraySegment<byte> payload = default(ArraySegment<byte>))
         {
-            int size = 8 + DescribedEncoding.GetEncodeSize(command) + payload.Count;
+            int size = 8 + AmqpEncoding.GetObjectEncodeSize(command) + payload.Count;
             AmqpBitConverter.WriteUInt(buffer, (uint)size);
             AmqpBitConverter.WriteUByte(buffer, 2);
             AmqpBitConverter.WriteUByte(buffer, 0);
             AmqpBitConverter.WriteUShort(buffer, channel);
-            DescribedEncoding.Encode(command, buffer);
+            AmqpEncoding.EncodeObject(command, buffer);
             if (payload.Count > 0)
             {
                 AmqpBitConverter.WriteBytes(buffer, payload.Array, payload.Offset, payload.Count);

@@ -9,13 +9,14 @@
     <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.Azure.Amqp.Amqp</RootNamespace>
+    <RootNamespace>Microsoft.Azure.Amqp</RootNamespace>
     <AssemblyName>Microsoft.Azure.Amqp</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <AndroidResgenFile>Resources\Resource.Designer.cs</AndroidResgenFile>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
     <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
     <TargetFrameworkVersion>v6.0</TargetFrameworkVersion>
+    <NoWarn>CS1734,CS1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -74,6 +75,9 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\WebSocketTransportSettings.cs">
       <Link>Amqp\Transport\WebSocketTransportSettings.cs</Link>
     </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Properties\Version.cs">
+      <Link>Properties\Version.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\ResourcesGeneric.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -115,7 +119,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\TimeoutHelper.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Timestamp.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\TraceOperation.cs" />
-    <Compile Include="..\Microsoft.Azure.Amqp\WaitCallbackActionItem.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Cbs\AmqpCbsLink.cs">
       <Link>Amqp\Cbs\AmqpCbsLink.cs</Link>
     </Compile>
@@ -683,7 +686,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Extensions\StreamExtensions.cs">
       <Link>Extensions\StreamExtensions.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Properties\InternalVisible.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\35MSSharedLib1024.snk">

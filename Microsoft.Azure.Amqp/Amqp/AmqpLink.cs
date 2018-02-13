@@ -36,7 +36,6 @@ namespace Microsoft.Azure.Amqp
         protected AmqpLink(AmqpSession session, AmqpLinkSettings linkSettings)
             : this("link", session, linkSettings)
         {
-            this.inflightDeliveries = new SerializedWorker<Delivery>(this);
         }
 
         protected AmqpLink(string type, AmqpSession session, AmqpLinkSettings linkSettings)
@@ -44,7 +43,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (linkSettings == null)
             {
-                throw new ArgumentNullException("linkSettings");
+                throw new ArgumentNullException(nameof(linkSettings));
             }
 
             this.references = 1;
@@ -67,6 +66,11 @@ namespace Microsoft.Azure.Amqp
             if (session != null)
             {
                 this.AttachTo(session);
+            }
+
+            if (!linkSettings.IsReceiver())
+            {
+                this.inflightDeliveries = new SerializedWorker<Delivery>(this);
             }
         }
 
@@ -186,14 +190,9 @@ namespace Microsoft.Azure.Amqp
                     throw new AmqpException(AmqpErrorCode.InvalidField, AmqpResources.GetString(AmqpResources.AmqpInvalidPerformativeCode, command.DescriptorCode));
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
-                AmqpTrace.Provider.AmqpLogError(this, "ProcessFrame", exception.Message);
+                AmqpTrace.Provider.AmqpLogError(this, nameof(ProcessFrame), exception.Message);
                 this.SafeClose(exception);
             }
         }
@@ -852,13 +851,8 @@ namespace Microsoft.Azure.Amqp
                 {
                     this.Session.LinkFactory.BeginOpenLink(this, this.DefaultOpenTimeout, onProviderLinkOpened, this);
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    if (Fx.IsFatal(exception))
-                    {
-                        throw;
-                    }
-
                     this.OnLinkOpenFailed(exception);
                 }
             }
@@ -906,7 +900,7 @@ namespace Microsoft.Azure.Amqp
                 return;
             }
 
-            this.ProcessTransfer(transfer, rawFrame, delivery, newDelivery);            
+            this.ProcessTransfer(transfer, rawFrame, delivery, newDelivery);
         }
 
         ArraySegment<byte> GetTxnIdFromFlow(Flow flow)
@@ -934,7 +928,7 @@ namespace Microsoft.Azure.Amqp
         static void OnProviderLinkOpened(IAsyncResult result)
         {
             var thisPtr = (AmqpLink)result.AsyncState;
-            AmqpTrace.Provider.AmqpLogOperationVerbose(thisPtr, TraceOperation.Execute, "OnProviderLinkOpened");
+            AmqpTrace.Provider.AmqpLogOperationVerbose(thisPtr, TraceOperation.Execute, nameof(OnProviderLinkOpened));
             Exception openException = null;
 
             // Capture the exception from provider first
@@ -942,13 +936,8 @@ namespace Microsoft.Azure.Amqp
             {
                 thisPtr.Session.LinkFactory.EndOpenLink(result);
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 AmqpTrace.Provider.AmqpLogError(thisPtr, "EndOpenLink", exception.Message);
                 openException = exception;
             }
@@ -966,13 +955,8 @@ namespace Microsoft.Azure.Amqp
                     thisPtr.Open();
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (Fx.IsFatal(exception))
-                {
-                    throw;
-                }
-
                 AmqpTrace.Provider.AmqpLogError(thisPtr, "CompleteOpenLink", exception.Message);
                 thisPtr.OnLinkOpenFailed(exception);
             }

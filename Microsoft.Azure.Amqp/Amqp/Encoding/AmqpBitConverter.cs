@@ -5,7 +5,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
 
-    static unsafe class AmqpBitConverter
+    public static unsafe class AmqpBitConverter
     {
         public static sbyte ReadByte(ByteBuffer buffer)
         {

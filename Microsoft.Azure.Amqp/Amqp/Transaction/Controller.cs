@@ -35,12 +35,7 @@ namespace Microsoft.Azure.Amqp.Transaction
                 Role = false
             };
 
-            controllerLink = new SendingAmqpLink(amqpSession, settings);
-        }
-
-        public async Task InitializeAsync(TimeSpan timeout)
-        {
-            await this.controllerLink.OpenAsync(timeout);
+            this.controllerLink = new SendingAmqpLink(amqpSession, settings);
         }
 
         public async Task<ArraySegment<byte>> DeclareAsync()
@@ -50,8 +45,8 @@ namespace Microsoft.Azure.Amqp.Transaction
 
             AmqpMessage message = Controller.CreateCommandMessage(declare);
             DeliveryState deliveryState = await Task<DeliveryState>.Factory.FromAsync(
-                controllerLink.BeginSendMessage(message, this.GetDeliveryTag(), AmqpConstants.NullBinary, this.operationTimeout, null, null),
-                controllerLink.EndSendMessage);
+                this.controllerLink.BeginSendMessage(message, this.GetDeliveryTag(), AmqpConstants.NullBinary, this.operationTimeout, null, null),
+                this.controllerLink.EndSendMessage);
 
             this.ThrowIfRejected(deliveryState);
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "EndDeclare");
@@ -69,8 +64,8 @@ namespace Microsoft.Azure.Amqp.Transaction
 
             AmqpMessage message = Controller.CreateCommandMessage(discharge);
             DeliveryState deliveryState = await Task<DeliveryState>.Factory.FromAsync(
-                controllerLink.BeginSendMessage(message, this.GetDeliveryTag(), AmqpConstants.NullBinary, this.operationTimeout, null, null),
-                controllerLink.EndSendMessage);
+                this.controllerLink.BeginSendMessage(message, this.GetDeliveryTag(), AmqpConstants.NullBinary, this.operationTimeout, null, null),
+                this.controllerLink.EndSendMessage);
             this.ThrowIfRejected(deliveryState);
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "EndDischange");
         }
@@ -82,13 +77,14 @@ namespace Microsoft.Azure.Amqp.Transaction
 
         protected override bool OpenInternal()
         {
-            return this.controllerLink.State == AmqpObjectState.Opened;
+            var result = controllerLink.BeginOpen(this.operationTimeout, OnOpen, null);
+            return result.IsCompleted;
         }
 
         protected override bool CloseInternal()
         {
-            this.controllerLink.Close();
-            this.controllerLink.Session.Close();
+            this.controllerLink.SafeClose();
+            this.controllerLink.Session.SafeClose();
             return true;
         }
 
@@ -102,6 +98,24 @@ namespace Microsoft.Azure.Amqp.Transaction
         {
             AmqpValue value = new AmqpValue { Value = command };
             return AmqpMessage.Create(value);
+        }
+
+        void OnOpen(IAsyncResult asyncResult)
+        {
+            Exception ex = null;
+            try
+            {
+                this.controllerLink.EndOpen(asyncResult);
+            }
+            catch (Exception exception) when (!Fx.IsFatal(exception))
+            {
+                ex = exception;
+            }
+
+            if (!asyncResult.CompletedSynchronously)
+            {
+                this.CompleteOpen(false, ex);
+            }
         }
 
         void ThrowIfRejected(DeliveryState deliveryState)

@@ -810,7 +810,7 @@ namespace Microsoft.Azure.Amqp
                     }
                     else
                     {
-                        this.Complete(completedSynchronously, new ArgumentException($"State '{state.GetType()}' is not valid"));
+                        this.Complete(completedSynchronously, new AmqpException(AmqpErrorCode.IllegalState, $"DeliveryState '{state.GetType()}' is not valid for disposition."));
                     }
                 }
 

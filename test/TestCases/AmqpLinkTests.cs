@@ -556,7 +556,7 @@ namespace Test.Microsoft.Azure.Amqp
             receiveLink.Session.Flush();    // force dispositions out before discharge frames
 
             // rollback txn
-            txController.DischargeAsync(txnId, true).Wait(TimeSpan.FromSeconds(10));
+            txController.DischargeAsync(txnState.TxnId, true).Wait(TimeSpan.FromSeconds(10));
 
             txnState.TxnId = txController.DeclareAsync().Result;
 
@@ -568,7 +568,7 @@ namespace Test.Microsoft.Azure.Amqp
             receiveLink.Session.Flush();
 
             // commit txn
-            txController.DischargeAsync(txnId, false).Wait(TimeSpan.FromSeconds(10));
+            txController.DischargeAsync(txnState.TxnId, false).Wait(TimeSpan.FromSeconds(10));
 
             txController.Close(TimeSpan.FromSeconds(5));
             sendLink.Close();

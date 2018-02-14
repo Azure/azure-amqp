@@ -77,7 +77,7 @@ namespace Microsoft.Azure.Amqp.Transaction
 
         protected override bool OpenInternal()
         {
-            var result = controllerLink.BeginOpen(this.operationTimeout, OnOpen, null);
+            var result = this.controllerLink.BeginOpen(this.operationTimeout, OnLinkOpen, this);
             return result.IsCompleted;
         }
 
@@ -100,12 +100,13 @@ namespace Microsoft.Azure.Amqp.Transaction
             return AmqpMessage.Create(value);
         }
 
-        void OnOpen(IAsyncResult asyncResult)
+        static void OnLinkOpen(IAsyncResult asyncResult)
         {
+            var thisPtr = (Controller) asyncResult.AsyncState;
             Exception ex = null;
             try
             {
-                this.controllerLink.EndOpen(asyncResult);
+                thisPtr.controllerLink.EndOpen(asyncResult);
             }
             catch (Exception exception) when (!Fx.IsFatal(exception))
             {
@@ -114,7 +115,7 @@ namespace Microsoft.Azure.Amqp.Transaction
 
             if (!asyncResult.CompletedSynchronously)
             {
-                this.CompleteOpen(false, ex);
+                thisPtr.CompleteOpen(false, ex);
             }
         }
 

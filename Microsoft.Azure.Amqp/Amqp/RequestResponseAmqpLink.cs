@@ -127,7 +127,12 @@ namespace Microsoft.Azure.Amqp
 
         public IAsyncResult BeginRequest(AmqpMessage request, TimeSpan timeout, AsyncCallback callback, object state)
         {
-            return new RequestAsyncResult(this, request, timeout, callback, state);
+            return this.BeginRequest(request, AmqpConstants.NullBinary, timeout, callback, state);
+        }
+
+        public IAsyncResult BeginRequest(AmqpMessage request, ArraySegment<byte> txnId, TimeSpan timeout, AsyncCallback callback, object state)
+        {
+            return new RequestAsyncResult(this, request, txnId, timeout, callback, state);
         }
 
         public AmqpMessage EndRequest(IAsyncResult result)
@@ -252,15 +257,16 @@ namespace Microsoft.Azure.Amqp
         {
             readonly RequestResponseAmqpLink parent;
             readonly MessageId requestId;
+            readonly ArraySegment<byte> transactionId;
             AmqpMessage request;
             AmqpMessage response;
 
-            public RequestAsyncResult(RequestResponseAmqpLink parent, AmqpMessage request, TimeSpan timeout, AsyncCallback callback, object state)
+            public RequestAsyncResult(RequestResponseAmqpLink parent, AmqpMessage request, ArraySegment<byte> txnId, TimeSpan timeout, AsyncCallback callback, object state)
                 : base(timeout, callback, state)
             {
                 this.parent = parent;
                 this.request = request;
-
+                this.transactionId = txnId;
                 this.requestId = "request" + (ulong)Interlocked.Increment(ref this.parent.nextRequestId);
                 this.request.Properties.MessageId = this.requestId;
                 this.request.Properties.ReplyTo = this.parent.replyTo;
@@ -280,7 +286,7 @@ namespace Microsoft.Azure.Amqp
             public void Start()
             {
                 this.SetTimer();
-                this.parent.sender.SendMessageNoWait(this.request, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary);
+                this.parent.sender.SendMessageNoWait(this.request, AmqpConstants.EmptyBinary, this.transactionId);
                 this.request = null;
             }
 

@@ -57,7 +57,7 @@
     <PackageReference Include="System.Security.Principal" Version="4.0.1" />
     <PackageReference Include="System.Threading.Thread" Version="4.0.0" />
     <PackageReference Include="System.Threading.ThreadPool" Version="4.0.10" />
-    <PackageReference Include="System.Net.WebSockets.Client" Version="4.0.0" />
+    <PackageReference Include="System.Net.WebSockets.Client" Version="4.0.1" />
   </ItemGroup>
 
 </Project>

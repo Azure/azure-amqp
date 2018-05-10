@@ -13,7 +13,7 @@
         <dependencies>
           <group targetFramework="netstandard1.3">
             <dependency id="System.Runtime.Serialization.Primitives" version="4.1.1" />
-            <dependency id="System.Net.WebSockets.Client" version="4.0.0" />
+            <dependency id="System.Net.WebSockets.Client" version="4.0.2" />
           </group>
         </dependencies>
     </metadata>

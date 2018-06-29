@@ -480,9 +480,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Cbs\ICbsTokenProvider.cs">
       <Link>Amqp\Cbs\ICbsTokenProvider.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\ICloseable.cs">
-      <Link>Amqp\ICloseable.cs</Link>
-    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\IIoHandler.cs">
       <Link>Amqp\IIoHandler.cs</Link>
     </Compile>

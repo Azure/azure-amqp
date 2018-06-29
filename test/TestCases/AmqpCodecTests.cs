@@ -780,14 +780,14 @@
             // Inter-op: it should be an AMQP described list as other clients see it
             stream.Seek(0, SeekOrigin.Begin);
             DescribedType dl1 = (DescribedType)AmqpEncoding.DecodeObject(new ByteBuffer(stream.ToArray(), 0, (int)stream.Length));
-            Assert.Equal(dl1.Descriptor, 1ul);
+            Assert.Equal(1ul, dl1.Descriptor);
             List<object> lv = dl1.Value as List<object>;
             Assert.NotNull(lv);
             Assert.Equal(p.Name, lv[0]);
             Assert.Equal(p.Age, lv[1]);
             Assert.Equal(p.DateOfBirth.Value, lv[2]);
             Assert.True(lv[3] is DescribedType, "Address is decribed type");
-            Assert.Equal(((DescribedType)lv[3]).Descriptor, 3ul);
+            Assert.Equal(3ul, ((DescribedType)lv[3]).Descriptor);
             Assert.Equal(((List<object>)((DescribedType)lv[3]).Value)[0], ((Student)p).Address.FullAddress);
             Assert.True(lv[4] is AmqpMap, "Properties should be map");
             Assert.Equal(((AmqpMap)lv[4])[new MapKey("height")], p.Properties["height"]);

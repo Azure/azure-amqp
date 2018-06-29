@@ -11,37 +11,28 @@ namespace Microsoft.Azure.Amqp
     /// <summary>
     /// Encapsulates a pair of links to '$cbs' for managing CBS tokens
     /// </summary>
-    public sealed class AmqpCbsLink : ICloseable
+    public sealed class AmqpCbsLink
     {
         readonly AmqpConnection connection;
+        readonly FaultTolerantAmqpObject<RequestResponseAmqpLink> linkFactory;
 
         /// <summary>
         /// Constructs a new instance
         /// </summary>
         public AmqpCbsLink(AmqpConnection connection)
         {
-            if (connection == null)
-            {
-                throw new ArgumentNullException(nameof(connection));
-            }
-
-            this.connection = connection;
-            this.FaultTolerantLink = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(
+            this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            this.linkFactory = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(
                 t => TaskHelpers.CreateTask<RequestResponseAmqpLink>((c, s) => this.BeginCreateCbsLink(t, c, s), this.EndCreateCbsLink),
-                this.CloseLink);
+                link => CloseLink(link));
 
             this.connection.Extensions.Add(this);
         }
 
-        bool ICloseable.IsClosedOrClosing
+        public void Close()
         {
-            get
-            {
-                return this.connection.IsClosing();
-            }
+            this.linkFactory.Close();
         }
-
-        FaultTolerantAmqpObject<RequestResponseAmqpLink> FaultTolerantLink { get; set; }
 
         public Task<DateTime> SendTokenAsync(ICbsTokenProvider tokenProvider, Uri namespaceAddress, string audience, string resource, string[] requiredClaims, TimeSpan timeout)
         {
@@ -59,12 +50,24 @@ namespace Microsoft.Azure.Amqp
                     tokenProvider == null ? "tokenProvider" : namespaceAddress == null ? "namespaceAddress" : audience == null ? "audience" : resource == null ? "resource" : "requiredClaims");
             }
 
+            if (this.connection.IsClosing())
+            {
+                throw new ObjectDisposedException(CbsConstants.CbsAddress);
+            }
+
             return new SendTokenAsyncResult(this, tokenProvider, namespaceAddress, audience, resource, requiredClaims, timeout, callback, state);
         }
 
         public DateTime EndSendToken(IAsyncResult result)
         {
             return SendTokenAsyncResult.End(result).ExpiresAtUtc;
+        }
+
+        static void CloseLink(RequestResponseAmqpLink link)
+        {
+            AmqpSession session = link.SendingLink?.Session;
+            link.Abort();
+            session?.SafeClose();
         }
 
         IAsyncResult BeginCreateCbsLink(TimeSpan timeout, AsyncCallback callback, object state)
@@ -76,11 +79,6 @@ namespace Microsoft.Azure.Amqp
         {
             RequestResponseAmqpLink link = OpenCbsRequestResponseLinkAsyncResult.End(result).Link;
             return link;
-        }
-
-        void CloseLink(RequestResponseAmqpLink link)
-        {
-            link.Session.SafeClose();
         }
 
         sealed class OpenCbsRequestResponseLinkAsyncResult : IteratorAsyncResult<OpenCbsRequestResponseLinkAsyncResult>, ILinkFactory
@@ -237,14 +235,14 @@ namespace Microsoft.Azure.Amqp
                 }
 
                 RequestResponseAmqpLink requestResponseLink;
-                if (this.cbsLink.FaultTolerantLink.TryGetOpenedObject(out requestResponseLink))
+                if (this.cbsLink.linkFactory.TryGetOpenedObject(out requestResponseLink))
                 {
                     this.requestResponseLinkTask = Task.FromResult(requestResponseLink);
                 }
                 else
                 {
                     yield return this.CallTask(
-                        (thisPtr, t) => thisPtr.requestResponseLinkTask = thisPtr.cbsLink.FaultTolerantLink.GetOrCreateAsync(t),
+                        (thisPtr, t) => thisPtr.requestResponseLinkTask = thisPtr.cbsLink.linkFactory.GetOrCreateAsync(t),
                         ExceptionPolicy.Transfer);
                 }
 

@@ -103,6 +103,33 @@
             ValidateMessage(message, message2);
         }
 
+        [Fact]
+        public void AmqpMessageSerializedSizeTest()
+        {
+            var message = AmqpMessage.Create(new Data() { Value = new ArraySegment<byte>(new byte[60]) });
+            long size = message.SerializedMessageSize;
+            Assert.True(size > 0);
+
+            message.Properties.MessageId = Guid.NewGuid();
+            long size2 = message.SerializedMessageSize;
+            Assert.True(size2 > size);
+
+            message.MessageAnnotations.Map["property"] = "v1";
+            long size3 = message.SerializedMessageSize;
+            Assert.True(size3 > size2);
+
+            var stream = (BufferListStream)message.ToStream();
+            var message2 = AmqpMessage.CreateInputMessage(stream);
+            Assert.Equal("v1", message2.MessageAnnotations.Map["property"]);
+
+            message.Properties.MessageId = "12345";
+            message.MessageAnnotations.Map["property"] = "v2";
+            stream = (BufferListStream)message.ToStream();
+            var message3 = AmqpMessage.CreateInputMessage(stream);
+            Assert.Equal((MessageId)"12345", message3.Properties.MessageId);
+            Assert.Equal("v2", message3.MessageAnnotations.Map["property"]);
+        }
+
         static ArraySegment<byte>[] ReadMessagePayLoad(AmqpMessage message, int payloadSize)
         {
             List<ArraySegment<byte>> buffers = new List<ArraySegment<byte>>();

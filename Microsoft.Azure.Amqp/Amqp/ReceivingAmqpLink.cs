@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Amqp
 
         Action<AmqpMessage> messageListener;
         SizeBasedFlowQueue messageQueue;
-        WorkCollection<ArraySegment<byte>, DisposeAsyncResult, Outcome> pendingDispositions;
+        WorkCollection<ArraySegment<byte>, DisposeAsyncResult, DeliveryState> pendingDispositions;
         AmqpMessage currentMessage;
         LinkedList<ReceiveAsyncResult> waiterList;
 
@@ -242,16 +242,26 @@ namespace Microsoft.Azure.Amqp
 
         public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, Outcome outcome, bool batchable, TimeSpan timeout)
         {
+            return this.DisposeMessageAsync(deliveryTag, AmqpConstants.NullBinary, outcome, batchable, timeout);
+        }
+
+        public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable, TimeSpan timeout)
+        {
             return TaskHelpers.CreateTask(
-                (c, s) => this.BeginDisposeMessage(deliveryTag, outcome, batchable, timeout, c, s),
+                (c, s) => this.BeginDisposeMessage(deliveryTag, txnId, outcome, batchable, timeout, c, s),
                 a => ((ReceivingAmqpLink)a.AsyncState).EndDisposeMessage(a),
                 this);
         }
 
         public IAsyncResult BeginDisposeMessage(ArraySegment<byte> deliveryTag, Outcome outcome, bool batchable, TimeSpan timeout, AsyncCallback callback, object state)
         {
+            return this.BeginDisposeMessage(deliveryTag, AmqpConstants.NullBinary, outcome, batchable, timeout, callback, state);
+        }
+
+        public IAsyncResult BeginDisposeMessage(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable, TimeSpan timeout, AsyncCallback callback, object state)
+        {
             this.ThrowIfClosed();
-            return new DisposeAsyncResult(this, deliveryTag, outcome, batchable, timeout, callback, state);
+            return new DisposeAsyncResult(this, deliveryTag, txnId, outcome, batchable, timeout, callback, state);
         }
 
         public Outcome EndDisposeMessage(IAsyncResult result)
@@ -318,7 +328,7 @@ namespace Microsoft.Azure.Amqp
         {
             this.messageQueue = new SizeBasedFlowQueue(this);
             this.waiterList = new LinkedList<ReceiveAsyncResult>();
-            this.pendingDispositions = new WorkCollection<ArraySegment<byte>, DisposeAsyncResult, Outcome>(ByteArrayComparer.Instance);
+            this.pendingDispositions = new WorkCollection<ArraySegment<byte>, DisposeAsyncResult, DeliveryState>(ByteArrayComparer.Instance);
             bool syncComplete = base.OpenInternal();
             if (this.LinkCredit > 0)
             {
@@ -334,14 +344,10 @@ namespace Microsoft.Azure.Amqp
             // in the EO delivery scenario, and also in transaction case.
             AmqpTrace.Provider.AmqpDispose(this, delivery.DeliveryId.Value, delivery.Settled, delivery.State);
             DeliveryState deliveryState = delivery.State;
-            if (delivery.Transactional())
-            {
-                deliveryState = ((TransactionalState)delivery.State).Outcome;
-            }
 
             if (deliveryState != null)
             {
-                this.pendingDispositions.CompleteWork(delivery.DeliveryTag, false, (Outcome)deliveryState);
+                this.pendingDispositions.CompleteWork(delivery.DeliveryTag, false, deliveryState);
             }
         }
 
@@ -735,16 +741,18 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        sealed class DisposeAsyncResult : AsyncResult, IWork<Outcome>
+        sealed class DisposeAsyncResult : AsyncResult, IWork<DeliveryState>
         {
             readonly ReceivingAmqpLink link;
             readonly ArraySegment<byte> deliveryTag;
             readonly bool batchable;
             Outcome outcome;
+            ArraySegment<byte> txnId;
 
             public DisposeAsyncResult(
                 ReceivingAmqpLink link,
-                ArraySegment<byte> deliveryTag, 
+                ArraySegment<byte> deliveryTag,
+                ArraySegment<byte> txnId,
                 Outcome outcome, 
                 bool batchable, 
                 TimeSpan timeout, 
@@ -756,6 +764,7 @@ namespace Microsoft.Azure.Amqp
                 this.deliveryTag = deliveryTag;
                 this.batchable = batchable;
                 this.outcome = outcome;
+                this.txnId = txnId;
                 this.link.pendingDispositions.StartWork(deliveryTag, this);
             }
 
@@ -766,16 +775,45 @@ namespace Microsoft.Azure.Amqp
 
             public void Start()
             {
-                if (!link.DisposeDelivery(deliveryTag, false, outcome, batchable))
+                DeliveryState deliveryState;
+                if (txnId.Array != null)
+                {
+                    deliveryState = new TransactionalState()
+                    {
+                        Outcome = this.outcome,
+                        TxnId = this.txnId
+                    };
+                }
+                else
+                {
+                    deliveryState = this.outcome;
+                }
+
+                if (!link.DisposeDelivery(deliveryTag, false, deliveryState, batchable))
                 {
                     // Delivery tag not found
                     link.pendingDispositions.CompleteWork(deliveryTag, true, AmqpConstants.RejectedNotFoundOutcome);
                 }
             }
 
-            public void Done(bool completedSynchronously, Outcome outcome)
+            public void Done(bool completedSynchronously, DeliveryState state)
             {
-                this.outcome = outcome;
+                if (state is Outcome outcome)
+                {
+                    this.outcome = outcome;
+                }
+                else
+                {
+                    if (state is TransactionalState transactionalState)
+                    {
+                        this.outcome = transactionalState.Outcome;
+                    }
+                    else
+                    {
+                        this.Complete(completedSynchronously, new AmqpException(AmqpErrorCode.IllegalState, $"DeliveryState '{state.GetType()}' is not valid for disposition."));
+                    }
+                }
+
                 this.Complete(completedSynchronously);
             }
 

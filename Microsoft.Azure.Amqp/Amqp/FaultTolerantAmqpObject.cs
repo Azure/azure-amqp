@@ -41,6 +41,11 @@ namespace Microsoft.Azure.Amqp
             return openedAmqpObject != null;
         }
 
+        protected override bool IsValid(T value)
+        {
+            return value.State == AmqpObjectState.Opened;
+        }
+
         protected override async Task<T> OnCreateAsync(TimeSpan timeout)
         {
             T amqpObject = await this.createObjectAsync(timeout).ConfigureAwait(false);

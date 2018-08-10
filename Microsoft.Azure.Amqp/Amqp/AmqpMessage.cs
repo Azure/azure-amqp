@@ -399,8 +399,14 @@ namespace Microsoft.Azure.Amqp
             {
                 get
                 {
-                    this.EnsureInitialized();
-                    return this.bufferStream.Length;
+                    if (this.bufferStream != null)
+                    {
+                        return this.bufferStream.Length;
+                    }
+
+                    // Do not cache the result stream
+                    // as the message could be updated again
+                    return this.Initialize().Length;
                 }
             }
 
@@ -414,7 +420,7 @@ namespace Microsoft.Azure.Amqp
             {
                 if (!this.initialized)
                 {
-                    this.Initialize();
+                    this.bufferStream = this.Initialize();
                     this.initialized = true;
                 }
             }
@@ -431,9 +437,12 @@ namespace Microsoft.Azure.Amqp
 
             public override Stream ToStream()
             {
-                bool more;
-                ArraySegment<byte>[] payload = this.GetPayload(int.MaxValue, out more);
-                return new BufferListStream(payload);
+                if (this.bufferStream != null)
+                {
+                    return (Stream)this.bufferStream.Clone();
+                }
+
+                return this.Initialize();
             }
 
             protected abstract int GetBodySize();
@@ -444,7 +453,7 @@ namespace Microsoft.Azure.Amqp
             {
             }
 
-            void Initialize()
+            BufferListStream Initialize()
             {
                 this.OnInitialize();
 
@@ -494,7 +503,7 @@ namespace Microsoft.Azure.Amqp
                     }
                 }
 
-                this.bufferStream = new BufferListStream(segmentList.ToArray());
+                return new BufferListStream(segmentList.ToArray());
             }
         }
 

@@ -735,7 +735,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        sealed class DisposeAsyncResult : AsyncResult, IWork<Outcome>
+        sealed class DisposeAsyncResult : TimeoutAsyncResult<string>, IWork<Outcome>
         {
             readonly ReceivingAmqpLink link;
             readonly ArraySegment<byte> deliveryTag;
@@ -750,7 +750,7 @@ namespace Microsoft.Azure.Amqp
                 TimeSpan timeout, 
                 AsyncCallback callback, 
                 object state)
-                : base(callback, state)
+                : base(timeout, callback, state)
             {
                 this.link = link;
                 this.deliveryTag = deliveryTag;
@@ -766,6 +766,7 @@ namespace Microsoft.Azure.Amqp
 
             public void Start()
             {
+                this.SetTimer();
                 if (!link.DisposeDelivery(deliveryTag, false, outcome, batchable))
                 {
                     // Delivery tag not found
@@ -782,6 +783,22 @@ namespace Microsoft.Azure.Amqp
             public void Cancel(bool completedSynchronously, Exception exception)
             {
                 this.Complete(completedSynchronously, exception);
+            }
+
+            protected override string Target
+            {
+                get { return "dispose"; }
+            }
+
+            protected override void CompleteOnTimer()
+            {
+                if (this.link.pendingDispositions.TryRemoveWork(this.deliveryTag, out var disposeAsyncResult))
+                {
+                    // Timeout
+                    link.pendingDispositions.CompleteWork(deliveryTag, true, AmqpConstants.RejectedOutcome);
+                }
+
+                base.CompleteOnTimer();
             }
         }
 

@@ -830,12 +830,8 @@ namespace Microsoft.Azure.Amqp
 
             protected override void CompleteOnTimer()
             {
-                if (this.link.pendingDispositions.TryRemoveWork(this.deliveryTag, out var disposeAsyncResult))
-                {
-                    // Timeout
-                    link.pendingDispositions.CompleteWork(deliveryTag, true, AmqpConstants.RejectedOutcome);
-                }
-
+                // Timeout
+                this.link.pendingDispositions.CompleteWork(this.deliveryTag, true, AmqpConstants.RejectedOutcome);
                 base.CompleteOnTimer();
             }
         }

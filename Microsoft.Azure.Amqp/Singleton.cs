@@ -95,13 +95,30 @@ namespace Microsoft.Azure.Amqp
 
                 if (this.TryGet(out tcs))
                 {
-                    return await tcs.Task.ConfigureAwait(false);
+                    TValue current = await tcs.Task.ConfigureAwait(false);
+                    if (this.IsValid(current))
+                    {
+                        return current;
+                    }
+
+                    this.Invalidate(current);
                 }
 
                 tcs = new TaskCompletionSource<TValue>();
                 if (this.TrySet(tcs))
                 {
-                    this.CreateValue(tcs, timeoutHelper.RemainingTime()).Fork();
+                    try
+                    {
+                        TValue value = await this.OnCreateAsync(timeout).ConfigureAwait(false);
+                        tcs.SetResult(value);
+                    }
+                    catch (Exception ex) when (!Fx.IsFatal(ex))
+                    {
+                        this.TryRemove();
+                        tcs.SetException(ex);
+                    }
+
+                    return await tcs.Task;
                 }
             }
 
@@ -109,10 +126,8 @@ namespace Microsoft.Azure.Amqp
             {
                 throw new ObjectDisposedException(this.GetType().Name);
             }
-            else
-            {
-                throw new TimeoutException(string.Format(CultureInfo.InvariantCulture, "Timed out trying to create {0}", this.GetType().Name));
-            }
+
+            throw new TimeoutException(string.Format(CultureInfo.InvariantCulture, "Creation of {0} did not complete in {1} milliseconds.", typeof(TValue).Name, timeout.TotalMilliseconds));
         }
 
         protected void Invalidate(TValue instance)
@@ -126,6 +141,11 @@ namespace Microsoft.Azure.Amqp
                     Volatile.Write<TaskCompletionSource<TValue>>(ref this.taskCompletionSource, null);
                 }
             }
+        }
+
+        protected virtual bool IsValid(TValue value)
+        {
+            return true;
         }
 
         protected abstract Task<TValue> OnCreateAsync(TimeSpan timeout);
@@ -167,25 +187,6 @@ namespace Microsoft.Azure.Amqp
                 {
                     return false;
                 }
-            }
-        }
-
-        async Task CreateValue(TaskCompletionSource<TValue> tcs, TimeSpan timeout)
-        {
-            try
-            {
-                TValue value = await OnCreateAsync(timeout).ConfigureAwait(false);
-                tcs.SetResult(value);
-
-                if (this.disposed)
-                {
-                    OnSafeClose(value);
-                }
-            }
-            catch (Exception ex) when (!Fx.IsFatal(ex))
-            {
-                this.TryRemove();
-                tcs.SetException(ex);
             }
         }
     }

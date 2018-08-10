@@ -9,7 +9,7 @@ namespace Microsoft.Azure.Amqp.Transaction
     {
         public static readonly AmqpSymbol LocalTransactions = "amqp:local-transactions";
         public static readonly AmqpSymbol DistributedTxn = "amqp:distributed-transactions";
-        public static readonly AmqpSymbol PrototableTransactions = "amqp:prototable-transactions";
+        public static readonly AmqpSymbol PromotableTransactions = "amqp:promotable-transactions";
         public static readonly AmqpSymbol MultiTxnsPerSsn = "amqp:multi-txns-per-ssn";
         public static readonly AmqpSymbol MultiSsnsPerTxn = "amqp:multi-ssns-per-txn";
     }

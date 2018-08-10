@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Description>Microsoft.Azure.Amqp Class Library</Description>
-    <VersionPrefix>2.0.0</VersionPrefix>
+    <VersionPrefix>2.2.0</VersionPrefix>
     <Authors>microsoft</Authors>
     <TargetFrameworks>net45;netstandard1.3</TargetFrameworks>
     <NoWarn>CS1734,CS1591</NoWarn>
@@ -58,7 +58,7 @@
     <PackageReference Include="System.Security.Principal" Version="4.0.1" />
     <PackageReference Include="System.Threading.Thread" Version="4.0.0" />
     <PackageReference Include="System.Threading.ThreadPool" Version="4.0.10" />
-    <PackageReference Include="System.Net.WebSockets.Client" Version="4.0.0" />
+    <PackageReference Include="System.Net.WebSockets.Client" Version="4.0.2" />
   </ItemGroup>
 
 </Project>

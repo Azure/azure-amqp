@@ -7,7 +7,7 @@ namespace Microsoft.Azure.Amqp.Sasl
     using System.Collections.Generic;
     using Microsoft.Azure.Amqp.Transport;
 
-    public sealed class SaslTransportProvider : TransportProvider
+    public class SaslTransportProvider : TransportProvider
     {
         Dictionary<string, SaslHandler> handlers;
 

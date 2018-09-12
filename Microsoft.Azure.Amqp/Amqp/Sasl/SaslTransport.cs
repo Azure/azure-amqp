@@ -7,9 +7,9 @@ namespace Microsoft.Azure.Amqp.Sasl
     using System.Security.Principal;
     using Microsoft.Azure.Amqp.Transport;
 
-    public sealed class SaslTransport : TransportBase
+    public class SaslTransport : TransportBase
     {
-        readonly TransportBase innerTransport;
+        protected readonly TransportBase innerTransport;
         SaslNegotiator negotiator;
 
         public SaslTransport(TransportBase transport, SaslTransportProvider provider, bool isInitiator)

@@ -394,7 +394,7 @@ namespace Microsoft.Azure.Amqp
         {
             Queue<AmqpMessage> messages = null;
             this.CancelPendingOperations(true, out messages);
-            
+
             if (messages != null)
             {
                 foreach (AmqpMessage message in messages)
@@ -450,21 +450,21 @@ namespace Microsoft.Azure.Amqp
             if (waiters != null)
             {
                 ActionItem.Schedule(o =>
+                {
+                    var state = (Tuple<LinkedList<ReceiveAsyncResult>, bool>)o;
+                    LinkedList<ReceiveAsyncResult> waitersToCancel = state.Item1;
+                    foreach (ReceiveAsyncResult waiter in waitersToCancel)
                     {
-                        var state = (Tuple<LinkedList<ReceiveAsyncResult>, bool>)o;
-                        LinkedList<ReceiveAsyncResult> waitersToCancel = state.Item1;
-                        foreach (ReceiveAsyncResult waiter in waitersToCancel)
+                        if (state.Item2)
                         {
-                            if (state.Item2)
-                            {
-                                waiter.Cancel();
-                            }
-                            else
-                            {
-                                waiter.Signal(false, null);
-                            }
+                            waiter.Cancel();
                         }
-                    },
+                        else
+                        {
+                            waiter.Signal(false, null);
+                        }
+                    }
+                },
                     new Tuple<LinkedList<ReceiveAsyncResult>, bool>(waiters, aborted));
             }
 
@@ -712,7 +712,7 @@ namespace Microsoft.Azure.Amqp
                         this.messages = new List<AmqpMessage>();
                     }
 
-                    if(exception != null)
+                    if (exception != null)
                     {
                         this.Complete(syncComplete, exception);
                     }
@@ -753,10 +753,10 @@ namespace Microsoft.Azure.Amqp
                 ReceivingAmqpLink link,
                 ArraySegment<byte> deliveryTag,
                 ArraySegment<byte> txnId,
-                Outcome outcome, 
-                bool batchable, 
-                TimeSpan timeout, 
-                AsyncCallback callback, 
+                Outcome outcome,
+                bool batchable,
+                TimeSpan timeout,
+                AsyncCallback callback,
                 object state)
                 : base(timeout, callback, state)
             {
@@ -811,16 +811,17 @@ namespace Microsoft.Azure.Amqp
                     }
                     else
                     {
-                        this.Complete(completedSynchronously, new AmqpException(AmqpErrorCode.IllegalState, $"DeliveryState '{state.GetType()}' is not valid for disposition."));
+                        this.CompleteSelf(completedSynchronously, new AmqpException(AmqpErrorCode.IllegalState, $"DeliveryState '{state.GetType()}' is not valid for disposition."));
+                        return;
                     }
                 }
 
-                this.Complete(completedSynchronously);
+                this.CompleteSelf(completedSynchronously);
             }
 
             public void Cancel(bool completedSynchronously, Exception exception)
             {
-                this.Complete(completedSynchronously, exception);
+                this.CompleteSelf(completedSynchronously, exception);
             }
 
             protected override string Target
@@ -831,8 +832,10 @@ namespace Microsoft.Azure.Amqp
             protected override void CompleteOnTimer()
             {
                 // Timeout
-                this.link.pendingDispositions.CompleteWork(this.deliveryTag, true, AmqpConstants.RejectedOutcome);
-                base.CompleteOnTimer();
+                if (this.link.pendingDispositions.TryRemoveWork(this.deliveryTag, out var disposeAsyncResult))
+                {
+                    base.CompleteOnTimer();
+                }
             }
         }
 
@@ -936,7 +939,7 @@ namespace Microsoft.Azure.Amqp
                     {
                         this.receivingLink.Settings.TotalLinkCredit = this.boundedTotalLinkCredit;
                     }
-                    
+
                     // This will turn on AutoFlow
                     this.receivingLink.SetTotalLinkCredit(this.boundedTotalLinkCredit, true, true);
                 }
@@ -969,7 +972,7 @@ namespace Microsoft.Azure.Amqp
                         if (issueCredit)
                         {
                             this.receivingLink.SetTotalLinkCredit(this.boundedTotalLinkCredit, true);
-                         }
+                        }
                     }
                 }
             }
@@ -997,7 +1000,7 @@ namespace Microsoft.Azure.Amqp
                     if (issueCredit)
                     {
                         this.receivingLink.SetTotalLinkCredit(this.boundedTotalLinkCredit, true);
-                     }
+                    }
                 }
 
                 return amqpMessage;

@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.Amqp
 {
-    enum TraceOperation
+    public enum TraceOperation
     {
         Initialize = 0,
         Create = 1,

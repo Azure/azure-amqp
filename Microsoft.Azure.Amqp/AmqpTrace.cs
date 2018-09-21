@@ -5,7 +5,7 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
 
-    class AmqpTrace
+    public class AmqpTrace
     {
         // Replace this with your own implementation to enable tracing.
         public static AmqpTrace Provider = new AmqpTrace();

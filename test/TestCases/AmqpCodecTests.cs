@@ -853,7 +853,7 @@
             EnsureEqual((IList)list.List, (IList)result.List);
         }
 
-#if !NETSTANDARD
+#if !NETCOREAPP && !WINDOWS_UWP
         [Fact]
         public void AmqpExceptionSerializeTest()
         {

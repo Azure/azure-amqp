@@ -18,6 +18,10 @@ namespace TestAmqpBroker
         {
         }
 
+        public void Start()
+        {
+        }
+
         public void Stop()
         {
         }

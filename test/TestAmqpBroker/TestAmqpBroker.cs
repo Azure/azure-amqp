@@ -18,18 +18,24 @@ namespace TestAmqpBroker
 
     public sealed class TestAmqpBroker : IRuntimeProvider
     {
+        readonly IList<string> endpoints;
+        readonly string userInfo;
+        readonly string sslValue;
         readonly Dictionary<string, TestQueue> queues;
         readonly Dictionary<SequenceNumber, AmqpConnection> connections;
         readonly TxnManager txnManager;
-        readonly AmqpSettings settings;
-        readonly TransportListener transportListener;
         readonly string containerId;
         readonly uint maxFrameSize;
-        bool implicitQueue;
+        readonly bool implicitQueue;
+        AmqpSettings settings;
+        TransportListener transportListener;
         int dynamicId;
 
         public TestAmqpBroker(IList<string> endpoints, string userInfo, string sslValue, string[] queues)
         {
+            this.endpoints = endpoints;
+            this.userInfo = userInfo;
+            this.sslValue = sslValue;
             this.containerId = "TestAmqpBroker-P" + Process.GetCurrentProcess().Id;
             this.maxFrameSize = 64 * 1024;
             this.txnManager = new TxnManager();
@@ -46,19 +52,22 @@ namespace TestAmqpBroker
             {
                 this.implicitQueue = true;
             }
+        }
 
+        public void Start()
+        {
             // create and initialize AmqpSettings
             AmqpSettings settings = new AmqpSettings();
-            X509Certificate2 certificate = sslValue == null ? null : GetCertificate(sslValue);
+            X509Certificate2 certificate = this.sslValue == null ? null : GetCertificate(this.sslValue);
             settings.RuntimeProvider = this;
 
             SaslHandler saslHandler;
-            if (userInfo != null)
+            if (this.userInfo != null)
             {
-                string[] creds = userInfo.Split(':');
+                string[] creds = this.userInfo.Split(':');
                 string usernanme = Uri.UnescapeDataString(creds[0]);
                 string password = creds.Length == 1 ? string.Empty : Uri.UnescapeDataString(creds[1]);
-                saslHandler = new SaslPlainHandler(new TestPlainAuthenticator(userInfo, password));
+                saslHandler = new SaslPlainHandler(new TestPlainAuthenticator(this.userInfo, password));
             }
             else
             {
@@ -75,10 +84,10 @@ namespace TestAmqpBroker
             settings.TransportProviders.Add(amqpProvider);
 
             // create and initialize transport listeners
-            TransportListener[] listeners = new TransportListener[endpoints.Count];
-            for (int i = 0; i < endpoints.Count; i++)
+            TransportListener[] listeners = new TransportListener[this.endpoints.Count];
+            for (int i = 0; i < this.endpoints.Count; i++)
             {
-                Uri addressUri = new Uri(endpoints[i]);
+                Uri addressUri = new Uri(this.endpoints[i]);
 
                 if (addressUri.Scheme.Equals(AmqpConstants.SchemeAmqps, StringComparison.OrdinalIgnoreCase))
                 {
@@ -96,25 +105,19 @@ namespace TestAmqpBroker
                     TcpTransportSettings tcpSettings = new TcpTransportSettings() { Host = addressUri.Host, Port = addressUri.Port };
                     listeners[i] = tcpSettings.CreateListener();
                 }
-#if !NETSTANDARD
                 else if (addressUri.Scheme.Equals("ws", StringComparison.OrdinalIgnoreCase))
                 {
                     WebSocketTransportSettings wsSettings = new WebSocketTransportSettings() { Uri = addressUri };
                     listeners[i] = wsSettings.CreateListener();
                 }
-#endif
                 else
                 {
                     throw new NotSupportedException(addressUri.Scheme);
                 }
             }
 
-            this.transportListener = new AmqpTransportListener(listeners, settings);
             this.settings = settings;
-        }
-
-        public void Start()
-        {
+            this.transportListener = new AmqpTransportListener(listeners, settings);
             this.transportListener.Listen(this.OnAcceptTransport);
         }
 
@@ -288,11 +291,7 @@ namespace TestAmqpBroker
                         false);
                 }
 
-#if NETSTANDARD
-                store.Dispose();
-#else
                 store.Close();
-#endif
                 if (collection.Count > 0)
                 {
                     return collection[0];

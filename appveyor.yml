@@ -1,4 +1,4 @@
-version: 2.1.{build}
+version: 3.0.{build}
 branches:
   only:
   - develop
@@ -6,16 +6,12 @@ branches:
 skip_tags: true
 image: Visual Studio 2017
 before_build:
-- cmd: nuget.exe restore
-build:
-  project: Microsoft_Azure_Amqp.sln
-  parallel: true
-  verbosity: minimal
+- cmd: echo before build.
+build_script:
+- ps: . .\build.ps1; Build-Solution -Configuration Debug -Platform 'Any CPU''
+after_build:
+- cmd: echo after build.
 test_script:
-- cmd: >-
-    %xunit20%\xunit.console.x86.exe test\Test.Microsoft.Amqp\bin\Debug\net452\Test.Microsoft.Amqp.dll
-
-
-    dotnet.exe test test\Test.Microsoft.Amqp.Core\Test.Microsoft.Amqp.Core.csproj
+- ps: . .\build.ps1; Run-Tests -Configuration Debug
 on_failure:
 - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

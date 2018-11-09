@@ -13,7 +13,7 @@ namespace Test.Microsoft.Azure.Amqp
         [Fact]
         public void AmqpResourcesTest()
         {
-            TestResource(Type.GetType("Microsoft.Azure.Amqp.Amqp.Resources, Microsoft.Azure.Amqp"));
+            TestResource(Type.GetType("Microsoft.Azure.Amqp.Resources, Microsoft.Azure.Amqp"));
             TestResource(Type.GetType("Microsoft.Azure.Amqp.ResourcesGeneric, Microsoft.Azure.Amqp"));
         }
 

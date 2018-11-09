@@ -20,21 +20,12 @@
             const int totalCount = workLoad * workerCount;
             int completedCount = 0;
             int callCount = 0;
-            int working = 0;
             ManualResetEvent completeEvent = new ManualResetEvent(false);
 
             WaitCallback callContinue = null;
 
             Func<object, bool> func = (o) =>
             {
-                // this function should be always called single threaded
-                if (Interlocked.Exchange(ref working, 1) == 1)
-                {
-                    Debug.WriteLine("Should not be called while working");
-                    completeEvent.Set();
-                    return false;
-                }
-
                 bool workCompleted = callCount++ % 30000 != 0;
                 if (workCompleted)
                 {
@@ -43,13 +34,11 @@
                         completeEvent.Set();
                     }
                 }
-
-                if (!workCompleted)
+                else
                 {
                     ThreadPool.QueueUserWorkItem(callContinue, null);
                 }
 
-                Interlocked.Exchange(ref working, 0);
                 return workCompleted;
             };
 
@@ -78,13 +67,7 @@
                 serialziedWorker.ContinueWork();
             }
 
-            // wait for all producer to finish
-            for (int i = 0; i < workerThreads.Length; ++i)
-            {
-                workerThreads[i].Join();
-            }
-
-            bool waitOne = completeEvent.WaitOne(30 * 1000);
+            bool waitOne = completeEvent.WaitOne(60 * 1000);
             Debug.WriteLine(string.Format("total: {0}, completed: {1}", totalCount, completedCount));
             if (!waitOne)
             {

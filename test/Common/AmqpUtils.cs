@@ -43,7 +43,6 @@ namespace Test.Microsoft.Azure.Amqp
         public static AmqpSettings GetAmqpSettings(bool client, string sslValue, bool doSslUpgrade, params SaslHandler[] saslHandlers)
         {
             AmqpSettings settings = new AmqpSettings();
-#if !WINDOWS_UWP
             if ((client && doSslUpgrade) || (!client && sslValue != null))
             {
                 TlsTransportSettings tlsSettings = new TlsTransportSettings();
@@ -62,7 +61,6 @@ namespace Test.Microsoft.Azure.Amqp
                 tlsProvider.Versions.Add(new AmqpVersion(1, 0, 0));
                 settings.TransportProviders.Add(tlsProvider);
             }
-#endif
 
             if (saslHandlers != null && saslHandlers.Length >= 1 && saslHandlers[0] != null)
             {
@@ -147,7 +145,6 @@ namespace Test.Microsoft.Azure.Amqp
             return AmqpMessage.Create(new Data[] { new Data() { Value = binaryData } });
         }
 
-#if !WINDOWS_UWP
         public static AmqpTransportListener CreateListener(string host, int port, string certFindValue, bool doSslUpgrade, SaslHandler saslHandler)
         {
             AmqpSettings settings = GetAmqpSettings(false, certFindValue, doSslUpgrade, saslHandler);
@@ -163,7 +160,6 @@ namespace Test.Microsoft.Azure.Amqp
             TransportListener listener = transportSettings.CreateListener();
             return new AmqpTransportListener(new TransportListener[] { listener }, settings);
         }
-#endif
 
         public static TransportBase CreateTransport(string host, int port, string sslHost, bool doSslUpgrade, SaslHandler saslHandler)
         {
@@ -174,9 +170,7 @@ namespace Test.Microsoft.Azure.Amqp
             {
                 TlsTransportSettings tlsSettings = new TlsTransportSettings(transportSettings);
                 tlsSettings.TargetHost = sslHost;
-#if !WINDOWS_UWP
                 tlsSettings.CertificateValidationCallback = (s, c, h, e) => { return true; };
-#endif
                 transportSettings = tlsSettings;
             }
 
@@ -260,11 +254,7 @@ namespace Test.Microsoft.Azure.Amqp
                         false);
                 }
 
-#if NETSTANDARD || WINDOWS_UWP
-                store.Dispose();
-#else
                 store.Close();
-#endif
                 if (collection.Count > 0)
                 {
                     return collection[0];

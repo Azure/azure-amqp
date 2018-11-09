@@ -489,7 +489,6 @@ namespace Test.Microsoft.Azure.Amqp
             foreach (var item in results) item();
         }
 
-#if !WINDOWS_UWP
         [Fact]
         public void AmqpTransactionTest()
         {
@@ -575,7 +574,6 @@ namespace Test.Microsoft.Azure.Amqp
             session.Close();
             connection.Close();
         }
-#endif
 
         [Fact]
         public void AmqpDynamicLinkCreditTest()
@@ -890,12 +888,11 @@ namespace Test.Microsoft.Azure.Amqp
             // NOTE: Increment this number to make it more likely to hit race conditions.
             const int NumberOfRuns = 500;
 
-#if !WINDOWS_UWP
             Process proc = Process.GetCurrentProcess();
             long affinityMask = (long)proc.ProcessorAffinity;
             var newAffinityMask = affinityMask &= 0x000F; // use only any of the first 4 available processors to make repro similar in most systems
             proc.ProcessorAffinity = (IntPtr)newAffinityMask;
-#endif
+
             try
             {
                 string queue = "OpenSequentialConnectionsToFindRaceConditions";
@@ -955,9 +952,7 @@ namespace Test.Microsoft.Azure.Amqp
             }
             finally
             {
-#if !WINDOWS_UWP
                 proc.ProcessorAffinity = (IntPtr)affinityMask;
-#endif
             }
         }
 

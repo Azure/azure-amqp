@@ -18,8 +18,6 @@ namespace TestAmqpClient
 
     abstract class Client<T> : IClient where T : AmqpLink
     {
-        protected static readonly Task CompletedTask;
-
         protected Options options;
         protected AmqpConnection connection;
         protected AmqpSession session;
@@ -27,17 +25,6 @@ namespace TestAmqpClient
         long attempts;
         long success;
         long failure;
-
-        static Client()
-        {
-#if NET452
-            TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
-            tcs.SetResult(0);
-            CompletedTask = tcs.Task;
-#else
-            CompletedTask = Task.CompletedTask;
-#endif
-        }
 
         public Client(Options options)
         {
@@ -79,7 +66,7 @@ namespace TestAmqpClient
                 return this.connection.CloseAsync(this.connection.DefaultCloseTimeout);
             }
 
-            return CompletedTask;
+            return Task.CompletedTask;
         }
 
         protected abstract T CreateLink();

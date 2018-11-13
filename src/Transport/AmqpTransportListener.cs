@@ -79,7 +79,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 // If we weren't shutting down then this class needs to Close itself (with the TerminalException) since
                 // it is no longer doing all the listening it is supposed to do.
                 TransportListener innerListener = (TransportListener)sender;
-                AmqpTrace.Provider.AmqpLogError(this, "OnListenerClosed", innerListener.ToString());
+                AmqpTrace.Provider.AmqpLogError(this, "OnListenerClosed", innerListener.TerminalException);
                 this.SafeClose(innerListener.TerminalException);
             }
         }
@@ -160,7 +160,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 catch (Exception exp) when (!Fx.IsFatal(exp))
                 {
-                    AmqpTrace.Provider.AmqpLogError(thisPtr, "HandleTransportOpened", exp.Message);
+                    AmqpTrace.Provider.AmqpLogError(thisPtr, "HandleTransportOpened", exp);
                     thisPtr.args.Exception = exp;
                     thisPtr.parent.OnHandleTransportComplete(thisPtr.args);
                 }
@@ -190,7 +190,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 catch (Exception exp) when (!Fx.IsFatal(exp))
                 {
-                    AmqpTrace.Provider.AmqpLogError(thisPtr, "OnProtocolHeader", exp.Message);
+                    AmqpTrace.Provider.AmqpLogError(thisPtr, "OnProtocolHeader", exp);
                     args.Exception = exp;
                     thisPtr.parent.OnHandleTransportComplete(args);
                 }
@@ -228,7 +228,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 {
                     // treat this the same as protocol ID/version failure
                     // which are all client config issues
-                    AmqpTrace.Provider.AmqpLogError(this, "CreateTransport", ioe.Message);
+                    AmqpTrace.Provider.AmqpLogError(this, "CreateTransport", ioe);
                     this.WriteReplyHeader(ProtocolHeader.Amqp100, true);
                     return;
                 }

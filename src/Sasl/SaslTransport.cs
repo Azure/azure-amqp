@@ -70,7 +70,7 @@ namespace Microsoft.Azure.Amqp.Sasl
 
         public void OnNegotiationFail(Exception exception)
         {
-            AmqpTrace.Provider.AmqpLogError(this, "OnNegotiationFail", exception.Message);
+            AmqpTrace.Provider.AmqpLogError(this, "OnNegotiationFail", exception);
             this.negotiator = null;
             this.innerTransport.SafeClose(exception);
             this.CompleteOpen(false, exception);

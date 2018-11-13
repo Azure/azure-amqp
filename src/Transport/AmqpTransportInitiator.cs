@@ -159,7 +159,7 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             if (args.Exception != null)
             {
-                AmqpTrace.Provider.AmqpLogError(this, "ReadHeader", args.Exception.Message);
+                AmqpTrace.Provider.AmqpLogError(this, "ReadHeader", args.Exception);
                 this.Complete(args);
                 return;
             }
@@ -191,7 +191,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
             catch (Exception exp) when (!Fx.IsFatal(exp))
             {
-                AmqpTrace.Provider.AmqpLogError(this, "OnProtocolHeader", exp.Message);
+                AmqpTrace.Provider.AmqpLogError(this, "OnProtocolHeader", exp);
                 args.Exception = exp;
                 this.Complete(args);
             }

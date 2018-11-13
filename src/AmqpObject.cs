@@ -292,7 +292,7 @@ namespace Microsoft.Azure.Amqp
             catch (Exception exception)
             {
                 // No one is supposed to throw but it someone does, we need to investigate
-                AmqpTrace.Provider.AmqpAbortThrowingException(exception.ToStringSlim());
+                AmqpTrace.Provider.AmqpAbortThrowingException(exception);
                 throw;
             }
             finally
@@ -329,7 +329,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception exp) when (!Fx.IsFatal(exp))
             {
-                AmqpTrace.Provider.AmqpLogError(this, nameof(SafeClose), exp.ToString());
+                AmqpTrace.Provider.AmqpLogError(this, nameof(SafeClose), exp);
 
                 this.Abort();
             }
@@ -477,7 +477,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (AmqpException exception)
             {
-                AmqpTrace.Provider.AmqpLogError(this, command, exception.ToStringSlim());
+                AmqpTrace.Provider.AmqpLogError(this, command, exception);
                 this.Abort();
             }
         }
@@ -499,7 +499,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                AmqpTrace.Provider.AmqpLogError(thisPtr, "SafeCloseComplete", exception.ToStringSlim());
+                AmqpTrace.Provider.AmqpLogError(thisPtr, "SafeCloseComplete", exception);
 
                 thisPtr.Abort();
             }
@@ -574,7 +574,7 @@ namespace Microsoft.Azure.Amqp
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    AmqpTrace.Provider.AmqpLogError(this.amqpObject, "OnStart", exception.ToStringSlim());
+                    AmqpTrace.Provider.AmqpLogError(this.amqpObject, "OnStart", exception);
 
                     shouldComplete = true;
                     completeException = exception;

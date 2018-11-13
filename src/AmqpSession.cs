@@ -125,7 +125,7 @@ namespace Microsoft.Azure.Amqp
                 link.LocalHandle = this.linksByLocalHandle.Add(link);
             }
 
-            AmqpTrace.Provider.AmqpAttachLink(this.connection, this, link, link.LocalHandle.Value,
+            AmqpTrace.Provider.AmqpAttachLink(this, link, link.LocalHandle.Value,
                 link.RemoteHandle ?? 0u, link.Name, link.IsReceiver ? "receiver" : "sender", link.Settings.Source, link.Settings.Target);
         }
 
@@ -160,7 +160,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                AmqpTrace.Provider.AmqpLogError(this, "ProcessFrame", exception.Message);
+                AmqpTrace.Provider.AmqpLogError(this, "ProcessFrame", exception);
                 this.SafeClose(exception);
             }
         }
@@ -308,7 +308,7 @@ namespace Microsoft.Azure.Amqp
                     throw;
                 }
 
-                AmqpTrace.Provider.AmqpLogError(this, "CreateLink", exception.Message);
+                AmqpTrace.Provider.AmqpLogError(this, "CreateLink", exception);
 
                 // detach requires a handle so the error link has to be attached first
                 link = new ErrorLink(this, linkSettings);
@@ -421,7 +421,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (this.Settings.IgnoreMissingLinks)
                     {
-                        AmqpTrace.Provider.AmqpMissingHandle(this, "link", flow.Handle.Value);
+                        AmqpTrace.Provider.AmqpMissingHandle(this.connection, this, "link", flow.Handle.Value);
                         return;
                     }
 
@@ -472,7 +472,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (this.Settings.IgnoreMissingLinks)
                     {
-                        AmqpTrace.Provider.AmqpMissingHandle(this, "link", linkBody.Handle.Value);
+                        AmqpTrace.Provider.AmqpMissingHandle(this.connection, this, "link", linkBody.Handle.Value);
                         return;
                     }
 
@@ -541,7 +541,7 @@ namespace Microsoft.Azure.Amqp
             thisPtr.incomingChannel.OnLinkClosed(link);
             thisPtr.outgoingChannel.OnLinkClosed(link);
 
-            AmqpTrace.Provider.AmqpRemoveLink(thisPtr.connection, thisPtr, link, link.LocalHandle ?? 0u, link.RemoteHandle ?? 0u, link.Name);
+            AmqpTrace.Provider.AmqpRemoveLink(thisPtr, link, link.LocalHandle ?? 0u, link.RemoteHandle ?? 0u, link.Name);
         }
 
         abstract class SessionChannel
@@ -958,7 +958,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (this.outgoingWindow == 0)
                     {
-                        AmqpTrace.Provider.AmqpSessionWindowClosed(this, (int)this.nextOutgoingId.Value);
+                        AmqpTrace.Provider.AmqpSessionWindowClosed(this.Session, (int)this.nextOutgoingId.Value);
                         return false;
                     }
 
@@ -1099,7 +1099,7 @@ namespace Microsoft.Azure.Amqp
 
                 if (!canAccept)
                 {
-                    AmqpTrace.Provider.AmqpSessionWindowClosed(this, (int)this.nextIncomingId.Value);
+                    AmqpTrace.Provider.AmqpSessionWindowClosed(this.Session, (int)this.nextIncomingId.Value);
                     throw new AmqpException(AmqpErrorCode.WindowViolation, null);
                 }
 

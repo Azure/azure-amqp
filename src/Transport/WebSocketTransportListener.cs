@@ -77,7 +77,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 catch (Exception exception)
                 {
-                    AmqpTrace.Provider.AmqpHandleException(exception, "listen loop");
+                    AmqpTrace.Provider.AmqpLogError(this, "accept-loop", exception);
                 }
             }
         }
@@ -117,7 +117,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
             catch (Exception exception)
             {
-                AmqpTrace.Provider.AmqpHandleException(exception, "listen loop");
+                AmqpTrace.Provider.AmqpLogError(this, "handle-context", exception);
 
                 context.Response.StatusCode = 500;
                 context.Response.OutputStream.Dispose();

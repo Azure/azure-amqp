@@ -121,7 +121,7 @@ namespace Microsoft.Azure.Amqp
                     Exception lastException = this.LastAsyncStepException;
                     if (lastException != null)
                     {
-                        AmqpTrace.Provider.AmqpOpenEntityFailed(this.connection, this.session, string.Empty, address, lastException.Message);
+                        AmqpTrace.Provider.AmqpOpenEntityFailed(this, string.Empty, address, lastException);
                         this.session.Abort();
                         this.Complete(lastException);
                         yield break;
@@ -138,14 +138,14 @@ namespace Microsoft.Azure.Amqp
                     lastException = this.LastAsyncStepException;
                     if (lastException != null)
                     {
-                        AmqpTrace.Provider.AmqpOpenEntityFailed(this.connection, this.Link, this.Link.Name, address, lastException.Message);
+                        AmqpTrace.Provider.AmqpOpenEntityFailed(this, this.Link.Name, address, lastException);
                         this.session.SafeClose();
                         this.Link = null;
                         this.Complete(lastException);
                         yield break;
                     }
 
-                    AmqpTrace.Provider.AmqpOpenEntitySucceeded(this.connection, this.Link, this.Link.Name, address);
+                    AmqpTrace.Provider.AmqpOpenEntitySucceeded(this.Link, this.Link.Name, address);
                     yield break;
                 }
 

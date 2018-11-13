@@ -127,7 +127,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (!this.IsClosing())
             {
-                AmqpTrace.Provider.AmqpLogError(this, "AsyncIoFault", exception.ToString());
+                AmqpTrace.Provider.AmqpLogError(this, "AsyncIoFault", exception);
             }
 
             this.TerminalException = exception;
@@ -156,7 +156,7 @@ namespace Microsoft.Azure.Amqp
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    AmqpTrace.Provider.AmqpLogError(this, "OnProtocolHeader", exception.Message);
+                    AmqpTrace.Provider.AmqpLogError(this, "OnProtocolHeader", exception);
 
                     this.TerminalException = exception;
                     this.Abort();
@@ -170,7 +170,7 @@ namespace Microsoft.Azure.Amqp
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    AmqpTrace.Provider.AmqpLogError(this, "OnFrame", exception.Message);
+                    AmqpTrace.Provider.AmqpLogError(this, "OnFrame", exception);
 
                     this.SafeClose(exception);
                 }

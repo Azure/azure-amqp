@@ -192,7 +192,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                AmqpTrace.Provider.AmqpLogError(this, nameof(ProcessFrame), exception.Message);
+                AmqpTrace.Provider.AmqpLogError(this, nameof(ProcessFrame), exception);
                 this.SafeClose(exception);
             }
         }
@@ -939,7 +939,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                AmqpTrace.Provider.AmqpLogError(thisPtr, "EndOpenLink", exception.Message);
+                AmqpTrace.Provider.AmqpLogError(thisPtr, "EndOpenLink", exception);
                 openException = exception;
             }
 
@@ -958,7 +958,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                AmqpTrace.Provider.AmqpLogError(thisPtr, "CompleteOpenLink", exception.Message);
+                AmqpTrace.Provider.AmqpLogError(thisPtr, "CompleteOpenLink", exception);
                 thisPtr.OnLinkOpenFailed(exception);
             }
         }

@@ -152,7 +152,7 @@ namespace Microsoft.Azure.Amqp
 
         protected override bool OpenInternal()
         {
-            AmqpTrace.Provider.AmqpOpenConnection(this, this);
+            AmqpTrace.Provider.AmqpOpenConnection(this);
             if (this.isInitiator)
             {
                 this.SendProtocolHeader(this.initialHeader);
@@ -174,7 +174,7 @@ namespace Microsoft.Azure.Amqp
 
         protected override bool CloseInternal()
         {
-            AmqpTrace.Provider.AmqpCloseConnection(this, this, false);
+            AmqpTrace.Provider.AmqpCloseConnection(this, false);
             this.heartBeat.Stop();
             this.CloseSessions(!this.SessionFrameAllowed());
 
@@ -203,7 +203,7 @@ namespace Microsoft.Azure.Amqp
 
         protected override void AbortInternal()
         {
-            AmqpTrace.Provider.AmqpCloseConnection(this, this, true);
+            AmqpTrace.Provider.AmqpCloseConnection(this, true);
             this.heartBeat.Stop();
             this.CloseSessions(true);
             this.AsyncIO.Abort();
@@ -460,7 +460,7 @@ namespace Microsoft.Azure.Amqp
                         this.Settings.IgnoreMissingSessions)
                     {
                         // The session close may timed out already
-                        AmqpTrace.Provider.AmqpMissingHandle(this, "session", channel);
+                        AmqpTrace.Provider.AmqpMissingHandle(this, null, "session", channel);
                         return;
                     }
 
@@ -650,9 +650,9 @@ namespace Microsoft.Azure.Amqp
                         {
                             string message = AmqpResources.GetString(AmqpResources.AmqpConnectionInactive,
                                 thisPtr.localInterval, thisPtr.connection.Settings.ContainerId);
-                            AmqpTrace.Provider.AmqpLogError(thisPtr.connection, "OnHeartBeatTimer", message);
-
-                            thisPtr.connection.SafeClose(new AmqpException(AmqpErrorCode.ConnectionForced, message));
+                            var amqpException = new AmqpException(AmqpErrorCode.ConnectionForced, message);
+                            AmqpTrace.Provider.AmqpLogError(thisPtr.connection, "OnHeartBeatTimer", amqpException);
+                            thisPtr.connection.SafeClose(amqpException);
 
                             return;
                         }
@@ -669,7 +669,7 @@ namespace Microsoft.Azure.Amqp
                     {
                         if (!thisPtr.connection.IsClosing())
                         {
-                            AmqpTrace.Provider.AmqpLogError(thisPtr.connection, "OnHeartBeatTimer", exception.Message);
+                            AmqpTrace.Provider.AmqpLogError(thisPtr.connection, "OnHeartBeatTimer", exception);
                             thisPtr.connection.SafeClose(exception);
                         }
                     }

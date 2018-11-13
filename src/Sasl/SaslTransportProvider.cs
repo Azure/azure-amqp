@@ -40,8 +40,9 @@ namespace Microsoft.Azure.Amqp.Sasl
             SaslHandler handler;
             if (!this.handlers.TryGetValue(mechanism, out handler))
             {
-                AmqpTrace.Provider.AmqpLogError(this, "GetHandler", mechanism);
-                throw new AmqpException(AmqpErrorCode.NotImplemented, mechanism);
+                var exception = new AmqpException(AmqpErrorCode.NotImplemented, mechanism);
+                AmqpTrace.Provider.AmqpLogError(this, "GetHandler", exception);
+                throw exception;
             }
 
             return clone ? handler.Clone() : handler;

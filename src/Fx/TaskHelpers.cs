@@ -58,17 +58,6 @@ namespace Microsoft.Azure.Amqp
             return retval;
         }
 
-        public static void Fork(this Task thisTask)
-        {
-            Fork(thisTask, "TaskExtensions.Fork");
-        }
-
-        public static void Fork(this Task thisTask, string tracingInfo)
-        {
-            Fx.Assert(thisTask != null, "task is required!");
-            thisTask.ContinueWith(t => AmqpTrace.Provider.AmqpHandleException(t.Exception, tracingInfo), TaskContinuationOptions.OnlyOnFaulted);
-        }
-
         public static IAsyncResult ToAsyncResult(this Task task, AsyncCallback callback, object state)
         {
             if (task.AsyncState == state)

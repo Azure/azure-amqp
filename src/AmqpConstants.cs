@@ -23,21 +23,13 @@ namespace Microsoft.Azure.Amqp
         public const string UriName = Vendor + ":uri";
         public const string DateTimeOffsetName = Vendor + ":datetime-offset";
         public const string OpenErrorName = Vendor + ":open-error";
-        public const string BadCommand = "BadCommand";
-        public const string AddRule = "AddRule";
-        public const string DeleteRule = "DeleteRule";
-        public const string GetMessageSessions = "GetMessageSessions";
-        public const string Publish = "Publish";
-        public const string Consume = "Consume";
-        public const string Dispose = "Dispose";
+        public static readonly AmqpSymbol IoEvent = "io-event";
         public static readonly AmqpSymbol BatchedMessageFormat = Vendor + ":batched-message-format";
         public static readonly AmqpSymbol SimpleWebTokenPropertyName = Vendor + ":swt";
         public static readonly AmqpSymbol HostName = "hostname";
         public static readonly AmqpSymbol NetworkHost = "network-host";
         public static readonly AmqpSymbol Port = "port";
         public static readonly AmqpSymbol Address = "address";
-        public static readonly AmqpSymbol PublisherId = "publisher-id";
-        public static readonly AmqpSymbol IoEvent = "io-event";
 
         public static readonly ArraySegment<byte> NullBinary = new ArraySegment<byte>();
         public static readonly ArraySegment<byte> EmptyBinary = new ArraySegment<byte>(new byte[0]);
@@ -79,8 +71,6 @@ namespace Microsoft.Azure.Amqp
         public const uint DefaultLinkCredit = 1000;
         public const uint DefaultNextTransferId = 1;
         public const int DefaultDispositionTimeout = 20;
-
         public const int SegmentSize = 512;
-        public const byte AmqpFormat = 1;
     }
 }

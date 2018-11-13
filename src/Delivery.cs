@@ -164,9 +164,12 @@ namespace Microsoft.Azure.Amqp
         {
             if (disposing && this.RawByteBuffers != null)
             {
-                foreach (ByteBuffer rawByteBuffer in this.RawByteBuffers)
+                // Buffer may still be appended to the list
+                // and not disposed but it should be rare.
+                int count = this.RawByteBuffers.Count;
+                for (int i = 0; i < count; i++)
                 {
-                    rawByteBuffer.Dispose();
+                    this.RawByteBuffers[i]?.Dispose();
                 }
             }
         }

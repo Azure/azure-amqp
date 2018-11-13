@@ -31,6 +31,7 @@ namespace Microsoft.Azure.Amqp
         int sendingFlow;
         uint? tempTotalCredit;
         uint bufferedCredit;
+        bool sessionWindowClosed;
         int references; // make sure no frames are sent after close
 
         protected AmqpLink(AmqpSession session, AmqpLinkSettings linkSettings)
@@ -41,14 +42,9 @@ namespace Microsoft.Azure.Amqp
         protected AmqpLink(string type, AmqpSession session, AmqpLinkSettings linkSettings)
             : base(type)
         {
-            if (linkSettings == null)
-            {
-                throw new ArgumentNullException(nameof(linkSettings));
-            }
-
             this.references = 1;
             this.syncRoot = new object();
-            this.settings = linkSettings;
+            this.settings = linkSettings ?? throw new ArgumentNullException(nameof(linkSettings));
             this.linkCredit = this.settings.TotalLinkCredit;
 
             Source source = (Source)this.settings.Source;
@@ -461,7 +457,22 @@ namespace Microsoft.Azure.Amqp
         bool IWorkDelegate<Delivery>.Invoke(Delivery delivery)
         {
             return this.DoActionIfNotClosed(
-                (thisPtr, paramDelivery, p1, p2, p3) => thisPtr.SendDelivery(paramDelivery),
+                (thisPtr, paramDelivery, p1, p2, p3) =>
+                {
+                    bool sent = thisPtr.SendDelivery(paramDelivery);
+                    if (!sent)
+                    {
+                        thisPtr.sessionWindowClosed = true;
+                        thisPtr.OnIoEvent(IoEvent.WriteBufferQueueFull);
+                    }
+                    else if (thisPtr.sessionWindowClosed)
+                    {
+                        thisPtr.sessionWindowClosed = true;
+                        thisPtr.OnIoEvent(IoEvent.WriteBufferQueueEmpty);
+                    }
+
+                    return sent;
+                },
                 delivery,
                 0,
                 0,

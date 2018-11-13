@@ -597,6 +597,7 @@ namespace Microsoft.Azure.Amqp
 
         protected bool SendDelivery(Delivery delivery)
         {
+            bool settled = delivery.Settled;
             bool more = true;
             while (more)
             {
@@ -611,7 +612,7 @@ namespace Microsoft.Azure.Amqp
                     transfer.MessageFormat = delivery.MessageFormat ?? AmqpConstants.AmqpMessageFormat;
                     transfer.Batchable = delivery.Batchable;
                     transfer.State = delivery.State;
-                    if (delivery.Settled)
+                    if (settled)
                     {
                         transfer.Settled = true;
                     }
@@ -654,7 +655,7 @@ namespace Microsoft.Azure.Amqp
                 delivery.CompletePayload(payloadSize);
             }
 
-            if (!more && delivery.Settled)
+            if (!more && settled)
             {
                 delivery.State = AmqpConstants.AcceptedOutcome;
                 this.OnDisposeDeliveryInternal(delivery);

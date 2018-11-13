@@ -10,9 +10,7 @@ namespace Microsoft.Azure.Amqp
     {
         readonly TimeSpan timeout;
         Timer timer;
-#if DEBUG
         bool setTimerCalled;  // make sure derived class always call SetTimer
-#endif
 
         protected TimeoutAsyncResult(TimeSpan timeout, AsyncCallback callback, object state)
             : base(callback, state)
@@ -27,9 +25,7 @@ namespace Microsoft.Azure.Amqp
 
         protected void SetTimer()
         {
-#if DEBUG
             this.setTimerCalled = true;
-#endif
             if (this.timeout != TimeSpan.MaxValue)
             {
                 this.timer = new Timer(s => OnTimerCallback(s), this, this.timeout, Timeout.InfiniteTimeSpan);
@@ -64,9 +60,7 @@ namespace Microsoft.Azure.Amqp
 
         bool CompleteInternal(bool syncComplete, Exception exception)
         {
-#if DEBUG
-            Fx.AssertAndThrow(exception != null || this.setTimerCalled, "Must call SetTimer.");
-#endif
+            Fx.Assert(exception != null || this.setTimerCalled, "Must call SetTimer.");
             return this.TryComplete(syncComplete, exception);
         }
     }

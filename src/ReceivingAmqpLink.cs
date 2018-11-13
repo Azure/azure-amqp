@@ -877,8 +877,6 @@ namespace Microsoft.Azure.Amqp
 
             public SizeBasedFlowQueue(ReceivingAmqpLink receivingLink)
             {
-                Fx.AssertAndThrow(receivingLink != null, "Receive link should not be null");
-                Fx.AssertAndThrow(receivingLink.Settings != null, "Setting should not be null");
                 this.receivingLink = receivingLink;
                 this.SetLinkCreditUsingTotalCacheSize(true);
             }

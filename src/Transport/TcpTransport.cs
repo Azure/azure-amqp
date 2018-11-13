@@ -438,7 +438,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 // use the segment buffer to avoid heap fragmentation
                 if (args.Count <= SmallBufferPool.SegmentSize)
                 {
-                    Fx.AssertAndThrow(this.segment.Array != null, "segment buffer already relaimed");
+                    Fx.Assert(this.segment.Array != null, "segment buffer already relaimed");
                     this.SetBuffer(this.segment.Array, this.segment.Offset, args.Count);
                     this.IsSegment = true;
                 }

@@ -256,7 +256,7 @@ namespace Microsoft.Azure.Amqp
                 putTokenRequest.ApplicationProperties.Map[CbsConstants.PutToken.Expiration] = this.token.ExpiresAtUtc;
 
                 AmqpMessage putTokenResponse = null;
-                Fx.AssertIsNotNull(this.requestResponseLinkTask.Result, "requestResponseLink cannot be null without exception");
+                Fx.Assert(this.requestResponseLinkTask.Result != null, "requestResponseLink cannot be null without exception");
                 yield return this.CallAsync(
                     (thisPtr, t, c, s) => thisPtr.requestResponseLinkTask.Result.BeginRequest(putTokenRequest, t, c, s),
                     (thisPtr, r) => putTokenResponse = thisPtr.requestResponseLinkTask.Result.EndRequest(r),

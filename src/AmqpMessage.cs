@@ -52,7 +52,7 @@ namespace Microsoft.Azure.Amqp
                 return this.header;
             }
 
-            protected set
+            set
             {
                 this.header = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.Header);
@@ -67,7 +67,7 @@ namespace Microsoft.Azure.Amqp
                 return this.deliveryAnnotations;
             }
 
-            protected set
+            set
             {
                 this.deliveryAnnotations = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.DeliveryAnnotations);
@@ -97,7 +97,7 @@ namespace Microsoft.Azure.Amqp
                 return this.properties;
             }
 
-            protected set
+            set
             {
                 this.properties = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.Properties);
@@ -151,7 +151,7 @@ namespace Microsoft.Azure.Amqp
                 return this.footer;
             }
 
-            protected set
+            set
             {
                 this.footer = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.Footer);

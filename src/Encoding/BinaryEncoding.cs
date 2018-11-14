@@ -108,7 +108,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
-            return BinaryEncoding.Decode(buffer, formatCode);
+            return BinaryEncoding.Decode(buffer, formatCode, false);
         }
     }
 }

@@ -82,7 +82,7 @@ namespace Microsoft.Azure.Amqp.Framing
 #if DEBUG
             error.Info = new Fields();
 
-            // Limit the size of the exception string as it may exceed the conneciton max frame size
+            // Limit the size of the exception string as it may exceed the connection max frame size
             string exceptionString = exception.ToString();
             if (exceptionString.Length > MaxSizeInInfoMap)
             {

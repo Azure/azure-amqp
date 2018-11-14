@@ -45,6 +45,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             return this.key.GetHashCode();
         }
 
+        public override bool Equals(object obj)
+        {
+            return (obj is MapKey) && this.Equals((MapKey)obj);
+        }
+
         public override string ToString()
         {
             return key == null ? "<null>" : key.ToString();

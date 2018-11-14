@@ -63,6 +63,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             return this.Value.GetHashCode();
         }
 
+        public override bool Equals(object obj)
+        {
+            return (obj is AmqpSymbol) && this.Equals((AmqpSymbol)obj);
+        }
+
         public override string ToString()
         {
             return this.Value;

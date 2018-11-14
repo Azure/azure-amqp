@@ -481,7 +481,7 @@ namespace Microsoft.Azure.Amqp
 
         protected override bool OpenInternal()
         {
-            AmqpObjectState state = this.SendAttach();
+            AmqpObjectState state = this.SendAttach(this.settings);
             if (this.IsReceiver)
             {
                 lock (this.syncRoot)
@@ -499,9 +499,7 @@ namespace Microsoft.Azure.Amqp
             if (state == AmqpObjectState.OpenReceived ||
                 state == AmqpObjectState.ClosePipe)
             {
-                this.settings.Source = null;
-                this.settings.Target = null;
-                this.SendAttach();
+                this.SendAttach(this.CreateAttachForClose());
             }
 
             if (this.inflightDeliveries != null)
@@ -758,10 +756,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        AmqpObjectState SendAttach()
+        AmqpObjectState SendAttach(Attach attach)
         {
             StateTransition transition = this.TransitState("S:ATTACH", StateTransition.SendOpen);
-            this.Session.SendCommand(this.settings);
+            this.Session.SendCommand(attach);
             return transition.To;
         }
 
@@ -978,9 +976,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (this.State == AmqpObjectState.OpenReceived)
             {
-                this.settings.Source = null;
-                this.settings.Target = null;
-                this.SendAttach();
+                this.SendAttach(this.CreateAttachForClose());
             }
 
             this.SafeClose(exception);
@@ -1094,6 +1090,15 @@ namespace Microsoft.Azure.Amqp
                 }
             }
             while (!forceSend && Interlocked.Decrement(ref this.sendingFlow) > 0);
+        }
+
+        Attach CreateAttachForClose()
+        {
+            Attach attach = new Attach();
+            attach.LinkName = this.settings.LinkName;
+            attach.Role = this.settings.Role;
+            attach.Handle = this.settings.Handle;
+            return attach;
         }
     }
 }

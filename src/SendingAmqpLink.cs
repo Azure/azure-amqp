@@ -15,7 +15,6 @@ namespace Microsoft.Azure.Amqp
         readonly SerializedWorker<AmqpMessage> pendingDeliveries;   // need link credit
         readonly WorkCollection<ArraySegment<byte>, SendAsyncResult, Outcome> inflightSends;
         Action<Delivery> dispositionListener;
-        Action<uint, bool, ArraySegment<byte>> creditListener;
         DateTime lastFlowRequestTime;
 
         public SendingAmqpLink(AmqpLinkSettings settings)
@@ -30,14 +29,6 @@ namespace Microsoft.Azure.Amqp
             this.pendingDeliveries = new SerializedWorker<AmqpMessage>(this);
             this.inflightSends = new WorkCollection<ArraySegment<byte>, SendAsyncResult, Outcome>(ByteArrayComparer.Instance);
             this.lastFlowRequestTime = DateTime.UtcNow;
-        }
-
-        public void RegisterCreditListener(Action<uint, bool, ArraySegment<byte>> creditListener)
-        {
-            if (Interlocked.Exchange(ref this.creditListener, creditListener) != null)
-            {
-                throw new InvalidOperationException(CommonResources.CreditListenerAlreadyRegistered);
-            }
         }
 
         public void RegisterDispositionListener(Action<Delivery> dispositionListener)
@@ -148,11 +139,6 @@ namespace Microsoft.Azure.Amqp
             if (this.LinkCredit > 0)
             {
                 this.pendingDeliveries.ContinueWork();
-            }
-
-            if (this.LinkCredit > 0 && this.creditListener != null)
-            {
-                this.creditListener(link, drain, txnId);
             }
         }
 

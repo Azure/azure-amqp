@@ -21,6 +21,7 @@ namespace Microsoft.Azure.Amqp
         readonly Outcome defaultOutcome;
         readonly Dictionary<ArraySegment<byte>, Delivery> unsettledMap;
         readonly SerializedWorker<Delivery> inflightDeliveries; // has link credit, may need session credit
+        Action<uint, bool, ArraySegment<byte>> creditListener;
 
         // flow control state
         SequenceNumber deliveryCount;
@@ -151,12 +152,40 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        public bool Drain => this.drain;
+
         public void AttachTo(AmqpSession session)
         {
             Fx.Assert(this.Session == null, "The link is already attached to a session");
             this.MaxFrameSize = session.Connection.Settings.MaxFrameSize();
             this.Session = session;
             session.AttachLink(this);
+        }
+
+        public void RegisterCreditListener(Action<uint, bool, ArraySegment<byte>> creditListener)
+        {
+            lock (this.syncRoot)
+            {
+                if (this.creditListener != null)
+                {
+                    throw new InvalidOperationException("Credit listener already registered.");
+                }
+
+                this.creditListener = creditListener;
+            }
+        }
+
+        public void DrainCredits()
+        {
+            lock (this.syncRoot)
+            {
+                this.deliveryCount += (int)this.linkCredit;
+                this.linkCredit = 0;
+                if (!this.IsReceiver)
+                {
+                    this.SendFlow(false, true, null);
+                }
+            }
         }
 
         public void ProcessFrame(Frame frame)
@@ -384,14 +413,19 @@ namespace Microsoft.Azure.Amqp
             uint flowLinkCredit = flow.LinkCredit();
             lock (this.syncRoot)
             {
+                this.drain = flow.Drain ?? false;
                 if (this.IsReceiver)
                 {
                     this.available = flow.Available ?? uint.MaxValue;
+                    if (this.drain)
+                    {
+                        this.DrainCredits();
+                    }
+
                     this.ApplyTempTotalLinkCredit();
                 }
                 else
                 {
-                    this.drain = flow.Drain ?? false;
                     if (flowLinkCredit != uint.MaxValue)
                     {
                         if (this.linkCredit == uint.MaxValue)
@@ -424,10 +458,14 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            if (moreCredit > 0)
+            if (moreCredit > 0 || this.drain)
             {
                 ArraySegment<byte> txnId = this.GetTxnIdFromFlow(flow);
                 this.OnCreditAvailable(0, moreCredit, this.drain, txnId);
+                if (this.linkCredit > 0 || this.drain)
+                {
+                    this.creditListener?.Invoke(moreCredit, this.drain, txnId);
+                }
             }
 
             if (flow.Echo())

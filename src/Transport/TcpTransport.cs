@@ -483,10 +483,10 @@ namespace Microsoft.Azure.Amqp.Transport
             // unitSize is the min value to increase to help small messages to reach level 1
             // level is changed only when the trend is consistent during two consecutive windows
             // bufferSizes: must match the preallocated buffers in InternalBufferManager.PreallocatedBufferManager
-            static long durationTicks = TimeSpan.FromSeconds(4).Ticks;
-            static int[] thresholds = new int[] { 0, 8 * 1024, 4 * 1024 * 1024 };
-            static int[] bufferSizes = new int[] { 0, 8 * 1024, 64 * 1024 };
-            int unitSize;
+            static readonly long durationTicks = TimeSpan.FromSeconds(4).Ticks;
+            static readonly int[] thresholds = new int[] { 0, 8 * 1024, 4 * 1024 * 1024 };
+            static readonly int[] bufferSizes = new int[] { 0, AmqpConstants.TransportBufferSize, AmqpConstants.TransportBufferSize };
+            readonly int unitSize;
             DateTime firstOperation;
             int transferedBytes;
             sbyte level;

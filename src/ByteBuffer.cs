@@ -10,10 +10,11 @@ namespace Microsoft.Azure.Amqp
     // This class is not thread safe
     public sealed class ByteBuffer : IDisposable, IAmqpSerializable
     {
-        static readonly InternalBufferManager BufferManager = InternalBufferManager.Create(50 * 1024 * 1024, int.MaxValue, false);
+        static readonly InternalBufferManager PooledBufferManager = InternalBufferManager.CreatePooledBufferManager(
+            50 * 1024 * 1024, int.MaxValue);
 
         static InternalBufferManager TransportBufferManager;
-        static object syncRoot = new object();
+        static readonly object syncRoot = new object();
 
         //
         // A buffer has start and end and two cursors (read/write)
@@ -37,7 +38,7 @@ namespace Microsoft.Azure.Amqp
         InternalBufferManager bufferManager;
         ByteBuffer innerBuffer;
 
-        public static void InitBufferManagers()
+        public static void InitTransportBufferManager(int bufferSize, int maxCount)
         {
             if (TransportBufferManager == null)
             {
@@ -45,7 +46,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (TransportBufferManager == null)
                     {
-                        TransportBufferManager = InternalBufferManager.Create(48 * 1024 * 1024, AmqpConstants.TransportBufferSize, true);
+                        TransportBufferManager = InternalBufferManager.CreatePreallocatedBufferManager(bufferSize, maxCount);
                     }
                 }
             }
@@ -106,7 +107,7 @@ namespace Microsoft.Azure.Amqp
 
         static ManagedBuffer AllocateBufferFromPool(int size, bool isTransportBuffer)
         {
-            return AllocateBuffer(size, isTransportBuffer ? TransportBufferManager : BufferManager);
+            return AllocateBuffer(size, isTransportBuffer ? TransportBufferManager : PooledBufferManager);
         }
 
         // attempts to allocate using the supplied buffer manager, falls back to the default buffer manager on failure
@@ -121,7 +122,7 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            return new ManagedBuffer(BufferManager.TakeBuffer(size), BufferManager);
+            return new ManagedBuffer(PooledBufferManager.TakeBuffer(size), PooledBufferManager);
         }
 
         public byte[] Buffer
@@ -328,9 +329,9 @@ namespace Microsoft.Azure.Amqp
 
         struct ManagedBuffer
         {
-            public InternalBufferManager BufferManager;
+            public readonly InternalBufferManager BufferManager;
 
-            public byte[] Buffer;
+            public readonly byte[] Buffer;
 
             public ManagedBuffer(byte[] buffer, InternalBufferManager bufferManager)
             {

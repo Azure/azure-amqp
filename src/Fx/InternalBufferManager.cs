@@ -19,24 +19,20 @@ namespace Microsoft.Azure.Amqp
         public abstract void ReturnBuffer(byte[] buffer);
         public abstract void Clear();
 
-        public static InternalBufferManager Create(long maxBufferPoolSize, int maxBufferSize, bool isTransportBufferPool)
+        public static InternalBufferManager CreatePooledBufferManager(long maxBufferPoolSize, int maxBufferSize)
         {
             if (maxBufferPoolSize == 0)
             {
                 return GCBufferManager.Value;
             }
-            else
-            {
-                Fx.Assert(maxBufferPoolSize > 0 && maxBufferSize >= 0, "bad params, caller should verify");
-                if (isTransportBufferPool)
-                {
-                    return new PreallocatedBufferManager(maxBufferPoolSize, maxBufferSize);
-                }
-                else
-                {
-                    return new PooledBufferManager(maxBufferPoolSize, maxBufferSize);
-                }
-            }
+
+            Fx.Assert(maxBufferPoolSize > 0 && maxBufferSize >= 0, "bad params, caller should verify");
+            return new PooledBufferManager(maxBufferPoolSize, maxBufferSize);
+        }
+
+        public static InternalBufferManager CreatePreallocatedBufferManager(int bufferSize, int maxCount)
+        {
+            return new PreallocatedBufferManager(bufferSize, maxCount);
         }
 
         public static byte[] AllocateByteArray(int size)
@@ -49,117 +45,45 @@ namespace Microsoft.Azure.Amqp
 
         sealed class PreallocatedBufferManager : InternalBufferManager
         {
-            readonly int maxBufferSize;
-            readonly int medBufferSize;
-            readonly int smallBufferSize;
+            readonly int bufferSize;
+            readonly int maxCount;
+            readonly ConcurrentQueue<byte[]> freeBuffers;
 
-            byte[][] buffersList;
-            readonly GCHandle[] handles;
-            readonly ConcurrentStack<byte[]> freeSmallBuffers;
-            readonly ConcurrentStack<byte[]> freeMedianBuffers;
-            readonly ConcurrentStack<byte[]> freeLargeBuffers;
-
-            internal PreallocatedBufferManager(long maxMemoryToPool, int maxBufferSize)
+            internal PreallocatedBufferManager(int bufferSize, int maxCount)
             {
-                // default values: maxMemoryToPool = 48MB, maxBufferSize = 64KB
-                // This creates the following buffers:
-                // max: 64KB = 256, med 16KB = 1024, small 4KB = 4096
-                this.maxBufferSize = maxBufferSize;
-                this.medBufferSize = maxBufferSize / 4;
-                this.smallBufferSize = maxBufferSize / 16;
-
-                long eachPoolSize = maxMemoryToPool / 3;
-                long numLargeBuffers = eachPoolSize / maxBufferSize;
-                long numMedBuffers = eachPoolSize / medBufferSize;
-                long numSmallBuffers = eachPoolSize / smallBufferSize;
-                long numBuffers = numLargeBuffers + numMedBuffers + numSmallBuffers;
-
-                this.buffersList = new byte[numBuffers][];
-                this.handles = new GCHandle[numBuffers];
-                this.freeSmallBuffers = new ConcurrentStack<byte[]>();
-                this.freeMedianBuffers = new ConcurrentStack<byte[]>();
-                this.freeLargeBuffers = new ConcurrentStack<byte[]>();
-
-                int lastLarge = 0;
-                for (int i = 0; i < numLargeBuffers; i++, lastLarge++)
+                this.bufferSize = bufferSize;
+                this.maxCount = maxCount;
+                this.freeBuffers = new ConcurrentQueue<byte[]>();
+                for (int i = 0; i < this.maxCount; i++)
                 {
-                    buffersList[i] = new byte[maxBufferSize];
-                    handles[i] = GCHandle.Alloc(buffersList[i], GCHandleType.Pinned);
-                    this.freeLargeBuffers.Push(buffersList[i]);
-                }
-
-                int lastMed = lastLarge;
-                for (int i = lastLarge; i < numMedBuffers + lastLarge; i++, lastMed++)
-                {
-                    buffersList[i] = new byte[this.medBufferSize];
-                    handles[i] = GCHandle.Alloc(buffersList[i], GCHandleType.Pinned);
-                    this.freeMedianBuffers.Push(buffersList[i]);
-                }
-
-                for (int i = lastMed; i < numSmallBuffers + lastMed; i++)
-                {
-                    buffersList[i] = new byte[this.smallBufferSize];
-                    handles[i] = GCHandle.Alloc(buffersList[i], GCHandleType.Pinned);
-                    this.freeSmallBuffers.Push(buffersList[i]);
+                    this.freeBuffers.Enqueue(new byte[this.bufferSize]);
                 }
             }
 
             public override byte[] TakeBuffer(int bufferSize)
             {
-                if (bufferSize > this.maxBufferSize)
-                {
-                    return null;
-                }
-
                 byte[] returnedBuffer = null;
-                if (bufferSize <= this.smallBufferSize)
+                if (bufferSize <= this.bufferSize)
                 {
-                    this.freeSmallBuffers.TryPop(out returnedBuffer);
-                    return returnedBuffer;
+                    this.freeBuffers.TryDequeue(out returnedBuffer);
                 }
 
-                if (bufferSize <= this.medBufferSize)
-                {
-                    this.freeMedianBuffers.TryPop(out returnedBuffer);
-                    return returnedBuffer;
-                }
-
-                this.freeLargeBuffers.TryPop(out returnedBuffer);
                 return returnedBuffer;
             }
 
-            /// <summary>
-            /// Returned buffer must have been acquired via a call to TakeBuffer
-            /// </summary>
-            /// <param name="buffer"></param>
             public override void ReturnBuffer(byte[] buffer)
             {
-                if (buffer.Length <= this.smallBufferSize)
+                if (buffer.Length == this.bufferSize)
                 {
-                    this.freeSmallBuffers.Push(buffer);
+                    this.freeBuffers.Enqueue(buffer);
                 }
-                else if (buffer.Length <= this.medBufferSize)
-                {
-                    this.freeMedianBuffers.Push(buffer);
-                }
-                else
-                {
-                    this.freeLargeBuffers.Push(buffer);
-                }
-
             }
 
             public override void Clear()
             {
-                for (int i = 0; i < this.buffersList.Length; i++)
+                while (this.freeBuffers.TryDequeue(out byte[] buffer))
                 {
-                    this.handles[i].Free();
-                    this.buffersList[i] = null;
                 }
-                this.buffersList = null;
-                this.freeSmallBuffers.Clear();
-                this.freeMedianBuffers.Clear();
-                this.freeLargeBuffers.Clear();
             }
         }
 
@@ -182,7 +106,7 @@ namespace Microsoft.Azure.Amqp
                 this.remainingMemory = maxMemoryToPool;
                 List<BufferPool> bufferPoolList = new List<BufferPool>();
 
-                for (int bufferSize = minBufferSize; ; )
+                for (int bufferSize = minBufferSize; ;)
                 {
                     long bufferCountLong = this.remainingMemory / bufferSize;
 

@@ -369,6 +369,7 @@ namespace Microsoft.Azure.Amqp
             StateTransition stateTransition = this.TransitState("R:BEGIN", StateTransition.ReceiveOpen);
 
             this.incomingChannel.OnBegin(begin);
+            this.NotifyOpening(begin);
             if (stateTransition.To == AmqpObjectState.OpenReceived)
             {
                 this.outgoingChannel.OnBegin(begin);

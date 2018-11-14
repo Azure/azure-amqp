@@ -87,7 +87,7 @@ namespace Microsoft.Azure.Amqp.Transport
         void OnAcceptTransport(TransportListener innerListener, TransportAsyncCallbackArgs args)
         {
             AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, "OnAcceptTransport");
-            TransportHandler.SpawnHandler(this, args);
+            TransportHandler.SpawnHandler(this, innerListener, args);
         }
 
         void OnHandleTransportComplete(TransportAsyncCallbackArgs args)
@@ -118,20 +118,21 @@ namespace Microsoft.Azure.Amqp.Transport
             byte[] buffer;
             TimeoutHelper timeoutHelper;
 
-            TransportHandler(AmqpTransportListener parent, TransportAsyncCallbackArgs args)
+            TransportHandler(AmqpTransportListener parent, TransportListener innerListener, TransportAsyncCallbackArgs args)
             {
                 this.parent = parent;
                 this.args = args;
                 this.args.UserToken = this;
+                this.args.UserToken2 = innerListener;
                 this.buffer = new byte[AmqpConstants.ProtocolHeaderSize];
                 this.bufferReader = new AsyncIO.AsyncBufferReader(args.Transport);
                 this.bufferWriter = new AsyncIO.AsyncBufferWriter(args.Transport);
                 this.timeoutHelper = new TimeoutHelper(AmqpConstants.DefaultTimeout);
             }
 
-            public static void SpawnHandler(AmqpTransportListener parent, TransportAsyncCallbackArgs args)
+            public static void SpawnHandler(AmqpTransportListener parent, TransportListener innerListener, TransportAsyncCallbackArgs args)
             {
-                TransportHandler handler = new TransportHandler(parent, args);
+                TransportHandler handler = new TransportHandler(parent, innerListener, args);
                 ActionItem.Schedule(s => Start(s), handler);
             }
 

@@ -118,6 +118,13 @@ namespace Microsoft.Azure.Amqp
             this.UsageMeter.OnTransportRead(bufferSize, readSize, cacheHits, latencyTicks);
         }
 
+        ByteBuffer IIoHandler.CreateBuffer(int frameSize)
+        {
+            var buffer = new ByteBuffer(frameSize, false);
+            AmqpBitConverter.WriteUInt(buffer, (uint)frameSize);
+            return buffer;
+        }
+
         void IIoHandler.OnReceiveBuffer(ByteBuffer buffer)
         {
             this.OnReceiveFrameBuffer(buffer);

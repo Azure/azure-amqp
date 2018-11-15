@@ -13,6 +13,8 @@ namespace Microsoft.Azure.Amqp
 
     public interface IIoHandler
     {
+        ByteBuffer CreateBuffer(int frameSize);
+
         void OnReceiveBuffer(ByteBuffer buffer);
 
         void OnIoFault(Exception exception);

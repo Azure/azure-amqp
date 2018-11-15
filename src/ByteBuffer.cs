@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Encoding;
 
     // This class is not thread safe
-    public sealed class ByteBuffer : IDisposable, IAmqpSerializable
+    public class ByteBuffer : IDisposable, IAmqpSerializable
     {
         static readonly InternalBufferManager PooledBufferManager = InternalBufferManager.CreatePooledBufferManager(
             50 * 1024 * 1024, int.MaxValue);

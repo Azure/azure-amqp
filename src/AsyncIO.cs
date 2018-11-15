@@ -164,12 +164,10 @@ namespace Microsoft.Azure.Amqp
 
             void SetReadFrameBody(int frameSize)
             {
-                ByteBuffer buffer = new ByteBuffer(frameSize, false, false);
-                AmqpBitConverter.WriteUInt(buffer, (uint)frameSize);
-
+                ByteBuffer buffer = this.asyncIo.ioHandler.CreateBuffer(frameSize);
                 this.readState = ReadState.FrameBody;
                 this.remainingBytes = buffer.Size;
-                this.readAsyncEventArgs.SetBuffer(buffer.Buffer, buffer.Length, this.remainingBytes);
+                this.readAsyncEventArgs.SetBuffer(buffer.Buffer, buffer.WritePos, this.remainingBytes);
                 this.readAsyncEventArgs.UserToken2 = buffer;
             }
 
@@ -516,9 +514,8 @@ namespace Microsoft.Azure.Amqp
                         }
                         else
                         {
-                            byte[] frameBuffer = new byte[size];
-                            Buffer.BlockCopy(this.sizeBuffer, 0, frameBuffer, 0, this.sizeBuffer.Length);
-                            args.SetBuffer(frameBuffer, this.sizeBuffer.Length, (int)size - this.sizeBuffer.Length);
+                            ByteBuffer buffer = this.parent.CreateBuffer((int)size);
+                            args.SetBuffer(buffer.Buffer, buffer.WritePos, buffer.Size);
                             args.CompletedCallback = onFrameComplete;
                             completed = false;
                         }

@@ -136,7 +136,7 @@ namespace Microsoft.Azure.Amqp
             set;
         }
 
-        protected Dictionary<ArraySegment<byte>, Delivery> UnsettledMap
+        public IDictionary<ArraySegment<byte>, Delivery> UnsettledMap
         {
             get
             {

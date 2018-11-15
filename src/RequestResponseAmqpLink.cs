@@ -267,7 +267,7 @@ namespace Microsoft.Azure.Amqp
                 this.parent = parent;
                 this.request = request;
                 this.transactionId = txnId;
-                this.requestId = "request" + (ulong)Interlocked.Increment(ref this.parent.nextRequestId);
+                this.requestId = this.parent.ToString() + (ulong)Interlocked.Increment(ref this.parent.nextRequestId);
                 this.request.Properties.MessageId = this.requestId;
                 this.request.Properties.ReplyTo = this.parent.replyTo;
                 this.parent.inflightRequests.StartWork(this.requestId, this);

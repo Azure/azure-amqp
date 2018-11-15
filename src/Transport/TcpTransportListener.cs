@@ -100,7 +100,7 @@ namespace Microsoft.Azure.Amqp.Transport
                     this.listenSockets[i] = null;
                     if (socket != null)
                     {
-                        socket.Dispose();
+                        socket.Close();
                     }
                 }
             }

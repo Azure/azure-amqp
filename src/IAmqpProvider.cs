@@ -33,21 +33,6 @@ namespace Microsoft.Azure.Amqp
     {
     }
 
-    public interface INodeFactory
-    {
-        IAsyncResult BeginCreateNode(string address, Fields properties, TimeSpan timeout, AsyncCallback callback, object state);
-
-        void EndCreateNode(IAsyncResult result);
-
-        IAsyncResult BeginDeleteNode(string address, TimeSpan timeout, AsyncCallback callback, object state);
-
-        void EndDeleteNode(IAsyncResult result);
-    }
-
-    public interface IAmqpProvider : IRuntimeProvider, INodeFactory
-    {
-    }
-
     public interface ITransportMonitor
     {
         void OnTransportWrite(int bufferSize, int writeSize, long queueSize, long latencyTicks);

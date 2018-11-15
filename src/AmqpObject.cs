@@ -152,7 +152,8 @@ namespace Microsoft.Azure.Amqp
 
             if (syncOpen)
             {
-                this.OpenInternal();
+                bool outcome = this.OpenInternal();
+                Fx.Assert(outcome, "OpenInternal should return true for sync open");
                 this.NotifyOpened();
             }
             else
@@ -168,7 +169,11 @@ namespace Microsoft.Azure.Amqp
 
         public Task OpenAsync(TimeSpan timeout)
         {
-            return Task.Factory.FromAsync(this.BeginOpen, this.EndOpen, timeout, null);
+            return Task.Factory.FromAsync(
+                (t, c, s) => ((AmqpObject)s).BeginOpen(t, c, s),
+                (a) => ((AmqpObject)a.AsyncState).EndOpen(a),
+                timeout,
+                this);
         }
 
         public IAsyncResult BeginOpen(TimeSpan timeout, AsyncCallback callback, object state)
@@ -220,7 +225,8 @@ namespace Microsoft.Azure.Amqp
 
             if (syncClose)
             {
-                this.CloseInternal();
+                bool outcome = this.CloseInternal();
+                Fx.Assert(outcome, "CloseInternal should return true for sync close");
                 this.NotifyClosed();
             }
             else
@@ -231,7 +237,11 @@ namespace Microsoft.Azure.Amqp
 
         public Task CloseAsync(TimeSpan timeout)
         {
-            return Task.Factory.FromAsync(this.BeginClose, this.EndClose, timeout, null);
+            return Task.Factory.FromAsync(
+                (t, c, s) => ((AmqpObject)s).BeginClose(t, c, s),
+                (a) => ((AmqpObject)a.AsyncState).EndClose(a),
+                timeout,
+                this);
         }
 
         public IAsyncResult BeginClose(TimeSpan timeout, AsyncCallback callback, object state)
@@ -582,8 +592,6 @@ namespace Microsoft.Azure.Amqp
 
                 if (shouldComplete)
                 {
-                    amqpObject.pendingOpen = null;
-                    amqpObject.pendingClose = null;
                     this.Signal(true, completeException);
                 }
             }
@@ -627,6 +635,8 @@ namespace Microsoft.Azure.Amqp
                 {
                     this.Target.State = AmqpObjectState.Opened;
                 }
+
+                this.Target.pendingOpen = null;
             }
         }
 
@@ -652,6 +662,8 @@ namespace Microsoft.Azure.Amqp
             protected override void UpdateState(Exception exception)
             {
                 this.Target.State = AmqpObjectState.End;
+                this.Target.pendingClose = null;
+
                 // we want the closed event handlers to be run on this thread
                 this.Target.NotifyClosed();
             }

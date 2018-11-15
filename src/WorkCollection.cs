@@ -45,9 +45,13 @@ namespace Microsoft.Azure.Amqp
                 throw new InvalidOperationException();
             }
 
-            if (this.closed && this.pendingWork.TryRemove(key, out work))
+            if (this.closed)
             {
-                work.Cancel(true, new OperationCanceledException());
+                if (this.pendingWork.TryRemove(key, out work))
+                {
+                    work.Cancel(true, new OperationCanceledException());
+                }
+
                 return;
             }
 

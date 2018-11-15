@@ -119,7 +119,8 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                return this.mutualCapabilities ?? new List<AmqpSymbol>();
+                return this.mutualCapabilities ??
+                    (this.mutualCapabilities = new List<AmqpSymbol>());
             }
         }
 
@@ -482,7 +483,7 @@ namespace Microsoft.Azure.Amqp
                         this.CompleteOpen(false, this.TerminalException);
                     }
 
-                    this.Close();
+                    this.HandleCloseCommand();
                 }
             }
             catch (AmqpException exception)
@@ -498,6 +499,20 @@ namespace Microsoft.Azure.Amqp
             {
                 throw new AmqpException(AmqpErrorCode.IllegalState, $"'{this.name}' is closed");
             }
+        }
+
+        /// <summary>
+        /// Called when the AmqpObject is about to finish following OnReceiveCloseCommand.
+        /// This gives any derived classes a place to do asynchronous work before letting
+        /// the close finish.
+        /// For example, between Link R:DETACH and S:DETACH, between Session R:END and S:END
+        /// or between Connection R:CLOSE and S:CLOSE.
+        /// Once any async work is finished the overriding class should continue
+        /// by calling base.HandleCloseCommand (or this.Close).
+        /// </summary>
+        protected virtual void HandleCloseCommand()
+        {
+            this.Close();
         }
 
         static void OnSafeCloseComplete(IAsyncResult result)

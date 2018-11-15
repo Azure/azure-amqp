@@ -40,33 +40,42 @@ namespace Microsoft.Azure.Amqp
             this.Name = name ?? string.Format(CultureInfo.InvariantCulture, "duplex{0}:{1}:{2}", session.Connection.Identifier, session.Identifier, this.Identifier);
             this.replyTo = Guid.NewGuid().ToString("N");
 
-            AmqpLinkSettings senderSettings = new AmqpLinkSettings();
-            senderSettings.Role = false;
-            senderSettings.LinkName = this.Name + ":sender";
-            senderSettings.SettleType = SettleMode.SettleOnSend;
-            senderSettings.Source = new Source();
-            senderSettings.Target = new Target() { Address = address };
-            senderSettings.Properties = properties;
-            this.sender = new SendingAmqpLink(session, senderSettings);
-            this.sender.Closed += new EventHandler(OnLinkClosed);
-
-            AmqpLinkSettings receiverSettings = new AmqpLinkSettings();
-            receiverSettings.Role = true;
-            receiverSettings.LinkName = this.Name + ":receiver";
-            receiverSettings.SettleType = SettleMode.SettleOnSend;
-            receiverSettings.Source = new Source() { Address = address };
-            receiverSettings.TotalLinkCredit = 50;
-            receiverSettings.AutoSendFlow = true;
-            receiverSettings.Target = new Target() { Address = this.replyTo };
-            if (properties != null)
+            try
             {
-                receiverSettings.Properties = new Fields();
-                receiverSettings.Properties.Merge(properties);
-            }
+                AmqpLinkSettings senderSettings = new AmqpLinkSettings();
+                senderSettings.Role = false;
+                senderSettings.LinkName = this.Name + ":sender";
+                senderSettings.SettleType = SettleMode.SettleOnSend;
+                senderSettings.Source = new Source();
+                senderSettings.Target = new Target() { Address = address };
+                senderSettings.Properties = properties;
+                this.sender = new SendingAmqpLink(session, senderSettings);
+                this.sender.SafeAddClosed(OnLinkClosed);
 
-            this.receiver = new ReceivingAmqpLink(session, receiverSettings);
-            this.receiver.RegisterMessageListener(this.OnResponseMessage);
-            this.receiver.Closed += new EventHandler(OnLinkClosed);
+                AmqpLinkSettings receiverSettings = new AmqpLinkSettings();
+                receiverSettings.Role = true;
+                receiverSettings.LinkName = this.Name + ":receiver";
+                receiverSettings.SettleType = SettleMode.SettleOnSend;
+                receiverSettings.Source = new Source() { Address = address };
+                receiverSettings.TotalLinkCredit = 50;
+                receiverSettings.AutoSendFlow = true;
+                receiverSettings.Target = new Target() { Address = this.replyTo };
+                if (properties != null)
+                {
+                    receiverSettings.Properties = new Fields();
+                    receiverSettings.Properties.Merge(properties);
+                }
+
+                this.receiver = new ReceivingAmqpLink(session, receiverSettings);
+                this.receiver.RegisterMessageListener(this.OnResponseMessage);
+                this.receiver.SafeAddClosed(OnLinkClosed);
+            }
+            catch
+            {
+                this.sender?.SafeClose();
+                this.receiver?.SafeClose();
+                throw;
+            }
 
             this.inflightRequests = new WorkCollection<MessageId, RequestAsyncResult, AmqpMessage>();
         }

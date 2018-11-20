@@ -128,7 +128,7 @@ namespace Microsoft.Azure.Amqp.Transport
             TransportProvider provider = this.settings.TransportProviders[this.providerIndex];
             this.sentHeader = new ProtocolHeader(provider.ProtocolId, provider.DefaultVersion);
 #if DEBUG
-            this.sentHeader.Trace(true);
+            this.sentHeader.Trace(true, null);
             AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Send, this.sentHeader);
 #endif
 
@@ -169,7 +169,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 ProtocolHeader receivedHeader = new ProtocolHeader();
                 receivedHeader.Decode(new ByteBuffer(args.Buffer, args.Offset, args.Count));
 #if DEBUG
-                receivedHeader.Trace(false);
+                receivedHeader.Trace(false, null);
                 AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Receive, receivedHeader);
 #endif
 

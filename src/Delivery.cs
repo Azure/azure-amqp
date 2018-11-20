@@ -4,20 +4,11 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using System.Collections.Generic;
+    using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
     public abstract class Delivery : IDisposable
     {
-        volatile bool settled;
-        volatile bool stateChanged;
-
-        public List<ByteBuffer> RawByteBuffers
-        {
-            get;
-            protected set;
-        }
-
         public ArraySegment<byte> DeliveryTag
         {
             get;
@@ -38,8 +29,8 @@ namespace Microsoft.Azure.Amqp
 
         public bool Settled
         {
-            get { return this.settled; }
-            set { this.settled = value; }
+            get;
+            set;
         }
 
         public bool Batchable
@@ -54,10 +45,10 @@ namespace Microsoft.Azure.Amqp
             set;
         }
 
-        public bool StateChanged 
+        public bool StateChanged
         {
-            get { return this.stateChanged; }
-            set { this.stateChanged = value; }
+            get;
+            set;
         }
 
         public AmqpLink Link
@@ -67,6 +58,12 @@ namespace Microsoft.Azure.Amqp
         }
 
         public long BytesTransfered
+        {
+            get;
+            protected set;
+        }
+
+        public int Segments
         {
             get;
             protected set;
@@ -86,8 +83,8 @@ namespace Microsoft.Azure.Amqp
 
         public uint? MessageFormat
         {
-            get; 
-            set; 
+            get;
+            set;
         }
 
         public static void Add(ref Delivery first, ref Delivery last, Delivery delivery)
@@ -135,52 +132,55 @@ namespace Microsoft.Azure.Amqp
             delivery.Next = null;
         }
 
-        public void CompletePayload(int payloadSize)
+        public abstract ByteBuffer GetPayload(int payloadSize, out bool more);
+
+        public abstract void AddPayload(ByteBuffer payload, bool isLast);
+
+        public virtual void CompletePayload(int payloadSize)
         {
+            this.Segments++;
             this.BytesTransfered += payloadSize;
-            this.OnCompletePayload(payloadSize);
         }
 
-        public virtual void AddPayload(ByteBuffer payload, bool isLast)
-        {
-            throw new InvalidOperationException();
-        }
+        public abstract void Dispose();
 
-        /// <inheritdoc />
-        public void Dispose()
+        protected static ByteBuffer GetPayload(ByteBuffer source, int payloadSize, out bool more)
         {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases unmanaged resources and optionally releases managed resources.
-        /// </summary>
-        /// <param name="disposing">
-        /// true to release both managed and unmanaged resources;
-        /// false to release only unmanaged resources.
-        /// </param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing && this.RawByteBuffers != null)
+            int size;
+            if (source.Length <= payloadSize)
             {
-                // Buffer may still be appended to the list
-                // and not disposed but it should be rare.
-                int count = this.RawByteBuffers.Count;
-                for (int i = 0; i < count; i++)
-                {
-                    this.RawByteBuffers[i]?.Dispose();
-                }
+                size = source.Length;
+                more = false;
             }
+            else
+            {
+                size = payloadSize;
+                more = true;
+            }
+
+            return source.GetSlice(source.Offset, size);
         }
 
-        public void PrepareForSend()
+        protected static ByteBuffer AddPayload(ByteBuffer dest, ByteBuffer payload, bool isLast)
         {
-            this.BytesTransfered = 0;
+            if (dest == null && isLast)
+            {
+                // this should be the most common case: 1 transfer
+                dest = payload.AddReference();
+            }
+            else
+            {
+                // multi-transfer message: merge into one buffer
+                // the individual transfer buffers are disposed
+                if (dest == null)
+                {
+                    dest = new ByteBuffer(payload.Length * 2, true);
+                }
+
+                AmqpBitConverter.WriteBytes(dest, payload.Buffer, payload.Offset, payload.Length);
+            }
+
+            return dest;
         }
-
-        public abstract ArraySegment<byte>[] GetPayload(int payloadSize, out bool more);
-
-        protected abstract void OnCompletePayload(int payloadSize);
     }
 }

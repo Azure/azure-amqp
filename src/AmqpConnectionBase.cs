@@ -76,28 +76,19 @@ namespace Microsoft.Azure.Amqp
 
         public void SendDatablock(IAmqpSerializable dataBlock)
         {
-            ByteBuffer buffer = new ByteBuffer(new byte[dataBlock.EncodeSize]);
+            ByteBuffer buffer = new ByteBuffer(dataBlock.EncodeSize, true);
             dataBlock.Encode(buffer);
-
-            int size = buffer.Length;
             this.asyncIO.WriteBuffer(buffer);
         }
 
         public void SendBuffer(ByteBuffer buffer)
         {
-            int size = buffer.Length;
             this.asyncIO.WriteBuffer(buffer);
         }
 
-        public void SendBuffers(ByteBuffer[] buffers)
+        public void SendBuffer(ByteBuffer cmdBuffer, ByteBuffer payload)
         {
-            int totalCount = 0;
-            foreach (ByteBuffer buffer in buffers)
-            {
-                totalCount += buffer.Length;
-            }
-
-            this.asyncIO.WriteBuffer(buffers);
+            this.asyncIO.WriteBuffer(cmdBuffer, payload);
         }
 
         protected abstract void OnProtocolHeader(ProtocolHeader header);

@@ -251,7 +251,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 else
                 {
 #if DEBUG
-                    header.Trace(false);
+                    header.Trace(false, null);
 #endif
                     AmqpTrace.Provider.AmqpUpgradeTransport(this, args.Transport, newTransport);
                     this.args.Transport = newTransport;
@@ -271,7 +271,7 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Send, header);
 #if DEBUG
-                header.Trace(true);
+                header.Trace(true, null);
 #endif
 
                 ByteBuffer byteBuffer = new ByteBuffer(this.buffer);

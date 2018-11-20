@@ -107,17 +107,18 @@ namespace Microsoft.Azure.Amqp
             return session;
         }
 
-        public void SendCommand(Performative command, ushort channel, ArraySegment<byte>[] payload)
+        public void SendCommand(Performative command, ushort channel, ByteBuffer payload)
         {
 #if DEBUG
             Frame frame = new Frame();
             frame.Channel = channel;
             frame.Command = command;
-            frame.Trace(true, this, channel, command, -1);
+            frame.Payload = payload.AsSegment();
+            frame.Trace(true, this);
             AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Send, frame);
 #endif
 
-            int frameSize = 0;
+            int frameSize;
             if (payload == null)
             {
                 // The frame buffer is disposed when the write completes
@@ -127,20 +128,10 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                ByteBuffer[] buffers = new ByteBuffer[1 + payload.Length];
-                int payloadSize = 0;
-                for (int i = 0; i < payload.Length; ++i)
-                {
-                    ArraySegment<byte> segment = payload[i];
-                    payloadSize += segment.Count;
-                    buffers[i + 1] = new ByteBuffer(segment);
-                }
-
                 // The frame buffer is disposed when the write completes
-                ByteBuffer cmdBuffer = Frame.EncodeCommand(FrameType.Amqp, channel, command, payloadSize);
-                frameSize = cmdBuffer.Length + payloadSize;
-                buffers[0] = cmdBuffer;
-                this.SendBuffers(buffers);
+                ByteBuffer cmdBuffer = Frame.EncodeCommand(FrameType.Amqp, channel, command, payload.Length);
+                frameSize = cmdBuffer.Length + payload.Length;
+                this.SendBuffer(cmdBuffer, payload);
             }
 
             this.heartBeat.OnSend();
@@ -212,7 +203,7 @@ namespace Microsoft.Azure.Amqp
         protected override void OnProtocolHeader(ProtocolHeader header)
         {
 #if DEBUG
-            header.Trace(false);
+            header.Trace(false, this);
             AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Receive, header);
 #endif
             this.heartBeat.OnReceive();
@@ -259,7 +250,7 @@ namespace Microsoft.Azure.Amqp
             {
                 frame.Decode(buffer);
 #if DEBUG
-                frame.Trace(false, this, frame.Channel, frame.Command, frame.Payload.Count);
+                frame.Trace(false, this);
                 AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Receive, frame);
 #endif
 
@@ -340,7 +331,7 @@ namespace Microsoft.Azure.Amqp
         void SendProtocolHeader(ProtocolHeader header)
         {
 #if DEBUG
-            header.Trace(true);
+            header.Trace(true, this);
             AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Send, header);
 #endif
             this.TransitState("S:HDR", StateTransition.SendHeader);

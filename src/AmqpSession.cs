@@ -181,14 +181,14 @@ namespace Microsoft.Azure.Amqp
             this.SendCommand(command, null);
         }
 
-        public void SendCommand(Performative command, ArraySegment<byte>[] payload)
+        public void SendCommand(Performative command, ByteBuffer payload)
         {
             AmqpDebug.Log(this, true, command);
             this.connection.SendCommand(command, this.LocalChannel, payload);
         }
 
         // delivery MUST be null for continued transfer fragments
-        public bool TrySendTransfer(Delivery delivery, Transfer transfer, ArraySegment<byte>[] payload)
+        public bool TrySendTransfer(Delivery delivery, Transfer transfer, ByteBuffer payload)
         {
             return this.outgoingChannel.TrySendTransfer(delivery, transfer, payload);
         }
@@ -953,7 +953,7 @@ namespace Microsoft.Azure.Amqp
                 this.IsReceiver = false;
             }
 
-            public bool TrySendTransfer(Delivery delivery, Transfer transfer, ArraySegment<byte>[] payload)
+            public bool TrySendTransfer(Delivery delivery, Transfer transfer, ByteBuffer payload)
             {
                 lock (this.SyncRoot)
                 {

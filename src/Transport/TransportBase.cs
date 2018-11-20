@@ -44,11 +44,6 @@ namespace Microsoft.Azure.Amqp.Transport
             get { return this.Principal != null && this.Principal.Identity.IsAuthenticated; }
         }
 
-        public virtual bool RequiresCompleteFrames
-        {
-            get { return false; }
-        }
-
         public abstract void SetMonitor(ITransportMonitor usageMeter);
 
         public abstract bool WriteAsync(TransportAsyncCallbackArgs args);

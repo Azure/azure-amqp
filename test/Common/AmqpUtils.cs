@@ -145,6 +145,11 @@ namespace Test.Microsoft.Azure.Amqp
             return AmqpMessage.Create(new Data[] { new Data() { Value = binaryData } });
         }
 
+        public static ByteBuffer GetPayload(this AmqpMessage message)
+        {
+            return message.GetPayload(int.MaxValue, out bool more);
+        }
+
         public static AmqpTransportListener CreateListener(string host, int port, string certFindValue, bool doSslUpgrade, SaslHandler saslHandler)
         {
             AmqpSettings settings = GetAmqpSettings(false, certFindValue, doSslUpgrade, saslHandler);
@@ -428,16 +433,6 @@ namespace Test.Microsoft.Azure.Amqp
             sb.Append(value);
 
             System.Diagnostics.Debug.WriteLine(sb.ToString());
-        }
-
-        public static async Task<AmqpMessage> ReceiveMessageAsync(this ReceivingAmqpLink link, TimeSpan timeout)
-        {
-            AmqpMessage message = null;
-            await Task.Factory.FromAsync(
-                (c, s) => link.BeginReceiveMessage(timeout, c, s),
-                (r) => link.EndReceiveMessage(r, out message),
-                link);
-            return message;
         }
     }
 }

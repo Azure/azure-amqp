@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Diagnostics;
     using System.Threading;
     using Microsoft.Azure.Amqp.Encoding;
 
@@ -103,7 +104,26 @@ namespace Microsoft.Azure.Amqp
             this.autoGrow = autoGrow;
             this.bufferManager = bufferManager;
             this.references = 1;
+#if DEBUG
+            if (Extensions.AmqpDebug && bufferManager != null)
+            {
+                this.stack = new StackTrace();
+            }
+#endif
         }
+
+#if DEBUG
+        StackTrace stack;
+
+        ~ByteBuffer()
+        {
+            if (this.stack == null)
+            {
+                System.Diagnostics.Trace.WriteLine(string.Format("{0} leak {1} bytes from {2}",
+                    AppDomain.CurrentDomain.FriendlyName, this.end, this.stack));
+            }
+        }
+#endif
 
         static ManagedBuffer AllocateBufferFromPool(int size, bool isTransportBuffer)
         {
@@ -236,15 +256,19 @@ namespace Microsoft.Azure.Amqp
             this.write = this.start;
         }
 
-        [Obsolete("Call AddReference instead.")]
-        public object Clone()
-        {
-            this.AddReference();
-            return this;
-        }
-
         public ByteBuffer GetSlice(int position, int length)
         {
+            if (this.innerBuffer != null)
+            {
+                return this.innerBuffer.GetSlice(position, length);
+            }
+
+#if DEBUG
+            if (Extensions.AmqpDebug && this.bufferManager != null)
+            {
+                this.stack = new StackTrace();
+            }
+#endif
             ByteBuffer wrapped = this.AddReference();
             return new ByteBuffer(wrapped.buffer, position, length, length, false, null)
             {
@@ -265,9 +289,15 @@ namespace Microsoft.Azure.Amqp
             this.RemoveReference();
         }
 
-        internal bool TryAddReference()
+        public bool TryAddReference()
         {
-            if (Interlocked.Increment(ref this.references) == 1)
+            if (Interlocked.Increment(ref this.references) <= 1)
+            {
+                Interlocked.Decrement(ref this.references);
+                return false;
+            }
+
+            if (this.innerBuffer != null && !this.innerBuffer.TryAddReference())
             {
                 Interlocked.Decrement(ref this.references);
                 return false;
@@ -288,21 +318,39 @@ namespace Microsoft.Azure.Amqp
 
         public void RemoveReference()
         {
-            if (this.references > 0)
+            int refCount = Interlocked.Decrement(ref this.references);
+#if DEBUG
+            if (refCount <= 0)
             {
-                if (Interlocked.Decrement(ref this.references) == 0)
+                this.stack = null;
+            }
+#endif
+
+            if (this.innerBuffer != null)
+            {
+                this.innerBuffer.RemoveReference();
+            }
+            else if (refCount == 0)
+            {
+                byte[] bufferToRelease = this.buffer;
+                this.buffer = null;
+                if (bufferToRelease != null && this.bufferManager != null)
                 {
-                    byte[] bufferToRelease = this.buffer;
-                    this.buffer = null;
-                    if (this.bufferManager != null)
-                    {
-                        this.bufferManager.ReturnBuffer(bufferToRelease);
-                    }
-                    else if (this.innerBuffer != null)
-                    {
-                        this.innerBuffer.Dispose();
-                    }
+                    this.bufferManager.ReturnBuffer(bufferToRelease);
                 }
+            }
+        }
+
+        [Conditional("DEBUG")]
+        internal void AssertReferences(int value)
+        {
+            if (this.innerBuffer != null)
+            {
+                this.innerBuffer.AssertReferences(value);
+            }
+            else
+            {
+                Fx.Assert(this.references == value, string.Format("Expected {0} Actual {1}", value, this.references));
             }
         }
 

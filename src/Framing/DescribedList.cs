@@ -49,14 +49,14 @@ namespace Microsoft.Azure.Amqp.Framing
                 {
                     AmqpBitConverter.WriteUByte(buffer, FormatCode.List8);
                     sizeOffset = buffer.Length;
-                    buffer.Append(FixedWidth.UByte);
+                    AmqpBitConverter.WriteUByte(buffer, 0);
                     AmqpBitConverter.WriteUByte(buffer, (byte)this.FieldCount);
                 }
                 else
                 {
                     AmqpBitConverter.WriteUByte(buffer, FormatCode.List32);
                     sizeOffset = buffer.Length;
-                    buffer.Append(FixedWidth.UInt);
+                    AmqpBitConverter.WriteUInt(buffer, 0);
                     AmqpBitConverter.WriteUInt(buffer, (uint)this.FieldCount);
                 }
 

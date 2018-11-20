@@ -40,11 +40,6 @@ namespace Microsoft.Azure.Amqp.Sasl
             get { return this.innerTransport.IsSecure; }
         }
 
-        public override bool RequiresCompleteFrames
-        {
-            get { return this.innerTransport.RequiresCompleteFrames; }
-        }
-
         public override void SetMonitor(ITransportMonitor usageMeter)
         {
             this.innerTransport.SetMonitor(usageMeter);

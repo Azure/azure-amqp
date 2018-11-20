@@ -7,7 +7,7 @@ namespace Microsoft.Azure.Amqp
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Xml;
+    using System.Threading;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
@@ -35,14 +35,27 @@ namespace Microsoft.Azure.Amqp
     /// </summary>
     public abstract class AmqpMessage : Delivery
     {
+        const int MessageDisposed = 1;
+        const int BufferDisposed = 2;
+
         Header header;
         DeliveryAnnotations deliveryAnnotations;
         MessageAnnotations messageAnnotations;
         Properties properties;
         ApplicationProperties applicationProperties;
         Footer footer;
+
+        // one of the following is allowed
+        IList<Data> dataList;
+        IList<AmqpSequence> sequenceList;
+        AmqpValue amqpValue;
+
         SectionFlag sectionFlags;
-        bool disposed;
+        int messageSize = -1;
+        int bodyOffset = -1;
+        int bodyLength = 0;
+        ByteBuffer buffer;
+        int disposeState;
 
         public Header Header
         {
@@ -52,7 +65,7 @@ namespace Microsoft.Azure.Amqp
                 return this.header;
             }
 
-            set
+            protected set
             {
                 this.header = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.Header);
@@ -63,11 +76,11 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                EnsureInitialized<DeliveryAnnotations>(ref this.deliveryAnnotations, SectionFlag.DeliveryAnnotations);
+                this.EnsureInitialized<DeliveryAnnotations>(ref this.deliveryAnnotations, SectionFlag.DeliveryAnnotations);
                 return this.deliveryAnnotations;
             }
 
-            set
+            protected set
             {
                 this.deliveryAnnotations = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.DeliveryAnnotations);
@@ -78,11 +91,11 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                EnsureInitialized<MessageAnnotations>(ref this.messageAnnotations, SectionFlag.MessageAnnotations);
+                this.EnsureInitialized<MessageAnnotations>(ref this.messageAnnotations, SectionFlag.MessageAnnotations);
                 return this.messageAnnotations;
             }
 
-            set
+            protected set
             {
                 this.messageAnnotations = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.MessageAnnotations);
@@ -93,11 +106,11 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                EnsureInitialized<Properties>(ref this.properties, SectionFlag.Properties);
+                this.EnsureInitialized<Properties>(ref this.properties, SectionFlag.Properties);
                 return this.properties;
             }
 
-            set
+            protected set
             {
                 this.properties = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.Properties);
@@ -108,50 +121,71 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                EnsureInitialized<ApplicationProperties>(ref this.applicationProperties, SectionFlag.ApplicationProperties);
+                this.EnsureInitialized<ApplicationProperties>(ref this.applicationProperties, SectionFlag.ApplicationProperties);
                 return this.applicationProperties;
             }
 
-            set
+            protected set
             {
                 this.applicationProperties = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.ApplicationProperties);
             }
         }
 
-        public virtual IEnumerable<Data> DataBody
+        public IList<Data> DataBody
         {
-            get { throw new InvalidOperationException(); }
-            set { throw new InvalidOperationException(); }
+            get
+            {
+                this.EnsureBodyType(SectionFlag.Data);
+                return this.dataList;
+            }
         }
 
-        public virtual IEnumerable<AmqpSequence> SequenceBody
+        public IList<AmqpSequence> SequenceBody
         {
-            get { throw new InvalidOperationException(); }
-            set { throw new InvalidOperationException(); }
+            get
+            {
+                this.EnsureBodyType(SectionFlag.AmqpSequence);
+                return this.sequenceList;
+            }
         }
 
-        public virtual AmqpValue ValueBody
+        public AmqpValue ValueBody
         {
-            get { throw new InvalidOperationException(); }
-            set { throw new InvalidOperationException(); }
+            get
+            {
+                this.EnsureBodyType(SectionFlag.AmqpValue);
+                return this.amqpValue;
+            }
         }
 
         public virtual Stream BodyStream
         {
-            get { throw new InvalidOperationException(); }
-            set { throw new InvalidOperationException(); }
+            get
+            {
+                if (this.BodyOffset < 0 || this.buffer == null)
+                {
+                    return null;
+                }
+
+                if (this.dataList != null)
+                {
+                    return new BufferListStream(this.dataList.Select(d => (ArraySegment<byte>)d.Value).ToArray());
+                }
+
+                return new MemoryStream(this.buffer.Buffer, this.bodyOffset, this.BodyLength);
+            }
         }
-        
+
         public Footer Footer
         {
             get
             {
-                EnsureInitialized<Footer>(ref this.footer, SectionFlag.Footer);
+                this.EnsureInitialized<Footer>(ref this.footer, SectionFlag.Footer);
                 return this.footer;
             }
 
-            set
+            protected set
             {
                 this.footer = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.Footer);
@@ -162,7 +196,11 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                this.Deserialize(SectionFlag.All);
+                if (this.sectionFlags == 0 && this.buffer != null)
+                {
+                    this.Initialize(SectionFlag.All);
+                }
+
                 return this.sectionFlags;
             }
         }
@@ -171,38 +209,43 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                this.Deserialize(SectionFlag.All);
+                if (this.sectionFlags == 0 && this.buffer != null)
+                {
+                    this.Initialize(SectionFlag.All);
+                }
+
                 return this.sectionFlags & SectionFlag.Body;
             }
         }
 
-        internal long BodySectionOffset
+        protected ByteBuffer Buffer
         {
-            get;
-            set;
+            get { return this.buffer; }
+            set { this.buffer = value; }
         }
 
-        internal long BodySectionLength
+        internal int BodyOffset
         {
-            get;
-            set;
+            get
+            {
+                this.Initialize(SectionFlag.All);
+                return this.bodyOffset;
+            }
         }
 
-        public abstract long SerializedMessageSize
+        internal int BodyLength
         {
-            get;
-        }
-
-        public ArraySegment<byte>[] GetPayload()
-        {
-            bool more;
-            return this.GetPayload(int.MaxValue, out more);
+            get
+            {
+                this.Initialize(SectionFlag.All);
+                return this.bodyLength;
+            }
         }
 
         // Public factory methods
         public static AmqpMessage Create()
         {
-            return new AmqpEmptyMessage();
+            return new AmqpEmptyBodyMessage();
         }
 
         public static AmqpMessage Create(Data data)
@@ -210,7 +253,7 @@ namespace Microsoft.Azure.Amqp
             return Create(new Data[] { data });
         }
 
-        public static AmqpMessage Create(IEnumerable<Data> dataList)
+        public static AmqpMessage Create(IList<Data> dataList)
         {
             return new AmqpDataMessage(dataList);
         }
@@ -220,7 +263,7 @@ namespace Microsoft.Azure.Amqp
             return new AmqpValueMessage(value);
         }
 
-        public static AmqpMessage Create(IEnumerable<AmqpSequence> amqpSequence)
+        public static AmqpMessage Create(IList<AmqpSequence> amqpSequence)
         {
             return new AmqpSequenceMessage(amqpSequence);
         }
@@ -233,101 +276,77 @@ namespace Microsoft.Azure.Amqp
         // Internal factory methods
         public static AmqpMessage CreateReceivedMessage()
         {
-            return new AmqpStreamMessage();
+            return new AmqpBufferMessage();
         }
 
-        public static AmqpMessage CreateAmqpStreamMessageBody(Stream bodyStream)
+        public static AmqpMessage CreateBufferMessage(ByteBuffer buffer)
         {
-            return new AmqpStreamMessage(BufferListStream.Create(bodyStream, AmqpConstants.SegmentSize));
+            return new AmqpBufferMessage(buffer);
         }
 
-        public static AmqpMessage CreateAmqpStreamMessageHeader(BufferListStream nonBodyStream)
+        public long Serialize(bool force)
         {
-            return new AmqpStreamMessageHeader(nonBodyStream);
-        }
-
-        public static AmqpMessage CreateAmqpStreamMessage(BufferListStream messageStream)
-        {
-            return new AmqpStreamMessage(messageStream);
-        }
-
-        public static AmqpMessage CreateAmqpStreamMessage(BufferListStream messagerStream, bool payloadInitialized)
-        {
-            return new AmqpStreamMessage(messagerStream, payloadInitialized);
-        }
-
-        public static AmqpMessage CreateAmqpStreamMessage(Stream nonBodyStream, Stream bodyStream, bool forceCopyStream)
-        {
-            return new AmqpStreamMessage(nonBodyStream, bodyStream, forceCopyStream);
-        }
-
-        public static AmqpMessage CreateInputMessage(BufferListStream stream)
-        {
-            return new AmqpInputStreamMessage(stream);
-        }
-
-        public static AmqpMessage CreateOutputMessage(BufferListStream stream, bool ownStream)
-        {
-            return new AmqpOutputStreamMessage(stream, ownStream);
+            this.Initialize(SectionFlag.All, force);
+            return this.messageSize;
         }
 
         public AmqpMessage Clone()
         {
-            if (this.RawByteBuffers != null)
-            {
-                ArraySegment<byte>[] segments = new ArraySegment<byte>[this.RawByteBuffers.Count];
-                for (int i = 0; i < this.RawByteBuffers.Count; ++i)
-                {
-                    ByteBuffer clone = this.RawByteBuffers[i].AddReference();
-                    segments[i] = new ArraySegment<byte>(clone.Buffer, clone.Offset, clone.Length);
-                }
-
-                return new AmqpStreamMessage(new BufferListStream(segments), true);
-            }
-            else
-            {
-                if (this.BytesTransfered > 0)
-                {
-                    throw new InvalidOperationException(AmqpResources.AmqpCannotCloneSentMessage);
-                }
-
-                bool more;
-                ArraySegment<byte>[] segments = this.GetPayload(int.MaxValue, out more);
-                return new AmqpStreamMessage(new BufferListStream(segments), true);
-            }
+            return this.Clone(false);
         }
 
-        public void Modify(Modified modified)
+        public AmqpMessage Clone(bool deepCopy)
         {
-            // TODO: handle delivery failed and undeliverable here
-            foreach(KeyValuePair<MapKey, object> pair in modified.MessageAnnotations)
+            if (this.Link != null && !this.Link.IsReceiver)
             {
-                this.MessageAnnotations.Map[pair.Key] = pair.Value;
+                throw new InvalidOperationException(Resources.AmqpCannotCloneSentMessage);
             }
+
+            if (this.sectionFlags == 0)
+            {
+                // a received message that has not been deserialized.
+                this.Initialize(SectionFlag.All);
+            }
+
+            return new AmqpClonedMessage(this, deepCopy);
         }
 
-        public virtual Stream ToStream()
+        public override void AddPayload(ByteBuffer payload, bool isLast)
         {
             throw new InvalidOperationException();
         }
 
-        public virtual void Deserialize(SectionFlag desiredSections)
+        public override ByteBuffer GetPayload(int payloadSize, out bool more)
         {
+            this.Initialize(SectionFlag.All);
+            return GetPayload(this.buffer, payloadSize, out more);
         }
 
-        protected override void Dispose(bool disposing)
+        public override void Dispose()
         {
-            this.disposed = true;
-            base.Dispose(disposing);
+            this.disposeState |= MessageDisposed;
+            this.ReleaseBuffer();
         }
 
         public void ThrowIfDisposed()
         {
-            if (this.disposed)
+            if ((this.disposeState & MessageDisposed) > 0)
             {
                 throw new ObjectDisposedException(this.GetType().Name);
             }
         }
+
+        protected static void EncodeSection(ByteBuffer buffer, AmqpDescribed section)
+        {
+            if (section != null)
+            {
+                section.Offset = buffer.WritePos;
+                section.Encode(buffer);
+                section.Length = buffer.WritePos - section.Offset;
+            }
+        }
+
+        protected abstract void Initialize(SectionFlag desiredSections, bool force = false);
 
         protected virtual void EnsureInitialized<T>(ref T obj, SectionFlag section) where T : class, new()
         {
@@ -337,19 +356,17 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal virtual long Write(XmlWriter writer)
+        void ReleaseBuffer()
         {
-            throw new InvalidOperationException();
-        }
-
-        internal virtual Stream GetBodySectionStream()
-        {
-            throw new InvalidOperationException();
-        }
-
-        internal virtual Stream GetNonBodySectionsStream()
-        {
-            throw new InvalidOperationException();
+            // if other bits are set after unset is computed, the buffer may not be disposed
+            // this is ok as long as the buffer is not double disposed.
+            int unset = this.disposeState & ~BufferDisposed;
+            int set = this.disposeState | BufferDisposed;
+            int original = Interlocked.CompareExchange(ref this.disposeState, set, unset);
+            if ((original & BufferDisposed) == 0)
+            {
+                this.buffer?.Dispose();
+            }
         }
 
         static bool EnsureInitialized<T>(ref T obj) where T : class, new()
@@ -365,16 +382,107 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        int GetSectionSize(IAmqpSerializable section)
+        void CopyFrom(AmqpMessage source, bool deepCopy, bool includeBody)
         {
-            return section == null ? 0 : section.EncodeSize;
+            if (deepCopy)
+            {
+                this.DeepCopy(source);
+            }
+            else
+            {
+                this.ShadowCopy(source);
+            }
+
+            if (includeBody)
+            {
+                this.dataList = source.dataList;
+                this.sequenceList = source.sequenceList;
+                this.amqpValue = source.amqpValue;
+                this.bodyOffset = source.bodyOffset;
+                this.bodyLength = source.bodyLength;
+                this.sectionFlags |= (source.sectionFlags & SectionFlag.Body);
+            }
         }
 
-        void EncodeSection(ByteBuffer buffer, IAmqpSerializable section)
+        void ShadowCopy(AmqpMessage source)
         {
-            if (section != null)
+            this.header = source.header;
+            this.deliveryAnnotations = source.deliveryAnnotations;
+            this.messageAnnotations = source.messageAnnotations;
+            this.properties = source.properties;
+            this.applicationProperties = source.applicationProperties;
+            this.footer = source.footer;
+            this.sectionFlags |= (source.sectionFlags & SectionFlag.NonBody);
+        }
+
+        void DeepCopy(AmqpMessage source)
+        {
+            if (source.header != null)
             {
-                section.Encode(buffer);
+                this.header = new Header();
+                this.header.Durable = source.header.Durable;
+                this.header.Priority = source.header.Priority;
+                this.header.Ttl = source.header.Ttl;
+                this.header.FirstAcquirer = source.header.FirstAcquirer;
+                this.header.DeliveryCount = source.header.DeliveryCount;
+            }
+
+            if (source.deliveryAnnotations != null)
+            {
+                this.deliveryAnnotations = new DeliveryAnnotations();
+                this.deliveryAnnotations.Map.Merge(source.deliveryAnnotations.Map);
+            }
+
+            if (source.messageAnnotations != null)
+            {
+                this.messageAnnotations = new MessageAnnotations();
+                this.messageAnnotations.Map.Merge(source.messageAnnotations.Map);
+            }
+
+            if (source.applicationProperties != null)
+            {
+                this.applicationProperties = new ApplicationProperties();
+                this.applicationProperties.Map.Merge(source.applicationProperties.Map);
+            }
+
+            if (source.properties != null)
+            {
+                this.properties = new Properties();
+                this.properties.MessageId = source.properties.MessageId;
+                this.properties.UserId = source.properties.UserId;
+                this.properties.To = source.properties.To;
+                this.properties.Subject = source.properties.Subject;
+                this.properties.ReplyTo = source.properties.ReplyTo;
+                this.properties.CorrelationId = source.properties.CorrelationId;
+                this.properties.ContentType = source.properties.ContentType;
+                this.properties.ContentEncoding = source.properties.ContentEncoding;
+                this.properties.AbsoluteExpiryTime = source.properties.AbsoluteExpiryTime;
+                this.properties.CreationTime = source.properties.CreationTime;
+                this.properties.GroupId = source.properties.GroupId;
+                this.properties.GroupSequence = source.properties.GroupSequence;
+                this.properties.ReplyToGroupId = source.properties.ReplyToGroupId;
+            }
+
+            if (source.footer != null)
+            {
+                this.footer = new Footer();
+                this.footer.Map.Merge(source.footer.Map);
+            }
+
+            this.sectionFlags |= (source.sectionFlags & SectionFlag.NonBody);
+        }
+
+        void EnsureBodyType(SectionFlag expected)
+        {
+            if (this.sectionFlags == 0 && this.buffer != null)
+            {
+                this.Initialize(SectionFlag.All);
+            }
+
+            SectionFlag actual = this.sectionFlags & SectionFlag.Body;
+            if (actual > 0 && actual != expected)
+            {
+                throw new InvalidOperationException(AmqpResources.GetString(Resources.AmqpInvalidMessageBodyType, actual, expected));
             }
         }
 
@@ -390,232 +498,178 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        abstract class AmqpBufferedMessage : AmqpMessage
+        /// <summary>
+        /// Message is composed of different sections. Sections are settable/mutable.
+        /// </summary>
+        abstract class AmqpSectionMessage : AmqpMessage
         {
-            BufferListStream bufferStream;
-            bool initialized;
-
-            public override long SerializedMessageSize
+            protected override void Initialize(SectionFlag desiredSections, bool force = false)
             {
-                get
+                if (force || this.buffer == null)
                 {
-                    if (this.bufferStream != null)
+                    this.buffer?.Dispose();
+                    this.buffer = this.Encode();
+                    this.messageSize = this.buffer.Length;
+                }
+            }
+
+            public override void CompletePayload(int payloadSize)
+            {
+                Fx.Assert(this.buffer != null, "buffer not initialized");
+                base.CompletePayload(payloadSize);
+                this.buffer.Complete(payloadSize);
+                if (this.buffer.Length == 0)
+                {
+                    this.ReleaseBuffer();
+                }
+            }
+
+            protected virtual void EncodeBody(ByteBuffer buffer)
+            {
+                int pos = buffer.WritePos;
+                if ((this.sectionFlags & SectionFlag.Data) != 0)
+                {
+                    foreach (Data data in this.dataList)
                     {
-                        return this.bufferStream.Length;
+                        EncodeSection(buffer, data);
                     }
-
-                    // Do not cache the result stream
-                    // as the message could be updated again
-                    return this.Initialize().Length;
                 }
-            }
-
-            public override ArraySegment<byte>[] GetPayload(int payloadSize, out bool more)
-            {
-                this.EnsureInitialized();
-                return this.bufferStream.ReadBuffers(payloadSize, false, out more);
-            }
-
-            protected void EnsureInitialized()
-            {
-                if (!this.initialized)
+                else if ((this.sectionFlags & SectionFlag.AmqpValue) != 0)
                 {
-                    this.bufferStream = this.Initialize();
-                    this.initialized = true;
+                    EncodeSection(buffer, this.amqpValue);
                 }
-            }
-
-            protected override void OnCompletePayload(int payloadSize)
-            {
-                long position = this.bufferStream.Position;
-                this.bufferStream.Position = position + payloadSize;
-            }
-
-            protected virtual void OnInitialize()
-            {
-            }
-
-            public override Stream ToStream()
-            {
-                if (this.bufferStream != null)
+                else if ((this.sectionFlags & SectionFlag.AmqpSequence) != 0)
                 {
-                    return (Stream)this.bufferStream.Clone();
-                }
-
-                return this.Initialize();
-            }
-
-            protected abstract int GetBodySize();
-
-            protected abstract void EncodeBody(ByteBuffer buffer);
-
-            protected virtual void AddCustomSegments(List<ArraySegment<byte>> segmentList)
-            {
-            }
-
-            BufferListStream Initialize()
-            {
-                this.OnInitialize();
-
-                int encodeSize = this.GetSectionSize(this.header) +
-                    this.GetSectionSize(this.deliveryAnnotations) +
-                    this.GetSectionSize(this.messageAnnotations) +
-                    this.GetSectionSize(this.properties) +
-                    this.GetSectionSize(this.applicationProperties) +
-                    this.GetBodySize() +
-                    this.GetSectionSize(this.footer);
-
-                List<ArraySegment<byte>> segmentList = new List<ArraySegment<byte>>(4);
-                if (encodeSize == 0)
-                {
-                    this.AddCustomSegments(segmentList);
-                }
-                else
-                {
-                    ByteBuffer buffer = new ByteBuffer(new byte[encodeSize]);
-                    int segmentOffset = 0;
-
-                    this.EncodeSection(buffer, this.header);
-                    this.EncodeSection(buffer, this.deliveryAnnotations);
-                    this.EncodeSection(buffer, this.messageAnnotations);
-                    this.EncodeSection(buffer, this.properties);
-                    this.EncodeSection(buffer, this.applicationProperties);
-                    if (buffer.Length > 0)
+                    foreach (AmqpSequence seq in this.sequenceList)
                     {
-                        segmentList.Add(new ArraySegment<byte>(buffer.Buffer, segmentOffset, buffer.Length));
-                    }
-
-                    segmentOffset = buffer.Length;
-                    this.EncodeBody(buffer);
-                    int count = buffer.Length - segmentOffset;
-                    if (count > 0)
-                    {
-                        segmentList.Add(new ArraySegment<byte>(buffer.Buffer, segmentOffset, count));
-                    }
-
-                    this.AddCustomSegments(segmentList);
-
-                    if (this.footer != null)
-                    {
-                        segmentOffset = buffer.Length;
-                        this.EncodeSection(buffer, this.footer);
-                        segmentList.Add(new ArraySegment<byte>(buffer.Buffer, segmentOffset, buffer.Length - segmentOffset));
+                        EncodeSection(buffer, seq);
                     }
                 }
 
-                return new BufferListStream(segmentList.ToArray());
+                if (buffer.WritePos > pos)
+                {
+                    this.bodyOffset = pos;
+                    this.bodyLength = buffer.WritePos - pos;
+                }
+            }
+
+            ByteBuffer Encode()
+            {
+                ByteBuffer buffer = new ByteBuffer(1024, true);
+                EncodeSection(buffer, this.header);
+                EncodeSection(buffer, this.deliveryAnnotations);
+                EncodeSection(buffer, this.messageAnnotations);
+                EncodeSection(buffer, this.properties);
+                EncodeSection(buffer, this.applicationProperties);
+                this.EncodeBody(buffer);
+                EncodeSection(buffer, this.footer);
+                return buffer;
             }
         }
 
-        sealed class AmqpEmptyMessage : AmqpBufferedMessage
+        sealed class AmqpEmptyBodyMessage : AmqpSectionMessage
         {
-            protected override int GetBodySize()
-            {
-                return 0;
-            }
-
-            protected override void EncodeBody(ByteBuffer buffer)
-            {
-            }
         }
 
-        sealed class AmqpValueMessage : AmqpBufferedMessage
+        sealed class AmqpValueMessage : AmqpSectionMessage
         {
-            readonly AmqpValue value;
-
             public AmqpValueMessage(AmqpValue value)
             {
-                this.value = value;
+                this.amqpValue = value;
                 this.sectionFlags |= SectionFlag.AmqpValue;
-            }
-
-            public override AmqpValue ValueBody
-            {
-                get { return this.value; }
-            }
-
-            protected override int GetBodySize()
-            {
-                return this.GetSectionSize(this.value);
-            }
-
-            protected override void EncodeBody(ByteBuffer buffer)
-            {
-                this.EncodeSection(buffer, this.value);
             }
         }
 
-        sealed class AmqpDataMessage : AmqpBufferedMessage
+        sealed class AmqpDataMessage : AmqpSectionMessage
         {
-            readonly IEnumerable<Data> dataList;
-
-            public AmqpDataMessage(IEnumerable<Data> dataList)
+            public AmqpDataMessage(IList<Data> dataList)
             {
                 this.dataList = dataList;
                 this.sectionFlags |= SectionFlag.Data;
             }
+        }
 
-            public override IEnumerable<Data> DataBody
+        sealed class AmqpSequenceMessage : AmqpSectionMessage
+        {
+            public AmqpSequenceMessage(IList<AmqpSequence> sequence)
             {
-                get { return this.dataList; }
-            }
-
-            public override Stream BodyStream
-            {
-                get { return new BufferListStream(this.dataList.Select(d => (ArraySegment<byte>) d.Value).ToArray()); }
-            }
-
-            protected override int GetBodySize()
-            {
-                return 0;
-            }
-
-            protected override void EncodeBody(ByteBuffer buffer)
-            {
-            }
-
-            protected override void AddCustomSegments(List<ArraySegment<byte>> segmentList)
-            {
-                foreach (Data data in this.dataList)
-                {
-                    ArraySegment<byte> value = (ArraySegment<byte>)data.Value;
-                    segmentList.Add(Data.GetEncodedPrefix(value.Count));
-                    segmentList.Add(value);
-                }
+                this.sequenceList = sequence;
+                this.sectionFlags |= SectionFlag.AmqpSequence;
             }
         }
 
-        sealed class AmqpSequenceMessage : AmqpBufferedMessage
+        /// <summary>
+        /// Allow updates in mutalble sections.
+        /// Note: currently this is only used by relay. 
+        /// </summary>
+        sealed class AmqpClonedMessage : AmqpSectionMessage
         {
-            readonly IEnumerable<AmqpSequence> sequence;
+            readonly bool deepCopy;
+            readonly ByteBuffer source;
 
-            public AmqpSequenceMessage(IEnumerable<AmqpSequence> sequence)
+            public AmqpClonedMessage(AmqpMessage source, bool deepCopy)
             {
-                this.sequence = sequence;
-                this.sectionFlags |= SectionFlag.AmqpSequence;
+                this.deepCopy = deepCopy;
+                this.CopyFrom(source, deepCopy, true);
+                this.source = source.buffer?.AddReference();
             }
 
-            public override IEnumerable<AmqpSequence> SequenceBody
+            protected override void Initialize(SectionFlag desiredSections, bool force = false)
             {
-                get { return this.sequence; }
-            }
-
-            protected override int GetBodySize()
-            {
-                int bodySize = 0;
-                foreach (AmqpSequence seq in this.sequence)
+                if (this.buffer != null && !force)
                 {
-                    bodySize += this.GetSectionSize(seq);
+                    return;
                 }
 
-                return bodySize;
+                int size = this.source == null ? 1024 : this.source.Length;
+                ByteBuffer buffer = new ByteBuffer(size, true);
+                AmqpMessage.EncodeSection(buffer, this.header);
+                AmqpMessage.EncodeSection(buffer, this.deliveryAnnotations);
+                AmqpMessage.EncodeSection(buffer, this.messageAnnotations);
+                if (this.deepCopy)
+                {
+                    AmqpMessage.EncodeSection(buffer, this.properties);
+                    AmqpMessage.EncodeSection(buffer, this.applicationProperties);
+                }
+                else
+                {
+                    WriteSection(buffer, this.properties, this.source);
+                    WriteSection(buffer, this.applicationProperties, this.source);
+                }
+
+                if (this.source != null && this.bodyOffset >= 0)
+                {
+                    AmqpBitConverter.WriteBytes(buffer, this.source.Buffer, this.bodyOffset, this.bodyLength);
+                }
+                else
+                {
+                    this.EncodeBody(buffer);
+                }
+
+                AmqpMessage.EncodeSection(buffer, this.footer);
+                this.buffer?.Dispose();
+                this.buffer = buffer;
+                this.messageSize = buffer.Length;
             }
 
-            protected override void EncodeBody(ByteBuffer buffer)
+            public override void Dispose()
             {
-                foreach (AmqpSequence seq in this.sequence)
+                this.source?.Dispose();
+                base.Dispose();
+            }
+
+            static void WriteSection(ByteBuffer buffer, AmqpDescribed section, ByteBuffer source)
+            {
+                if (section != null)
                 {
-                    this.EncodeSection(buffer, seq);
+                    if (source != null)
+                    {
+                        AmqpBitConverter.WriteBytes(buffer, source.Buffer, section.Offset, section.Length);
+                    }
+                    else
+                    {
+                        AmqpMessage.EncodeSection(buffer, section);
+                    }
                 }
             }
         }
@@ -623,16 +677,13 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Wraps a stream in the message body. The data is sent in one or more Data sections.
         /// </summary>
-        sealed class AmqpBodyStreamMessage : AmqpBufferedMessage
+        sealed class AmqpBodyStreamMessage : AmqpSectionMessage
         {
             readonly Stream bodyStream;
             readonly bool ownStream;
-            ArraySegment<byte>[] bodyData;
-            int bodyLength;
 
             public AmqpBodyStreamMessage(Stream bodyStream, bool ownStream)
             {
-                Fx.Assert(bodyStream != null, "The bodyStream argument should not be null.");
                 this.sectionFlags |= SectionFlag.Data;
                 this.bodyStream = bodyStream;
                 this.ownStream = ownStream;
@@ -642,1084 +693,189 @@ namespace Microsoft.Azure.Amqp
             {
                 get
                 {
-                    this.EnsureInitialized();
-                    return new BufferListStream(this.bodyData);
-                }
-
-                set
-                {
-                    base.BodyStream = value;
+                    return this.bodyStream;
                 }
             }
 
-            protected override void OnInitialize()
+            protected override void EncodeBody(ByteBuffer buffer)
             {
-                this.bodyData = BufferListStream.ReadStream(this.bodyStream, 1024, out this.bodyLength);
+                int pos = buffer.WritePos;
+                buffer.Validate(true, 8);
+                buffer.Append(8);
+                int length = 0;
+                long streamPos = this.bodyStream.CanSeek ? this.bodyStream.Position : -1;
+                try
+                {
+                    while (true)
+                    {
+                        buffer.Validate(true, 512);
+                        int size = this.bodyStream.Read(buffer.Buffer, buffer.WritePos, 512);
+                        if (size == 0)
+                        {
+                            break;
+                        }
+
+                        buffer.Append(size);
+                        length += size;
+                    }
+                }
+                finally
+                {
+                    if (this.bodyStream.CanSeek)
+                    {
+                        this.bodyStream.Position = streamPos;
+                    }
+                }
+
+                AmqpBitConverter.WriteUByte(buffer.Buffer, pos, FormatCode.Described);
+                AmqpBitConverter.WriteUByte(buffer.Buffer, pos + 1, FormatCode.SmallULong);
+                AmqpBitConverter.WriteUByte(buffer.Buffer, pos + 2, (byte)Data.Code);
+                AmqpBitConverter.WriteUByte(buffer.Buffer, pos + 3, FormatCode.Binary32);
+                AmqpBitConverter.WriteUInt(buffer.Buffer, pos + 4, (uint)length);
+
+                this.bodyOffset = pos;
+                this.bodyLength = buffer.WritePos - pos;
+                this.dataList = new Data[]
+                {
+                    new Data()
+                    {
+                        Value = new ArraySegment<byte>(buffer.Buffer, pos, length),
+                        Offset = pos,
+                        Length = length
+                    }
+                };
+            }
+
+            public override void Dispose()
+            {
+                base.Dispose();
                 if (this.ownStream)
                 {
                     this.bodyStream.Dispose();
                 }
             }
-
-            protected override int GetBodySize()
-            {
-                return 0;
-            }
-
-            protected override void EncodeBody(ByteBuffer buffer)
-            {
-            }
-
-            protected override void AddCustomSegments(List<ArraySegment<byte>> segmentList)
-            {
-                // if body length is 0, send an empty Data section
-                segmentList.Add(Data.GetEncodedPrefix(this.bodyLength));
-                if (this.bodyLength > 0)
-                {
-                    segmentList.AddRange(this.bodyData);
-                }
-            }
         }
 
         /// <summary>
-        /// The stream contains an entire AMQP message. When the stream is sent out,
-        /// the mutable sections are updated.
+        /// Message is constructed from a buffer. Sections are not settable. Though
+        /// not strictly enforced, section properties SHOULD NOT be updated as the
+        /// change will be lost. To update a buffer message, clone it first and update
+        /// the cloned message instead.
         /// </summary>
-        sealed class AmqpOutputStreamMessage : AmqpBufferedMessage
+        sealed class AmqpBufferMessage : AmqpMessage
         {
-            readonly BufferListStream messageStream;
-            readonly bool ownStream;
-            ArraySegment<byte>[] buffers;
-
-            public AmqpOutputStreamMessage(BufferListStream messageStream, bool ownStream)
-            {
-                this.messageStream = messageStream;
-                this.ownStream = ownStream;
-            }
-
-            protected override void OnInitialize()
-            {
-                BufferListStream stream = this.messageStream;
-                if (!this.ownStream)
-                {
-                    stream = (BufferListStream)stream.Clone();
-                }
-
-                try
-                {
-                    // backup and cleanup
-                    Header savedHeader = this.header;
-                    DeliveryAnnotations savedDeliveryAnnotation = this.deliveryAnnotations;
-                    MessageAnnotations savedMessageAnnotation = this.messageAnnotations;
-                    this.header = null;
-                    this.deliveryAnnotations = null;
-                    this.messageAnnotations = null;
-
-                    AmqpMessageReader reader = new AmqpMessageReader(stream);
-                    reader.ReadMessage(this, SectionFlag.Header | SectionFlag.DeliveryAnnotations | SectionFlag.MessageAnnotations);
-
-                    // merge
-                    this.UpdateHeader(savedHeader);
-                    this.UpdateDeliveryAnnotations(savedDeliveryAnnotation);
-                    this.UpdateMessageAnnotations(savedMessageAnnotation);
-
-                    // mask off immutable sections except footer
-                    this.properties = null;
-                    this.applicationProperties = null;
-                    this.footer = null;
-
-                    // read out the remaining buffers
-                    bool unused = false;
-                    this.buffers = stream.ReadBuffers(int.MaxValue, true, out unused);
-                }
-                finally
-                {
-                    if (!this.ownStream)
-                    {
-                        stream.Dispose();
-                    }
-                }
-            }
-
-            protected override int GetBodySize()
-            {
-                return 0;
-            }
-
-            protected override void EncodeBody(ByteBuffer buffer)
+            public AmqpBufferMessage()
             {
             }
 
-            protected override void AddCustomSegments(List<ArraySegment<byte>> segmentList)
+            public AmqpBufferMessage(ByteBuffer buffer)
             {
-                if (this.buffers != null && this.buffers.Length > 0)
-                {
-                    segmentList.AddRange(this.buffers);
-                }
-            }
-
-            void UpdateHeader(Header modified)
-            {
-                if (modified != null)
-                {
-                    if (this.header == null)
-                    {
-                        this.Header = modified;
-                    }
-                    else
-                    {
-                        // update this header only if it is null
-                        if (modified.Durable != null) this.header.Durable = modified.Durable;
-                        if (modified.Priority != null) this.header.Priority = this.header.Priority;
-                        if (modified.Ttl != null) this.header.Ttl = modified.Ttl;
-                        if (modified.FirstAcquirer != null) this.header.FirstAcquirer = modified.FirstAcquirer;
-                        if (modified.DeliveryCount != null) this.header.DeliveryCount = modified.DeliveryCount;
-                    }
-                }
-            }
-
-            void UpdateDeliveryAnnotations(DeliveryAnnotations modified)
-            {
-                if (modified != null)
-                {
-                    if (this.deliveryAnnotations == null)
-                    {
-                        this.DeliveryAnnotations = modified;
-                    }
-                    else
-                    {
-                        foreach (KeyValuePair<MapKey, object> pair in modified.Map)
-                        {
-                            this.deliveryAnnotations.Map[pair.Key] = pair.Value;
-                        }
-                    }
-                }
-            }
-
-            void UpdateMessageAnnotations(MessageAnnotations modified)
-            {
-                if (modified != null)
-                {
-                    if (this.messageAnnotations == null)
-                    {
-                        this.MessageAnnotations = modified;
-                    }
-                    else
-                    {
-                        foreach (KeyValuePair<MapKey, object> pair in modified.Map)
-                        {
-                            this.messageAnnotations.Map[pair.Key] = pair.Value;
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Used on the receiver side. The entire message is immutable (changes are discarded).
-        /// </summary>
-        sealed class AmqpInputStreamMessage : AmqpMessage
-        {
-            readonly BufferListStream bufferStream;
-            bool deserialized;
-            IEnumerable<Data> dataList;
-            IEnumerable<AmqpSequence> sequenceList;
-            AmqpValue amqpValue;
-            Stream bodyStream;
-
-            public AmqpInputStreamMessage(BufferListStream bufferStream)
-            {
-                this.bufferStream = bufferStream;
-            }
-
-            public override IEnumerable<Data> DataBody
-            {
-                get
-                {
-                    this.Deserialize(SectionFlag.All);
-                    return this.dataList;
-                }
-
-                set
-                {
-                    this.dataList = value;
-                    this.UpdateSectionFlag(value != null, SectionFlag.Data);
-                }
-            }
-
-            public override IEnumerable<AmqpSequence> SequenceBody
-            {
-                get
-                {
-                    this.Deserialize(SectionFlag.All);
-                    return this.sequenceList;
-                }
-
-                set
-                {
-                    this.sequenceList = value;
-                    this.UpdateSectionFlag(value != null, SectionFlag.AmqpSequence);
-                }
-            }
-
-            public override AmqpValue ValueBody
-            {
-                get
-                {
-                    this.Deserialize(SectionFlag.All);
-                    return this.amqpValue;
-                }
-
-                set
-                {
-                    this.amqpValue = value;
-                    this.UpdateSectionFlag(value != null, SectionFlag.AmqpValue);
-                }
-            }
-
-            public override Stream BodyStream
-            {
-                get
-                {
-                    this.Deserialize(SectionFlag.All);
-                    return this.bodyStream;
-                }
-
-                set
-                {
-                    this.bodyStream = value;
-                }
-            }
-
-            public override long SerializedMessageSize
-            {
-                get
-                {
-                    return this.bufferStream.Length;
-                }
-            }
-
-            public override ArraySegment<byte>[] GetPayload(int payloadSize, out bool more)
-            {
-                throw new InvalidOperationException();
-            }
-
-            protected override void OnCompletePayload(int payloadSize)
-            {
-                throw new InvalidOperationException();
-            }
-
-            protected override void EnsureInitialized<T>(ref T obj, SectionFlag section)
-            {
-                this.Deserialize(SectionFlag.All);
-            }
-
-            public override Stream ToStream()
-            {
-                return this.bufferStream;
-            }
-
-            public override void Deserialize(SectionFlag desiredSections)
-            {
-                if (!this.deserialized)
-                {
-                    BufferListStream stream = (BufferListStream)this.bufferStream.Clone();
-                    AmqpMessageReader reader = new AmqpMessageReader(stream);
-                    reader.ReadMessage(this, desiredSections);
-                    stream.Dispose();
-                    this.deserialized = true;
-                }
-            }
-        }
-
-        sealed class AmqpMessageReader
-        {
-            static Dictionary<string, ulong> sectionCodeByName = new Dictionary<string, ulong>()
-            {
-                { Header.Name, Header.Code },
-                { DeliveryAnnotations.Name, DeliveryAnnotations.Code },
-                { MessageAnnotations.Name, MessageAnnotations.Code },
-                { Properties.Name, Properties.Code },
-                { ApplicationProperties.Name, ApplicationProperties.Code },
-                { Data.Name, Data.Code },
-                { AmqpSequence.Name, AmqpSequence.Code },
-                { AmqpValue.Name, AmqpValue.Code },
-                { Footer.Name, Footer.Code },
-            };
-
-            static Action<AmqpMessageReader, AmqpMessage, long>[] sectionReaders = new Action<AmqpMessageReader, AmqpMessage, long>[]
-            {
-                ReadHeaderSection,
-                ReadDeliveryAnnotationsSection,
-                ReadMessageAnnotationsSection,
-                ReadPropertiesSection,
-                ReadApplicationPropertiesSection,
-                ReadDataSection,
-                ReadAmqpSequenceSection,
-                ReadAmqpValueSection,
-                ReadFooterSection,
-            };
-
-            readonly BufferListStream stream;
-            List<Data> dataList;
-            List<AmqpSequence> sequenceList;
-            AmqpValue amqpValue;
-            List<ArraySegment<byte>> bodyBuffers;
-
-            public AmqpMessageReader(BufferListStream stream)
-            {
-                this.stream = stream;
-            }
-
-            public void ReadMessage(AmqpMessage message, SectionFlag sections)
-            {
-                while (this.ReadSection(message, sections));
-
-                if ((sections & SectionFlag.Body) != 0)
-                {
-                    if (this.dataList != null)
-                    {
-                        message.DataBody = this.dataList;
-                    }
-
-                    if (this.sequenceList != null)
-                    {
-                        message.SequenceBody = this.sequenceList;
-                    }
-
-                    if (this.amqpValue != null)
-                    {
-                        message.ValueBody = this.amqpValue;
-                    }
-
-                    if (this.bodyBuffers != null)
-                    {
-                        message.BodyStream = new BufferListStream(this.bodyBuffers.ToArray());
-                    }
-                }
-            }
-
-            static void ReadHeaderSection(AmqpMessageReader reader, AmqpMessage message, long startPosition)
-            {
-                message.Header = ReadListSection<Header>(reader);
-                message.header.Offset = startPosition;
-                message.header.Length = reader.stream.Position - startPosition;
-            }
-
-            static void ReadDeliveryAnnotationsSection(AmqpMessageReader reader, AmqpMessage message, long startPosition)
-            {
-                message.DeliveryAnnotations = ReadMapSection<DeliveryAnnotations>(reader);
-                message.deliveryAnnotations.Offset = startPosition;
-                message.deliveryAnnotations.Length = reader.stream.Position - startPosition;
-            }
-
-            static void ReadMessageAnnotationsSection(AmqpMessageReader reader, AmqpMessage message, long startPosition)
-            {
-                message.MessageAnnotations = ReadMapSection<MessageAnnotations>(reader);
-                message.messageAnnotations.Offset = startPosition;
-                message.messageAnnotations.Length = reader.stream.Position - startPosition;
-            }
-
-            static void ReadPropertiesSection(AmqpMessageReader reader, AmqpMessage message, long startPosition)
-            {
-                message.Properties = ReadListSection<Properties>(reader);
-                message.properties.Offset = startPosition;
-                message.properties.Length = reader.stream.Position - startPosition;
-            }
-
-            static void ReadApplicationPropertiesSection(AmqpMessageReader reader, AmqpMessage message, long startPosition)
-            {
-                message.ApplicationProperties = ReadMapSection<ApplicationProperties>(reader);
-                message.applicationProperties.Offset = startPosition;
-                message.applicationProperties.Length = reader.stream.Position - startPosition;
-            }
-
-            static void ReadDataSection(AmqpMessageReader reader, AmqpMessage message, long startPosition)
-            {
-                FormatCode formatCode = reader.ReadFormatCode();
-                Fx.Assert(formatCode == FormatCode.Binary8 || formatCode == FormatCode.Binary32, "Invalid binary format code");
-                bool smallEncoding = formatCode == FormatCode.Binary8;
-                int count = reader.ReadInt(smallEncoding);
-                ArraySegment<byte> buffer;
-                if (count > 0)
-                {
-                    buffer = reader.ReadBytes(count);
-                }
-                else
-                {
-                    buffer = AmqpConstants.EmptyBinary;
-                }
-
-                AmqpMessage.EnsureInitialized<List<Data>>(ref reader.dataList);
-                reader.dataList.Add(new Data() { Value = buffer });
-
-                reader.AddBodyBuffer(buffer);
-            }
-
-            static void ReadAmqpSequenceSection(AmqpMessageReader reader, AmqpMessage message, long startPosition)
-            {
-                AmqpMessage.EnsureInitialized<List<AmqpSequence>>(ref reader.sequenceList);
-                reader.sequenceList.Add(ReadListSection<AmqpSequence>(reader, true));
-            }
-
-            static void ReadAmqpValueSection(AmqpMessageReader reader, AmqpMessage message, long startPosition)
-            {
-                ArraySegment<byte> buffer = reader.ReadBytes(int.MaxValue);
-                ByteBuffer byteBuffer = new ByteBuffer(buffer);
-                object value = AmqpCodec.DecodeObject(byteBuffer);
-                reader.amqpValue = new AmqpValue() { Value = value };
-
-                reader.AddBodyBuffer(buffer);
-
-                // we didn't know the size and the buffer may include the footer
-                if (byteBuffer.Length > 0)
-                {
-                    int footerLength = byteBuffer.Length;
-                    Footer footer = new Footer();
-                    footer.Decode(byteBuffer);
-                    message.Footer = footer;
-                    message.footer.Offset = reader.stream.Position - footerLength;
-                    message.footer.Length = footerLength;
-                }
-            }
-
-            static void ReadFooterSection(AmqpMessageReader reader, AmqpMessage message, long startPosition)
-            {
-                message.Footer = ReadMapSection<Footer>(reader);
-                message.footer.Offset = startPosition;
-                message.footer.Length = reader.stream.Position - startPosition;
-            }
-
-            static T ReadListSection<T>(AmqpMessageReader reader, bool isBodySection = false) where T : DescribedList, new()
-            {
-                T section = new T();
-                long position = reader.stream.Position;
-                FormatCode formatCode = reader.ReadFormatCode();
-                Fx.Assert(formatCode == FormatCode.List8 || formatCode == FormatCode.List0 || formatCode == FormatCode.List32, "Invalid list format code");
-                if (formatCode == FormatCode.List0)
-                {
-                    return section;
-                }
-
-                bool smallEncoding = formatCode == FormatCode.List8;
-                int size = reader.ReadInt(smallEncoding);
-                int count = reader.ReadInt(smallEncoding);
-                if (count == 0)
-                {
-                    return section;
-                }
-
-                long position2 = reader.stream.Position;
-
-                ArraySegment<byte> bytes = reader.ReadBytes(size - (smallEncoding ? FixedWidth.UByte : FixedWidth.UInt));
-                long position3 = reader.stream.Position;
-
-                section.DecodeValue(new ByteBuffer(bytes), size, count);
-
-                // Check if we are decoding the AMQP value body
-                if (isBodySection)
-                {
-                    reader.stream.Position = position;
-                    ArraySegment<byte> segment = reader.stream.ReadBytes((int)(position2 - position));
-                    reader.stream.Position = position3;
-
-                    reader.AddBodyBuffer(segment);
-                    reader.AddBodyBuffer(bytes);
-                }
-
-                return section;
-            }
-
-            static T ReadMapSection<T>(AmqpMessageReader reader) where T : DescribedMap, new()
-            {
-                T section = new T();
-                FormatCode formatCode = reader.ReadFormatCode();
-                Fx.Assert(formatCode == FormatCode.Map8 || formatCode == FormatCode.Map32, "Invalid map format code");
-                bool smallEncoding = formatCode == FormatCode.Map8;
-                int size = reader.ReadInt(smallEncoding);
-                int count = reader.ReadInt(smallEncoding);
-                if (count > 0)
-                {
-                    ArraySegment<byte> bytes = reader.ReadBytes(size - (smallEncoding ? FixedWidth.UByte : FixedWidth.UInt));
-                    section.DecodeValue(new ByteBuffer(bytes), size, count);
-                }
-
-                return section;
-            }
-
-            bool ReadSection(AmqpMessage message, SectionFlag sections)
-            {
-                long position = this.stream.Position;
-                if (position == this.stream.Length)
-                {
-                    return false;
-                }
-
-                FormatCode formatCode = this.ReadFormatCode();
-                if (formatCode != FormatCode.Described)
-                {
-                    throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, this.stream.Position));
-                }
-
-                ulong descriptorCode = this.ReadDescriptorCode();
-                if (descriptorCode < Header.Code || descriptorCode > Footer.Code)
-                {
-                    throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidMessageSectionCode, descriptorCode));
-                }
-
-                int sectionIndex = (int)(descriptorCode - Header.Code);
-                SectionFlag sectionFlag = (SectionFlag)(1 << sectionIndex);
-                if ((sectionFlag & sections) == 0)
-                {
-                    // The section we want to decode does not exist, so rollback to
-                    // where we were.
-                    this.stream.Position = position;
-                    return false;
-                }
-
-                sectionReaders[sectionIndex](this, message, position);
-
-                if ((sectionFlag & SectionFlag.Body) != 0)
-                {
-                    message.BodySectionOffset = position;
-                    message.BodySectionLength = this.stream.Position - position;
-                }
-
-                return true;
-            }
-
-            FormatCode ReadFormatCode()
-            {
-                byte type = (byte)this.stream.ReadByte();
-                byte extType = 0;
-                if (FormatCode.HasExtType(type))
-                {
-                    extType = (byte)this.stream.ReadByte();
-                }
-
-                return new FormatCode(type, extType);
-            }
-
-            ulong ReadDescriptorCode()
-            {
-                FormatCode formatCode = this.ReadFormatCode();
-                ulong descriptorCode = 0;
-                if (formatCode == FormatCode.SmallULong)
-                {
-                    descriptorCode = (ulong)this.stream.ReadByte();
-                }
-                else if (formatCode == FormatCode.ULong)
-                {
-                    ArraySegment<byte> buffer = this.ReadBytes(FixedWidth.ULong);
-                    descriptorCode = AmqpBitConverter.ReadULong(buffer.Array, buffer.Offset, FixedWidth.ULong);
-                }
-                else if (formatCode == FormatCode.Symbol8 || formatCode == FormatCode.Symbol32)
-                {
-                    int count = this.ReadInt(formatCode == FormatCode.Symbol8);
-                    ArraySegment<byte> nameBuffer = this.ReadBytes(count);
-                    string descriptorName = System.Text.Encoding.ASCII.GetString(nameBuffer.Array, nameBuffer.Offset, count);
-                    sectionCodeByName.TryGetValue(descriptorName, out descriptorCode);
-                }
-
-                return descriptorCode;
-            }
-
-            int ReadInt(bool smallEncoding)
-            {
-                if (smallEncoding)
-                {
-                    return this.stream.ReadByte();
-                }
-                else
-                {
-                    ArraySegment<byte> buffer = this.ReadBytes(FixedWidth.UInt);
-                    return(int)AmqpBitConverter.ReadUInt(buffer.Array, buffer.Offset, FixedWidth.UInt);
-                }
-            }
-
-            ArraySegment<byte> ReadBytes(int count)
-            {
-                ArraySegment<byte> bytes = this.stream.ReadBytes(count);
-                if (count != int.MaxValue && bytes.Count < count)
-                {
-                    throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInsufficientBufferSize, count, bytes.Count));
-                }
-
-                return bytes;
-            }
-
-            void AddBodyBuffer(ArraySegment<byte> buffer)
-            {
-                AmqpMessage.EnsureInitialized<List<ArraySegment<byte>>>(ref this.bodyBuffers);
-                if (buffer.Count > 0)
-                {
-                    this.bodyBuffers.Add(buffer);
-                }
-            }
-        }
-
-        sealed class AmqpStreamMessage : AmqpMessage
-        {
-            readonly BufferListStream bodySection;
-            BufferListStream messageStream;
-            BufferListStream payloadStream;
-            IEnumerable<Data> dataList;
-            IEnumerable<AmqpSequence> sequenceList;
-            AmqpValue amqpValue;
-            Stream bodyStream;
-            bool payloadInitialized;
-            bool deserialized;
-
-            public AmqpStreamMessage()
-            {
-                this.RawByteBuffers = new List<ByteBuffer>();
-            }
-
-            public AmqpStreamMessage(BufferListStream messageStream)
-                : this(messageStream, false)
-            {
-            }
-
-            public AmqpStreamMessage(BufferListStream messageStream, bool payloadInitialized)
-            {
-                if (messageStream == null)
-                {
-                    throw new ArgumentNullException(nameof(messageStream));
-                }
-
-                this.messageStream = messageStream;
-                this.payloadInitialized = payloadInitialized;
-                if (payloadInitialized)
-                {
-                    this.payloadStream = this.messageStream;
-                }
-            }
-
-            public AmqpStreamMessage(Stream nonBodySections, Stream bodySection, bool forceCopyStream)
-            {
-                // Currently message always has header stream, may change in the future
-                if (nonBodySections == null)
-                {
-                    throw new ArgumentNullException(nameof(nonBodySections));
-                }
-
-                this.messageStream = BufferListStream.Create(nonBodySections, AmqpConstants.SegmentSize, forceCopyStream);
-                if (bodySection != null)
-                {
-                    this.bodySection = BufferListStream.Create(bodySection, AmqpConstants.SegmentSize, forceCopyStream);
-                }
-            }
-
-            public override long SerializedMessageSize
-            {
-                get
-                {
-                    return this.payloadInitialized ?
-                        this.payloadStream.Length :
-                        this.messageStream.Length + (this.bodySection == null ? 0 : this.bodySection.Length);
-                }
-            }
-
-            public override ArraySegment<byte>[] GetPayload(int payloadSize, out bool more)
-            {
-                if (!this.payloadInitialized)
-                {
-                    this.payloadStream = AmqpStreamMessage.Encode(this);
-                    this.payloadInitialized = true;
-                }
-
-                return this.payloadStream.ReadBuffers(payloadSize, false, out more);
+                this.buffer = buffer;
+                this.messageSize = buffer.Length;
             }
 
             public override void AddPayload(ByteBuffer payload, bool isLast)
             {
-                Fx.Assert(this.RawByteBuffers != null, "Raw buffer list must have been initialized!");
-                this.RawByteBuffers.Add(payload);
                 this.BytesTransfered += payload.Length;
-                if (isLast)
-                {
-                    ArraySegment<byte>[] segments = new ArraySegment<byte>[this.RawByteBuffers.Count];
-                    for (int i = 0; i < this.RawByteBuffers.Count; ++i)
-                    {
-                        ByteBuffer byteBuffer = this.RawByteBuffers[i];
-                        segments[i] = new ArraySegment<byte>(byteBuffer.Buffer, byteBuffer.Offset, byteBuffer.Length);
-                    }
-
-                    this.messageStream = new BufferListStream(segments);
-                }
+                this.buffer = AddPayload(this.buffer, payload, isLast);
+                this.messageSize = this.buffer.Length;
             }
 
-            protected override void OnCompletePayload(int payloadSize)
+            public override ByteBuffer GetPayload(int payloadSize, out bool more)
             {
-                long position = this.payloadStream.Position;
-                this.payloadStream.Position = position + payloadSize;
+                return GetPayload(this.buffer, payloadSize, out more);
             }
 
-            public override IEnumerable<Data> DataBody
+            protected override void Initialize(SectionFlag desiredSections, bool force = false)
             {
-                get
+                if (this.sectionFlags > 0)
                 {
-                    this.Deserialize(SectionFlag.All);
-                    return this.dataList;
+                    return;
                 }
 
-                set
+                Error error;
+                if (!AmqpMessageReader.TryRead(
+                    this,
+                    0,
+                    this.buffer,
+                    desiredSections,
+                    (a, b, s) => HandleSection(a, b, s),
+                    this.GetType().Name,
+                    out error))
                 {
-                    this.dataList = value;
-                    this.UpdateSectionFlag(value != null, SectionFlag.Data);
-                }
-            }
-
-            public override IEnumerable<AmqpSequence> SequenceBody
-            {
-                get
-                {
-                    this.Deserialize(SectionFlag.All);
-                    return this.sequenceList;
-                }
-
-                set
-                {
-                    this.sequenceList = value;
-                    this.UpdateSectionFlag(value != null, SectionFlag.AmqpSequence);
-                }
-            }
-
-            public override AmqpValue ValueBody
-            {
-                get
-                {
-                    this.Deserialize(SectionFlag.All);
-                    return this.amqpValue;
-                }
-
-                set
-                {
-                    this.amqpValue = value;
-                    this.UpdateSectionFlag(value != null, SectionFlag.AmqpValue);
-                }
-            }
-
-            public override Stream BodyStream
-            {
-                get
-                {
-                    this.Deserialize(SectionFlag.All);
-                    return this.bodyStream;
-                }
-
-                set
-                {
-                    this.bodyStream = value;
+                    throw new AmqpException(error);
                 }
             }
 
             protected override void EnsureInitialized<T>(ref T obj, SectionFlag section)
             {
-                this.Deserialize(SectionFlag.All);
+                this.Initialize(SectionFlag.All);
             }
 
-            public override Stream ToStream()
+            static bool HandleSection(AmqpBufferMessage thisPtr, int unused, Section section)
             {
-                return this.messageStream;
-            }
-
-            public override void Deserialize(SectionFlag desiredSections)
-            {
-                if (!this.deserialized)
+                if (section.Flag == SectionFlag.Header)
                 {
-                    BufferListStream stream = (BufferListStream)this.messageStream.Clone();
-                    AmqpMessageReader reader = new AmqpMessageReader(stream);
-                    reader.ReadMessage(this, desiredSections);
-                    stream.Dispose();
-
-                    this.header = this.header ?? new Header();
-                    this.messageAnnotations = this.messageAnnotations ?? new MessageAnnotations();
-
-                    this.deserialized = true;
+                    thisPtr.Header = (Header)section.Value;
                 }
-            }
-
-            internal override Stream GetNonBodySectionsStream()
-            {
-                this.Deserialize(SectionFlag.All);
-                using (BufferListStream stream = (BufferListStream)this.messageStream.Clone())
+                else if (section.Flag == SectionFlag.DeliveryAnnotations)
                 {
-                    List<ArraySegment<byte>> segments = new List<ArraySegment<byte>>();
-                    ReadSection(stream, segments, this.Header);
-                    ReadSection(stream, segments, this.DeliveryAnnotations);
-                    ReadSection(stream, segments, this.MessageAnnotations);
-                    ReadSection(stream, segments, this.Properties);
-                    ReadSection(stream, segments, this.ApplicationProperties);
-                    ReadSection(stream, segments, this.Footer);
-
-                    return new BufferListStream(segments.ToArray());
+                    thisPtr.DeliveryAnnotations = (DeliveryAnnotations)section.Value;
                 }
-            }
-
-            internal override Stream GetBodySectionStream()
-            {
-                if (this.bodySection != null)
+                else if (section.Flag == SectionFlag.MessageAnnotations)
                 {
-                    return (BufferListStream)this.bodySection.Clone();
+                    thisPtr.MessageAnnotations = (MessageAnnotations)section.Value;
                 }
-
-                this.Deserialize(SectionFlag.All);
-                if ((this.sectionFlags & SectionFlag.Body) == 0)
+                else if (section.Flag == SectionFlag.Properties)
                 {
-                    return null;
+                    thisPtr.Properties = (Properties)section.Value;
                 }
-
-                using (BufferListStream stream = (BufferListStream)this.messageStream.Clone())
+                else if (section.Flag == SectionFlag.ApplicationProperties)
                 {
-                    bool more;
-                    stream.Position = this.BodySectionOffset;
-                    ArraySegment<byte>[] segments = stream.ReadBuffers((int)this.BodySectionLength, true, out more);
-                    return new BufferListStream(segments);
+                    thisPtr.ApplicationProperties = (ApplicationProperties)section.Value;
                 }
-            }
-
-            ArraySegment<byte>[] GetBodySectionSegments()
-            {
-                if (this.bodySection != null)
+                else if (section.Flag == SectionFlag.Data)
                 {
-                    using (BufferListStream stream = (BufferListStream)this.bodySection.Clone())
+                    if (thisPtr.dataList == null)
                     {
-                        bool more;
-                        return stream.ReadBuffers(int.MaxValue, false, out more);
-                    }
-                }
-
-                this.Deserialize(SectionFlag.All);
-                if ((this.sectionFlags & SectionFlag.Body) == 0)
-                {
-                    return null;
-                }
-
-                using (BufferListStream stream = (BufferListStream)this.messageStream.Clone())
-                {
-                    bool more;
-                    stream.Position = this.BodySectionOffset;
-                    return stream.ReadBuffers((int)this.BodySectionLength, true, out more);
-                }
-            }
-
-            void ReadSection(BufferListStream source, List<ArraySegment<byte>> target, AmqpDescribed section)
-            {
-                if (section != null && section.Length > 0)
-                {
-                    bool more;
-                    source.Position = section.Offset;
-                    ArraySegment<byte>[] segments = source.ReadBuffers((int)section.Length, false, out more);
-                    if (segments != null && segments.Length > 0)
-                    {
-                        target.AddRange(segments);
-                    }
-                }
-            }
-
-            void EncodeSection(ByteBuffer buffer, AmqpDescribed section)
-            {
-                if (section != null)
-                {
-                    section.Offset = buffer.Length;
-                    base.EncodeSection(buffer, section);
-                    section.Length = buffer.Length - section.Offset;
-                }
-            }
-
-            static BufferListStream Encode(AmqpStreamMessage message)
-            {
-                int encodeSize = message.GetSectionSize(message.header) +
-                    message.GetSectionSize(message.deliveryAnnotations) +
-                    message.GetSectionSize(message.messageAnnotations) +
-                    message.GetSectionSize(message.properties) +
-                    message.GetSectionSize(message.applicationProperties) +
-                    message.GetSectionSize(message.footer);
-
-                List<ArraySegment<byte>> segmentList = new List<ArraySegment<byte>>(4);
-                {
-                    ByteBuffer buffer = new ByteBuffer(new byte[encodeSize]);
-                    int segmentOffset = 0;
-
-                    message.EncodeSection(buffer, message.header);
-                    message.EncodeSection(buffer, message.deliveryAnnotations);
-                    message.EncodeSection(buffer, message.messageAnnotations);
-                    message.EncodeSection(buffer, message.properties);
-                    message.EncodeSection(buffer, message.applicationProperties);
-                    if (buffer.Length > 0)
-                    {
-                        segmentList.Add(new ArraySegment<byte>(buffer.Buffer, segmentOffset, buffer.Length));
+                        thisPtr.bodyOffset = section.Offset;
+                        thisPtr.dataList = new List<Data>();
+                        thisPtr.sectionFlags |= SectionFlag.Data;
                     }
 
-                    var bodySegments = message.GetBodySectionSegments();
-                    if (bodySegments != null)
+                    thisPtr.bodyLength += section.Length;
+                    thisPtr.dataList.Add((Data)section.Value);
+                }
+                else if (section.Flag == SectionFlag.AmqpSequence)
+                {
+                    if (thisPtr.sequenceList == null)
                     {
-                        segmentList.AddRange(bodySegments);
+                        thisPtr.bodyOffset = section.Offset;
+                        thisPtr.sequenceList = new List<AmqpSequence>();
+                        thisPtr.sectionFlags |= SectionFlag.AmqpSequence;
                     }
 
-                    if (message.footer != null)
-                    {
-                        segmentOffset = buffer.Length;
-                        message.EncodeSection(buffer, message.footer);
-                        segmentList.Add(new ArraySegment<byte>(buffer.Buffer, segmentOffset, buffer.Length - segmentOffset));
-                    }
+                    thisPtr.bodyLength += section.Length;
+                    thisPtr.sequenceList.Add((AmqpSequence)section.Value);
                 }
-
-                return new BufferListStream(segmentList.ToArray());
-            }
-        }
-
-        sealed class AmqpStreamMessageHeader : AmqpMessage
-        {
-            readonly BufferListStream bufferStream;
-            bool deserialized;
-
-            public AmqpStreamMessageHeader(BufferListStream headerStream)
-            {
-                if (headerStream == null)
+                else if (section.Flag == SectionFlag.AmqpValue)
                 {
-                    throw new ArgumentNullException(nameof(headerStream));
+                    thisPtr.bodyOffset = section.Offset;
+                    thisPtr.bodyLength = section.Length;
+                    thisPtr.amqpValue = (AmqpValue)section.Value;
+                    thisPtr.sectionFlags |= SectionFlag.AmqpValue;
                 }
-
-                this.bufferStream = headerStream;
-            }
-
-            public override long SerializedMessageSize
-            {
-                get
+                else if (section.Flag == SectionFlag.Footer)
                 {
-                    return this.bufferStream.Length;
+                    thisPtr.Footer = (Footer)section.Value;
                 }
-            }
-
-            public override ArraySegment<byte>[] GetPayload(int payloadSize, out bool more)
-            {
-                throw new InvalidOperationException();
-            }
-
-            protected override void OnCompletePayload(int payloadSize)
-            {
-                throw new InvalidOperationException();
-            }
-
-            protected override void EnsureInitialized<T>(ref T obj, SectionFlag section)
-            {
-                this.Deserialize(SectionFlag.All);
-            }
-
-            public override Stream ToStream()
-            {
-                return this.bufferStream;
-            }
-
-            internal override Stream GetNonBodySectionsStream()
-            {
-                return (BufferListStream)this.bufferStream.Clone();
-            }
-
-            public override void Deserialize(SectionFlag desiredSections)
-            {
-                if (!this.deserialized)
+                else
                 {
-                    BufferListStream stream = (BufferListStream)this.bufferStream.Clone();
-                    AmqpMessageReader reader = new AmqpMessageReader(stream);
-                    reader.ReadMessage(this, desiredSections);
-                    stream.Dispose();
-
-                    this.header = this.header ?? new Header();
-                    this.deliveryAnnotations = this.deliveryAnnotations ?? new DeliveryAnnotations();
-                    this.messageAnnotations = this.messageAnnotations ?? new MessageAnnotations();
-
-                    this.deserialized = true;
-                }
-            }
-
-            internal override long Write(XmlWriter writer)
-            {
-                this.Deserialize(SectionFlag.All);
-                List<ArraySegment<byte>> updatedSections = AmqpStreamMessageHeader.Encode(this);
-                using (BufferListStream stream = new BufferListStream(updatedSections.ToArray()))
-                {
-                    long size = 0;
-                    size += Write(stream, writer, this.Header);
-                    size += Write(stream, writer, this.DeliveryAnnotations);
-                    size += Write(stream, writer, this.MessageAnnotations);
-                    size += Write(stream, writer, this.Properties);
-                    size += Write(stream, writer, this.ApplicationProperties);
-                    size += Write(stream, writer, this.Footer);
-
-                    return size;
-                }
-            }
-
-            void EncodeSection(ByteBuffer buffer, AmqpDescribed section)
-            {
-                if (section != null)
-                {
-                    section.Offset = buffer.Length;
-                    base.EncodeSection(buffer, section);
-                    section.Length = buffer.Length - section.Offset;
-                }
-            }
-
-            static long Write(BufferListStream source, XmlWriter target, AmqpDescribed section)
-            {
-                long size = 0;
-
-                if (section != null && section.Length > 0)
-                {
-                    source.Position = section.Offset;
-                    byte[] buffer = new byte[section.Length];
-                    int readBytes = source.Read(buffer, 0, (int)buffer.Length);
-                    target.WriteBase64(buffer, 0, readBytes);
-                    size = buffer.Length;
+                    throw new AmqpException(AmqpErrorCode.DecodeError,
+                        AmqpResources.GetString(Resources.AmqpInvalidMessageSectionCode, section.Flag));
                 }
 
-                return size;
-            }
-
-            static List<ArraySegment<byte>> Encode(AmqpStreamMessageHeader message)
-            {
-                int encodeSize =
-                    message.GetSectionSize(message.header) +
-                    message.GetSectionSize(message.deliveryAnnotations) +
-                    message.GetSectionSize(message.messageAnnotations) +
-                    message.GetSectionSize(message.properties) +
-                    message.GetSectionSize(message.applicationProperties) +
-                    message.GetSectionSize(message.footer);
-
-                List<ArraySegment<byte>> segmentList = new List<ArraySegment<byte>>(4);
-                {
-                    ByteBuffer buffer = new ByteBuffer(new byte[encodeSize]);
-                    int segmentOffset = 0;
-
-                    message.EncodeSection(buffer, message.header);
-                    message.EncodeSection(buffer, message.deliveryAnnotations);
-                    message.EncodeSection(buffer, message.messageAnnotations);
-                    message.EncodeSection(buffer, message.properties);
-                    message.EncodeSection(buffer, message.applicationProperties);
-                    if (buffer.Length > 0)
-                    {
-                        segmentList.Add(new ArraySegment<byte>(buffer.Buffer, segmentOffset, buffer.Length));
-                    }
-
-                    segmentOffset = buffer.Length;
-                    int count = buffer.Length - segmentOffset;
-                    if (count > 0)
-                    {
-                        segmentList.Add(new ArraySegment<byte>(buffer.Buffer, segmentOffset, count));
-                    }
-
-                    if (message.footer != null)
-                    {
-                        segmentOffset = buffer.Length;
-                        message.EncodeSection(buffer, message.footer);
-                        segmentList.Add(new ArraySegment<byte>(buffer.Buffer, segmentOffset, buffer.Length - segmentOffset));
-                    }
-                }
-
-                return segmentList;
+                return true;
             }
         }
     }

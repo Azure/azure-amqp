@@ -44,9 +44,9 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        public long Offset { get; set; }
+        internal int Offset { get; set; }
 
-        public long Length { get; set; }
+        internal int Length { get; set; }
 
         public static void DecodeDescriptor(ByteBuffer buffer, out AmqpSymbol name, out ulong code)
         {

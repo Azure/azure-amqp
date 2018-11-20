@@ -1140,7 +1140,7 @@ namespace Test.Microsoft.Azure.Amqp
         {
             ByteBuffer buffer = new ByteBuffer(1024, true);
             Frm(buffer, channel, command, payload);
-            connection.SendBuffers(new ByteBuffer[] { buffer });
+            connection.SendBuffer(buffer);
         }
 
         static void PipeLineSend(string host, int port, string queue, byte[] message)

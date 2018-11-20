@@ -16,6 +16,11 @@ namespace Test.Microsoft.Azure.Amqp
 
         public static Uri WsAddress = new Uri(wsAddress);
 
+        static TestAmqpBrokerFixture()
+        {
+            Environment.SetEnvironmentVariable("AMQP_DEBUG", "1");
+        }
+
         public TestAmqpBrokerFixture()
         {
             lock (syncRoot)

@@ -678,7 +678,7 @@ namespace Microsoft.Azure.Amqp
                 }
 
                 int payloadSize = (int)maxFrameSize - overhead;
-                ArraySegment<byte>[] payload = delivery.GetPayload(payloadSize, out more);
+                ByteBuffer payload = delivery.GetPayload(payloadSize, out more);
                 transfer.More = more;
 
                 if (!firstTransfer && payload == null)
@@ -689,17 +689,12 @@ namespace Microsoft.Azure.Amqp
 
                 if (!this.Session.TrySendTransfer(firstTransfer ? delivery : null, transfer, payload))
                 {
+                    payload.Dispose();
                     more = true;
                     break;
                 }
 
-                payloadSize = 0;
-                for (int i = 0; i < payload.Length; ++i)
-                {
-                    payloadSize += payload[i].Count;
-                }
-
-                delivery.CompletePayload(payloadSize);
+                delivery.CompletePayload(payload.Length);
             }
 
             if (!more && settled)
@@ -734,7 +729,6 @@ namespace Microsoft.Azure.Amqp
 
         void StartSendDelivery(Delivery delivery)
         {
-            delivery.PrepareForSend();
             delivery.Settled = this.settings.SettleType == SettleMode.SettleOnSend;
             if (!delivery.Settled)
             {

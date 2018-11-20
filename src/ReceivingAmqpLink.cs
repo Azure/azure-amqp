@@ -381,7 +381,7 @@ namespace Microsoft.Azure.Amqp
                 AmqpMessage message = this.currentMessage;
                 this.currentMessage = null;
 
-                AmqpTrace.Provider.AmqpReceiveMessage(this, message.DeliveryId.Value, message.RawByteBuffers.Count);
+                AmqpTrace.Provider.AmqpReceiveMessage(this, message.DeliveryId.Value, message.Segments);
                 this.OnReceiveMessage(message);
             }
         }
@@ -950,7 +950,7 @@ namespace Microsoft.Azure.Amqp
                     base.Enqueue(amqpMessage);
                     if (this.IsPrefetchingBySize)
                     {
-                        this.cacheSizeCredit -= amqpMessage.SerializedMessageSize;
+                        this.cacheSizeCredit -= amqpMessage.Serialize(false);
                         bool issueCredit = false;
                         if (this.cacheSizeCredit > 0 && this.cacheSizeCredit > this.overflowBufferCacheSizeInBytes)
                         {
@@ -982,7 +982,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     // if we are draining the cache (i.e. receiving) we should start giving
                     // credit if we now have credit above the threshold.
-                    this.cacheSizeCredit += amqpMessage.SerializedMessageSize;
+                    this.cacheSizeCredit += amqpMessage.Serialize(false);
 
                     bool issueCredit = false;
                     if (this.cacheSizeCredit >= this.thresholdCacheSizeInBytes)
@@ -1013,7 +1013,7 @@ namespace Microsoft.Azure.Amqp
             {
                 var previousCredit = this.boundedTotalLinkCredit;
                 long totalSize = this.receivingLink.Settings.TotalCacheSizeInBytes ?? 0;
-                long externalMessageSize = externalMessage == null ? 0 : externalMessage.SerializedMessageSize;
+                long externalMessageSize = externalMessage == null ? 0 : externalMessage.Serialize(false);
                 int count = externalMessage == null ? this.Count : this.Count + 1;
                 if (count > 0)
                 {

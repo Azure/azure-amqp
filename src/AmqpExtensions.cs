@@ -4,12 +4,12 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Diagnostics;
     using System.Globalization;
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
-    using System.Diagnostics;
 
     /// <summary>
     /// make it convenient to deal with nullable types
@@ -18,57 +18,98 @@ namespace Microsoft.Azure.Amqp
     public static class Extensions
     {
 #if DEBUG
+        public static bool AmqpDebug = string.Equals(Environment.GetEnvironmentVariable("AMQP_DEBUG"), "1", StringComparison.Ordinal);
+        public static Action<bool, AmqpConnection, Frame> FrameCallback;
         public static Action<string> TraceCallback;
-        static bool AmqpDebug = string.Equals(Environment.GetEnvironmentVariable("AMQP_DEBUG"), "1", StringComparison.Ordinal);
-        public static Action<bool, AmqpConnection, ushort, Performative, int> PerformativeTraceCallback;
 #endif
 
-        public static string GetString(this ArraySegment<byte> binary)
+        public static string GetString(this ArraySegment<byte> binary, int count = int.MaxValue, StringBuilder output = null)
         {
-            StringBuilder sb = new StringBuilder(binary.Count * 2);
-            for (int i = 0; i < binary.Count; ++i)
+            if (binary.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            StringBuilder sb = output ?? new StringBuilder(binary.Count * 2);
+            for (int i = 0; i < Math.Min(count, binary.Count); ++i)
             {
                 sb.AppendFormat(CultureInfo.InvariantCulture, "{0:X2}", binary.Array[binary.Offset + i]);
             }
 
-            return sb.ToString();
+            if (count < binary.Count)
+            {
+                sb.Append("...");
+            }
+
+            return output == null ? sb.ToString() : null;
         }
 
 #if DEBUG
-        public static void Trace(this object target, bool send, AmqpConnection connection, ushort channel, Performative performative, int payload)
+        public static void Trace(this ProtocolHeader header, bool send, AmqpConnection connection)
         {
-            if (AmqpDebug)
-            {
-                if (PerformativeTraceCallback != null)
-                {
-                    PerformativeTraceCallback(send, connection, channel, performative, payload);
-                }
-                else
-                {
-                    Trace(target, send);
-                }
-            }
-        }
-
-        public static void Trace(this object target, bool send)
-        {
-            if (AmqpDebug)
-            {
-                string message = string.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "[{0:X3}.{1:X3} {2:HH:mm:ss.fff}] {3} {4}",
+            string message = string.Format(
+                        "{0} [{1:X3}.{2:X3} {3:HH:mm:ss.fff}] {4} {5}",
+                        AppDomain.CurrentDomain.FriendlyName,
                         Process.GetCurrentProcess().Id,
                         Environment.CurrentManagedThreadId,
                         DateTime.UtcNow,
                         send ? "SEND" : "RECV",
-                        target.ToString());
-                if (TraceCallback != null)
+                        header.ToString());
+
+            if (TraceCallback != null)
+            {
+                TraceCallback(message);
+            }
+            else
+            {
+                System.Diagnostics.Trace.WriteLine(message);
+            }
+        }
+
+        public static void Trace(this Frame frame, bool send, AmqpConnection connection)
+        {
+            if (AmqpDebug)
+            {
+                if (FrameCallback != null)
                 {
-                    TraceCallback(message);
+                    FrameCallback(send, connection, frame);
                 }
                 else
                 {
-                    System.Diagnostics.Trace.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}\t{1}", AppDomain.CurrentDomain.FriendlyName, message));
+                    StringBuilder sb = new StringBuilder(1024);
+                    sb.AppendFormat(
+                        "{0} [{1:X3}.{2:X3} {3:HH:mm:ss.fff}] {4} FRM({5:X4}|{6}|{7}|{8:X2}",
+                        AppDomain.CurrentDomain.FriendlyName,
+                        Process.GetCurrentProcess().Id,
+                        Environment.CurrentManagedThreadId,
+                        DateTime.UtcNow,
+                        send ? "SEND" : "RECV",
+                        frame.Size,
+                        frame.DataOffset,
+                        frame.Type,
+                        frame.Channel);
+                    if (frame.Command != null)
+                    {
+                        sb.Append(' ');
+                        sb.Append(frame.Command);
+                    }
+
+                    if (frame.Payload.Count > 0)
+                    {
+                        sb.Append(' ');
+                        frame.Payload.GetString(128, sb);
+                    }
+
+                    sb.Append(')');
+
+                    if (TraceCallback != null)
+                    {
+                        TraceCallback(sb.ToString());
+                    }
+                    else
+                    {
+                        System.Diagnostics.Trace.WriteLine(sb.ToString());
+                    }
                 }
             }
         }
@@ -91,11 +132,6 @@ namespace Microsoft.Azure.Amqp
         }
 
         // begin
-        public static ushort RemoteChannel(this Begin begin)
-        {
-            return begin.RemoteChannel == null ? (ushort)0 : begin.RemoteChannel.Value;
-        }
-
         public static uint HandleMax(this Begin begin)
         {
             return begin.HandleMax == null ? uint.MaxValue : begin.HandleMax.Value;
@@ -117,28 +153,9 @@ namespace Microsoft.Azure.Amqp
             return attach.Role.HasValue && attach.Role.Value;
         }
 
-        public static bool IncompleteUnsettled(this Attach attach)
-        {
-            return attach.IncompleteUnsettled == null ? false : attach.IncompleteUnsettled.Value;
-        }
-
         public static ulong MaxMessageSize(this Attach attach)
         {
             return attach.MaxMessageSize == null || attach.MaxMessageSize.Value == 0 ? ulong.MaxValue : attach.MaxMessageSize.Value;
-        }
-
-        public static Terminus Terminus(this Attach attach)
-        {
-            if (attach.IsReceiver())
-            {
-                Source source = attach.Source as Source;
-                return source == null ? null : new Terminus(source);
-            }
-            else
-            {
-                Target target = attach.Target as Target;
-                return target == null ? null : new Terminus(target);
-            }
         }
 
         public static Address Address(this Attach attach)
@@ -157,20 +174,6 @@ namespace Microsoft.Azure.Amqp
             {
                 Fx.Assert(attach.Target != null && attach.Target is Target, "Target is not valid.");
                 return ((Target)attach.Target).Address;
-            }
-        }
-
-        public static bool Dynamic(this Attach attach)
-        {
-            if (attach.IsReceiver())
-            {
-                Fx.Assert(attach.Source != null && attach.Source is Source, "Source is not valid.");
-                return ((Source)attach.Source).Dynamic();
-            }
-            else
-            {
-                Fx.Assert(attach.Target != null && attach.Target is Target, "Target is not valid.");
-                return ((Target)attach.Target).Dynamic();
             }
         }
 
@@ -194,98 +197,6 @@ namespace Microsoft.Azure.Amqp
                     return SettleMode.SettleOnDispose;
                 }
             }
-        }
-
-        public static Attach Clone(this Attach attach)
-        {
-            Attach clone = new Attach();
-            clone.LinkName = attach.LinkName;
-            clone.Role = attach.Role;
-            clone.SndSettleMode = attach.SndSettleMode;
-            clone.RcvSettleMode = attach.RcvSettleMode;
-            clone.Source = attach.Source;
-            clone.Target = attach.Target;
-            clone.Unsettled = attach.Unsettled;
-            clone.IncompleteUnsettled = attach.IncompleteUnsettled;
-            clone.InitialDeliveryCount = attach.InitialDeliveryCount;
-            clone.MaxMessageSize = attach.MaxMessageSize;
-            clone.OfferedCapabilities = attach.OfferedCapabilities;
-            clone.DesiredCapabilities = attach.DesiredCapabilities;
-            clone.Properties = attach.Properties;
-
-            return clone;
-        }
-
-        public static AmqpLinkSettings Clone(this AmqpLinkSettings settings, bool deepClone)
-        {
-            AmqpLinkSettings clone = new AmqpLinkSettings();
-
-            // Attach
-            clone.LinkName = settings.LinkName;
-            clone.Role = settings.Role;
-            clone.SndSettleMode = settings.SndSettleMode;
-            clone.RcvSettleMode = settings.RcvSettleMode;
-            clone.Source = settings.Source;
-            clone.Target = settings.Target;
-            clone.Unsettled = settings.Unsettled;
-            clone.IncompleteUnsettled = settings.IncompleteUnsettled;
-            clone.InitialDeliveryCount = settings.InitialDeliveryCount;
-            clone.MaxMessageSize = settings.MaxMessageSize;
-            clone.OfferedCapabilities = settings.OfferedCapabilities;
-            clone.DesiredCapabilities = settings.DesiredCapabilities;
-
-            if (deepClone)
-            {
-                if (settings.Properties != null)
-                {
-                    clone.Properties = new Fields();
-                    foreach (var p in settings.Properties)
-                    {
-                        clone.Properties[p.Key] = p.Value;
-                    }
-                }
-            }
-            else
-            {
-                clone.Properties = settings.Properties;
-            }
-
-            // AmqpLinkSettings
-            clone.TotalLinkCredit = settings.TotalLinkCredit;
-            clone.TotalCacheSizeInBytes = settings.TotalCacheSizeInBytes;
-            clone.FlowThreshold = settings.FlowThreshold;
-            clone.AutoSendFlow = settings.AutoSendFlow;
-            clone.SettleType = settings.SettleType;
-
-            return clone;
-        }
-
-        public static Source Clone(this Source source)
-        {
-            Source clone = new Source();
-            clone.Address = source.Address;
-            clone.Durable = source.Durable;
-            clone.ExpiryPolicy = source.ExpiryPolicy;
-            clone.Timeout = source.Timeout;
-            clone.DistributionMode = source.DistributionMode;
-            clone.FilterSet = source.FilterSet;
-            clone.DefaultOutcome = source.DefaultOutcome;
-            clone.Outcomes = source.Outcomes;
-            clone.Capabilities = source.Capabilities;
-
-            return clone;
-        }
-
-        public static Target Clone(this Target target)
-        {
-            Target clone = new Target();
-            clone.Address = target.Address;
-            clone.Durable = target.Durable;
-            clone.ExpiryPolicy = target.ExpiryPolicy;
-            clone.Timeout = target.Timeout;
-            clone.Capabilities = target.Capabilities;
-
-            return clone;
         }
 
         // transfer
@@ -382,26 +293,6 @@ namespace Microsoft.Azure.Amqp
         public static SequenceNumber GroupSequence(this Properties properties)
         {
             return properties.GroupSequence == null ? 0 : properties.GroupSequence.Value;
-        }
-
-        public static string TrackingId(this Properties properties)
-        {
-            // Here we prefer CorrelationId over MessageId so that responses get tracked with their requests
-            if (properties.CorrelationId != null)
-            {
-                return properties.CorrelationId.ToString();
-            }
-            else if (properties.MessageId != null)
-            {
-                return properties.MessageId.ToString();
-            }
-            else
-            {
-                // Create a new Id and put it in MessageId so others will use same TrackingId.
-                Guid trackingId = Guid.NewGuid();
-                properties.MessageId = trackingId;
-                return properties.MessageId.ToString();
-            }
         }
 
         // delivery
@@ -532,6 +423,16 @@ namespace Microsoft.Azure.Amqp
 
             extension = default(T);
             return false;
+        }
+
+        public static ArraySegment<byte> AsSegment(this ByteBuffer buffer)
+        {
+            if (buffer == null)
+            {
+                return default(ArraySegment<byte>);
+            }
+
+            return new ArraySegment<byte>(buffer.Buffer, buffer.Offset, buffer.Length);
         }
     }
 }

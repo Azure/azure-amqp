@@ -356,17 +356,12 @@ namespace TestAmqpBroker
 
         sealed class BrokerMessage : AmqpMessage
         {
-            readonly BufferListStream stream;
+            readonly int pos;
 
             public BrokerMessage(AmqpMessage message)
             {
-                foreach (var buffer in message.RawByteBuffers)
-                {
-                    buffer.AddReference();
-                }
-
-                this.stream = (BufferListStream)message.ToStream();
-                this.RawByteBuffers = message.RawByteBuffers;
+                this.Buffer = message.GetPayload(int.MaxValue, out bool more);
+                this.pos = this.Buffer.Offset;
             }
 
             public object LockedBy { get; set; }
@@ -381,42 +376,18 @@ namespace TestAmqpBroker
                 this.State = null;
                 this.StateChanged = false;
                 this.Link = null;
-                this.stream.Position = 0;
-                this.PrepareForSend();
+                this.Buffer.Seek(this.pos);
+                this.BytesTransfered = 0;
             }
 
-            public override long SerializedMessageSize
+            public override void CompletePayload(int payloadSize)
             {
-                get { return this.stream.Length; }
+                base.CompletePayload(payloadSize);
+                this.Buffer.Complete(payloadSize);
             }
 
-            public override ArraySegment<byte>[] GetPayload(int payloadSize, out bool more)
+            protected override void Initialize(SectionFlag desiredSections, bool force)
             {
-                ArraySegment<byte>[] segments = this.stream.ReadBuffers(payloadSize, false, out more);
-                if (segments == null)
-                {
-                    return null;
-                }
-
-                // copy the buffer because the message could be disposed while the buffers could be
-                // stilled queued in the transport. Need to fix the protocol stack to take ByteBuffer
-                // so we can dispose the buffers after write operation completes.
-                int size = 0;
-                foreach (var segment in segments) size += segment.Count;
-                byte[] buffer = new byte[size];
-                size = 0;
-                foreach (var segment in segments)
-                {
-                    Buffer.BlockCopy(segment.Array, segment.Offset, buffer, size, segment.Count);
-                    size += segment.Count;
-                }
-
-                return new ArraySegment<byte>[] { new ArraySegment<byte>(buffer) };
-            }
-
-            protected override void OnCompletePayload(int payloadSize)
-            {
-                this.stream.Position += payloadSize;
             }
         }
 

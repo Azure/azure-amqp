@@ -80,13 +80,13 @@ namespace Microsoft.Azure.Amqp.Sasl
             {
 #if DEBUG
                 Frame frame = new Frame(FrameType.Sasl) { Command = command };
-                frame.Trace(true);
+                frame.Trace(true, null);
                 AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Send, frame);
 #endif
 
                 ByteBuffer buffer = Frame.EncodeCommand(FrameType.Sasl, 0, command, 0);
                 TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();
-                args.SetBuffer(buffer);
+                args.SetWriteBuffer(buffer);
                 args.CompletedCallback = onWriteFrameComplete;
                 args.UserToken = this;
                 args.UserToken2 = needReply;
@@ -128,6 +128,7 @@ namespace Microsoft.Azure.Amqp.Sasl
 
         static void OnWriteFrameComplete(TransportAsyncCallbackArgs args)
         {
+            args.ByteBuffer.Dispose();
             var thisPtr = (SaslNegotiator)args.UserToken;
             if (args.Exception != null)
             {
@@ -203,7 +204,7 @@ namespace Microsoft.Azure.Amqp.Sasl
             {
                 frame.Decode(buffer);
 #if DEBUG
-                frame.Trace(false);
+                frame.Trace(false, null);
                 AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Receive, frame);
 #endif
 

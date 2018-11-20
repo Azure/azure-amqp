@@ -249,7 +249,6 @@ namespace Microsoft.Azure.Amqp
                 AmqpValue value = new AmqpValue();
                 value.Value = this.token.TokenValue;
                 AmqpMessage putTokenRequest = AmqpMessage.Create(value);
-                putTokenRequest.ApplicationProperties = new ApplicationProperties();
                 putTokenRequest.ApplicationProperties.Map[CbsConstants.Operation] = CbsConstants.PutToken.OperationValue;
                 putTokenRequest.ApplicationProperties.Map[CbsConstants.PutToken.Type] = tokenType;
                 putTokenRequest.ApplicationProperties.Map[CbsConstants.PutToken.Audience] = this.audience;

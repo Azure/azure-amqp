@@ -19,14 +19,8 @@
             message.MessageAnnotations.Map["key"] = "old";
 
             // send the message and receive it on remote side
-            var payload = message.GetPayload();
-            var streamMessage = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(payload));
-
-            //new OutputMessage for resending with modified sections
-            var stream = BufferListStream.Create(streamMessage.ToStream(), AmqpConstants.SegmentSize, streamMessage.Settled);
-            stream.Seek(0, System.IO.SeekOrigin.Begin);
-            var outMessage = AmqpMessage.CreateOutputMessage(stream, false);
-            outMessage.Settled = streamMessage.Settled;
+            ByteBuffer payload = message.GetPayload();
+            var outMessage = AmqpMessage.CreateBufferMessage(payload).Clone();
             //explicitly assign
             outMessage.Header.Priority = 99;
             outMessage.DeliveryAnnotations.Map["key"] = "da-update";
@@ -38,8 +32,8 @@
             Assert.Equal("update", value);
 
             // receive
-            var streamMessage2 = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(payload2));
-            Assert.Equal(99, streamMessage2.Header.Priority.Value);
+            var receivedMessage = AmqpMessage.CreateBufferMessage(payload2);
+            Assert.Equal(99, receivedMessage.Header.Priority.Value);
             value = (string)outMessage.DeliveryAnnotations.Map["key"];
             Assert.Equal("da-update", value);
             value = (string)outMessage.MessageAnnotations.Map["key"];
@@ -87,60 +81,55 @@
             message = AmqpMessage.Create(new AmqpValue() { Value = new AmqpSymbol("symbol value") });
             AddSection(message, SectionFlag.MessageAnnotations | SectionFlag.Properties | SectionFlag.ApplicationProperties);
             // serialize - send the message on client side
-            ArraySegment<byte>[] buffers = ReadMessagePayLoad(message, 71);
-            // input stream message - received on broker side
-            AmqpMessage message2 = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(buffers));
-            // output stream message - send out on broker side
-            message2 = AmqpMessage.CreateOutputMessage((BufferListStream)message2.ToStream(), true);
+            // buffer message - received on broker side, clone for edit
+            AmqpMessage message2 = CreateMessage(message, 71).Clone();
             AddSection(message2, SectionFlag.Header | SectionFlag.DeliveryAnnotations);
             message2.MessageAnnotations.Map["delivery-count"] = 5;
-            // input stream message - received on client side
-            buffers = ReadMessagePayLoad(message2, 71);
-            message2 = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(buffers));
+            // buffer message - received on client side
+            AmqpMessage message3 = CreateMessage(message2, 73);
             // update the original message to match the updated message
             AddSection(message, SectionFlag.Header | SectionFlag.DeliveryAnnotations);
             message.MessageAnnotations.Map["delivery-count"] = 5;
-            ValidateMessage(message, message2);
+            ValidateMessage(message, message3);
         }
 
         [Fact]
         public void AmqpMessageSerializedSizeTest()
         {
             var message = AmqpMessage.Create(new Data() { Value = new ArraySegment<byte>(new byte[60]) });
-            long size = message.SerializedMessageSize;
+            long size = message.Serialize(true);
             Assert.True(size > 0);
 
             message.Properties.MessageId = Guid.NewGuid();
-            long size2 = message.SerializedMessageSize;
+            long size2 = message.Serialize(true);
             Assert.True(size2 > size);
 
             message.MessageAnnotations.Map["property"] = "v1";
-            long size3 = message.SerializedMessageSize;
+            long size3 = message.Serialize(true);
             Assert.True(size3 > size2);
 
-            var stream = (BufferListStream)message.ToStream();
-            var message2 = AmqpMessage.CreateInputMessage(stream);
+            var message2 = AmqpMessage.CreateBufferMessage(message.GetPayload());
             Assert.Equal("v1", message2.MessageAnnotations.Map["property"]);
 
             message.Properties.MessageId = "12345";
             message.MessageAnnotations.Map["property"] = "v2";
-            stream = (BufferListStream)message.ToStream();
-            var message3 = AmqpMessage.CreateInputMessage(stream);
+            message.Serialize(true);
+            var message3 = AmqpMessage.CreateBufferMessage(message.GetPayload());
             Assert.Equal((MessageId)"12345", message3.Properties.MessageId);
             Assert.Equal("v2", message3.MessageAnnotations.Map["property"]);
         }
 
-        static ArraySegment<byte>[] ReadMessagePayLoad(AmqpMessage message, int payloadSize)
+        static ByteBuffer[] ReadMessagePayLoad(AmqpMessage message, int payloadSize)
         {
-            List<ArraySegment<byte>> buffers = new List<ArraySegment<byte>>();
+            List<ByteBuffer> buffers = new List<ByteBuffer>();
             bool more = true;
             while (more)
             {
-                ArraySegment<byte>[] messageBuffers = message.GetPayload(payloadSize, out more);
-                if (messageBuffers != null)
+               ByteBuffer buffer = message.GetPayload(payloadSize, out more);
+                if (buffer != null)
                 {
-                    foreach (var segment in messageBuffers) { message.CompletePayload(segment.Count); }
-                    buffers.AddRange(messageBuffers);
+                    buffers.Add(buffer);
+                    message.CompletePayload(buffer.Length);
                 }
             }
 
@@ -193,8 +182,21 @@
 
         static void RunSerializationTest(AmqpMessage message)
         {
-            AmqpMessage deserialized = AmqpMessage.CreateAmqpStreamMessage(new BufferListStream(ReadMessagePayLoad(message, 89)));
+            AmqpMessage deserialized = AmqpMessage.CreateBufferMessage(message.GetPayload());
             ValidateMessage(message, deserialized);
+        }
+
+        static AmqpMessage CreateMessage(AmqpMessage source, int segmentSize)
+        {
+            ByteBuffer[] buffers = ReadMessagePayLoad(source, segmentSize);
+            AmqpMessage message = AmqpMessage.CreateReceivedMessage();
+            for (int i = 0; i < buffers.Length; i++)
+            {
+                message.AddPayload(buffers[i], i == buffers.Length - 1);
+                buffers[i].Dispose();
+            }
+
+            return message;
         }
 
         static void ValidateMessage(AmqpMessage original, AmqpMessage deserialized)

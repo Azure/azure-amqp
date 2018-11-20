@@ -110,9 +110,15 @@ namespace Microsoft.Azure.Amqp.Transport
             this.ByteBufferList = null;
         }
 
-        public void SetBuffer(ByteBuffer byteBuffer)
+        public void SetWriteBuffer(ByteBuffer byteBuffer)
         {
             this.SetBuffer(byteBuffer.Buffer, byteBuffer.Offset, byteBuffer.Length);
+            this.ByteBuffer = byteBuffer;
+        }
+
+        public void SetReadBuffer(ByteBuffer byteBuffer)
+        {
+            this.SetBuffer(byteBuffer.Buffer, byteBuffer.WritePos, byteBuffer.Size);
             this.ByteBuffer = byteBuffer;
         }
 

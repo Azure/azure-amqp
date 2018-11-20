@@ -9,8 +9,6 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Transport;
 
-    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
-        Justification = "Uses custom scheme for cleanup")]
     public sealed class AsyncIO : AmqpObject
     {
         readonly IIoHandler ioHandler;
@@ -80,8 +78,6 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// A reader that pumps frames from the transport and hands it over to the handler
         /// </summary>
-        [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
-           Justification = "Uses custom protocol for cleanup")]
         sealed class AsyncReader
         {
             enum ReadState : byte

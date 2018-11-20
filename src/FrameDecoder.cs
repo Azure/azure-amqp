@@ -8,8 +8,6 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
-    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
-        Justification = "Uses custom scheme for cleanup")]
     sealed class FrameDecoder
     {
         int maxFrameSize;

@@ -10,13 +10,8 @@ namespace Microsoft.Azure.Amqp.Framing
 
     public sealed class ProtocolHeader : IAmqpSerializable
     {
-        [SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Should be a constant")]
         public static readonly ProtocolHeader Amqp100 = new ProtocolHeader(ProtocolId.Amqp, new AmqpVersion(1, 0, 0));
-
-        [SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Should be a constant")]
         public static readonly ProtocolHeader AmqpTls100 = new ProtocolHeader(ProtocolId.AmqpTls, new AmqpVersion(1, 0, 0));
-
-        [SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes", Justification = "Should be a constant")]
         public static readonly ProtocolHeader AmqpSasl100 = new ProtocolHeader(ProtocolId.AmqpSasl, new AmqpVersion(1, 0, 0));
 
         const uint AmqpPrefix = 0x414D5150;

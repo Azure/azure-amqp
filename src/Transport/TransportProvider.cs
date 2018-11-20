@@ -34,7 +34,6 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
-        [SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations", Justification="Temporary suppression. Bug opened to fix issue.")]
         public AmqpVersion DefaultVersion
         {
             get 

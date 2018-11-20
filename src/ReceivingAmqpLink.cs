@@ -5,15 +5,12 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
 
-    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
-        Justification = "Uses custom scheme for cleanup")]
     public sealed class ReceivingAmqpLink : AmqpLink
     {
         // Workaround for TimeSpan.Zero server wait timeout. Consider supporting this with drain

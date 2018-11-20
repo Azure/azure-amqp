@@ -3,7 +3,6 @@
 
 namespace Microsoft.Azure.Amqp
 {
-    using System.Diagnostics.CodeAnalysis;
     using Microsoft.Azure.Amqp.Encoding;
 
     /// <summary>
@@ -20,19 +19,6 @@ namespace Microsoft.Azure.Amqp
         /// The address of the CBS Node ($cbs)
         /// </summary>
         public const string CbsAddress = "$cbs";
-
-        /// <summary>
-        /// The Sas token type used by IotHub (azure-devices.net:sastoken)
-        /// </summary>
-        public const string IotHubSasTokenType = "azure-devices.net:sastoken";
-
-        /// <summary>
-        /// The Sas token type used by ServiceBus (servicebus.windows.net:sastoken)
-        /// </summary>
-        public const string ServiceBusSasTokenType = "servicebus.windows.net:sastoken";
-
-        [SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly", Justification = "Should be a constant")]
-        public static readonly string[] SupportedTokenTypes = { IotHubSasTokenType, ServiceBusSasTokenType };
 
         /// <summary>
         /// The operation property name

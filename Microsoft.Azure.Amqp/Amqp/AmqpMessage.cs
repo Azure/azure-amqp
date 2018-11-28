@@ -654,10 +654,13 @@ namespace Microsoft.Azure.Amqp
 
             protected override void OnInitialize()
             {
-                this.bodyData = BufferListStream.ReadStream(this.bodyStream, 1024, out this.bodyLength);
-                if (this.ownStream)
+                if (this.bodyData == null)
                 {
-                    this.bodyStream.Dispose();
+                    this.bodyData = BufferListStream.ReadStream(this.bodyStream, 1024, out this.bodyLength);
+                    if (this.ownStream)
+                    {
+                        this.bodyStream.Dispose();
+                    }
                 }
             }
 

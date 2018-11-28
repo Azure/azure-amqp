@@ -130,6 +130,25 @@
             Assert.Equal("v2", message3.MessageAnnotations.Map["property"]);
         }
 
+        [Fact]
+        public void BodyStreamMessageSerializedSizeTest()
+        {
+            var message = AmqpMessage.Create(new MemoryStream(new byte[60]), true);
+            long size = message.SerializedMessageSize;
+            Assert.True(size > 0);
+
+            message.Properties.MessageId = Guid.NewGuid();
+            long size2 = message.SerializedMessageSize;
+            Assert.True(size2 > size);
+
+            message.MessageAnnotations.Map["property"] = "v1";
+            long size3 = message.SerializedMessageSize;
+            Assert.True(size3 > size2);
+
+            long size4 = message.SerializedMessageSize;
+            Assert.Equal(size3, size4);
+        }
+
         static ArraySegment<byte>[] ReadMessagePayLoad(AmqpMessage message, int payloadSize)
         {
             List<ArraySegment<byte>> buffers = new List<ArraySegment<byte>>();

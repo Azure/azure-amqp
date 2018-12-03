@@ -96,27 +96,35 @@
         [Fact]
         public void AmqpMessageSerializedSizeTest()
         {
-            var message = AmqpMessage.Create(new Data() { Value = new ArraySegment<byte>(new byte[60]) });
-            long size = message.Serialize(true);
-            Assert.True(size > 0);
+            var messages = new AmqpMessage[]
+            {
+                AmqpMessage.Create(new Data() { Value = new ArraySegment<byte>(new byte[60]) }),
+                AmqpMessage.Create(new MemoryStream(new byte[1000]), true)
+            };
 
-            message.Properties.MessageId = Guid.NewGuid();
-            long size2 = message.Serialize(true);
-            Assert.True(size2 > size);
+            foreach (var message in messages)
+            {
+                long size = message.Serialize(true);
+                Assert.True(size > 0);
 
-            message.MessageAnnotations.Map["property"] = "v1";
-            long size3 = message.Serialize(true);
-            Assert.True(size3 > size2);
+                message.Properties.MessageId = Guid.NewGuid();
+                long size2 = message.Serialize(true);
+                Assert.True(size2 > size);
 
-            var message2 = AmqpMessage.CreateBufferMessage(message.GetPayload());
-            Assert.Equal("v1", message2.MessageAnnotations.Map["property"]);
+                message.MessageAnnotations.Map["property"] = "v1";
+                long size3 = message.Serialize(true);
+                Assert.True(size3 > size2);
 
-            message.Properties.MessageId = "12345";
-            message.MessageAnnotations.Map["property"] = "v2";
-            message.Serialize(true);
-            var message3 = AmqpMessage.CreateBufferMessage(message.GetPayload());
-            Assert.Equal((MessageId)"12345", message3.Properties.MessageId);
-            Assert.Equal("v2", message3.MessageAnnotations.Map["property"]);
+                var message2 = AmqpMessage.CreateBufferMessage(message.GetPayload());
+                Assert.Equal("v1", message2.MessageAnnotations.Map["property"]);
+
+                message.Properties.MessageId = "12345";
+                message.MessageAnnotations.Map["property"] = "v2";
+                message.Serialize(true);
+                var message3 = AmqpMessage.CreateBufferMessage(message.GetPayload());
+                Assert.Equal((MessageId)"12345", message3.Properties.MessageId);
+                Assert.Equal("v2", message3.MessageAnnotations.Map["property"]);
+            }
         }
 
         static ByteBuffer[] ReadMessagePayLoad(AmqpMessage message, int payloadSize)

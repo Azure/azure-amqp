@@ -117,7 +117,7 @@ namespace Microsoft.Azure.Amqp
 
         public Task<AmqpMessage> ReceiveMessageAsync(TimeSpan timeout)
         {
-            return TaskHelpers.CreateTask(
+            return Task.Factory.FromAsync(
                 (c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessage(timeout, c, s),
                 (a) =>
                 {
@@ -244,8 +244,8 @@ namespace Microsoft.Azure.Amqp
 
         public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable, TimeSpan timeout)
         {
-            return TaskHelpers.CreateTask(
-                (c, s) => this.BeginDisposeMessage(deliveryTag, txnId, outcome, batchable, timeout, c, s),
+            return Task.Factory.FromAsync(
+                (c, s) => ((ReceivingAmqpLink)s).BeginDisposeMessage(deliveryTag, txnId, outcome, batchable, timeout, c, s),
                 a => ((ReceivingAmqpLink)a.AsyncState).EndDisposeMessage(a),
                 this);
         }

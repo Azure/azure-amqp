@@ -50,7 +50,7 @@ namespace Microsoft.Azure.Amqp
         {
             this.Dispose();
 
-            return TaskHelpers.CompletedTask;
+            return Task.CompletedTask;
         }
 
         public void Close()

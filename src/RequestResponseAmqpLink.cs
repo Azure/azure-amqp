@@ -128,7 +128,7 @@ namespace Microsoft.Azure.Amqp
 
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, TimeSpan timeout)
         {
-            return TaskHelpers.CreateTask(
+            return Task.Factory.FromAsync(
                 (c, s) => ((RequestResponseAmqpLink)s).BeginRequest(request, timeout, c, s),
                 (r) => ((RequestResponseAmqpLink)r.AsyncState).EndRequest(r),
                 this);

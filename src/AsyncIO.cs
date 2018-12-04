@@ -502,10 +502,6 @@ namespace Microsoft.Azure.Amqp
                         {
                             if (exception == null)
                             {
-                                // rewind the buffer
-                                int len = buffer.Length + this.sizeBuffer.Length;
-                                buffer.Reset();
-                                buffer.Append(len);
                                 this.parent.OnReceiveBuffer(buffer);
                             }
                             else

@@ -82,7 +82,11 @@ namespace Test.Microsoft.Azure.Amqp
         async Task RunClientAsync(string address)
         {
             AmqpConnectionFactory factory = new AmqpConnectionFactory();
-            factory.TlsSettings.CertificateValidationCallback = (a, b, c, d) => true;
+            factory.Settings.TransportProviders.Add(
+                new TlsTransportProvider(
+                    new TlsTransportSettings() { CertificateValidationCallback = (a, b, c, d) => true },
+                    AmqpVersion.V100));
+
             AmqpConnection connection = await factory.OpenConnectionAsync(address);
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());

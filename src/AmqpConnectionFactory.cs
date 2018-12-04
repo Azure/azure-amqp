@@ -10,19 +10,19 @@ namespace Microsoft.Azure.Amqp
 
     public class AmqpConnectionFactory
     {
-        TlsTransportSettings tlsSettings;
-        public TlsTransportSettings TlsSettings
-        {
-            get
-            {
-                if (this.tlsSettings == null)
-                {
-                    this.tlsSettings = new TlsTransportSettings();
-                }
+        readonly AmqpSettings settings;
 
-                return this.tlsSettings;
-            }
+        public AmqpConnectionFactory()
+            : this(new AmqpSettings())
+        {
         }
+
+        public AmqpConnectionFactory(AmqpSettings settings)
+        {
+            this.settings = settings;
+        }
+
+        public AmqpSettings Settings => this.settings;
 
         public Task<AmqpConnection> OpenConnectionAsync(string address)
         {
@@ -58,6 +58,7 @@ namespace Microsoft.Azure.Amqp
         public async Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, SaslHandler saslHandler, TimeSpan timeout)
         {
             TransportSettings transportSettings;
+
             if (addressUri.Scheme.Equals(AmqpConstants.SchemeAmqp, StringComparison.OrdinalIgnoreCase))
             {
                 transportSettings = new TcpTransportSettings()
@@ -75,12 +76,13 @@ namespace Microsoft.Azure.Amqp
                 };
 
                 var tls = new TlsTransportSettings(tcpSettings) { TargetHost = addressUri.Host };
-                if (this.tlsSettings != null)
+                TlsTransportProvider tlsProvider = this.settings.GetTransportProvider<TlsTransportProvider>();
+                if (tlsProvider != null)
                 {
-                    tls.CertificateValidationCallback = this.tlsSettings.CertificateValidationCallback;
-                    tls.CheckCertificateRevocation = this.tlsSettings.CheckCertificateRevocation;
-                    tls.Certificate = this.tlsSettings.Certificate;
-                    tls.Protocols = this.tlsSettings.Protocols;
+                    tls.CertificateValidationCallback = tlsProvider.Settings.CertificateValidationCallback;
+                    tls.CheckCertificateRevocation = tlsProvider.Settings.CheckCertificateRevocation;
+                    tls.Certificate = tlsProvider.Settings.Certificate;
+                    tls.Protocols = tlsProvider.Settings.Protocols;
                 }
 
                 transportSettings = tls;
@@ -95,25 +97,24 @@ namespace Microsoft.Azure.Amqp
                 throw new NotSupportedException(addressUri.Scheme);
             }
 
-            AmqpSettings settings = new AmqpSettings();
+            AmqpSettings settings = this.settings.Clone();
+            settings.TransportProviders.Clear();
 
             if (saslHandler != null)
             {
                 // Provider for "AMQP3100"
-                SaslTransportProvider saslProvider = new SaslTransportProvider();
-                saslProvider.Versions.Add(new AmqpVersion(1, 0, 0));
+                SaslTransportProvider saslProvider = new SaslTransportProvider(AmqpVersion.V100);
                 saslProvider.AddHandler(saslHandler);
                 settings.TransportProviders.Add(saslProvider);
             }
 
             // Provider for "AMQP0100"
-            AmqpTransportProvider amqpProvider = new AmqpTransportProvider();
-            amqpProvider.Versions.Add(new AmqpVersion(new Version(1, 0, 0, 0)));
+            AmqpTransportProvider amqpProvider = new AmqpTransportProvider(AmqpVersion.V100);
             settings.TransportProviders.Add(amqpProvider);
 
             AmqpTransportInitiator initiator = new AmqpTransportInitiator(settings, transportSettings);
             TransportBase transport = await Task.Factory.FromAsync(
-                (c, s) => initiator.BeginConnect(timeout, c, s),
+                (c, s) => initiator.BeginConnect(settings.TimerFactory, timeout, c, s),
                 (r) => initiator.EndConnect(r),
                 null).ConfigureAwait(false);
 

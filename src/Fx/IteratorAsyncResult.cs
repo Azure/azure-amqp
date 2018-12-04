@@ -221,22 +221,6 @@ namespace Microsoft.Azure.Amqp
                 policy);
         }
 
-        protected AsyncStep CallAsyncSleep(TimeSpan amountToSleep)
-        {
-            return this.CallAsyncSleep(amountToSleep, CancellationToken.None);
-        }
-
-        protected AsyncStep CallAsyncSleep(TimeSpan amountToSleep, CancellationToken cancellationToken)
-        {
-            Fx.Assert(amountToSleep != TimeSpan.MaxValue, "IteratorAsyncResult cannot delay for TimeSpan.MaxValue!");
-
-            return this.CallAsync(
-                (thisPtr, t, c, s) => new SleepAsyncResult(amountToSleep, cancellationToken, c, s),
-                (thisPtr, r) => SleepAsyncResult.End(r),
-                (thisPtr, t) => Task.Delay(amountToSleep).Wait(),
-                ExceptionPolicy.Transfer);
-        }
-
         protected AsyncStep CallCompletedAsyncStep()
         {
             return this.CallAsync(
@@ -491,78 +475,6 @@ namespace Microsoft.Azure.Amqp
             /// LastAsyncException property.
             /// </summary>
             Continue
-        }
-
-        sealed class SleepAsyncResult : AsyncResult<SleepAsyncResult>
-        {
-            readonly Timer timer;
-            int complete;
-
-            CancellationTokenRegistration cancellationTokenRegistration;
-
-            public SleepAsyncResult(TimeSpan amount, CancellationToken cancellationToken, AsyncCallback callback, object state)
-                : base(callback, state)
-            {
-                this.timer = new Timer(s => OnTimer(s), this, amount, Timeout.InfiniteTimeSpan);
-
-                try
-                {
-                    this.cancellationTokenRegistration = cancellationToken.Register(s => OnCancellation(s), this);
-                }
-                catch (ObjectDisposedException)
-                {
-                    this.HandleCancellation(false);
-                }
-            }
-
-            public static new void End(IAsyncResult result)
-            {
-                var thisPtr = AsyncResult<SleepAsyncResult>.End(result);
-                try
-                {
-                    thisPtr.cancellationTokenRegistration.Dispose();
-                }
-                catch (ObjectDisposedException)
-                {
-                    // .Net 4.0 can throw this. Note that .Net 4.5 doesn't have this problem.
-                    // this ODE can happen because HandleCancellation() can race with OnTimer()
-                }
-            }
-
-            static void OnTimer(object state)
-            {
-                SleepAsyncResult thisPtr = (SleepAsyncResult)state;
-                if (Interlocked.CompareExchange(ref thisPtr.complete, 1, 0) == 0)
-                {
-                    thisPtr.Complete(false);
-                }
-            }
-
-            static void OnCancellation(object state)
-            {
-                SleepAsyncResult thisPtr = (SleepAsyncResult)state;
-
-                // This callback can be called synchronously or asynchronously.
-                // To avoid issues, always schedule Complete() call in a seperate thread.
-                thisPtr.HandleCancellation(true);
-            }
-
-            void HandleCancellation(bool scheduleComplete)
-            {
-                if (Interlocked.CompareExchange(ref this.complete, 1, 0) == 0)
-                {
-                    this.timer.Change(Timeout.Infinite, Timeout.Infinite);
-
-                    if (scheduleComplete)
-                    {
-                        ActionItem.Schedule(s => ((SleepAsyncResult)s).Complete(false), this);
-                    }
-                    else
-                    {
-                        this.Complete(true);
-                    }
-                }
-            }
         }
 
         protected delegate IAsyncResult BeginCall<TWorkItem>(TIteratorAsyncResult thisPtr, TWorkItem workItem, TimeSpan timeout, AsyncCallback callback, object state);

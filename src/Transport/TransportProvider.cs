@@ -5,7 +5,6 @@ namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using Microsoft.Azure.Amqp;
 
     public abstract class TransportProvider

@@ -74,13 +74,11 @@ namespace TestAmqpBroker
                 saslHandler = new SaslAnonymousHandler();
             }
 
-            SaslTransportProvider saslProvider = new SaslTransportProvider();
+            SaslTransportProvider saslProvider = new SaslTransportProvider(AmqpVersion.V100);
             saslProvider.AddHandler(saslHandler);
-            saslProvider.Versions.Add(new AmqpVersion(1, 0, 0));
             settings.TransportProviders.Add(saslProvider);
 
-            AmqpTransportProvider amqpProvider = new AmqpTransportProvider();
-            amqpProvider.Versions.Add(new AmqpVersion(1, 0, 0));
+            AmqpTransportProvider amqpProvider = new AmqpTransportProvider(AmqpVersion.V100);
             settings.TransportProviders.Add(amqpProvider);
 
             // create and initialize transport listeners

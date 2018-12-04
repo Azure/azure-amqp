@@ -154,6 +154,8 @@ namespace Microsoft.Azure.Amqp
 
         public bool Drain => this.drain;
 
+        internal override ITimerFactory TimerFactory => this.Session.Connection.AmqpSettings.TimerFactory;
+
         public void AttachTo(AmqpSession session)
         {
             Fx.Assert(this.Session == null, "The link is already attached to a session");

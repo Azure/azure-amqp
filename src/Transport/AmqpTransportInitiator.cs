@@ -63,7 +63,12 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public IAsyncResult BeginConnect(TimeSpan timeout, AsyncCallback callback, object state)
         {
-            return new ConnectAsyncResult(this, timeout, callback, state);
+            return this.BeginConnect(SystemTimerFactory.Default, timeout, callback, state);
+        }
+
+        internal IAsyncResult BeginConnect(ITimerFactory timerFactory, TimeSpan timeout, AsyncCallback callback, object state)
+        {
+            return new ConnectAsyncResult(this, timerFactory, timeout, callback, state);
         }
 
         public TransportBase EndConnect(IAsyncResult result)
@@ -264,8 +269,9 @@ namespace Microsoft.Azure.Amqp.Transport
             readonly AmqpTransportInitiator initiator;
             readonly TransportAsyncCallbackArgs args;
 
-            public ConnectAsyncResult(AmqpTransportInitiator initiator, TimeSpan timeout, AsyncCallback callback, object state)
-                : base(timeout, callback, state)
+            public ConnectAsyncResult(AmqpTransportInitiator initiator, ITimerFactory timerFactory,
+                TimeSpan timeout, AsyncCallback callback, object state)
+                : base(timerFactory, timeout, callback, state)
             {
                 this.initiator = initiator;
                 this.args = new TransportAsyncCallbackArgs();

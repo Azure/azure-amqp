@@ -15,6 +15,12 @@ namespace Microsoft.Azure.Amqp.Transport
             this.ProtocolId = ProtocolId.AmqpTls;
         }
 
+        public TlsTransportProvider(TlsTransportSettings tlsSettings, AmqpVersion version)
+            : this(tlsSettings)
+        {
+            this.Versions.Add(version);
+        }
+
         public TlsTransportSettings Settings
         {
             get { return this.tlsSettings; }

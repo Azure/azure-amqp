@@ -271,7 +271,7 @@ namespace Microsoft.Azure.Amqp
             AmqpMessage response;
 
             public RequestAsyncResult(RequestResponseAmqpLink parent, AmqpMessage request, ArraySegment<byte> txnId, TimeSpan timeout, AsyncCallback callback, object state)
-                : base(timeout, callback, state)
+                : base(parent.Session.TimerFactory, timeout, callback, state)
             {
                 this.parent = parent;
                 this.request = request;

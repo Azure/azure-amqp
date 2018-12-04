@@ -8,6 +8,8 @@ namespace Microsoft.Azure.Amqp
 
     public struct AmqpVersion : IEquatable<AmqpVersion>
     {
+        public static AmqpVersion V100 = new AmqpVersion(1, 0, 0);
+
         readonly byte major;
         readonly byte minor;
         readonly byte revision;

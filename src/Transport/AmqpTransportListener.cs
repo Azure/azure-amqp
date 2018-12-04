@@ -230,7 +230,7 @@ namespace Microsoft.Azure.Amqp.Transport
                     // treat this the same as protocol ID/version failure
                     // which are all client config issues
                     AmqpTrace.Provider.AmqpLogError(this, "CreateTransport", ioe);
-                    this.WriteReplyHeader(ProtocolHeader.Amqp100, true);
+                    this.WriteReplyHeader(new ProtocolHeader(ProtocolId.Amqp, AmqpVersion.V100), true);
                     return;
                 }
 

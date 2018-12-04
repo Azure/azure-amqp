@@ -19,6 +19,7 @@ namespace Microsoft.Azure.Amqp
             this.MaxLinksPerSession = int.MaxValue;
             this.DefaultLinkCredit = AmqpConstants.DefaultLinkCredit;
             this.AllowAnonymousConnection = true;
+            this.TimerFactory = SystemTimerFactory.Default;
         }
 
         public int MaxConcurrentConnections
@@ -51,6 +52,12 @@ namespace Microsoft.Azure.Amqp
             set;
         }
 
+        public ITimerFactory TimerFactory
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// Providers should be added in preferred order.
         /// </summary>
@@ -75,11 +82,14 @@ namespace Microsoft.Azure.Amqp
 
         public T GetTransportProvider<T>() where T : TransportProvider
         {
-            foreach (TransportProvider provider in this.transportProviders)
+            if (this.transportProviders != null)
             {
-                if (provider is T)
+                foreach (TransportProvider provider in this.transportProviders)
                 {
-                    return (T)provider;
+                    if (provider is T)
+                    {
+                        return (T)provider;
+                    }
                 }
             }
 
@@ -141,6 +151,7 @@ namespace Microsoft.Azure.Amqp
             settings.RuntimeProvider = this.RuntimeProvider;
             settings.RequireSecureTransport = this.RequireSecureTransport;
             settings.AllowAnonymousConnection = this.AllowAnonymousConnection;
+            settings.TimerFactory = this.TimerFactory;
             return settings;
         }
 

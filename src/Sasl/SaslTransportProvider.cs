@@ -18,6 +18,12 @@ namespace Microsoft.Azure.Amqp.Sasl
             this.MaxFrameSize = AmqpConstants.MinMaxFrameSize;
         }
 
+        public SaslTransportProvider(AmqpVersion version)
+            : this()
+        {
+            this.Versions.Add(version);
+        }
+
         public int MaxFrameSize
         {
             get;

@@ -100,11 +100,9 @@ namespace Microsoft.Azure.Amqp
                 listeners.Add(tpListener);
             }
 
-            if (settings.TransportProviders.Count == 0 ||
-                settings.GetTransportProvider<AmqpTransportProvider>() == null)
+            if (settings.GetTransportProvider<AmqpTransportProvider>() == null)
             {
-                var amqpProvider = new AmqpTransportProvider();
-                amqpProvider.Versions.Add(ProtocolHeader.Amqp100.Version);
+                var amqpProvider = new AmqpTransportProvider(AmqpVersion.V100);
                 settings.TransportProviders.Add(amqpProvider);
             }
 

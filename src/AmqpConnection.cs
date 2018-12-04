@@ -100,6 +100,8 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        internal override ITimerFactory TimerFactory => this.AmqpSettings.TimerFactory;
+
         public AmqpSession CreateSession(AmqpSessionSettings sessionSettings)
         {
             AmqpSession session = this.SessionFactory.CreateSession(this, sessionSettings);
@@ -566,11 +568,11 @@ namespace Microsoft.Azure.Amqp
             sealed class TimedHeartBeat : HeartBeat
             {
                 readonly AmqpConnection connection;
-                readonly Timer heartBeatTimer;
                 readonly uint localInterval;     // idle-timeout for receive (maxValue=infinite)
                 readonly uint remoteInterval;    // idle-timeout for send (maxValue=infinite)
                 DateTime lastSendTime;
                 DateTime lastReceiveTime;
+                ITimer heartBeatTimer;
 
                 public TimedHeartBeat(AmqpConnection connection, uint local, uint remote)
                 {
@@ -579,9 +581,8 @@ namespace Microsoft.Azure.Amqp
                     this.lastReceiveTime = this.lastSendTime = DateTime.UtcNow;
                     this.localInterval = local;
                     this.remoteInterval = remote < uint.MaxValue ? remote * 7 / 8 : uint.MaxValue;
-                    this.heartBeatTimer = new Timer(OnHeartBeatTimer, this, Timeout.Infinite, Timeout.Infinite);
-
-                    this.SetTimer(this.lastSendTime);
+                    this.heartBeatTimer = this.connection.amqpSettings.TimerFactory.Create(
+                        OnHeartBeatTimer, this, GetTimerInterval(this.lastSendTime));
                 }
 
                 public override void OnSend()
@@ -602,15 +603,15 @@ namespace Microsoft.Azure.Amqp
 
                 public override void Stop()
                 {
-                    this.heartBeatTimer.Dispose();
+                    this.heartBeatTimer.Cancel();
                 }
 
-                void SetTimer(DateTime time)
+                TimeSpan GetTimerInterval(DateTime time)
                 {
                     uint remote = GetNextInterval(this.remoteInterval, time, this.lastSendTime);
                     uint local = GetNextInterval(this.localInterval, time, this.lastReceiveTime);
                     uint interval = Math.Min(remote, local);
-                    this.heartBeatTimer.Change(interval, uint.MaxValue);
+                    return interval == uint.MaxValue ? Timeout.InfiniteTimeSpan : TimeSpan.FromMilliseconds(interval);
                 }
 
                 static uint GetNextInterval(uint interval, DateTime now, DateTime previous)
@@ -654,7 +655,7 @@ namespace Microsoft.Azure.Amqp
                             thisPtr.connection.SendCommand(null, 0, null);
                         }
 
-                        thisPtr.SetTimer(now);
+                        thisPtr.heartBeatTimer = thisPtr.heartBeatTimer.Set(thisPtr.GetTimerInterval(now));
                     }
                     catch (Exception exception) when (!Fx.IsFatal(exception))
                     {

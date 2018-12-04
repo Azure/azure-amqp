@@ -104,6 +104,8 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        internal override ITimerFactory TimerFactory => this.Connection.AmqpSettings.TimerFactory;
+
         public void AttachLink(AmqpLink link)
         {
             Fx.Assert(link.Session == this, "The link is not owned by this session.");
@@ -549,7 +551,7 @@ namespace Microsoft.Azure.Amqp
         {
             readonly AmqpSession session;
             readonly object syncRoot;
-            readonly Timer dispositionTimer;
+            ITimer dispositionTimer;
             SequenceNumber nextDeliveryId;
             int needDispositionCount;
             bool sendingDisposition;
@@ -562,10 +564,6 @@ namespace Microsoft.Azure.Amqp
                 this.session = session;
                 this.nextDeliveryId = session.settings.InitialDeliveryId;
                 this.syncRoot = new object();
-                if (session.settings.DispositionInterval > TimeSpan.Zero)
-                {
-                    this.dispositionTimer = new Timer(s => DispositionTimerCallback(s), this, Timeout.Infinite, Timeout.Infinite);
-                }
             }
 
             protected AmqpSession Session
@@ -738,8 +736,15 @@ namespace Microsoft.Azure.Amqp
                 }
                 else if (scheduleTimer)
                 {
-                    Fx.Assert(this.dispositionTimer != null, "Disposition timer cannot be null");
-                    this.dispositionTimer.Change(this.session.settings.DispositionInterval, Timeout.InfiniteTimeSpan);
+                    if (this.dispositionTimer == null)
+                    {
+                        this.dispositionTimer = this.session.TimerFactory.Create(
+                            s => DispositionTimerCallback(s), this, this.session.settings.DispositionInterval);
+                    }
+                    else
+                    {
+                        this.dispositionTimer = this.dispositionTimer.Set(this.session.settings.DispositionInterval);
+                    }
                 }
                 else
                 {

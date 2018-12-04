@@ -57,15 +57,13 @@ namespace Test.Microsoft.Azure.Amqp
                     tlsSettings.Certificate = GetCertificate(sslValue); ;
                 }
 
-                TlsTransportProvider tlsProvider = new TlsTransportProvider(tlsSettings);
-                tlsProvider.Versions.Add(new AmqpVersion(1, 0, 0));
+                TlsTransportProvider tlsProvider = new TlsTransportProvider(tlsSettings, AmqpVersion.V100);
                 settings.TransportProviders.Add(tlsProvider);
             }
 
             if (saslHandlers != null && saslHandlers.Length >= 1 && saslHandlers[0] != null)
             {
-                SaslTransportProvider saslProvider = new SaslTransportProvider();
-                saslProvider.Versions.Add(new AmqpVersion(1, 0, 0));
+                SaslTransportProvider saslProvider = new SaslTransportProvider(AmqpVersion.V100);
                 foreach (SaslHandler handler in saslHandlers)
                 {
                     saslProvider.AddHandler(handler);
@@ -74,8 +72,7 @@ namespace Test.Microsoft.Azure.Amqp
                 settings.TransportProviders.Add(saslProvider);
             }
 
-            AmqpTransportProvider amqpProvider = new AmqpTransportProvider();
-            amqpProvider.Versions.Add(new AmqpVersion(1, 0, 0));
+            AmqpTransportProvider amqpProvider = new AmqpTransportProvider(AmqpVersion.V100);
             settings.TransportProviders.Add(amqpProvider);
 
             return settings;

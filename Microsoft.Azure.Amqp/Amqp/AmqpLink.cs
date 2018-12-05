@@ -269,7 +269,13 @@ namespace Microsoft.Azure.Amqp
         public bool DisposeDelivery(ArraySegment<byte> deliveryTag, bool settled, DeliveryState state, bool batchable)
         {
             Delivery delivery = null;
-            if (this.unsettledMap.TryGetValue(deliveryTag, out delivery))
+            bool result = false;
+            lock (this.syncRoot)
+            {
+                result = this.unsettledMap.TryGetValue(deliveryTag, out delivery);
+            }
+
+            if (result)
             {
                 delivery.Batchable = batchable;
                 this.DisposeDelivery(delivery, settled, state);
@@ -361,7 +367,13 @@ namespace Microsoft.Azure.Amqp
         public void CompleteDelivery(ArraySegment<byte> deliveryTag)
         {
             Delivery delivery = null;
-            if (this.unsettledMap.TryGetValue(deliveryTag, out delivery))
+            bool result = false;
+            lock (this.syncRoot)
+            {
+                result = this.unsettledMap.TryGetValue(deliveryTag, out delivery);
+            }
+
+            if (result) 
             {
                 this.DisposeDelivery(delivery, true, delivery.State);
             }

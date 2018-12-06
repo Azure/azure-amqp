@@ -421,7 +421,7 @@ namespace Microsoft.Azure.Amqp
             {
                 foreach (AmqpMessage message in messages)
                 {
-                    this.ReleaseMessage(message);
+                    this.DisposeDelivery(message, true, AmqpConstants.ReleasedOutcome);
                     message.Dispose();
                 }
             }

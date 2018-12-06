@@ -849,6 +849,48 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [Fact]
+        public void ReleaseMessageOnLinkCloseTest()
+        {
+            string queue = "ReleaseMessageOnLinkCloseTest" + Guid.NewGuid().ToString("N");
+            broker.AddQueue(queue);
+
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            connection.Open();
+
+            AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+            session.Open();
+
+            SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnSend));
+            sLink.Open();
+
+            AmqpMessage message;
+            for (int i = 0; i < 10; i++)
+            {
+                message = AmqpMessage.Create(new AmqpValue() { Value = "test" });
+                Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10), null, null));
+                Assert.Equal(Accepted.Code, outcome.DescriptorCode);
+            }
+
+            ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnReceive, 100));
+            rLink.Open();
+
+            bool hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(20), null, null), out message);
+            Assert.True(hasMessage);
+            Assert.NotNull(message);
+
+            rLink.Close();
+
+            rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnReceive, 100));
+            rLink.Open();
+            hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(20), null, null), out message);
+            Assert.True(hasMessage);
+            Assert.NotNull(message);
+            rLink.AcceptMessage(message, false);
+
+            connection.Close();
+        }
+
+        [Fact]
         public void AmqpLinkCreditMaxValueTest()
         {
             string queue = "AmqpLinkCreditMaxValueTest-" + Guid.NewGuid().ToString("N").Substring(6);

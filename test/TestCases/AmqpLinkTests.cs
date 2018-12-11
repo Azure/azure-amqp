@@ -407,21 +407,15 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [Fact]
-        public void AmqpConcurrentConnectionsTest()
+        public async Task AmqpConcurrentConnectionsTest()
         {
             Exception lastException = null;
-            Action action = () =>
+            Func<Task> func = async () =>
             {
                 try
                 {
-                    AmqpConnection connection = AmqpUtils.CreateConnection(
-                        addressUri,
-                        null,
-                        false,
-                        null,
-                        (int)AmqpConstants.DefaultMaxFrameSize);
-                    connection.Open();
-                    connection.Close();
+                    AmqpConnection connection = await AmqpConnection.Factory.OpenConnectionAsync(addressUri, TimeSpan.FromSeconds(10));
+                    await connection.CloseAsync(TimeSpan.FromSeconds(10));
                 }
                 catch (Exception exp)
                 {
@@ -432,10 +426,10 @@ namespace Test.Microsoft.Azure.Amqp
             Task[] tasks = new Task[32];
             for (int i = 0; i < tasks.Length; ++i)
             {
-                tasks[i] = Task.Run(action);
+                tasks[i] = func();
             }
 
-            Task.WaitAll(tasks);
+            await Task.WhenAll(tasks);
 
             Assert.True(lastException == null, string.Format("Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString()));
         }

@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
+    using System.Net;
     using System.Net.WebSockets;
     using System.Threading;
     using System.Threading.Tasks;
@@ -12,29 +13,22 @@ namespace Microsoft.Azure.Amqp.Transport
     {
         readonly WebSocket webSocket;
         readonly Uri uri;
+        readonly EndPoint local;
+        readonly EndPoint remote;
+
         ITransportMonitor usageMeter;
 
-        public override string LocalEndPoint
-        {
-            get
-            {
-                return string.Empty;
-            }
-        }
+        public override EndPoint LocalEndPoint => this.local;
 
-        public override string RemoteEndPoint
-        {
-            get
-            {
-                return this.uri.OriginalString;
-            }
-        }
+        public override EndPoint RemoteEndPoint => this.remote;
 
-        internal WebSocketTransport(WebSocket webSocket, Uri uri)
+        internal WebSocketTransport(WebSocket webSocket, Uri uri, EndPoint local, EndPoint remote)
             : base(WebSocketTransportSettings.WebSockets)
         {
             this.webSocket = webSocket;
             this.uri = uri;
+            this.local = local;
+            this.remote = remote;
         }
 
         public sealed override bool WriteAsync(TransportAsyncCallbackArgs args)

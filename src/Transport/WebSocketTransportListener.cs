@@ -108,7 +108,8 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
 
                 var wsContext = await context.AcceptWebSocketAsync(subProtocol).ConfigureAwait(false);
-                var transport = new WebSocketTransport(wsContext.WebSocket, this.uri);
+                var transport = new WebSocketTransport(wsContext.WebSocket, this.uri,
+                    context.Request.LocalEndPoint, context.Request.RemoteEndPoint);
 
                 TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();
                 args.Transport = transport;

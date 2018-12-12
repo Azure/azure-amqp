@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
+    using System.Net;
     using System.Net.Sockets;
     using Microsoft.Azure.Amqp.Encoding;
 
@@ -13,8 +14,8 @@ namespace Microsoft.Azure.Amqp.Transport
         static readonly EventHandler<SocketAsyncEventArgs> onWriteComplete = OnWriteComplete;
         static readonly EventHandler<SocketAsyncEventArgs> onReadComplete = OnReadComplete;
         readonly Socket socket;
-        readonly string localEndPoint;
-        readonly string remoteEndPoint;
+        readonly EndPoint localEndPoint;
+        readonly EndPoint remoteEndPoint;
         readonly WriteAsyncEventArgs sendEventArgs;
         readonly ReadAsyncEventArgs receiveEventArgs;
         ITransportMonitor monitor;
@@ -26,8 +27,8 @@ namespace Microsoft.Azure.Amqp.Transport
             this.socket.NoDelay = true;
             this.socket.SendBufferSize = transportSettings.SendBufferSize;
             this.socket.ReceiveBufferSize = transportSettings.ReceiveBufferSize;
-            this.localEndPoint = this.socket.LocalEndPoint.ToString();
-            this.remoteEndPoint = this.socket.RemoteEndPoint.ToString();
+            this.localEndPoint = this.socket.LocalEndPoint;
+            this.remoteEndPoint = this.socket.RemoteEndPoint;
             this.sendEventArgs = new WriteAsyncEventArgs(transportSettings.SendBufferSize);
             this.sendEventArgs.Transport = this;
             this.sendEventArgs.Completed += onWriteComplete;
@@ -36,7 +37,7 @@ namespace Microsoft.Azure.Amqp.Transport
             this.receiveEventArgs.Transport = this;
         }
 
-        public override string LocalEndPoint
+        public override EndPoint LocalEndPoint
         {
             get
             {
@@ -44,7 +45,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
-        public override string RemoteEndPoint
+        public override EndPoint RemoteEndPoint
         {
             get
             {

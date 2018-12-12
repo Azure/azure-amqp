@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
+    using System.Net;
     using System.Net.WebSockets;
     using System.Threading;
     using System.Threading.Tasks;
@@ -35,7 +36,8 @@ namespace Microsoft.Azure.Amqp.Transport
 
             if (task.IsCompleted)
             {
-                callbackArgs.Transport = new WebSocketTransport(cws, this.settings.Uri);
+                callbackArgs.Transport = new WebSocketTransport(cws, this.settings.Uri, null,
+                    new DnsEndPoint(this.settings.Uri.Host, this.settings.Uri.Port));
                 return false;
             }
 
@@ -51,7 +53,8 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 else
                 {
-                    callbackArgs.Transport = new WebSocketTransport(cws, this.settings.Uri);
+                    callbackArgs.Transport = new WebSocketTransport(cws, this.settings.Uri, null,
+                        new DnsEndPoint(this.settings.Uri.Host, this.settings.Uri.Port));
                 }
 
                 callbackArgs.CompletedCallback(callbackArgs);

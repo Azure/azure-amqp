@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Net;
     using System.Security.Principal;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
@@ -42,12 +43,12 @@ namespace Microsoft.Azure.Amqp
             get { return this.asyncIO.Transport.Principal; }
         }
 
-        public string LocalEndpoint
+        public EndPoint LocalEndpoint
         {
             get { return this.asyncIO.Transport.LocalEndPoint; }
         }
 
-        public string RemoteEndpoint
+        public EndPoint RemoteEndpoint
         {
             get { return this.asyncIO.Transport.RemoteEndPoint; }
         }

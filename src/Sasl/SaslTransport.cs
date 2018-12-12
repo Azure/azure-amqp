@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Sasl
 {
     using System;
+    using System.Net;
     using System.Security.Principal;
     using Microsoft.Azure.Amqp.Transport;
 
@@ -19,7 +20,7 @@ namespace Microsoft.Azure.Amqp.Sasl
             this.negotiator = new SaslNegotiator(this, provider, isInitiator);
         }
 
-        public override string LocalEndPoint
+        public override EndPoint LocalEndPoint
         {
             get
             {
@@ -27,7 +28,7 @@ namespace Microsoft.Azure.Amqp.Sasl
             }
         }
 
-        public override string RemoteEndPoint
+        public override EndPoint RemoteEndPoint
         {
             get
             {

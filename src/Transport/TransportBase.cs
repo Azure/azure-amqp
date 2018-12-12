@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
+    using System.Net;
     using System.Security.Principal;
 
     public abstract class TransportBase : AmqpObject
@@ -18,12 +19,12 @@ namespace Microsoft.Azure.Amqp.Transport
         {
         }
 
-        public abstract string LocalEndPoint
+        public abstract EndPoint LocalEndPoint
         {
             get; 
         }
 
-        public abstract string RemoteEndPoint
+        public abstract EndPoint RemoteEndPoint
         {
             get;
         }

@@ -948,7 +948,12 @@ namespace Microsoft.Azure.Amqp
             return value;
         }
 
-        internal static T DecodeKnownType<T>(ByteBuffer buffer) where T : class, IAmqpSerializable, new()
+        /// <summary>
+        /// Decodes an object (AMQP and registered known types) from the buffer and advances the buffer's position.
+        /// </summary>
+        /// <param name="buffer">The buffer to read.</param>
+        /// <returns>An object of type T.</returns>
+        public static T DecodeKnownType<T>(ByteBuffer buffer) where T : class, IAmqpSerializable, new()
         {
             FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
             if (formatCode == FormatCode.Null)

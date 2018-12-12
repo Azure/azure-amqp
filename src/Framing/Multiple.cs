@@ -8,66 +8,63 @@ namespace Microsoft.Azure.Amqp.Framing
     using Microsoft.Azure.Amqp.Encoding;
 
     /// <summary>
-    /// Multiple is not an AMQP data type. It is a property of a list field
-    /// that affects the encoding of the associated data type.
+    /// Represends one or multiple object of T.
     /// </summary>
-    public sealed class Multiple<T>
+    /// <remarks>Multiple is not an AMQP data type. It is an encoding property.
+    /// When there is only one T object, it is encoded as a single T object.
+    /// When there are multiple T objects, it is encoded as an array of T.
+    /// Examples are <see cref="Open.OfferedCapabilities"/> and <see cref="Source.Capabilities"/></remarks>
+    public sealed class Multiple<T> : List<T>
     {
-        List<T> value;
-
+        /// <summary>
+        /// Initializes a Multiple object.
+        /// </summary>
         public Multiple()
         {
-            this.value = new List<T>();
         }
 
+        /// <summary>
+        /// Initializes a Multiple object with a list of objects.
+        /// </summary>
+        /// <param name="value">The list of objects to add to the Multiple object.</param>
         public Multiple(IList<T> value)
+            : base(value)
         {
-            this.value = new List<T>(value);
         }
 
-        public void Add(T item)
-        {
-            this.value.Add(item);
-        }
-
-        public bool Contains(T item)
-        {
-            return this.value.Contains(item);
-        }
-
-        public static int GetEncodeSize(Multiple<T> multiple)
+        internal static int GetEncodeSize(Multiple<T> multiple)
         {
             if (multiple == null)
             {
                 return FixedWidth.NullEncoded;
             }
-            else if (multiple.value.Count == 1)
+            else if (multiple.Count == 1)
             {
-                return AmqpEncoding.GetObjectEncodeSize(multiple.value[0]);
+                return AmqpEncoding.GetObjectEncodeSize(multiple[0]);
             }
             else
             {
-                return ArrayEncoding.GetEncodeSize(multiple.value.ToArray());
+                return ArrayEncoding.GetEncodeSize(multiple.ToArray());
             }
         }
 
-        public static void Encode(Multiple<T> multiple, ByteBuffer buffer)
+        internal static void Encode(Multiple<T> multiple, ByteBuffer buffer)
         {
             if (multiple == null)
             {
                 AmqpEncoding.EncodeNull(buffer);
             }
-            else if (multiple.value.Count == 1)
+            else if (multiple.Count == 1)
             {
-                AmqpEncoding.EncodeObject(multiple.value[0], buffer);
+                AmqpEncoding.EncodeObject(multiple[0], buffer);
             }
             else
             {
-                ArrayEncoding.Encode(multiple.value.ToArray(), buffer);
+                ArrayEncoding.Encode(multiple.ToArray(), buffer);
             }
         }
 
-        public static Multiple<T> Decode(ByteBuffer buffer)
+        internal static Multiple<T> Decode(ByteBuffer buffer)
         {
             object value = AmqpEncoding.DecodeObject(buffer);
             if (value == null)
@@ -91,6 +88,12 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
+        /// <summary>
+        /// Returns a new Multiple object that contains items in both Multiple objects.
+        /// </summary>
+        /// <param name="multiple1">The first Multiple object.</param>
+        /// <param name="multiple2">The second Multiple object.</param>
+        /// <returns>A Multiple object that contains items in both Multiple objects.</returns>
         public static IList<T> Intersect(Multiple<T> multiple1, Multiple<T> multiple2)
         {
             List<T> list = new List<T>();
@@ -99,9 +102,9 @@ namespace Microsoft.Azure.Amqp.Framing
                 return list;
             }
 
-            foreach (T t1 in multiple1.value)
+            foreach (T t1 in multiple1)
             {
-                if (multiple2.value.Contains(t1))
+                if (multiple2.Contains(t1))
                 {
                     list.Add(t1);
                 }
@@ -114,7 +117,7 @@ namespace Microsoft.Azure.Amqp.Framing
         {
             StringBuilder sb = new StringBuilder("[");
             bool firstItem = true;
-            foreach (object item in this.value)
+            foreach (object item in this)
             {
                 if (!firstItem)
                 {

@@ -48,10 +48,10 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            while (buffer.Length >= AmqpCodec.MinimumFrameDecodeSize)
+            while (buffer.Length >= Frame.HeaderSize)
             {
                 int frameSize = AmqpCodec.GetFrameSize(buffer);
-                if (frameSize < AmqpCodec.MinimumFrameDecodeSize || frameSize > this.maxFrameSize)
+                if (frameSize < Frame.HeaderSize || frameSize > this.maxFrameSize)
                 {
                     throw new AmqpException(AmqpErrorCode.FramingError, CommonResources.GetString(CommonResources.InvalidFrameSize, frameSize, this.maxFrameSize));
                 }

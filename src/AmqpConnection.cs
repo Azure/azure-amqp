@@ -25,24 +25,57 @@ namespace Microsoft.Azure.Amqp
         HeartBeat heartBeat;
         Dictionary<Type, object> extensions;
 
+        /// <summary>
+        /// The default factory instance to create connections.
+        /// </summary>
         // create a new instance as the caller many change the settings of the returned value.
         public static AmqpConnectionFactory Factory => new AmqpConnectionFactory();
 
+        /// <summary>
+        /// Initializes a connection object.
+        /// </summary>
+        /// <param name="transport">The transport for the connection.</param>
+        /// <param name="amqpSettings">The protocol settings <see cref="AmqpSettings"/>.</param>
+        /// <param name="connectionSettings">The connection settings <see cref="AmqpConnectionSettings"/>.</param>
         public AmqpConnection(TransportBase transport, AmqpSettings amqpSettings, AmqpConnectionSettings connectionSettings) :
             this(transport, amqpSettings.GetDefaultHeader(), true, amqpSettings, connectionSettings)
         {
         }
 
+        /// <summary>
+        /// Initializes a connection object.
+        /// </summary>
+        /// <param name="transport">The transport for the connection.</param>
+        /// <param name="protocolHeader">The protocol header for version negotiation.</param>
+        /// <param name="amqpSettings">The protocol settings <see cref="AmqpSettings"/>.</param>
+        /// <param name="connectionSettings">The connection settings <see cref="AmqpConnectionSettings"/>.</param>
         public AmqpConnection(TransportBase transport, ProtocolHeader protocolHeader, AmqpSettings amqpSettings, AmqpConnectionSettings connectionSettings) :
             this(transport, protocolHeader, true, amqpSettings, connectionSettings)
         {
         }
 
+        /// <summary>
+        /// Initializes a connection object.
+        /// </summary>
+        /// <param name="transport">The transport for the connection.</param>
+        /// <param name="protocolHeader">The protocol header for version negotiation.</param>
+        /// <param name="isInitiator">True if the connection is the initiator; false otherwise.</param>
+        /// <param name="amqpSettings">The protocol settings <see cref="AmqpSettings"/>.</param>
+        /// <param name="connectionSettings">The connection settings <see cref="AmqpConnectionSettings"/>.</param>
         public AmqpConnection(TransportBase transport, ProtocolHeader protocolHeader, bool isInitiator, AmqpSettings amqpSettings, AmqpConnectionSettings connectionSettings) :
             this((isInitiator ? "out" : "in") + "-connection", transport, protocolHeader, isInitiator, amqpSettings, connectionSettings)
         {
         }
 
+        /// <summary>
+        /// Initializes a connection object.
+        /// </summary>
+        /// <param name="type">A prefix for the connection name for debugging purposes.</param>
+        /// <param name="transport">The transport for the connection.</param>
+        /// <param name="protocolHeader">The protocol header for version negotiation.</param>
+        /// <param name="isInitiator">True if the connection is the initiator; false otherwise.</param>
+        /// <param name="amqpSettings">The protocol settings <see cref="AmqpSettings"/>.</param>
+        /// <param name="connectionSettings">The connection settings <see cref="AmqpConnectionSettings"/>.</param>
         protected AmqpConnection(string type, TransportBase transport, ProtocolHeader protocolHeader, bool isInitiator, AmqpSettings amqpSettings, AmqpConnectionSettings connectionSettings) :
             base(type, transport, connectionSettings, isInitiator)
         {
@@ -60,17 +93,29 @@ namespace Microsoft.Azure.Amqp
             this.heartBeat = HeartBeat.None;
         }
 
+        /// <summary>
+        /// Gets the protocol settings of the connection.
+        /// </summary>
         public AmqpSettings AmqpSettings
         {
             get { return this.amqpSettings; }
         }
 
+        /// <summary>
+        /// Gets or sets a session factory.
+        /// </summary>
         public ISessionFactory SessionFactory
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets a key-value collection for storing objects with the connection.
+        /// </summary>
+        /// <remarks><see cref="Extensions.AddExtension(AmqpConnection, object)"/> and
+        /// <see cref="Extensions.TryGetExtension{T}(AmqpConnection, out T)"/> should be used
+        /// to add or find objects from the collection.</remarks>
         public IDictionary<Type, object> Extensions
         {
             get
@@ -84,11 +129,19 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets a boolean value that indicates if the connection is the initiator.
+        /// </summary>
         public bool IsInitiator
         {
             get { return this.isInitiator; }
         }
 
+        /// <summary>
+        /// Gets a snapshot of the sessions in the connection.
+        /// </summary>
+        /// <remarks>The property creates a new list for the snapshot. Avoid getting this
+        /// property very frequently where there are a large number of sessions.</remarks>
         public IEnumerable<AmqpSession> Sessions
         {
             get
@@ -102,6 +155,11 @@ namespace Microsoft.Azure.Amqp
 
         internal override ITimerFactory TimerFactory => this.AmqpSettings.TimerFactory;
 
+        /// <summary>
+        /// Creates a <see cref="AmqpSession"/> and adds it to the session collection.
+        /// </summary>
+        /// <param name="sessionSettings">The session settings.</param>
+        /// <returns>A session object.</returns>
         public AmqpSession CreateSession(AmqpSessionSettings sessionSettings)
         {
             AmqpSession session = this.SessionFactory.CreateSession(this, sessionSettings);
@@ -109,6 +167,9 @@ namespace Microsoft.Azure.Amqp
             return session;
         }
 
+        /// <summary>
+        /// For internal implementation only.
+        /// </summary>
         public void SendCommand(Performative command, ushort channel, ByteBuffer payload)
         {
 #if DEBUG
@@ -143,6 +204,13 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Opens the connection. Override this method if the derived class has extra or different
+        /// operations.
+        /// </summary>
+        /// <returns>True if the connection enters open state; false if open is pending.</returns>
+        /// <remarks>A connection is fully open when an <see cref="Open"/> frame is received from the
+        /// remote peer.</remarks>
         protected override bool OpenInternal()
         {
             AmqpTrace.Provider.AmqpOpenConnection(this);
@@ -165,6 +233,13 @@ namespace Microsoft.Azure.Amqp
             return false;
         }
 
+        /// <summary>
+        /// Closes the connection. Override this method if the derived class has extra or different
+        /// operations.
+        /// </summary>
+        /// <returns>True if the connection enters closed state; false if close is pending.</returns>
+        /// <remarks>A connection is fully closed when an <see cref="Close"/> frame is received from the
+        /// remote peer.</remarks>
         protected override bool CloseInternal()
         {
             AmqpTrace.Provider.AmqpCloseConnection(this, false);
@@ -194,6 +269,12 @@ namespace Microsoft.Azure.Amqp
             return completed;
         }
 
+        /// <summary>
+        /// Aborts the connection. Override this method if the derived class has extra or different
+        /// operations.
+        /// </summary>
+        /// <remarks>Abort shuts down the transport immediately without doing a close handshake
+        /// with the remote peer.</remarks>
         protected override void AbortInternal()
         {
             AmqpTrace.Provider.AmqpCloseConnection(this, true);
@@ -202,6 +283,10 @@ namespace Microsoft.Azure.Amqp
             this.AsyncIO.Abort();
         }
 
+        /// <summary>
+        /// Handles the received protocol header.
+        /// </summary>
+        /// <param name="header">The received protocol header.</param>
         protected override void OnProtocolHeader(ProtocolHeader header)
         {
 #if DEBUG
@@ -240,6 +325,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Handles the received frame buffer.
+        /// </summary>
+        /// <param name="buffer">The received frame buffer.</param>
         protected override void OnFrameBuffer(ByteBuffer buffer)
         {
             if (this.State == AmqpObjectState.End)
@@ -269,6 +358,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Handles transport I/O event.
+        /// </summary>
+        /// <param name="ioEvent">The transport I/O event.</param>
         protected override void HandleIoEvent(IoEvent ioEvent)
         {
             IEnumerator<AmqpSession> it = this.sessionsByLocalHandle.GetSafeEnumerator();
@@ -496,6 +589,11 @@ namespace Microsoft.Azure.Amqp
             return new AmqpSession(this, sessionSettings, this.amqpSettings.RuntimeProvider);
         }
 
+        /// <summary>
+        /// Adds the session and assigns a local channel number.
+        /// </summary>
+        /// <param name="session">The session object.</param>
+        /// <param name="channel">The remote channel of the session. It is set when the session is created on the listener side.</param>
         public void AddSession(AmqpSession session, ushort? channel)
         {
             lock (this.ThisLock)

@@ -8,32 +8,62 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Sasl;
     using Microsoft.Azure.Amqp.Transport;
 
+    /// <summary>
+    /// A factory to open AMQP connections.
+    /// </summary>
     public class AmqpConnectionFactory
     {
         readonly AmqpSettings settings;
 
+        /// <summary>
+        /// Initializes a factory with default protocol settings.
+        /// </summary>
         public AmqpConnectionFactory()
             : this(new AmqpSettings())
         {
         }
 
+        /// <summary>
+        /// Initializes a factory with protocol settings.
+        /// </summary>
+        /// <param name="settings"></param>
         public AmqpConnectionFactory(AmqpSettings settings)
         {
             this.settings = settings;
         }
 
+        /// <summary>
+        /// Gets the protocol settings of the factory.
+        /// </summary>
         public AmqpSettings Settings => this.settings;
 
+        /// <summary>
+        /// Opens a connection to the specified address.
+        /// </summary>
+        /// <param name="address">The address.</param>
+        /// <returns>An AMQP connection.</returns>
         public Task<AmqpConnection> OpenConnectionAsync(string address)
         {
             return this.OpenConnectionAsync(address, AmqpConstants.DefaultTimeout);
         }
 
+        /// <summary>
+        /// Opens a connection to the specified address.
+        /// </summary>
+        /// <param name="address">The Uri string of the address. If it contains user info, SASL PLAIN is enabled.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns>An AMQP connection.</returns>
         public Task<AmqpConnection> OpenConnectionAsync(string address, TimeSpan timeout)
         {
             return this.OpenConnectionAsync(new Uri(address), timeout);
         }
 
+        /// <summary>
+        /// Opens a connection to the specified address.
+        /// </summary>
+        /// <param name="addressUri">The address Uri. If it contains user info, SASL PLAIN is enabled.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns>An AMQP connection.</returns>
         public Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, TimeSpan timeout)
         {
             SaslHandler saslHandler = null;
@@ -55,6 +85,13 @@ namespace Microsoft.Azure.Amqp
             return OpenConnectionAsync(addressUri, saslHandler, timeout);
         }
 
+        /// <summary>
+        /// Opens a connection to the specified address.
+        /// </summary>
+        /// <param name="addressUri">The address Uri. User info is ignored.</param>
+        /// <param name="saslHandler">The SASL handler which determines the SASL mechanism. Null means no SASL handshake.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns>An AMQP connection.</returns>
         public async Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, SaslHandler saslHandler, TimeSpan timeout)
         {
             TransportSettings transportSettings;

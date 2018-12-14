@@ -8,6 +8,9 @@ namespace Microsoft.Azure.Amqp
     using System.Threading;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// Implements the AMQP 1.0 session.
+    /// </summary>
     public class AmqpSession : AmqpObject
     {
         static readonly EventHandler onLinkClosed = OnLinkClosed;
@@ -19,13 +22,25 @@ namespace Microsoft.Azure.Amqp
         HandleTable<AmqpLink> linksByRemoteHandle;
         OutgoingSessionChannel outgoingChannel;
         IncomingSessionChannel incomingChannel;
-        ushort cachedRemoteChannel;
 
+        /// <summary>
+        /// Initializes the session object.
+        /// </summary>
+        /// <param name="connection">The connection in which the session is created.</param>
+        /// <param name="settings">The session settings.</param>
+        /// <param name="linkFactory">The factory to create <see cref="AmqpLink"/> objects when an <see cref="Attach"/> frame is received.</param>
         public AmqpSession(AmqpConnection connection, AmqpSessionSettings settings, ILinkFactory linkFactory)
             : this("session", connection, settings, linkFactory)
         {
         }
 
+        /// <summary>
+        /// Initializes the session object.
+        /// </summary>
+        /// <param name="type">A prefix to the session name for debugging purposes.</param>
+        /// <param name="connection">The connection in which the session is created.</param>
+        /// <param name="settings">The session settings.</param>
+        /// <param name="linkFactory">The factory to create <see cref="AmqpLink"/> objects when an <see cref="Attach"/> frame is received.</param>
         protected AmqpSession(string type, AmqpConnection connection, AmqpSessionSettings settings, ILinkFactory linkFactory)
             : base(type)
         {
@@ -42,22 +57,34 @@ namespace Microsoft.Azure.Amqp
             this.incomingChannel = new IncomingSessionChannel(this);
         }
 
+        /// <summary>
+        /// Gets the session settings.
+        /// </summary>
         public AmqpSessionSettings Settings
         {
             get { return this.settings; }
         }
 
+        /// <summary>
+        /// Gets the owning connection.
+        /// </summary>
         public AmqpConnection Connection
         {
             get { return this.connection; }
         }
 
+        /// <summary>
+        /// Gets the assigned local session channel number.
+        /// </summary>
         public ushort LocalChannel
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets the remote session channel.
+        /// </summary>
         public ushort? RemoteChannel
         {
             get
@@ -68,18 +95,12 @@ namespace Microsoft.Azure.Amqp
             set
             {
                 this.settings.RemoteChannel = value;
-                if (this.settings.RemoteChannel != null)
-                {
-                    this.cachedRemoteChannel = this.settings.RemoteChannel.Value;
-                }
             }
         }
 
-        public ushort CachedRemoteChannel
-        {
-            get { return this.cachedRemoteChannel; }
-        }
-
+        /// <summary>
+        /// Gets the link factory.
+        /// </summary>
         public ILinkFactory LinkFactory
         {
             get
@@ -88,24 +109,12 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        protected Dictionary<string, AmqpLink> Links
-        {
-            get
-            {
-                return this.links;
-            }
-        }
-
-        protected HandleTable<AmqpLink> LinksByRemoteHandle
-        {
-            get
-            {
-                return this.linksByRemoteHandle;
-            }
-        }
-
         internal override ITimerFactory TimerFactory => this.Connection.AmqpSettings.TimerFactory;
 
+        /// <summary>
+        /// Attaches a link to the session. The link is assigned a local handle on success.
+        /// </summary>
+        /// <param name="link">The link to attach.</param>
         public void AttachLink(AmqpLink link)
         {
             Fx.Assert(link.Session == this, "The link is not owned by this session.");
@@ -131,6 +140,10 @@ namespace Microsoft.Azure.Amqp
                 link.RemoteHandle ?? 0u, link.Name, link.IsReceiver ? "receiver" : "sender", link.Settings.Source, link.Settings.Target);
         }
 
+        /// <summary>
+        /// Processes session and link frames.
+        /// </summary>
+        /// <param name="frame">The received frame.</param>
         public virtual void ProcessFrame(Frame frame)
         {
             Performative command = frame.Command;
@@ -167,6 +180,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Sends the flow command after updating it with incoming and outgoing channel state.
+        /// </summary>
+        /// <param name="flow"></param>
         public void SendFlow(Flow flow)
         {
             lock (this.ThisLock)
@@ -178,23 +195,38 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        public void SendCommand(Performative command)
+        internal void SendCommand(Performative command)
         {
             this.SendCommand(command, null);
         }
 
-        public void SendCommand(Performative command, ByteBuffer payload)
+        internal void SendCommand(Performative command, ByteBuffer payload)
         {
             AmqpDebug.Log(this, true, command);
             this.connection.SendCommand(command, this.LocalChannel, payload);
         }
 
-        // delivery MUST be null for continued transfer fragments
+        /// <summary>
+        /// Attempts to send the transfer over the outgoing channel.
+        /// </summary>
+        /// <param name="delivery">The delivery owning the transfer.</param>
+        /// <param name="transfer">The transfer command to send.</param>
+        /// <param name="payload">The payload to carry in the transfer frame.</param>
+        /// <returns>True if the transfer is sent; false if session window is 0.</returns>
         public bool TrySendTransfer(Delivery delivery, Transfer transfer, ByteBuffer payload)
         {
+            // delivery MUST be null for continued transfer fragments
             return this.outgoingChannel.TrySendTransfer(delivery, transfer, payload);
         }
 
+        /// <summary>
+        /// Updates the state of the delivery and sends a disposition if required.
+        /// </summary>
+        /// <param name="link">The link where the delivery was transferred.</param>
+        /// <param name="delivery">The delivery to update.</param>
+        /// <param name="settled">Settle the delivery. See <see cref="Delivery.Settled"/> for more details.</param>
+        /// <param name="state">The new state of the delivery.</param>
+        /// <param name="noFlush">True to not send a disposition right away; false otherwise.</param>
         public void DisposeDelivery(AmqpLink link, Delivery delivery, bool settled, DeliveryState state, bool noFlush)
         {
             if (link.IsReceiver)
@@ -207,7 +239,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        public bool OnAcceptTransfer(Delivery delivery, Transfer transfer, bool newDelivery)
+        internal bool OnAcceptTransfer(Delivery delivery, Transfer transfer, bool newDelivery)
         {
             try
             {
@@ -221,6 +253,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Sends a disposition for all pending delivery state changes in both incoming and outgoing channels.
+        /// </summary>
         public void Flush()
         {
             this.outgoingChannel.Flush();
@@ -236,12 +271,21 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Opens the session.
+        /// </summary>
+        /// <returns>True if the session is open; false if open is pending.</returns>
         protected override bool OpenInternal()
         {
             AmqpObjectState state = this.SendBegin();
             return state == AmqpObjectState.Opened;
         }
 
+        /// <summary>
+        /// Closes the session.
+        /// </summary>
+        /// <returns>True if the session is closed; false if close is pending.</returns>
+        /// <remarks>All links in the session are also closed.</remarks>
         protected override bool CloseInternal()
         {
             if (this.State == AmqpObjectState.OpenReceived)
@@ -255,12 +299,19 @@ namespace Microsoft.Azure.Amqp
             return state == AmqpObjectState.End;
         }
 
+        /// <summary>
+        /// Aborts the session object. All links in the session are aborted.
+        /// </summary>
         protected override void AbortInternal()
         {
             this.CloseLinks(true);
             AmqpDebug.Dump(this);
         }
 
+        /// <summary>
+        /// Sends a begin frame.
+        /// </summary>
+        /// <returns>The session state after sending the begin frame.</returns>
         protected AmqpObjectState SendBegin()
         {
             StateTransition transition = this.TransitState("S:BEGIN", StateTransition.SendOpen);
@@ -268,6 +319,10 @@ namespace Microsoft.Azure.Amqp
             return transition.To;
         }
 
+        /// <summary>
+        /// Sends an end frame.
+        /// </summary>
+        /// <returns>The session state after sending the end frame.</returns>
         protected AmqpObjectState SendEnd()
         {
             StateTransition transition = this.TransitState("S:END", StateTransition.SendClose);
@@ -283,7 +338,7 @@ namespace Microsoft.Azure.Amqp
             return transition.To;
         }
 
-        protected bool TryCreateRemoteLink(Attach attach, out AmqpLink link)
+        internal bool TryCreateRemoteLink(Attach attach, out AmqpLink link)
         {
             link = null;
             if (this.linkFactory == null)

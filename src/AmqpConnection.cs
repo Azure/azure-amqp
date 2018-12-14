@@ -629,7 +629,7 @@ namespace Microsoft.Azure.Amqp
                     }
                 }
 
-                AmqpTrace.Provider.AmqpRemoveSession(thisPtr, session, session.LocalChannel, session.CachedRemoteChannel);
+                AmqpTrace.Provider.AmqpRemoveSession(thisPtr, session, session.LocalChannel, session.RemoteChannel ?? 0);
             }
         }
         

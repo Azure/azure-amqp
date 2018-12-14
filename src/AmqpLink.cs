@@ -10,8 +10,7 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Transaction;
 
     /// <summary>
-    /// Implements the transport-layer link, including
-    /// link command handling and link flow control.
+    /// Implements the AMQP 1.0 link.
     /// </summary>
     public abstract class AmqpLink : AmqpObject, IWorkDelegate<Delivery>
     {
@@ -35,11 +34,22 @@ namespace Microsoft.Azure.Amqp
         bool sessionWindowClosed;
         int references; // make sure no frames are sent after close
 
+        /// <summary>
+        /// Initializes the link object.
+        /// </summary>
+        /// <param name="session">The session in which the link is created.</param>
+        /// <param name="linkSettings">The link settings.</param>
         protected AmqpLink(AmqpSession session, AmqpLinkSettings linkSettings)
             : this("link", session, linkSettings)
         {
         }
 
+        /// <summary>
+        /// Initializes the link object.
+        /// </summary>
+        /// <param name="type">A prefix to the link name for debugging purposes.</param>
+        /// <param name="session">The session in which the link is created.</param>
+        /// <param name="linkSettings">The link settings.</param>
         protected AmqpLink(string type, AmqpSession session, AmqpLinkSettings linkSettings)
             : base(type)
         {
@@ -71,36 +81,57 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal event EventHandler PropertyReceived;
+        /// <summary>
+        /// A handler to handle custom properties received in a flow command.
+        /// </summary>
+        public event EventHandler PropertyReceived;
 
+        /// <summary>
+        /// Gets the link name.
+        /// </summary>
         public string Name
         {
             get { return this.settings.LinkName; }
         }
 
+        /// <summary>
+        /// Gets the link local handle.
+        /// </summary>
         public uint? LocalHandle
         {
             get { return this.settings.Handle; }
             set { this.settings.Handle = value; }
         }
 
+        /// <summary>
+        /// Gets the link remote handle.
+        /// </summary>
         public uint? RemoteHandle
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets the session in which the link is created.
+        /// </summary>
         public AmqpSession Session
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Gets the link settings.
+        /// </summary>
         public AmqpLinkSettings Settings
         {
             get { return this.settings; }
         }
 
+        /// <summary>
+        /// Gets the role of the link. True if it is a receiver; false if it is a sender.
+        /// </summary>
         public bool IsReceiver
         {
             get
@@ -109,6 +140,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets the current credit.
+        /// </summary>
         public uint LinkCredit
         {
             get
@@ -122,6 +156,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets the available deliveries from the link endpoint. May not always be set.
+        /// </summary>
         public virtual uint Available
         {
             get
@@ -130,12 +167,18 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets or sets the maximum frame size of the underlying connection.
+        /// </summary>
         public uint MaxFrameSize
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets the map of unsettled deliveries.
+        /// </summary>
         public IDictionary<ArraySegment<byte>, Delivery> UnsettledMap
         {
             get
@@ -144,6 +187,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets an object that synchronizes access to shared link endpoint state.
+        /// </summary>
         protected object SyncRoot
         {
             get
@@ -152,10 +198,17 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets the drain state of the link endpoint.
+        /// </summary>
         public bool Drain => this.drain;
 
         internal override ITimerFactory TimerFactory => this.Session.Connection.AmqpSettings.TimerFactory;
 
+        /// <summary>
+        /// Attaches the link to a session.
+        /// </summary>
+        /// <param name="session">The session.</param>
         public void AttachTo(AmqpSession session)
         {
             Fx.Assert(this.Session == null, "The link is already attached to a session");
@@ -164,6 +217,10 @@ namespace Microsoft.Azure.Amqp
             session.AttachLink(this);
         }
 
+        /// <summary>
+        /// Registers a callback which is invoked when credits are updated by received flow commands.
+        /// </summary>
+        /// <param name="creditListener">The callback that is invoked with credit, drain and txn-id arguments.</param>
         public void RegisterCreditListener(Action<uint, bool, ArraySegment<byte>> creditListener)
         {
             lock (this.syncRoot)
@@ -177,6 +234,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Drains the credit to stop remote peer transfering more deliveries.
+        /// </summary>
         public void DrainCredits()
         {
             lock (this.syncRoot)
@@ -190,6 +250,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// For internal implementation.
+        /// </summary>
+        /// <param name="frame">The received frame.</param>
         public void ProcessFrame(Frame frame)
         {
             Performative command = frame.Command;
@@ -224,11 +288,16 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        public void OnFlow(Flow flow)
+        internal void OnFlow(Flow flow)
         {
             this.OnReceiveFlow(flow);
         }
 
+        /// <summary>
+        /// Attempts to send a delivery over the link.
+        /// </summary>
+        /// <param name="delivery">The delivery to send.</param>
+        /// <returns>True if there is credit to transfer the delivery; false otherwise.</returns>
         public bool TrySendDelivery(Delivery delivery)
         {
             Fx.Assert(delivery.DeliveryTag.Array != null, "delivery-tag must be set.");
@@ -258,6 +327,11 @@ namespace Microsoft.Azure.Amqp
             return true;
         }
 
+        /// <summary>
+        /// Sends the delivery even if there is no credit left. It may happen that the credits are reduced
+        /// to 0 while messages become available in the link endpoint.
+        /// </summary>
+        /// <param name="delivery">The delivery to send.</param>
         public void ForceSendDelivery(Delivery delivery)
         {
             // Send the delivery even if there is no link credit
@@ -273,12 +347,24 @@ namespace Microsoft.Azure.Amqp
             this.StartSendDelivery(delivery);
         }
 
-        // up-down: from application to link to session (to send a disposition)
+        /// <summary>
+        /// Updates the state of a delivery.
+        /// </summary>
+        /// <param name="delivery">The delivery to update.</param>
+        /// <param name="settled">True if the delivery is settled; false otherwise.</param>
+        /// <param name="state">The state of the delivery.</param>
         public void DisposeDelivery(Delivery delivery, bool settled, DeliveryState state)
         {
             this.DisposeDelivery(delivery, settled, state, false);
         }
 
+        /// <summary>
+        /// Updates the state of a delivery.
+        /// </summary>
+        /// <param name="delivery">The delivery to update.</param>
+        /// <param name="settled">True if the delivery is settled; false otherwise.</param>
+        /// <param name="state">The state of the delivery.</param>
+        /// <param name="noFlush">True to not send a disposition frame right away.</param>
         public void DisposeDelivery(Delivery delivery, bool settled, DeliveryState state, bool noFlush)
         {
             this.DoActionIfNotClosed(
@@ -293,6 +379,14 @@ namespace Microsoft.Azure.Amqp
                 noFlush);
         }
 
+        /// <summary>
+        /// Updates the state of a delivery using its delivery tag.
+        /// </summary>
+        /// <param name="deliveryTag">The delivery tag that identifies the delivery.</param>
+        /// <param name="settled">True if the delivery is settled; false otherwise.</param>
+        /// <param name="state">The state of the delivery.</param>
+        /// <param name="batchable">True if the state change can be batched with other deliveries.</param>
+        /// <returns>True if the delivery is found and updated; false otherwise.</returns>
         public bool DisposeDelivery(ArraySegment<byte> deliveryTag, bool settled, DeliveryState state, bool batchable)
         {
             Delivery delivery = null;
@@ -315,6 +409,15 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Sets a new credit on the link. A flow frame may be sent to the remote peer.
+        /// It should be called only for a receiver link endpoint.
+        /// </summary>
+        /// <param name="totalCredit">The new credit.</param>
+        /// <param name="applyNow">True to update link flow control state right away and send a flow.</param>
+        /// <param name="updateAutoFlow">To set <see cref="AmqpLinkSettings.AutoSendFlow"/> to true if totalCredit is greater than 0.</param>
+        /// <remarks>The credit update is not a direct assignment. This method accounts for inflight
+        /// deliveries in case credits are reduced.</remarks>
         public void SetTotalLinkCredit(uint totalCredit, bool applyNow, bool updateAutoFlow = false)
         {
             Fx.Assert(this.IsReceiver, "Only receiver can change the total link credit.");
@@ -340,6 +443,15 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// When <see cref="AmqpLinkSettings.AutoSendFlow"/> is false, sets the link credit
+        /// and sends a flow frame.
+        /// </summary>
+        /// <param name="credit">The link credit.</param>
+        /// <param name="drain">The drain flag.</param>
+        /// <param name="txnId">The transaction-id for transfers allowed by the credits.</param>
+        /// <remarks>This method should be called when application needs full control of
+        /// the link flow control.</remarks>
         public void IssueCredit(uint credit, bool drain, ArraySegment<byte> txnId)
         {
             if (!this.settings.AutoSendFlow)
@@ -354,7 +466,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        public void NotifySessionCredit(int credit)
+        internal void NotifySessionCredit(int credit)
         {
             if (this.inflightDeliveries != null)
             {
@@ -367,7 +479,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         // bottom-up: from session disposition to link to application
-        public void OnDisposeDelivery(Delivery delivery)
+        internal void OnDisposeDelivery(Delivery delivery)
         {
             if (delivery.Settled)
             {
@@ -391,7 +503,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        public void CompleteDelivery(ArraySegment<byte> deliveryTag)
+        internal void CompleteDelivery(ArraySegment<byte> deliveryTag)
         {
             Delivery delivery = null;
             bool result = false;
@@ -406,11 +518,22 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Sends a map in a flow command to the remote peer.
+        /// </summary>
+        /// <param name="properties">A map containing the properties.</param>
+        /// <remarks>Enables applicaiton to build a simple communication channel
+        /// using the existing link. See <see cref="PropertyReceived"/>.</remarks>
         public void SendProperties(Fields properties)
         {
             this.SendFlow(false, false, properties);
         }
 
+        /// <summary>
+        /// Processes a received flow command.
+        /// </summary>
+        /// <param name="flow">The received flow command.</param>
+        /// <returns>More credits allowed by the received flow command.</returns>
         public uint ProcessFlow(Flow flow)
         {
             uint moreCredit = 0;
@@ -490,8 +613,14 @@ namespace Microsoft.Azure.Amqp
             return moreCredit;
         }
 
-        // Returns true if this is a new delivery
-        public abstract bool CreateDelivery(Transfer transfer, out Delivery delivery);
+        /// <summary>
+        /// Creates a delivery from a received transfer command.
+        /// </summary>
+        /// <param name="transfer">The received transfer command.</param>
+        /// <param name="delivery">The delivery.</param>
+        /// <returns>True if the transfer is for a new delivery; false if it is
+        /// for the existing delivery.</returns>
+        protected abstract bool CreateDelivery(Transfer transfer, out Delivery delivery);
 
         internal virtual void OnIoEvent(IoEvent ioEvent)
         {
@@ -531,6 +660,10 @@ namespace Microsoft.Azure.Amqp
                 0);
         }
 
+        /// <summary>
+        /// Opens the link.
+        /// </summary>
+        /// <returns>True if the link is open; false if open is pending.</returns>
         protected override bool OpenInternal()
         {
             AmqpObjectState state = this.SendAttach(this.settings);
@@ -545,6 +678,11 @@ namespace Microsoft.Azure.Amqp
             return state == AmqpObjectState.Opened;
         }
 
+        /// <summary>
+        /// Closes the link.
+        /// </summary>
+        /// <returns>True if the link is closed; false if close is pending.</returns>
+        /// <remarks>All inflight deliveries are canceled.</remarks>
         protected override bool CloseInternal()
         {
             AmqpObjectState state = this.State;
@@ -570,6 +708,9 @@ namespace Microsoft.Azure.Amqp
             return state == AmqpObjectState.End;
         }
 
+        /// <summary>
+        /// Aborts the link object. All inflight deliveries are canceled.
+        /// </summary>
         protected override void AbortInternal()
         {
             Interlocked.Decrement(ref this.references);

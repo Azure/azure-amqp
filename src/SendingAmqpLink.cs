@@ -92,7 +92,7 @@ namespace Microsoft.Azure.Amqp
             return SendAsyncResult.End(result);
         }
 
-        public override bool CreateDelivery(Transfer transfer, out Delivery delivery)
+        protected override bool CreateDelivery(Transfer transfer, out Delivery delivery)
         {
             throw new NotImplementedException();
         }

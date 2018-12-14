@@ -307,7 +307,7 @@ namespace Microsoft.Azure.Amqp
             this.DisposeDelivery(message, settled, state);
         }
 
-        public override bool CreateDelivery(Transfer transfer, out Delivery delivery)
+        protected override bool CreateDelivery(Transfer transfer, out Delivery delivery)
         {
             if (this.currentMessage != null)
             {

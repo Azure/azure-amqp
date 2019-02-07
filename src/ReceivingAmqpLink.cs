@@ -11,6 +11,9 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
 
+    /// <summary>
+    /// A link for receiving messages.
+    /// </summary>
     public sealed class ReceivingAmqpLink : AmqpLink
     {
         // Workaround for TimeSpan.Zero server wait timeout. Consider supporting this with drain
@@ -27,16 +30,28 @@ namespace Microsoft.Azure.Amqp
         AmqpMessage currentMessage;
         LinkedList<ReceiveAsyncResult> waiterList;
 
+        /// <summary>
+        /// Initializes the receiver link without attaching to any session.
+        /// </summary>
+        /// <param name="settings">The link settings.</param>
         public ReceivingAmqpLink(AmqpLinkSettings settings)
             : this(null, settings)
         {
         }
 
+        /// <summary>
+        /// Initializes the receiver link and attach it to the session.
+        /// </summary>
+        /// <param name="session">The session to attach the link.</param>
+        /// <param name="settings">The link settings.</param>
         public ReceivingAmqpLink(AmqpSession session, AmqpLinkSettings settings) :
             base("receiver", session, settings)
         {
         }
 
+        /// <summary>
+        /// Gets a value of the prefetch cache size. Null if it is not set.
+        /// </summary>
         public long? TotalCacheSizeInBytes
         {
             get
@@ -83,6 +98,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Sets the prefetch cache size.
+        /// </summary>
+        /// <param name="cacheSizeInBytes">The cache size.</param>
         public void SetCacheSizeInBytes(long? cacheSizeInBytes)
         {
             if (cacheSizeInBytes != this.Settings.TotalCacheSizeInBytes)
@@ -96,6 +115,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Registers a message listener to handle received messages.
+        /// </summary>
+        /// <param name="messageListener">The message listener.</param>
         public void RegisterMessageListener(Action<AmqpMessage> messageListener)
         {
             if (Interlocked.Exchange(ref this.messageListener, messageListener) != null)
@@ -104,6 +127,16 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Begins the message receive operation. The operation waits at least 10 seconds
+        /// when no messages are available.
+        /// </summary>
+        /// <param name="messageCount">The requested message count.</param>
+        /// <param name="batchWaitTimeout">The wait time for the messages.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The state associated with this operation.</param>
+        /// <returns>An IAsyncResult for the operation.</returns>
         public IAsyncResult BeginReceiveRemoteMessages(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
         {
             // If the caller expects some messages and pass TimeSpan.Zero, we wait to mimic a service call
@@ -115,6 +148,11 @@ namespace Microsoft.Azure.Amqp
             return this.BeginReceiveMessages(messageCount, batchWaitTimeout, timeout, callback, state);
         }
 
+        /// <summary>
+        /// Creates a task to receive a message.
+        /// </summary>
+        /// <param name="timeout">The time to wait for messages.</param>
+        /// <returns>A message. Null if there is no message available.</returns>
         public Task<AmqpMessage> ReceiveMessageAsync(TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
@@ -128,11 +166,25 @@ namespace Microsoft.Azure.Amqp
                 this);
         }
 
+        /// <summary>
+        /// Begins the message receive operation. The operation returns immediately
+        /// when no message is available in the prefetch cache.
+        /// </summary>
+        /// <param name="timeout">The time to wait for messages.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The state associated with this operation.</param>
+        /// <returns>An IAsyncResult for the operation.</returns>
         public IAsyncResult BeginReceiveMessage(TimeSpan timeout, AsyncCallback callback, object state)
         {
             return this.BeginReceiveMessages(1, TimeSpan.Zero, timeout, callback, state);
         }
 
+        /// <summary>
+        /// Ends the message receive operation.
+        /// </summary>
+        /// <param name="result">The result returned by the begin method.</param>
+        /// <param name="message">The received message. Null if no message is available.</param>
+        /// <returns>True if the operation is completed within the specified time; false otherwise.</returns>
         public bool EndReceiveMessage(IAsyncResult result, out AmqpMessage message)
         {
             if (result is ReceiveAsyncResult)
@@ -147,6 +199,14 @@ namespace Microsoft.Azure.Amqp
             return true;
         }
 
+        /// <summary>
+        /// Begins the operation to receive a batch of messages.
+        /// </summary>
+        /// <param name="messageCount">The desired number of messages.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The state associated with this operation.</param>
+        /// <returns>An IAsyncResult for the operation.</returns>
         public IAsyncResult BeginReceiveMessages(int messageCount, TimeSpan timeout, AsyncCallback callback, object state)
         {
             return BeginReceiveMessages(messageCount, TimeSpan.Zero, timeout, callback, state);
@@ -212,7 +272,7 @@ namespace Microsoft.Azure.Amqp
             return new CompletedAsyncResult<IEnumerable<AmqpMessage>>(messages, callback, state);
         }
 
-        protected override void OnReceiveStateOpenSent(Attach attach)
+        internal override void OnReceiveStateOpenSent(Attach attach)
         {
             // If we uses prefetchBySize logic, then we need to
             // Update link credit based on Gateway's return max message size
@@ -226,6 +286,12 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Ends the message receive operation.
+        /// </summary>
+        /// <param name="result">The result returned by the begin method.</param>
+        /// <param name="messages">The returned messages.</param>
+        /// <returns>True if the operation is completed within the specified time; false otherwise.</returns>
         public bool EndReceiveMessages(IAsyncResult result, out IEnumerable<AmqpMessage> messages)
         {
             if (result is ReceiveAsyncResult)
@@ -237,11 +303,28 @@ namespace Microsoft.Azure.Amqp
             return true;
         }
 
+        /// <summary>
+        /// Updates the outcome of a received message.
+        /// </summary>
+        /// <param name="deliveryTag">The delivery-tag of the message.</param>
+        /// <param name="outcome">The outcome.</param>
+        /// <param name="batchable"><see cref="Delivery.Batchable"/></param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns></returns>
         public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, Outcome outcome, bool batchable, TimeSpan timeout)
         {
             return this.DisposeMessageAsync(deliveryTag, AmqpConstants.NullBinary, outcome, batchable, timeout);
         }
 
+        /// <summary>
+        /// Updates the outcome of a received message in a transaction.
+        /// </summary>
+        /// <param name="deliveryTag">The delivery-tag of the message.</param>
+        /// <param name="txnId">The transaction id.</param>
+        /// <param name="outcome">The outcome.</param>
+        /// <param name="batchable"><see cref="Delivery.Batchable"/></param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns></returns>
         public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable, TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
@@ -250,33 +333,74 @@ namespace Microsoft.Azure.Amqp
                 this);
         }
 
+        /// <summary>
+        /// Begins to update the outcome of a received message.
+        /// </summary>
+        /// <param name="deliveryTag">The delivery-tag of the message.</param>
+        /// <param name="outcome">The outcome.</param>
+        /// <param name="batchable"><see cref="Delivery.Batchable"/></param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The state associated with this operation.</param>
+        /// <returns>An IAsyncResult for the operation.</returns>
         public IAsyncResult BeginDisposeMessage(ArraySegment<byte> deliveryTag, Outcome outcome, bool batchable, TimeSpan timeout, AsyncCallback callback, object state)
         {
             return this.BeginDisposeMessage(deliveryTag, AmqpConstants.NullBinary, outcome, batchable, timeout, callback, state);
         }
 
+        /// <summary>
+        /// Begins to update the outcome of a received message in a transaction.
+        /// </summary>
+        /// <param name="deliveryTag">The delivery-tag of the message.</param>
+        /// <param name="txnId">The transaction id.</param>
+        /// <param name="outcome">The outcome.</param>
+        /// <param name="batchable"><see cref="Delivery.Batchable"/></param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The state associated with this operation.</param>
+        /// <returns>An IAsyncResult for the operation.</returns>
         public IAsyncResult BeginDisposeMessage(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable, TimeSpan timeout, AsyncCallback callback, object state)
         {
             this.ThrowIfClosed();
             return new DisposeAsyncResult(this, deliveryTag, txnId, outcome, batchable, timeout, callback, state);
         }
 
+        /// <summary>
+        /// Ends the message state update operation.
+        /// </summary>
+        /// <param name="result">The result returned by the begin method.</param>
+        /// <returns>Outcome of the update operation.</returns>
         public Outcome EndDisposeMessage(IAsyncResult result)
         {
             return DisposeAsyncResult.End(result);
         }
 
-        public void AcceptMessage(AmqpMessage message, bool batchable)
+        /// <summary>
+        /// Accepts a message. The method does not wait for a response from the peer.
+        /// </summary>
+        /// <param name="message">The message to accept.</param>
+        public void AcceptMessage(AmqpMessage message)
         {
             bool settled = this.Settings.SettleType != SettleMode.SettleOnDispose;
-            this.AcceptMessage(message, settled, batchable);
+            this.AcceptMessage(message, settled, true);
         }
 
+        /// <summary>
+        /// Accepts a message.
+        /// </summary>
+        /// <param name="message">The message to accept.</param>
+        /// <param name="settled"><see cref="Delivery.Settled"/></param>
+        /// <param name="batchable"><see cref="Delivery.Batchable"/></param>
         public void AcceptMessage(AmqpMessage message, bool settled, bool batchable)
         {
             this.DisposeMessage(message, AmqpConstants.AcceptedOutcome, settled, batchable);
         }
 
+        /// <summary>
+        /// Rejects a message. The method does not wait for a response from the peer.
+        /// </summary>
+        /// <param name="message">The message to reject.</param>
+        /// <param name="exception">The error for the rejection.</param>
         public void RejectMessage(AmqpMessage message, Exception exception)
         {
             Rejected rejected = new Rejected();
@@ -285,11 +409,22 @@ namespace Microsoft.Azure.Amqp
             this.DisposeMessage(message, rejected, true, false);
         }
 
+        /// <summary>
+        /// Releases a message. The method does not wait for a response from the peer.
+        /// </summary>
+        /// <param name="message">The message to release.</param>
         public void ReleaseMessage(AmqpMessage message)
         {
             this.DisposeMessage(message, AmqpConstants.ReleasedOutcome, true, false);
         }
 
+        /// <summary>
+        /// Modifies a message.
+        /// </summary>
+        /// <param name="message">The message to modify.</param>
+        /// <param name="deliveryFailed"><see cref="Modified.DeliveryFailed"/></param>
+        /// <param name="deliverElseWhere"><see cref="Modified.UndeliverableHere"/></param>
+        /// <param name="messageAttributes"><see cref="Modified.MessageAnnotations"/></param>
         public void ModifyMessage(AmqpMessage message, bool deliveryFailed, bool deliverElseWhere, Fields messageAttributes)
         {
             Modified modified = new Modified();
@@ -300,6 +435,13 @@ namespace Microsoft.Azure.Amqp
             this.DisposeMessage(message, modified, true, false);
         }
 
+        /// <summary>
+        /// Updates the state of a message. The method does not wait for a response from the peer.
+        /// </summary>
+        /// <param name="message">The message to update.</param>
+        /// <param name="state">The new delivery state.</param>
+        /// <param name="settled"><see cref="Delivery.Settled"/></param>
+        /// <param name="batchable"><see cref="Delivery.Batchable"/></param>
         public void DisposeMessage(AmqpMessage message, DeliveryState state, bool settled, bool batchable)
         {
             this.ThrowIfClosed();
@@ -307,6 +449,13 @@ namespace Microsoft.Azure.Amqp
             this.DisposeDelivery(message, settled, state);
         }
 
+        /// <summary>
+        /// Creates a delivery for the received transfer. If the transfer is the first of a message,
+        /// a delivery object must be created. If it is continous, the current delivery must be returned.
+        /// </summary>
+        /// <param name="transfer">The received transfer.</param>
+        /// <param name="delivery">The returned delivery.</param>
+        /// <returns>True if a delivery is created.</returns>
         protected override bool CreateDelivery(Transfer transfer, out Delivery delivery)
         {
             if (this.currentMessage != null)
@@ -321,6 +470,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Opens the link.
+        /// </summary>
+        /// <returns>True if open is completed.</returns>
         protected override bool OpenInternal()
         {
             this.messageQueue = new SizeBasedFlowQueue(this);
@@ -335,6 +488,11 @@ namespace Microsoft.Azure.Amqp
             return syncComplete;
         }
 
+        /// <summary>
+        /// Called when the state of a delivey is updated by the remote peer. Override this method to perform
+        /// other operations if needed.
+        /// </summary>
+        /// <param name="delivery"></param>
         protected override void OnDisposeDeliveryInternal(Delivery delivery)
         {
             // This happens when the sender sends a disposition after the receiver's disposition
@@ -348,6 +506,12 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Called when a transfer is received from the peer.
+        /// </summary>
+        /// <param name="delivery">Delivery to which the transfer belongs.</param>
+        /// <param name="transfer">The received transfer.</param>
+        /// <param name="frame">The transfer frame.</param>
         protected override void OnProcessTransfer(Delivery delivery, Transfer transfer, Frame frame)
         {
             Fx.Assert(delivery == null || delivery == this.currentMessage, "The delivery must be null or must be the same as the current message.");
@@ -383,10 +547,20 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// <see cref="AmqpLink.OnCreditAvailable(int, uint, bool, ArraySegment{byte})"/>
+        /// </summary>
+        /// <param name="session"></param>
+        /// <param name="link"></param>
+        /// <param name="drain"></param>
+        /// <param name="txnId"></param>
         protected override void OnCreditAvailable(int session, uint link, bool drain, ArraySegment<byte> txnId)
         {
         }
 
+        /// <summary>
+        /// Aborts the link.
+        /// </summary>
         protected override void AbortInternal()
         {
             Queue<AmqpMessage> messages = null;
@@ -409,6 +583,10 @@ namespace Microsoft.Azure.Amqp
             base.AbortInternal();
         }
 
+        /// <summary>
+        /// Closes the link.
+        /// </summary>
+        /// <returns>True if close is completed.</returns>
         protected override bool CloseInternal()
         {
             Queue<AmqpMessage> messages = null;

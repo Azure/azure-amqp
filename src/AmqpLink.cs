@@ -721,12 +721,16 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Sets a flow on this link.
+        /// </summary>
+        /// <param name="echo"><see cref="Flow.Echo"/></param>
         protected void SendFlow(bool echo)
         {
             this.SendFlow(echo, false, null);
         }
 
-        protected void ProcessTransfer(Transfer transfer, Frame rawFrame, Delivery delivery, bool newDelivery)
+        void ProcessTransfer(Transfer transfer, Frame rawFrame, Delivery delivery, bool newDelivery)
         {
             if (newDelivery)
             {
@@ -781,23 +785,44 @@ namespace Microsoft.Azure.Amqp
             this.OnProcessTransfer(delivery, transfer, rawFrame);
         }
 
+        /// <summary>
+        /// A <see cref="Flow"/> is received. Override this method to process the flow if needed.
+        /// </summary>
+        /// <param name="flow">The received flow performative.</param>
         protected virtual void OnReceiveFlow(Flow flow)
         {
             this.ProcessFlow(flow);
         }
 
+        /// <summary>
+        /// A method to override to process the received transfer performative.
+        /// </summary>
+        /// <param name="delivery">The delivery to which the transfer belong.</param>
+        /// <param name="transfer">The received transfer.</param>
+        /// <param name="rawFrame">The frame that contains the transfer.</param>
         protected abstract void OnProcessTransfer(Delivery delivery, Transfer transfer, Frame rawFrame);
 
+        /// <summary>
+        /// A method to override to handle link flow event.
+        /// </summary>
+        /// <param name="session">The increased session window size.</param>
+        /// <param name="link">The increased link credit.</param>
+        /// <param name="drain"><see cref="Flow.Drain"/></param>
+        /// <param name="txnId">The transaction identifier in the flow.</param>
         protected abstract void OnCreditAvailable(int session, uint link, bool drain, ArraySegment<byte> txnId);
 
+        /// <summary>
+        /// A method to override to handle a delivery state update by the remote peer.
+        /// </summary>
+        /// <param name="delivery">The delivery whose state is updated.</param>
         protected abstract void OnDisposeDeliveryInternal(Delivery delivery);
 
-        protected virtual void OnReceiveStateOpenSent(Attach attach)
+        internal virtual void OnReceiveStateOpenSent(Attach attach)
         {
             // no op by default
         }
 
-        protected bool SendDelivery(Delivery delivery)
+        internal bool SendDelivery(Delivery delivery)
         {
             bool settled = delivery.Settled;
             bool more = true;
@@ -862,7 +887,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         // call this method if the operation should not be performed after close
-        protected bool DoActionIfNotClosed<T1, T2, T3, T4>(Func<AmqpLink, T1, T2, T3, T4, bool> action, T1 p1, T2 p2, T3 p3, T4 p4)
+        internal bool DoActionIfNotClosed<T1, T2, T3, T4>(Func<AmqpLink, T1, T2, T3, T4, bool> action, T1 p1, T2 p2, T3 p3, T4 p4)
         {
             int temp = Interlocked.Increment(ref this.references);
             try
@@ -1226,7 +1251,7 @@ namespace Microsoft.Azure.Amqp
             this.SendFlow(echo, drain, properties);
         }
 
-        protected void SendFlow(bool echo, bool drain, Fields properties)
+        void SendFlow(bool echo, bool drain, Fields properties)
         {
             this.DoActionIfNotClosed(
                 (thisPtr, paramEcho, paramDrain, paramProperties, p5) =>

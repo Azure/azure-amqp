@@ -5,8 +5,14 @@ namespace Microsoft.Azure.Amqp
 {
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// Connection settings.
+    /// </summary>
     public sealed class AmqpConnectionSettings : Open
     {
+        /// <summary>
+        /// Initializes the connection settings object.
+        /// </summary>
         public AmqpConnectionSettings()
         {
             this.SendBufferSize = AmqpConstants.TransportBufferSize;
@@ -17,55 +23,89 @@ namespace Microsoft.Azure.Amqp
             this.MinIdleTimeout = AmqpConstants.MinimumHeartBeatIntervalMs;
         }
 
+        /// <summary>
+        /// The container-id of the remote peer. This property is set only
+        /// when an open performative is received from the peer.
+        /// </summary>
         public string RemoteContainerId
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// The hostname of the remote peer. This property is set only
+        /// when an open performative is received from the peer.
+        /// </summary>
         public string RemoteHostName
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Size in bytes of the send buffer used by the transport.
+        /// </summary>
         public int SendBufferSize
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Size in bytes of the receive buffer used by the transport.
+        /// If the value is 0, the transport adjusts the buffer according
+        /// to I/O operations.
+        /// </summary>
         public int ReceiveBufferSize
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// A boolean value that controls how connection handles a session
+        /// begin command when its channel is unknown.
+        /// </summary>
         public bool IgnoreMissingSessions
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets a high limit of the outgoing buffers in the async writer.
+        /// When the size is above the limit, the writer raises an <see cref="IoEvent.WriteBufferQueueFull"/> event.
+        /// </summary>
         public int WriteBufferFullLimit
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets a low limit of the outgoing buffers in the async writer.
+        /// When the size is below the limit, the writer raises an <see cref="IoEvent.WriteBufferQueueEmpty"/> event.
+        /// </summary>
         public int WriteBufferEmptyLimit
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets the minimum allowed connection idle-timeout value.
+        /// </summary>
         public uint MinIdleTimeout
         {
             get;
             set;
         }
 
-        /// <summary> doesn't clone - RemoteSettings: HostName/ContainerId </summary>
+        /// <summary>
+        /// Clones the settings object. Properties of remote peer are not copied.
+        /// </summary>
+        /// <returns>A new connection settings object.</returns>
         public AmqpConnectionSettings Clone()
         {
             AmqpConnectionSettings newSettings = new AmqpConnectionSettings();

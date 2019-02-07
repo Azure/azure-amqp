@@ -5,6 +5,9 @@ namespace Microsoft.Azure.Amqp
 {
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the standard AMQP error codes.
+    /// </summary>
     public static class AmqpErrorCode
     {
         // amqp errors

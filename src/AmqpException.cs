@@ -8,15 +8,27 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// The exception represents an AMQP error.
+    /// </summary>
     [Serializable]
     public sealed class AmqpException : Exception
     {
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="error">The AMQP error.</param>
         public AmqpException(Error error)
             : base(error.Description ?? AmqpResources.GetString(AmqpResources.AmqpErrorOccurred, error.Condition.Value))
         {
             this.Error = error;
         }
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="condition">The error condition.</param>
+        /// <param name="description">The error description.</param>
         public AmqpException(AmqpSymbol condition, string description)
             : this(new Error() { Condition = condition, Description = description })
         {
@@ -28,12 +40,20 @@ namespace Microsoft.Azure.Amqp
             this.Error = (Error)info.GetValue("Error", typeof(Error));
         }
 
+        /// <summary>
+        /// Gets the <see cref="Error"/> of the exception.
+        /// </summary>
         public Error Error
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Creates an exception from an error.
+        /// </summary>
+        /// <param name="error">The AMQP error.</param>
+        /// <returns></returns>
         public static AmqpException FromError(Error error)
         {
             if (error == null || error.Condition.Value == null)

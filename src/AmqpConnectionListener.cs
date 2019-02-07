@@ -8,6 +8,9 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transport;
 
+    /// <summary>
+    /// A listener to accept AMQP connections.
+    /// </summary>
     public class AmqpConnectionListener
     {
         readonly AmqpTransportListener listener;
@@ -16,11 +19,22 @@ namespace Microsoft.Azure.Amqp
         readonly HashSet<AmqpConnection> connections;
         readonly EventHandler onConnectionClosed;
 
+        /// <summary>
+        /// Initializes a listener.
+        /// </summary>
+        /// <param name="address">The address to listen on.</param>
+        /// <param name="runtime">The provider to handle runtime operations.</param>
         public AmqpConnectionListener(string address, IRuntimeProvider runtime)
             : this(new[] { address }, new AmqpSettings() { RuntimeProvider = runtime }, new AmqpConnectionSettings())
         {
         }
 
+        /// <summary>
+        /// Initializes a listener.
+        /// </summary>
+        /// <param name="addresses">The addresses to listen on.</param>
+        /// <param name="settings">The protocol settings of the listener.</param>
+        /// <param name="connectionSettings">The connection settings applied to accepted connections.</param>
         public AmqpConnectionListener(IEnumerable<string> addresses, AmqpSettings settings, AmqpConnectionSettings connectionSettings)
         {
             if (settings.RuntimeProvider == null)
@@ -35,12 +49,18 @@ namespace Microsoft.Azure.Amqp
             this.listener = CreateListener(addresses, settings);
         }
 
+        /// <summary>
+        /// Opens the listener.
+        /// </summary>
         public void Open()
         {
             this.listener.Open();
             this.listener.Listen(this.OnAcceptTransport);
         }
 
+        /// <summary>
+        /// Closes the listener.
+        /// </summary>
         public void Close()
         {
             this.listener.Close();

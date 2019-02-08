@@ -569,15 +569,6 @@ namespace Microsoft.Azure.Amqp
             this.Settings.ChannelMax = Math.Min(this.Settings.ChannelMax(), open.ChannelMax());
             this.sessionsByLocalHandle.SetMaxHandle(this.Settings.ChannelMax.Value);
             this.sessionsByRemoteHandle.SetMaxHandle(this.Settings.ChannelMax.Value);
-            if (this.isInitiator)
-            {
-                this.FindMutualCapabilites(this.Settings.DesiredCapabilities, open.OfferedCapabilities);
-            }
-            else
-            {
-                this.FindMutualCapabilites(this.Settings.OfferedCapabilities, open.DesiredCapabilities);
-            }
-            
             if (open.MaxFrameSize.HasValue)
             {
                 this.Settings.MaxFrameSize = Math.Min(this.Settings.MaxFrameSize.Value, open.MaxFrameSize.Value);

@@ -4,10 +4,8 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
     // ============= State Diagram ====================
@@ -53,6 +51,10 @@ namespace Microsoft.Azure.Amqp
     //      SafeClose = Close + Exception handling
     //
     // =================================================
+
+    /// <summary>
+    /// Base class of AMQP objects.
+    /// </summary>
     public abstract class AmqpObject
     {
         readonly static AsyncCallback onSafeCloseComplete = OnSafeCloseComplete;
@@ -67,17 +69,36 @@ namespace Microsoft.Azure.Amqp
         bool closeCalled;
         bool abortCalled;
         bool closedHandlerInvoked;
-        IList<AmqpSymbol> mutualCapabilities;
 
+        /// <summary>
+        /// Invoked when an Open is received.
+        /// </summary>
         public event EventHandler<OpenEventArgs> Opening;
+
+        /// <summary>
+        /// Invoked when the object enters the <see cref="AmqpObjectState.Opened"/> state.
+        /// </summary>
         public event EventHandler Opened;
+
+        /// <summary>
+        /// Invoked when the object enters the <see cref="AmqpObjectState.End"/> state.
+        /// </summary>
         public event EventHandler Closed;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="type">Used as a prefix in the name for tracking/debugging purposes.</param>
         protected AmqpObject(string type)
             : this(type, SequenceNumber.Increment(ref AmqpObject.nextId))
         {
         }
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="type">Used as a prefix in the name for tracking/debugging purposes.</param>
+        /// <param name="identifier">Identifier of the object.</param>
         protected AmqpObject(string type, SequenceNumber identifier)
         {
             this.identifier = identifier;
@@ -86,56 +107,69 @@ namespace Microsoft.Azure.Amqp
             this.DefaultCloseTimeout = AmqpConstants.DefaultTimeout;
         }
 
+        /// <summary>
+        /// Gets the identifier.
+        /// </summary>
         public SequenceNumber Identifier
         {
             get { return this.identifier; }
         }
 
+        /// <summary>
+        /// Gets the current state.
+        /// </summary>
         public AmqpObjectState State
         {
             get;
             protected set;
         }
 
+        /// <summary>
+        /// Gets the terminal exception of the object.
+        /// </summary>
         public Exception TerminalException
         {
             get;
             protected set;
         }
 
+        /// <summary>
+        /// Gets or sets the default timeout for opening the object.
+        /// </summary>
         public TimeSpan DefaultOpenTimeout
         {
             get;
             protected set;
         }
 
+        /// <summary>
+        /// Gets or sets the default timeout for closing the object.
+        /// </summary>
         public TimeSpan DefaultCloseTimeout
         {
             get;
             protected set;
         }
 
-        public IList<AmqpSymbol> MutualCapabilities
-        {
-            get
-            {
-                return this.mutualCapabilities ??
-                    (this.mutualCapabilities = new List<AmqpSymbol>());
-            }
-        }
-
-        protected object ThisLock
+        internal object ThisLock
         {
             get { return this.thisLock; }
         }
 
         internal virtual ITimerFactory TimerFactory => SystemTimerFactory.Default;
 
+        /// <summary>
+        /// Opens the object with default timeout.
+        /// </summary>
         public void Open()
         {
             this.Open(this.DefaultOpenTimeout);
         }
 
+        /// <summary>
+        /// Opens the object.
+        /// </summary>
+        /// <param name="timeout">The open timeout.</param>
         public void Open(TimeSpan timeout)
         {
             bool syncOpen = false;
@@ -170,6 +204,11 @@ namespace Microsoft.Azure.Amqp
             this.name = name;
         }
 
+        /// <summary>
+        /// Starts a task to open the object.
+        /// </summary>
+        /// <param name="timeout">The open timeout.</param>
+        /// <returns>A task.</returns>
         public Task OpenAsync(TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
@@ -179,6 +218,13 @@ namespace Microsoft.Azure.Amqp
                 this);
         }
 
+        /// <summary>
+        /// Begins to open the object.
+        /// </summary>
+        /// <param name="timeout">The open timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The state associated with this operation.</param>
+        /// <returns>An IAsyncResult for the operation.</returns>
         public IAsyncResult BeginOpen(TimeSpan timeout, AsyncCallback callback, object state)
         {
             lock (this.thisLock)
@@ -195,17 +241,28 @@ namespace Microsoft.Azure.Amqp
             return new OpenAsyncResult(this, timeout, callback, state);
         }
 
+        /// <summary>
+        /// Ends the open operation.
+        /// </summary>
+        /// <param name="result">The result returned by the begin method.</param>
         public void EndOpen(IAsyncResult result)
         {
             OpenAsyncResult.End(result);
             AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(EndOpen));
         }
 
+        /// <summary>
+        /// Closes the object with default timeout.
+        /// </summary>
         public void Close()
         {
             this.Close(this.DefaultCloseTimeout);
         }
 
+        /// <summary>
+        /// Closes the object.
+        /// </summary>
+        /// <param name="timeout">The close timeout.</param>
         public void Close(TimeSpan timeout)
         {
             bool syncClose = false;
@@ -238,6 +295,11 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Starts a task to close the object.
+        /// </summary>
+        /// <param name="timeout">The close timeout.</param>
+        /// <returns>A task.</returns>
         public Task CloseAsync(TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
@@ -247,6 +309,13 @@ namespace Microsoft.Azure.Amqp
                 this);
         }
 
+        /// <summary>
+        /// Begins to close the object.
+        /// </summary>
+        /// <param name="timeout">The close timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The state associated with this operation.</param>
+        /// <returns>An IAsyncResult for the operation.</returns>
         public IAsyncResult BeginClose(TimeSpan timeout, AsyncCallback callback, object state)
         {
             bool closed = false;
@@ -269,6 +338,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Ends the close operation.
+        /// </summary>
+        /// <param name="result">The result returned by the begin method.</param>
         public void EndClose(IAsyncResult result)
         {
             if (result is CompletedAsyncResult)
@@ -283,7 +356,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Move to End state without closing
+        /// Moves to End state without closing.
         /// </summary>
         public void Abort()
         {
@@ -315,13 +388,17 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Close with exception handling
+        /// Closes the object with exception handling in the background.
         /// </summary>
         public void SafeClose()
         {
             this.SafeClose(null);
         }
 
+        /// <summary>
+        /// Closes the object with exception handling in the background.
+        /// </summary>
+        /// <param name="exception">The error for closing the object.</param>
         public void SafeClose(Exception exception)
         {
             this.TerminalException = exception;
@@ -348,11 +425,20 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets a string representation of the object.
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return this.name;
         }
 
+        /// <summary>
+        /// Registers a handler to <see cref="Closed"/> event.
+        /// The handler is invoked even when the object is closed.
+        /// </summary>
+        /// <param name="handler"></param>
         public void SafeAddClosed(EventHandler handler)
         {
             bool invokeHandler = false;
@@ -376,7 +462,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        public bool IsClosing()
+        internal bool IsClosing()
         {
             AmqpObjectState state = this.State;
             return state == AmqpObjectState.CloseSent ||
@@ -386,28 +472,50 @@ namespace Microsoft.Azure.Amqp
                 state == AmqpObjectState.Faulted;
         }
 
+        /// <summary>
+        /// Opens the object.
+        /// </summary>
+        /// <param name="timeout">The timeout.</param>
+        /// <remarks>
+        /// The default implementation starts the asynchronous open and waits
+        /// for it to complete. Override the method to perform different operations.
+        /// </remarks>
         protected virtual void OnOpen(TimeSpan timeout)
         {
             OpenAsyncResult.End(new OpenAsyncResult(this, timeout, null, null));
         }
 
+        /// <summary>
+        /// Closes the object.
+        /// </summary>
+        /// <param name="timeout">The timeout.</param>
+        /// <remarks>
+        /// The default implementation starts the asynchronous close and waits
+        /// for it to complete. Override the method to perform different operations.
+        /// </remarks>
         protected virtual void OnClose(TimeSpan timeout)
         {
             CloseAsyncResult.End(new CloseAsyncResult(this, timeout, null, null));
         }
 
+        /// <summary>
+        /// Override the method to perform the actual open.
+        /// </summary>
+        /// <returns>True if the object is opened; false if it is pending.</returns>
         protected abstract bool OpenInternal();
-        
+
+        /// <summary>
+        /// Override the method to perform the actual close.
+        /// </summary>
+        /// <returns>True if the object is closed; false if it is pending.</returns>
         protected abstract bool CloseInternal();
 
+        /// <summary>
+        /// Override the method to perform the actual abort.
+        /// </summary>
         protected abstract void AbortInternal();
 
-        protected void FindMutualCapabilites(Multiple<AmqpSymbol> desired, Multiple<AmqpSymbol> offered)
-        {
-            this.mutualCapabilities = Multiple<AmqpSymbol>.Intersect(desired, offered);
-        }
-
-        protected void NotifyOpening(Performative command)
+        internal void NotifyOpening(Performative command)
         {
             EventHandler<OpenEventArgs> opening = this.Opening;
             if (opening != null)
@@ -416,7 +524,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        protected void CompleteOpen(bool syncComplete, Exception exception)
+        internal void CompleteOpen(bool syncComplete, Exception exception)
         {
             OpenAsyncResult openResult = Interlocked.Exchange(ref this.pendingOpen, null);
             if (openResult != null)
@@ -425,7 +533,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        protected void CompleteClose(bool syncComplete, Exception exception)
+        internal void CompleteClose(bool syncComplete, Exception exception)
         {
             CloseAsyncResult closeResult = Interlocked.Exchange(ref this.pendingClose, null);
             if (closeResult != null)
@@ -434,7 +542,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        protected StateTransition TransitState(string operation, StateTransition[] states)
+        internal StateTransition TransitState(string operation, StateTransition[] states)
         {
             StateTransition state = null;
 
@@ -461,7 +569,7 @@ namespace Microsoft.Azure.Amqp
             return state;
         }
 
-        protected void OnReceiveCloseCommand(string command, Error error)
+        internal void OnReceiveCloseCommand(string command, Error error)
         {
             Exception remoteException = null;
             if (error != null && this.TerminalException == null)
@@ -495,7 +603,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        protected void ThrowIfClosed()
+        internal void ThrowIfClosed()
         {
             if (this.closeCalled)
             {

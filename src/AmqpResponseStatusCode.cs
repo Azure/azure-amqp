@@ -4,7 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     // https://www.oasis-open.org/committees/download.php/54441/AMQP%20Management%20v1.0%20WD09
-    public enum AmqpResponseStatusCode
+    enum AmqpResponseStatusCode
     {
         Accepted = 0xca,
         Ambiguous = 300,

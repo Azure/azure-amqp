@@ -11,27 +11,72 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// Flags for message sections.
+    /// </summary>
     [Flags]
     public enum SectionFlag
     {
+        /// <summary>
+        /// Message header.
+        /// </summary>
         Header = 1,
+        /// <summary>
+        /// Delivery annotations.
+        /// </summary>
         DeliveryAnnotations = 2,
+        /// <summary>
+        /// Message annotations.
+        /// </summary>
         MessageAnnotations = 4,
+        /// <summary>
+        /// Properties.
+        /// </summary>
         Properties = 8,
+        /// <summary>
+        /// Application Properties.
+        /// </summary>
         ApplicationProperties = 16,
+        /// <summary>
+        /// Data in the body.
+        /// </summary>
         Data = 32,
+        /// <summary>
+        /// AmqpSequence in the body.
+        /// </summary>
         AmqpSequence = 64,
+        /// <summary>
+        /// AmqpValue in the body.
+        /// </summary>
         AmqpValue = 128,
+        /// <summary>
+        /// Footer.
+        /// </summary>
         Footer = 256,
+        /// <summary>
+        /// All sections.
+        /// </summary>
         All = Mutable | Immutable,
+        /// <summary>
+        /// Body section.
+        /// </summary>
         Body = Data | AmqpSequence | AmqpValue,
+        /// <summary>
+        /// Non-body sections.
+        /// </summary>
         NonBody = All & ~Body,
+        /// <summary>
+        /// Mutable sections.
+        /// </summary>
         Mutable = Header | DeliveryAnnotations | MessageAnnotations | Footer,
+        /// <summary>
+        /// Immutable sections.
+        /// </summary>
         Immutable = Properties | ApplicationProperties | Body,
     }
 
     /// <summary>
-    /// Implements the AMQP MESSAGE FORMAT 0 message.
+    /// Implements the AMQP message.
     /// </summary>
     public abstract class AmqpMessage : Delivery
     {
@@ -57,6 +102,9 @@ namespace Microsoft.Azure.Amqp
         ByteBuffer buffer;
         int disposeState;
 
+        /// <summary>
+        /// Gets or sets the header.
+        /// </summary>
         public Header Header
         {
             get
@@ -72,6 +120,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets or sets the delivery annotations.
+        /// </summary>
         public DeliveryAnnotations DeliveryAnnotations
         {
             get
@@ -87,6 +138,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets or sets the message annotations.
+        /// </summary>
         public MessageAnnotations MessageAnnotations
         {
             get
@@ -102,6 +156,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets or sets the properties.
+        /// </summary>
         public Properties Properties
         {
             get
@@ -117,6 +174,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets or sets the application properties.
+        /// </summary>
         public ApplicationProperties ApplicationProperties
         {
             get
@@ -132,6 +192,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets the Data list body.
+        /// </summary>
         public IList<Data> DataBody
         {
             get
@@ -141,6 +204,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets the AmqpSequence body.
+        /// </summary>
         public IList<AmqpSequence> SequenceBody
         {
             get
@@ -150,6 +216,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets the AmqpValue body.
+        /// </summary>
         public AmqpValue ValueBody
         {
             get
@@ -159,6 +228,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets the body stream.
+        /// </summary>
         public virtual Stream BodyStream
         {
             get
@@ -177,6 +249,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets the footer.
+        /// </summary>
         public Footer Footer
         {
             get
@@ -192,6 +267,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets the section flags of the message.
+        /// </summary>
         public SectionFlag Sections
         {
             get
@@ -205,6 +283,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets the body flag.
+        /// </summary>
         public SectionFlag BodyType
         {
             get
@@ -218,6 +299,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets or sets a buffer of the message.
+        /// </summary>
         protected ByteBuffer Buffer
         {
             get { return this.buffer; }
@@ -242,59 +326,117 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        // Public factory methods
+        /// <summary>
+        /// Creates a message without the body.
+        /// </summary>
+        /// <returns>An AmqpMessage.</returns>
         public static AmqpMessage Create()
         {
             return new AmqpEmptyBodyMessage();
         }
 
+        /// <summary>
+        /// Creates a message with a Data as the body.
+        /// </summary>
+        /// <param name="data">The body.</param>
+        /// <returns></returns>
         public static AmqpMessage Create(Data data)
         {
             return Create(new Data[] { data });
         }
 
+        /// <summary>
+        /// Creates a message with a Data list as the body.
+        /// </summary>
+        /// <param name="dataList"></param>
+        /// <returns>An AmqpMessage.</returns>
         public static AmqpMessage Create(IList<Data> dataList)
         {
             return new AmqpDataMessage(dataList);
         }
 
+        /// <summary>
+        /// Creates a message with an AmqpValue as the body.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns>An AmqpMessage.</returns>
         public static AmqpMessage Create(AmqpValue value)
         {
             return new AmqpValueMessage(value);
         }
 
+        /// <summary>
+        /// Creates a message with a list of AmqpSequence as the body.
+        /// </summary>
+        /// <param name="amqpSequence"></param>
+        /// <returns>An AmqpMessage.</returns>
         public static AmqpMessage Create(IList<AmqpSequence> amqpSequence)
         {
             return new AmqpSequenceMessage(amqpSequence);
         }
 
+        /// <summary>
+        /// Creates a message with a stream as the body. Bytes from the stream
+        /// is put in a Data section.
+        /// </summary>
+        /// <param name="stream">The body stream.</param>
+        /// <param name="ownStream">True if the message should own the stream.</param>
+        /// <returns>An AmqpMessage.</returns>
         public static AmqpMessage Create(Stream stream, bool ownStream)
         {
             return new AmqpBodyStreamMessage(stream, ownStream);
         }
 
-        // Internal factory methods
+        /// <summary>
+        /// Creates a message whose buffer will be updated later when transfers are
+        /// received.
+        /// </summary>
+        /// <returns>An AmqpMessage.</returns>
         public static AmqpMessage CreateReceivedMessage()
         {
             return new AmqpBufferMessage();
         }
 
+        /// <summary>
+        /// Creates a message from a buffer. Message is deserialized when it is accessed.
+        /// </summary>
+        /// <param name="buffer">The buffer.</param>
+        /// <returns>An AmqpMessage.</returns>
         public static AmqpMessage CreateBufferMessage(ByteBuffer buffer)
         {
             return new AmqpBufferMessage(buffer);
         }
 
+        /// <summary>
+        /// Serializes the message and update its <see cref="Buffer"/>.
+        /// </summary>
+        /// <param name="force">True to force update the buffer if it exists.</param>
+        /// <returns>An AmqpMessage.</returns>
         public long Serialize(bool force)
         {
             this.Initialize(SectionFlag.All, force);
             return this.messageSize;
         }
 
+        /// <summary>
+        /// Clones the message for send or other operations.
+        /// </summary>
+        /// <returns>An AmqpMessage.</returns>
+        /// <remarks>
+        /// Mutable sections can be added or updated. This method performs
+        /// a shadow copy of the sections so any update is also affecting the
+        /// source message.
+        /// </remarks>
         public AmqpMessage Clone()
         {
             return this.Clone(false);
         }
 
+        /// <summary>
+        /// Clones the message for send or other operations.
+        /// </summary>
+        /// <param name="deepCopy">True to perform a deep copy of all multable sections.</param>
+        /// <returns>An AmqpMessage.</returns>
         public AmqpMessage Clone(bool deepCopy)
         {
             if (this.Link != null && !this.Link.IsReceiver)
@@ -311,24 +453,39 @@ namespace Microsoft.Azure.Amqp
             return new AmqpClonedMessage(this, deepCopy);
         }
 
+        /// <summary>
+        /// Appends a buffer to the message.
+        /// </summary>
+        /// <param name="payload">The payload buffer.</param>
+        /// <param name="isLast">True if it is the last part of the message.</param>
         public override void AddPayload(ByteBuffer payload, bool isLast)
         {
             throw new InvalidOperationException();
         }
 
+        /// <summary>
+        /// Gets a buffer of the message payload from the current read position and advances
+        /// the read position.
+        /// </summary>
+        /// <param name="payloadSize">The size of the buffer to return.</param>
+        /// <param name="more">True if there is no more data in the message's buffer.</param>
+        /// <returns>A buffer of the requested payload. It can be smaller than the requested size.</returns>
         public override ByteBuffer GetPayload(int payloadSize, out bool more)
         {
             this.Initialize(SectionFlag.All);
             return GetPayload(this.buffer, payloadSize, out more);
         }
 
+        /// <summary>
+        /// Disposes the message and releases the buffer.
+        /// </summary>
         public override void Dispose()
         {
             this.disposeState |= MessageDisposed;
             this.ReleaseBuffer();
         }
 
-        public void ThrowIfDisposed()
+        internal void ThrowIfDisposed()
         {
             if ((this.disposeState & MessageDisposed) > 0)
             {
@@ -336,7 +493,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        protected static void EncodeSection(ByteBuffer buffer, AmqpDescribed section)
+        internal static void EncodeSection(ByteBuffer buffer, AmqpDescribed section)
         {
             if (section != null)
             {
@@ -346,9 +503,15 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Initializes the message. Depends on the type of the message, it performs
+        /// a serialization or deserialization of the message.
+        /// </summary>
+        /// <param name="desiredSections">The sections to initialize.</param>
+        /// <param name="force">Force the initialization if it was done before.</param>
         protected abstract void Initialize(SectionFlag desiredSections, bool force = false);
 
-        protected virtual void EnsureInitialized<T>(ref T obj, SectionFlag section) where T : class, new()
+        internal virtual void EnsureInitialized<T>(ref T obj, SectionFlag section) where T : class, new()
         {
             if (AmqpMessage.EnsureInitialized(ref obj))
             {
@@ -807,7 +970,7 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            protected override void EnsureInitialized<T>(ref T obj, SectionFlag section)
+            internal override void EnsureInitialized<T>(ref T obj, SectionFlag section)
             {
                 this.Initialize(SectionFlag.All);
             }

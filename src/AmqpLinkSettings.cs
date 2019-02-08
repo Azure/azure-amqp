@@ -6,14 +6,23 @@ namespace Microsoft.Azure.Amqp
     using System;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// Settings of a link.
+    /// </summary>
     public sealed class AmqpLinkSettings : Attach
     {
         uint linkCredit;
 
+        /// <summary>
+        /// Initializes the settings object.
+        /// </summary>
         public AmqpLinkSettings()
         {
         }
 
+        /// <summary>
+        /// Gets or sets the total credit.
+        /// </summary>
         public uint TotalLinkCredit
         {
             get
@@ -28,24 +37,39 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets or sets the cache size of the prefetch queue. When set, the link
+        /// does a best effor to ensure prefetched messages fit into the specified size.
+        /// </summary>
         public long? TotalCacheSizeInBytes
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// The number of messages that have been settled by the application by
+        /// calling one of the state update methods on <see cref="ReceivingAmqpLink"/>.
+        /// A flow is sent when the threshold is reached.
+        /// </summary>
         public int FlowThreshold
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Sends a flow based on <see cref="FlowThreshold"/>.
+        /// </summary>
         public bool AutoSendFlow
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="SettleMode"/> of the link.
+        /// </summary>
         public SettleMode SettleType
         {
             get 
@@ -71,6 +95,11 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Creates a settings object from an attach.
+        /// </summary>
+        /// <param name="attach">The attach.</param>
+        /// <returns>A AmqpLinkSettings object.</returns>
         public static AmqpLinkSettings Create(Attach attach)
         {
             AmqpLinkSettings settings = new AmqpLinkSettings();
@@ -97,6 +126,12 @@ namespace Microsoft.Azure.Amqp
             return settings;
         }
 
+        /// <summary>
+        /// Determines whether two link settings are equal based on <see cref="Attach.LinkName"/>
+        /// and <see cref="Attach.Role"/>. Name comparison is case insensitive.
+        /// </summary>
+        /// <param name="obj">The object to compare with the current object.</param>
+        /// <returns>True if the specified object is equal to the current object; otherwise, false.</returns>
         public override bool Equals(object obj)
         {
             AmqpLinkSettings other = obj as AmqpLinkSettings;
@@ -109,6 +144,10 @@ namespace Microsoft.Azure.Amqp
                 this.Role == other.Role;
         }
 
+        /// <summary>
+        /// Gets a hash code of the object.
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             return (this.LinkName.GetHashCode() * 397) + this.Role.GetHashCode();

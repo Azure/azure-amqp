@@ -833,7 +833,7 @@ namespace Test.Microsoft.Azure.Amqp
             hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(20), null, null), out message);
             Assert.True(hasMessage);
             Assert.NotNull(message);
-            rLink.AcceptMessage(message, false);
+            rLink.AcceptMessage(message);
 
             hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromMilliseconds(500), null, null), out message);
             Assert.False(hasMessage);
@@ -879,7 +879,7 @@ namespace Test.Microsoft.Azure.Amqp
             hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(20), null, null), out message);
             Assert.True(hasMessage);
             Assert.NotNull(message);
-            rLink.AcceptMessage(message, false);
+            rLink.AcceptMessage(message);
 
             connection.Close();
         }
@@ -977,7 +977,7 @@ namespace Test.Microsoft.Azure.Amqp
                     await Task.Yield();
                     Assert.NotNull(message2);
 
-                    receiver.AcceptMessage(message2, false);
+                    receiver.AcceptMessage(message2);
                     message2.Dispose();
 
                     await sender.CloseAsync(timeout);

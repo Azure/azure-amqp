@@ -9,10 +9,16 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Sasl;
     using Microsoft.Azure.Amqp.Transport;
 
+    /// <summary>
+    /// Settings for the AMQP protocol.
+    /// </summary>
     public sealed class AmqpSettings
     {
         List<TransportProvider> transportProviders;
 
+        /// <summary>
+        /// Initializes the settings.
+        /// </summary>
         public AmqpSettings()
         {
             this.MaxConcurrentConnections = int.MaxValue;
@@ -22,36 +28,55 @@ namespace Microsoft.Azure.Amqp
             this.TimerFactory = SystemTimerFactory.Default;
         }
 
+        /// <summary>
+        /// The maximum number of connections allowed.
+        /// </summary>
         public int MaxConcurrentConnections
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// The maximum number of sessions allowed in a connection.
+        /// </summary>
         public int MaxLinksPerSession
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// The default credit of receiving links.
+        /// </summary>
         public uint DefaultLinkCredit
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Requires a secure transport (e.g. TLS) for the connection.
+        /// </summary>
         public bool RequireSecureTransport
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Allows a connection that is not authenticated through an
+        /// SASL mechanism.
+        /// </summary>
         public bool AllowAnonymousConnection
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets the factory to create <see cref="ITimer"/> objects.
+        /// </summary>
         public ITimerFactory TimerFactory
         {
             get;
@@ -59,8 +84,13 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Providers should be added in preferred order.
+        /// Gets the list of transport providers that are used
+        /// during connection creation.
         /// </summary>
+        /// <remarks>
+        /// After the initial transport is created, the connection
+        /// initiator walks through the list and upgrades the transport.
+        /// </remarks>
         public IList<TransportProvider> TransportProviders
         {
             get
@@ -74,13 +104,16 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets or sets the runtime provider that handles the protocol requests.
+        /// </summary>
         public IRuntimeProvider RuntimeProvider
         {
             get;
             set;
         }
 
-        public T GetTransportProvider<T>() where T : TransportProvider
+        internal T GetTransportProvider<T>() where T : TransportProvider
         {
             if (this.transportProviders != null)
             {
@@ -96,7 +129,7 @@ namespace Microsoft.Azure.Amqp
             return null;
         }
 
-        public bool TryGetTransportProvider(ProtocolHeader header, out TransportProvider provider)
+        internal bool TryGetTransportProvider(ProtocolHeader header, out TransportProvider provider)
         {
             if (this.TransportProviders.Count == 0)
             {
@@ -118,13 +151,13 @@ namespace Microsoft.Azure.Amqp
             return false;
         }
 
-        public ProtocolHeader GetDefaultHeader()
+        internal ProtocolHeader GetDefaultHeader()
         {
             TransportProvider provider = this.GetDefaultProvider();
             return new ProtocolHeader(provider.ProtocolId, provider.DefaultVersion);
         }
 
-        public ProtocolHeader GetSupportedHeader(ProtocolHeader requestedHeader)
+        internal ProtocolHeader GetSupportedHeader(ProtocolHeader requestedHeader)
         {
             // Protocol id negotiation
             TransportProvider provider = null;
@@ -143,6 +176,10 @@ namespace Microsoft.Azure.Amqp
             return requestedHeader;
         }
 
+        /// <summary>
+        /// Clones the settings object.
+        /// </summary>
+        /// <returns>A new settings object.</returns>
         public AmqpSettings Clone()
         {
             AmqpSettings settings = new AmqpSettings();
@@ -155,7 +192,7 @@ namespace Microsoft.Azure.Amqp
             return settings;
         }
 
-        public void ValidateInitiatorSettings()
+        internal void ValidateInitiatorSettings()
         {
             if (this.TransportProviders.Count == 0)
             {
@@ -163,7 +200,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        public void ValidateListenerSettings()
+        internal void ValidateListenerSettings()
         {
             if (this.TransportProviders.Count == 0)
             {

@@ -621,7 +621,7 @@ namespace TestAmqpBroker
                         else
                         {
                             this.queue.Enqueue(new BrokerMessage(message));
-                            this.link.AcceptMessage(message, message.Batchable);
+                            this.link.AcceptMessage(message);
                             message.Dispose();
                         }
                     }

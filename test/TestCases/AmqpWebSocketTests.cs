@@ -53,7 +53,7 @@ namespace Test.Microsoft.Azure.Amqp
                 AmqpMessage message2 = rLink.ReceiveMessageAsync(TimeSpan.FromSeconds(60)).GetAwaiter().GetResult();
                 Assert.NotNull(message2);
 
-                rLink.AcceptMessage(message2, false);
+                rLink.AcceptMessage(message2);
                 message2.Dispose();
             }
 

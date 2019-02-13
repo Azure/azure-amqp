@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -11,8 +11,8 @@
     <AssemblyName>Microsoft.Azure.Amqp</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.14393.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.10240.0</TargetPlatformMinVersion>
+    <TargetPlatformVersion>10.0.16299.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.16299.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -107,6 +107,55 @@
     <ErrorReport>prompt</ErrorReport>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Signed|AnyCPU'">
+    <OutputPath>bin\Signed\</OutputPath>
+    <DefineConstants>TRACE;WINDOWS_UWP;RELEASE_DELAY_SIGN</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>bin\Release\Microsoft.Azure.Amqp.XML</DocumentationFile>
+    <Optimize>true</Optimize>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Signed|x86'">
+    <OutputPath>bin\x86\Signed\</OutputPath>
+    <DefineConstants>TRACE;WINDOWS_UWP</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Signed|ARM'">
+    <OutputPath>bin\ARM\Signed\</OutputPath>
+    <DefineConstants>TRACE;WINDOWS_UWP</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Signed|x64'">
+    <OutputPath>bin\x64\Signed\</OutputPath>
+    <DefineConstants>TRACE;WINDOWS_UWP</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <NoStdLib>true</NoStdLib>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
     <PRIResource Include="Amqp\AmqpResources.UWP.resw">
@@ -118,7 +167,6 @@
     <None Include="..\35MSSharedLib1024.snk">
       <Link>35MSSharedLib1024.snk</Link>
     </None>
-    <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Microsoft.Azure.Amqp\ActionItem.cs" />
@@ -534,11 +582,35 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Sasl\SaslResponse.cs">
       <Link>Amqp\Sasl\SaslResponse.cs</Link>
     </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\CustomSslStream.cs">
+      <Link>Amqp\Transport\CustomSslStream.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransport.cs">
+      <Link>Amqp\Transport\TcpTransport.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportInitiator.cs">
+      <Link>Amqp\Transport\TcpTransportInitiator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransport.cs">
+      <Link>Amqp\Transport\TlsTransport.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportInitiator.cs">
+      <Link>Amqp\Transport\TlsTransportInitiator.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TlsTransportProvider.cs">
       <Link>Amqp\Transport\TlsTransportProvider.cs</Link>
     </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TransportStream.cs">
+      <Link>Amqp\Transport\TransportStream.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\WebSocketTransportSettings.cs">
       <Link>Amqp\Transport\WebSocketTransportSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\X509\X509CertificateIdentity.cs">
+      <Link>Amqp\X509\X509CertificateIdentity.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\X509\X509Principal.cs">
+      <Link>Amqp\X509\X509Principal.cs</Link>
     </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\AsyncResult.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\CommonResources.cs" />
@@ -563,7 +635,6 @@
       <Link>Properties\Version.cs</Link>
     </Compile>
     <Compile Include="Amqp\Resources.UWP.cs" />
-    <Compile Include="Amqp\Transport\TlsTransportInitiator.UWP.cs" />
     <Compile Include="Amqp\Transport\WebSocketTransport.UWP.cs" />
     <Compile Include="Amqp\Transport\WebSocketTransportInitiator.UWP.cs" />
     <Compile Include="ResourceManager.cs" />
@@ -629,8 +700,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\AmqpTransportProvider.cs">
       <Link>Amqp\Transport\AmqpTransportProvider.cs</Link>
     </Compile>
-    <Compile Include="Amqp\Transport\TcpTransport.UWP.cs" />
-    <Compile Include="Amqp\Transport\TcpTransportInitiator.UWP.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\TcpTransportSetting.cs">
       <Link>Amqp\Transport\TcpTransportSetting.cs</Link>
     </Compile>
@@ -663,58 +732,13 @@
   <ItemGroup>
     <EmbeddedResource Include="Properties\Microsoft.Azure.Amqp.Uwp.rd.xml" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
+      <Version>6.1.9</Version>
+    </PackageReference>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Signed|AnyCPU'">
-    <OutputPath>bin\Signed\</OutputPath>
-    <DefineConstants>TRACE;WINDOWS_UWP;RELEASE_DELAY_SIGN</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>bin\Release\Microsoft.Azure.Amqp.XML</DocumentationFile>
-    <Optimize>true</Optimize>
-    <NoStdLib>true</NoStdLib>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Signed|x86'">
-    <OutputPath>bin\x86\Signed\</OutputPath>
-    <DefineConstants>TRACE;WINDOWS_UWP</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
-    <NoStdLib>true</NoStdLib>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Signed|ARM'">
-    <OutputPath>bin\ARM\Signed\</OutputPath>
-    <DefineConstants>TRACE;WINDOWS_UWP</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
-    <NoStdLib>true</NoStdLib>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>ARM</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Signed|x64'">
-    <OutputPath>bin\x64\Signed\</OutputPath>
-    <DefineConstants>TRACE;WINDOWS_UWP</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Optimize>true</Optimize>
-    <NoStdLib>true</NoStdLib>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

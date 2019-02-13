@@ -79,7 +79,7 @@ namespace Microsoft.Azure.Amqp
                 var tls = new TlsTransportSettings(tcpSettings) { TargetHost = addressUri.Host };
                 if (this.tlsSettings != null)
                 {
-#if NET45 || NETSTANDARD || MONOANDROID
+#if !PCL
                     tls.CertificateValidationCallback = this.tlsSettings.CertificateValidationCallback;
                     tls.CheckCertificateRevocation = this.tlsSettings.CheckCertificateRevocation;
                     tls.Certificate = this.tlsSettings.Certificate;

@@ -5,15 +5,15 @@
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   IgnorableNamespaces="uap mp">
 
-  <Identity Name="14b219f9-88b2-4d3b-8395-670b6741074c"
-            Publisher="CN=xinchen"
+  <Identity Name="8d4953e8-6eeb-4b8a-a317-46a893f4bb20"
+            Publisher="CN=mqt"
             Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="14b219f9-88b2-4d3b-8395-670b6741074c" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="8d4953e8-6eeb-4b8a-a317-46a893f4bb20" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>Test.Microsoft.Amqp.Uwp</DisplayName>
-    <PublisherDisplayName>xinchen</PublisherDisplayName>
+    <PublisherDisplayName>mqt</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -41,5 +41,6 @@
   </Applications>
   <Capabilities>
     <Capability Name="internetClientServer" />
+    <Capability Name="privateNetworkClientServer" />
   </Capabilities>
 </Package>

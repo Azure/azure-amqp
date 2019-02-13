@@ -288,7 +288,7 @@ namespace TestAmqpBroker
                         false);
                 }
 
-#if NETSTANDARD
+#if NETCOREAPP
                 store.Dispose();
 #else
                 store.Close();

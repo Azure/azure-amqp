@@ -9,6 +9,7 @@ using Windows.Networking;
 using Windows.Networking.Sockets;
 #endif
 
+#if !WINDOWS_UWP
 namespace System.Collections.Generic
 {
     using System.Collections.ObjectModel;
@@ -157,8 +158,9 @@ namespace System.Collections.Generic
         }
     }
 }
+#endif
 
-#if WINDOWS_UWP || PCL
+#if PCL
 
 namespace System.Threading
 {

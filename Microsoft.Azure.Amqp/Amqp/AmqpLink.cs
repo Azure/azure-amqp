@@ -308,7 +308,7 @@ namespace Microsoft.Azure.Amqp
                     this.ApplyTempTotalLinkCredit() &&
                     this.State == AmqpObjectState.Opened)
                 {
-                    this.SendFlow(false, false, null);
+                    this.SendFlow(false, false, properties: null);
                 }
             }
         }
@@ -448,7 +448,7 @@ namespace Microsoft.Azure.Amqp
 
             if (flow.Echo())
             {
-                this.SendFlow(false, false, null);
+                this.SendFlow(false, false, properties: null);
             }
 
             return moreCredit;
@@ -533,7 +533,7 @@ namespace Microsoft.Azure.Amqp
 
         protected void SendFlow(bool echo)
         {
-            this.SendFlow(echo, false, null);
+            this.SendFlow(echo, false, properties: null);
         }
 
         protected void ProcessTransfer(Transfer transfer, Frame rawFrame, Delivery delivery, bool newDelivery)
@@ -551,7 +551,7 @@ namespace Microsoft.Azure.Amqp
                         if (this.tempTotalCredit != null &&
                             this.ApplyTempTotalLinkCredit())
                         {
-                            this.SendFlow(false, false, null);
+                            this.SendFlow(false, false, properties: null);
                         }
 
                         if (this.linkCredit == 0 && this.bufferedCredit == 0)
@@ -753,7 +753,7 @@ namespace Microsoft.Azure.Amqp
 
                 if (sendFlow)
                 {
-                    this.SendFlow(false, false, null);
+                    this.SendFlow(false, false, properties: null);
                 }
             }
         }

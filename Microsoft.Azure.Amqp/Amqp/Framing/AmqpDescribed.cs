@@ -6,19 +6,17 @@ namespace Microsoft.Azure.Amqp.Framing
     using System;
     using System.Globalization;
     using System.Text;
-
     using Microsoft.Azure.Amqp.Encoding;
 
     /// <summary>
     /// Descriptor is restricted to symbol and ulong
     /// </summary>
-    public class AmqpDescribed : DescribedType, IAmqpSerializable
+    public class AmqpDescribed : IAmqpSerializable
     {
         AmqpSymbol name;
         ulong code;
 
         public AmqpDescribed(AmqpSymbol name, ulong code)
-            : base(name.Value == null ? (object)code : (object)name, null)
         {
             this.name = name;
             this.code = code;
@@ -32,6 +30,12 @@ namespace Microsoft.Azure.Amqp.Framing
         public ulong DescriptorCode
         {
             get { return this.code; }
+        }
+
+        public object Value
+        {
+            get;
+            set;
         }
 
         public int EncodeSize

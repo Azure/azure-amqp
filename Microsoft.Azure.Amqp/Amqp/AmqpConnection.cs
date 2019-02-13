@@ -86,7 +86,12 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                return LazyInitializer.EnsureInitialized(ref this.extensions);
+                if (this.extensions == null)
+                {
+                    Interlocked.CompareExchange(ref this.extensions, new KeyedByTypeCollection<object>(), null);
+                }
+
+                return this.extensions;
             }
         }
 

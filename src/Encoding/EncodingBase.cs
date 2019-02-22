@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    public abstract class EncodingBase
+    abstract class EncodingBase
     {
         FormatCode formatCode;
 

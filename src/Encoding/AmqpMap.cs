@@ -3,70 +3,29 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    using System.Collections;
     using System.Collections.Generic;
     using System.Globalization;
     using System.Text;
 
-    public sealed class AmqpMap : IEnumerable<KeyValuePair<MapKey, object>>
+    /// <summary>
+    /// This class implements an AMQP map.
+    /// </summary>
+    public sealed class AmqpMap : Dictionary<MapKey, object>
     {
-        IDictionary<MapKey, object> value;
-
-        public AmqpMap()
-        {
-            this.value = new Dictionary<MapKey, object>();
-        }
-
-        public AmqpMap(IDictionary<MapKey, object> value)
-        {
-            this.value = value;
-        }
-
-        public AmqpMap(IDictionary value)
-            : this()
-        {
-            foreach (DictionaryEntry entry in value)
-            {
-                this.value.Add(new MapKey(entry.Key), entry.Value);
-            }
-        }
-
-        public int Count
-        {
-            get { return this.value.Count; }
-        }
-
-        public int ValueSize
-        {
-            get
-            {
-                return MapEncoding.GetValueSize(this);
-            }
-        }
-
-        public object this[MapKey key]
-        {
-            get
-            {
-                object obj;
-                if (this.value.TryGetValue(key, out obj))
-                {
-                    return obj;
-                }
-
-                return null;
-            }
-
-            set
-            {
-                this.value[key] = value;
-            }
-        }
-
+        /// <summary>
+        /// Gets a value from the map for a given key.
+        /// </summary>
+        /// <typeparam name="TValue">The expected type of the value.</typeparam>
+        /// <param name="key">The key to lookup.</param>
+        /// <param name="value">The returned value.</param>
+        /// <returns>True if the key is found and the type matches; false otherwise.</returns>
+        /// <remarks>This method returns false if the key exists but the value type
+        /// does not match the expected type. Use the indexer to access the value
+        /// if this is not the expected behavior.</remarks>
         public bool TryGetValue<TValue>(MapKey key, out TValue value)
         {
             object obj;
-            if (this.value.TryGetValue(key, out obj))
+            if (this.TryGetValue(key, out obj))
             {
                 if (obj == null)
                 {
@@ -85,28 +44,34 @@ namespace Microsoft.Azure.Amqp.Encoding
             return false;
         }
 
+        /// <summary>
+        /// Removes a value from the map for a given key.
+        /// </summary>
+        /// <typeparam name="TValue">The expected type of the value.</typeparam>
+        /// <param name="key">The key to lookup.</param>
+        /// <param name="value">The value to remove.</param>
+        /// <returns>True if the key is found and the type matches; false otherwise.</returns>
         public bool TryRemoveValue<TValue>(MapKey key, out TValue value)
         {
             if (this.TryGetValue(key, out value))
             {
-                this.value.Remove(key);
+                this.Remove(key);
                 return true;
             }
 
             return false;
         }
 
-        public void Add(MapKey key, object value)
-        {
-            this.value.Add(key, value);
-        }
-
+        /// <summary>
+        /// Gets a string to represent the object.
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
             sb.Append('[');
             bool firstItem = true;
-            foreach (KeyValuePair<MapKey, object> pair in this.value)
+            foreach (KeyValuePair<MapKey, object> pair in this)
             {
                 if (firstItem)
                 {
@@ -122,16 +87,6 @@ namespace Microsoft.Azure.Amqp.Encoding
 
             sb.Append(']');
             return sb.ToString();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.value.GetEnumerator();
-        }
-
-        IEnumerator<KeyValuePair<MapKey, object>> IEnumerable<KeyValuePair<MapKey, object>>.GetEnumerator()
-        {
-            return this.value.GetEnumerator();
         }
     }
 }

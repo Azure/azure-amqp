@@ -5,8 +5,17 @@ namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
 
+    /// <summary>
+    /// Encodes and decodes AMQP primitive types. The input/output buffer
+    /// is advanced after the read/write operation.
+    /// </summary>
     public static unsafe class AmqpBitConverter
     {
+        /// <summary>
+        /// Reads an 8-bit signed number from a buffer.
+        /// </summary>
+        /// <param name="buffer">The input buffer.</param>
+        /// <returns>An 8-bit signed number.</returns>
         public static sbyte ReadByte(ByteBuffer buffer)
         {
             buffer.Validate(false, FixedWidth.Byte);
@@ -15,6 +24,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
+        /// <summary>
+        /// Reads an 8-bit unsigned number from a buffer.
+        /// </summary>
+        /// <param name="buffer">The input buffer.</param>
+        /// <returns>An 8-bit unsigned number.</returns>
         public static byte ReadUByte(ByteBuffer buffer)
         {
             buffer.Validate(false, FixedWidth.UByte);
@@ -23,6 +37,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
+        /// <summary>
+        /// Reads a 16-bit signed number from a buffer.
+        /// </summary>
+        /// <param name="buffer">The input buffer.</param>
+        /// <returns>A 16-bit signed number.</returns>
         public static short ReadShort(ByteBuffer buffer)
         {
             buffer.Validate(false, FixedWidth.Short);
@@ -38,6 +57,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
+        /// <summary>
+        /// Reads a 16-bit unsigned number from a buffer.
+        /// </summary>
+        /// <param name="buffer">The input buffer.</param>
+        /// <returns>A 16-bit unsigned number.</returns>
         public static ushort ReadUShort(ByteBuffer buffer)
         {
             buffer.Validate(false, FixedWidth.UShort);
@@ -53,6 +77,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
+        /// <summary>
+        /// Reads a 32-bit signed number from a buffer.
+        /// </summary>
+        /// <param name="buffer">The input buffer.</param>
+        /// <returns>A 32-bit signed number.</returns>
         public static int ReadInt(ByteBuffer buffer)
         {
             buffer.Validate(false, FixedWidth.Int);
@@ -70,13 +99,18 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
-        public static uint PeekUInt(ByteBuffer buffer)
+        internal static uint PeekUInt(ByteBuffer buffer)
         {
             buffer.Validate(false, FixedWidth.UInt);
             uint data = ReadUInt(buffer.Buffer, buffer.Offset, buffer.Length);
             return data;
         }
 
+        /// <summary>
+        /// Reads a 32-bit unsigned number from a buffer.
+        /// </summary>
+        /// <param name="buffer">The input buffer.</param>
+        /// <returns>A 32-bit unsigned number.</returns>
         public static uint ReadUInt(ByteBuffer buffer)
         {
             buffer.Validate(false, FixedWidth.UInt);
@@ -85,6 +119,13 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
+        /// <summary>
+        /// Reads a 32-bit unsigned number from a byte array.
+        /// </summary>
+        /// <param name="buffer">The input byte array</param>
+        /// <param name="offset">The offset to read.</param>
+        /// <param name="count">bytes available from offset in the array.</param>
+        /// <returns>A 32-bit unsigned number.</returns>
         public static uint ReadUInt(byte[] buffer, int offset, int count)
         {
             Validate(count, FixedWidth.UInt);
@@ -101,6 +142,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
+        /// <summary>
+        /// Reads a 64-bit signed number from a buffer.
+        /// </summary>
+        /// <param name="buffer">The input buffer.</param>
+        /// <returns>A 64-bit signed number.</returns>
         public static long ReadLong(ByteBuffer buffer)
         {
             buffer.Validate(false, FixedWidth.Long);
@@ -122,6 +168,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
+        /// <summary>
+        /// Reads a 64-bit unsigned number from a buffer.
+        /// </summary>
+        /// <param name="buffer">The input buffer.</param>
+        /// <returns>A 64-bit unsigned number.</returns>
         public static ulong ReadULong(ByteBuffer buffer)
         {
             buffer.Validate(false, FixedWidth.ULong);
@@ -130,6 +181,14 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
+
+        /// <summary>
+        /// Reads a 64-bit unsigned number from a byte array.
+        /// </summary>
+        /// <param name="buffer">The input byte array</param>
+        /// <param name="offset">The offset to read.</param>
+        /// <param name="count">bytes available from offset in the array.</param>
+        /// <returns>A 64-bit unsigned number.</returns>
         public static ulong ReadULong(byte[] buffer, int offset, int count)
         {
             Validate(count, FixedWidth.ULong);
@@ -150,6 +209,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
+        /// <summary>
+        /// Reads a 32-bit floating point number from a buffer.
+        /// </summary>
+        /// <param name="buffer">The input buffer.</param>
+        /// <returns>A 32-bit floating point number.</returns>
         public static float ReadFloat(ByteBuffer buffer)
         {
             buffer.Validate(false, FixedWidth.Float);
@@ -167,6 +231,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
+        /// <summary>
+        /// Reads a 64-bit floating point number from a buffer.
+        /// </summary>
+        /// <param name="buffer">The input buffer.</param>
+        /// <returns>A 64-bit floating point number.</returns>
         public static double ReadDouble(ByteBuffer buffer)
         {
             buffer.Validate(false, FixedWidth.Double);
@@ -188,6 +257,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
+        /// <summary>
+        /// Reads a uuid from a buffer.
+        /// </summary>
+        /// <param name="buffer">The input buffer.</param>
+        /// <returns>A uuid.</returns>
         public static Guid ReadUuid(ByteBuffer buffer)
         {
             buffer.Validate(false, FixedWidth.Uuid);
@@ -213,6 +287,13 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
+        /// <summary>
+        /// Reads a number of bytes from a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to read.</param>
+        /// <param name="data">The destination byte array.</param>
+        /// <param name="offset">The offset of the destination byte array.</param>
+        /// <param name="count">The number of bytes to read.</param>
         public static void ReadBytes(ByteBuffer buffer, byte[] data, int offset, int count)
         {
             buffer.Validate(false, count);
@@ -220,6 +301,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Complete(count);
         }
 
+        /// <summary>
+        /// Writes an 8-bit signed number to a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        /// <param name="data">The 8-bit signed number.</param>
         public static void WriteByte(ByteBuffer buffer, sbyte data)
         {
             buffer.Validate(true, FixedWidth.Byte);
@@ -227,6 +313,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Append(FixedWidth.Byte);
         }
 
+        /// <summary>
+        /// Writes an 8-bit unsigned number to a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        /// <param name="data">The 8-bit unsigned number.</param>
         public static void WriteUByte(ByteBuffer buffer, byte data)
         {
             buffer.Validate(true, FixedWidth.UByte);
@@ -234,12 +325,17 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Append(FixedWidth.UByte);
         }
 
-        public static void WriteUByte(byte[] buffer, int offset, byte data)
+        internal static void WriteUByte(byte[] buffer, int offset, byte data)
         {
             Validate(buffer.Length - offset, FixedWidth.UByte);
             buffer[offset] = data;
         }
 
+        /// <summary>
+        /// Writes a 16-bit signed number to a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        /// <param name="data">The 16-bit signed number.</param>
         public static void WriteShort(ByteBuffer buffer, short data)
         {
             buffer.Validate(true, FixedWidth.Short);
@@ -253,6 +349,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Append(FixedWidth.Short);
         }
 
+        /// <summary>
+        /// Writes a 16-bit unsigned number to a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        /// <param name="data">The 16-bit unsigned number.</param>
         public static void WriteUShort(ByteBuffer buffer, ushort data)
         {
             buffer.Validate(true, FixedWidth.UShort);
@@ -266,17 +367,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Append(FixedWidth.UShort);
         }
 
-        public static void WriteUShort(byte[] buffer, int offset, ushort data)
-        {
-            Validate(buffer.Length - offset, FixedWidth.UShort);
-            fixed (byte* d = &buffer[offset])
-            {
-                byte* p = (byte*)&data;
-                d[0] = p[1];
-                d[1] = p[0];
-            }
-        }
-
+        /// <summary>
+        /// Writes a 32-bit signed number to a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        /// <param name="data">The 32-bit signed number.</param>
         public static void WriteInt(ByteBuffer buffer, int data)
         {
             buffer.Validate(true, FixedWidth.Int);
@@ -292,6 +387,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Append(FixedWidth.Int);
         }
 
+        /// <summary>
+        /// Writes a 32-bit unsigned number to a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        /// <param name="data">The 32-bit unsigned number.</param>
         public static void WriteUInt(ByteBuffer buffer, uint data)
         {
             buffer.Validate(true, FixedWidth.UInt);
@@ -307,6 +407,12 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Append(FixedWidth.UInt);
         }
 
+        /// <summary>
+        /// Writes a 32-bit unsigned number to a byte array.
+        /// </summary>
+        /// <param name="buffer">The byte array to write.</param>
+        /// <param name="offset">The offset in the array to write.</param>
+        /// <param name="data">The 32-bit unsigned number.</param>
         public static void WriteUInt(byte[] buffer, int offset, uint data)
         {
             Validate(buffer.Length - offset, FixedWidth.UInt);
@@ -320,6 +426,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
         }
 
+        /// <summary>
+        /// Writes a 64-bit signed number to a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        /// <param name="data">The 64-bit signed number.</param>
         public static void WriteLong(ByteBuffer buffer, long data)
         {
             buffer.Validate(true, FixedWidth.Long);
@@ -339,6 +450,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Append(FixedWidth.Long);
         }
 
+        /// <summary>
+        /// Writes a 64-bit unsigned number to a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        /// <param name="data">The 64-bit unsigned number.</param>
         public static void WriteULong(ByteBuffer buffer, ulong data)
         {
             buffer.Validate(true, FixedWidth.ULong);
@@ -358,6 +474,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Append(FixedWidth.ULong);
         }
 
+        /// <summary>
+        /// Writes a 32-bit floating point number to a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        /// <param name="data">The 32-bit floating point number.</param>
         public static void WriteFloat(ByteBuffer buffer, float data)
         {
             buffer.Validate(true, FixedWidth.Float);
@@ -373,6 +494,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Append(FixedWidth.Float);
         }
 
+        /// <summary>
+        /// Writes a 64-bit floating point number to a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        /// <param name="data">The 64-bit floating point number.</param>
         public static void WriteDouble(ByteBuffer buffer, double data)
         {
             buffer.Validate(true, FixedWidth.Double);
@@ -392,6 +518,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Append(FixedWidth.Double);
         }
 
+        /// <summary>
+        /// Writes a uuid to a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        /// <param name="data">The uuid.</param>
         public static void WriteUuid(ByteBuffer buffer, Guid data)
         {
             buffer.Validate(true, FixedWidth.Uuid);
@@ -415,6 +546,13 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Append(FixedWidth.Uuid);
         }
 
+        /// <summary>
+        /// Writes a number of bytes to a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        /// <param name="data">The source byte array.</param>
+        /// <param name="offset">The offset of the source byte array.</param>
+        /// <param name="count">The number of bytes.</param>
         public static void WriteBytes(ByteBuffer buffer, byte[] data, int offset, int count)
         {
             buffer.Validate(true, count);

@@ -3,29 +3,47 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
+    /// <summary>
+    /// Implements the AMQP described type.
+    /// </summary>
     public class DescribedType
     {
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="descriptor">The descriptor.</param>
+        /// <param name="value">The described value.</param>
         public DescribedType(object descriptor, object value)
         {
             this.Descriptor = descriptor;
             this.Value = value;
         }
 
+        /// <summary>
+        /// Gets the descriptor.
+        /// </summary>
         public object Descriptor
         {
             get;
-            set;
+            private set;
         }
 
+        /// <summary>
+        /// Gets or sets the value.
+        /// </summary>
         public object Value
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
-            return this.Value == null ? string.Empty : this.Value.ToString();
+            return $"{this.Descriptor}:{this.Value}";
         }
     }
 }

@@ -369,7 +369,7 @@ namespace TestAmqpBroker
             public void Unlock()
             {
                 this.LockedBy = null;
-                this.DeliveryTag = AmqpConstants.NullBinary;
+                this.DeliveryTag = new ArraySegment<byte>();
                 this.DeliveryId = 0;
                 this.State = null;
                 this.StateChanged = false;
@@ -616,7 +616,7 @@ namespace TestAmqpBroker
                         {
                             Transaction txn = this.queue.broker.txnManager.GetTransaction(message.TxnId);
                             txn.AddOperation(message, this.OnTxnDischarge);
-                            this.link.DisposeMessage(message, new TransactionalState() { Outcome = AmqpConstants.AcceptedOutcome }, true, message.Batchable);
+                            this.link.DisposeMessage(message, new TransactionalState() { Outcome = new Accepted() }, true, message.Batchable);
                         }
                         else
                         {
@@ -659,7 +659,7 @@ namespace TestAmqpBroker
 
                 public void Signal(BrokerMessage message)
                 {
-                    this.link.SendMessageNoWait(message, this.GetNextTag(), AmqpConstants.NullBinary);
+                    this.link.SendMessageNoWait(message, this.GetNextTag(), new ArraySegment<byte>());
                 }
 
                 ArraySegment<byte> GetNextTag()
@@ -814,7 +814,7 @@ namespace TestAmqpBroker
                         }
 
                         txn.Discharge(discharge.Fail ?? false);
-                        outcome = AmqpConstants.AcceptedOutcome;
+                        outcome = new Accepted();
                     }
                     else
                     {

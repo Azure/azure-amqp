@@ -19,7 +19,7 @@ namespace TestAmqpClient
                 AmqpMessage message = await this.link.ReceiveMessageAsync(this.link.DefaultOpenTimeout);
                 if (message != null)
                 {
-                    this.link.DisposeDelivery(message, true, AmqpConstants.AcceptedOutcome);
+                    this.link.DisposeDelivery(message, true, new Accepted());
                     if (!this.Attempt())
                     {
                         break;

@@ -17,6 +17,9 @@ namespace Test.Microsoft.Azure.Amqp
     [Trait("Category", TestCategory.Current)]
     public class AmqpConnectionListenerTests
     {
+        static readonly ArraySegment<byte> NullBinary = new ArraySegment<byte>();
+        static readonly ArraySegment<byte> EmptyBinary = new ArraySegment<byte>(new byte[0]);
+
         string queue = "q1";
 
         [Fact]
@@ -96,7 +99,7 @@ namespace Test.Microsoft.Azure.Amqp
             await sLink.OpenAsync(TimeSpan.FromSeconds(20));
 
             AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "AmqpConnectionFactoryTest" });
-            Outcome outcome = await sLink.SendMessageAsync(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10));
+            Outcome outcome = await sLink.SendMessageAsync(message, EmptyBinary, NullBinary, TimeSpan.FromSeconds(10));
             Assert.Equal(Accepted.Code, outcome.DescriptorCode);
 
             ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnDispose, 10));
@@ -146,7 +149,7 @@ namespace Test.Microsoft.Azure.Amqp
                     {
                         AmqpMessage message = this.messages.Dequeue();
                         message.DeliveryAnnotations.Map["x-opt-sequence-number"] = 1;
-                        sender.SendMessageNoWait(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary);
+                        sender.SendMessageNoWait(message, EmptyBinary, NullBinary);
                     });
                     sender.RegisterDispositionListener(d =>
                     {

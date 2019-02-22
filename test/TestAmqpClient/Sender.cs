@@ -7,7 +7,6 @@ namespace TestAmqpClient
 {
     class Sender : Client<SendingAmqpLink>
     {
-
         public Sender(Options options)
             : base(options)
         {
@@ -23,7 +22,7 @@ namespace TestAmqpClient
                     new string('A', this.options.BodySize);
                 AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = body });
                 ArraySegment<byte> tag = new ArraySegment<byte>(BitConverter.GetBytes(i++));
-                Outcome outcome = await this.link.SendMessageAsync(message, tag, AmqpConstants.NullBinary, this.link.DefaultOpenTimeout);
+                Outcome outcome = await this.link.SendMessageAsync(message, tag, new ArraySegment<byte>(), this.link.DefaultOpenTimeout);
                 if (outcome.DescriptorCode == Accepted.Code)
                 {
                     this.Success();

@@ -159,7 +159,7 @@
             if ((sections & SectionFlag.Header) != 0)
             {
                 message.Header.Priority = 10;
-                message.Header.Ttl = (uint)(DateTime.Parse("2011-02-01 12:00:00") - AmqpConstants.StartOfEpoch).TotalMilliseconds;
+                message.Header.Ttl = (uint)TimeSpan.FromDays(10).TotalMilliseconds;
             }
 
             if ((sections & SectionFlag.DeliveryAnnotations) != 0)

@@ -10,58 +10,64 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Framing;
 
     /// <summary>
-    /// Constants for the protocol stack. Extended constants should be defined in
-    /// ClientConstants.cs
+    /// Defines the constants for the protocol stack.
     /// </summary>
     public static class AmqpConstants
     {
-        public const string Apache = "apache.org";
-        public const string Vendor = "com.microsoft";
+        /// <summary>
+        /// Uri scheme for AMQP without TLS.
+        /// </summary>
         public const string SchemeAmqp = "amqp";
+        /// <summary>
+        /// Uri scheme for AMQP over TLS.
+        /// </summary>
         public const string SchemeAmqps = "amqps";
-        public const string TimeSpanName = Vendor + ":timespan";
-        public const string UriName = Vendor + ":uri";
-        public const string DateTimeOffsetName = Vendor + ":datetime-offset";
-        public const string OpenErrorName = Vendor + ":open-error";
-        public static readonly AmqpSymbol IoEvent = "io-event";
-        public static readonly AmqpSymbol BatchedMessageFormat = Vendor + ":batched-message-format";
-        public static readonly AmqpSymbol SimpleWebTokenPropertyName = Vendor + ":swt";
-        public static readonly AmqpSymbol HostName = "hostname";
-        public static readonly AmqpSymbol NetworkHost = "network-host";
-        public static readonly AmqpSymbol Port = "port";
-        public static readonly AmqpSymbol Address = "address";
 
-        public static readonly ArraySegment<byte> NullBinary = new ArraySegment<byte>();
-        public static readonly ArraySegment<byte> EmptyBinary = new ArraySegment<byte>(new byte[0]);
+        internal const string Apache = "apache.org";
+        internal const string Vendor = "com.microsoft";
+        internal const string TimeSpanName = Vendor + ":timespan";
+        internal const string UriName = Vendor + ":uri";
+        internal const string DateTimeOffsetName = Vendor + ":datetime-offset";
+        internal const string OpenErrorName = Vendor + ":open-error";
+        internal static readonly AmqpSymbol IoEvent = "io-event";
+        internal static readonly AmqpSymbol BatchedMessageFormat = Vendor + ":batched-message-format";
+        internal static readonly AmqpSymbol SimpleWebTokenPropertyName = Vendor + ":swt";
+        internal static readonly AmqpSymbol HostName = "hostname";
+        internal static readonly AmqpSymbol NetworkHost = "network-host";
+        internal static readonly AmqpSymbol Port = "port";
+        internal static readonly AmqpSymbol Address = "address";
 
-        public static readonly AmqpVersion DefaultProtocolVersion = new AmqpVersion(1, 0, 0);
-        public static readonly DateTime StartOfEpoch = DateTime.Parse("1970-01-01T00:00:00.0000000Z", CultureInfo.InvariantCulture).ToUniversalTime();
-        public static readonly DateTime MaxAbsoluteExpiryTime = DateTime.MaxValue.ToUniversalTime() - TimeSpan.FromDays(1);
+        internal static readonly ArraySegment<byte> NullBinary = new ArraySegment<byte>();
+        internal static readonly ArraySegment<byte> EmptyBinary = new ArraySegment<byte>(new byte[0]);
 
-        public static readonly Accepted AcceptedOutcome = new Accepted();
-        public static readonly Released ReleasedOutcome = new Released();
-        public static readonly Rejected RejectedOutcome = new Rejected();
-        public static readonly Rejected RejectedNotFoundOutcome = new Rejected { Error = new Error() { Condition = AmqpErrorCode.NotFound } };
-        public static readonly Received ReceivedOutcome = new Received();
+        internal static readonly AmqpVersion DefaultProtocolVersion = new AmqpVersion(1, 0, 0);
+        internal static readonly DateTime StartOfEpoch = DateTime.Parse("1970-01-01T00:00:00.0000000Z", CultureInfo.InvariantCulture).ToUniversalTime();
+        internal static readonly DateTime MaxAbsoluteExpiryTime = DateTime.MaxValue.ToUniversalTime() - TimeSpan.FromDays(1);
+
+        internal static readonly Accepted AcceptedOutcome = new Accepted();
+        internal static readonly Released ReleasedOutcome = new Released();
+        internal static readonly Rejected RejectedOutcome = new Rejected();
+        internal static readonly Rejected RejectedNotFoundOutcome = new Rejected { Error = new Error() { Condition = AmqpErrorCode.NotFound } };
+        internal static readonly Received ReceivedOutcome = new Received();
 
         // 311(0x137) is the IANA code for Microsoft (http://www.iana.org/assignments/enterprise-numbers/enterprise-numbers)
-        public const uint AmqpBatchedMessageFormat = 0x80013700;
-        public const uint AmqpMessageFormat = 0;
-        public const int DefaultPort = 5672;
-        public const int DefaultSecurePort = 5671;
-        public const int ProtocolHeaderSize = 8;
-        public const int TransportBufferSize = 8 * 1024;
-        public const int MinMaxFrameSize = 512;
-        public const uint DefaultMaxFrameSize = 64 * 1024;
-        public const ushort DefaultMaxConcurrentChannels = 8 * 1024;
-        public const uint DefaultMaxLinkHandles = 256 * 1024;
-        public const uint DefaultHeartBeatInterval = 90000;
-        public const uint MinimumHeartBeatIntervalMs = 5 * 1000;
-        public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
-        public const uint DefaultWindowSize = 5000;
-        public const uint DefaultLinkCredit = 1000;
-        public const uint DefaultNextTransferId = 1;
-        public const int DefaultDispositionTimeout = 20;
-        public const int SegmentSize = 512;
+        internal const uint AmqpBatchedMessageFormat = 0x80013700;
+        internal const uint AmqpMessageFormat = 0;
+        internal const int DefaultPort = 5672;
+        internal const int DefaultSecurePort = 5671;
+        internal const int ProtocolHeaderSize = 8;
+        internal const int TransportBufferSize = 8 * 1024;
+        internal const int MinMaxFrameSize = 512;
+        internal const uint DefaultMaxFrameSize = 64 * 1024;
+        internal const ushort DefaultMaxConcurrentChannels = 8 * 1024;
+        internal const uint DefaultMaxLinkHandles = 256 * 1024;
+        internal const uint DefaultHeartBeatInterval = 90000;
+        internal const uint MinimumHeartBeatIntervalMs = 5 * 1000;
+        internal static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
+        internal const uint DefaultWindowSize = 5000;
+        internal const uint DefaultLinkCredit = 1000;
+        internal const uint DefaultNextTransferId = 1;
+        internal const int DefaultDispositionTimeout = 20;
+        internal const int SegmentSize = 512;
     }
 }

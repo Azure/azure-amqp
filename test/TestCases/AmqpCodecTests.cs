@@ -798,9 +798,9 @@
             // Non-default serializer
             AmqpContractSerializer serializer = new AmqpContractSerializer();
             ByteBuffer bf1 = new ByteBuffer(1024, true);
-            serializer.WriteObjectInternal(bf1, p);
+            serializer.WriteObjectToBuffer(bf1, p);
 
-            Person p4 = serializer.ReadObjectInternal<Person, Person>(bf1);
+            Person p4 = serializer.ReadObjectFromBuffer<Person, Person>(bf1);
             personValidator(p, p4);
 
             // Extensible: more items in the payload should not break
@@ -811,7 +811,7 @@
             AmqpEncoding.EncodeObject(dl2, bf2);
             AmqpCodec.EncodeULong(100ul, bf2);
 
-            Person p5 = serializer.ReadObjectInternal<Person, Person>(bf2);
+            Person p5 = serializer.ReadObjectFromBuffer<Person, Person>(bf2);
             Assert.True(p5 is Teacher);
             Assert.Equal(100ul, AmqpCodec.DecodeULong(bf2));   // unknowns should be skipped
             Assert.Equal(0, bf2.Length);
@@ -823,9 +823,9 @@
             teacher.Classes = new Dictionary<int, string>() { { 101, "CS" }, { 102, "Math" }, { 205, "Project" } };
 
             ByteBuffer bf3 = new ByteBuffer(1024, true);
-            serializer.WriteObjectInternal(bf3, teacher);
+            serializer.WriteObjectToBuffer(bf3, teacher);
 
-            Person p6 = serializer.ReadObjectInternal<Person, Person>(bf3);
+            Person p6 = serializer.ReadObjectFromBuffer<Person, Person>(bf3);
             Assert.True(p6 is Teacher);
             Assert.Equal(teacher.Age + 1, p6.Age);
             Assert.Equal(teacher.Sallary * 2, ((Teacher)p6).Sallary);
@@ -846,9 +846,9 @@
 
             AmqpContractSerializer serializer = new AmqpContractSerializer();
             ByteBuffer b = new ByteBuffer(1024, true);
-            serializer.WriteObjectInternal(b, list);
+            serializer.WriteObjectToBuffer(b, list);
 
-            var result = serializer.ReadObjectInternal<NamedList<string>, NamedList<string>>(b);
+            var result = serializer.ReadObjectFromBuffer<NamedList<string>, NamedList<string>>(b);
             Assert.Equal(list.Name, result.Name);
             EnsureEqual((IList)list.List, (IList)result.List);
         }

@@ -13,6 +13,9 @@ namespace Microsoft.Azure.Amqp.Serialization
     using System.Runtime.Serialization;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// An serializer that uses AMQP type system to serialize .Net objects.
+    /// </summary>
     public sealed class AmqpContractSerializer
     {
         static readonly Dictionary<Type, SerializableType> builtInTypes = new Dictionary<Type, SerializableType>()
@@ -65,33 +68,30 @@ namespace Microsoft.Azure.Amqp.Serialization
                 (o, t) => new DateTimeOffset(new DateTime((long)((DescribedType)o).Value, DateTimeKind.Utc)));
         }
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public AmqpContractSerializer()
         {
             this.customTypeCache = new ConcurrentDictionary<Type, SerializableType>();
         }
 
+        /// <summary>
+        /// Initializes the object with external type resolvers.
+        /// </summary>
+        /// <param name="compiler"></param>
         public AmqpContractSerializer(Func<Type, SerializableType> compiler)
             : this()
         {
             this.externalCompilers = new List<Func<Type, SerializableType>>() { compiler };
         }
 
+        /// <summary>
+        /// Writes an object to a stream.
+        /// </summary>
+        /// <param name="stream">The destination stream.</param>
+        /// <param name="graph">The object to serialize.</param>
         public static void WriteObject(Stream stream, object graph)
-        {
-            Instance.WriteObjectInternal(stream, graph);
-        }
-
-        public static T ReadObject<T>(Stream stream)
-        {
-            return Instance.ReadObjectInternal<T, T>(stream);
-        }
-
-        public static TAs ReadObject<T, TAs>(Stream stream)
-        {
-            return Instance.ReadObjectInternal<T, TAs>(stream);
-        }
-
-        internal void WriteObjectInternal(Stream stream, object graph)
         {
             if (graph == null)
             {
@@ -99,7 +99,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
             else
             {
-                SerializableType type = this.GetType(graph.GetType());
+                SerializableType type = Instance.GetType(graph.GetType());
                 using (ByteBuffer buffer = new ByteBuffer(1024, true))
                 {
                     type.WriteObject(buffer, graph);
@@ -108,32 +108,34 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        public void WriteObjectInternal(ByteBuffer buffer, object graph)
+        /// <summary>
+        /// Reads an object from a stream.
+        /// </summary>
+        /// <typeparam name="T">The expected type.</typeparam>
+        /// <param name="stream">The source stream.</param>
+        /// <returns>An object of T.</returns>
+        public static T ReadObject<T>(Stream stream)
         {
-            if (graph == null)
-            {
-                AmqpEncoding.EncodeNull(buffer);
-            }
-            else
-            {
-                SerializableType type = this.GetType(graph.GetType());
-                type.WriteObject(buffer, graph);
-            }
+            return ReadObject<T, T>(stream);
         }
 
-        internal T ReadObjectInternal<T>(Stream stream)
-        {
-            return this.ReadObjectInternal<T, T>(stream);
-        }
-
-        internal TAs ReadObjectInternal<T, TAs>(Stream stream)
+        /// <summary>
+        /// Reads an object from a stream.
+        /// </summary>
+        /// <typeparam name="T">The expected type.</typeparam>
+        /// <typeparam name="TAs">The returned type.</typeparam>
+        /// <param name="stream">The source stream.</param>
+        /// <returns>An object of TAs.</returns>
+        /// <remarks>The serializer uses T to resolve decoding
+        /// types and returns the decoded object as TAs.</remarks>
+        public static TAs ReadObject<T, TAs>(Stream stream)
         {
             if (!stream.CanSeek)
             {
                 throw new AmqpException(AmqpErrorCode.DecodeError, "stream.CanSeek must be true.");
             }
 
-            SerializableType type = this.GetType(typeof(T));
+            SerializableType type = Instance.GetType(typeof(T));
             ByteBuffer buffer = null;
             long position = stream.Position;
             BufferListStream listStream = stream as BufferListStream;
@@ -161,19 +163,51 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        public T ReadObjectInternal<T>(ByteBuffer buffer)
+        /// <summary>
+        /// Writes an object to a buffer.
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="graph"></param>
+        public void WriteObjectToBuffer(ByteBuffer buffer, object graph)
         {
-            SerializableType type = this.GetType(typeof(T));
-            return (T)type.ReadObject(buffer);
+            if (graph == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                SerializableType type = this.GetType(graph.GetType());
+                type.WriteObject(buffer, graph);
+            }
         }
 
-        public TAs ReadObjectInternal<T, TAs>(ByteBuffer buffer)
+        /// <summary>
+        /// Reads an object from a buffer.
+        /// </summary>
+        /// <typeparam name="T">The expected type.</typeparam>
+        /// <param name="buffer">The source buffer.</param>
+        /// <returns>An object of T.</returns>
+        public T ReadObjectFromBuffer<T>(ByteBuffer buffer)
+        {
+            return this.ReadObjectFromBuffer<T, T>(buffer);
+        }
+
+        /// <summary>
+        /// Reads an object from a buffer.
+        /// </summary>
+        /// <typeparam name="T">The expected type.</typeparam>
+        /// <typeparam name="TAs">The returned type.</typeparam>
+        /// <param name="buffer">The source buffer.</param>
+        /// <returns>An object of TAs.</returns>
+        /// <remarks>The serializer uses T to resolve decoding
+        /// types and returns the decoded object as TAs.</remarks>
+        public TAs ReadObjectFromBuffer<T, TAs>(ByteBuffer buffer)
         {
             SerializableType type = this.GetType(typeof(T));
             return (TAs)type.ReadObject(buffer);
         }
 
-        public SerializableType GetType(Type type)
+        internal SerializableType GetType(Type type)
         {
             return this.GetOrCompileType(type, false);
         }

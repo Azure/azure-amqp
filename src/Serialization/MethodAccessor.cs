@@ -7,7 +7,7 @@ namespace Microsoft.Azure.Amqp.Serialization
     using System.Reflection;
     using System.Reflection.Emit;
 
-    public abstract class MethodAccessor
+    abstract class MethodAccessor
     {
         delegate object MethodDelegate(object container, object[] parameters);
 

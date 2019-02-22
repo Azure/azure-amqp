@@ -29,9 +29,13 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static int GetEncodeSize(AmqpMap value)
         {
-            return value == null ?
-                FixedWidth.NullEncoded :
-                FixedWidth.FormatCode + (MapEncoding.GetEncodeWidth(value) * 2) + value.ValueSize;
+            if (value == null)
+            {
+                return FixedWidth.NullEncoded;
+            }
+
+            int valueSize = GetValueSize(value);
+            return FixedWidth.FormatCode + MapEncoding.GetEncodeWidth(value, valueSize) * 2 + valueSize;
         }
 
         public static void Encode(AmqpMap value, ByteBuffer buffer)
@@ -42,10 +46,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
             else
             {
-                int encodeWidth = MapEncoding.GetEncodeWidth(value);
+                int valueSize = GetValueSize(value);
+                int encodeWidth = MapEncoding.GetEncodeWidth(value, valueSize);
                 AmqpBitConverter.WriteUByte(buffer, encodeWidth == FixedWidth.UByte ? FormatCode.Map8 : FormatCode.Map32);
 
-                int size = encodeWidth + value.ValueSize;
+                int size = encodeWidth + valueSize;
                 MapEncoding.Encode(value, encodeWidth, size, buffer);
             }
         }
@@ -75,9 +80,9 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
         }
 
-        static int GetEncodeWidth(AmqpMap value)
+        static int GetEncodeWidth(AmqpMap value, int valueSize)
         {
-            return AmqpEncoding.GetEncodeWidthByCountAndSize(value.Count * 2, value.ValueSize);
+            return AmqpEncoding.GetEncodeWidthByCountAndSize(value.Count * 2, valueSize);
         }
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
@@ -97,7 +102,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             if (arrayEncoding)
             {
                 AmqpMap mapValue = (AmqpMap)value;
-                int size = FixedWidth.UInt + mapValue.ValueSize;
+                int size = FixedWidth.UInt + GetValueSize(mapValue);
                 MapEncoding.Encode(mapValue, FixedWidth.UInt, size, buffer);
             }
             else

@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp.Serialization
     using System.Reflection.Emit;
     using System.Runtime.Serialization;
 
-    public abstract class MemberAccessor
+    abstract class MemberAccessor
     {
         readonly Type type;
         Func<object, object> getter;

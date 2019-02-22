@@ -19,9 +19,13 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static int GetEncodeSize(AmqpSymbol value)
         {
-            return value.Value == null ?
-                FixedWidth.NullEncoded :
-                FixedWidth.FormatCode + AmqpEncoding.GetEncodeWidthBySize(value.ValueSize) + value.ValueSize;
+            if (value.Value == null)
+            {
+                return FixedWidth.NullEncoded;
+            }
+
+            int valueSize = GetValueSize(value);
+            return FixedWidth.FormatCode + AmqpEncoding.GetEncodeWidthBySize(valueSize) + valueSize;
         }
 
         public static void Encode(AmqpSymbol value, ByteBuffer buffer)

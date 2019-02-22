@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Amqp.Serialization
     using Microsoft.Azure.Amqp.Encoding;
     using AmqpDescribedType = Microsoft.Azure.Amqp.Encoding.DescribedType;
 
-    public enum AmqpType
+    enum AmqpType
     {
         Primitive,
         Described,
@@ -22,12 +22,20 @@ namespace Microsoft.Azure.Amqp.Serialization
         Converted,
     }
 
+    /// <summary>
+    /// A type that supports <see cref="AmqpContractSerializer"/>.
+    /// </summary>
     public abstract class SerializableType
     {
         readonly AmqpContractSerializer serializer;
         readonly Type type;
         readonly bool hasDefaultCtor;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="serializer">The serializer that is supported by this type.</param>
+        /// <param name="type">The underlying type.</param>
         protected SerializableType(AmqpContractSerializer serializer, Type type)
         {
             this.serializer = serializer;
@@ -35,12 +43,15 @@ namespace Microsoft.Azure.Amqp.Serialization
             this.hasDefaultCtor = type.GetConstructor(Type.EmptyTypes) != null;
         }
 
-        public AmqpType AmqpType
+        internal AmqpType AmqpType
         {
             get;
-            protected set;
+            set;
         }
 
+        /// <summary>
+        /// Gets the underlying type.
+        /// </summary>
         public Type UnderlyingType
         {
             get { return this.type; }
@@ -52,25 +63,35 @@ namespace Microsoft.Azure.Amqp.Serialization
             set;
         }
 
-        public static SerializableType CreatePrimitiveType(Type type)
+        internal static SerializableType CreatePrimitiveType(Type type)
         {
             // encoder is pre-determined
             EncodingBase encoder = AmqpEncoding.GetEncoding(type);
             return new Primitive(type, encoder);
         }
 
-        public object CreateInstance()
+        internal object CreateInstance()
         {
             return this.hasDefaultCtor ?
                 Activator.CreateInstance(this.type) :
                 FormatterServices.GetUninitializedObject(this.type);
         }
 
+        /// <summary>
+        /// Writes the object graph to the buffer.
+        /// </summary>
+        /// <param name="buffer">The destination buffer.</param>
+        /// <param name="graph">The object graph.</param>
         public abstract void WriteObject(ByteBuffer buffer, object graph);
 
+        /// <summary>
+        /// Reads an object from the buffer.
+        /// </summary>
+        /// <param name="buffer">The source buffer.</param>
+        /// <returns>An object.</returns>
         public abstract object ReadObject(ByteBuffer buffer);
 
-        public sealed class Primitive : SerializableType
+        internal sealed class Primitive : SerializableType
         {
             readonly EncodingBase encoder;
 
@@ -92,7 +113,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        public sealed class Serializable : SerializableType
+        internal sealed class Serializable : SerializableType
         {
             public Serializable(AmqpContractSerializer serializer, Type type)
                 : base(serializer, type)
@@ -130,7 +151,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        public sealed class Converted : SerializableType
+        internal sealed class Converted : SerializableType
         {
             readonly EncodingBase encoder;
             readonly Type source;
@@ -186,7 +207,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        public sealed class Object : SerializableType
+        internal sealed class Object : SerializableType
         {
             public Object(Type type)
                 : base(null, type)
@@ -205,7 +226,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        public abstract class Collection : SerializableType
+        internal abstract class Collection : SerializableType
         {
             protected Collection(AmqpContractSerializer serializer, Type type)
                 : base(serializer, type)
@@ -274,7 +295,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        public sealed class List : Collection
+        internal sealed class List : Collection
         {
             readonly SerializableType itemType;
             readonly MethodAccessor addMethodAccessor;
@@ -356,7 +377,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        public sealed class Map : Collection
+        internal sealed class Map : Collection
         {
             readonly SerializableType keyType;
             readonly SerializableType valueType;
@@ -436,7 +457,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        public abstract class Composite : Collection
+        internal abstract class Composite : Collection
         {
             readonly Composite baseType;
             readonly AmqpSymbol descriptorName;
@@ -610,7 +631,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        public sealed class CompositeList : Composite
+        internal sealed class CompositeList : Composite
         {
             public CompositeList(
                 AmqpContractSerializer serializer,
@@ -667,7 +688,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        public sealed class CompositeMap : Composite
+        internal sealed class CompositeMap : Composite
         {
             public CompositeMap(
                 AmqpContractSerializer serializer,

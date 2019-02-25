@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Amqp.Framing
 
         public Fields Info { get; set; }
 
-        protected override int FieldCount
+        internal override int FieldCount
         {
             get { return Fields; }
         }
@@ -114,7 +114,7 @@ namespace Microsoft.Azure.Amqp.Framing
             info.AddValue("Description", this.Description);
         }
 
-        protected override void EnsureRequired()
+        internal override void EnsureRequired()
         {
             if (this.Condition.Value == null)
             {
@@ -122,14 +122,14 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        protected override void OnEncode(ByteBuffer buffer)
+        internal override void OnEncode(ByteBuffer buffer)
         {
             AmqpCodec.EncodeSymbol(this.Condition, buffer);
             AmqpCodec.EncodeString(this.Description, buffer);
             AmqpCodec.EncodeMap(this.Info, buffer);
         }
 
-        protected override void OnDecode(ByteBuffer buffer, int count)
+        internal override void OnDecode(ByteBuffer buffer, int count)
         {
             if (count-- > 0)
             {
@@ -147,7 +147,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        protected override int OnValueSize()
+        internal override int OnValueSize()
         {
             int valueSize = 0;
 

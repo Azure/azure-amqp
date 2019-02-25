@@ -6,21 +6,28 @@ namespace Microsoft.Azure.Amqp.Framing
     using System;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the AMQP address.
+    /// </summary>
     public abstract class Address
     {
-        public abstract int EncodeSize { get; }
+        internal abstract int EncodeSize { get; }
 
+        /// <summary>
+        /// Creates an Address from a string object.
+        /// </summary>
+        /// <param name="value">A string representing the address.</param>
         public static implicit operator Address(string value)
         {
             return new AddressString(value);
         }
 
-        public static int GetEncodeSize(Address address)
+        internal static int GetEncodeSize(Address address)
         {
             return address == null ? FixedWidth.NullEncoded : address.EncodeSize;
         }
 
-        public static void Encode(ByteBuffer buffer, Address address)
+        internal static void Encode(ByteBuffer buffer, Address address)
         {
             if (address == null)
             {
@@ -32,7 +39,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        public static Address Decode(ByteBuffer buffer)
+        internal static Address Decode(ByteBuffer buffer)
         {
             object value = AmqpEncoding.DecodeObject(buffer);
             if (value == null)
@@ -48,7 +55,7 @@ namespace Microsoft.Azure.Amqp.Framing
             throw new NotSupportedException(value.GetType().ToString());
         }
 
-        public abstract void OnEncode(ByteBuffer buffer);
+        internal abstract void OnEncode(ByteBuffer buffer);
 
         sealed class AddressString : Address
         {
@@ -59,12 +66,12 @@ namespace Microsoft.Azure.Amqp.Framing
                 this.address = id;
             }
 
-            public override int EncodeSize
+            internal override int EncodeSize
             {
                 get { return AmqpCodec.GetStringEncodeSize(this.address); }
             }
 
-            public override void OnEncode(ByteBuffer buffer)
+            internal override void OnEncode(ByteBuffer buffer)
             {
                 AmqpCodec.EncodeString(this.address, buffer);
             }

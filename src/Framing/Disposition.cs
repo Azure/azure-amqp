@@ -29,7 +29,7 @@ namespace Microsoft.Azure.Amqp.Framing
 
         public bool? Batchable { get; set; }
 
-        protected override int FieldCount
+        internal override int FieldCount
         {
             get { return Fields; }
         }
@@ -48,7 +48,7 @@ namespace Microsoft.Azure.Amqp.Framing
             return sb.ToString();
         }
 
-        protected override void EnsureRequired()
+        internal override void EnsureRequired()
         {
             if (!this.Role.HasValue)
             {
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        protected override void OnEncode(ByteBuffer buffer)
+        internal override void OnEncode(ByteBuffer buffer)
         {
             AmqpCodec.EncodeBoolean(this.Role, buffer);
             AmqpCodec.EncodeUInt(this.First, buffer);
@@ -71,7 +71,7 @@ namespace Microsoft.Azure.Amqp.Framing
             AmqpCodec.EncodeBoolean(this.Batchable, buffer);
         }
 
-        protected override void OnDecode(ByteBuffer buffer, int count)
+        internal override void OnDecode(ByteBuffer buffer, int count)
         {
             if (count-- > 0)
             {
@@ -104,7 +104,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        protected override int OnValueSize()
+        internal override int OnValueSize()
         {
             int valueSize = 0;
 

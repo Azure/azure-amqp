@@ -5,13 +5,25 @@ namespace Microsoft.Azure.Amqp.Framing
 {
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the application-properties section of a message.
+    /// </summary>
     public sealed class ApplicationProperties : DescribedMap
     {
-        public static readonly string Name = "amqp:application-properties:map";
-        public static readonly ulong Code = 0x0000000000000074;
+        /// <summary>
+        /// The descriptor name.
+        /// </summary>
+        public const string Name = "amqp:application-properties:map";
+        /// <summary>
+        /// The descriptor code.
+        /// </summary>
+        public const ulong Code = 0x0000000000000074;
 
         PropertiesMap propMap;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public ApplicationProperties() 
             : base(Name, Code) 
         {

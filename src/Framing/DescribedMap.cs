@@ -20,22 +20,22 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return this.innerMap; }
         }
 
-        public override int GetValueEncodeSize()
+        internal override int GetValueEncodeSize()
         {
             return MapEncoding.GetEncodeSize(this.innerMap);
         }
 
-        public override void EncodeValue(ByteBuffer buffer)
+        internal override void EncodeValue(ByteBuffer buffer)
         {
             MapEncoding.Encode(this.innerMap, buffer);
         }
 
-        public override void DecodeValue(ByteBuffer buffer)
+        internal override void DecodeValue(ByteBuffer buffer)
         {
             this.innerMap = MapEncoding.Decode(buffer, 0);
         }
 
-        public void DecodeValue(ByteBuffer buffer, int size, int count)
+        internal void DecodeValue(ByteBuffer buffer, int size, int count)
         {
             MapEncoding.ReadMapValue(buffer, this.innerMap, size, count);
         }

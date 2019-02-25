@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Amqp.Framing
 
         public Multiple<AmqpSymbol> Capabilities { get; set; }
 
-        protected override int FieldCount
+        internal override int FieldCount
         {
             get { return Fields; }
         }
@@ -54,7 +54,7 @@ namespace Microsoft.Azure.Amqp.Framing
             return sb.ToString();
         }
 
-        protected override void OnEncode(ByteBuffer buffer)
+        internal override void OnEncode(ByteBuffer buffer)
         {
             Address.Encode(buffer, this.Address);
             AmqpCodec.EncodeUInt(this.Durable, buffer);
@@ -65,7 +65,7 @@ namespace Microsoft.Azure.Amqp.Framing
             AmqpCodec.EncodeMultiple(this.Capabilities, buffer);
         }
 
-        protected override void OnDecode(ByteBuffer buffer, int count)
+        internal override void OnDecode(ByteBuffer buffer, int count)
         {
             if (count-- > 0)
             {
@@ -103,7 +103,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        protected override int OnValueSize()
+        internal override int OnValueSize()
         {
             int valueSize = 0;
 

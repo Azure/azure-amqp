@@ -6,23 +6,26 @@ namespace Microsoft.Azure.Amqp.Framing
     using Microsoft.Azure.Amqp.Encoding;
 
     /// <summary>
-    /// Encoding of DescribedType(symbol/ulong, list) is not efficient if the
-    /// descriptor and the list fields are pre-defined, e.g. the performatives
-    /// and other types used by the protocol.
+    /// Defines a composite type whose value is a list.
     /// </summary>
     public abstract class DescribedList : AmqpDescribed
     {
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="name">The descriptor name.</param>
+        /// <param name="code">The descriptor code.</param>
         public DescribedList(AmqpSymbol name, ulong code)
             : base(name, code)
         {
         }
 
-        protected abstract int FieldCount
+        internal abstract int FieldCount
         {
             get;
         }
 
-        public override int GetValueEncodeSize()
+        internal override int GetValueEncodeSize()
         {
             if (this.FieldCount == 0)
             {
@@ -34,7 +37,7 @@ namespace Microsoft.Azure.Amqp.Framing
             return FixedWidth.FormatCode + width + width + valueSize;
         }
 
-        public override void EncodeValue(ByteBuffer buffer)
+        internal override void EncodeValue(ByteBuffer buffer)
         {
             if (this.FieldCount == 0)
             {
@@ -80,7 +83,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        public override void DecodeValue(ByteBuffer buffer)
+        internal override void DecodeValue(ByteBuffer buffer)
         {
             FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
             if (formatCode == FormatCode.List0)
@@ -105,7 +108,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        public void DecodeValue(ByteBuffer buffer, int size, int count)
+        internal void DecodeValue(ByteBuffer buffer, int size, int count)
         {
             if (count > 0)
             {
@@ -114,14 +117,14 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        protected virtual void EnsureRequired()
+        internal virtual void EnsureRequired()
         {
         }
 
-        protected abstract int OnValueSize();
+        internal abstract int OnValueSize();
 
-        protected abstract void OnEncode(ByteBuffer buffer);
+        internal abstract void OnEncode(ByteBuffer buffer);
 
-        protected abstract void OnDecode(ByteBuffer buffer, int count);
+        internal abstract void OnDecode(ByteBuffer buffer, int count);
     }
 }

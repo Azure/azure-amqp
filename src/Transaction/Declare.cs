@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Amqp.Transaction
 
         public object GlobalId { get; set; }
 
-        protected override int FieldCount
+        internal override int FieldCount
         {
             get { return Fields; }
         }
@@ -28,12 +28,12 @@ namespace Microsoft.Azure.Amqp.Transaction
             return "declare()";
         }
 
-        protected override void OnEncode(ByteBuffer buffer)
+        internal override void OnEncode(ByteBuffer buffer)
         {
             AmqpCodec.EncodeObject(this.GlobalId, buffer);
         }
 
-        protected override void OnDecode(ByteBuffer buffer, int count)
+        internal override void OnDecode(ByteBuffer buffer, int count)
         {
             if (count-- > 0)
             {
@@ -41,7 +41,7 @@ namespace Microsoft.Azure.Amqp.Transaction
             }
         }
 
-        protected override int OnValueSize()
+        internal override int OnValueSize()
         {
             int valueSize = 0;
 

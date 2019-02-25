@@ -6,34 +6,56 @@ namespace Microsoft.Azure.Amqp.Framing
     using System;
     using System.Globalization;
     using System.Text;
-
     using Microsoft.Azure.Amqp.Encoding;
 
     /// <summary>
-    /// Descriptor is restricted to symbol and ulong
+    /// The base class of AMQP defined composite types where descriptor is
+    /// a name (symbol) or a code (ulong).
     /// </summary>
-    public class AmqpDescribed : DescribedType, IAmqpSerializable
+    public class AmqpDescribed : IAmqpSerializable
     {
         AmqpSymbol name;
         ulong code;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="name">The descriptor name.</param>
+        /// <param name="code">The descriptor code.</param>
         public AmqpDescribed(AmqpSymbol name, ulong code)
-            : base(name.Value == null ? (object)code : (object)name, null)
         {
             this.name = name;
             this.code = code;
         }
 
+        /// <summary>
+        /// Gets the descriptor name.
+        /// </summary>
         public AmqpSymbol DescriptorName
         {
             get { return this.name; }
         }
 
+        /// <summary>
+        /// Gets the descriptor code.
+        /// </summary>
         public ulong DescriptorCode
         {
             get { return this.code; }
         }
 
+        /// <summary>
+        /// Gets or sets the value.
+        /// </summary>
+        public object Value
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets the encode size of the object.
+        /// </summary>
         public int EncodeSize
         {
             get
@@ -48,7 +70,7 @@ namespace Microsoft.Azure.Amqp.Framing
 
         internal int Length { get; set; }
 
-        public static void DecodeDescriptor(ByteBuffer buffer, out AmqpSymbol name, out ulong code)
+        static void DecodeDescriptor(ByteBuffer buffer, out AmqpSymbol name, out ulong code)
         {
             name = default(AmqpSymbol);
             code = 0;
@@ -76,11 +98,19 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
-            return this.name.Value;
+            return $"{this.name}:{this.Value}";
         }
 
+        /// <summary>
+        /// Encodes the object to a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer.</param>
         public void Encode(ByteBuffer buffer)
         {
             AmqpBitConverter.WriteUByte(buffer, FormatCode.Described);
@@ -88,6 +118,10 @@ namespace Microsoft.Azure.Amqp.Framing
             this.EncodeValue(buffer);
         }
 
+        /// <summary>
+        /// Decodes the object from a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer.</param>
         public void Decode(ByteBuffer buffer)
         {
             // TODO: validate that the name or code is actually correct
@@ -95,22 +129,22 @@ namespace Microsoft.Azure.Amqp.Framing
             this.DecodeValue(buffer);
         }
 
-        public virtual int GetValueEncodeSize()
+        internal virtual int GetValueEncodeSize()
         {
             return AmqpEncoding.GetObjectEncodeSize(this.Value);
         }
 
-        public virtual void EncodeValue(ByteBuffer buffer)
+        internal virtual void EncodeValue(ByteBuffer buffer)
         {
             AmqpEncoding.EncodeObject(this.Value, buffer);
         }
 
-        public virtual void DecodeValue(ByteBuffer buffer)
+        internal virtual void DecodeValue(ByteBuffer buffer)
         {
             this.Value = AmqpEncoding.DecodeObject(buffer);
         }
 
-        protected void AddFieldToString(bool condition, StringBuilder sb, string fieldName, object value, ref int count)
+        internal void AddFieldToString(bool condition, StringBuilder sb, string fieldName, object value, ref int count)
         {
             if (condition)
             {

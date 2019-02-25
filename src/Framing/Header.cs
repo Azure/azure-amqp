@@ -25,7 +25,7 @@ namespace Microsoft.Azure.Amqp.Framing
 
         public uint? DeliveryCount { get; set; }
 
-        protected override int FieldCount
+        internal override int FieldCount
         {
             get { return Fields; }
         }
@@ -43,7 +43,7 @@ namespace Microsoft.Azure.Amqp.Framing
             return sb.ToString();
         }
 
-        protected override void OnEncode(ByteBuffer buffer)
+        internal override void OnEncode(ByteBuffer buffer)
         {
             AmqpCodec.EncodeBoolean(this.Durable, buffer);
             AmqpCodec.EncodeUByte(this.Priority, buffer);
@@ -52,7 +52,7 @@ namespace Microsoft.Azure.Amqp.Framing
             AmqpCodec.EncodeUInt(this.DeliveryCount, buffer);
         }
 
-        protected override void OnDecode(ByteBuffer buffer, int count)
+        internal override void OnDecode(ByteBuffer buffer, int count)
         {
             if (count-- > 0)
             {
@@ -80,7 +80,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        protected override int OnValueSize()
+        internal override int OnValueSize()
         {
             int valueSize = 0;
 

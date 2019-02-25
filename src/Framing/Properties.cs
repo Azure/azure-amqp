@@ -55,7 +55,7 @@ namespace Microsoft.Azure.Amqp.Framing
 
         public string ReplyToGroupId { get; set; }
 
-        protected override int FieldCount
+        internal override int FieldCount
         {
             get { return Fields; }
         }
@@ -81,7 +81,7 @@ namespace Microsoft.Azure.Amqp.Framing
             return sb.ToString();
         }
 
-        protected override void OnEncode(ByteBuffer buffer)
+        internal override void OnEncode(ByteBuffer buffer)
         {
             MessageId.Encode(buffer, this.MessageId);
             AmqpCodec.EncodeBinary(this.UserId, buffer);
@@ -98,7 +98,7 @@ namespace Microsoft.Azure.Amqp.Framing
             AmqpCodec.EncodeString(this.ReplyToGroupId, buffer);
         }
 
-        protected override void OnDecode(ByteBuffer buffer, int count)
+        internal override void OnDecode(ByteBuffer buffer, int count)
         {
             if (count-- > 0)
             {
@@ -166,7 +166,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        protected override int OnValueSize()
+        internal override int OnValueSize()
         {
             int valueSize = 0;
 

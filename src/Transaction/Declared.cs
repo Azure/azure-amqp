@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Amqp.Transaction
 
         public ArraySegment<byte> TxnId { get; set; }
 
-        protected override int FieldCount
+        internal override int FieldCount
         {
             get { return Fields; }
         }
@@ -33,12 +33,12 @@ namespace Microsoft.Azure.Amqp.Transaction
             return sb.ToString();
         }
 
-        protected override void OnEncode(ByteBuffer buffer)
+        internal override void OnEncode(ByteBuffer buffer)
         {
             AmqpCodec.EncodeBinary(this.TxnId, buffer);
         }
 
-        protected override void OnDecode(ByteBuffer buffer, int count)
+        internal override void OnDecode(ByteBuffer buffer, int count)
         {
             if (count-- > 0)
             {
@@ -46,7 +46,7 @@ namespace Microsoft.Azure.Amqp.Transaction
             }
         }
 
-        protected override int OnValueSize()
+        internal override int OnValueSize()
         {
             int valueSize = 0;
 

@@ -18,21 +18,21 @@ namespace Microsoft.Azure.Amqp.Transaction
 
         public Multiple<AmqpSymbol> Capabilities { get; set; }
 
-        protected override int FieldCount
+        internal override int FieldCount
         {
             get { return Fields; }
         }
 
-        protected override void EnsureRequired()
+        internal override void EnsureRequired()
         {
         }
 
-        protected override void OnEncode(ByteBuffer buffer)
+        internal override void OnEncode(ByteBuffer buffer)
         {
             AmqpCodec.EncodeMultiple(this.Capabilities, buffer);
         }
 
-        protected override void OnDecode(ByteBuffer buffer, int count)
+        internal override void OnDecode(ByteBuffer buffer, int count)
         {
             if (count-- > 0)
             {
@@ -40,7 +40,7 @@ namespace Microsoft.Azure.Amqp.Transaction
             }
         }
 
-        protected override int OnValueSize()
+        internal override int OnValueSize()
         {
             int valueSize = 0;
 

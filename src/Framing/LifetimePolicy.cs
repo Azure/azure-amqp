@@ -14,20 +14,20 @@ namespace Microsoft.Azure.Amqp.Framing
         {
         }
 
-        protected override int FieldCount
+        internal override int FieldCount
         {
             get { return Fields; }
         }
 
-        protected override void OnEncode(ByteBuffer buffer)
+        internal override void OnEncode(ByteBuffer buffer)
         {
         }
 
-        protected override void OnDecode(ByteBuffer buffer, int count)
+        internal override void OnDecode(ByteBuffer buffer, int count)
         {
         }
 
-        protected override int OnValueSize()
+        internal override int OnValueSize()
         {
             return 0;
         }

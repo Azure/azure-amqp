@@ -15,7 +15,7 @@ namespace Microsoft.Azure.Amqp.Sasl
 
         public SaslResponse() : base(Name, Code) { }
 
-        protected override int FieldCount
+        internal override int FieldCount
         {
             get { return Fields; }
         }
@@ -31,7 +31,7 @@ namespace Microsoft.Azure.Amqp.Sasl
             return sb.ToString();
         }
 
-        protected override void EnsureRequired()
+        internal override void EnsureRequired()
         {
             if (this.Response.Array == null)
             {
@@ -39,12 +39,12 @@ namespace Microsoft.Azure.Amqp.Sasl
             }
         }
 
-        protected override void OnEncode(ByteBuffer buffer)
+        internal override void OnEncode(ByteBuffer buffer)
         {
             AmqpCodec.EncodeBinary(this.Response, buffer);
         }
 
-        protected override void OnDecode(ByteBuffer buffer, int count)
+        internal override void OnDecode(ByteBuffer buffer, int count)
         {
             if (count-- > 0)
             {
@@ -52,7 +52,7 @@ namespace Microsoft.Azure.Amqp.Sasl
             }
         }
 
-        protected override int OnValueSize()
+        internal override int OnValueSize()
         {
             int valueSize = 0;
             valueSize += AmqpCodec.GetBinaryEncodeSize(this.Response);

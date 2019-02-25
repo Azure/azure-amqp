@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Amqp.Framing
 
         public Released() : base(Name, Code) { }
 
-        protected override int FieldCount
+        internal override int FieldCount
         {
             get { return Fields; }
         }
@@ -21,15 +21,15 @@ namespace Microsoft.Azure.Amqp.Framing
             return "released()";
         }
 
-        protected override void OnEncode(ByteBuffer buffer)
+        internal override void OnEncode(ByteBuffer buffer)
         {
         }
 
-        protected override void OnDecode(ByteBuffer buffer, int count)
+        internal override void OnDecode(ByteBuffer buffer, int count)
         {
         }
 
-        protected override int OnValueSize()
+        internal override int OnValueSize()
         {
             return 0;
         }

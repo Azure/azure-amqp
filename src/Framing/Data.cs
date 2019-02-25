@@ -34,18 +34,18 @@ namespace Microsoft.Azure.Amqp.Framing
 
             return new ArraySegment<byte>(buffer, 0, count);
         }
-        
-        public override int GetValueEncodeSize()
+
+        internal override int GetValueEncodeSize()
         {
             return BinaryEncoding.GetEncodeSize((ArraySegment<byte>)this.Value);
         }
 
-        public override void EncodeValue(ByteBuffer buffer)
+        internal override void EncodeValue(ByteBuffer buffer)
         {
             BinaryEncoding.Encode((ArraySegment<byte>)this.Value, buffer);
         }
 
-        public override void DecodeValue(ByteBuffer buffer)
+        internal override void DecodeValue(ByteBuffer buffer)
         {
             this.Value = BinaryEncoding.Decode(buffer, 0);
         }

@@ -3,10 +3,9 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    using System;
     using System.Globalization;
 
-    public struct FormatCode : IEquatable<FormatCode>
+    public struct FormatCode
     {
         public const byte Described = 0x00;
 
@@ -139,11 +138,6 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 return string.Format(CultureInfo.InvariantCulture, "0x{0:X2}", this.Type);
             }
-        }
-
-        public bool Equals(FormatCode other)
-        {
-            return this.type == other.type;
         }
     }
 }

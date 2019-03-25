@@ -107,6 +107,7 @@ namespace Microsoft.Azure.Amqp.Transaction
             try
             {
                 thisPtr.controllerLink.EndOpen(asyncResult);
+                thisPtr.controllerLink.SafeAddClosed((sender, args) => { thisPtr.SafeClose(); });
             }
             catch (Exception exception) when (!Fx.IsFatal(exception))
             {

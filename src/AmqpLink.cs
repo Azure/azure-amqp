@@ -627,7 +627,7 @@ namespace Microsoft.Azure.Amqp
             EventHandler temp = this.PropertyReceived;
             if (temp != null)
             {
-                AmqpTrace.Provider.AmqpIoEvent(this, (int)ioEvent, (long)this.linkCredit);
+                AmqpTrace.Provider.AmqpIoEvent(this, ioEvent, (long)this.linkCredit);
 
                 Fields properties = new Fields();
                 properties.Add(AmqpConstants.IoEvent, (int)ioEvent);

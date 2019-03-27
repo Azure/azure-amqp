@@ -188,7 +188,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (!this.IsClosing())
             {
-                AmqpTrace.Provider.AmqpIoEvent(this, (int)ioEvent, queueSize);
+                AmqpTrace.Provider.AmqpIoEvent(this, ioEvent, queueSize);
                 this.HandleIoEvent(ioEvent);
             }
         }

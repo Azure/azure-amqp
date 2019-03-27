@@ -10,6 +10,7 @@ namespace Microsoft.Azure.Amqp
     /// </summary>
     public static class AmqpErrorCode
     {
+#pragma warning disable 1591
         // amqp errors
         public static AmqpSymbol InternalError = "amqp:internal-error";
         public static AmqpSymbol NotFound = "amqp:not-found";
@@ -47,5 +48,6 @@ namespace Microsoft.Azure.Amqp
         public static AmqpSymbol TransactionUnknownId = "amqp:transaction:unknown-id";
         public static AmqpSymbol TransactionRollback = "amqp:transaction:rollback";
         public static AmqpSymbol TransactionTimeout = "amqp:transaction:timeout";
+#pragma warning restore 1591
     }
 }

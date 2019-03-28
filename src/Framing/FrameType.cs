@@ -3,9 +3,14 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
+    /// <summary>
+    /// Defines the frame type.
+    /// </summary>
     public enum FrameType : byte
     {
+        /// <summary>AMQP frame.</summary>
         Amqp = 0,
+        /// <summary>SASL frame.</summary>
         Sasl = 1
     }
 }

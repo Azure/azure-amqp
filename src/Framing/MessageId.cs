@@ -7,36 +7,55 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Globalization;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the AMQP message id.
+    /// </summary>
     public abstract class MessageId
     {
-        public abstract int EncodeSize { get; }
+        internal abstract int EncodeSize { get; }
 
+        /// <summary>
+        /// Creates a ulong message id.
+        /// </summary>
+        /// <param name="value">The ulong message id.</param>
         public static implicit operator MessageId(ulong value)
         {
             return new MessageIdUlong(value);
         }
 
+        /// <summary>
+        /// Creates a uuid message id.
+        /// </summary>
+        /// <param name="value">The uuid message id.</param>
         public static implicit operator MessageId(Guid value)
         {
             return new MessageIdUuid(value);
         }
 
+        /// <summary>
+        /// Creates a binary message id.
+        /// </summary>
+        /// <param name="value">The binary message id.</param>
         public static implicit operator MessageId(ArraySegment<byte> value)
         {
             return new MessageIdBinary(value);
         }
 
+        /// <summary>
+        /// Creates a string message id.
+        /// </summary>
+        /// <param name="value">The string message id.</param>
         public static implicit operator MessageId(string value)
         {
             return new MessageIdString(value);
         }
 
-        public static int GetEncodeSize(MessageId messageId)
+        internal static int GetEncodeSize(MessageId messageId)
         {
             return messageId == null ? FixedWidth.NullEncoded : messageId.EncodeSize;
         }
 
-        public static void Encode(ByteBuffer buffer, MessageId messageId)
+        internal static void Encode(ByteBuffer buffer, MessageId messageId)
         {
             if (messageId == null)
             {
@@ -48,7 +67,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        public static MessageId Decode(ByteBuffer buffer)
+        internal static MessageId Decode(ByteBuffer buffer)
         {
             object value = AmqpEncoding.DecodeObject(buffer);
             if (value == null)
@@ -79,7 +98,7 @@ namespace Microsoft.Azure.Amqp.Framing
             throw new NotSupportedException(value.GetType().ToString());
         }
 
-        public abstract void OnEncode(ByteBuffer buffer);
+        internal abstract void OnEncode(ByteBuffer buffer);
 
         sealed class MessageIdUlong : MessageId
         {
@@ -90,12 +109,12 @@ namespace Microsoft.Azure.Amqp.Framing
                 this.id = id;
             }
 
-            public override int EncodeSize
+            internal override int EncodeSize
             {
                 get { return AmqpCodec.GetULongEncodeSize(this.id); }
             }
 
-            public override void OnEncode(ByteBuffer buffer)
+            internal override void OnEncode(ByteBuffer buffer)
             {
                 AmqpCodec.EncodeULong(this.id, buffer);
             }
@@ -131,12 +150,12 @@ namespace Microsoft.Azure.Amqp.Framing
                 this.id = id;
             }
 
-            public override int EncodeSize
+            internal override int EncodeSize
             {
                 get { return AmqpCodec.GetUuidEncodeSize(this.id); }
             }
 
-            public override void OnEncode(ByteBuffer buffer)
+            internal override void OnEncode(ByteBuffer buffer)
             {
                 AmqpCodec.EncodeUuid(this.id, buffer);
             }
@@ -172,12 +191,12 @@ namespace Microsoft.Azure.Amqp.Framing
                 this.id = id;
             }
 
-            public override int EncodeSize
+            internal override int EncodeSize
             {
                 get { return AmqpCodec.GetBinaryEncodeSize(this.id); }
             }
 
-            public override void OnEncode(ByteBuffer buffer)
+            internal override void OnEncode(ByteBuffer buffer)
             {
                 AmqpCodec.EncodeBinary(this.id, buffer);
             }
@@ -213,12 +232,12 @@ namespace Microsoft.Azure.Amqp.Framing
                 this.id = id;
             }
 
-            public override int EncodeSize
+            internal override int EncodeSize
             {
                 get { return AmqpCodec.GetStringEncodeSize(this.id); }
             }
 
-            public override void OnEncode(ByteBuffer buffer)
+            internal override void OnEncode(ByteBuffer buffer)
             {
                 AmqpCodec.EncodeString(this.id, buffer);
             }

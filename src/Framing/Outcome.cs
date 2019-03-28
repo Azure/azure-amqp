@@ -5,8 +5,16 @@ namespace Microsoft.Azure.Amqp.Framing
 {
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// The base class of delivery outcomes.
+    /// </summary>
     public abstract class Outcome : DeliveryState
     {
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="name">The descriptor name.</param>
+        /// <param name="code">The descriptor code.</param>
         protected Outcome(AmqpSymbol name, ulong code)
             : base(name, code)
         {

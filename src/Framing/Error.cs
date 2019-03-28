@@ -8,15 +8,21 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the AMQP error.
+    /// </summary>
     [Serializable]
     public sealed class Error : DescribedList, ISerializable
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:error:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x000000000000001d;
-        public static bool IncludeErrorDetails;
         const int Fields = 3;
-        const int MaxSizeInInfoMap = 8 * 1024;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Error() : base(Name, Code)
         {
         }
@@ -28,10 +34,19 @@ namespace Microsoft.Azure.Amqp.Framing
             this.Description = (string)info.GetValue("Description", typeof(string));
         }
 
+        /// <summary>
+        /// Gets or sets the "condition" field.
+        /// </summary>
         public AmqpSymbol Condition { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "description" field.
+        /// </summary>
         public string Description { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "info" field.
+        /// </summary>
         public Fields Info { get; set; }
 
         internal override int FieldCount
@@ -39,9 +54,7 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
-        // This list should have non-SB related exceptions. The contract that handles SB exceptions
-        // are in ExceptionHelper
-        public static Error FromException(Exception exception)
+        internal static Error FromException(Exception exception, bool includeErrorDetails = false)
         {
             AmqpException amqpException = exception as AmqpException;
             if (amqpException != null)
@@ -70,18 +83,15 @@ namespace Microsoft.Azure.Amqp.Framing
             else
             {
                 error.Condition = AmqpErrorCode.InternalError;
-                error.Description = AmqpResources.GetString(AmqpResources.AmqpErrorOccurred, AmqpErrorCode.InternalError);
-            }
-
-            // Set the error details if 'IncludeErrorDetails' is set explicitly
-            if (IncludeErrorDetails)
-            {
-                error.Description = exception.Message;
+                error.Description = includeErrorDetails ?
+                    exception.Message :
+                    AmqpResources.GetString(AmqpResources.AmqpErrorOccurred, AmqpErrorCode.InternalError);
             }
 
 #if DEBUG
             error.Info = new Fields();
 
+            const int MaxSizeInInfoMap = 8 * 1024;
             // Limit the size of the exception string as it may exceed the connection max frame size
             string exceptionString = exception.ToString();
             if (exceptionString.Length > MaxSizeInInfoMap)
@@ -95,6 +105,10 @@ namespace Microsoft.Azure.Amqp.Framing
             return error;
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("error(");

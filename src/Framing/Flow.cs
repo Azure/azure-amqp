@@ -7,36 +7,72 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the flow performative.
+    /// </summary>
     public sealed class Flow : LinkPerformative
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:flow:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000013;
         const int Fields = 11;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Flow() : base(Name, Code)
         {
         }
 
+        /// <summary>
+        /// Gets or sets the "next-incoming-id" field.
+        /// </summary>
         public uint? NextIncomingId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "incoming-window" field.
+        /// </summary>
         public uint? IncomingWindow { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "next-outgoing-id" field.
+        /// </summary>
         public uint? NextOutgoingId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "outgoing-window" field.
+        /// </summary>
         public uint? OutgoingWindow { get; set; }
 
-        //// public uint? Handle { get; set; }
-
+        /// <summary>
+        /// Gets or sets the "delivery-count" field.
+        /// </summary>
         public uint? DeliveryCount { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "link-credit" field.
+        /// </summary>
         public uint? LinkCredit { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "available" field.
+        /// </summary>
         public uint? Available { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "drain" field.
+        /// </summary>
         public bool? Drain { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "echo" field.
+        /// </summary>
         public bool? Echo { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "properties" field.
+        /// </summary>
         public Fields Properties { get; set; }
 
         internal override int FieldCount
@@ -44,6 +80,10 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("flow(");

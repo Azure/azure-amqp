@@ -7,30 +7,62 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the begin performative.
+    /// </summary>
     public class Begin : Performative
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:begin:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000011;
         const int Fields = 8;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Begin() : base(Name, Code)
         {
         }
 
+        /// <summary>
+        /// Gets or sets the "remote-channel" field.
+        /// </summary>
         public ushort? RemoteChannel { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "next-outgoing-id" field.
+        /// </summary>
         public uint? NextOutgoingId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "incoming-window" field.
+        /// </summary>
         public uint? IncomingWindow { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "outgoing-window" field.
+        /// </summary>
         public uint? OutgoingWindow { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "handle-max" field.
+        /// </summary>
         public uint? HandleMax { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "offered-capabilities" field.
+        /// </summary>
         public Multiple<AmqpSymbol> OfferedCapabilities { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "desired-capabilities" field.
+        /// </summary>
         public Multiple<AmqpSymbol> DesiredCapabilities { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "properties" field.
+        /// </summary>
         public Fields Properties { get; set; }
 
         internal override int FieldCount
@@ -38,6 +70,10 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("begin(");

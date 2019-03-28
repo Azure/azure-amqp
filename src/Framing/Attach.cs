@@ -7,42 +7,87 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the attach performative.
+    /// </summary>
     public class Attach : LinkPerformative
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:attach:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000012;
         const int Fields = 14;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Attach() : base(Name, Code)
         {
         }
 
+        /// <summary>
+        /// Gets or sets the "name" field.
+        /// </summary>
         public string LinkName { get; set; }
 
-        //// public uint? Handle { get; set; }
-
+        /// <summary>
+        /// Gets or sets the "role" field.
+        /// </summary>
         public bool? Role { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "snd-settle-mode" field.
+        /// </summary>
         public byte? SndSettleMode { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "rcv-settle-mode" field.
+        /// </summary>
         public byte? RcvSettleMode { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "source" field.
+        /// </summary>
         public object Source { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "target" field.
+        /// </summary>
         public object Target { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "unsettled" field.
+        /// </summary>
         public AmqpMap Unsettled { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "incomplete-unsettled" field.
+        /// </summary>
         public bool? IncompleteUnsettled { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "initial-delivery-count" field.
+        /// </summary>
         public uint? InitialDeliveryCount { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "max-message-size" field.
+        /// </summary>
         public ulong? MaxMessageSize { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "offered-capabilities" field.
+        /// </summary>
         public Multiple<AmqpSymbol> OfferedCapabilities { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "desired-capabilities" field.
+        /// </summary>
         public Multiple<AmqpSymbol> DesiredCapabilities { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "properties" field.
+        /// </summary>
         public Fields Properties { get; set; }
 
         internal override int FieldCount
@@ -50,6 +95,10 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("attach(");

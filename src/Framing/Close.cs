@@ -4,18 +4,28 @@
 namespace Microsoft.Azure.Amqp.Framing
 {
     using System.Text;
-    using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the close performative.
+    /// </summary>
     public sealed class Close : Performative
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:close:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000018;
         const int Fields = 1;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Close() : base(Name, Code)
         {
         }
 
+        /// <summary>
+        /// Gets or sets the "error" field.
+        /// </summary>
         public Error Error { get; set; }
 
         internal override int FieldCount
@@ -23,6 +33,10 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("close(");

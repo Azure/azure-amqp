@@ -5,20 +5,37 @@ namespace Microsoft.Azure.Amqp.Framing
 {
     using System.Text;
 
+    /// <summary>
+    /// Defines the modified outcome.
+    /// </summary>
     public sealed class Modified : Outcome
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:modified:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000027;
         const int Fields = 3;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Modified() : base(Name, Code)
         {
         }
 
+        /// <summary>
+        /// Gets or sets the "delivery-field" field.
+        /// </summary>
         public bool? DeliveryFailed { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "undeliverable-here" field.
+        /// </summary>
         public bool? UndeliverableHere { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "message-annotations" field.
+        /// </summary>
         public Fields MessageAnnotations { get; set; }
 
         internal override int FieldCount
@@ -26,6 +43,10 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("modified(");

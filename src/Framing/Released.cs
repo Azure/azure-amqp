@@ -3,12 +3,20 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
+    /// <summary>
+    /// Defines the rejected outcome.
+    /// </summary>
     public sealed class Released : Outcome
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:released:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000026;
         const int Fields = 0;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Released() : base(Name, Code) { }
 
         internal override int FieldCount
@@ -16,6 +24,10 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return "released()";

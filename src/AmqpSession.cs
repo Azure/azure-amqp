@@ -467,6 +467,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Receives a flow from the session.
+        /// </summary>
+        /// <param name="flow">The received flow.</param>
         protected virtual void OnReceiveFlow(Flow flow)
         {
             this.outgoingChannel.OnFlow(flow);

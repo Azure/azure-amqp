@@ -7,34 +7,70 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the transfer performative.
+    /// </summary>
     public sealed class Transfer : LinkPerformative
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:transfer:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000014;
         const int Fields = 11;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Transfer() : base(Name, Code) { }
 
-        // public uint? Handle { get; set; }
-
+        /// <summary>
+        /// Gets or sets the "delivery-id" field.
+        /// </summary>
         public uint? DeliveryId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "delivery-tag" field.
+        /// </summary>
         public ArraySegment<byte> DeliveryTag { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "message-format" field.
+        /// </summary>
         public uint? MessageFormat { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "settled" field.
+        /// </summary>
         public bool? Settled { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "more" field.
+        /// </summary>
         public bool? More { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "rcv-settle-mode" field.
+        /// </summary>
         public byte? RcvSettleMode { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "state" field.
+        /// </summary>
         public DeliveryState State { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "resume" field.
+        /// </summary>
         public bool? Resume { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "aborted" field.
+        /// </summary>
         public bool? Aborted { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "batchable" field.
+        /// </summary>
         public bool? Batchable { get; set; }
 
         internal override int FieldCount
@@ -42,6 +78,10 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("transfer(");

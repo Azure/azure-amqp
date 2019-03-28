@@ -5,16 +5,27 @@ namespace Microsoft.Azure.Amqp.Framing
 {
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines a described type whose value is a map.
+    /// </summary>
     public abstract class DescribedMap : AmqpDescribed
     {
         AmqpMap innerMap;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="name">The descriptor name.</param>
+        /// <param name="code">The descriptor code.</param>
         public DescribedMap(AmqpSymbol name, ulong code)
             : base(name, code)
         {
             this.innerMap = new AmqpMap();
         }
 
+        /// <summary>
+        /// Gets the map that stores the key-value items.
+        /// </summary>
         protected AmqpMap InnerMap
         {
             get { return this.innerMap; }

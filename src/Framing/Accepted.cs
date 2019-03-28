@@ -33,7 +33,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// Returns a string that represents the object.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return "accepted()";

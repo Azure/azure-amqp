@@ -5,16 +5,30 @@ namespace Microsoft.Azure.Amqp.Framing
 {
     using System.Text;
 
+    /// <summary>
+    /// Defines the received outcome.
+    /// </summary>
     public sealed class Received : DeliveryState
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:received:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000023;
         const int Fields = 2;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Received() : base(Name, Code) { }
 
+        /// <summary>
+        /// Gets or sets the "section-number" field.
+        /// </summary>
         public uint? SectionNumber { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "section-offset" field.
+        /// </summary>
         public ulong? SectionOffset { get; set; }
 
         internal override int FieldCount
@@ -22,6 +36,10 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("received(");

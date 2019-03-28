@@ -29,6 +29,9 @@ namespace Microsoft.Azure.Amqp.Framing
         {
         }
 
+        /// <summary>
+        /// Gets the map that stores the properties.
+        /// </summary>
         public PropertiesMap Map
         {
             get 

@@ -3,16 +3,26 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
-    using System;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// The base class of link performatives.
+    /// </summary>
     public abstract class LinkPerformative : Performative
     {
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="name">The descriptor name.</param>
+        /// <param name="code">The descriptor code.</param>
         protected LinkPerformative(AmqpSymbol name, ulong code)
             : base(name, code)
         {
         }
 
+        /// <summary>
+        /// Gets or sets the "handle" field.
+        /// </summary>
         public uint? Handle { get; set; }
     }
 }

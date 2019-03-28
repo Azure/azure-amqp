@@ -22,7 +22,7 @@
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <Configurations>Debug;Release;Signed</Configurations>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <NoWarn>1591</NoWarn>
+    <NoWarn>15910</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

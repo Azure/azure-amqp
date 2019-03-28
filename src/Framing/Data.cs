@@ -6,33 +6,21 @@ namespace Microsoft.Azure.Amqp.Framing
     using System;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the data message section.
+    /// </summary>
     public sealed class Data : AmqpDescribed
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:data:binary";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000075;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Data() : base(Name, Code)
         {
-        }
-
-        public static ArraySegment<byte> GetEncodedPrefix(int valueLength)
-        {
-            byte[] buffer = new byte[8] { FormatCode.Described, FormatCode.SmallULong, (byte)Data.Code, 0x00, 0x00, 0x00, 0x00, 0x00 };
-            int count;
-            if (valueLength <= byte.MaxValue)
-            {
-                buffer[3] = FormatCode.Binary8;
-                buffer[4] = (byte)valueLength;
-                count = 5;
-            }
-            else
-            {
-                buffer[3] = FormatCode.Binary32;
-                AmqpBitConverter.WriteUInt(buffer, 4, (uint)valueLength);
-                count = 8;
-            }
-
-            return new ArraySegment<byte>(buffer, 0, count);
         }
 
         internal override int GetValueEncodeSize()
@@ -50,6 +38,10 @@ namespace Microsoft.Azure.Amqp.Framing
             this.Value = BinaryEncoding.Decode(buffer, 0);
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return "data()";

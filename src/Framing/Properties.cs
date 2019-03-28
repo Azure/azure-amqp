@@ -7,52 +7,86 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the properties message section.
+    /// </summary>
     public sealed class Properties : DescribedList
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:properties:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000073;
-        public static readonly string MessageIdName = "message-id";
-        public static readonly string UserIdName = "user-id";
-        public static readonly string ToName = "to";
-        public static readonly string SubjectName = "subject";
-        public static readonly string ReplyToName = "reply-to";
-        public static readonly string CorrelationIdName = "correlation-id";
-        public static readonly string ContentTypeName = "content-type";
-        public static readonly string ContentEncodingName = "content-encoding";
-        public static readonly string AbsoluteExpiryTimeName = "absolute-expiry-time";
-        public static readonly string CreationTimeName = "creation-time";
-        public static readonly string GroupIdName = "group-id";
-        public static readonly string GroupSequenceName = "group-sequence";
-        public static readonly string ReplyToGroupIdName = "reply-to-group-id";
 
         const int Fields = 13;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Properties() : base(Name, Code) { }
 
+        /// <summary>
+        /// Gets or sets the "message-id" field..
+        /// </summary>
         public MessageId MessageId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "user-id" field.
+        /// </summary>
         public ArraySegment<byte> UserId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "to" field.
+        /// </summary>
         public Address To { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "subject" field.
+        /// </summary>
         public string Subject { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "reply-to" field.
+        /// </summary>
         public Address ReplyTo { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "correlation-id" field.
+        /// </summary>
         public MessageId CorrelationId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "content-type" field.
+        /// </summary>
         public AmqpSymbol ContentType { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "content-encoding" field.
+        /// </summary>
         public AmqpSymbol ContentEncoding { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "absolute-expiry-time" field.
+        /// </summary>
         public DateTime? AbsoluteExpiryTime { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "creation-time" field.
+        /// </summary>
         public DateTime? CreationTime { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "group-id" field.
+        /// </summary>
         public string GroupId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "group-sequence" field.
+        /// </summary>
         public uint? GroupSequence { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "reply-to-group-id" field.
+        /// </summary>
         public string ReplyToGroupId { get; set; }
 
         internal override int FieldCount
@@ -60,23 +94,27 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("properties(");
             int count = 0;
-            this.AddFieldToString(this.MessageId != null, sb, MessageIdName, this.MessageId, ref count);
-            this.AddFieldToString(this.UserId.Array != null, sb, UserIdName, this.UserId, ref count);
-            this.AddFieldToString(this.To != null, sb, ToName, this.To, ref count);
-            this.AddFieldToString(this.Subject != null, sb, SubjectName, this.Subject, ref count);
-            this.AddFieldToString(this.ReplyTo != null, sb, ReplyToName, this.ReplyTo, ref count);
-            this.AddFieldToString(this.CorrelationId != null, sb, CorrelationIdName, this.CorrelationId, ref count);
-            this.AddFieldToString(this.ContentType.Value != null, sb, ContentTypeName, this.ContentType, ref count);
-            this.AddFieldToString(this.ContentEncoding.Value != null, sb, ContentEncodingName, this.ContentEncoding, ref count);
-            this.AddFieldToString(this.AbsoluteExpiryTime != null, sb, AbsoluteExpiryTimeName, this.AbsoluteExpiryTime, ref count);
-            this.AddFieldToString(this.CreationTime != null, sb, CreationTimeName, this.CreationTime, ref count);
-            this.AddFieldToString(this.GroupId != null, sb, GroupIdName, this.GroupId, ref count);
-            this.AddFieldToString(this.GroupSequence != null, sb, GroupSequenceName, this.GroupSequence, ref count);
-            this.AddFieldToString(this.ReplyToGroupId != null, sb, ReplyToGroupIdName, this.ReplyToGroupId, ref count);
+            this.AddFieldToString(this.MessageId != null, sb, "message-id", this.MessageId, ref count);
+            this.AddFieldToString(this.UserId.Array != null, sb, "user-id", this.UserId, ref count);
+            this.AddFieldToString(this.To != null, sb, "to", this.To, ref count);
+            this.AddFieldToString(this.Subject != null, sb, "subject", this.Subject, ref count);
+            this.AddFieldToString(this.ReplyTo != null, sb, "reply-to", this.ReplyTo, ref count);
+            this.AddFieldToString(this.CorrelationId != null, sb, "correlation-id", this.CorrelationId, ref count);
+            this.AddFieldToString(this.ContentType.Value != null, sb, "content-type", this.ContentType, ref count);
+            this.AddFieldToString(this.ContentEncoding.Value != null, sb, "content-encoding", this.ContentEncoding, ref count);
+            this.AddFieldToString(this.AbsoluteExpiryTime != null, sb, "absolute-expiry-time", this.AbsoluteExpiryTime, ref count);
+            this.AddFieldToString(this.CreationTime != null, sb, "creation-time", this.CreationTime, ref count);
+            this.AddFieldToString(this.GroupId != null, sb, "group-id", this.GroupId, ref count);
+            this.AddFieldToString(this.GroupSequence != null, sb, "group-sequence", this.GroupSequence, ref count);
+            this.AddFieldToString(this.ReplyToGroupId != null, sb, "reply-to-group-id", this.ReplyToGroupId, ref count);
             sb.Append(')');
             return sb.ToString();
         }

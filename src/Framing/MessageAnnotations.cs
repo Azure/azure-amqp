@@ -3,11 +3,19 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
+    /// <summary>
+    /// Defines the message-annotations section of a message.
+    /// </summary>
     public sealed class MessageAnnotations : DescribedAnnotations
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:message-annotations:map";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000072;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public MessageAnnotations() : base(Name, Code)
         {
         }

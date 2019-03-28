@@ -5,11 +5,10 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Transport;
 
-    public sealed class AsyncIO : AmqpObject
+    sealed class AsyncIO : AmqpObject
     {
         readonly IIoHandler ioHandler;
         readonly TransportBase transport;

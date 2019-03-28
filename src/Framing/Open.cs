@@ -6,34 +6,72 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the open performative.
+    /// </summary>
     public class Open : Performative
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:open:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000010;
         const int Fields = 10;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Open() : base(Name, Code)
         {
         }
 
+        /// <summary>
+        /// Gets or sets the "container-id" field.
+        /// </summary>
         public string ContainerId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "hostname" field.
+        /// </summary>
         public string HostName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "max-frame-size" field.
+        /// </summary>
         public uint? MaxFrameSize { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "channel-max" field.
+        /// </summary>
         public ushort? ChannelMax { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "idle-time-out" field.
+        /// </summary>
         public uint? IdleTimeOut { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "outgoing-locales" field.
+        /// </summary>
         public Multiple<AmqpSymbol> OutgoingLocales { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "incoming-locales" field.
+        /// </summary>
         public Multiple<AmqpSymbol> IncomingLocales { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "offered-capabilities" field.
+        /// </summary>
         public Multiple<AmqpSymbol> OfferedCapabilities { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "desired-capabilities" field.
+        /// </summary>
         public Multiple<AmqpSymbol> DesiredCapabilities { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "properties" field.
+        /// </summary>
         public Fields Properties { get; set; }
 
         internal override int FieldCount
@@ -41,6 +79,10 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("open(");

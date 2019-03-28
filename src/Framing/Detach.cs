@@ -7,20 +7,32 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the detach performative.
+    /// </summary>
     public sealed class Detach : LinkPerformative
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:detach:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000016;
         const int Fields = 3;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Detach() : base(Name, Code)
         {
         }
 
-        //// public uint? Handle { get; set; }
-
+        /// <summary>
+        /// Gets or sets the "closed" field.
+        /// </summary>
         public bool? Closed { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "error" field.
+        /// </summary>
         public Error Error { get; set; }
 
         internal override int FieldCount
@@ -28,6 +40,10 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("detach(");

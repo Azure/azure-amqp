@@ -340,10 +340,7 @@ namespace Microsoft.Azure.Amqp
             using (Frame frame = new Frame())
             {
                 frame.Decode(buffer);
-#if DEBUG
                 frame.Trace(false, this);
-                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Receive, frame);
-#endif
 
                 this.heartBeat.OnReceive();
                 if (this.UsageMeter != null)
@@ -440,6 +437,7 @@ namespace Microsoft.Azure.Amqp
             {
                 this.Settings.AddProperty(AmqpConstants.OpenErrorName, Error.FromException(this.TerminalException));
             }
+
             this.SendCommand(this.Settings, 0, null);
         }
 

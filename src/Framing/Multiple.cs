@@ -113,6 +113,10 @@ namespace Microsoft.Azure.Amqp.Framing
             return list;
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("[");

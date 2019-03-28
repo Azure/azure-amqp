@@ -3,30 +3,55 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
-    using System.Globalization;
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the disposition performative.
+    /// </summary>
     public sealed class Disposition : Performative
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:disposition:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000015;
         const int Fields = 6;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Disposition() : base(Name, Code)
         {
         }
 
+        /// <summary>
+        /// Gets or sets the "role" field.
+        /// </summary>
         public bool? Role { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "first" field.
+        /// </summary>
         public uint? First { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "last" field.
+        /// </summary>
         public uint? Last { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "settled" field.
+        /// </summary>
         public bool? Settled { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "state" field.
+        /// </summary>
         public DeliveryState State { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "batchable" field.
+        /// </summary>
         public bool? Batchable { get; set; }
 
         internal override int FieldCount
@@ -34,6 +59,10 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("disposition(");

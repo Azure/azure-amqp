@@ -3,11 +3,12 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
-    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using Microsoft.Azure.Amqp.Encoding;
 
-
+    /// <summary>
+    /// Defines the AMQP protocol header which consists of a protocol id and a version.
+    /// </summary>
     public sealed class ProtocolHeader : IAmqpSerializable
     {
         const uint AmqpPrefix = 0x414D5150;
@@ -15,27 +16,41 @@ namespace Microsoft.Azure.Amqp.Framing
         ProtocolId protocolId;
         AmqpVersion version;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public ProtocolHeader()
         {
         }
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="id">The protocol id.</param>
+        /// <param name="version">The protocol version.</param>
         public ProtocolHeader(ProtocolId id, AmqpVersion version)
         {
             this.protocolId = id;
             this.version = version;
         }
 
+        /// <summary>
+        /// Gets the protocol id.
+        /// </summary>
         public ProtocolId ProtocolId
         {
             get { return this.protocolId; }
         }
 
+        /// <summary>
+        /// Gets the protocol version.
+        /// </summary>
         public AmqpVersion Version
         {
             get { return this.version; }
         }
 
-        public int EncodeSize
+        int IAmqpSerializable.EncodeSize
         {
             get
             {
@@ -43,7 +58,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        public void Encode(ByteBuffer buffer)
+        void IAmqpSerializable.Encode(ByteBuffer buffer)
         {
             AmqpBitConverter.WriteUInt(buffer, AmqpPrefix);
             AmqpBitConverter.WriteUByte(buffer, (byte)this.protocolId);
@@ -52,11 +67,11 @@ namespace Microsoft.Azure.Amqp.Framing
             AmqpBitConverter.WriteUByte(buffer, this.version.Revision);
         }
 
-        public void Decode(ByteBuffer buffer)
+        void IAmqpSerializable.Decode(ByteBuffer buffer)
         {
-            if (buffer.Length < this.EncodeSize)
+            if (buffer.Length < AmqpConstants.ProtocolHeaderSize)
             {
-                throw new AmqpException(AmqpErrorCode.DecodeError, AmqpResources.GetString(AmqpResources.AmqpInsufficientBufferSize, this.EncodeSize, buffer.Length));
+                throw new AmqpException(AmqpErrorCode.DecodeError, AmqpResources.GetString(AmqpResources.AmqpInsufficientBufferSize, AmqpConstants.ProtocolHeaderSize, buffer.Length));
             }
 
             uint prefix = AmqpBitConverter.ReadUInt(buffer);
@@ -73,11 +88,20 @@ namespace Microsoft.Azure.Amqp.Framing
                 AmqpBitConverter.ReadUByte(buffer));
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return string.Format(CultureInfo.InvariantCulture, "AMQP {0} {1}", (byte)this.protocolId, this.version);
         }
 
+        /// <summary>
+        /// Determines whether two objects are equal.
+        /// </summary>
+        /// <param name="obj">The object to compare.</param>
+        /// <returns>True if they are equal; false otherwise.</returns>
         public override bool Equals(object obj)
         {
             ProtocolHeader otherHeader = obj as ProtocolHeader;
@@ -90,6 +114,10 @@ namespace Microsoft.Azure.Amqp.Framing
                 otherHeader.version.Equals(this.version);
         }
 
+        /// <summary>
+        /// Returns a hash code of the object.
+        /// </summary>
+        /// <returns>The hash code.</returns>
         public override int GetHashCode()
         {
             int result = ((int)this.protocolId << 24) +

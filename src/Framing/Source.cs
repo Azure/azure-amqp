@@ -7,39 +7,75 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the source.
+    /// </summary>
     public sealed class Source : DescribedList
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:source:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000028;
         const int Fields = 11;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Source() : base(Name, Code) { }
 
-        public Source(Uri uri) : this()
-        {
-            this.Address = uri.AbsoluteUri;
-        }
-
+        /// <summary>
+        /// Gets or sets the "address" field.
+        /// </summary>
         public Address Address { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "durable" field.
+        /// </summary>
         public uint? Durable { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "expiry-policy" field.
+        /// </summary>
         public AmqpSymbol ExpiryPolicy { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "timeout" field.
+        /// </summary>
         public uint? Timeout { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "dynamic" field.
+        /// </summary>
         public bool? Dynamic { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "dynamic-node-properties" field.
+        /// </summary>
         public Fields DynamicNodeProperties { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "distribution-mode" field.
+        /// </summary>
         public AmqpSymbol DistributionMode { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "filter-set" field.
+        /// </summary>
         public FilterSet FilterSet { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "default-outcome" field.
+        /// </summary>
         public Outcome DefaultOutcome { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "outcomes" field.
+        /// </summary>
         public Multiple<AmqpSymbol> Outcomes { get; set; }
 
+        /// <summary>
+        /// Gets or sets the "capabilities" field.
+        /// </summary>
         public Multiple<AmqpSymbol> Capabilities { get; set; }
 
         internal override int FieldCount
@@ -47,6 +83,10 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("source(");

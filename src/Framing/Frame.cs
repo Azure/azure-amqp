@@ -8,65 +8,96 @@ namespace Microsoft.Azure.Amqp.Framing
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Defines the AMQP frame.
+    /// </summary>
     public sealed class Frame : IDisposable
     {
-        public const int HeaderSize = 8;
+        internal const int HeaderSize = 8;
         const byte DefaultDataOffset = 2;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Frame()
             : this(FrameType.Amqp)
         {
         }
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="type">The frame type.</param>
         public Frame(FrameType type)
         {
             this.Type = type;
             this.DataOffset = Frame.DefaultDataOffset;
         }
 
+        /// <summary>
+        /// Gets the size of the frame.
+        /// </summary>
         public int Size
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Gets the data offset in the frame buffer.
+        /// </summary>
         public byte DataOffset
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Gets the frame type.
+        /// </summary>
         public FrameType Type
         {
             get;
             private set;
         }
 
+        /// <summary>
+        /// Gets or sets the session channel.
+        /// </summary>
         public ushort Channel
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets the performative of the frame.
+        /// </summary>
         public Performative Command
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets the payload, if any, of the performative.
+        /// </summary>
         public ArraySegment<byte> Payload
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets the buffer of the frame.
+        /// </summary>
         public ByteBuffer RawByteBuffer
         {
             get; 
             private set; 
         }
 
-        public static ByteBuffer EncodeCommand(FrameType type, ushort channel, Performative command, int payloadSize)
+        internal static ByteBuffer EncodeCommand(FrameType type, ushort channel, Performative command, int payloadSize)
         {
             int frameSize = HeaderSize;
             if (command != null)
@@ -90,6 +121,18 @@ namespace Microsoft.Azure.Amqp.Framing
             return buffer;
         }
 
+        /// <summary>
+        /// Serializes the frame. Payload is not copied to <see cref="RawByteBuffer"/>.
+        /// </summary>
+        public void Encode()
+        {
+            this.RawByteBuffer = EncodeCommand(this.Type, this.Channel, this.Command, this.Payload.Count);
+        }
+
+        /// <summary>
+        /// Deserializes the frame.
+        /// </summary>
+        /// <param name="buffer">The frame buffer.</param>
         public void Decode(ByteBuffer buffer)
         {
             // the frame now owns disposing the buffer
@@ -103,6 +146,10 @@ namespace Microsoft.Azure.Amqp.Framing
             buffer.AdjustPosition(offset, length);
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
@@ -148,6 +195,9 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
+        /// <summary>
+        /// Disposes the frame and releases the buffer.
+        /// </summary>
         public void Dispose()
         {
             if (this.RawByteBuffer != null)

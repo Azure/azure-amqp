@@ -69,7 +69,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets or sets the status of delivery state changes.
         /// </summary>
-        internal bool StateChanged
+        public bool StateChanged
         {
             get;
             set;

@@ -25,7 +25,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         public bool TryGetValue<TValue>(MapKey key, out TValue value)
         {
             object obj;
-            if (this.TryGetValue(key, out obj))
+            if (base.TryGetValue(key, out obj))
             {
                 if (obj == null)
                 {

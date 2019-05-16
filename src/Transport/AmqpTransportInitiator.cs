@@ -82,7 +82,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// <returns>An <see cref="IAsyncResult"/>.</returns>
         public IAsyncResult BeginConnect(TimeSpan timeout, AsyncCallback callback, object state)
         {
-            return this.BeginConnect(timeout, callback, state);
+            return new ConnectAsyncResult(this, timeout, callback, state);
         }
 
         /// <summary>

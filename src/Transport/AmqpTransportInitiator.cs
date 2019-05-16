@@ -8,6 +8,14 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// The initiator creates an AMQP transport.
+    /// </summary>
+    /// <remarks>Transport upgrades are supported by providers in the protocol settings.
+    /// The initiator establishes a base transport using the transport settings,
+    /// and then it iterates through the transport provider list to upgrade
+    /// the transports (e.g. tcp -> tls -> sasl -> amqp).
+    /// </remarks>
     public sealed class AmqpTransportInitiator : TransportInitiator
     {
         AmqpSettings settings;
@@ -20,12 +28,10 @@ namespace Microsoft.Azure.Amqp.Transport
         int completingThread;
 
         /// <summary>
-        /// This initiator establishes a base transport using the transport settings
-        /// Then it iterates through the security provider list in the settings to upgrade
-        /// the transport (e.g. tcp -> tls -> sasl).
+        /// Initializes the object.
         /// </summary>
-        /// <param name="settings"></param>
-        /// <param name="transportSettings"></param>
+        /// <param name="settings">The protocol settings.</param>
+        /// <param name="transportSettings">The base transport settings.</param>
         public AmqpTransportInitiator(AmqpSettings settings, TransportSettings transportSettings)
         {
             settings.ValidateInitiatorSettings();
@@ -41,6 +47,12 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
+        /// <summary>
+        /// Connects to the remote peer.
+        /// </summary>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callbackArgs">The callback arguments.</param>
+        /// <returns>true if connect is pending, false otherwise.</returns>
         public override bool ConnectAsync(TimeSpan timeout, TransportAsyncCallbackArgs callbackArgs)
         {
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Connect, this.transportSettings);
@@ -61,6 +73,13 @@ namespace Microsoft.Azure.Amqp.Transport
             return Interlocked.Exchange(ref this.completingThread, -1) != 0;
         }
 
+        /// <summary>
+        /// Begins to connect to the remote peer.
+        /// </summary>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The object associated with the operation.</param>
+        /// <returns>An <see cref="IAsyncResult"/>.</returns>
         public IAsyncResult BeginConnect(TimeSpan timeout, AsyncCallback callback, object state)
         {
             return this.BeginConnect(SystemTimerFactory.Default, timeout, callback, state);
@@ -71,17 +90,31 @@ namespace Microsoft.Azure.Amqp.Transport
             return new ConnectAsyncResult(this, timerFactory, timeout, callback, state);
         }
 
+        /// <summary>
+        /// Ends the connect operation.
+        /// </summary>
+        /// <param name="result">The <see cref="IAsyncResult"/> returned by the begin method.</param>
+        /// <returns>An AMQP transport.</returns>
         public TransportBase EndConnect(IAsyncResult result)
         {
             return ConnectAsyncResult.End(result);
         }
 
+        /// <summary>
+        /// Gets a string representation of the object.
+        /// </summary>
+        /// <returns>A string representation of the object.</returns>
         public override string ToString()
         {
             return "tp-initiator";
         }
 
-        public Task<TransportBase> ConnectTaskAsync(TimeSpan timeout)
+        /// <summary>
+        /// Starts the connect operation.
+        /// </summary>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns>A task that returns a transport when it is completed.</returns>
+        public Task<TransportBase> ConnectAsync(TimeSpan timeout)
         {
             var tcs = new TaskCompletionSource<TransportBase>();
             var args = new TransportAsyncCallbackArgs

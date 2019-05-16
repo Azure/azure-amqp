@@ -7,10 +7,16 @@ namespace Microsoft.Azure.Amqp.Sasl
     using System.Collections.Generic;
     using Microsoft.Azure.Amqp.Transport;
 
+    /// <summary>
+    /// Provides SASL transport upgrade.
+    /// </summary>
     public class SaslTransportProvider : TransportProvider
     {
         Dictionary<string, SaslHandler> handlers;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public SaslTransportProvider()
         {
             this.ProtocolId = ProtocolId.AmqpSasl;
@@ -18,29 +24,48 @@ namespace Microsoft.Azure.Amqp.Sasl
             this.MaxFrameSize = AmqpConstants.MinMaxFrameSize;
         }
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public SaslTransportProvider(AmqpVersion version)
             : this()
         {
             this.Versions.Add(version);
         }
 
+        /// <summary>
+        /// Gets or sets the max-frame-size of SASL frames.
+        /// </summary>
         public int MaxFrameSize
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// The supported SASL mechanisms.
+        /// </summary>
         public IEnumerable<string> Mechanisms
         {
             get { return this.handlers.Keys; }
         }
 
+        /// <summary>
+        /// Adds a SASL handler.
+        /// </summary>
+        /// <param name="handler">The SASL handler.</param>
         public void AddHandler(SaslHandler handler)
         {
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Add, handler);
             this.handlers.Add(handler.Mechanism, handler);
         }
 
+        /// <summary>
+        /// Gets a SASL handler for a given mechanism.
+        /// </summary>
+        /// <param name="mechanism">The SASL mechanism.</param>
+        /// <param name="clone">true to clone the handler.</param>
+        /// <returns></returns>
         public SaslHandler GetHandler(string mechanism, bool clone)
         {
             SaslHandler handler;
@@ -54,11 +79,21 @@ namespace Microsoft.Azure.Amqp.Sasl
             return clone ? handler.Clone() : handler;
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return "sasl-provider";
         }
 
+        /// <summary>
+        /// Creates a SASL transport from the inner transport.
+        /// </summary>
+        /// <param name="innerTransport">The inner transport.</param>
+        /// <param name="isInitiator">true if it is called by the transport initiator.</param>
+        /// <returns></returns>
         protected override TransportBase OnCreateTransport(TransportBase innerTransport, bool isInitiator)
         {
             if (innerTransport.GetType() == typeof(SaslTransport))

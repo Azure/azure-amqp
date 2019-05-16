@@ -8,7 +8,10 @@ namespace Microsoft.Azure.Amqp
     using System.Threading;
     using Microsoft.Azure.Amqp.Encoding;
 
-    // This class is not thread safe
+    /// <summary>
+    /// Provides a wrapper to read bytes from and write bytes to a byte array.
+    /// It also pools the byte array to reduce allocation.
+    /// </summary>
     public class ByteBuffer : IDisposable, IAmqpSerializable
     {
         static readonly InternalBufferManager PooledBufferManager = InternalBufferManager.CreatePooledBufferManager(
@@ -39,6 +42,15 @@ namespace Microsoft.Azure.Amqp
         InternalBufferManager bufferManager;
         ByteBuffer innerBuffer;
 
+        /// <summary>
+        /// Initializes the pool of buffers used for transport read and write.
+        /// </summary>
+        /// <param name="bufferSize">The buffer size in bytes.</param>
+        /// <param name="maxCount">Number of buffers to allocate.</param>
+        /// <remarks>This method allocates the buffers. It should
+        /// be called as early as possible when the process starts, so that
+        /// when a buffer is pinned for pending I/O, it doesn't cause significant
+        /// heap fragmentation.</remarks>
         public static void InitTransportBufferManager(int bufferSize, int maxCount)
         {
             if (TransportBufferManager == null)
@@ -53,31 +65,65 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Initializes the buffer from a byte array.
+        /// </summary>
+        /// <param name="buffer">The byte array.</param>
         public ByteBuffer(byte[] buffer)
             : this(buffer, 0, 0, buffer.Length, false, null)
         {
         }
 
+        /// <summary>
+        /// Initializes the buffer from a byte array.
+        /// </summary>
+        /// <param name="buffer">The byte array.</param>
+        /// <param name="autoGrow">true for allocating a bigger buffer when the
+        /// current one does not have space for write.</param>
         public ByteBuffer(byte[] buffer, bool autoGrow)
             : this(buffer, 0, 0, buffer.Length, autoGrow, null)
         {
         }
 
+        /// <summary>
+        /// Initializes the buffer from a byte array segment.
+        /// </summary>
+        /// <param name="array">The byte array segment.</param>
         public ByteBuffer(ArraySegment<byte> array)
             : this(array.Array, array.Offset, array.Count, array.Count, false, null)
         {
         }
 
+        /// <summary>
+        /// Initializes the buffer for a given size.
+        /// </summary>
+        /// <param name="size">The required size in bytes.</param>
+        /// <param name="autoGrow">true for allocating a bigger buffer when the
+        /// current one does not have space for write.</param>
         public ByteBuffer(int size, bool autoGrow)
             : this(size, autoGrow, false)
         {
         }
 
+        /// <summary>
+        /// Initializes the buffer for a given size.
+        /// </summary>
+        /// <param name="size">The required size in bytes.</param>
+        /// <param name="autoGrow">true for allocating a bigger buffer when the
+        /// current one does not have space for write.</param>
+        /// <param name="isTransportBuffer">true for allocating a byte array
+        /// from the transport buffer pool.</param>
         public ByteBuffer(int size, bool autoGrow, bool isTransportBuffer)
             : this(ByteBuffer.AllocateBufferFromPool(size, isTransportBuffer), autoGrow, size)
         {
         }
 
+        /// <summary>
+        /// Initializes the buffer from a byte array segment.
+        /// </summary>
+        /// <param name="buffer">The byte array.</param>
+        /// <param name="offset">The offset.</param>
+        /// <param name="count">Number of bytes from the offset.</param>
         public ByteBuffer(byte[] buffer, int offset, int count)
             : this(buffer, offset, count, count, false, null)
         {
@@ -105,7 +151,7 @@ namespace Microsoft.Azure.Amqp
             this.bufferManager = bufferManager;
             this.references = 1;
 #if DEBUG
-            if (Extensions.AmqpDebug && bufferManager != null)
+            if (AmqpTrace.AmqpDebug && bufferManager != null)
             {
                 this.stack = new StackTrace();
             }
@@ -115,6 +161,9 @@ namespace Microsoft.Azure.Amqp
 #if DEBUG
         StackTrace stack;
 
+        /// <summary>
+        /// Finalizer for the object.
+        /// </summary>
         ~ByteBuffer()
         {
             if (this.stack == null)
@@ -145,36 +194,59 @@ namespace Microsoft.Azure.Amqp
             return new ManagedBuffer(PooledBufferManager.TakeBuffer(size), PooledBufferManager);
         }
 
+        /// <summary>
+        /// Gets the byte array.
+        /// </summary>
         public byte[] Buffer
         {
             get { return this.buffer; }
         }
 
+        /// <summary>
+        /// Gets the capacity of the buffer.
+        /// </summary>
         public int Capacity
         {
             get { return this.end - this.start; }
         }
 
+        /// <summary>
+        /// Gets the current read offset.
+        /// </summary>
         public int Offset
         {
             get { return this.read; }
         }
 
+        /// <summary>
+        /// Gets the remaining size for write.
+        /// </summary>
         public int Size
         {
             get { return this.end - this.write; }
         }
 
+        /// <summary>
+        /// Gets the remainng bytes for read.
+        /// </summary>
         public int Length
         {
             get { return this.write - this.read; }
         }
 
+        /// <summary>
+        /// Gets the current write offset.
+        /// </summary>
         public int WritePos
         {
             get { return this.write; }
         }
 
+        /// <summary>
+        /// Validates if the buffer has sufficient bytes for read or space for write.
+        /// </summary>
+        /// <param name="write">true if validation is for writing bytes.</param>
+        /// <param name="dataSize">The requested size.</param>
         public void Validate(bool write, int dataSize)
         {
             bool valid = false;
@@ -229,6 +301,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Advances the read end position.
+        /// </summary>
+        /// <param name="size"></param>
         public void Append(int size)
         {
             Fx.Assert(size >= 0, "size must be positive.");
@@ -236,6 +312,10 @@ namespace Microsoft.Azure.Amqp
             this.write += size;
         }
 
+        /// <summary>
+        /// Advances the read cursor.
+        /// </summary>
+        /// <param name="size"></param>
         public void Complete(int size)
         {
             Fx.Assert(size >= 0, "size must be positive.");
@@ -243,6 +323,10 @@ namespace Microsoft.Azure.Amqp
             this.read += size;
         }
 
+        /// <summary>
+        /// Sets the read cursor.
+        /// </summary>
+        /// <param name="seekPosition">The absolute position in the byte array.</param>
         public void Seek(int seekPosition)
         {
             Fx.Assert(seekPosition >= this.start, "seekPosition must not be before start.");
@@ -250,12 +334,21 @@ namespace Microsoft.Azure.Amqp
             this.read = seekPosition;
         }
 
+        /// <summary>
+        /// Resets the read and write cursor.
+        /// </summary>
         public void Reset()
         {
             this.read = this.start;
             this.write = this.start;
         }
 
+        /// <summary>
+        /// Gets a slice of the buffer.
+        /// </summary>
+        /// <param name="position">The start position.</param>
+        /// <param name="length">Number of bytes.</param>
+        /// <returns></returns>
         public ByteBuffer GetSlice(int position, int length)
         {
             if (this.innerBuffer != null)
@@ -264,7 +357,7 @@ namespace Microsoft.Azure.Amqp
             }
 
 #if DEBUG
-            if (Extensions.AmqpDebug && this.bufferManager != null)
+            if (AmqpTrace.AmqpDebug && this.bufferManager != null)
             {
                 this.stack = new StackTrace();
             }
@@ -276,6 +369,12 @@ namespace Microsoft.Azure.Amqp
             };
         }
 
+        /// <summary>
+        /// Adjusts the read and write cursor.
+        /// </summary>
+        /// <param name="offset">The read cursor.</param>
+        /// <param name="length">The number of bytes for read. The write cursor
+        /// will be after the length.</param>
         public void AdjustPosition(int offset, int length)
         {
             Fx.Assert(offset >= this.start, "Invalid offset!");
@@ -284,11 +383,19 @@ namespace Microsoft.Azure.Amqp
             this.write = this.read + length;
         }
 
+        /// <summary>
+        /// Releases the reference on the buffer. When the reference is 0, the
+        /// byte array is returned.
+        /// </summary>
         public void Dispose()
         {
             this.RemoveReference();
         }
 
+        /// <summary>
+        /// Tries to add a reference on the buffer.
+        /// </summary>
+        /// <returns>true on success, false if the buffer is already disposed.</returns>
         public bool TryAddReference()
         {
             if (Interlocked.Increment(ref this.references) <= 1)
@@ -306,6 +413,11 @@ namespace Microsoft.Azure.Amqp
             return true;
         }
 
+        /// <summary>
+        /// Adds a reference on the buffer. Throws <see cref="InvalidOperationException"/>
+        /// if the buffer is already disposed.
+        /// </summary>
+        /// <returns>The current buffer.</returns>
         public ByteBuffer AddReference()
         {
             if (!this.TryAddReference())
@@ -316,6 +428,10 @@ namespace Microsoft.Azure.Amqp
             return this;
         }
 
+        /// <summary>
+        /// Removes a reference on the buffer. When the reference is 0, the
+        /// byte array is returned.
+        /// </summary>
         public void RemoveReference()
         {
             int refCount = Interlocked.Decrement(ref this.references);

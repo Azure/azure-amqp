@@ -8,6 +8,9 @@ namespace Microsoft.Azure.Amqp
     using System.IO;
     using System.Linq;
 
+    /// <summary>
+    /// A stream that consists of a list of array segments for read.
+    /// </summary>
     public sealed class BufferListStream : Stream
     {
         IList<ArraySegment<byte>> bufferList;
@@ -17,6 +20,10 @@ namespace Microsoft.Azure.Amqp
         long position;
         bool disposed;
 
+        /// <summary>
+        /// Initializes the stream object.
+        /// </summary>
+        /// <param name="arraySegments">The list of array segments.</param>
         public BufferListStream(IList<ArraySegment<byte>> arraySegments)
         {
             if (arraySegments == null)
@@ -38,21 +45,33 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// true (the stream supports reading).
+        /// </summary>
         public override bool CanRead
         {
             get { return true; }
         }
 
+        /// <summary>
+        /// true (the stream supports seeking).
+        /// </summary>
         public override bool CanSeek
         {
             get { return true; }
         }
 
+        /// <summary>
+        /// false (the stream does not support writing).
+        /// </summary>
         public override bool CanWrite
         {
             get { return false; }
         }
 
+        /// <summary>
+        /// Gets the lengh of the stream.
+        /// </summary>
         public override long Length
         {
             get
@@ -62,6 +81,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets or sets the current position within the stream.
+        /// </summary>
         public override long Position
         {
             get
@@ -77,17 +99,29 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Creates a new BufferListStream from the buffer list.
+        /// </summary>
+        /// <returns></returns>
         public object Clone()
         {
             this.ThrowIfDisposed();
             return new BufferListStream(this.bufferList);
         }
 
+        /// <summary>
+        /// Should not be called.
+        /// </summary>
         public override void Flush()
         {
             throw new InvalidOperationException();
         }
 
+        /// <summary>
+        /// Reads a byte from the stream and advances the position within the stream by one
+        ///  byte, or returns -1 if at the end of the stream.
+        /// </summary>
+        /// <returns>The unsigned byte cast to an Int32, or -1 if at the end of the stream.</returns>
         public override int ReadByte()
         {
             this.ThrowIfDisposed();
@@ -102,6 +136,14 @@ namespace Microsoft.Azure.Amqp
             return value;
         }
 
+        /// <summary>
+        /// reads a sequence of bytes from the current stream and advances
+        /// the position within the stream by the number of bytes read.
+        /// </summary>
+        /// <param name="buffer">An array of bytes.</param>
+        /// <param name="offset">The zero-based byte offset in buffer at which to begin storing the data.</param>
+        /// <param name="count">The maximum number of bytes to be read.</param>
+        /// <returns></returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
             this.ThrowIfDisposed();
@@ -127,6 +169,12 @@ namespace Microsoft.Azure.Amqp
             return bytesRead;
         }
 
+        /// <summary>
+        /// Sets the position within the current stream.
+        /// </summary>
+        /// <param name="offset">A byte offset relative to the origin parameter.</param>
+        /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
+        /// <returns>The new position within the current stream.</returns>
         public override long Seek(long offset, SeekOrigin origin)
         {
             this.ThrowIfDisposed();
@@ -148,16 +196,32 @@ namespace Microsoft.Azure.Amqp
             return pos;
         }
 
+        /// <summary>
+        /// Not supported.
+        /// </summary>
+        /// <param name="value"></param>
         public override void SetLength(long value)
         {
             throw new NotSupportedException();
         }
 
+        /// <summary>
+        /// Not supported.
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
         public override void Write(byte[] buffer, int offset, int count)
         {
             throw new NotSupportedException();
         }
 
+        /// <summary>
+        /// Reads bytes of the specified count from the stream. The method may allocate
+        /// a new array of bytes and copy bytes if count is greater than the current array segment.
+        /// </summary>
+        /// <param name="count">The number of bytes to read.</param>
+        /// <returns>An array segment.</returns>
         public ArraySegment<byte> ReadBytes(int count)
         {
             this.ThrowIfDisposed();
@@ -185,6 +249,14 @@ namespace Microsoft.Azure.Amqp
             return segment;
         }
 
+        /// <summary>
+        /// Reads array segments from the stream. This method does not allocate array of bytes.
+        /// It creates array segments from existing buffers and return them as an array.
+        /// </summary>
+        /// <param name="count">Number of bytes to read.</param>
+        /// <param name="advance">true to advances the position, false otherwise.</param>
+        /// <param name="more">true if there are more bytes in the stream, false otherwise.</param>
+        /// <returns>An array of array segments.</returns>
         public ArraySegment<byte>[] ReadBuffers(int count, bool advance, out bool more)
         {
             this.ThrowIfDisposed();
@@ -220,6 +292,10 @@ namespace Microsoft.Azure.Amqp
             return buffers.ToArray();
         }
 
+        /// <summary>
+        /// Disposes the stream object.
+        /// </summary>
+        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             try
@@ -286,11 +362,29 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Creates a BufferListStream from an input stream.
+        /// </summary>
+        /// <param name="stream">The input stream.</param>
+        /// <param name="segmentSize">Size of the segments.</param>
+        /// <returns>A BufferListStream object.</returns>
+        /// <remarks>
+        /// If the input stream is a BufferListStream object, this method
+        /// creates a shadow copy of the buffers. Otherwise, it reads
+        /// the input stream into fixed-size segments.
+        /// </remarks>
         public static BufferListStream Create(Stream stream, int segmentSize)
         {
             return Create(stream, segmentSize, false);
         }
 
+        /// <summary>
+        /// Creates a BufferListStream from an input stream.
+        /// </summary>
+        /// <param name="stream">The input stream.</param>
+        /// <param name="segmentSize">Size of the segments.</param>
+        /// <param name="forceCopyStream">true to always copy the bytes.</param>
+        /// <returns>A BufferListStream object.</returns>
         public static BufferListStream Create(Stream stream, int segmentSize, bool forceCopyStream)
         {
             if (stream == null)
@@ -313,6 +407,13 @@ namespace Microsoft.Azure.Amqp
             return bufferStream;
         }
 
+        /// <summary>
+        /// Reads a stream into fixed-size segments.
+        /// </summary>
+        /// <param name="stream">The input stream.</param>
+        /// <param name="segmentSize">Size of the segments.</param>
+        /// <param name="length">Total length of the read bytes.</param>
+        /// <returns></returns>
         public static ArraySegment<byte>[] ReadStream(Stream stream, int segmentSize, out int length)
         {
             if (stream == null)

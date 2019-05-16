@@ -11,6 +11,9 @@ namespace Microsoft.Azure.Amqp.Sasl
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transport;
 
+    /// <summary>
+    /// This class performs the SASL negotiatioin.
+    /// </summary>
     public sealed class SaslNegotiator : IIoHandler
     {
         enum SaslState
@@ -35,6 +38,12 @@ namespace Microsoft.Azure.Amqp.Sasl
         Exception completeException;
         int completeTransport;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="transport">The transport.</param>
+        /// <param name="provider">The SASL transport provider.</param>
+        /// <param name="isInitiator">true if it is the initiator, false otherwise.</param>
         public SaslNegotiator(SaslTransport transport, SaslTransportProvider provider, bool isInitiator)
         {
             this.transport = transport;
@@ -43,6 +52,10 @@ namespace Microsoft.Azure.Amqp.Sasl
             this.state = SaslState.Start;
         }
 
+        /// <summary>
+        /// Starts the negotiation.
+        /// </summary>
+        /// <returns>true if the negotiation is completed, false otherwise.</returns>
         public bool Start()
         {
             this.reader = new AsyncIO.FrameBufferReader(this, transport, this.provider.MaxFrameSize);
@@ -62,6 +75,9 @@ namespace Microsoft.Azure.Amqp.Sasl
             return false;
         }
 
+        /// <summary>
+        /// Starts reading a SASL frame from the transport.
+        /// </summary>
         public void ReadFrame()
         {
             try
@@ -74,6 +90,11 @@ namespace Microsoft.Azure.Amqp.Sasl
             }
         }
 
+        /// <summary>
+        /// Writes a SASL performative.
+        /// </summary>
+        /// <param name="command">The SASL performative.</param>
+        /// <param name="needReply">true if a response is needed, false otherwise.</param>
         public void WriteFrame(Performative command, bool needReply)
         {
             try
@@ -98,6 +119,11 @@ namespace Microsoft.Azure.Amqp.Sasl
             }
         }
 
+        /// <summary>
+        /// Completes the negotiation.
+        /// </summary>
+        /// <param name="code">The code.</param>
+        /// <param name="exception">The exception.</param>
         public void CompleteNegotiation(SaslCode code, Exception exception)
         {
             this.state = SaslState.End;
@@ -121,6 +147,10 @@ namespace Microsoft.Azure.Amqp.Sasl
             }
         }
 
+        /// <summary>
+        /// Gets a string representing the object.
+        /// </summary>
+        /// <returns>A string representing the object.</returns>
         public override string ToString()
         {
             return "sasl-negotiator";

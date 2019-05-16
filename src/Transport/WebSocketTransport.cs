@@ -9,17 +9,25 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Threading;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Defines the web socket transport.
+    /// </summary>
     public class WebSocketTransport : TransportBase
     {
         readonly WebSocket webSocket;
         readonly Uri uri;
         readonly EndPoint local;
         readonly EndPoint remote;
-
         ITransportMonitor usageMeter;
 
+        /// <summary>
+        /// Gets the local endpoint.
+        /// </summary>
         public override EndPoint LocalEndPoint => this.local;
 
+        /// <summary>
+        /// Gets the remote endpoint.
+        /// </summary>
         public override EndPoint RemoteEndPoint => this.remote;
 
         internal WebSocketTransport(WebSocket webSocket, Uri uri, EndPoint local, EndPoint remote)
@@ -31,6 +39,11 @@ namespace Microsoft.Azure.Amqp.Transport
             this.remote = remote;
         }
 
+        /// <summary>
+        /// Starts a write operation.
+        /// </summary>
+        /// <param name="args">The write arguments.</param>
+        /// <returns>true if the write operation is pending, otherwise false.</returns>
         public sealed override bool WriteAsync(TransportAsyncCallbackArgs args)
         {
             ArraySegment<byte> buffer;
@@ -90,6 +103,11 @@ namespace Microsoft.Azure.Amqp.Transport
             return true;
         }
 
+        /// <summary>
+        /// Starts a read operation.
+        /// </summary>
+        /// <param name="args">The read arguments.</param>
+        /// <returns>true if the read operation is pending, otherwise false.</returns>
         public sealed override bool ReadAsync(TransportAsyncCallbackArgs args)
         {
             DateTime startTime = DateTime.UtcNow;
@@ -121,11 +139,19 @@ namespace Microsoft.Azure.Amqp.Transport
             return true;
         }
 
+        /// <summary>
+        /// Opens the object.
+        /// </summary>
+        /// <returns>true if open is completed, otherwise false.</returns>
         protected override bool OpenInternal()
         {
             return true;
         }
 
+        /// <summary>
+        /// Closes the object.
+        /// </summary>
+        /// <returns>true if close is completed, otherwise false.</returns>
         protected override bool CloseInternal()
         {
             Task task = webSocket.CloseAsync(WebSocketCloseStatus.Empty, string.Empty, CancellationToken.None);
@@ -142,11 +168,18 @@ namespace Microsoft.Azure.Amqp.Transport
             return true;
         }
 
+        /// <summary>
+        /// Aborts the object.
+        /// </summary>
         protected override void AbortInternal()
         {
             this.webSocket.Dispose();
         }
 
+        /// <summary>
+        /// Sets a transport monitor for transport I/O operations.
+        /// </summary>
+        /// <param name="usageMeter">The transport monitor.</param>
         public override void SetMonitor(ITransportMonitor usageMeter)
         {
             this.usageMeter = usageMeter;

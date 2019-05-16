@@ -9,41 +9,67 @@ namespace Microsoft.Azure.Amqp.Sasl
     using System.Text;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// A SASL handler for the PLAIN mechanism.
+    /// </summary>
     public sealed class SaslPlainHandler : SaslHandler
     {
+        /// <summary>
+        /// The name of the PLAIN mechanism.
+        /// </summary>
         public static readonly string Name = "PLAIN";
-        static readonly string InvalidCredential = "Invalid user name or password.";
+        const string InvalidCredential = "Invalid user name or password.";
         ISaslPlainAuthenticator authenticator;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public SaslPlainHandler()
         {
             this.Mechanism = Name;
         }
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="authenticator">The SASL PLAIN authenticator.</param>
         public SaslPlainHandler(ISaslPlainAuthenticator authenticator)
             : this()
         {
             this.authenticator = authenticator;
         }
 
+        /// <summary>
+        /// Gets or sets the authorization identity.
+        /// </summary>
         public string AuthorizationIdentity
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets the authentication identity.
+        /// </summary>
         public string AuthenticationIdentity
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets the password.
+        /// </summary>
         public string Password
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Clones the object.
+        /// </summary>
+        /// <returns>A new SaslPlainHandler object.</returns>
         public override SaslHandler Clone()
         {
             return new SaslPlainHandler(this.authenticator)
@@ -54,16 +80,29 @@ namespace Microsoft.Azure.Amqp.Sasl
             };
         }
 
+        /// <summary>
+        /// Handles the received challenge. It is not implemented by this handler.
+        /// </summary>
+        /// <param name="challenge">The challenge.</param>
         public override void OnChallenge(SaslChallenge challenge)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Handles the received response. It is not implemented by this handler.
+        /// </summary>
+        /// <param name="response">The response.</param>
         public override void OnResponse(SaslResponse response)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Starts the SASL negotiation.
+        /// </summary>
+        /// <param name="init">The <see cref="SaslInit"/> performative to be sent.</param>
+        /// <param name="isClient">true if it is the initiator, otherwise false.</param>
         protected override void OnStart(SaslInit init, bool isClient)
         {
             if (isClient)

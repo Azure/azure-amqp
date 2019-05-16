@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Amqp.Transport
     using System;
     
     /// <summary>
-    /// This listener accepts SSL transport directly (no AMQP security upgrade)
+    /// This listener accepts TLS transport directly (no TLS upgrade).
     /// </summary>
     public class TlsTransportListener : TransportListener
     {
@@ -14,6 +14,10 @@ namespace Microsoft.Azure.Amqp.Transport
         readonly TlsTransportSettings transportSettings;
         TransportListener innerListener;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="transportSettings">The TLS transport settings.</param>
         public TlsTransportListener(TlsTransportSettings transportSettings)
             : base("tls-listener")
         {
@@ -21,6 +25,10 @@ namespace Microsoft.Azure.Amqp.Transport
             this.onTransportOpened = this.OnTransportOpened;
         }
 
+        /// <summary>
+        /// Closes the listener.
+        /// </summary>
+        /// <returns>True.</returns>
         protected override bool CloseInternal()
         {
             if (this.innerListener != null)
@@ -31,6 +39,9 @@ namespace Microsoft.Azure.Amqp.Transport
             return true;
         }
 
+        /// <summary>
+        /// Aborts the listener.
+        /// </summary>
         protected override void AbortInternal()
         {
             if (this.innerListener != null)
@@ -39,6 +50,9 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
+        /// <summary>
+        /// Starts listening for incoming transports.
+        /// </summary>
         protected override void OnListen()
         {
             TransportSettings innerSettings = this.transportSettings.InnerTransportSettings;
@@ -47,6 +61,12 @@ namespace Microsoft.Azure.Amqp.Transport
             this.innerListener.Listen(this.OnAcceptInnerTransport);
         }
 
+        /// <summary>
+        /// Creates a TLS transport from the accepted transport.
+        /// </summary>
+        /// <param name="innerTransport">The inner transport.</param>
+        /// <param name="tlsTransportSettings">The TLS transport settings.</param>
+        /// <returns></returns>
         protected virtual TlsTransport OnCreateTransport(TransportBase innerTransport, TlsTransportSettings tlsTransportSettings)
         {
             return new TlsTransport(innerTransport, tlsTransportSettings);

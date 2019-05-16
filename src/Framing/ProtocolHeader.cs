@@ -50,7 +50,10 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return this.version; }
         }
 
-        int IAmqpSerializable.EncodeSize
+        /// <summary>
+        /// Gets the encode size.
+        /// </summary>
+        public int EncodeSize
         {
             get
             {
@@ -58,7 +61,11 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        void IAmqpSerializable.Encode(ByteBuffer buffer)
+        /// <summary>
+        /// Encodes the protocol header into the buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer.</param>
+        public void Encode(ByteBuffer buffer)
         {
             AmqpBitConverter.WriteUInt(buffer, AmqpPrefix);
             AmqpBitConverter.WriteUByte(buffer, (byte)this.protocolId);
@@ -67,7 +74,11 @@ namespace Microsoft.Azure.Amqp.Framing
             AmqpBitConverter.WriteUByte(buffer, this.version.Revision);
         }
 
-        void IAmqpSerializable.Decode(ByteBuffer buffer)
+        /// <summary>
+        /// Decodes the protocol header from the buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer.</param>
+        public void Decode(ByteBuffer buffer)
         {
             if (buffer.Length < AmqpConstants.ProtocolHeaderSize)
             {

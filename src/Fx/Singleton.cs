@@ -9,8 +9,9 @@ namespace Microsoft.Azure.Amqp
     using System.Threading.Tasks;
 
     /// <summary>
-    /// This API supports the Azure infrastructure and is not intended to be used directly from your code.
+    /// Provides a singleton for a type.
     /// </summary>
+    /// <typeparam name="TValue">The value type.</typeparam>
     public abstract class Singleton<TValue> : IDisposable where TValue : class
     {
         readonly object syncLock;
@@ -18,17 +19,12 @@ namespace Microsoft.Azure.Amqp
         TaskCompletionSource<TValue> taskCompletionSource;
         volatile bool disposed;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Singleton()
         {
             this.syncLock = new object();
-        }
-
-        protected TaskCompletionSource<TValue> TaskCompletionSource
-        {
-            get
-            {
-                return this.taskCompletionSource;
-            }
         }
 
         // Test verification only
@@ -41,11 +37,20 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Opens the object.
+        /// </summary>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns>A task for the asyn operation.</returns>
         public Task OpenAsync(TimeSpan timeout)
         {
             return this.GetOrCreateAsync(timeout);
         }
 
+        /// <summary>
+        /// Closes the object.
+        /// </summary>
+        /// <returns>A task for the asyn operation.</returns>
         public Task CloseAsync()
         {
             this.Dispose();
@@ -53,12 +58,17 @@ namespace Microsoft.Azure.Amqp
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Closes the object.
+        /// </summary>
         public void Close()
         {
             this.Dispose();
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Disposes the object.
+        /// </summary>
         public void Dispose()
         {
             this.Dispose(true);
@@ -85,6 +95,11 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets or creates TValue object.
+        /// </summary>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns>A task for the asyn operation.</returns>
         public async Task<TValue> GetOrCreateAsync(TimeSpan timeout)
         {
             var timeoutHelper = new TimeoutHelper(timeout);
@@ -130,6 +145,10 @@ namespace Microsoft.Azure.Amqp
             throw new TimeoutException(string.Format(CultureInfo.InvariantCulture, "Creation of {0} did not complete in {1} milliseconds.", typeof(TValue).Name, timeout.TotalMilliseconds));
         }
 
+        /// <summary>
+        /// Marks the singleton as invalid.
+        /// </summary>
+        /// <param name="instance"></param>
         protected void Invalidate(TValue instance)
         {
             lock (this.syncLock)
@@ -143,13 +162,27 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Determines if the instance is valid.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         protected virtual bool IsValid(TValue value)
         {
             return true;
         }
 
+        /// <summary>
+        /// Creates the singleton.
+        /// </summary>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns>A task for the asyn operation.</returns>
         protected abstract Task<TValue> OnCreateAsync(TimeSpan timeout);
 
+        /// <summary>
+        /// Closes the singleton.
+        /// </summary>
+        /// <param name="value">The singleton.</param>
         protected abstract void OnSafeClose(TValue value);
 
         bool TryGet(out TaskCompletionSource<TValue> tcs)

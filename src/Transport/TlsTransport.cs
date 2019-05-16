@@ -9,17 +9,25 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Security.Cryptography.X509Certificates;
     using Microsoft.Azure.Amqp.X509;
 
+    /// <summary>
+    /// Defines the TLS transport.
+    /// </summary>
     public class TlsTransport : TransportBase, IDisposable
     {
         static readonly AsyncCallback onOpenComplete = OnOpenComplete;
         static readonly AsyncCallback onWriteComplete = OnWriteComplete;
         static readonly AsyncCallback onReadComplete = OnReadComplete;
         readonly TransportBase innerTransport;
-        protected readonly CustomSslStream sslStream;
+        readonly CustomSslStream sslStream;
         TlsTransportSettings tlsSettings;
         OperationState writeState;
         OperationState readState;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="innerTransport">The inner transport.</param>
+        /// <param name="tlsSettings">The TLS transport settings.</param>
         public TlsTransport(TransportBase innerTransport, TlsTransportSettings tlsSettings)
             : base("tls", innerTransport.Identifier)
         {
@@ -32,17 +40,43 @@ namespace Microsoft.Azure.Amqp.Transport
                 new CustomSslStream(new TransportStream(this.innerTransport), false, this.ValidateRemoteCertificate, tlsSettings.IsInitiator);
         }
 
+        /// <summary>
+        /// Gets the local endpoint.
+        /// </summary>
         public override EndPoint LocalEndPoint => this.innerTransport.LocalEndPoint;
 
+        /// <summary>
+        /// Gets the remote endpoint.
+        /// </summary>
         public override EndPoint RemoteEndPoint => this.innerTransport.RemoteEndPoint;
 
+        /// <summary>
+        /// true since the transport is encrypted.
+        /// </summary>
         public override bool IsSecure => true;
 
+        /// <summary>
+        /// Gets the SslStream of this transport.
+        /// </summary>
+        protected CustomSslStream SslStream
+        {
+            get { return this.sslStream; }
+        }
+
+        /// <summary>
+        /// Sets a transport monitor for transport I/O operations.
+        /// </summary>
+        /// <param name="usageMeter">The transport monitor.</param>
         public override void SetMonitor(ITransportMonitor usageMeter)
         {
             this.innerTransport.SetMonitor(usageMeter);
         }
 
+        /// <summary>
+        /// Starts a write operation.
+        /// </summary>
+        /// <param name="args">The write arguments.</param>
+        /// <returns>true if the write operation is pending, otherwise false.</returns>
         public override bool WriteAsync(TransportAsyncCallbackArgs args)
         {
             Fx.Assert(this.writeState.Args == null, "Cannot write when a write is still in progress");
@@ -89,6 +123,11 @@ namespace Microsoft.Azure.Amqp.Transport
             return !completedSynchronously;
         }
 
+        /// <summary>
+        /// Starts a read operation.
+        /// </summary>
+        /// <param name="args">The read arguments.</param>
+        /// <returns>true if the read operation is pending, otherwise false.</returns>
         public override bool ReadAsync(TransportAsyncCallbackArgs args)
         {
             // Read with buffer list not supported
@@ -105,11 +144,18 @@ namespace Microsoft.Azure.Amqp.Transport
             return !completedSynchronously;
         }
 
+        /// <summary>
+        /// Gets the TLS transport settings.
+        /// </summary>
         protected TlsTransportSettings TlsSettings
         {
             get { return this.tlsSettings; }
         }
 
+        /// <summary>
+        /// Opens the object.
+        /// </summary>
+        /// <returns>true if open is completed, otherwise false.</returns>
         protected override bool OpenInternal()
         {
             IAsyncResult result;
@@ -142,22 +188,42 @@ namespace Microsoft.Azure.Amqp.Transport
             return completedSynchronously;
         }
 
+        /// <summary>
+        /// Closes the object.
+        /// </summary>
+        /// <returns>true if close is completed, otherwise false.</returns>
         protected override bool CloseInternal()
         {
             this.sslStream.Dispose();
             return true;
         }
 
+        /// <summary>
+        /// Aborts the object.
+        /// </summary>
         protected override void AbortInternal()
         {
             this.innerTransport.Abort();
         }
 
+        /// <summary>
+        /// Creates a <see cref="X509Principal"/> from a certificate.
+        /// </summary>
+        /// <param name="certificate">The received certificate.</param>
+        /// <returns>A <see cref="X509Principal"/> object.</returns>
         protected virtual X509Principal CreateX509Principal(X509Certificate2 certificate)
         {
             return new X509Principal(new X509CertificateIdentity(certificate, this.sslStream.IsRemoteCertificateValid));
         }
 
+        /// <summary>
+        /// Validates the remote certificate through <see cref="TlsTransportSettings.CertificateValidationCallback"/>.
+        /// </summary>
+        /// <param name="sender">The caller.</param>
+        /// <param name="certificate">The certificate.</param>
+        /// <param name="chain">The certificate chain.</param>
+        /// <param name="sslPolicyErrors">The TLS policy errors.</param>
+        /// <returns></returns>
         protected virtual bool ValidateRemoteCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
             return this.tlsSettings.CertificateValidationCallback(sender, certificate, chain, sslPolicyErrors);

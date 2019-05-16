@@ -92,10 +92,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        /// <summary>
-        /// Gets the <see cref="asyncIO"/> of the connection.
-        /// </summary>
-        protected AsyncIO AsyncIO
+        internal AsyncIO AsyncIO
         {
             get { return this.asyncIO; }
         }

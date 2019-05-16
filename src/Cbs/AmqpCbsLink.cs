@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Framing;
 
     /// <summary>
-    /// Encapsulates a pair of links to '$cbs' for managing CBS tokens
+    /// Encapsulates a pair of links to the '$cbs' node for managing security tokens.
     /// </summary>
     public sealed class AmqpCbsLink
     {
@@ -16,8 +16,9 @@ namespace Microsoft.Azure.Amqp
         readonly FaultTolerantAmqpObject<RequestResponseAmqpLink> linkFactory;
 
         /// <summary>
-        /// Constructs a new instance
+        /// Initializes the CBS link.
         /// </summary>
+        /// <param name="connection">The connection in which to create the links.</param>
         public AmqpCbsLink(AmqpConnection connection)
         {
             this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
@@ -28,11 +29,24 @@ namespace Microsoft.Azure.Amqp
             this.connection.AddExtension(this);
         }
 
+        /// <summary>
+        /// Closes the link.
+        /// </summary>
         public void Close()
         {
             this.linkFactory.Close();
         }
 
+        /// <summary>
+        /// Sends a security token for a resource for later access.
+        /// </summary>
+        /// <param name="tokenProvider">The provider for issuing security tokens.</param>
+        /// <param name="namespaceAddress">The namespace (or tenant) name.</param>
+        /// <param name="audience">The audience. In most cases it is the same as resource.</param>
+        /// <param name="resource">The resource to access.</param>
+        /// <param name="requiredClaims">The required claims to access the resource.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns></returns>
         public async Task<DateTime> SendTokenAsync(ICbsTokenProvider tokenProvider, Uri namespaceAddress, string audience, string resource, string[] requiredClaims, TimeSpan timeout)
         {
             if (this.connection.IsClosing())

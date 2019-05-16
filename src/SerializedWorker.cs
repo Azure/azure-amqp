@@ -6,7 +6,8 @@ namespace Microsoft.Azure.Amqp
     using System.Collections.Generic;
 
     /// <summary>
-    /// Work is serialized. Each work is retried until it is completed
+    /// Serializes concurrent work items and execute each work item
+    /// sequentially until it is completed.
     /// </summary>
     public sealed class SerializedWorker<T> where T : class
     {
@@ -24,6 +25,10 @@ namespace Microsoft.Azure.Amqp
         readonly LinkedList<T> pendingWorkList;
         State state;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="workProcessor">The delegate to execute the work.</param>
         public SerializedWorker(IWorkDelegate<T> workProcessor)
         {
             this.workDelegate = workProcessor;
@@ -31,6 +36,9 @@ namespace Microsoft.Azure.Amqp
             this.pendingWorkList = new LinkedList<T>();
         }
 
+        /// <summary>
+        /// Gets the count of the pending work items.
+        /// </summary>
         public int Count
         {
             get
@@ -44,6 +52,11 @@ namespace Microsoft.Azure.Amqp
             get { return this.pendingWorkList; }
         }
 
+        /// <summary>
+        /// Starts to do a work item. Depending on the worker state,
+        /// the work may be queued, or started immediately.
+        /// </summary>
+        /// <param name="work">The work item.</param>
         public void DoWork(T work)
         {
             lock (this.SyncRoot)
@@ -65,6 +78,9 @@ namespace Microsoft.Azure.Amqp
             this.DoWorkInternal(work, false);
         }
 
+        /// <summary>
+        /// Continues to do the pending work items, if any.
+        /// </summary>
         public void ContinueWork()
         {
             T work = null;
@@ -94,6 +110,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Aborts the worker. All pending work items are discarded.
+        /// </summary>
         public void Abort()
         {
             lock (this.SyncRoot)

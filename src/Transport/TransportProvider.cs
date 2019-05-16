@@ -7,10 +7,16 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Collections.Generic;
     using Microsoft.Azure.Amqp;
 
+    /// <summary>
+    /// Defines the base class of a transport provider.
+    /// </summary>
     public abstract class TransportProvider
     {
         List<AmqpVersion> versions;
 
+        /// <summary>
+        /// Gets or sets the protocol ID.
+        /// </summary>
         public ProtocolId ProtocolId
         {
             get;
@@ -18,7 +24,7 @@ namespace Microsoft.Azure.Amqp.Transport
         }
 
         /// <summary>
-        /// Supported versions in preferred order.
+        /// Gets the supported versions in preferred order.
         /// </summary>
         public IList<AmqpVersion> Versions
         {
@@ -33,6 +39,9 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
+        /// <summary>
+        /// Gets the default version.
+        /// </summary>
         public AmqpVersion DefaultVersion
         {
             get 
@@ -46,6 +55,12 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
+        /// <summary>
+        /// Examines if the request version is supported.
+        /// </summary>
+        /// <param name="requestedVersion">The requested version.</param>
+        /// <param name="supportedVersion">The supported version.</param>
+        /// <returns>true if the requested version is supported, otherwise false.</returns>
         public bool TryGetVersion(AmqpVersion requestedVersion, out AmqpVersion supportedVersion)
         {
             supportedVersion = this.DefaultVersion;
@@ -61,11 +76,23 @@ namespace Microsoft.Azure.Amqp.Transport
             return false;
         }
 
+        /// <summary>
+        /// Creates a transport from the inner transport.
+        /// </summary>
+        /// <param name="innerTransport">The inner transport.</param>
+        /// <param name="isInitiator">true if the caller is the transport initiator, otherwise false.</param>
+        /// <returns>The transport.</returns>
         public TransportBase CreateTransport(TransportBase innerTransport, bool isInitiator)
         {
             return this.OnCreateTransport(innerTransport, isInitiator);
         }
 
+        /// <summary>
+        /// When overriden in derived classes, creates a transport from the inner transport.
+        /// </summary>
+        /// <param name="innerTransport">The inner transport.</param>
+        /// <param name="isInitiator">true if the caller is the transport initiator, otherwise false.</param>
+        /// <returns>The transport.</returns>
         protected abstract TransportBase OnCreateTransport(TransportBase innerTransport, bool isInitiator);
     }
 }

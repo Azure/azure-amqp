@@ -9,13 +9,20 @@ namespace Microsoft.Azure.Amqp.Transaction
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// The controller manages transactions.
+    /// </summary>
     public sealed class Controller : AmqpObject
     {
+        readonly TimeSpan operationTimeout;
         readonly SendingAmqpLink controllerLink;
         long messageTag;
 
-        readonly TimeSpan operationTimeout;
-
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="amqpSession">The session where the link to the coordinator is created.</param>
+        /// <param name="operationTimeout">The operation timeout.</param>
         public Controller(AmqpSession amqpSession, TimeSpan operationTimeout)
             : base("controller")
         {
@@ -38,6 +45,10 @@ namespace Microsoft.Azure.Amqp.Transaction
             this.controllerLink = new SendingAmqpLink(amqpSession, settings);
         }
 
+        /// <summary>
+        /// Declares a transaction.
+        /// </summary>
+        /// <returns>A task that returns a transaction id when it completes.</returns>
         public async Task<ArraySegment<byte>> DeclareAsync()
         {
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "BeginDeclare");
@@ -53,6 +64,12 @@ namespace Microsoft.Azure.Amqp.Transaction
             return ((Declared)deliveryState).TxnId;
         }
 
+        /// <summary>
+        /// Discharges a transaction.
+        /// </summary>
+        /// <param name="txnId">The transaction id.</param>
+        /// <param name="fail">true if the transaction failed, false otherwise.</param>
+        /// <returns></returns>
         public async Task DischargeAsync(ArraySegment<byte> txnId, bool fail)
         {
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "BeginDischange");
@@ -70,17 +87,29 @@ namespace Microsoft.Azure.Amqp.Transaction
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "EndDischange");
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return "controller";
         }
 
+        /// <summary>
+        /// Opens the controller.
+        /// </summary>
+        /// <returns>True if the controller is open; false if open is pending.</returns>
         protected override bool OpenInternal()
         {
             var result = this.controllerLink.BeginOpen(this.operationTimeout, OnLinkOpen, this);
             return result.IsCompleted;
         }
 
+        /// <summary>
+        /// Closes the controller.
+        /// </summary>
+        /// <returns>True if the controller is closed; false if close is pending.</returns>
         protected override bool CloseInternal()
         {
             this.controllerLink.SafeClose();
@@ -88,6 +117,9 @@ namespace Microsoft.Azure.Amqp.Transaction
             return true;
         }
 
+        /// <summary>
+        /// Aborts the controller.
+        /// </summary>
         protected override void AbortInternal()
         {
             this.controllerLink.Abort();

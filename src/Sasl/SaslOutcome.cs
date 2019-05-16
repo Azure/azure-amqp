@@ -8,12 +8,24 @@ namespace Microsoft.Azure.Amqp.Sasl
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Encoding;
 
+    /// <summary>
+    /// Indicates the outcome of the sasl dialog.
+    /// </summary>
     public sealed class SaslOutcome : Performative
     {
+        /// <summary>
+        /// The descriptor name.
+        /// </summary>
         public static readonly string Name = "amqp:sasl-outcome:list";
+        /// <summary>
+        /// The descriptor code.
+        /// </summary>
         public static readonly ulong Code = 0x0000000000000044;
         const int Fields = 2;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public SaslOutcome() : base(Name, Code) { }
 
         internal override int FieldCount
@@ -21,10 +33,20 @@ namespace Microsoft.Azure.Amqp.Sasl
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Gets or sets the code that indicates the outcome of the sasl dialog.
+        /// </summary>
         public SaslCode? OutcomeCode { get; set; }
 
+        /// <summary>
+        /// Gets or sets the additional data as specified in RFC-4422.
+        /// </summary>
         public ArraySegment<byte> AdditionalData { get; set; }
 
+        /// <summary>
+        /// Gets a string representing the object.
+        /// </summary>
+        /// <returns>A string representing the object.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("sasl-outcome(");

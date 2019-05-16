@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp
     /// <summary>
     /// Constants useful for CBS scenarios
     /// </summary>
-    public static class CbsConstants
+    static class CbsConstants
     {
         /// <summary>
         /// The Property name for setting timeouts

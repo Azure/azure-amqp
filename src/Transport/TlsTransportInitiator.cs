@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Amqp.Transport
     using System;
     
     /// <summary>
-    /// This initiator establishes an SSL connection (no AMQP security upgrade)
+    /// This initiator creates a TLS transport directly. (no TLS upgrade)
     /// </summary>
     public class TlsTransportInitiator : TransportInitiator
     {
@@ -16,16 +16,30 @@ namespace Microsoft.Azure.Amqp.Transport
         TransportAsyncCallbackArgs callbackArgs;
         TimeoutHelper timeoutHelper;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="transportSettings">The TLS transport settings.</param>
         public TlsTransportInitiator(TlsTransportSettings transportSettings)
         {
             this.transportSettings = transportSettings;
         }
 
+        /// <summary>
+        /// Gets a string representation of the object.
+        /// </summary>
+        /// <returns>A string representation of the object.</returns>
         public override string ToString()
         {
             return "tls-initiator";
         }
 
+        /// <summary>
+        /// Connects to the remote peer.
+        /// </summary>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callbackArgs">The callback arguments.</param>
+        /// <returns>true if the operation is pending, false otherwise.</returns>
         public override bool ConnectAsync(TimeSpan timeout, TransportAsyncCallbackArgs callbackArgs)
         {
             this.callbackArgs = callbackArgs;
@@ -47,6 +61,12 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
+        /// <summary>
+        /// Creates a TLS transport from the inner transport.
+        /// </summary>
+        /// <param name="innerTransport">The inner transport.</param>
+        /// <param name="tlsTransportSettings">The TLS transport settings.</param>
+        /// <returns></returns>
         protected virtual TlsTransport OnCreateTransport(TransportBase innerTransport, TlsTransportSettings tlsTransportSettings)
         {
             return new TlsTransport(innerTransport, tlsTransportSettings);

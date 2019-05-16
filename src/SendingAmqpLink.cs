@@ -9,6 +9,9 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
 
+    /// <summary>
+    /// An AMQP link for sending messages.
+    /// </summary>
     public sealed class SendingAmqpLink : AmqpLink, IWorkDelegate<AmqpMessage>
     {
         static readonly TimeSpan MinRequestCreditWindow = TimeSpan.FromSeconds(10);
@@ -17,11 +20,20 @@ namespace Microsoft.Azure.Amqp
         Action<Delivery> dispositionListener;
         DateTime lastFlowRequestTime;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="settings">The link settings.</param>
         public SendingAmqpLink(AmqpLinkSettings settings)
             : this(null, settings)
         {
         }
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="session">The session where the link is created.</param>
+        /// <param name="settings">The link settings.</param>
         public SendingAmqpLink(AmqpSession session, AmqpLinkSettings settings)
             : base("sender", session, settings)
         {
@@ -31,6 +43,10 @@ namespace Microsoft.Azure.Amqp
             this.lastFlowRequestTime = DateTime.UtcNow;
         }
 
+        /// <summary>
+        /// Registers a disposition listener to handler delivery state changes.
+        /// </summary>
+        /// <param name="dispositionListener"></param>
         public void RegisterDispositionListener(Action<Delivery> dispositionListener)
         {
             if (Interlocked.Exchange(ref this.dispositionListener, dispositionListener) != null)
@@ -39,6 +55,12 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Sends a messages and not wait for the disposition.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <param name="deliveryTag">The delivery tag.</param>
+        /// <param name="txnId">The transaction id.</param>
         public void SendMessageNoWait(
             AmqpMessage message, 
             ArraySegment<byte> deliveryTag, 
@@ -47,6 +69,14 @@ namespace Microsoft.Azure.Amqp
             this.SendMessageInternal(message, deliveryTag, txnId);
         }
 
+        /// <summary>
+        /// Starts an operation to send a message.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <param name="deliveryTag">The delivery tag.</param>
+        /// <param name="txnId">The transaction id.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns>A task that completes with the delivery outcome.</returns>
         public Task<Outcome> SendMessageAsync(
             AmqpMessage message,
             ArraySegment<byte> deliveryTag,
@@ -59,6 +89,16 @@ namespace Microsoft.Azure.Amqp
                 null);
         }
 
+        /// <summary>
+        /// Begins an operation to send a message.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <param name="deliveryTag">The delivery tag.</param>
+        /// <param name="txnId">The transaction id.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The object associated with the operation.</param>
+        /// <returns>An <see cref="IAsyncResult"/>.</returns>
         public IAsyncResult BeginSendMessage(
             AmqpMessage message, 
             ArraySegment<byte> deliveryTag, 
@@ -87,16 +127,30 @@ namespace Microsoft.Azure.Amqp
             return new SendAsyncResult(this, message, deliveryTag, txnId, timeout, callback, state);
         }
 
+        /// <summary>
+        /// Ends the asynchronous send operation.
+        /// </summary>
+        /// <param name="result">The <see cref="IAsyncResult"/> returned by the begin method.</param>
+        /// <returns>The delivery outcome.</returns>
         public Outcome EndSendMessage(IAsyncResult result)
         {
             return SendAsyncResult.End(result);
         }
 
+        /// <summary>
+        /// This method is not valid for a sending link.
+        /// </summary>
+        /// <param name="transfer"></param>
+        /// <param name="delivery"></param>
+        /// <returns></returns>
         protected override bool CreateDelivery(Transfer transfer, out Delivery delivery)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Gets the number of deliveries that wait for link credits.
+        /// </summary>
         public override uint Available
         {
             get
@@ -105,6 +159,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Handles the state change of a delivery.
+        /// </summary>
+        /// <param name="delivery">The delivery whose state changed.</param>
         protected override void OnDisposeDeliveryInternal(Delivery delivery)
         {
             if (this.dispositionListener != null)
@@ -129,11 +187,24 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// This method is not valid for a sending link.
+        /// </summary>
+        /// <param name="delivery"></param>
+        /// <param name="transfer"></param>
+        /// <param name="frame"></param>
         protected override void OnProcessTransfer(Delivery delivery, Transfer transfer, Frame frame)
         {
             throw new AmqpException(AmqpErrorCode.NotAllowed, null);
         }
 
+        /// <summary>
+        /// Called when link credits are available.
+        /// </summary>
+        /// <param name="session">The session window.</param>
+        /// <param name="link">The available link credits.</param>
+        /// <param name="drain">true if the link is in drain mode, otherwise false.</param>
+        /// <param name="txnId">The transaction id. It is ignored.</param>
         protected override void OnCreditAvailable(int session, uint link, bool drain, ArraySegment<byte> txnId)
         {
             if (this.LinkCredit > 0)
@@ -142,12 +213,19 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Closes the link.
+        /// </summary>
+        /// <returns>true if the operation is completed, false otherwise.</returns>
         protected override bool CloseInternal()
         {
             this.AbortDeliveries();
             return base.CloseInternal();
         }
 
+        /// <summary>
+        /// Aborts the link.
+        /// </summary>
         protected override void AbortInternal()
         {
             this.AbortDeliveries();

@@ -7,12 +7,24 @@ namespace Microsoft.Azure.Amqp.Sasl
     using System.Text;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// Security mechanism challenge.
+    /// </summary>
     public sealed class SaslChallenge : Performative
     {
+        /// <summary>
+        /// The descriptor name.
+        /// </summary>
         public static readonly string Name = "amqp:sasl-challenge:list";
+        /// <summary>
+        /// The descriptor code.
+        /// </summary>
         public static readonly ulong Code = 0x0000000000000042;
         const int Fields = 1;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public SaslChallenge() : base(Name, Code) { }
 
         internal override int FieldCount
@@ -20,8 +32,15 @@ namespace Microsoft.Azure.Amqp.Sasl
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Gets or sets the security challenge data.
+        /// </summary>
         public ArraySegment<byte> Challenge { get; set; }
 
+        /// <summary>
+        /// Gets a string representing the object.
+        /// </summary>
+        /// <returns>A string representing the object.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("sasl-challenge(");

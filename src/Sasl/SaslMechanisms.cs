@@ -7,12 +7,24 @@ namespace Microsoft.Azure.Amqp.Sasl
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// Advertise available sasl mechanisms.
+    /// </summary>
     public sealed class SaslMechanisms : Performative
     {
+        /// <summary>
+        /// The descriptor name.
+        /// </summary>
         public static readonly string Name = "amqp:sasl-mechanisms:list";
+        /// <summary>
+        /// The descriptor code.
+        /// </summary>
         public static readonly ulong Code = 0x0000000000000040;
         const int Fields = 1;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public SaslMechanisms() : base(Name, Code) { }
 
         internal override int FieldCount
@@ -20,8 +32,15 @@ namespace Microsoft.Azure.Amqp.Sasl
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Gets or sets the supported sasl mechanisms.
+        /// </summary>
         public Multiple<AmqpSymbol> SaslServerMechanisms { get; set; }
 
+        /// <summary>
+        /// Gets a string representing the object.
+        /// </summary>
+        /// <returns>A string representing the object.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("sasl-mechanisms(");

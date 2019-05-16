@@ -6,16 +6,27 @@ namespace Microsoft.Azure.Amqp.Transaction
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// Defines the coordinator target.
+    /// </summary>
     public sealed class Coordinator : DescribedList
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:coordinator:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000030;
         const int Fields = 1;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Coordinator() : base(Name, Code)
         {
         }
 
+        /// <summary>
+        /// Gets or sets the capabilities field.
+        /// </summary>
         public Multiple<AmqpSymbol> Capabilities { get; set; }
 
         internal override int FieldCount

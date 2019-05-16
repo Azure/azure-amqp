@@ -6,16 +6,27 @@ namespace Microsoft.Azure.Amqp.Transaction
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// Defines the declare performative.
+    /// </summary>
     public sealed class Declare : Performative
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:declare:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000031;
         const int Fields = 1;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Declare() : base(Name, Code)
         {
         }
 
+        /// <summary>
+        /// Gets or sets the global-id field.
+        /// </summary>
         public object GlobalId { get; set; }
 
         internal override int FieldCount
@@ -23,6 +34,10 @@ namespace Microsoft.Azure.Amqp.Transaction
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return "declare()";

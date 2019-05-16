@@ -8,11 +8,20 @@ namespace Microsoft.Azure.Amqp.Sasl
     using System.Security.Principal;
     using Microsoft.Azure.Amqp.Transport;
 
+    /// <summary>
+    /// Defines the SASL transport.
+    /// </summary>
     public class SaslTransport : TransportBase
     {
-        protected readonly TransportBase innerTransport;
+        readonly TransportBase innerTransport;
         SaslNegotiator negotiator;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="transport">The inner transport.</param>
+        /// <param name="provider">The SASL transport provider.</param>
+        /// <param name="isInitiator">true if it is the transport initiator, otherwise false.</param>
         public SaslTransport(TransportBase transport, SaslTransportProvider provider, bool isInitiator)
             : base("sasl", transport.Identifier)
         {
@@ -20,6 +29,9 @@ namespace Microsoft.Azure.Amqp.Sasl
             this.negotiator = new SaslNegotiator(this, provider, isInitiator);
         }
 
+        /// <summary>
+        /// Gets the local endpoint.
+        /// </summary>
         public override EndPoint LocalEndPoint
         {
             get
@@ -28,6 +40,9 @@ namespace Microsoft.Azure.Amqp.Sasl
             }
         }
 
+        /// <summary>
+        /// Gets the remote endpoint.
+        /// </summary>
         public override EndPoint RemoteEndPoint
         {
             get
@@ -36,27 +51,44 @@ namespace Microsoft.Azure.Amqp.Sasl
             }
         }
 
+        /// <summary>
+        /// true if the transport is encrypted, otherwise false.
+        /// </summary>
         public override bool IsSecure
         {
             get { return this.innerTransport.IsSecure; }
         }
 
+        /// <summary>
+        /// Sets a transport monitor for transport I/O operations.
+        /// </summary>
+        /// <param name="usageMeter"></param>
         public override void SetMonitor(ITransportMonitor usageMeter)
         {
             this.innerTransport.SetMonitor(usageMeter);
         }
 
+        /// <summary>
+        /// Starts a write operation.
+        /// </summary>
+        /// <param name="args">The write arguments.</param>
+        /// <returns>true if the write operation is pending, otherwise false.</returns>
         public override bool WriteAsync(TransportAsyncCallbackArgs args)
         {
             return this.innerTransport.WriteAsync(args);
         }
 
+        /// <summary>
+        /// Starts a read operation.
+        /// </summary>
+        /// <param name="args">The read arguments.</param>
+        /// <returns>true if the read operation is pending, otherwise false.</returns>
         public override bool ReadAsync(TransportAsyncCallbackArgs args)
         {
             return this.innerTransport.ReadAsync(args);
         }
 
-        public void OnNegotiationSucceed(IPrincipal principal)
+        internal void OnNegotiationSucceed(IPrincipal principal)
         {
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "OnNegotiationSucceed");
             this.negotiator = null;
@@ -64,7 +96,7 @@ namespace Microsoft.Azure.Amqp.Sasl
             this.CompleteOpen(false, null);
         }
 
-        public void OnNegotiationFail(Exception exception)
+        internal void OnNegotiationFail(Exception exception)
         {
             AmqpTrace.Provider.AmqpLogError(this, "OnNegotiationFail", exception);
             this.negotiator = null;
@@ -72,16 +104,27 @@ namespace Microsoft.Azure.Amqp.Sasl
             this.CompleteOpen(false, exception);
         }
 
+        /// <summary>
+        /// Opens the object.
+        /// </summary>
+        /// <returns>true if open is completed, otherwise false.</returns>
         protected override bool OpenInternal()
         {
             return this.negotiator.Start();
         }
 
+        /// <summary>
+        /// Aborts the object.
+        /// </summary>
         protected override void AbortInternal()
         {
             this.innerTransport.Abort();
         }
 
+        /// <summary>
+        /// Closes the object.
+        /// </summary>
+        /// <returns>true if close is completed, otherwise false.</returns>
         protected override bool CloseInternal()
         {
             this.innerTransport.Close();

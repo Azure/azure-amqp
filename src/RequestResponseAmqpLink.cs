@@ -10,6 +10,10 @@ namespace Microsoft.Azure.Amqp
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// A duplex communication channel over a pair of AMQP links in different
+    /// direction.
+    /// </summary>
     public class RequestResponseAmqpLink : AmqpObject
     {
         static readonly TimeSpan OperationTimeout = AmqpConstants.DefaultTimeout;
@@ -24,16 +28,38 @@ namespace Microsoft.Azure.Amqp
         Dictionary<string, object> requestProperties;
         long nextRequestId;
 
+        /// <summary>
+        /// Initializes the request response channel.
+        /// </summary>
+        /// <param name="type">A prefix of the object name for debugging purposes.</param>
+        /// <param name="session">The session in which the links are created.</param>
+        /// <param name="address">The node address.</param>
+        /// <param name="properties">The properties to send in attach performatives.</param>
         public RequestResponseAmqpLink(string type, AmqpSession session, string address, Fields properties)
             : this(type, null, session, address, properties)
         {
         }
 
+        /// <summary>
+        /// Initializes the request response channel.
+        /// </summary>
+        /// <param name="type">A prefix of the object name for debugging purposes.</param>
+        /// <param name="name">The object name.</param>
+        /// <param name="session">The session in which the links are created.</param>
+        /// <param name="address">The node address.</param>
         public RequestResponseAmqpLink(string type, string name, AmqpSession session, string address)
             : this(type, name, session, address, null)
         {
         }
 
+        /// <summary>
+        /// Initializes the request response channel.
+        /// </summary>
+        /// <param name="type">A prefix of the object name for debugging purposes.</param>
+        /// <param name="name">The object name.</param>
+        /// <param name="session">The session in which the links are created.</param>
+        /// <param name="address">The node address.</param>
+        /// <param name="properties">The properties to send in attach performatives.</param>
         public RequestResponseAmqpLink(string type, string name, AmqpSession session, string address, Fields properties)
             : base(type)
         {
@@ -80,9 +106,12 @@ namespace Microsoft.Azure.Amqp
             this.inflightRequests = new WorkCollection<MessageId, RequestAsyncResult, AmqpMessage>();
         }
 
+        /// <summary>
+        /// Gets the object name.
+        /// </summary>
         public string Name { get; private set; }
 
-        public SendingAmqpLink SendingLink
+        internal SendingAmqpLink SendingLink
         {
             get
             {
@@ -90,7 +119,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        public ReceivingAmqpLink ReceivingLink
+        internal ReceivingAmqpLink ReceivingLink
         {
             get
             {
@@ -98,6 +127,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// The default properties to include in every request message
+        /// application-properties section.
+        /// </summary>
         public Dictionary<string, object> RequestProperties
         {
             get
@@ -118,7 +151,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        public AmqpSession Session
+        internal AmqpSession Session
         {
             get
             {
@@ -126,6 +159,12 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Starts an asynchronous request.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
@@ -134,27 +173,57 @@ namespace Microsoft.Azure.Amqp
                 this);
         }
 
+        /// <summary>
+        /// Begins an asynchronous request.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The object that is associated with the operation.</param>
+        /// <returns>An <see cref="IAsyncResult"/> representing the asynchronous operation.</returns>
         public IAsyncResult BeginRequest(AmqpMessage request, TimeSpan timeout, AsyncCallback callback, object state)
         {
             return this.BeginRequest(request, AmqpConstants.NullBinary, timeout, callback, state);
         }
 
+        /// <summary>
+        /// Begins an asynchronous request.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <param name="txnId">The transaction id.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The object that is associated with the operation.</param>
+        /// <returns>An <see cref="IAsyncResult"/> representing the asynchronous operation.</returns>
         public IAsyncResult BeginRequest(AmqpMessage request, ArraySegment<byte> txnId, TimeSpan timeout, AsyncCallback callback, object state)
         {
             return new RequestAsyncResult(this, request, txnId, timeout, callback, state);
         }
 
+        /// <summary>
+        /// Ends an asynchronous request.
+        /// </summary>
+        /// <param name="result">The <see cref="IAsyncResult"/> object returned by the begin method.</param>
+        /// <returns>The response message.</returns>
         public AmqpMessage EndRequest(IAsyncResult result)
         {
             return RequestAsyncResult.End(result);
         }
 
+        /// <summary>
+        /// Sends a set of properties to the remote peer in a flow performative.
+        /// </summary>
+        /// <param name="fields">The properties.</param>
         public void SendProperties(Fields fields)
         {
             this.receiver.SendProperties(fields);
             this.sender.SendProperties(fields);
         }
 
+        /// <summary>
+        /// Opens the object.
+        /// </summary>
+        /// <returns>true if open is completed, otherwise false.</returns>
         protected override bool OpenInternal()
         {
             var state = new OperationState() { Owner = this };
@@ -163,6 +232,10 @@ namespace Microsoft.Azure.Amqp
             return senderResult.CompletedSynchronously && receiverResult.CompletedSynchronously;
         }
 
+        /// <summary>
+        /// Closes the object.
+        /// </summary>
+        /// <returns>true if close is completed, otherwise false.</returns>
         protected override bool CloseInternal()
         {
             this.inflightRequests.Abort();
@@ -172,6 +245,9 @@ namespace Microsoft.Azure.Amqp
             return senderResult.CompletedSynchronously && receiverResult.CompletedSynchronously;
         }
 
+        /// <summary>
+        /// Aborts the object. All pending requests are canceled.
+        /// </summary>
         protected override void AbortInternal()
         {
             this.sender.Abort();

@@ -7,18 +7,32 @@ namespace Microsoft.Azure.Amqp.Transaction
     using System.Text;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// Defines the discharge performative.
+    /// </summary>
     public sealed class Discharge : Performative
     {
+        /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:discharge:list";
+        /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000032;
         const int Fields = 2;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public Discharge() : base(Name, Code)
         {
         }
 
+        /// <summary>
+        /// Gets or sets the txn-id field.
+        /// </summary>
         public ArraySegment<byte> TxnId { get; set; }
 
+        /// <summary>
+        /// Gets or sets the fail field.
+        /// </summary>
         public bool? Fail { get; set; }
 
         internal override int FieldCount
@@ -26,6 +40,10 @@ namespace Microsoft.Azure.Amqp.Transaction
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Returns a string that represents the object.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("discharge(");

@@ -7,11 +7,7 @@ namespace Microsoft.Azure.Amqp
     using System.Collections;
     using System.Collections.Generic;
 
-    /// <summary>
-    /// Designed for session channel and link handle lookup. 
-    /// Not for general purpose uses.
-    /// </summary>
-    public sealed class HandleTable<T> where T : class
+    sealed class HandleTable<T> where T : class
     {
         const int InitialCapacity = 4;
         const int ResetThreshold = 4 * 1024;

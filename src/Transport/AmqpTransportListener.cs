@@ -9,13 +9,19 @@ namespace Microsoft.Azure.Amqp.Transport
     using Microsoft.Azure.Amqp.Framing;
 
     /// <summary>
-    /// This listener supports protocol upgrade (e.g. tcp -> tls -> sasl)
+    /// Listens for AMQP transports. Transport upgrades are supported by
+    /// providers in the protocol settings.
     /// </summary>
     public sealed class AmqpTransportListener : TransportListener
     {
         readonly List<TransportListener> innerListeners;
         readonly AmqpSettings settings;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="listeners">The transport listeners.</param>
+        /// <param name="settings">The protocol settings.</param>
         public AmqpTransportListener(IEnumerable<TransportListener> listeners, AmqpSettings settings)
             : base("tp-listener")
         {
@@ -23,11 +29,19 @@ namespace Microsoft.Azure.Amqp.Transport
             this.settings = settings;
         }
 
+        /// <summary>
+        /// Gets the AMQP protocol settings.
+        /// </summary>
         public AmqpSettings AmqpSettings
         {
             get { return this.settings; }
         }
 
+        /// <summary>
+        /// Finds a transport listener of a given type.
+        /// </summary>
+        /// <typeparam name="T">The transport listener type.</typeparam>
+        /// <returns>A transport listener, or null.</returns>
         public T Find<T>() where T : TransportListener
         {
             foreach (TransportListener listener in this.innerListeners)
@@ -41,6 +55,9 @@ namespace Microsoft.Azure.Amqp.Transport
             return null;
         }
 
+        /// <summary>
+        /// Starts listening on all inner transport listeners.
+        /// </summary>
         protected override void OnListen()
         {
             Action<TransportListener, TransportAsyncCallbackArgs> onTransportAccept = this.OnAcceptTransport;
@@ -52,6 +69,10 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
+        /// <summary>
+        /// Closes the listener.
+        /// </summary>
+        /// <returns>true if the listener is closed; false if close is pending.</returns>
         protected override bool CloseInternal()
         {
             this.State = AmqpObjectState.CloseSent;
@@ -63,6 +84,9 @@ namespace Microsoft.Azure.Amqp.Transport
             return true;
         }
 
+        /// <summary>
+        /// Aborts the listener.
+        /// </summary>
         protected override void AbortInternal()
         {
             this.State = AmqpObjectState.Faulted;

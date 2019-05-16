@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.Amqp
 {
-    public sealed class StateTransition
+    sealed class StateTransition
     {
         static StateTransition[] sendHeader = new StateTransition[]
         {

@@ -8,12 +8,24 @@ namespace Microsoft.Azure.Amqp.Sasl
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
+    /// <summary>
+    /// Initiate sasl exchange.
+    /// </summary>
     public sealed class SaslInit : Performative
     {
+        /// <summary>
+        /// The descriptor name.
+        /// </summary>
         public static readonly string Name = "amqp:sasl-init:list";
+        /// <summary>
+        /// The descriptor code.
+        /// </summary>
         public static readonly ulong Code = 0x0000000000000041;
         const int Fields = 3;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
         public SaslInit() : base(Name, Code) { }
 
         internal override int FieldCount
@@ -21,12 +33,25 @@ namespace Microsoft.Azure.Amqp.Sasl
             get { return Fields; }
         }
 
+        /// <summary>
+        /// Gets or sets the selected SASL mechanism.
+        /// </summary>
         public AmqpSymbol Mechanism { get; set; }
 
+        /// <summary>
+        /// Gets or sets the initial security response data.
+        /// </summary>
         public ArraySegment<byte> InitialResponse { get; set; }
 
+        /// <summary>
+        /// Gets or sets the hostname.
+        /// </summary>
         public string HostName { get; set; }
 
+        /// <summary>
+        /// Gets a string representing the object.
+        /// </summary>
+        /// <returns>A string representing the object.</returns>
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder("sasl-init(");

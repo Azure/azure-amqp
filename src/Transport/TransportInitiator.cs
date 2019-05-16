@@ -5,6 +5,9 @@ namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
 
+    /// <summary>
+    /// Defines the base class of transport initiators.
+    /// </summary>
     public abstract class TransportInitiator
     {
         /// <summary>

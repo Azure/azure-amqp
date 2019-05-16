@@ -428,7 +428,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets a string representation of the object.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A string representation of the object.</returns>
         public override string ToString()
         {
             return this.name;

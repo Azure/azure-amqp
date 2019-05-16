@@ -109,8 +109,6 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal override ITimerFactory TimerFactory => this.Connection.AmqpSettings.TimerFactory;
-
         /// <summary>
         /// Attaches a link to the session. The link is assigned a local handle on success.
         /// </summary>
@@ -610,7 +608,7 @@ namespace Microsoft.Azure.Amqp
         {
             readonly AmqpSession session;
             readonly object syncRoot;
-            ITimer dispositionTimer;
+            Timer dispositionTimer;
             SequenceNumber nextDeliveryId;
             int needDispositionCount;
             bool sendingDisposition;
@@ -797,12 +795,15 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (this.dispositionTimer == null)
                     {
-                        this.dispositionTimer = this.session.TimerFactory.Create(
-                            s => DispositionTimerCallback(s), this, this.session.settings.DispositionInterval);
+                        this.dispositionTimer = new Timer(
+                            s => DispositionTimerCallback(s),
+                            this,
+                            this.session.settings.DispositionInterval,
+                            Timeout.InfiniteTimeSpan);
                     }
                     else
                     {
-                        this.dispositionTimer = this.dispositionTimer.Set(this.session.settings.DispositionInterval);
+                        this.dispositionTimer.Change(this.session.settings.DispositionInterval, Timeout.InfiniteTimeSpan);
                     }
                 }
                 else

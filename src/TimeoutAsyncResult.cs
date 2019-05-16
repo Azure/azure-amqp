@@ -8,18 +8,16 @@ namespace Microsoft.Azure.Amqp
 
     abstract class TimeoutAsyncResult<T> : AsyncResult where T : class
     {
-        readonly ITimerFactory timerFactory;
         readonly TimeSpan timeout;
-        ITimer timer;
+        Timer timer;
         bool setTimerCalled;  // make sure derived class always call SetTimer
 
-        protected TimeoutAsyncResult(ITimerFactory timerFactory, TimeSpan timeout, AsyncCallback callback, object state)
+        protected TimeoutAsyncResult(TimeSpan timeout, AsyncCallback callback, object state)
             : base(callback, state)
         {
             // The derived class must call SetTimer to start the timer.
             // Timer is not started here because it could fire before the
             // derived class ctor completes.
-            this.timerFactory = timerFactory;
             this.timeout = timeout;
         }
 
@@ -30,7 +28,7 @@ namespace Microsoft.Azure.Amqp
             this.setTimerCalled = true;
             if (this.timeout != Timeout.InfiniteTimeSpan && this.timeout != TimeSpan.MaxValue)
             {
-                this.timer = this.timerFactory.Create(s => OnTimerCallback(s), this, this.timeout);
+                this.timer = new Timer(OnTimerCallback, this, this.timeout, Timeout.InfiniteTimeSpan);
             }
         }
 
@@ -48,7 +46,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (this.timer != null)
             {
-                this.timer.Cancel();
+                this.timer.Dispose();
             }
 
             return this.CompleteInternal(syncComplete, exception);

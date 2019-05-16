@@ -151,7 +151,7 @@ namespace Microsoft.Azure.Amqp
 
             AmqpTransportInitiator initiator = new AmqpTransportInitiator(settings, transportSettings);
             TransportBase transport = await Task.Factory.FromAsync(
-                (c, s) => initiator.BeginConnect(settings.TimerFactory, timeout, c, s),
+                (c, s) => initiator.BeginConnect(timeout, c, s),
                 (r) => initiator.EndConnect(r),
                 null).ConfigureAwait(false);
 

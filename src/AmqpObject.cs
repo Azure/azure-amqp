@@ -156,8 +156,6 @@ namespace Microsoft.Azure.Amqp
             get { return this.thisLock; }
         }
 
-        internal virtual ITimerFactory TimerFactory => SystemTimerFactory.Default;
-
         /// <summary>
         /// Opens the object with default timeout.
         /// </summary>
@@ -680,7 +678,7 @@ namespace Microsoft.Azure.Amqp
             readonly AmqpObject amqpObject;
 
             protected AmqpObjectAsyncResult(AmqpObject amqpObject, TimeSpan timeout, AsyncCallback callback, object asyncState)
-                : base(amqpObject.TimerFactory, timeout, callback, asyncState)
+                : base(timeout, callback, asyncState)
             {
                 this.amqpObject = amqpObject;
             }

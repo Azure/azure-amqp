@@ -765,7 +765,7 @@ namespace Microsoft.Azure.Amqp
             readonly int requestedMessageCount;
             readonly TimeSpan batchWaitTimeout;
             readonly TimeSpan timeout;
-            ITimer timer;
+            Timer timer;
             LinkedListNode<ReceiveAsyncResult> node;
             int completed;  // 1: signaled, 2: timeout
             List<AmqpMessage> messages;
@@ -799,9 +799,10 @@ namespace Microsoft.Azure.Amqp
             public void Initialize(LinkedListNode<ReceiveAsyncResult> node)
             {
                 this.node = node;
-                if (this.timeout != TimeSpan.MaxValue && this.timeout != Timeout.InfiniteTimeSpan)
+                if (this.timeout != TimeSpan.MaxValue &&
+                    this.timeout != Timeout.InfiniteTimeSpan)
                 {
-                    this.timer = this.parent.TimerFactory.Create(s => OnTimer(s), this, this.timeout);
+                    this.timer = new Timer(s => OnTimer(s), this, this.timeout, Timeout.InfiniteTimeSpan);
                 }
             }
 
@@ -814,7 +815,7 @@ namespace Microsoft.Azure.Amqp
                     this.messages.Add(message);
                     if (this.requestedMessageCount > 1 && this.batchWaitTimeout != TimeSpan.MaxValue)
                     {
-                        this.timer = this.timer.Set(this.batchWaitTimeout);
+                        this.timer.Change(this.batchWaitTimeout, Timeout.InfiniteTimeSpan);
                     }
                 }
                 else
@@ -869,10 +870,10 @@ namespace Microsoft.Azure.Amqp
 
             public void Signal(bool syncComplete, Exception exception)
             {
-                ITimer t = this.timer;
+                Timer t = this.timer;
                 if (t != null)
                 {
-                    t.Cancel();
+                    t.Dispose();
                 }
 
                 this.CompleteInternal(syncComplete, 1, exception);
@@ -933,7 +934,7 @@ namespace Microsoft.Azure.Amqp
                 TimeSpan timeout,
                 AsyncCallback callback,
                 object state)
-                : base(link.TimerFactory, timeout, callback, state)
+                : base(timeout, callback, state)
             {
                 this.link = link;
                 this.deliveryTag = deliveryTag;

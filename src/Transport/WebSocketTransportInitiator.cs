@@ -66,7 +66,7 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             readonly T t;
             readonly TimeSpan timeout;
-            readonly ITimer timer;
+            readonly Timer timer;
             readonly Action<T> onTimeout;
 
             public TimeoutTaskSource(T t, Func<T, Task> onStart, Action<T> onTimeout, TimeSpan timeout)
@@ -74,7 +74,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 this.t = t;
                 this.onTimeout = onTimeout;
                 this.timeout = timeout;
-                this.timer = SystemTimerFactory.Default.Create(OnTimer, this, timeout);
+                this.timer = new Timer(OnTimer, this, timeout, Timeout.InfiniteTimeSpan);
 
                 Task task = onStart(t);
                 task.ContinueWith((_t, _s) => ((TimeoutTaskSource<T>)_s).OnTask(_t), this);
@@ -89,7 +89,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
             void OnTask(Task inner)
             {
-                this.timer.Cancel();
+                this.timer.Dispose();
                 if (inner.IsFaulted)
                 {
                     this.TrySetException(inner.Exception.InnerException);

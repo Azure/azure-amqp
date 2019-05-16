@@ -307,7 +307,7 @@ namespace Microsoft.Azure.Amqp
                 TimeSpan timeout, 
                 AsyncCallback callback, 
                 object state)
-                : base(link.TimerFactory, timeout, callback, state)
+                : base(timeout, callback, state)
             {
                 this.link = link;
                 this.message = message;

@@ -203,8 +203,6 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public bool Drain => this.drain;
 
-        internal override ITimerFactory TimerFactory => this.Session.Connection.AmqpSettings.TimerFactory;
-
         /// <summary>
         /// Attaches the link to a session.
         /// </summary>

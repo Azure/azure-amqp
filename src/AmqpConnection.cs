@@ -153,8 +153,6 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal override ITimerFactory TimerFactory => this.AmqpSettings.TimerFactory;
-
         /// <summary>
         /// Creates a <see cref="AmqpSession"/> and adds it to the session collection.
         /// </summary>
@@ -659,7 +657,7 @@ namespace Microsoft.Azure.Amqp
                 readonly uint remoteInterval;    // idle-timeout for send (maxValue=infinite)
                 DateTime lastSendTime;
                 DateTime lastReceiveTime;
-                ITimer heartBeatTimer;
+                Timer heartBeatTimer;
 
                 public TimedHeartBeat(AmqpConnection connection, uint local, uint remote)
                 {
@@ -668,8 +666,7 @@ namespace Microsoft.Azure.Amqp
                     this.lastReceiveTime = this.lastSendTime = DateTime.UtcNow;
                     this.localInterval = local;
                     this.remoteInterval = remote < uint.MaxValue ? remote * 7 / 8 : uint.MaxValue;
-                    this.heartBeatTimer = this.connection.amqpSettings.TimerFactory.Create(
-                        OnHeartBeatTimer, this, GetTimerInterval(this.lastSendTime));
+                    this.heartBeatTimer = new Timer(OnHeartBeatTimer, this, GetTimerInterval(this.lastSendTime), Timeout.InfiniteTimeSpan);
                 }
 
                 public override void OnSend()
@@ -690,7 +687,7 @@ namespace Microsoft.Azure.Amqp
 
                 public override void Stop()
                 {
-                    this.heartBeatTimer.Cancel();
+                    this.heartBeatTimer.Dispose();
                 }
 
                 TimeSpan GetTimerInterval(DateTime time)
@@ -742,7 +739,7 @@ namespace Microsoft.Azure.Amqp
                             thisPtr.connection.SendCommand(null, 0, null);
                         }
 
-                        thisPtr.heartBeatTimer = thisPtr.heartBeatTimer.Set(thisPtr.GetTimerInterval(now));
+                        thisPtr.heartBeatTimer.Change(thisPtr.GetTimerInterval(now), Timeout.InfiniteTimeSpan);
                     }
                     catch (Exception exception) when (!Fx.IsFatal(exception))
                     {

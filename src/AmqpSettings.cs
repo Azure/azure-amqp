@@ -25,7 +25,6 @@ namespace Microsoft.Azure.Amqp
             this.MaxLinksPerSession = int.MaxValue;
             this.DefaultLinkCredit = AmqpConstants.DefaultLinkCredit;
             this.AllowAnonymousConnection = true;
-            this.TimerFactory = SystemTimerFactory.Default;
         }
 
         /// <summary>
@@ -69,15 +68,6 @@ namespace Microsoft.Azure.Amqp
         /// SASL mechanism.
         /// </summary>
         public bool AllowAnonymousConnection
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets the factory to create <see cref="ITimer"/> objects.
-        /// </summary>
-        public ITimerFactory TimerFactory
         {
             get;
             set;
@@ -188,7 +178,6 @@ namespace Microsoft.Azure.Amqp
             settings.RuntimeProvider = this.RuntimeProvider;
             settings.RequireSecureTransport = this.RequireSecureTransport;
             settings.AllowAnonymousConnection = this.AllowAnonymousConnection;
-            settings.TimerFactory = this.TimerFactory;
             return settings;
         }
 

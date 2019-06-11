@@ -1069,7 +1069,7 @@ namespace Microsoft.Azure.Amqp
             {
                 try
                 {
-                    this.Session.LinkFactory.BeginOpenLink(this, this.DefaultOpenTimeout, onProviderLinkOpened, this);
+                    this.Session.LinkFactory.BeginOpenLink(this, AmqpConstants.DefaultTimeout, onProviderLinkOpened, this);
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {

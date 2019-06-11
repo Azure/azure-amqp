@@ -103,8 +103,6 @@ namespace Microsoft.Azure.Amqp
         {
             this.identifier = identifier;
             this.name = type + this.identifier;
-            this.DefaultOpenTimeout = AmqpConstants.DefaultTimeout;
-            this.DefaultCloseTimeout = AmqpConstants.DefaultTimeout;
         }
 
         /// <summary>
@@ -133,24 +131,6 @@ namespace Microsoft.Azure.Amqp
             protected set;
         }
 
-        /// <summary>
-        /// Gets or sets the default timeout for opening the object.
-        /// </summary>
-        public TimeSpan DefaultOpenTimeout
-        {
-            get;
-            protected set;
-        }
-
-        /// <summary>
-        /// Gets or sets the default timeout for closing the object.
-        /// </summary>
-        public TimeSpan DefaultCloseTimeout
-        {
-            get;
-            protected set;
-        }
-
         internal object ThisLock
         {
             get { return this.thisLock; }
@@ -161,7 +141,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public void Open()
         {
-            this.Open(this.DefaultOpenTimeout);
+            this.Open(AmqpConstants.DefaultTimeout);
         }
 
         /// <summary>
@@ -200,6 +180,15 @@ namespace Microsoft.Azure.Amqp
         internal void SetName(string name)
         {
             this.name = name;
+        }
+
+        /// <summary>
+        /// Starts a task to open the object with default timeout.
+        /// </summary>
+        /// <returns>A task.</returns>
+        public Task OpenAsync()
+        {
+            return this.OpenAsync(AmqpConstants.DefaultTimeout);
         }
 
         /// <summary>
@@ -254,7 +243,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public void Close()
         {
-            this.Close(this.DefaultCloseTimeout);
+            this.Close(AmqpConstants.DefaultTimeout);
         }
 
         /// <summary>
@@ -291,6 +280,15 @@ namespace Microsoft.Azure.Amqp
             {
                 this.OnClose(timeout);
             }
+        }
+
+        /// <summary>
+        /// Starts a task to close the object with default timeout.
+        /// </summary>
+        /// <returns>A task.</returns>
+        public Task CloseAsync()
+        {
+            return this.CloseAsync(AmqpConstants.DefaultTimeout);
         }
 
         /// <summary>

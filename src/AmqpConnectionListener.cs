@@ -177,7 +177,7 @@ namespace Microsoft.Azure.Amqp
                 connection = this.runtime.CreateConnection(transport, header, false, this.listener.AmqpSettings, settings);
 
                 operation = "BeginOpen";
-                connection.BeginOpen(connection.DefaultOpenTimeout, OnConnectionOpenComplete, Tuple.Create(this, innerListener, connection));
+                connection.BeginOpen(AmqpConstants.DefaultTimeout, OnConnectionOpenComplete, Tuple.Create(this, innerListener, connection));
             }
             catch (Exception ex) when (!Fx.IsFatal(ex))
             {

@@ -38,7 +38,7 @@ namespace Microsoft.Azure.Amqp
         public AmqpSettings Settings => this.settings;
 
         /// <summary>
-        /// Opens a connection to the specified address.
+        /// Opens a connection to the specified address with a default operation timeout.
         /// </summary>
         /// <param name="address">The address.</param>
         /// <returns>An AMQP connection.</returns>
@@ -56,6 +56,16 @@ namespace Microsoft.Azure.Amqp
         public Task<AmqpConnection> OpenConnectionAsync(string address, TimeSpan timeout)
         {
             return this.OpenConnectionAsync(new Uri(address), timeout);
+        }
+
+        /// <summary>
+        /// Opens a connection to the specified address with a default operation timeout.
+        /// </summary>
+        /// <param name="addressUri">The address.</param>
+        /// <returns>An AMQP connection.</returns>
+        public Task<AmqpConnection> OpenConnectionAsync(Uri addressUri)
+        {
+            return this.OpenConnectionAsync(addressUri, AmqpConstants.DefaultTimeout);
         }
 
         /// <summary>

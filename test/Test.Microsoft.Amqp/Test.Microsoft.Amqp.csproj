@@ -24,6 +24,7 @@
     <Compile Include="..\TestCases\AmqpConnectionListenerTests.cs" Link="TestCases\AmqpConnectionListenerTests.cs" />
     <Compile Include="..\TestCases\AmqpLinkTests.cs" Link="TestCases\AmqpLinkTests.cs" />
     <Compile Include="..\TestCases\AmqpMessageTests.cs" Link="TestCases\AmqpMessageTests.cs" />
+    <Compile Include="..\TestCases\AmqpSamples.cs" Link="TestCases\AmqpSamples.cs" />
     <Compile Include="..\TestCases\AmqpTransportTests.cs" Link="TestCases\AmqpTransportTests.cs" />
     <Compile Include="..\TestCases\AmqpWebSocketTests.cs" Link="TestCases\AmqpWebSocketTests.cs" />
     <Compile Include="..\TestCases\ResourcesTests.cs" Link="TestCases\ResourcesTests.cs" />

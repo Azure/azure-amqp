@@ -149,10 +149,19 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Creates a task to receive a message.
+        /// Starts the operation to receive a message with the default timeout.
+        /// </summary>
+        /// <returns>A message when the task is completed. Null if there is no message available.</returns>
+        public Task<AmqpMessage> ReceiveMessageAsync()
+        {
+            return this.ReceiveMessageAsync(AmqpConstants.DefaultTimeout);
+        }
+
+        /// <summary>
+        /// Starts the operation to receive a message.
         /// </summary>
         /// <param name="timeout">The time to wait for messages.</param>
-        /// <returns>A message. Null if there is no message available.</returns>
+        /// <returns>A message when the task is completed. Null if there is no message available.</returns>
         public Task<AmqpMessage> ReceiveMessageAsync(TimeSpan timeout)
         {
             return Task.Factory.FromAsync(

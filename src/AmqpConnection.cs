@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Collections.Generic;
     using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transport;
     using CloseCommand = Microsoft.Azure.Amqp.Framing.Close;
@@ -163,6 +164,35 @@ namespace Microsoft.Azure.Amqp
             AmqpSession session = this.SessionFactory.CreateSession(this, sessionSettings);
             this.AddSession(session, null);
             return session;
+        }
+
+        /// <summary>
+        /// Opens a <see cref="AmqpSession"/> in the connection with default session settings.
+        /// </summary>
+        /// <returns>A task that returns an AmqpSession on completion.</returns>
+        public Task<AmqpSession> OpenSessionAsync()
+        {
+            return this.OpenSessionAsync(new AmqpSessionSettings());
+        }
+
+        /// <summary>
+        /// Opens a <see cref="AmqpSession"/> in the connection.
+        /// </summary>
+        /// <param name="sessionSettings">The session settings.</param>
+        /// <returns>A task that returns an AmqpSession on completion.</returns>
+        public async Task<AmqpSession> OpenSessionAsync(AmqpSessionSettings sessionSettings)
+        {
+            AmqpSession session = this.CreateSession(sessionSettings);
+            try
+            {
+                await session.OpenAsync();
+                return session;
+            }
+            catch
+            {
+                session.SafeClose();
+                throw;
+            }
         }
 
         /// <summary>
@@ -619,7 +649,7 @@ namespace Microsoft.Azure.Amqp
                 AmqpTrace.Provider.AmqpRemoveSession(thisPtr, session, session.LocalChannel, session.RemoteChannel ?? 0);
             }
         }
-        
+
         abstract class HeartBeat
         {
             public static readonly HeartBeat None = new NoneHeartBeat();

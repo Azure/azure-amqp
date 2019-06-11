@@ -92,7 +92,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 // upgrade transport
                 innerArgs.Transport = this.OnCreateTransport(innerArgs.Transport, this.transportSettings);
                 IAsyncResult result = innerArgs.Transport.BeginOpen(
-                    innerArgs.Transport.DefaultOpenTimeout, 
+                    AmqpConstants.DefaultTimeout, 
                     this.onTransportOpened,
                     innerArgs);
                 if (result.CompletedSynchronously)

@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Collections.Generic;
     using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
 
     /// <summary>
@@ -106,6 +107,53 @@ namespace Microsoft.Azure.Amqp
             get
             {
                 return this.linkFactory;
+            }
+        }
+
+        /// <summary>
+        /// Opens an <see cref="AmqpLink"/> to a node at the given address.
+        /// </summary>
+        /// <typeparam name="T">The type of link. Only <see cref="SendingAmqpLink"/> and <see cref="ReceivingAmqpLink"/> are supported.</typeparam>
+        /// <param name="name">The link name.</param>
+        /// <param name="address">The node address.</param>
+        /// <returns>A task that returns a link on completion.</returns>
+        public async Task<T> OpenLinkAsync<T>(string name, string address) where T : AmqpLink
+        {
+            AmqpLink link;
+            Type linkType = typeof(T);
+            AmqpLinkSettings linkSettings = new AmqpLinkSettings();
+            linkSettings.LinkName = name;
+            if (linkType == typeof(SendingAmqpLink))
+            {
+                linkSettings.Role = false;
+                linkSettings.Source = new Source();
+                linkSettings.Target = new Target() { Address = address };
+                link = new SendingAmqpLink(linkSettings);
+            }
+            else if (linkType == typeof(ReceivingAmqpLink))
+            {
+                linkSettings.Role = true;
+                linkSettings.Source = new Source() { Address = address };
+                linkSettings.TotalLinkCredit = AmqpConstants.DefaultLinkCredit;
+                linkSettings.Target = new Target();
+                link = new ReceivingAmqpLink(linkSettings);
+            }
+            else
+            {
+                throw new NotSupportedException(linkType.Name);
+            }
+
+            try
+            {
+                link.AttachTo(this);
+                await link.OpenAsync();
+
+                return link as T;
+            }
+            catch
+            {
+                link.SafeClose();
+                throw;
             }
         }
 

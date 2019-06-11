@@ -356,6 +356,16 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Creates a message with an AMQP object in the <see cref="AmqpValue"/> body.
+        /// </summary>
+        /// <param name="value">The AMQP object.</param>
+        /// <returns>An AmqpMessage.</returns>
+        public static AmqpMessage Create(object value)
+        {
+            return new AmqpValueMessage(new AmqpValue() { Value = value });
+        }
+
+        /// <summary>
         /// Creates a message with an AmqpValue as the body.
         /// </summary>
         /// <param name="value"></param>

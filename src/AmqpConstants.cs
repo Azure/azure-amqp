@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
@@ -23,7 +22,12 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public const string SchemeAmqps = "amqps";
 
-        internal const string Apache = "apache.org";
+        /// <summary>
+        /// Gets or sets the default timeout used for all APIs that have an overload
+        /// with a timeout parameter. Default is 60 seconds.
+        /// </summary>
+        public static TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
+
         internal const string Vendor = "com.microsoft";
         internal const string TimeSpanName = Vendor + ":timespan";
         internal const string UriName = Vendor + ":uri";
@@ -31,7 +35,6 @@ namespace Microsoft.Azure.Amqp
         internal const string OpenErrorName = Vendor + ":open-error";
         internal static readonly AmqpSymbol IoEvent = "io-event";
         internal static readonly AmqpSymbol BatchedMessageFormat = Vendor + ":batched-message-format";
-        internal static readonly AmqpSymbol SimpleWebTokenPropertyName = Vendor + ":swt";
         internal static readonly AmqpSymbol HostName = "hostname";
         internal static readonly AmqpSymbol NetworkHost = "network-host";
         internal static readonly AmqpSymbol Port = "port";
@@ -63,7 +66,6 @@ namespace Microsoft.Azure.Amqp
         internal const uint DefaultMaxLinkHandles = 256 * 1024;
         internal const uint DefaultHeartBeatInterval = 90000;
         internal const uint MinimumHeartBeatIntervalMs = 5 * 1000;
-        internal static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
         internal const uint DefaultWindowSize = 5000;
         internal const uint DefaultLinkCredit = 1000;
         internal const uint DefaultNextTransferId = 1;

@@ -155,7 +155,7 @@ namespace TestAmqpBroker
                     this.settings,
                     connectionSettings);
 
-                connection.BeginOpen(connection.DefaultOpenTimeout, this.OnConnectionOpenComplete, connection);
+                connection.BeginOpen(AmqpConstants.DefaultTimeout, this.OnConnectionOpenComplete, connection);
             }
             catch (Exception ex)
             {

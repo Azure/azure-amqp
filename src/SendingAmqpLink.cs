@@ -73,6 +73,19 @@ namespace Microsoft.Azure.Amqp
         /// Starts an operation to send a message.
         /// </summary>
         /// <param name="message">The message to send.</param>
+        /// <returns>A task that completes with the delivery outcome.</returns>
+        public Task<Outcome> SendMessageAsync(AmqpMessage message)
+        {
+            return Task.Factory.FromAsync<Outcome>(
+                (c, s) => this.BeginSendMessage(message, CreateTag(), AmqpConstants.NullBinary, AmqpConstants.DefaultTimeout, c, s),
+                this.EndSendMessage,
+                null);
+        }
+
+        /// <summary>
+        /// Starts an operation to send a message.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
         /// <param name="deliveryTag">The delivery tag.</param>
         /// <param name="txnId">The transaction id.</param>
         /// <param name="timeout">The operation timeout.</param>
@@ -230,6 +243,11 @@ namespace Microsoft.Azure.Amqp
         {
             this.AbortDeliveries();
             base.AbortInternal();
+        }
+
+        static ArraySegment<byte> CreateTag()
+        {
+            return new ArraySegment<byte>(Guid.NewGuid().ToByteArray());
         }
 
         static void OnRequestCredit(object state)

@@ -91,11 +91,11 @@ namespace Microsoft.Azure.Amqp.Transport
                 {
                     if (a.Exception != null)
                     {
-                        tcs.SetException(a.Exception);
+                        tcs.TrySetException(a.Exception);
                     }
                     else
                     {
-                        tcs.SetResult(a.Transport);
+                        tcs.TrySetResult(a.Transport);
                     }
                 }
             };

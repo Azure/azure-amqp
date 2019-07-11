@@ -18,7 +18,6 @@ namespace Test.Microsoft.Azure.Amqp
 
         static TestAmqpBrokerFixture()
         {
-            Environment.SetEnvironmentVariable("AMQP_DEBUG", "1");
         }
 
         public TestAmqpBrokerFixture()

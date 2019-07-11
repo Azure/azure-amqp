@@ -135,6 +135,7 @@ namespace Microsoft.Azure.Amqp
                 linkSettings.Role = true;
                 linkSettings.Source = new Source() { Address = address };
                 linkSettings.TotalLinkCredit = AmqpConstants.DefaultLinkCredit;
+                linkSettings.AutoSendFlow = true;
                 linkSettings.Target = new Target();
                 link = new ReceivingAmqpLink(linkSettings);
             }

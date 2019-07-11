@@ -166,7 +166,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         ~ByteBuffer()
         {
-            if (this.stack == null)
+            if (this.stack != null)
             {
                 System.Diagnostics.Trace.WriteLine(string.Format("{0} leak {1} bytes from {2}",
                     AppDomain.CurrentDomain.FriendlyName, this.end, this.stack));

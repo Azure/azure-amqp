@@ -18,18 +18,24 @@ namespace TestAmqpBroker
 
     public sealed class TestAmqpBroker : IRuntimeProvider
     {
+        readonly IList<string> endpoints;
+        readonly string userInfo;
+        readonly string sslValue;
         readonly Dictionary<string, TestQueue> queues;
         readonly Dictionary<SequenceNumber, AmqpConnection> connections;
         readonly TxnManager txnManager;
-        readonly AmqpSettings settings;
-        readonly TransportListener transportListener;
         readonly string containerId;
         readonly uint maxFrameSize;
-        bool implicitQueue;
+        readonly bool implicitQueue;
+        AmqpSettings settings;
+        TransportListener transportListener;
         int dynamicId;
 
         public TestAmqpBroker(IList<string> endpoints, string userInfo, string sslValue, string[] queues)
         {
+            this.endpoints = endpoints;
+            this.userInfo = userInfo;
+            this.sslValue = sslValue;
             this.containerId = "TestAmqpBroker-P" + Process.GetCurrentProcess().Id;
             this.maxFrameSize = 64 * 1024;
             this.txnManager = new TxnManager();
@@ -46,39 +52,40 @@ namespace TestAmqpBroker
             {
                 this.implicitQueue = true;
             }
+        }
 
+        public void Start()
+        {
             // create and initialize AmqpSettings
             AmqpSettings settings = new AmqpSettings();
-            X509Certificate2 certificate = sslValue == null ? null : GetCertificate(sslValue);
+            X509Certificate2 certificate = this.sslValue == null ? null : GetCertificate(this.sslValue);
             settings.RuntimeProvider = this;
 
             SaslHandler saslHandler;
-            if (userInfo != null)
+            if (this.userInfo != null)
             {
-                string[] creds = userInfo.Split(':');
+                string[] creds = this.userInfo.Split(':');
                 string usernanme = Uri.UnescapeDataString(creds[0]);
                 string password = creds.Length == 1 ? string.Empty : Uri.UnescapeDataString(creds[1]);
-                saslHandler = new SaslPlainHandler(new TestPlainAuthenticator(userInfo, password));
+                saslHandler = new SaslPlainHandler(new TestPlainAuthenticator(this.userInfo, password));
             }
             else
             {
                 saslHandler = new SaslAnonymousHandler();
             }
 
-            SaslTransportProvider saslProvider = new SaslTransportProvider();
+            SaslTransportProvider saslProvider = new SaslTransportProvider(AmqpVersion.V100);
             saslProvider.AddHandler(saslHandler);
-            saslProvider.Versions.Add(new AmqpVersion(1, 0, 0));
             settings.TransportProviders.Add(saslProvider);
 
-            AmqpTransportProvider amqpProvider = new AmqpTransportProvider();
-            amqpProvider.Versions.Add(new AmqpVersion(1, 0, 0));
+            AmqpTransportProvider amqpProvider = new AmqpTransportProvider(AmqpVersion.V100);
             settings.TransportProviders.Add(amqpProvider);
 
             // create and initialize transport listeners
-            TransportListener[] listeners = new TransportListener[endpoints.Count];
-            for (int i = 0; i < endpoints.Count; i++)
+            TransportListener[] listeners = new TransportListener[this.endpoints.Count];
+            for (int i = 0; i < this.endpoints.Count; i++)
             {
-                Uri addressUri = new Uri(endpoints[i]);
+                Uri addressUri = new Uri(this.endpoints[i]);
 
                 if (addressUri.Scheme.Equals(AmqpConstants.SchemeAmqps, StringComparison.OrdinalIgnoreCase))
                 {
@@ -96,25 +103,19 @@ namespace TestAmqpBroker
                     TcpTransportSettings tcpSettings = new TcpTransportSettings() { Host = addressUri.Host, Port = addressUri.Port };
                     listeners[i] = tcpSettings.CreateListener();
                 }
-#if !NETSTANDARD
                 else if (addressUri.Scheme.Equals("ws", StringComparison.OrdinalIgnoreCase))
                 {
                     WebSocketTransportSettings wsSettings = new WebSocketTransportSettings() { Uri = addressUri };
                     listeners[i] = wsSettings.CreateListener();
                 }
-#endif
                 else
                 {
                     throw new NotSupportedException(addressUri.Scheme);
                 }
             }
 
-            this.transportListener = new AmqpTransportListener(listeners, settings);
             this.settings = settings;
-        }
-
-        public void Start()
-        {
+            this.transportListener = new AmqpTransportListener(listeners, settings);
             this.transportListener.Listen(this.OnAcceptTransport);
         }
 
@@ -154,7 +155,7 @@ namespace TestAmqpBroker
                     this.settings,
                     connectionSettings);
 
-                connection.BeginOpen(connection.DefaultOpenTimeout, this.OnConnectionOpenComplete, connection);
+                connection.BeginOpen(AmqpConstants.DefaultTimeout, this.OnConnectionOpenComplete, connection);
             }
             catch (Exception ex)
             {
@@ -288,11 +289,7 @@ namespace TestAmqpBroker
                         false);
                 }
 
-#if NETCOREAPP
-                store.Dispose();
-#else
                 store.Close();
-#endif
                 if (collection.Count > 0)
                 {
                     return collection[0];
@@ -357,17 +354,12 @@ namespace TestAmqpBroker
 
         sealed class BrokerMessage : AmqpMessage
         {
-            readonly BufferListStream stream;
+            readonly int pos;
 
             public BrokerMessage(AmqpMessage message)
             {
-                foreach (var buffer in message.RawByteBuffers)
-                {
-                    buffer.AddReference();
-                }
-
-                this.stream = (BufferListStream)message.ToStream();
-                this.RawByteBuffers = message.RawByteBuffers;
+                this.Buffer = message.GetPayload(int.MaxValue, out bool more);
+                this.pos = this.Buffer.Offset;
             }
 
             public object LockedBy { get; set; }
@@ -377,47 +369,23 @@ namespace TestAmqpBroker
             public void Unlock()
             {
                 this.LockedBy = null;
-                this.DeliveryTag = AmqpConstants.NullBinary;
+                this.DeliveryTag = new ArraySegment<byte>();
                 this.DeliveryId = 0;
                 this.State = null;
                 this.StateChanged = false;
                 this.Link = null;
-                this.stream.Position = 0;
-                this.PrepareForSend();
+                this.Buffer.Seek(this.pos);
+                this.BytesTransfered = 0;
             }
 
-            public override long SerializedMessageSize
+            public override void CompletePayload(int payloadSize)
             {
-                get { return this.stream.Length; }
+                base.CompletePayload(payloadSize);
+                this.Buffer.Complete(payloadSize);
             }
 
-            public override ArraySegment<byte>[] GetPayload(int payloadSize, out bool more)
+            protected override void Initialize(SectionFlag desiredSections, bool force)
             {
-                ArraySegment<byte>[] segments = this.stream.ReadBuffers(payloadSize, false, out more);
-                if (segments == null)
-                {
-                    return null;
-                }
-
-                // copy the buffer because the message could be disposed while the buffers could be
-                // stilled queued in the transport. Need to fix the protocol stack to take ByteBuffer
-                // so we can dispose the buffers after write operation completes.
-                int size = 0;
-                foreach (var segment in segments) size += segment.Count;
-                byte[] buffer = new byte[size];
-                size = 0;
-                foreach (var segment in segments)
-                {
-                    Buffer.BlockCopy(segment.Array, segment.Offset, buffer, size, segment.Count);
-                    size += segment.Count;
-                }
-
-                return new ArraySegment<byte>[] { new ArraySegment<byte>(buffer) };
-            }
-
-            protected override void OnCompletePayload(int payloadSize)
-            {
-                this.stream.Position += payloadSize;
             }
         }
 
@@ -648,12 +616,12 @@ namespace TestAmqpBroker
                         {
                             Transaction txn = this.queue.broker.txnManager.GetTransaction(message.TxnId);
                             txn.AddOperation(message, this.OnTxnDischarge);
-                            this.link.DisposeMessage(message, new TransactionalState() { Outcome = AmqpConstants.AcceptedOutcome }, true, message.Batchable);
+                            this.link.DisposeMessage(message, new TransactionalState() { Outcome = new Accepted() }, true, message.Batchable);
                         }
                         else
                         {
                             this.queue.Enqueue(new BrokerMessage(message));
-                            this.link.AcceptMessage(message, message.Batchable);
+                            this.link.AcceptMessage(message);
                             message.Dispose();
                         }
                     }
@@ -691,7 +659,7 @@ namespace TestAmqpBroker
 
                 public void Signal(BrokerMessage message)
                 {
-                    this.link.SendMessageNoWait(message, this.GetNextTag(), AmqpConstants.NullBinary);
+                    this.link.SendMessageNoWait(message, this.GetNextTag(), new ArraySegment<byte>());
                 }
 
                 ArraySegment<byte> GetNextTag()
@@ -846,7 +814,7 @@ namespace TestAmqpBroker
                         }
 
                         txn.Discharge(discharge.Fail ?? false);
-                        outcome = AmqpConstants.AcceptedOutcome;
+                        outcome = new Accepted();
                     }
                     else
                     {

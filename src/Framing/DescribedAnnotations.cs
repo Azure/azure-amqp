@@ -1,0 +1,42 @@
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.Azure.Amqp.Framing
+{
+    using Microsoft.Azure.Amqp.Encoding;
+
+    /// <summary>
+    /// The base class of an annotations section.
+    /// </summary>
+    public abstract class DescribedAnnotations : DescribedMap
+    {
+        Annotations annotations;
+
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="name">The descriptor name.</param>
+        /// <param name="code">The descriptor code.</param>
+        protected DescribedAnnotations(AmqpSymbol name, ulong code) 
+            : base(name, code) 
+        {
+        }
+
+        /// <summary>
+        /// Gets the map that stores the key-value items.
+        /// </summary>
+        public Annotations Map
+        {
+            get 
+            {
+                if (this.annotations == null)
+                {
+                    this.annotations = new Annotations();
+                    this.annotations.SetMap(this.InnerMap);
+                }
+
+                return this.annotations; 
+            }
+        }
+    }
+}

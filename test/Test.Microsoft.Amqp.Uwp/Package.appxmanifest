@@ -1,46 +1,28 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Package
-  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
-  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
-  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
-  IgnorableNamespaces="uap mp">
-
-  <Identity Name="8d4953e8-6eeb-4b8a-a317-46a893f4bb20"
-            Publisher="CN=mqt"
-            Version="1.0.0.0" />
-
-  <mp:PhoneIdentity PhoneProductId="8d4953e8-6eeb-4b8a-a317-46a893f4bb20" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
-
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
+  <Identity Name="Test.Amqp.Uwp" Publisher="CN=xinchen" Version="1.0.0.0" />
+  <mp:PhoneIdentity PhoneProductId="14b219f9-88b2-4d3b-8395-670b6741074c" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>Test.Microsoft.Amqp.Uwp</DisplayName>
-    <PublisherDisplayName>mqt</PublisherDisplayName>
+    <PublisherDisplayName>xinchen</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
-
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
   </Dependencies>
-
   <Resources>
     <Resource Language="x-generate" />
   </Resources>
   <Applications>
-    <Application Id="vstest.executionengine.universal.App"
-        Executable="$targetnametoken$.exe"
-        EntryPoint="Test.Microsoft.Amqp.Uwp.App">
-      <uap:VisualElements
-        DisplayName="Test.Microsoft.Amqp.Uwp"
-        Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png"
-        Description="Test.Microsoft.Amqp.Uwp"
-        BackgroundColor="transparent">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+    <Application Id="vstest.executionengine.universal.App" Executable="$targetnametoken$.exe" EntryPoint="Test.Microsoft.Amqp.Uwp.App">
+      <uap:VisualElements DisplayName="Test.Microsoft.Amqp.Uwp" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" Description="Test.Microsoft.Amqp.Uwp" BackgroundColor="transparent">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png">
+        </uap:DefaultTile>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
     </Application>
   </Applications>
   <Capabilities>
     <Capability Name="internetClientServer" />
-    <Capability Name="privateNetworkClientServer" />
   </Capabilities>
 </Package>

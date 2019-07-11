@@ -5,10 +5,8 @@ namespace Test.Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Security.Cryptography.X509Certificates;
     using System.Threading;
-    using System.Threading.Tasks;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Encoding;
     using global::Microsoft.Azure.Amqp.Framing;
@@ -43,7 +41,6 @@ namespace Test.Microsoft.Azure.Amqp
         public static AmqpSettings GetAmqpSettings(bool client, string sslValue, bool doSslUpgrade, params SaslHandler[] saslHandlers)
         {
             AmqpSettings settings = new AmqpSettings();
-#if !WINDOWS_UWP
             if ((client && doSslUpgrade) || (!client && sslValue != null))
             {
                 TlsTransportSettings tlsSettings = new TlsTransportSettings();
@@ -58,16 +55,13 @@ namespace Test.Microsoft.Azure.Amqp
                     tlsSettings.Certificate = GetCertificate(sslValue); ;
                 }
 
-                TlsTransportProvider tlsProvider = new TlsTransportProvider(tlsSettings);
-                tlsProvider.Versions.Add(new AmqpVersion(1, 0, 0));
+                TlsTransportProvider tlsProvider = new TlsTransportProvider(tlsSettings, AmqpVersion.V100);
                 settings.TransportProviders.Add(tlsProvider);
             }
-#endif
 
             if (saslHandlers != null && saslHandlers.Length >= 1 && saslHandlers[0] != null)
             {
-                SaslTransportProvider saslProvider = new SaslTransportProvider();
-                saslProvider.Versions.Add(new AmqpVersion(1, 0, 0));
+                SaslTransportProvider saslProvider = new SaslTransportProvider(AmqpVersion.V100);
                 foreach (SaslHandler handler in saslHandlers)
                 {
                     saslProvider.AddHandler(handler);
@@ -76,8 +70,7 @@ namespace Test.Microsoft.Azure.Amqp
                 settings.TransportProviders.Add(saslProvider);
             }
 
-            AmqpTransportProvider amqpProvider = new AmqpTransportProvider();
-            amqpProvider.Versions.Add(new AmqpVersion(1, 0, 0));
+            AmqpTransportProvider amqpProvider = new AmqpTransportProvider(AmqpVersion.V100);
             settings.TransportProviders.Add(amqpProvider);
 
             return settings;
@@ -147,7 +140,11 @@ namespace Test.Microsoft.Azure.Amqp
             return AmqpMessage.Create(new Data[] { new Data() { Value = binaryData } });
         }
 
-#if !WINDOWS_UWP
+        public static ByteBuffer GetPayload(this AmqpMessage message)
+        {
+            return message.GetPayload(int.MaxValue, out bool more);
+        }
+
         public static AmqpTransportListener CreateListener(string host, int port, string certFindValue, bool doSslUpgrade, SaslHandler saslHandler)
         {
             AmqpSettings settings = GetAmqpSettings(false, certFindValue, doSslUpgrade, saslHandler);
@@ -163,7 +160,6 @@ namespace Test.Microsoft.Azure.Amqp
             TransportListener listener = transportSettings.CreateListener();
             return new AmqpTransportListener(new TransportListener[] { listener }, settings);
         }
-#endif
 
         public static TransportBase CreateTransport(string host, int port, string sslHost, bool doSslUpgrade, SaslHandler saslHandler)
         {
@@ -174,9 +170,7 @@ namespace Test.Microsoft.Azure.Amqp
             {
                 TlsTransportSettings tlsSettings = new TlsTransportSettings(transportSettings);
                 tlsSettings.TargetHost = sslHost;
-#if !WINDOWS_UWP
                 tlsSettings.CertificateValidationCallback = (s, c, h, e) => { return true; };
-#endif
                 transportSettings = tlsSettings;
             }
 
@@ -260,11 +254,7 @@ namespace Test.Microsoft.Azure.Amqp
                         false);
                 }
 
-#if NETSTANDARD || WINDOWS_UWP
-                store.Dispose();
-#else
                 store.Close();
-#endif
                 if (collection.Count > 0)
                 {
                     return collection[0];
@@ -277,7 +267,7 @@ namespace Test.Microsoft.Azure.Amqp
         static void DumpAmqpData(ByteBuffer buffer, int indent)
         {
             int offset = buffer.Offset;
-            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            byte formatCode = buffer.Buffer[buffer.Offset];
             if (formatCode == 0x40)
             {
                 WriteAmqpValue(offset, indent, "Null");
@@ -292,80 +282,80 @@ namespace Test.Microsoft.Azure.Amqp
             }
             else if (formatCode == 0x50)
             {
-                WriteAmqpValue(offset, indent, string.Format("UByte:{0}", (byte)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("UByte:{0}", (byte)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x60)
             {
-                WriteAmqpValue(offset, indent, string.Format("UShort:{0}", (ushort)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("UShort:{0}", (ushort)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x70)
             {
-                WriteAmqpValue(offset, indent, string.Format("UInt:{0}", (uint)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("UInt:{0}", (uint)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x52)
             {
-                WriteAmqpValue(offset, indent, string.Format("SmallUInt:{0}", (uint)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("SmallUInt:{0}", (uint)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x80)
             {
-                WriteAmqpValue(offset, indent, string.Format("ULong:{0}", (ulong)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("ULong:{0}", (ulong)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x53)
             {
-                WriteAmqpValue(offset, indent, string.Format("SmallULong:{0}", (ulong)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("SmallULong:{0}", (ulong)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x51)
             {
-                WriteAmqpValue(offset, indent, string.Format("Byte:{0}", (sbyte)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("Byte:{0}", (sbyte)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x61)
             {
-                WriteAmqpValue(offset, indent, string.Format("Short:{0}", (short)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("Short:{0}", (short)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x71)
             {
-                WriteAmqpValue(offset, indent, string.Format("Int:{0}", (int)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("Int:{0}", (int)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x54)
             {
-                WriteAmqpValue(offset, indent, string.Format("SmallInt:{0}", (int)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("SmallInt:{0}", (int)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x81)
             {
-                WriteAmqpValue(offset, indent, string.Format("Long:{0}", (long)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("Long:{0}", (long)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x54)
             {
-                WriteAmqpValue(offset, indent, string.Format("SmallLong:{0}", (long)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("SmallLong:{0}", (long)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x72)
             {
-                WriteAmqpValue(offset, indent, string.Format("Float:{0}", (float)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("Float:{0}", (float)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x82)
             {
-                WriteAmqpValue(offset, indent, string.Format("Double:{0}", (double)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("Double:{0}", (double)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x73)
             {
-                WriteAmqpValue(offset, indent, string.Format("Char:{0}", (char)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("Char:{0}", (char)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x83)
             {
-                WriteAmqpValue(offset, indent, string.Format("TimeStamp:{0}", (DateTime)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("TimeStamp:{0}", (DateTime)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0x98)
             {
-                WriteAmqpValue(offset, indent, string.Format("Uuid:{0}", (Guid)AmqpEncoding.DecodeObject(buffer, formatCode)));
+                WriteAmqpValue(offset, indent, string.Format("Uuid:{0}", (Guid)AmqpEncoding.DecodeObject(buffer)));
             }
             else if (formatCode == 0xa0 || formatCode == 0xb0)
             {
-                ArraySegment<byte> bin = (ArraySegment<byte>)AmqpEncoding.DecodeObject(buffer, formatCode);
+                ArraySegment<byte> bin = (ArraySegment<byte>)AmqpEncoding.DecodeObject(buffer);
                 WriteAmqpValue(offset, indent, string.Format("Binary{0}:{1}", formatCode == 0xa0 ? 8 : 32, bin.Array == null ? "Null" : bin.Count.ToString()));
             }
             else if (formatCode == 0xa1 || formatCode == 0xb1 || formatCode == 0xa2 || formatCode == 0xb2)
             {
-                string str = (string)AmqpEncoding.DecodeObject(buffer, formatCode);
+                string str = (string)AmqpEncoding.DecodeObject(buffer);
                 string toDisplay = "Null";
                 if (str != null)
                 {
@@ -376,7 +366,7 @@ namespace Test.Microsoft.Azure.Amqp
             }
             else if (formatCode == 0xa3 || formatCode == 0xb3)
             {
-                AmqpSymbol sym = (AmqpSymbol)AmqpEncoding.DecodeObject(buffer, formatCode);
+                AmqpSymbol sym = (AmqpSymbol)AmqpEncoding.DecodeObject(buffer);
                 string toDisplay = "Null";
                 if (sym.Value != null)
                 {
@@ -387,18 +377,16 @@ namespace Test.Microsoft.Azure.Amqp
             }
             else if (formatCode == 0xc0 || formatCode == 0xd0)
             {
-                int size;
-                int count;
-                AmqpEncoding.ReadSizeAndCount(buffer, formatCode, 0xc0, 0xd0, out size, out count);
-                WriteAmqpValue(offset, indent, string.Format("List{0}:{1},{2}", formatCode == 0xc0 ? 8 : 32, size, count));
-                for (int i = 0; i < count; ++i)
+                IList<object> list = AmqpEncoding.DecodeObject(buffer) as List<object>;
+                WriteAmqpValue(offset, indent, string.Format("List{0}:{1}", formatCode == 0xc0 ? 8 : 32, list.Count));
+                for (int i = 0; i < list.Count; ++i)
                 {
-                    DumpAmqpData(buffer, indent + 1);
+                    WriteAmqpValue(-1, indent + 1, list[i].ToString());
                 }
             }
             else if (formatCode == 0xe0 || formatCode == 0xf0)
             {
-                Array array = (Array)AmqpEncoding.DecodeObject(buffer, formatCode);
+                Array array = (Array)AmqpEncoding.DecodeObject(buffer);
                 WriteAmqpValue(offset, indent, string.Format("Array{0}:{1}", formatCode == 0xe0 ? 8 : 32, array.Length));
                 for (int i = 0; i < array.Length; ++i)
                 {
@@ -407,19 +395,17 @@ namespace Test.Microsoft.Azure.Amqp
             }
             else if (formatCode == 0xc1 || formatCode == 0xd1)
             {
-                int size;
-                int count;
-                AmqpEncoding.ReadSizeAndCount(buffer, formatCode, 0xc1, 0xd1, out size, out count);
-                WriteAmqpValue(offset, indent, string.Format("Map{0}:{1},{2}", formatCode == 0xc0 ? 8 : 32, size, count));
-                for (int i = 0; i < count; i += 2)
+                AmqpMap map = (AmqpMap)AmqpEncoding.DecodeObject(buffer);
+                WriteAmqpValue(offset, indent, string.Format("Map{0}:{1}", formatCode == 0xc0 ? 8 : 32, map.Count));
+                foreach (var kvp in map)
                 {
-                    DumpAmqpData(buffer, indent + 1);
-                    DumpAmqpData(buffer, indent + 1);
+                    WriteAmqpValue(-1, indent + 1, kvp.Key.ToString());
+                    WriteAmqpValue(-1, indent + 1, kvp.Value?.ToString() ?? "Null");
                 }
             }
             else if (formatCode == 0x00)
             {
-                WriteAmqpValue(offset, indent, "Described type");
+                WriteAmqpValue(offset, indent, "Described");
                 DumpAmqpData(buffer, indent + 1);
                 DumpAmqpData(buffer, indent + 1);
             }
@@ -428,7 +414,14 @@ namespace Test.Microsoft.Azure.Amqp
         static void WriteAmqpValue(int offset, int indent, string value)
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
-            sb.AppendFormat("0x{0:X4}  ", offset);
+            if (offset >= 0)
+            {
+                sb.AppendFormat("0x{0:X4}  ", offset);
+            }
+            else
+            {
+                sb.Append("        ");
+            }
 
             if (indent > 0)
             {
@@ -438,16 +431,6 @@ namespace Test.Microsoft.Azure.Amqp
             sb.Append(value);
 
             System.Diagnostics.Debug.WriteLine(sb.ToString());
-        }
-
-        public static async Task<AmqpMessage> ReceiveMessageAsync(this ReceivingAmqpLink link, TimeSpan timeout)
-        {
-            AmqpMessage message = null;
-            await Task.Factory.FromAsync(
-                (c, s) => link.BeginReceiveMessage(timeout, c, s),
-                (r) => link.EndReceiveMessage(r, out message),
-                link);
-            return message;
         }
     }
 }

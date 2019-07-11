@@ -21,6 +21,9 @@ namespace Test.Microsoft.Azure.Amqp
     [Trait("Category", TestCategory.Current)]
     public class AmqpLinkTests : IClassFixture<TestAmqpBrokerFixture>
     {
+        static readonly ArraySegment<byte> NullBinary = new ArraySegment<byte>();
+        static readonly ArraySegment<byte> EmptyBinary = new ArraySegment<byte>(new byte[0]);
+
         Uri addressUri;
         TestAmqpBroker broker;
 
@@ -63,7 +66,7 @@ namespace Test.Microsoft.Azure.Amqp
                 true,
                 true,
                 true,
-                (int)AmqpConstants.DefaultMaxFrameSize,
+                65536,
                 0,
                 (s) => { s.IncomingWindow = 8; s.OutgoingWindow = 12; },
                 (s) => { s.SettleType = SettleMode.SettleOnSend; },
@@ -83,7 +86,7 @@ namespace Test.Microsoft.Azure.Amqp
                 true,
                 true,
                 true,
-                (int)AmqpConstants.DefaultMaxFrameSize,
+                65536,
                 0,
                 (s) => { s.IncomingWindow = 8; s.OutgoingWindow = 12; },
                 (s) => { s.SettleType = SettleMode.SettleOnReceive; },
@@ -103,7 +106,7 @@ namespace Test.Microsoft.Azure.Amqp
                 true,
                 true,
                 true,
-                (int)AmqpConstants.DefaultMaxFrameSize,
+                65536,
                 0,
                 (s) => { s.IncomingWindow = 8; s.OutgoingWindow = 12; },
                 (s) => { s.SettleType = SettleMode.SettleOnDispose; },
@@ -126,7 +129,7 @@ namespace Test.Microsoft.Azure.Amqp
                 true,
                 true,
                 true,
-                (int)AmqpConstants.DefaultMaxFrameSize,
+                65536,
                 64,
                 null,
                 (s) => { s.SettleType = SettleMode.SettleOnSend; },
@@ -140,7 +143,7 @@ namespace Test.Microsoft.Azure.Amqp
             string queue = "AmqpAsyncAndOrderTestQueue";
             broker.AddQueue(queue);
 
-            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);
             connection.Open();
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
@@ -194,7 +197,7 @@ namespace Test.Microsoft.Azure.Amqp
                     }
                     else
                     {
-                        m.Link.DisposeDelivery(m, true, AmqpConstants.AcceptedOutcome);
+                        m.Link.DisposeDelivery(m, true, new Accepted());
                     }
                     m.Dispose();
                     ++receiveCount;
@@ -237,7 +240,7 @@ namespace Test.Microsoft.Azure.Amqp
             string queue = "AmqpMessageTest";
             broker.AddQueue(queue);
 
-            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);
             connection.Open();
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
@@ -257,7 +260,7 @@ namespace Test.Microsoft.Azure.Amqp
             message.ApplicationProperties.Map.Add("image_type", "jpg");
             message.ApplicationProperties.Map.Add("client_name", "rob-jms");
             message.Footer.Map.Add("signature", "foo");
-            sLink.EndSendMessage(sLink.BeginSendMessage(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10), null, null));
+            sLink.EndSendMessage(sLink.BeginSendMessage(message, EmptyBinary, NullBinary, TimeSpan.FromSeconds(10), null, null));
 
             sLink.Close();
 
@@ -279,7 +282,7 @@ namespace Test.Microsoft.Azure.Amqp
         [Fact]
         public void AmqpDynamicNodeTest()
         {
-            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);
             connection.Open();
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
@@ -334,7 +337,7 @@ namespace Test.Microsoft.Azure.Amqp
             string queue = "AmqpMultipleSettleModeLinksTestQueue";
             broker.AddQueue(queue);
 
-            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);
             connection.Open();
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings() { IncomingWindow = 9, OutgoingWindow = 11 });
@@ -407,21 +410,15 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [Fact]
-        public void AmqpConcurrentConnectionsTest()
+        public async Task AmqpConcurrentConnectionsTest()
         {
             Exception lastException = null;
-            Action action = () =>
+            Func<Task> func = async () =>
             {
                 try
                 {
-                    AmqpConnection connection = AmqpUtils.CreateConnection(
-                        addressUri,
-                        null,
-                        false,
-                        null,
-                        (int)AmqpConstants.DefaultMaxFrameSize);
-                    connection.Open();
-                    connection.Close();
+                    AmqpConnection connection = await AmqpConnection.Factory.OpenConnectionAsync(addressUri, TimeSpan.FromSeconds(10));
+                    await connection.CloseAsync(TimeSpan.FromSeconds(10));
                 }
                 catch (Exception exp)
                 {
@@ -432,10 +429,10 @@ namespace Test.Microsoft.Azure.Amqp
             Task[] tasks = new Task[32];
             for (int i = 0; i < tasks.Length; ++i)
             {
-                tasks[i] = Task.Run(action);
+                tasks[i] = func();
             }
 
-            Task.WaitAll(tasks);
+            await Task.WhenAll(tasks);
 
             Assert.True(lastException == null, string.Format("Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString()));
         }
@@ -453,7 +450,7 @@ namespace Test.Microsoft.Azure.Amqp
                 true,
                 false,
                 true,
-                (int)AmqpConstants.DefaultMaxFrameSize,
+                65536,
                 0,
                 (s) => { s.NextOutgoingId = uint.MaxValue - 3; s.InitialDeliveryId = uint.MaxValue - 7; s.IncomingWindow = 8; s.OutgoingWindow = 12; },
                 null,
@@ -489,7 +486,6 @@ namespace Test.Microsoft.Azure.Amqp
             foreach (var item in results) item();
         }
 
-#if !WINDOWS_UWP
         [Fact]
         public void AmqpTransactionTest()
         {
@@ -542,7 +538,7 @@ namespace Test.Microsoft.Azure.Amqp
             ReceivingAmqpLink receiveLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnReceive, 20));
             receiveLink.Open();
 
-            TransactionalState txnState = new TransactionalState() { Outcome = AmqpConstants.AcceptedOutcome };
+            TransactionalState txnState = new TransactionalState() { Outcome = new Accepted() };
             txnState.TxnId = txController.DeclareAsync().Result;
 
             // receive message
@@ -575,12 +571,11 @@ namespace Test.Microsoft.Azure.Amqp
             session.Close();
             connection.Close();
         }
-#endif
 
         [Fact]
         public void AmqpDynamicLinkCreditTest()
         {
-            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);
             connection.Open();
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
@@ -607,7 +602,7 @@ namespace Test.Microsoft.Azure.Amqp
                 for (int k = 0; k < n; k++)
                 {
                     ByteBuffer buffer = new ByteBuffer(1024, true);
-                    Frm(buffer, 0, Cmd(Transfer.Code, 0u, (uint)d++, AmqpConstants.EmptyBinary, 0u, true), new ArraySegment<byte>(new byte[] { 0x00, 0x53, 0x77, 0x44 }));
+                    Frm(buffer, 0, Cmd(Transfer.Code, 0u, (uint)d++, EmptyBinary, 0u, true), new ArraySegment<byte>(new byte[] { 0x00, 0x53, 0x77, 0x44 }));
                     link.ProcessFrame(Frm(buffer));
                 }
             };
@@ -637,7 +632,7 @@ namespace Test.Microsoft.Azure.Amqp
             Assert.Equal(0u, bufferedCredit.GetValue(link));
 
             // reset credit to 10
-            link.IssueCredit(10, false, AmqpConstants.NullBinary);
+            link.IssueCredit(10, false, NullBinary);
             Assert.Equal(10u, link.LinkCredit);
             Assert.Equal(0u, bufferedCredit.GetValue(link));
 
@@ -671,7 +666,7 @@ namespace Test.Microsoft.Azure.Amqp
             string entity = "AmqpTransferWithFlowControlTest";
             broker.AddQueue(entity);
 
-            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);
             connection.Open();
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
@@ -681,7 +676,7 @@ namespace Test.Microsoft.Azure.Amqp
             sender.Open();
             for (int i = 0; i < 100; i++)
             {
-                sender.SendMessageNoWait(AmqpMessage.Create(new AmqpValue() { Value = "hello" }), AmqpConstants.EmptyBinary, AmqpConstants.NullBinary);
+                sender.SendMessageNoWait(AmqpMessage.Create(new AmqpValue() { Value = "hello" }), EmptyBinary, NullBinary);
             }
 
             ReceivingAmqpLink receiver = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, entity, SettleMode.SettleOnSend, 10));
@@ -691,7 +686,7 @@ namespace Test.Microsoft.Azure.Amqp
                 {
                     try
                     {
-                        receiver.DisposeDelivery(m, true, AmqpConstants.AcceptedOutcome);
+                        receiver.DisposeDelivery(m, true, new Accepted());
                         if (messageReceived == 5)
                         {
                             receiver.SetTotalLinkCredit(20, false);
@@ -738,14 +733,14 @@ namespace Test.Microsoft.Azure.Amqp
             broker.AddQueue(queue);
 
             AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null,
-                (int)AmqpConstants.DefaultMaxFrameSize, 60 * 1000);
+                65536, 60 * 1000);
 
             connection.Open();
             connection.Close();
 
             bool gotException = false;
             connection = AmqpUtils.CreateConnection(addressUri, null, false, null,
-                (int)AmqpConstants.DefaultMaxFrameSize, 1 * 1000);
+                65536, 1 * 1000);
             try
             {
                 connection.EndOpen(connection.BeginOpen(TimeSpan.FromMinutes(5), null, null));
@@ -765,7 +760,7 @@ namespace Test.Microsoft.Azure.Amqp
             string queue = "AmqpMessageCloneForResendTest" + Guid.NewGuid().ToString("N");
             broker.AddQueue(queue);
 
-            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);
             connection.Open();
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
@@ -788,7 +783,7 @@ namespace Test.Microsoft.Azure.Amqp
             message.ApplicationProperties.Map.Add("client_name", "rob-jms");
             message.Footer.Map.Add("signature", "foo");
 
-            Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10), null, null));
+            Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, EmptyBinary, NullBinary, TimeSpan.FromSeconds(10), null, null));
             Assert.Equal(Accepted.Code, outcome.DescriptorCode);
 
             for (int i = 0; i < 10; i++)
@@ -798,15 +793,15 @@ namespace Test.Microsoft.Azure.Amqp
                 Assert.NotNull(message);
 
                 AmqpMessage newMessage = message.Clone();
-                rLink.DisposeMessage(message, AmqpConstants.AcceptedOutcome, true, false);
+                rLink.DisposeMessage(message, new Accepted(), true, false);
 
-                outcome = sLink.EndSendMessage(sLink.BeginSendMessage(newMessage, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10), null, null));
+                outcome = sLink.EndSendMessage(sLink.BeginSendMessage(newMessage, EmptyBinary, NullBinary, TimeSpan.FromSeconds(10), null, null));
                 Assert.Equal(Accepted.Code, outcome.DescriptorCode);
             }
 
             rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(60), null, null), out message);
             Assert.NotNull(message);
-            rLink.DisposeMessage(message, AmqpConstants.AcceptedOutcome, true, false);
+            rLink.DisposeMessage(message, new Accepted(), true, false);
 
             connection.Close();
         }
@@ -817,7 +812,7 @@ namespace Test.Microsoft.Azure.Amqp
             string queue = "AmqpPeekLockReleaseAcceptTest" + Guid.NewGuid().ToString("N");
             broker.AddQueue(queue);
 
-            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);
             connection.Open();
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
@@ -827,7 +822,7 @@ namespace Test.Microsoft.Azure.Amqp
             sLink.Open();
 
             AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "test" });
-            Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10), null, null));
+            Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, EmptyBinary, NullBinary, TimeSpan.FromSeconds(10), null, null));
             Assert.Equal(Accepted.Code, outcome.DescriptorCode);
 
             ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnReceive, 100));
@@ -841,7 +836,7 @@ namespace Test.Microsoft.Azure.Amqp
             hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(20), null, null), out message);
             Assert.True(hasMessage);
             Assert.NotNull(message);
-            rLink.AcceptMessage(message, false);
+            rLink.AcceptMessage(message);
 
             hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromMilliseconds(500), null, null), out message);
             Assert.False(hasMessage);
@@ -856,7 +851,7 @@ namespace Test.Microsoft.Azure.Amqp
             string queue = "ReleaseMessageOnLinkCloseTest" + Guid.NewGuid().ToString("N");
             broker.AddQueue(queue);
 
-            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);
             connection.Open();
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
@@ -869,7 +864,7 @@ namespace Test.Microsoft.Azure.Amqp
             for (int i = 0; i < 10; i++)
             {
                 message = AmqpMessage.Create(new AmqpValue() { Value = "test" });
-                Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10), null, null));
+                Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, EmptyBinary, NullBinary, TimeSpan.FromSeconds(10), null, null));
                 Assert.Equal(Accepted.Code, outcome.DescriptorCode);
             }
 
@@ -887,7 +882,7 @@ namespace Test.Microsoft.Azure.Amqp
             hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(20), null, null), out message);
             Assert.True(hasMessage);
             Assert.NotNull(message);
-            rLink.AcceptMessage(message, false);
+            rLink.AcceptMessage(message);
 
             connection.Close();
         }
@@ -898,7 +893,7 @@ namespace Test.Microsoft.Azure.Amqp
             string queue = "AmqpLinkCreditMaxValueTest-" + Guid.NewGuid().ToString("N").Substring(6);
             broker.AddQueue(queue);
 
-            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);
             connection.Open();
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
@@ -908,7 +903,7 @@ namespace Test.Microsoft.Azure.Amqp
             sLink.Open();
 
             AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "test" });
-            Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10), null, null));
+            Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, EmptyBinary, NullBinary, TimeSpan.FromSeconds(10), null, null));
             Assert.Equal(Accepted.Code, outcome.DescriptorCode);
 
             var settings = AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnReceive, 0);
@@ -932,12 +927,11 @@ namespace Test.Microsoft.Azure.Amqp
             // NOTE: Increment this number to make it more likely to hit race conditions.
             const int NumberOfRuns = 500;
 
-#if !WINDOWS_UWP
             Process proc = Process.GetCurrentProcess();
             long affinityMask = (long)proc.ProcessorAffinity;
             var newAffinityMask = affinityMask &= 0x000F; // use only any of the first 4 available processors to make repro similar in most systems
             proc.ProcessorAffinity = (IntPtr)newAffinityMask;
-#endif
+
             try
             {
                 string queue = "OpenSequentialConnectionsToFindRaceConditions";
@@ -965,7 +959,7 @@ namespace Test.Microsoft.Azure.Amqp
                     await sender.OpenAsync(timeout);
 
                     var message = AmqpMessage.Create(new AmqpValue { Value = "Hello, AMQP!" });
-                    Outcome outcome = await sender.SendMessageAsync(message, new ArraySegment<byte>(Guid.NewGuid().ToByteArray()), AmqpConstants.NullBinary, timeout);
+                    Outcome outcome = await sender.SendMessageAsync(message, new ArraySegment<byte>(Guid.NewGuid().ToByteArray()), NullBinary, timeout);
                     message.Dispose();
 
                     var receiverSettings = new AmqpLinkSettings
@@ -986,7 +980,7 @@ namespace Test.Microsoft.Azure.Amqp
                     await Task.Yield();
                     Assert.NotNull(message2);
 
-                    receiver.AcceptMessage(message2, false);
+                    receiver.AcceptMessage(message2);
                     message2.Dispose();
 
                     await sender.CloseAsync(timeout);
@@ -997,9 +991,7 @@ namespace Test.Microsoft.Azure.Amqp
             }
             finally
             {
-#if !WINDOWS_UWP
                 proc.ProcessorAffinity = (IntPtr)affinityMask;
-#endif
             }
         }
 
@@ -1018,7 +1010,7 @@ namespace Test.Microsoft.Azure.Amqp
             await sLink.OpenAsync(TimeSpan.FromSeconds(20));
 
             AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "AmqpConnectionFactoryTest" });
-            Outcome outcome = await sLink.SendMessageAsync(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, TimeSpan.FromSeconds(10));
+            Outcome outcome = await sLink.SendMessageAsync(message, EmptyBinary, NullBinary, TimeSpan.FromSeconds(10));
             Assert.Equal(Accepted.Code, outcome.DescriptorCode);
 
             ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnDispose, 10));
@@ -1038,7 +1030,7 @@ namespace Test.Microsoft.Azure.Amqp
             bool doSend = true,
             bool doReceive = true,
             bool sendAsync = true,
-            int frameSize = (int)AmqpConstants.DefaultMaxFrameSize,
+            int frameSize = 64 * 1024,
             int messageSize = 0,
             Action<AmqpSessionSettings> sessionSettingsUpdater = null,
             Action<AmqpLinkSettings> sendLinkSettingsUpdater = null,
@@ -1187,7 +1179,7 @@ namespace Test.Microsoft.Azure.Amqp
         {
             ByteBuffer buffer = new ByteBuffer(1024, true);
             Frm(buffer, channel, command, payload);
-            connection.SendBuffers(new ByteBuffer[] { buffer });
+            connection.SendBuffer(buffer);
         }
 
         static void PipeLineSend(string host, int port, string queue, byte[] message)

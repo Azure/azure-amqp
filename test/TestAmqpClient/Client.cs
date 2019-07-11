@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Amqp;
+using Microsoft.Azure.Amqp.Transport;
 
 namespace TestAmqpClient
 {
@@ -18,8 +19,6 @@ namespace TestAmqpClient
 
     abstract class Client<T> : IClient where T : AmqpLink
     {
-        protected static readonly Task CompletedTask;
-
         protected Options options;
         protected AmqpConnection connection;
         protected AmqpSession session;
@@ -27,17 +26,6 @@ namespace TestAmqpClient
         long attempts;
         long success;
         long failure;
-
-        static Client()
-        {
-#if NET452
-            TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
-            tcs.SetResult(0);
-            CompletedTask = tcs.Task;
-#else
-            CompletedTask = Task.CompletedTask;
-#endif
-        }
 
         public Client(Options options)
         {
@@ -49,15 +37,19 @@ namespace TestAmqpClient
         public async Task InitAsync()
         {
             AmqpConnectionFactory factory = new AmqpConnectionFactory();
-            factory.TlsSettings.CertificateValidationCallback = (a, b, c, d) => true;
-            factory.TlsSettings.CheckCertificateRevocation = false;
-            factory.TlsSettings.Protocols = System.Security.Authentication.SslProtocols.Tls12;
+            factory.Settings.TransportProviders.Add(new TlsTransportProvider(new TlsTransportSettings()
+            {
+                CertificateValidationCallback = (a, b, c, d) => true,
+                CheckCertificateRevocation = false,
+                Protocols = System.Security.Authentication.SslProtocols.Tls12
+            }));
+
             this.connection = await factory.OpenConnectionAsync(new Uri(this.options.Address), this.options.Sasl, TimeSpan.FromSeconds(30));
             this.session = this.connection.CreateSession(new AmqpSessionSettings());
             this.link = this.CreateLink();
             await Task.WhenAll(
-                this.session.OpenAsync(this.session.DefaultOpenTimeout),
-                this.link.OpenAsync(this.link.DefaultOpenTimeout));
+                this.session.OpenAsync(),
+                this.link.OpenAsync());
         }
 
         public Task RunAsync()
@@ -76,10 +68,10 @@ namespace TestAmqpClient
         {
             if (this.connection != null)
             {
-                return this.connection.CloseAsync(this.connection.DefaultCloseTimeout);
+                return this.connection.CloseAsync();
             }
 
-            return CompletedTask;
+            return Task.CompletedTask;
         }
 
         protected abstract T CreateLink();

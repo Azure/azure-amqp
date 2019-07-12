@@ -6,16 +6,14 @@ This repository contains the source code for the Microsoft Azure AMQP for C# imp
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-### Prerequisites
-
-The project and solution files are Visual Studio version 14, thus you will need to install Visual Studio 2015 prior to building the code.
 
 ### Build
 
-To build the AMQP assembly:
-
-- Run the /build/build.cmd script.
-
-or
-
-- Open the solution Microsoft_Azure_Amqp.sln and build.
+- In Visual Studio
+  - Open the solution `amqp.sln` and build. Visual Studio 2017 is required.
+- dotnet
+  - The project targets netstandard2.0, so dotnet commands can be used to build the library cross platform.
+  - The solution includes a test UWP project. It needs to be removed in order to build the solution. Or you can build just the library project. For example at the repo root run the following command.
+```
+dotnet build -p:Version=3.0.0 src\Microsoft.Azure.Amqp.csproj
+```

@@ -111,7 +111,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// <returns>A task that returns a transport when it is completed.</returns>
         public Task<TransportBase> ConnectAsync(TimeSpan timeout)
         {
-            var tcs = new TaskCompletionSource<TransportBase>();
+            var tcs = new TaskCompletionSource<TransportBase>(TaskCreationOptions.RunContinuationsAsynchronously);
             var args = new TransportAsyncCallbackArgs
             {
                 CompletedCallback = a =>
@@ -183,7 +183,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "ReadHeader");
             byte[] headerBuffer = new byte[AmqpConstants.ProtocolHeaderSize];
-            args.SetBuffer(headerBuffer, 0, headerBuffer.Length); 
+            args.SetBuffer(headerBuffer, 0, headerBuffer.Length);
             args.CompletedCallback = this.OnReadHeaderComplete;
             this.reader.ReadBuffer(args);
         }

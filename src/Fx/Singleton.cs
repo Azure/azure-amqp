@@ -133,7 +133,7 @@ namespace Microsoft.Azure.Amqp
                         tcs.SetException(ex);
                     }
 
-                    return await tcs.Task;
+                    return await tcs.Task.ConfigureAwait(false);
                 }
             }
 

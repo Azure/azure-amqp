@@ -54,7 +54,7 @@ namespace Microsoft.Azure.Amqp
                 throw new OperationCanceledException("Connection is closing or closed.");
             }
 
-            CbsToken token = await tokenProvider.GetTokenAsync(namespaceAddress, resource, requiredClaims);
+            CbsToken token = await tokenProvider.GetTokenAsync(namespaceAddress, resource, requiredClaims).ConfigureAwait(false);
             string tokenType = token.TokenType;
             if (tokenType == null)
             {
@@ -64,7 +64,7 @@ namespace Microsoft.Azure.Amqp
             RequestResponseAmqpLink requestResponseLink;
             if (!this.linkFactory.TryGetOpenedObject(out requestResponseLink))
             {
-                requestResponseLink = await this.linkFactory.GetOrCreateAsync(timeout);
+                requestResponseLink = await this.linkFactory.GetOrCreateAsync(timeout).ConfigureAwait(false);
             }
 
             AmqpValue value = new AmqpValue();
@@ -75,7 +75,7 @@ namespace Microsoft.Azure.Amqp
             putTokenRequest.ApplicationProperties.Map[CbsConstants.PutToken.Audience] = audience;
             putTokenRequest.ApplicationProperties.Map[CbsConstants.PutToken.Expiration] = token.ExpiresAtUtc;
 
-            AmqpMessage putTokenResponse = await requestResponseLink.RequestAsync(putTokenRequest, timeout);
+            AmqpMessage putTokenResponse = await requestResponseLink.RequestAsync(putTokenRequest, timeout).ConfigureAwait(false);
 
             int statusCode = (int)putTokenResponse.ApplicationProperties.Map[CbsConstants.PutToken.StatusCode];
             string statusDescription = (string)putTokenResponse.ApplicationProperties.Map[CbsConstants.PutToken.StatusDescription];
@@ -129,12 +129,12 @@ namespace Microsoft.Azure.Amqp
                 {
                     AmqpSessionSettings sessionSettings = new AmqpSessionSettings() { Properties = new Fields() };
                     session = this.connection.CreateSession(sessionSettings);
-                    await session.OpenAsync(timeoutHelper.RemainingTime());
+                    await session.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
                     Fields properties = new Fields();
                     properties.Add(CbsConstants.TimeoutName, (uint)timeoutHelper.RemainingTime().TotalMilliseconds);
                     link = new RequestResponseAmqpLink("cbs", session, address, properties);
-                    await link.OpenAsync(timeoutHelper.RemainingTime());
+                    await link.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
 
                     AmqpTrace.Provider.AmqpOpenEntitySucceeded(this, link.Name, address);
                     return link;
@@ -150,7 +150,7 @@ namespace Microsoft.Azure.Amqp
                     AmqpTrace.Provider.AmqpOpenEntityFailed(this, this.GetType().Name, address, exception);
                 }
 
-                await Task.Delay(1000);
+                await Task.Delay(1000).ConfigureAwait(false);
             }
 
             link?.Abort();

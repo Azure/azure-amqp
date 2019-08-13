@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Amqp.Transaction
             AmqpMessage message = Controller.CreateCommandMessage(declare);
             DeliveryState deliveryState = await Task<DeliveryState>.Factory.FromAsync(
                 this.controllerLink.BeginSendMessage(message, this.GetDeliveryTag(), AmqpConstants.NullBinary, this.operationTimeout, null, null),
-                this.controllerLink.EndSendMessage);
+                this.controllerLink.EndSendMessage).ConfigureAwait(false);
 
             this.ThrowIfRejected(deliveryState);
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "EndDeclare");
@@ -82,7 +82,7 @@ namespace Microsoft.Azure.Amqp.Transaction
             AmqpMessage message = Controller.CreateCommandMessage(discharge);
             DeliveryState deliveryState = await Task<DeliveryState>.Factory.FromAsync(
                 this.controllerLink.BeginSendMessage(message, this.GetDeliveryTag(), AmqpConstants.NullBinary, this.operationTimeout, null, null),
-                this.controllerLink.EndSendMessage);
+                this.controllerLink.EndSendMessage).ConfigureAwait(false);
             this.ThrowIfRejected(deliveryState);
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "EndDischange");
         }

@@ -147,7 +147,7 @@ namespace Microsoft.Azure.Amqp
             try
             {
                 link.AttachTo(this);
-                await link.OpenAsync();
+                await link.OpenAsync().ConfigureAwait(false);
 
                 return link as T;
             }
@@ -1091,7 +1091,7 @@ namespace Microsoft.Azure.Amqp
 
                     this.Session.SendCommand(transfer, payload);
                 }
-                
+
                 return true;
             }
 

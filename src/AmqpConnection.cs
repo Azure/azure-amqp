@@ -185,7 +185,7 @@ namespace Microsoft.Azure.Amqp
             AmqpSession session = this.CreateSession(sessionSettings);
             try
             {
-                await session.OpenAsync();
+                await session.OpenAsync().ConfigureAwait(false);
                 return session;
             }
             catch
@@ -339,7 +339,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                ProtocolHeader supportedHeader = this.amqpSettings.GetSupportedHeader(header);                
+                ProtocolHeader supportedHeader = this.amqpSettings.GetSupportedHeader(header);
                 this.SendProtocolHeader(supportedHeader);
                 if (!supportedHeader.Equals(header))
                 {
@@ -500,7 +500,7 @@ namespace Microsoft.Azure.Amqp
             {
                 this.SendOpen();
             }
-            
+
             if(this.isInitiator)
             {
                 // check if open returned an error right away

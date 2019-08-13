@@ -41,7 +41,7 @@ namespace Microsoft.Azure.Amqp
         /// Opens the object.
         /// </summary>
         /// <param name="timeout">The operation timeout.</param>
-        /// <returns>A task for the asyn operation.</returns>
+        /// <returns>A task for the async operation.</returns>
         public Task OpenAsync(TimeSpan timeout)
         {
             return this.GetOrCreateAsync(timeout);
@@ -50,7 +50,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Closes the object.
         /// </summary>
-        /// <returns>A task for the asyn operation.</returns>
+        /// <returns>A task for the async operation.</returns>
         public Task CloseAsync()
         {
             this.Dispose();
@@ -99,7 +99,7 @@ namespace Microsoft.Azure.Amqp
         /// Gets or creates TValue object.
         /// </summary>
         /// <param name="timeout">The operation timeout.</param>
-        /// <returns>A task for the asyn operation.</returns>
+        /// <returns>A task for the async operation.</returns>
         public async Task<TValue> GetOrCreateAsync(TimeSpan timeout)
         {
             var timeoutHelper = new TimeoutHelper(timeout);
@@ -176,7 +176,7 @@ namespace Microsoft.Azure.Amqp
         /// Creates the singleton.
         /// </summary>
         /// <param name="timeout">The operation timeout.</param>
-        /// <returns>A task for the asyn operation.</returns>
+        /// <returns>A task for the async operation.</returns>
         protected abstract Task<TValue> OnCreateAsync(TimeSpan timeout);
 
         /// <summary>

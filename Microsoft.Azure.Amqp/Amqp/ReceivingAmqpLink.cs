@@ -109,13 +109,29 @@ namespace Microsoft.Azure.Amqp
 
         public IAsyncResult BeginReceiveRemoteMessages(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
         {
+            return this.BeginReceiveRemoteMessages(messageCount, batchWaitTimeout, timeout, callback, state, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Begins the message receive operation. The operation waits at least 10 seconds
+        /// when no messages are available.
+        /// </summary>
+        /// <param name="messageCount">The requested message count.</param>
+        /// <param name="batchWaitTimeout">The wait time for the messages.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The state associated with this operation.</param>
+        /// <param name="cancellationToken">The cancellation token to cancel the receive operation.</param>
+        /// <returns>An IAsyncResult for the operation.</returns>
+        public IAsyncResult BeginReceiveRemoteMessages(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state, CancellationToken cancellationToken)
+        {
             // If the caller expects some messages and pass TimeSpan.Zero, we wait to mimic a service call
             if (timeout == TimeSpan.Zero)
             {
                 timeout = MinReceiveTimeout;
             }
 
-            return this.BeginReceiveMessages(messageCount, batchWaitTimeout, timeout, callback, state);
+            return this.BeginReceiveMessages(messageCount, batchWaitTimeout, timeout, callback, state, cancellationToken);
         }
 
         public Task<AmqpMessage> ReceiveMessageAsync(TimeSpan timeout)
@@ -133,7 +149,21 @@ namespace Microsoft.Azure.Amqp
 
         public IAsyncResult BeginReceiveMessage(TimeSpan timeout, AsyncCallback callback, object state)
         {
-            return this.BeginReceiveMessages(1, TimeSpan.Zero, timeout, callback, state);
+            return this.BeginReceiveMessage(timeout, callback, state, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Begins the message receive operation. The operation returns immediately
+        /// when no message is available in the prefetch cache.
+        /// </summary>
+        /// <param name="timeout">The time to wait for messages.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The state associated with this operation.</param>
+        /// <param name="cancellationToken">The cancellation token to cancel the receive operation.</param>
+        /// <returns>An IAsyncResult for the operation.</returns>
+        public IAsyncResult BeginReceiveMessage(TimeSpan timeout, AsyncCallback callback, object state, CancellationToken cancellationToken)
+        {
+            return this.BeginReceiveMessages(1, TimeSpan.Zero, timeout, callback, state, cancellationToken);
         }
 
         public bool EndReceiveMessage(IAsyncResult result, out AmqpMessage message)
@@ -152,10 +182,24 @@ namespace Microsoft.Azure.Amqp
 
         public IAsyncResult BeginReceiveMessages(int messageCount, TimeSpan timeout, AsyncCallback callback, object state)
         {
-            return BeginReceiveMessages(messageCount, TimeSpan.Zero, timeout, callback, state);
+            return BeginReceiveMessages(messageCount, timeout, callback, state, CancellationToken.None);
         }
 
-        IAsyncResult BeginReceiveMessages(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
+        /// <summary>
+        /// Begins the operation to receive a batch of messages.
+        /// </summary>
+        /// <param name="messageCount">The desired number of messages.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The state associated with this operation.</param>
+        /// <param name="cancellationToken">The cancellation token to cancel the receive operation.</param>
+        /// <returns>An IAsyncResult for the operation.</returns>
+        public IAsyncResult BeginReceiveMessages(int messageCount, TimeSpan timeout, AsyncCallback callback, object state, CancellationToken cancellationToken)
+        {
+            return BeginReceiveMessages(messageCount, TimeSpan.Zero, timeout, callback, state, cancellationToken);
+        }
+
+        IAsyncResult BeginReceiveMessages(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state, CancellationToken cancellationToken)
         {
             this.ThrowIfClosed();
             List<AmqpMessage> messages = new List<AmqpMessage>();
@@ -172,7 +216,7 @@ namespace Microsoft.Azure.Amqp
 
             if (!messages.Any() && timeout > TimeSpan.Zero)
             {
-                ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, callback, state);
+                ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, callback, state, cancellationToken);
                 bool completeWaiter = true;
                 lock (this.SyncRoot)
                 {
@@ -590,12 +634,14 @@ namespace Microsoft.Azure.Amqp
             readonly int requestedMessageCount;
             readonly TimeSpan batchWaitTimeout;
             readonly TimeSpan timeout;
+            readonly CancellationToken cancellationToken;
+            CancellationTokenRegistration cancellationTokenRegistration;
             Timer timer;
             LinkedListNode<ReceiveAsyncResult> node;
-            int completed;  // 1: signaled, 2: timeout
+            int completed;  // 1: signaled, 2: timeout or cancelled
             List<AmqpMessage> messages;
 
-            public ReceiveAsyncResult(ReceivingAmqpLink parent, int requestedMessageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
+            public ReceiveAsyncResult(ReceivingAmqpLink parent, int requestedMessageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state, CancellationToken cancellationToken)
                 : base(callback, state)
             {
                 this.parent = parent;
@@ -603,6 +649,7 @@ namespace Microsoft.Azure.Amqp
                 this.requestedMessageCount = requestedMessageCount;
                 Fx.Assert(timeout > TimeSpan.Zero, "must have a non-zero timeout");
                 this.timeout = timeout;
+                this.cancellationToken = cancellationToken;
             }
 
             public int RequestedMessageCount
@@ -627,6 +674,11 @@ namespace Microsoft.Azure.Amqp
                 if (this.timeout != TimeSpan.MaxValue)
                 {
                     this.timer = new Timer(s => OnTimer(s), this, this.timeout, Timeout.InfiniteTimeSpan);
+                }
+
+                if (this.cancellationToken.CanBeCanceled)
+                {
+                    this.cancellationTokenRegistration = this.cancellationToken.Register(OnCancel, this);
                 }
             }
 
@@ -712,6 +764,8 @@ namespace Microsoft.Azure.Amqp
                         this.messages = new List<AmqpMessage>();
                     }
 
+                    this.cancellationTokenRegistration.Dispose();
+
                     if (exception != null)
                     {
                         this.Complete(syncComplete, exception);
@@ -721,6 +775,19 @@ namespace Microsoft.Azure.Amqp
                         this.Complete(syncComplete);
                     }
                 }
+            }
+
+            static void OnCancel(object state)
+            {
+                ReceiveAsyncResult thisPtr = (ReceiveAsyncResult)state;
+
+                Timer t = thisPtr.timer;
+                if (t != null)
+                {
+                    t.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+                }
+
+                OnTimer(state);
             }
 
             static void OnTimer(object state)

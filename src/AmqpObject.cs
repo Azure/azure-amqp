@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Amqp
     //      Async Open/Close: after Open/CloseInternal, the
     //            state is Open/CloseSent. It is waiting for
     //            for the Open/Close command. It is completed
-    //            in OnRecieveOpen/CloseCommand. Example: initiator.
+    //            in OnReceiveOpen/CloseCommand. Example: initiator.
     //      Sync Open/Close: after Open/CloseInternal, the
     //            state is Opened/End. Everything is completed
     //            synchronously. Example: acceptor.

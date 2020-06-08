@@ -919,6 +919,11 @@ namespace Microsoft.Azure.Amqp
                     }
 
                     thisPtr.parent.waiterList.Remove(thisPtr.node);
+                    Timer t = thisPtr.timer;
+                    if (t != null)
+                    {
+                        t.Dispose();
+                    }
                     thisPtr.node = null;
                 }
 

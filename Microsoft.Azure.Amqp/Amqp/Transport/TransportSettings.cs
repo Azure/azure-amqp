@@ -5,10 +5,13 @@ namespace Microsoft.Azure.Amqp.Transport
 {
     public abstract class TransportSettings
     {
+        internal int sendBufferSize;
+        internal int receiveBufferSize;
+
         protected TransportSettings()
         {
-            this.SendBufferSize = AmqpConstants.TransportBufferSize;
-            this.ReceiveBufferSize = AmqpConstants.TransportBufferSize;
+            this.sendBufferSize = -1;
+            this.receiveBufferSize = -1;
         }
 
         public int ListenerAcceptorCount
@@ -19,14 +22,14 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public int SendBufferSize
         {
-            get;
-            set;
+            get { return this.sendBufferSize >= 0 ? this.sendBufferSize : AmqpConstants.TransportBufferSize; }
+            set { this.sendBufferSize = value; }
         }
 
         public int ReceiveBufferSize
         {
-            get;
-            set;
+            get { return this.receiveBufferSize >= 0 ? this.receiveBufferSize : AmqpConstants.TransportBufferSize; }
+            set { this.receiveBufferSize = value; }
         }
 
         public abstract TransportInitiator CreateInitiator();

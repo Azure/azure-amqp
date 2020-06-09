@@ -34,6 +34,11 @@ namespace Microsoft.Azure.Amqp
 
         protected virtual void CompleteOnTimer()
         {
+            if (this.timer != null)
+            {
+                this.timer.Dispose();
+            }
+
             this.CompleteInternal(false, new TimeoutException(AmqpResources.GetString(AmqpResources.AmqpTimeout, this.timeout, this.Target)));
         }
 

@@ -28,7 +28,7 @@ namespace Microsoft.Azure.Amqp
             this.setTimerCalled = true;
             if (this.timeout != Timeout.InfiniteTimeSpan && this.timeout != TimeSpan.MaxValue)
             {
-                this.timer = new Timer(OnTimerCallback, this, this.timeout, Timeout.InfiniteTimeSpan);
+                this.timer = new Timer(s => OnTimerCallback(s), this, this.timeout, Timeout.InfiniteTimeSpan);
             }
         }
 

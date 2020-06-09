@@ -635,6 +635,7 @@ namespace Microsoft.Azure.Amqp
             AmqpSession thisPtr = link.Session;
             lock (thisPtr.ThisLock)
             {
+                link.Closed -= onLinkClosed;
                 thisPtr.links.Remove(link.Name);
                 if (link.LocalHandle.HasValue)
                 {

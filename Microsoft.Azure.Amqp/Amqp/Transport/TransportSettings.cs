@@ -5,8 +5,8 @@ namespace Microsoft.Azure.Amqp.Transport
 {
     public abstract class TransportSettings
     {
-        internal int sendBufferSize;
-        internal int receiveBufferSize;
+        int sendBufferSize;
+        int receiveBufferSize;
 
         protected TransportSettings()
         {
@@ -30,6 +30,16 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             get { return this.receiveBufferSize >= 0 ? this.receiveBufferSize : AmqpConstants.TransportBufferSize; }
             set { this.receiveBufferSize = value; }
+        }
+
+        internal int InternalSendBufferSize
+        {
+            get { return this.sendBufferSize; }
+        }
+
+        internal int InternalReceiveBufferSize
+        {
+            get { return this.receiveBufferSize; }
         }
 
         public abstract TransportInitiator CreateInitiator();

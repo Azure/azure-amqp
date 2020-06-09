@@ -32,13 +32,13 @@ namespace Microsoft.Azure.Amqp.Transport
             this.receiveEventArgs = new ReadAsyncEventArgs(transportSettings.ReceiveBufferSize);
             this.receiveEventArgs.Completed += onReadComplete;
             this.receiveEventArgs.Transport = this;
-            if (transportSettings.sendBufferSize >= 0)
+            if (transportSettings.InternalSendBufferSize >= 0)
             {
-                this.socket.SendBufferSize = transportSettings.sendBufferSize;
+                this.socket.SendBufferSize = transportSettings.InternalSendBufferSize;
             }
-            if (transportSettings.receiveBufferSize >= 0)
+            if (transportSettings.InternalReceiveBufferSize >= 0)
             {
-                this.socket.ReceiveBufferSize = transportSettings.receiveBufferSize;
+                this.socket.ReceiveBufferSize = transportSettings.InternalReceiveBufferSize;
             }
         }
 

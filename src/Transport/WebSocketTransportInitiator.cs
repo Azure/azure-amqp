@@ -22,7 +22,11 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             ClientWebSocket cws = new ClientWebSocket();
             cws.Options.AddSubProtocol(this.settings.SubProtocol);
-            cws.Options.SetBuffer(this.settings.ReceiveBufferSize, this.settings.SendBufferSize);
+            if (this.settings.InternalSendBufferSize > 0 || this.settings.InternalReceiveBufferSize > 0)
+            {
+                cws.Options.SetBuffer(this.settings.ReceiveBufferSize, this.settings.SendBufferSize);
+            }
+
             if (this.settings.Proxy != null)
             {
                 cws.Options.Proxy = this.settings.Proxy;

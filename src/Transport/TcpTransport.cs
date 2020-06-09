@@ -25,8 +25,6 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             this.socket = socket;
             this.socket.NoDelay = true;
-            this.socket.SendBufferSize = transportSettings.SendBufferSize;
-            this.socket.ReceiveBufferSize = transportSettings.ReceiveBufferSize;
             this.localEndPoint = this.socket.LocalEndPoint;
             this.remoteEndPoint = this.socket.RemoteEndPoint;
             this.sendEventArgs = new WriteAsyncEventArgs(transportSettings.SendBufferSize);
@@ -35,6 +33,14 @@ namespace Microsoft.Azure.Amqp.Transport
             this.receiveEventArgs = new ReadAsyncEventArgs(transportSettings.ReceiveBufferSize);
             this.receiveEventArgs.Completed += onReadComplete;
             this.receiveEventArgs.Transport = this;
+            if (transportSettings.InternalSendBufferSize >= 0)
+            {
+                this.socket.SendBufferSize = transportSettings.InternalSendBufferSize;
+            }
+            if (transportSettings.InternalReceiveBufferSize >= 0)
+            {
+                this.socket.ReceiveBufferSize = transportSettings.InternalReceiveBufferSize;
+            }
         }
 
         public override EndPoint LocalEndPoint

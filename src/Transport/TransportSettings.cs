@@ -8,13 +8,16 @@ namespace Microsoft.Azure.Amqp.Transport
     /// </summary>
     public abstract class TransportSettings
     {
+        int sendBufferSize;
+        int receiveBufferSize;
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
         protected TransportSettings()
         {
-            this.SendBufferSize = AmqpConstants.TransportBufferSize;
-            this.ReceiveBufferSize = AmqpConstants.TransportBufferSize;
+            this.sendBufferSize = -1;
+            this.receiveBufferSize = -1;
         }
 
         /// <summary>
@@ -32,8 +35,8 @@ namespace Microsoft.Azure.Amqp.Transport
         /// </summary>
         public int SendBufferSize
         {
-            get;
-            set;
+            get { return this.sendBufferSize >= 0 ? this.sendBufferSize : AmqpConstants.TransportBufferSize; }
+            set { this.sendBufferSize = value; }
         }
 
         /// <summary>
@@ -41,8 +44,18 @@ namespace Microsoft.Azure.Amqp.Transport
         /// </summary>
         public int ReceiveBufferSize
         {
-            get;
-            set;
+            get { return this.receiveBufferSize >= 0 ? this.receiveBufferSize : AmqpConstants.TransportBufferSize; }
+            set { this.receiveBufferSize = value; }
+        }
+
+        internal int InternalSendBufferSize
+        {
+            get { return this.sendBufferSize; }
+        }
+
+        internal int InternalReceiveBufferSize
+        {
+            get { return this.receiveBufferSize; }
         }
 
         /// <summary>

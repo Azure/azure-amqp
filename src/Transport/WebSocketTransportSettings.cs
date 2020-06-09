@@ -21,9 +21,8 @@ namespace Microsoft.Azure.Amqp.Transport
         /// Initializes the object.
         /// </summary>
         public WebSocketTransportSettings()
+            : base()
         {
-            this.SendBufferSize = AmqpConstants.TransportBufferSize;
-            this.ReceiveBufferSize = AmqpConstants.TransportBufferSize;
             this.SubProtocol = WebSocketSubProtocol;
         }
 

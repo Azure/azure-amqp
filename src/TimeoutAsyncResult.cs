@@ -28,12 +28,17 @@ namespace Microsoft.Azure.Amqp
             this.setTimerCalled = true;
             if (this.timeout != Timeout.InfiniteTimeSpan && this.timeout != TimeSpan.MaxValue)
             {
-                this.timer = new Timer(OnTimerCallback, this, this.timeout, Timeout.InfiniteTimeSpan);
+                this.timer = new Timer(s => OnTimerCallback(s), this, this.timeout, Timeout.InfiniteTimeSpan);
             }
         }
 
         protected virtual void CompleteOnTimer()
         {
+            if (this.timer != null)
+            {
+                this.timer.Dispose();
+            }
+
             this.CompleteInternal(false, new TimeoutException(AmqpResources.GetString(AmqpResources.AmqpTimeout, this.timeout, this.Target)));
         }
 

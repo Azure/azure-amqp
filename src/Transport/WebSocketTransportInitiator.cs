@@ -74,7 +74,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 this.t = t;
                 this.onTimeout = onTimeout;
                 this.timeout = timeout;
-                this.timer = new Timer(OnTimer, this, timeout, Timeout.InfiniteTimeSpan);
+                this.timer = new Timer(s => OnTimer(s), this, timeout, Timeout.InfiniteTimeSpan);
 
                 Task task = onStart(t);
                 task.ContinueWith((_t, _s) => ((TimeoutTaskSource<T>)_s).OnTask(_t), this);

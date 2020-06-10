@@ -98,11 +98,14 @@ namespace Microsoft.Azure.Amqp.Transport
 
         void OnListenerClosed(object sender, EventArgs e)
         {
+            TransportListener innerListener = (TransportListener)sender;
+            EventHandler onListenerClose = this.OnListenerClosed;
+            innerListener.Closed -= onListenerClose;
+
             if (!this.IsClosing())
             {
                 // If we weren't shutting down then this class needs to Close itself (with the TerminalException) since
                 // it is no longer doing all the listening it is supposed to do.
-                TransportListener innerListener = (TransportListener)sender;
                 AmqpTrace.Provider.AmqpLogError(this, "OnListenerClosed", innerListener.TerminalException);
                 this.SafeClose(innerListener.TerminalException);
             }

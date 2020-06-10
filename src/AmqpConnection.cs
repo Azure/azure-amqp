@@ -639,6 +639,7 @@ namespace Microsoft.Azure.Amqp
             {
                 lock (thisPtr.ThisLock)
                 {
+                    session.Closed -= onSessionClosed;
                     thisPtr.sessionsByLocalHandle.Remove(session.LocalChannel);
                     if (session.RemoteChannel.HasValue)
                     {

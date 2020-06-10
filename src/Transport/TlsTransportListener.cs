@@ -4,7 +4,7 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
-    
+
     /// <summary>
     /// This listener accepts TLS transport directly (no TLS upgrade).
     /// </summary>
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             TransportSettings innerSettings = this.transportSettings.InnerTransportSettings;
             this.innerListener = innerSettings.CreateListener();
-            this.innerListener.Closed += new EventHandler(OnInnerListenerClosed);
+            this.innerListener.Closed += OnInnerListenerClosed;
             this.innerListener.Listen(this.OnAcceptInnerTransport);
         }
 
@@ -74,9 +74,11 @@ namespace Microsoft.Azure.Amqp.Transport
 
         void OnInnerListenerClosed(object sender, EventArgs e)
         {
+            TransportListener innerListener = (TransportListener)sender;
+            innerListener.Closed -= OnInnerListenerClosed;
+
             if (!this.IsClosing())
             {
-                TransportListener innerListener = (TransportListener)sender;
                 this.SafeClose(innerListener.TerminalException);
             }
         }
@@ -92,7 +94,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 // upgrade transport
                 innerArgs.Transport = this.OnCreateTransport(innerArgs.Transport, this.transportSettings);
                 IAsyncResult result = innerArgs.Transport.BeginOpen(
-                    AmqpConstants.DefaultTimeout, 
+                    AmqpConstants.DefaultTimeout,
                     this.onTransportOpened,
                     innerArgs);
                 if (result.CompletedSynchronously)

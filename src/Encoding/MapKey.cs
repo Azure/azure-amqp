@@ -9,9 +9,9 @@ namespace Microsoft.Azure.Amqp.Encoding
     /// <summary>
     /// Defines the key type used in <see cref="AmqpMap"/>.
     /// </summary>
-    public struct MapKey : IEquatable<MapKey>
+    public readonly struct MapKey : IEquatable<MapKey>
     {
-        object key;
+        readonly object key;
 
         /// <summary>
         /// Initializes the key from an object.

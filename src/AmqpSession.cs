@@ -837,7 +837,7 @@ namespace Microsoft.Azure.Amqp
 
                 if (toDispose != null)
                 {
-                    this.SendDisposition(new DispositionInfo() { First = toDispose });
+                    this.SendDisposition(new DispositionInfo(toDispose));
                     if (delivery.Settled)
                     {
                         this.OnWindowMoved(1);
@@ -977,7 +977,7 @@ namespace Microsoft.Azure.Amqp
                                 }
                                 else
                                 {
-                                    disposedDeliveries.Add(new DispositionInfo() { First = firstChanged, Last = lastId });
+                                    disposedDeliveries.Add(new DispositionInfo(firstChanged, lastId));
                                     firstChanged = current;
                                     lastId = null;
                                 }
@@ -1001,7 +1001,7 @@ namespace Microsoft.Azure.Amqp
                         {
                             if (firstChanged != null)
                             {
-                                disposedDeliveries.Add(new DispositionInfo() { First = firstChanged, Last = lastId });
+                                disposedDeliveries.Add(new DispositionInfo(firstChanged, lastId));
                                 firstChanged = null;
                                 lastId = null;
                             }
@@ -1012,7 +1012,7 @@ namespace Microsoft.Azure.Amqp
 
                     if (firstChanged != null)
                     {
-                        disposedDeliveries.Add(new DispositionInfo() { First = firstChanged, Last = lastId });
+                        disposedDeliveries.Add(new DispositionInfo(firstChanged, lastId));
                     }
 
                     this.sendingDisposition = false;
@@ -1058,10 +1058,17 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            struct DispositionInfo
+            readonly struct DispositionInfo
             {
-                public Delivery First;
-                public uint? Last;
+                public DispositionInfo(Delivery first, uint? last = null)
+                {
+                    First = first;
+                    Last = last;
+                }
+
+                public Delivery First { get; }
+
+                public uint? Last { get; }
             }
         }
 

@@ -455,6 +455,8 @@ namespace Microsoft.Azure.Amqp
                     link.SafeClose(this.connection.TerminalException);
                 }
             }
+            this.incomingChannel.Close();
+            this.outgoingChannel.Close();
         }
 
         bool LinkFrameAllowed()
@@ -1045,6 +1047,14 @@ namespace Microsoft.Azure.Amqp
                     {
                         this.session.SendCommand(disposition);
                     }
+                }
+            }
+
+            public void Close()
+            {
+                if (dispositionTimer != null)
+                {
+                    dispositionTimer.Dispose();
                 }
             }
 

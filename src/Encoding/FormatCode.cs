@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Amqp.Encoding
     using System;
     using System.Globalization;
 
-    struct FormatCode : IEquatable<FormatCode>
+    readonly struct FormatCode : IEquatable<FormatCode>
     {
         public const byte Described = 0x00;
 
@@ -55,8 +55,8 @@ namespace Microsoft.Azure.Amqp.Encoding
         public const byte Array8 = 0xe0;
         public const byte Array32 = 0xf0;
 
-        byte type;
-        byte extType;
+        readonly byte type;
+        readonly byte extType;
 
         public FormatCode(byte type) :
             this(type, 0)
@@ -93,7 +93,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             return (type & 0xF) == 0xF;
         }
- 
+
         public static implicit operator FormatCode(byte value)
         {
             return new FormatCode(value);
@@ -120,7 +120,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         }
 
         public override bool Equals(object obj)
-        {            
+        {
             return obj is FormatCode && this == (FormatCode)obj;
         }
 

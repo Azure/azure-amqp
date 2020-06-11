@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Amqp
     // This class is immune to clock jump with the following two exceptions:
     //  - When multi-processor machine has a bug in BIOS/HAL that returns inconsistent clock tick for different processor.
     //  - When the machine does not support high frequency CPU tick.
-    struct Timestamp : IComparable<Timestamp>, IEquatable<Timestamp>
+    readonly struct Timestamp : IComparable<Timestamp>, IEquatable<Timestamp>
     {
         static readonly double TickFrequency = 10000000.0 / Stopwatch.Frequency;
         readonly long timestamp;

@@ -269,7 +269,7 @@ namespace Microsoft.Azure.Amqp
                     {
                         newBuffer = new ManagedBuffer(new byte[newSize], null);
                     }
-                    
+
                     System.Buffer.BlockCopy(this.buffer, this.start, newBuffer.Buffer, 0, this.Capacity);
 
                     int consumed = this.read - this.start;
@@ -491,7 +491,7 @@ namespace Microsoft.Azure.Amqp
             this.write = this.end = segment.Offset + segment.Count;
         }
 
-        struct ManagedBuffer
+        readonly struct ManagedBuffer
         {
             public readonly InternalBufferManager BufferManager;
 

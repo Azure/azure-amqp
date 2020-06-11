@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp.Encoding
     /// <summary>
     /// Implements the AMQP symbol type.
     /// </summary>
-    public struct AmqpSymbol : IEquatable<AmqpSymbol>
+    public readonly struct AmqpSymbol : IEquatable<AmqpSymbol>
     {
         /// <summary>
         /// Initializes the object from a string.
@@ -25,7 +25,6 @@ namespace Microsoft.Azure.Amqp.Encoding
         public string Value
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -34,7 +33,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         /// <param name="value">The string.</param>
         public static implicit operator AmqpSymbol(string value)
         {
-            return new AmqpSymbol() { Value = value };
+            return new AmqpSymbol(value);
         }
 
         /// <summary>

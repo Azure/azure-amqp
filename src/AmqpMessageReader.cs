@@ -8,23 +8,40 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
-    struct Section
+    readonly struct Section
     {
-        public SectionFlag Flag;
-        public int Offset;
-        public int Length;
-        public AmqpDescribed Value;
+        public readonly SectionFlag Flag;
+        public readonly int Offset;
+        public readonly int Length;
+        public readonly AmqpDescribed Value;
+
+        public Section(SectionFlag flag, int offset, int length, AmqpDescribed value)
+        {
+            Flag = flag;
+            Offset = offset;
+            Length = length;
+            Value = value;
+        }
     }
 
     sealed class AmqpMessageReader
     {
-        struct SectionInfo
+        readonly struct SectionInfo
         {
-            public SectionFlag Flag;
-            public ulong Code;
-            public string Name;
-            public Func<AmqpDescribed> Ctor;
-            public Func<byte, ByteBuffer, Error> Scanner;
+            public readonly SectionFlag Flag;
+            public readonly ulong Code;
+            public readonly string Name;
+            public readonly Func<AmqpDescribed> Ctor;
+            public readonly Func<byte, ByteBuffer, Error> Scanner;
+
+            public SectionInfo(SectionFlag flag, ulong code, string name, Func<AmqpDescribed> ctor, Func<byte, ByteBuffer, Error> scanner)
+            {
+                Flag = flag;
+                Code = code;
+                Name = name;
+                Ctor = ctor;
+                Scanner = scanner;
+            }
         }
 
         static readonly SectionInfo[] MessageSections;
@@ -33,78 +50,59 @@ namespace Microsoft.Azure.Amqp
         {
             MessageSections = new SectionInfo[]
             {
-                new SectionInfo()
-                {
-                    Flag = SectionFlag.Header,
-                    Code = Header.Code,
-                    Name = Header.Name,
-                    Ctor = () => new Header(),
-                    Scanner = (a, b) => ScanListSection(a, b)
-                },
-                new SectionInfo()
-                {
-                    Flag = SectionFlag.DeliveryAnnotations,
-                    Code = DeliveryAnnotations.Code,
-                    Name = DeliveryAnnotations.Name,
-                    Ctor = () => new DeliveryAnnotations(),
-                    Scanner = (a, b) => ScanMapSection(a, b)
-                },
-                new SectionInfo()
-                {
-                    Flag = SectionFlag.MessageAnnotations,
-                    Code = MessageAnnotations.Code,
-                    Name = MessageAnnotations.Name,
-                    Ctor = () => new MessageAnnotations(),
-                    Scanner = (a, b) => ScanMapSection(a, b)
-                },
-                new SectionInfo()
-                {
-                    Flag = SectionFlag.Properties,
-                    Code = Properties.Code,
-                    Name = Properties.Name,
-                    Ctor = () => new Properties(),
-                    Scanner = (a, b) => ScanListSection(a, b)
-                },
-                new SectionInfo()
-                {
-                    Flag = SectionFlag.ApplicationProperties,
-                    Code = ApplicationProperties.Code,
-                    Name = ApplicationProperties.Name,
-                    Ctor = () => new ApplicationProperties(),
-                    Scanner = (a, b) => ScanMapSection(a, b)
-                },
-                new SectionInfo()
-                {
-                    Flag = SectionFlag.Data,
-                    Code = Data.Code,
-                    Name = Data.Name,
-                    Ctor = () => new Data(),
-                    Scanner = (a, b) => ScanDataSection(a, b)
-                },
-                new SectionInfo()
-                {
-                    Flag = SectionFlag.AmqpSequence,
-                    Code = AmqpSequence.Code,
-                    Name = AmqpSequence.Name,
-                    Ctor = () => new AmqpSequence(),
-                    Scanner = (a, b) => ScanListSection(a, b)
-                },
-                new SectionInfo()
-                {
-                    Flag = SectionFlag.AmqpValue,
-                    Code = AmqpValue.Code,
-                    Name = AmqpValue.Name,
-                    Ctor = () => new AmqpValue(),
-                    Scanner = (a, b) => ScanValueSection(a, b)
-                },
-                new SectionInfo()
-                {
-                    Flag = SectionFlag.Footer,
-                    Code = Footer.Code,
-                    Name = Footer.Name,
-                    Ctor = () => new Footer(),
-                    Scanner = (a, b) => ScanMapSection(a, b)
-                },
+                new SectionInfo(
+                    flag: SectionFlag.Header,
+                    code: Header.Code,
+                    name: Header.Name,
+                    ctor: () => new Header(),
+                    scanner: (a, b) => ScanListSection(a, b)),
+                new SectionInfo(
+                    flag: SectionFlag.DeliveryAnnotations,
+                    code: DeliveryAnnotations.Code,
+                    name: DeliveryAnnotations.Name,
+                    ctor: () => new DeliveryAnnotations(),
+                    scanner: (a, b) => ScanMapSection(a, b)),
+                new SectionInfo(
+                    flag: SectionFlag.MessageAnnotations,
+                    code: MessageAnnotations.Code,
+                    name: MessageAnnotations.Name,
+                    ctor: () => new MessageAnnotations(),
+                    scanner: (a, b) => ScanMapSection(a, b)),
+                new SectionInfo(flag: SectionFlag.Properties,
+                    code: Properties.Code,
+                    name: Properties.Name,
+                    ctor: () => new Properties(),
+                    scanner: (a,  b) => ScanListSection(a, b)),
+                new SectionInfo(
+                    flag: SectionFlag.ApplicationProperties,
+                    code: ApplicationProperties.Code,
+                    name: ApplicationProperties.Name,
+                    ctor: () => new ApplicationProperties(),
+                    scanner: (a, b) => ScanMapSection(a, b)),
+                new SectionInfo(
+                    flag: SectionFlag.Data,
+                    code: Data.Code,
+                    name: Data.Name,
+                    ctor: () => new Data(),
+                    scanner: (a, b) => ScanDataSection(a, b)),
+                new SectionInfo(
+                    flag: SectionFlag.AmqpSequence,
+                    code: AmqpSequence.Code,
+                    name: AmqpSequence.Name,
+                    ctor: () => new AmqpSequence(),
+                    scanner: (a, b) => ScanListSection(a, b)),
+                new SectionInfo(
+                    flag: SectionFlag.AmqpValue,
+                    code: AmqpValue.Code,
+                    name: AmqpValue.Name,
+                    ctor: () => new AmqpValue(),
+                    scanner: (a, b) => ScanValueSection(a, b)),
+                new SectionInfo(
+                    flag: SectionFlag.Footer,
+                    code: Footer.Code,
+                    name: Footer.Name,
+                    ctor: () => new Footer(),
+                    scanner: (a, b) => ScanMapSection(a, b)),
             };
 
             for (int i = 0; i < MessageSections.Length; i++)
@@ -174,7 +172,7 @@ namespace Microsoft.Azure.Amqp
                             length = buffer.Offset - offset;
                         }
 
-                        Section s = new Section() { Flag = info.Flag, Offset = offset, Length = length, Value = section };
+                        Section s = new Section(info.Flag, offset, length, section);
                         bool shouldContinue = sectionHandler(t1, t2, s);
 
                         if (!shouldContinue)

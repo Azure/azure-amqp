@@ -9,7 +9,7 @@ namespace Microsoft.Azure.Amqp
     /// <summary>
     /// Defines an AMQP version.
     /// </summary>
-    public struct AmqpVersion : IEquatable<AmqpVersion>
+    public readonly struct AmqpVersion : IEquatable<AmqpVersion>
     {
         /// <summary>
         /// The 1.0.0 version.

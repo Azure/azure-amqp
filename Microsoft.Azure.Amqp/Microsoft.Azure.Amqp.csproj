@@ -4,7 +4,7 @@
     <Description>Microsoft.Azure.Amqp Class Library</Description>
     <VersionPrefix>2.2.0</VersionPrefix>
     <Authors>microsoft</Authors>
-    <TargetFrameworks>net45;netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard1.3;netstandard2.0</TargetFrameworks>
     <NoWarn>CS1734,CS1591</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -32,11 +32,7 @@
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
-  </PropertyGroup>
-
+  
   <PropertyGroup Condition=" '$(Configuration)' == 'Signed' ">
     <DefineConstants>$(DefineConstants);RELEASE_DELAY_SIGN</DefineConstants>
     <Optimize>true</Optimize>
@@ -61,4 +57,7 @@
     <PackageReference Include="System.Net.WebSockets.Client" Version="4.0.2" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+  </ItemGroup>
 </Project>

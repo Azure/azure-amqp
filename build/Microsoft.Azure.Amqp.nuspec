@@ -17,6 +17,9 @@
             <dependency id="System.Runtime.Serialization.Primitives" version="4.1.1" />
             <dependency id="System.Net.WebSockets.Client" version="4.0.2" />
           </group>
+          <group targetFramework="netstandard2.0">
+            <dependency id="System.Reflection.Emit.Lightweight" version="4.7.0" />
+          </group>
         </dependencies>
     </metadata>
     <files>

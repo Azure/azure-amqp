@@ -13,7 +13,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Azure/azure-amqp</PackageProjectUrl>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <PackageIconUrl>http://go.microsoft.com/fwlink/?LinkID=288890</PackageIconUrl>
+    <PackageIcon>icon.png</PackageIcon>
     <PackageTags>AMQP coreclr netstandard Azure</PackageTags>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
@@ -42,6 +42,7 @@
 
   <ItemGroup>
     <None Include="..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt"/>
+    <None Include="..\icon.png" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
   <ItemGroup>

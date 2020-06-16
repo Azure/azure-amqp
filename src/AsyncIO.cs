@@ -5,6 +5,8 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Concurrent;
+    using System.Threading;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Transport;
 
@@ -395,7 +397,7 @@ namespace Microsoft.Azure.Amqp
                 }
             }
         }
-        
+
         /// <summary>
         /// A reader that reads AMQP frame buffers. Not thread safe.
         /// </summary>
@@ -548,7 +550,7 @@ namespace Microsoft.Azure.Amqp
             readonly int writeQueueFullLimit;
             readonly int writeQueueEmptyLimit;
             readonly TransportAsyncCallbackArgs writeAsyncEventArgs;
-            readonly Queue<ByteBuffer> bufferQueue;
+            readonly ConcurrentQueue<ByteBuffer> bufferQueue;
             readonly IIoHandler parent;
             long bufferQueueSize;
             bool writing;
@@ -561,33 +563,25 @@ namespace Microsoft.Azure.Amqp
                 this.writeQueueFullLimit = writeQueueFullLimit;
                 this.writeQueueEmptyLimit = writeQueueEmptyLimit;
                 this.parent = parent;
-                this.bufferQueue = new Queue<ByteBuffer>();
+                this.bufferQueue = new ConcurrentQueue<ByteBuffer>();
                 this.writeAsyncEventArgs = new TransportAsyncCallbackArgs();
                 this.writeAsyncEventArgs.CompletedCallback = writeCompleteCallback;
             }
 
             public long BufferQueueSize
             {
-                get { return this.bufferQueueSize; }
-            }
-
-            object SyncRoot
-            {
-                get { return this.bufferQueue; }
+                get { return Interlocked.Read(ref this.bufferQueueSize); }
             }
 
             public void WriteBuffer(ByteBuffer buffer)
             {
-                lock (this.SyncRoot)
+                if (Volatile.Read(ref this.writing))
                 {
-                    if (this.writing)
-                    {
-                        this.EnqueueBuffer(buffer);
-                        return;
-                    }
-
-                    this.writing = true;
+                    this.EnqueueBuffer(buffer);
+                    return;
                 }
+
+                Volatile.Write(ref this.writing, true);
 
                 this.writeAsyncEventArgs.SetWriteBuffer(buffer);
                 if (this.WriteCore())
@@ -598,17 +592,14 @@ namespace Microsoft.Azure.Amqp
 
             public virtual void WriteBuffer(ByteBuffer buffer, ByteBuffer extra)
             {
-                lock (this.SyncRoot)
+                if (Volatile.Read(ref this.writing))
                 {
-                    if (this.writing)
-                    {
-                        this.EnqueueBuffer(buffer);
-                        this.EnqueueBuffer(extra);
-                        return;
-                    }
-
-                    this.writing = true;
+                    this.EnqueueBuffer(buffer);
+                    this.EnqueueBuffer(extra);
+                    return;
                 }
+
+                Volatile.Write(ref this.writing, true);
 
                 this.writeAsyncEventArgs.SetBuffer(new ByteBuffer[] { buffer, extra });
                 if (this.WriteCore())
@@ -619,13 +610,10 @@ namespace Microsoft.Azure.Amqp
 
             public void IssueClose()
             {
-                lock (this.SyncRoot)
+                Volatile.Write(ref this.closed, true);
+                if (Volatile.Read(ref this.writing))
                 {
-                    this.closed = true;
-                    if (this.writing)
-                    {
-                        return;
-                    }
+                    return;
                 }
 
                 this.transport.SafeClose();
@@ -642,26 +630,24 @@ namespace Microsoft.Azure.Amqp
                 thisPtr.ContinueWrite();
             }
 
-            // call this under lock
             void EnqueueBuffer(ByteBuffer buffer)
             {
-                this.bufferQueueSize += buffer.Length;
+                var queueSize = Interlocked.Add(ref this.bufferQueueSize, buffer.Length);
                 this.bufferQueue.Enqueue(buffer);
-                if (this.bufferQueueSize >= this.writeQueueFullLimit && !this.isQueueFull)
+                if (queueSize >= this.writeQueueFullLimit && !Volatile.Read(ref this.isQueueFull))
                 {
-                    this.isQueueFull = true;
-                    this.parent.OnIoEvent(IoEvent.WriteBufferQueueFull, this.bufferQueueSize);
+                    Volatile.Write(ref this.isQueueFull, true);
+                    this.parent.OnIoEvent(IoEvent.WriteBufferQueueFull, queueSize);
                 }
             }
 
-            // call this under lock
             void OnBufferDequeued(int size)
             {
-                this.bufferQueueSize -= size;
-                if (this.bufferQueueSize <= this.writeQueueEmptyLimit && this.isQueueFull)
+                var queueSize = Interlocked.Add(ref this.bufferQueueSize, -size);
+                if (queueSize <= this.writeQueueEmptyLimit && Volatile.Read(ref this.isQueueFull))
                 {
-                    this.isQueueFull = false;
-                    this.parent.OnIoEvent(IoEvent.WriteBufferQueueEmpty, this.bufferQueueSize);
+                    Volatile.Write(ref this.isQueueFull, false);
+                    this.parent.OnIoEvent(IoEvent.WriteBufferQueueEmpty, queueSize);
                 }
             }
 
@@ -695,39 +681,53 @@ namespace Microsoft.Azure.Amqp
             {
                 do
                 {
-                    lock (this.SyncRoot)
+                    if (!this.bufferQueue.TryDequeue(out var buffer))
                     {
-                        int count = this.bufferQueue.Count;
-                        if (count == 0)
+                        Volatile.Write(ref this.writing, false);
+                        if (Volatile.Read(ref this.closed))
                         {
-                            this.writing = false;
-                            if (this.closed)
-                            {
-                                this.transport.SafeClose();
-                            }
-
-                            return;
+                            this.transport.SafeClose();
                         }
-                        else if (count == 1)
-                        {
-                            ByteBuffer buffer = this.bufferQueue.Dequeue();
-                            this.OnBufferDequeued(buffer.Length);
-                            this.writeAsyncEventArgs.SetWriteBuffer(buffer);
-                        }
-                        else
-                        {
-                            var buffers = new List<ByteBuffer>(Math.Min(count, 64));
-                            int size = 0;
-                            for (int i = 0; i < count && size < MaxBatchSize; i++)
-                            {
-                                ByteBuffer buffer = this.bufferQueue.Dequeue();
-                                buffers.Add(buffer);
-                                size += buffer.Length;
-                            }
 
+                        return;
+                    }
+
+                    if (!this.bufferQueue.TryDequeue(out var nextBuffer))
+                    {
+                        this.OnBufferDequeued(buffer.Length);
+                        this.writeAsyncEventArgs.SetWriteBuffer(buffer);
+                    }
+                    else
+                    {
+                        var size = 0;
+                        var buffers = new List<ByteBuffer>(64) { buffer }; // for now, trying to avoid .Count
+                        size += buffer.Length;
+
+                        if (size > MaxBatchSize)
+                        {
                             this.OnBufferDequeued(size);
                             this.writeAsyncEventArgs.SetBuffer(buffers);
+                            continue;
                         }
+
+                        buffers.Add(nextBuffer);
+                        size += nextBuffer.Length;
+
+                        if (size > MaxBatchSize)
+                        {
+                            this.OnBufferDequeued(size);
+                            this.writeAsyncEventArgs.SetBuffer(buffers);
+                            continue;
+                        }
+
+                        while (size < MaxBatchSize && this.bufferQueue.TryDequeue(out var readBuffer))
+                        {
+                            buffers.Add(readBuffer);
+                            size += readBuffer.Length;
+                        }
+
+                        this.OnBufferDequeued(size);
+                        this.writeAsyncEventArgs.SetBuffer(buffers);
                     }
                 }
                 while (this.WriteCore());

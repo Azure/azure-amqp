@@ -351,6 +351,9 @@ namespace Microsoft.Azure.Amqp
                     link.SafeClose(this.connection.TerminalException);
                 }
             }
+
+            this.incomingChannel.Close();
+            this.outgoingChannel.Close();
         }
 
         bool LinkFrameAllowed()
@@ -581,6 +584,11 @@ namespace Microsoft.Azure.Amqp
             protected object SyncRoot
             {
                 get { return this.syncRoot; }
+            }
+
+            public void Close()
+            {
+                this.dispositionTimer?.Dispose();
             }
 
             public void OnLinkClosed(AmqpLink link)

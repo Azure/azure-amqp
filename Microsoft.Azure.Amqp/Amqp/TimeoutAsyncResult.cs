@@ -48,11 +48,6 @@ namespace Microsoft.Azure.Amqp
 
         protected bool CompleteSelf(bool syncComplete, Exception exception)
         {
-            if (this.timer != null)
-            {
-                this.timer.Change(Timeout.Infinite, Timeout.Infinite);
-            }
-
             return this.CompleteInternal(syncComplete, exception);
         }
 
@@ -67,6 +62,11 @@ namespace Microsoft.Azure.Amqp
 #if DEBUG
             Fx.AssertAndThrow(exception != null || this.setTimerCalled, "Must call SetTimer.");
 #endif
+            if (this.timer != null)
+            {
+                this.timer.Dispose();
+            }
+
             return this.TryComplete(syncComplete, exception);
         }
     }

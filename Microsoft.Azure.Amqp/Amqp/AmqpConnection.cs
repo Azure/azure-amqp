@@ -599,7 +599,7 @@ namespace Microsoft.Azure.Amqp
                     this.lastReceiveTime = this.lastSendTime = DateTime.UtcNow;
                     this.localInterval = local;
                     this.remoteInterval = remote < uint.MaxValue ? remote * 7 / 8 : uint.MaxValue;
-                    this.heartBeatTimer = new Timer(OnHeartBeatTimer, this, Timeout.Infinite, Timeout.Infinite);
+                    this.heartBeatTimer = new Timer(s => OnHeartBeatTimer(s), this, Timeout.Infinite, Timeout.Infinite);
 
                     this.SetTimer(this.lastSendTime);
                 }

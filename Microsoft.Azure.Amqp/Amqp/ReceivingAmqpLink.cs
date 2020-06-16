@@ -694,17 +694,17 @@ namespace Microsoft.Azure.Amqp
 
             public void Signal(bool syncComplete, Exception exception)
             {
-                Timer t = this.timer;
-                if (t != null)
-                {
-                    t.Change(Timeout.Infinite, Timeout.Infinite);
-                }
-
                 this.CompleteInternal(syncComplete, 1, exception);
             }
 
             void CompleteInternal(bool syncComplete, int code, Exception exception)
             {
+                Timer t = this.timer;
+                if (t != null)
+                {
+                    t.Dispose();
+                }
+
                 if (Interlocked.CompareExchange(ref this.completed, code, 0) == 0)
                 {
                     if (this.messages == null)

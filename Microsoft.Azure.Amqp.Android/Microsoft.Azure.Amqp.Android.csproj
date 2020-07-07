@@ -63,6 +63,9 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionFactory.cs">
       <Link>Amqp\AmqpConnectionFactory.cs</Link>
     </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Serialization\ReflectionExtentions.cs">
+      <Link>Amqp\Serialization\ReflectionExtentions.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Transport\WebSocketTransport.cs">
       <Link>Amqp\Transport\WebSocketTransport.cs</Link>
     </Compile>

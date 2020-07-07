@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.Amqp.Serialization
 {
-#if NET45 || NETSTANDARD1_3
+#if NET45 || NETSTANDARD1_3 || MONOANDROID
     using System;
     using System.Reflection;
     using System.Reflection.Emit;

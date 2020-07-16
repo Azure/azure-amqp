@@ -458,7 +458,11 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal bool IsClosing()
+        /// <summary>
+        /// Returns if the object is closing or closed.
+        /// </summary>
+        /// <returns>true if the object is closing or closed, false otherwise.</returns>
+        public bool IsClosing()
         {
             AmqpObjectState state = this.State;
             return state == AmqpObjectState.CloseSent ||

@@ -113,7 +113,7 @@ namespace Microsoft.Azure.Amqp
                 return this.header;
             }
 
-            protected set
+            set
             {
                 this.header = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.Header);
@@ -131,7 +131,7 @@ namespace Microsoft.Azure.Amqp
                 return this.deliveryAnnotations;
             }
 
-            protected set
+            set
             {
                 this.deliveryAnnotations = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.DeliveryAnnotations);
@@ -149,7 +149,7 @@ namespace Microsoft.Azure.Amqp
                 return this.messageAnnotations;
             }
 
-            protected set
+            set
             {
                 this.messageAnnotations = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.MessageAnnotations);
@@ -167,7 +167,7 @@ namespace Microsoft.Azure.Amqp
                 return this.properties;
             }
 
-            protected set
+            set
             {
                 this.properties = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.Properties);
@@ -185,7 +185,7 @@ namespace Microsoft.Azure.Amqp
                 return this.applicationProperties;
             }
 
-            protected set
+            set
             {
                 this.applicationProperties = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.ApplicationProperties);
@@ -260,7 +260,7 @@ namespace Microsoft.Azure.Amqp
                 return this.footer;
             }
 
-            protected set
+            set
             {
                 this.footer = value;
                 this.UpdateSectionFlag(value != null, SectionFlag.Footer);
@@ -297,6 +297,14 @@ namespace Microsoft.Azure.Amqp
 
                 return this.sectionFlags & SectionFlag.Body;
             }
+        }
+
+        /// <summary>
+        /// Gets the number of bytes of the serialized message.
+        /// </summary>
+        public long SerializedMessageSize
+        {
+            get => this.Serialize(true);
         }
 
         /// <summary>
@@ -418,6 +426,18 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Creates a message from a stream.
+        /// </summary>
+        /// <param name="messageStream">The message stream.</param>
+        /// <param name="ownStream">true if the stream will be owned by the message.</param>
+        /// <returns>An AmqpMessage.</returns>
+        public static AmqpMessage CreateAmqpStreamMessage(BufferListStream messageStream, bool ownStream = true)
+        {
+            ArraySegment<byte> payload = messageStream.ReadBytes(int.MaxValue);
+            return new AmqpBufferMessage(new ByteBuffer(payload));
+        }
+
+        /// <summary>
         /// Serializes the message and update its <see cref="Buffer"/>.
         /// </summary>
         /// <param name="force">True to force update the buffer if it exists.</param>
@@ -426,6 +446,16 @@ namespace Microsoft.Azure.Amqp
         {
             this.Initialize(SectionFlag.All, force);
             return this.messageSize;
+        }
+
+        /// <summary>
+        /// Creates a stream from the bytes of the serialized message.
+        /// </summary>
+        /// <returns></returns>
+        public Stream ToStream()
+        {
+            this.Initialize(SectionFlag.All, true);
+            return new MemoryStream(this.buffer.Buffer, this.buffer.Offset, this.buffer.Length);
         }
 
         /// <summary>
@@ -484,6 +514,17 @@ namespace Microsoft.Azure.Amqp
         {
             this.Initialize(SectionFlag.All);
             return GetPayload(this.buffer, payloadSize, out more);
+        }
+
+        /// <summary>
+        /// Gets the payload segments of the serialized message. It should not be used.
+        /// Use <see cref="GetPayload(int, out bool)"/> instead.
+        /// </summary>
+        /// <returns>The serialized message bytes in an array of byte segments.</returns>
+        public ArraySegment<byte>[] GetPayload()
+        {
+            var buffer = this.GetPayload(int.MaxValue, out _);
+            return new ArraySegment<byte>[] { buffer.AsSegment() };
         }
 
         /// <summary>

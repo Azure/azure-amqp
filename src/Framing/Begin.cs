@@ -65,7 +65,10 @@ namespace Microsoft.Azure.Amqp.Framing
         /// </summary>
         public Fields Properties { get; set; }
 
-        internal override int FieldCount
+        /// <summary>
+        /// Gets the number of fields in the list.
+        /// </summary>
+        protected override int FieldCount
         {
             get { return Fields; }
         }
@@ -108,7 +111,11 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        internal override void OnEncode(ByteBuffer buffer)
+        /// <summary>
+        /// Encodes the fields into the buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        protected override void OnEncode(ByteBuffer buffer)
         {
             AmqpCodec.EncodeUShort(this.RemoteChannel, buffer);
             AmqpCodec.EncodeUInt(this.NextOutgoingId, buffer);
@@ -120,7 +127,12 @@ namespace Microsoft.Azure.Amqp.Framing
             AmqpCodec.EncodeMap(this.Properties, buffer);
         }
 
-        internal override void OnDecode(ByteBuffer buffer, int count)
+        /// <summary>
+        /// Decodes the fields from the buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer.</param>
+        /// <param name="count">The number of fields.</param>
+        protected override void OnDecode(ByteBuffer buffer, int count)
         {
             if (count-- > 0)
             {
@@ -163,7 +175,11 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        internal override int OnValueSize()
+        /// <summary>
+        /// Returns the total encode size of all fields.
+        /// </summary>
+        /// <returns>The total encode size.</returns>
+        protected override int OnValueSize()
         {
             int valueSize = 0;
 

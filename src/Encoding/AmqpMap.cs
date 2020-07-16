@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
+    using System.Collections;
     using System.Collections.Generic;
     using System.Globalization;
     using System.Text;
@@ -12,6 +13,26 @@ namespace Microsoft.Azure.Amqp.Encoding
     /// </summary>
     public sealed class AmqpMap : Dictionary<MapKey, object>
     {
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        public AmqpMap() : base()
+        {
+        }
+
+        /// <summary>
+        /// Initializes the object from a dictionary.
+        /// </summary>
+        /// <param name="value">The dictionary.</param>
+        public AmqpMap(IDictionary value)
+            : this()
+        {
+            foreach (DictionaryEntry entry in value)
+            {
+                this.Add(new MapKey(entry.Key), entry.Value);
+            }
+        }
+
         /// <summary>
         /// Gets a value from the map for a given key.
         /// </summary>

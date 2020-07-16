@@ -144,7 +144,10 @@ namespace Microsoft.Azure.Amqp.Framing
             this.Value = AmqpEncoding.DecodeObject(buffer);
         }
 
-        internal void AddFieldToString(bool condition, StringBuilder sb, string fieldName, object value, ref int count)
+        /// <summary>
+        /// Adds a field to the string builder to create a string of the container object.
+        /// </summary>
+        protected void AddFieldToString(bool condition, StringBuilder sb, string fieldName, object value, ref int count)
         {
             if (condition)
             {

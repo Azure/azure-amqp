@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
     using System.Text;
@@ -652,6 +653,25 @@ namespace Microsoft.Azure.Amqp
             }
 
             return new ArraySegment<byte>(buffer.Buffer, buffer.Offset, buffer.Length);
+        }
+
+        /// <summary>
+        /// Finds an object of given type from the dictionary.
+        /// </summary>
+        /// <typeparam name="T">The type to find.</typeparam>
+        /// <param name="extensions">The dictionary.</param>
+        /// <returns>The object matching the type, or default(T) if not found.</returns>
+        public static T Find<T>(this IDictionary<Type, object> extensions)
+        {
+            foreach (var kvp in extensions)
+            {
+                if (kvp.Key is T)
+                {
+                    return (T)kvp.Value;
+                }
+            }
+
+            return default(T);
         }
     }
 }

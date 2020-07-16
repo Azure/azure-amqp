@@ -34,6 +34,15 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="version">The version to use.</param>
+        public AmqpVersion(Version version)
+            : this((byte)version.Major, (byte)version.Minor, (byte)version.Revision)
+        {
+        }
+
+        /// <summary>
         /// Gets the major protocol version.
         /// </summary>
         public byte Major

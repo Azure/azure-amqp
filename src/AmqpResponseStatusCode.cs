@@ -4,8 +4,12 @@
 namespace Microsoft.Azure.Amqp
 {
     // https://www.oasis-open.org/committees/download.php/54441/AMQP%20Management%20v1.0%20WD09
-    enum AmqpResponseStatusCode
+    /// <summary>
+    /// Defines the response status code for AMQP management operations.
+    /// </summary>
+    public enum AmqpResponseStatusCode
     {
+#pragma warning disable 1591
         Accepted = 0xca,
         Ambiguous = 300,
         BadGateway = 0x1f6,
@@ -53,5 +57,6 @@ namespace Microsoft.Azure.Amqp
         Unused = 0x132,
         UpgradeRequired = 0x1aa,
         UseProxy = 0x131
+#pragma warning restore 1591
     }
-}
+ }

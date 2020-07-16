@@ -19,6 +19,23 @@ namespace Microsoft.Azure.Amqp.Framing
 
         const int Fields = 13;
 
+#pragma warning disable 1591
+        // These constants should not be used. They may be removed in later releases.
+        public const string MessageIdName = "message-id";
+        public const string UserIdName = "user-id";
+        public const string ToName = "to";
+        public const string SubjectName = "subject";
+        public const string ReplyToName = "reply-to";
+        public const string CorrelationIdName = "correlation-id";
+        public const string ContentTypeName = "content-type";
+        public const string ContentEncodingName = "content-encoding";
+        public const string AbsoluteExpiryTimeName = "absolute-expiry-time";
+        public const string CreationTimeName = "creation-time";
+        public const string GroupIdName = "group-id";
+        public const string GroupSequenceName = "group-sequence";
+        public const string ReplyToGroupIdName = "reply-to-group-id";
+#pragma warning restore 1591
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -89,7 +106,10 @@ namespace Microsoft.Azure.Amqp.Framing
         /// </summary>
         public string ReplyToGroupId { get; set; }
 
-        internal override int FieldCount
+        /// <summary>
+        /// Gets the number of fields in the list.
+        /// </summary>
+        protected override int FieldCount
         {
             get { return Fields; }
         }
@@ -119,7 +139,11 @@ namespace Microsoft.Azure.Amqp.Framing
             return sb.ToString();
         }
 
-        internal override void OnEncode(ByteBuffer buffer)
+        /// <summary>
+        /// Encodes the fields into the buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        protected override void OnEncode(ByteBuffer buffer)
         {
             MessageId.Encode(buffer, this.MessageId);
             AmqpCodec.EncodeBinary(this.UserId, buffer);
@@ -136,7 +160,12 @@ namespace Microsoft.Azure.Amqp.Framing
             AmqpCodec.EncodeString(this.ReplyToGroupId, buffer);
         }
 
-        internal override void OnDecode(ByteBuffer buffer, int count)
+        /// <summary>
+        /// Decodes the fields from the buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer.</param>
+        /// <param name="count">The number of fields.</param>
+        protected override void OnDecode(ByteBuffer buffer, int count)
         {
             if (count-- > 0)
             {
@@ -204,7 +233,11 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        internal override int OnValueSize()
+        /// <summary>
+        /// Returns the total encode size of all fields.
+        /// </summary>
+        /// <returns>The total encode size.</returns>
+        protected override int OnValueSize()
         {
             int valueSize = 0;
 

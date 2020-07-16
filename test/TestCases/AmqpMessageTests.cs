@@ -19,7 +19,7 @@
             message.MessageAnnotations.Map["key"] = "old";
 
             // send the message and receive it on remote side
-            ByteBuffer payload = message.GetPayload();
+            ByteBuffer payload = message.GetBuffer();
             var outMessage = AmqpMessage.CreateBufferMessage(payload).Clone();
             //explicitly assign
             outMessage.Header.Priority = 99;
@@ -27,7 +27,7 @@
             outMessage.MessageAnnotations.Map["key"] = "update";
 
             // send
-            var payload2 = outMessage.GetPayload();
+            var payload2 = outMessage.GetBuffer();
             var value = (string)outMessage.MessageAnnotations.Map["key"];
             Assert.Equal("update", value);
 
@@ -115,13 +115,13 @@
                 long size3 = message.Serialize(true);
                 Assert.True(size3 > size2);
 
-                var message2 = AmqpMessage.CreateBufferMessage(message.GetPayload());
+                var message2 = AmqpMessage.CreateBufferMessage(message.GetBuffer());
                 Assert.Equal("v1", message2.MessageAnnotations.Map["property"]);
 
                 message.Properties.MessageId = "12345";
                 message.MessageAnnotations.Map["property"] = "v2";
                 message.Serialize(true);
-                var message3 = AmqpMessage.CreateBufferMessage(message.GetPayload());
+                var message3 = AmqpMessage.CreateBufferMessage(message.GetBuffer());
                 Assert.Equal((MessageId)"12345", message3.Properties.MessageId);
                 Assert.Equal("v2", message3.MessageAnnotations.Map["property"]);
             }
@@ -190,7 +190,7 @@
 
         static void RunSerializationTest(AmqpMessage message)
         {
-            AmqpMessage deserialized = AmqpMessage.CreateBufferMessage(message.GetPayload());
+            AmqpMessage deserialized = AmqpMessage.CreateBufferMessage(message.GetBuffer());
             ValidateMessage(message, deserialized);
         }
 

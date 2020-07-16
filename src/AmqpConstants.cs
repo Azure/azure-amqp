@@ -28,7 +28,14 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public static TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
 
-        internal const string Vendor = "com.microsoft";
+        /// <summary>
+        /// A string constant as the domain name for Microsoft extensions.
+        /// </summary>
+        public const string Vendor = "com.microsoft";
+        /// <summary>
+        /// A string constant as the domain name for Apache extensions.
+        /// </summary>
+        public const string Apache = "apache.org";
         internal const string TimeSpanName = Vendor + ":timespan";
         internal const string UriName = Vendor + ":uri";
         internal const string DateTimeOffsetName = Vendor + ":datetime-offset";
@@ -40,28 +47,70 @@ namespace Microsoft.Azure.Amqp
         internal static readonly AmqpSymbol Port = "port";
         internal static readonly AmqpSymbol Address = "address";
 
-        internal static readonly ArraySegment<byte> NullBinary = new ArraySegment<byte>();
-        internal static readonly ArraySegment<byte> EmptyBinary = new ArraySegment<byte>(new byte[0]);
+        /// <summary>
+        /// Null binary.
+        /// </summary>
+        public static readonly ArraySegment<byte> NullBinary = new ArraySegment<byte>();
+        /// <summary>
+        /// Empty binary.
+        /// </summary>
+        public static readonly ArraySegment<byte> EmptyBinary = new ArraySegment<byte>(new byte[0]);
 
         internal static readonly AmqpVersion DefaultProtocolVersion = new AmqpVersion(1, 0, 0);
         internal static readonly DateTime StartOfEpoch = DateTime.Parse("1970-01-01T00:00:00.0000000Z", CultureInfo.InvariantCulture).ToUniversalTime();
-        internal static readonly DateTime MaxAbsoluteExpiryTime = DateTime.MaxValue.ToUniversalTime() - TimeSpan.FromDays(1);
+        /// <summary>
+        /// The maximum message absolute expiry time. It is deprecated and should not be used.
+        /// </summary>
+        public static readonly DateTime MaxAbsoluteExpiryTime = DateTime.MaxValue.ToUniversalTime() - TimeSpan.FromDays(1);
 
-        internal static readonly Accepted AcceptedOutcome = new Accepted();
-        internal static readonly Released ReleasedOutcome = new Released();
-        internal static readonly Rejected RejectedOutcome = new Rejected();
-        internal static readonly Rejected RejectedNotFoundOutcome = new Rejected { Error = new Error() { Condition = AmqpErrorCode.NotFound } };
-        internal static readonly Received ReceivedOutcome = new Received();
+        /// <summary>
+        /// The accepted outcome constant.
+        /// </summary>
+        public static readonly Accepted AcceptedOutcome = new Accepted();
+        /// <summary>
+        /// The released outcome constant.
+        /// </summary>
+        public static readonly Released ReleasedOutcome = new Released();
+        /// <summary>
+        /// The rejected outcome constant without error.
+        /// </summary>
+        public static readonly Rejected RejectedOutcome = new Rejected();
+        /// <summary>
+        /// The rejected outcome constant with "amqp:not-found" error.
+        /// </summary>
+        public static readonly Rejected RejectedNotFoundOutcome = new Rejected { Error = new Error() { Condition = AmqpErrorCode.NotFound } };
+        /// <summary>
+        /// The received outcome constant.
+        /// </summary>
+        public static readonly Received ReceivedOutcome = new Received();
 
         // 311(0x137) is the IANA code for Microsoft (http://www.iana.org/assignments/enterprise-numbers/enterprise-numbers)
-        internal const uint AmqpBatchedMessageFormat = 0x80013700;
-        internal const uint AmqpMessageFormat = 0;
-        internal const int DefaultPort = 5672;
-        internal const int DefaultSecurePort = 5671;
+        /// <summary>
+        /// AMQP batch format. Each <see cref="Data"/> section is a serialized message.
+        /// </summary>
+        public const uint AmqpBatchedMessageFormat = 0x80013700;
+        /// <summary>
+        /// The standard AMQP message format.
+        /// </summary>
+        public const uint AmqpMessageFormat = 0;
+        /// <summary>
+        /// The standard AMQP plain tcp port.
+        /// </summary>
+        public const int DefaultPort = 5672;
+        /// <summary>
+        /// The standard AMQP secure tcp port.
+        /// </summary>
+        public const int DefaultSecurePort = 5671;
         internal const int ProtocolHeaderSize = 8;
-        internal const int TransportBufferSize = 8 * 1024;
+        /// <summary>
+        /// The default transport buffer size.
+        /// </summary>
+        public const int TransportBufferSize = 8 * 1024;
         internal const int MinMaxFrameSize = 512;
-        internal const uint DefaultMaxFrameSize = 64 * 1024;
+        /// <summary>
+        /// The default maximum frame size used by the library.
+        /// </summary>
+        public const uint DefaultMaxFrameSize = 64 * 1024;
         internal const ushort DefaultMaxConcurrentChannels = 8 * 1024;
         internal const uint DefaultMaxLinkHandles = 256 * 1024;
         internal const uint DefaultHeartBeatInterval = 90000;

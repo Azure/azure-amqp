@@ -901,7 +901,12 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal static AmqpDescribed DecodeAmqpDescribed(ByteBuffer buffer)
+        /// <summary>
+        /// Decodes an <see cref="AmqpDescribed"/> object from the buffer.
+        /// </summary>
+        /// <param name="buffer">The input buffer.</param>
+        /// <returns>An AmqpDescribed object.</returns>
+        public static AmqpDescribed DecodeAmqpDescribed(ByteBuffer buffer)
         {
             AmqpDescribed value = CreateAmqpDescribed(buffer, knownTypesByName, knownTypesByCode);
             if (value != null)

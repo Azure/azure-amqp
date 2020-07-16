@@ -140,7 +140,7 @@ namespace Test.Microsoft.Azure.Amqp
             return AmqpMessage.Create(new Data[] { new Data() { Value = binaryData } });
         }
 
-        public static ByteBuffer GetPayload(this AmqpMessage message)
+        public static ByteBuffer GetBuffer(this AmqpMessage message)
         {
             return message.GetPayload(int.MaxValue, out bool more);
         }

@@ -20,7 +20,10 @@ namespace Microsoft.Azure.Amqp.Framing
         {
         }
 
-        internal abstract int FieldCount
+        /// <summary>
+        /// Gets the number of fields of the list.
+        /// </summary>
+        protected abstract int FieldCount
         {
             get;
         }
@@ -121,10 +124,23 @@ namespace Microsoft.Azure.Amqp.Framing
         {
         }
 
-        internal abstract int OnValueSize();
+        /// <summary>
+        /// Returns the total encode size of all fields.
+        /// </summary>
+        /// <returns>The total encode size.</returns>
+        protected abstract int OnValueSize();
 
-        internal abstract void OnEncode(ByteBuffer buffer);
+        /// <summary>
+        /// Encodes the fields into the buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        protected abstract void OnEncode(ByteBuffer buffer);
 
-        internal abstract void OnDecode(ByteBuffer buffer, int count);
+        /// <summary>
+        /// Decodes the fields from the buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer.</param>
+        /// <param name="count">The number of fields.</param>
+        protected abstract void OnDecode(ByteBuffer buffer, int count);
     }
 }

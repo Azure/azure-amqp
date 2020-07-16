@@ -151,7 +151,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal AmqpSession Session
+        /// <summary>
+        /// Gets the <see cref="AmqpSession"/> object of the links.
+        /// </summary>
+        public AmqpSession Session
         {
             get
             {

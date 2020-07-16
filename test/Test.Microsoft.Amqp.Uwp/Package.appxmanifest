@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="Test.Amqp.Uwp" Publisher="CN=xinchen" Version="1.0.0.0" />
+  <Identity Name="Test.Amqp.Uwp" Publisher="CN=amqp" Version="1.0.0.0" />
   <mp:PhoneIdentity PhoneProductId="14b219f9-88b2-4d3b-8395-670b6741074c" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>Test.Microsoft.Amqp.Uwp</DisplayName>

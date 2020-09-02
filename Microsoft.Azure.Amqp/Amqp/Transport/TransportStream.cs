@@ -53,7 +53,6 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override void Flush()
         {
-            throw new InvalidOperationException();
         }
 
         public override int Read(byte[] buffer, int offset, int count)

@@ -64,6 +64,10 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 thisPtr.Complete(e, false);
             }
+            else
+            {
+                e.ConnectSocket?.Dispose();
+            }
         }
 
         static void OnTimer(object obj)
@@ -83,9 +87,9 @@ namespace Microsoft.Azure.Amqp.Transport
             if (e.SocketError != SocketError.Success)
             {
                 exception = new SocketException((int)e.SocketError);
-                if (e.AcceptSocket != null)
+                if (e.ConnectSocket != null)
                 {
-                    e.AcceptSocket.Dispose();
+                    e.ConnectSocket.Dispose();
                 }
             }
             else

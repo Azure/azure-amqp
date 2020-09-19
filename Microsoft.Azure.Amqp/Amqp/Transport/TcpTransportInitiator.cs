@@ -50,7 +50,11 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 if (Interlocked.CompareExchange(ref this.state, 1, 0) == 0)
                 {
-                    this.Complete(connectEventArgs, true);
+                    this.Complete(this.connectEventArgs, true);
+                }
+                else
+                {
+                    this.connectEventArgs.ConnectSocket?.Dispose();
                 }
 
                 return false;

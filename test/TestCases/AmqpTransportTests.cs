@@ -111,11 +111,8 @@
             complete.WaitOne();
             complete.Dispose();
 
-            transport.Closed += (s, a) =>
-            {
-                listener.Close();
-                Debug.WriteLine("Listeners Closed.");
-            };
+            listener.Close();
+            Debug.WriteLine("Listeners Closed.");
 
             return transport;
         }

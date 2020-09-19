@@ -2,7 +2,10 @@
 {
     using System;
     using System.Diagnostics;
+    using System.Net;
+    using System.Net.Sockets;
     using System.Threading;
+    using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Transport;
     using Xunit;
 
@@ -45,6 +48,38 @@
             Assert.True(serverContext.Success);
         }
 
+        [Fact]
+        public void ConnectTimeoutTest()
+        {
+            const int port = 30888;
+            IPAddress address = IPAddress.Loopback;
+            // Creat a listener socket but do not listen on it
+            var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+            socket.Bind(new IPEndPoint(address, port));
+
+            try
+            {
+                var tcp = new TcpTransportSettings() { Host = "localhost", Port = port };
+                var amqp = new AmqpSettings();
+                amqp.TransportProviders.Add(new AmqpTransportProvider());
+                var initiator = new AmqpTransportInitiator(amqp, tcp);
+                var task = initiator.ConnectTaskAsync(TimeSpan.FromSeconds(1));
+                Assert.False(task.IsCompleted);
+
+                Thread.Sleep(2000);
+                Assert.True(task.IsFaulted);
+                Assert.NotNull(task.Exception);
+
+                var ex = task.Exception.GetBaseException() as SocketException;
+                Assert.NotNull(ex);
+                Assert.Equal(SocketError.TimedOut, (SocketError)ex.ErrorCode);
+            }
+            finally
+            {
+                socket.Close();
+            }
+        }
+
         internal static TransportBase AcceptServerTransport(TransportSettings settings)
         {
             ManualResetEvent complete = new ManualResetEvent(false);
@@ -75,12 +110,8 @@
 
             complete.WaitOne();
             complete.Dispose();
-
-            transport.Closed += (s, a) =>
-            {
-                listener.Close();
-                Debug.WriteLine("Listeners Closed.");
-            };
+            listener.Close();
+            Debug.WriteLine("Listeners Closed.");
 
             return transport;
         }

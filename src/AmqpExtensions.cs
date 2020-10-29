@@ -663,15 +663,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>The object matching the type, or default(T) if not found.</returns>
         public static T Find<T>(this IDictionary<Type, object> extensions)
         {
-            foreach (var kvp in extensions)
+            if (extensions.TryGetValue(typeof(T), out object value) &&
+                value is T typedValue)
             {
-                if (kvp.Key is T)
-                {
-                    return (T)kvp.Value;
-                }
+                return typedValue;
             }
 
-            return default(T);
+            return default;
         }
     }
 }

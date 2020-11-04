@@ -391,7 +391,7 @@ namespace Microsoft.Azure.Amqp
         public void AcceptMessage(AmqpMessage message)
         {
             bool settled = this.Settings.SettleType != SettleMode.SettleOnDispose;
-            this.AcceptMessage(message, settled, true);
+            this.AcceptMessage(message, settled, message.Batchable);
         }
 
         /// <summary>
@@ -415,7 +415,7 @@ namespace Microsoft.Azure.Amqp
             Rejected rejected = new Rejected();
             rejected.Error = Error.FromException(exception);
 
-            this.DisposeMessage(message, rejected, true, false);
+            this.DisposeMessage(message, rejected, true, message.Batchable);
         }
 
         /// <summary>
@@ -424,7 +424,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="message">The message to release.</param>
         public void ReleaseMessage(AmqpMessage message)
         {
-            this.DisposeMessage(message, AmqpConstants.ReleasedOutcome, true, false);
+            this.DisposeMessage(message, AmqpConstants.ReleasedOutcome, true, message.Batchable);
         }
 
         /// <summary>
@@ -441,7 +441,7 @@ namespace Microsoft.Azure.Amqp
             modified.UndeliverableHere = deliverElseWhere;
             modified.MessageAnnotations = messageAttributes;
 
-            this.DisposeMessage(message, modified, true, false);
+            this.DisposeMessage(message, modified, true, message.Batchable);
         }
 
         /// <summary>
@@ -747,7 +747,9 @@ namespace Microsoft.Azure.Amqp
                     currentCredit < MaxCreditForOnDemandReceive)
                 {
                     int needCredit = Math.Min(this.waiterList.Count, MaxCreditForOnDemandReceive) - currentCredit;
-                    if (this.waiterList.Count <= CreditBatchThreshold || needCredit % CreditBatchThreshold == 0)
+                    if (this.waiterList.Count <= CreditBatchThreshold ||
+                        currentCredit == 0 ||
+                        needCredit % CreditBatchThreshold == 0)
                     {
                         credit = currentCredit + needCredit;
                     }
@@ -758,7 +760,9 @@ namespace Microsoft.Azure.Amqp
                 if (totalRequestedMessageCount > currentCredit)
                 {
                     int needCredit = totalRequestedMessageCount - currentCredit;
-                    if (this.waiterList.Count <= PendingReceiversThreshold || this.waiterList.Count % PendingReceiversThreshold == 0)
+                    if (this.waiterList.Count <= PendingReceiversThreshold ||
+                        currentCredit == 0 ||
+                        this.waiterList.Count % PendingReceiversThreshold == 0)
                     {
                         credit = currentCredit + needCredit;
                     }

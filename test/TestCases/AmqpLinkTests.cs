@@ -438,6 +438,61 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [Fact]
+        public void NonPrefetchConcurrentReceiveTest()
+        {
+            string queue = "NonPrefetchConcurrentReceiveTest";
+            broker.AddQueue(queue);
+
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            connection.Open();
+
+            AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+            session.Open();
+
+            ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnSend, 0));
+            rLink.Open();
+
+            bool done = false;
+            int count = 0;
+            Task sendTask = Task.Run(async () =>
+            {
+                SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnReceive));
+                sLink.Open();
+                while (!done)
+                {
+                    await Task.WhenAll(Enumerable.Range(0, 6).Select(async i =>
+                    {
+                        AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "Test" });
+                        Outcome outcome = await sLink.SendMessageAsync(message);
+                        Assert.True(outcome.DescriptorCode == Accepted.Code, "message is not accepted.");
+                    }).ToArray());
+                }
+            });
+
+            Task.WaitAll(Enumerable.Range(0, 30).Select(i =>
+            {
+                return Task.Run(async () =>
+                {
+                    while (!done)
+                    {
+                        var msg = await rLink.ReceiveMessageAsync(TimeSpan.FromSeconds(10));
+                        Assert.NotNull(msg);
+                        rLink.AcceptMessage(msg);
+                        if (Interlocked.Increment(ref count) > 10000)
+                        {
+                            break;
+                        }
+                    }
+                });
+            }).ToArray());
+
+            done = true;
+            sendTask.Wait();
+
+            connection.Close();
+        }
+
+        [Fact]
         public void AmqpSequenceNumberWrapAroundTest()
         {
             const int messageCount = 24;

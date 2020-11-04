@@ -563,7 +563,9 @@ namespace Microsoft.Azure.Amqp
                     currentCredit < MaxCreditForOnDemandReceive)
                 {
                     int needCredit = Math.Min(this.waiterList.Count, MaxCreditForOnDemandReceive) - currentCredit;
-                    if (this.waiterList.Count <= CreditBatchThreshold || needCredit % CreditBatchThreshold == 0)
+                    if (this.waiterList.Count <= CreditBatchThreshold ||
+                        currentCredit == 0 ||
+                        needCredit % CreditBatchThreshold == 0)
                     {
                         credit = currentCredit + needCredit;
                     }
@@ -574,7 +576,9 @@ namespace Microsoft.Azure.Amqp
                 if (totalRequestedMessageCount > currentCredit)
                 {
                     int needCredit = totalRequestedMessageCount - currentCredit;
-                    if (this.waiterList.Count <= PendingReceiversThreshold || this.waiterList.Count % PendingReceiversThreshold == 0)
+                    if (this.waiterList.Count <= PendingReceiversThreshold ||
+                        currentCredit == 0 ||
+                        this.waiterList.Count % PendingReceiversThreshold == 0)
                     {
                         credit = currentCredit + needCredit;
                     }

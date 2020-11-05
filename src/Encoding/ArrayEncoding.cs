@@ -3,8 +3,11 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
+    using Microsoft.Azure.Amqp.Framing;
     using System;
     using System.Collections;
+    using System.Collections.Generic;
+    using System.Diagnostics;
 
     sealed class ArrayEncoding : EncodingBase
     {
@@ -13,12 +16,21 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
         }
 
-        public static int GetEncodeSize<T>(T[] value)
+        public static int GetEncodeSize<T>(IList value)
         {
-            return value == null ? FixedWidth.NullEncoded : ArrayEncoding.GetEncodeSize(value, false);
+            if (value == null)
+            {
+                return FixedWidth.NullEncoded;
+            }
+            else
+            {
+                Debug.Assert(value is T[] || value is Multiple<T>);
+
+                return ArrayEncoding.GetEncodeSize(value, typeof(T), false);
+            }
         }
 
-        public static void Encode<T>(T[] value, ByteBuffer buffer)
+        public static void Encode<T>(IList value, ByteBuffer buffer)
         {
             if (value == null)
             {
@@ -26,10 +38,12 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
             else
             {
+                Debug.Assert(value is T[] || value is Multiple<T>);
+
                 int width;
-                int encodeSize = ArrayEncoding.GetEncodeSize(value, false, out width);
+                int encodeSize = ArrayEncoding.GetEncodeSize(value, typeof(T), false, out width);
                 AmqpBitConverter.WriteUByte(buffer, width == FixedWidth.UByte ? FormatCode.Array8 : FormatCode.Array32);
-                ArrayEncoding.Encode(value, width, encodeSize, buffer);
+                ArrayEncoding.Encode(value, typeof(T), width, encodeSize, buffer);
             }
         }
 
@@ -50,16 +64,21 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
         {
-            return ArrayEncoding.GetEncodeSize((Array)value, arrayEncoding);
+            Array array = (Array)value;
+            Type elementType = array.GetType().GetElementType();
+
+            return ArrayEncoding.GetEncodeSize(array, elementType, arrayEncoding);
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
         {
             Array array = (Array)value;
+            Type elementType = array.GetType().GetElementType();
+
             int width;
-            int encodeSize = ArrayEncoding.GetEncodeSize(array, arrayEncoding, out width);
+            int encodeSize = ArrayEncoding.GetEncodeSize(array, elementType, arrayEncoding, out width);
             AmqpBitConverter.WriteUByte(buffer, width == FixedWidth.UByte ? FormatCode.Array8 : FormatCode.Array32);
-            ArrayEncoding.Encode(array, width, encodeSize, buffer);
+            ArrayEncoding.Encode(array, elementType, width, encodeSize, buffer);
         }
 
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
@@ -154,33 +173,33 @@ namespace Microsoft.Azure.Amqp.Encoding
             return array;
         }
 
-        static int GetEncodeSize(Array array, bool arrayEncoding)
+        static int GetEncodeSize(IList array, Type elementType, bool arrayEncoding)
         {
             int unused;
-            return ArrayEncoding.GetEncodeSize(array, arrayEncoding, out unused);
+            return ArrayEncoding.GetEncodeSize(array, elementType, arrayEncoding, out unused);
         }
 
-        static int GetEncodeSize(Array array, bool arrayEncoding, out int width)
+        static int GetEncodeSize(IList array, Type elementType, bool arrayEncoding, out int width)
         {
-            int size = FixedWidth.FormatCode + ArrayEncoding.GetValueSize(array, null);
-            width = arrayEncoding ? FixedWidth.UInt : AmqpEncoding.GetEncodeWidthByCountAndSize(array.Length, size);
+            int size = FixedWidth.FormatCode + ArrayEncoding.GetValueSize(array, elementType);
+            width = arrayEncoding ? FixedWidth.UInt : AmqpEncoding.GetEncodeWidthByCountAndSize(array.Count, size);
             size += FixedWidth.FormatCode + width + width;
             return size;
         }
 
-        static int GetValueSize(Array value, Type type)
+        static int GetValueSize(IList value, Type elementType)
         {
-            if (value.Length == 0)
+            if (value.Count == 0)
             {
                 return 0;
             }
 
-            if (type == null)
+            EncodingBase encoding = AmqpEncoding.GetEncoding(elementType);
+            if (encoding is PrimitiveEncoding primitiveEncoding)
             {
-                type = value.GetValue(0).GetType();
+                return primitiveEncoding.GetArrayEncodeSize(value);
             }
 
-            EncodingBase encoding = AmqpEncoding.GetEncoding(type);
             int valueSize = 0;
             foreach (object item in value)
             {
@@ -196,43 +215,55 @@ namespace Microsoft.Azure.Amqp.Encoding
             return valueSize;
         }
 
-        static void Encode(Array value, int width, int encodeSize, ByteBuffer buffer)
+        static void Encode(IList value, Type elementType, int width, int encodeSize, ByteBuffer buffer)
         {
             encodeSize -= FixedWidth.FormatCode + width;
             if (width == FixedWidth.UByte)
             {
                 AmqpBitConverter.WriteUByte(buffer, (byte)encodeSize);
-                AmqpBitConverter.WriteUByte(buffer, (byte)value.Length);
+                AmqpBitConverter.WriteUByte(buffer, (byte)value.Count);
             }
             else
             {
                 AmqpBitConverter.WriteUInt(buffer, (uint)encodeSize);
-                AmqpBitConverter.WriteUInt(buffer, (uint)value.Length);
+                AmqpBitConverter.WriteUInt(buffer, (uint)value.Count);
             }
 
-            if (value.Length > 0)
+            if (value.Count > 0)
             {
-                object firstItem = value.GetValue(0);
-                EncodingBase encoding = AmqpEncoding.GetEncoding(firstItem);
+                EncodingBase encoding = AmqpEncoding.GetEncoding(elementType);
                 AmqpBitConverter.WriteUByte(buffer, encoding.FormatCode);
-                if (encoding.FormatCode == FormatCode.Described)
-                {
-                    DescribedType describedValue = (DescribedType)firstItem;
-                    AmqpEncoding.EncodeObject(describedValue.Descriptor, buffer);
-                    AmqpBitConverter.WriteUByte(buffer, AmqpEncoding.GetEncoding(describedValue.Value).FormatCode);
-                }
 
-                foreach (object item in value)
+                if (encoding is PrimitiveEncoding primitiveEncoding)
                 {
-                    encoding.EncodeObject(item, true, buffer);
+                    primitiveEncoding.EncodeArray(value, buffer);
+                }
+                else
+                {
+                    if (encoding.FormatCode == FormatCode.Described)
+                    {
+                        object firstItem = value[0];
+                        DescribedType describedValue = (DescribedType)firstItem;
+                        AmqpEncoding.EncodeObject(describedValue.Descriptor, buffer);
+                        AmqpBitConverter.WriteUByte(buffer, AmqpEncoding.GetEncoding(describedValue.Value).FormatCode);
+                    }
+
+                    foreach (object item in value)
+                    {
+                        encoding.EncodeObject(item, true, buffer);
+                    }
                 }
             }
         }
 
         static T[] Decode<T>(ByteBuffer buffer, int size, int count, FormatCode formatCode)
         {
-            T[] array = new T[count];
             EncodingBase encoding = AmqpEncoding.GetEncoding(formatCode);
+            if (encoding is PrimitiveEncoding primitiveEncoding)
+            {
+                return (T[])primitiveEncoding.DecodeArray(buffer, count, formatCode);
+            }
+
             object descriptor = null;
             if (formatCode == FormatCode.Described)
             {
@@ -240,6 +271,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 formatCode = AmqpEncoding.ReadFormatCode(buffer);
             }
 
+            T[] array = new T[count];
             for (int i = 0; i < count; ++i)
             {
                 object value = encoding.DecodeObject(buffer, formatCode);

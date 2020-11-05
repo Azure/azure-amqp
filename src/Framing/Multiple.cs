@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
             else
             {
-                return ArrayEncoding.GetEncodeSize(multiple.ToArray());
+                return ArrayEncoding.GetEncodeSize<T>(multiple);
             }
         }
 
@@ -60,7 +60,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
             else
             {
-                ArrayEncoding.Encode(multiple.ToArray(), buffer);
+                ArrayEncoding.Encode<T>(multiple, buffer);
             }
         }
 

@@ -43,6 +43,8 @@
   <ItemGroup>
     <None Include="..\LICENSE.txt" Pack="true" PackagePath="LICENSE.txt"/>
     <None Include="..\icon.png" Pack="true" PackagePath="\"/>
+
+    <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 
 </Project>

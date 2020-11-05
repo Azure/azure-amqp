@@ -421,6 +421,16 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        internal ReadOnlySpan<byte> GetReadSpan()
+        {
+            return this.buffer.AsSpan(this.Offset, this.Length);
+        }
+
+        internal Span<byte> GetWriteSpan()
+        {
+            return this.buffer.AsSpan(this.WritePos, this.Size);
+        }
+
         [Conditional("DEBUG")]
         internal void AssertReferences(int value)
         {

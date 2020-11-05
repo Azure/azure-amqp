@@ -3,9 +3,12 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
+    using System;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Text;
 
-    sealed class SymbolEncoding : EncodingBase
+    sealed class SymbolEncoding : PrimitiveEncoding
     {
         public SymbolEncoding()
             : base(FormatCode.Symbol32)
@@ -89,16 +92,64 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         static void Encode(byte[] encodedData, int width, ByteBuffer buffer)
         {
+            Encode(encodedData, encodedData.Length, width, buffer);
+        }
+
+        static void Encode(byte[] encodedData, int encodedDataLength, int width, ByteBuffer buffer)
+        {
             if (width == FixedWidth.UByte)
             {
-                AmqpBitConverter.WriteUByte(buffer, (byte)encodedData.Length);
+                AmqpBitConverter.WriteUByte(buffer, (byte)encodedDataLength);
             }
             else
             {
-                AmqpBitConverter.WriteUInt(buffer, (uint)encodedData.Length);
+                AmqpBitConverter.WriteUInt(buffer, (uint)encodedDataLength);
             }
 
-            AmqpBitConverter.WriteBytes(buffer, encodedData, 0, encodedData.Length);
+            AmqpBitConverter.WriteBytes(buffer, encodedData, 0, encodedDataLength);
+        }
+
+        public override int GetArrayEncodeSize(IList value)
+        {
+            IReadOnlyList<AmqpSymbol> listValue = (IReadOnlyList<AmqpSymbol>)value;
+
+            int size = 0;
+            foreach (AmqpSymbol item in listValue)
+            {
+                size += Encoding.ASCII.GetByteCount(item.Value);
+            }
+
+            return size;
+        }
+
+        public override void EncodeArray(IList value, ByteBuffer buffer)
+        {
+            IReadOnlyList<AmqpSymbol> listValue = (IReadOnlyList<AmqpSymbol>)value;
+
+            byte[] tempBuffer = null;
+            foreach (AmqpSymbol item in listValue)
+            {
+                string s = item.Value;
+                int byteCount = Encoding.ASCII.GetByteCount(s);
+                if (tempBuffer == null || tempBuffer.Length < byteCount)
+                {
+                    tempBuffer = new byte[byteCount];
+                }
+
+                int encodedByteCount = Encoding.ASCII.GetBytes(s, 0, s.Length, tempBuffer, 0);
+
+                Encode(tempBuffer, encodedByteCount, FixedWidth.UInt, buffer);
+            }
+        }
+
+        public override Array DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
+        {
+            AmqpSymbol[] symbolArray = new AmqpSymbol[count];
+            for (int i = 0; i < count; ++i)
+            {
+                symbolArray[i] = SymbolEncoding.Decode(buffer, formatCode);
+            }
+            return symbolArray;
         }
     }
 }

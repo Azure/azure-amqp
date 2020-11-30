@@ -78,7 +78,9 @@ namespace Microsoft.Azure.Amqp
             {
                 this.disposed = true;
                 var thisTaskCompletionSource = this.taskCompletionSource;
-                if (thisTaskCompletionSource != null && thisTaskCompletionSource.Task.Status == TaskStatus.RanToCompletion)
+                if (thisTaskCompletionSource != null &&
+                    thisTaskCompletionSource.Task.Status == TaskStatus.RanToCompletion &&
+                    this.TryRemove())
                 {
                     OnSafeClose(thisTaskCompletionSource.Task.Result);
                 }
@@ -111,6 +113,11 @@ namespace Microsoft.Azure.Amqp
                     {
                         TValue value = await this.OnCreateAsync(timeout).ConfigureAwait(false);
                         tcs.SetResult(value);
+
+                        if (this.disposed && this.TryRemove())
+                        {
+                            OnSafeClose(value);
+                        }
                     }
                     catch (Exception ex) when (!Fx.IsFatal(ex))
                     {

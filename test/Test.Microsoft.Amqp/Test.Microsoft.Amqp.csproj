@@ -18,6 +18,7 @@
     <Compile Include="..\TestCases\AmqpWebSocketTests.cs" Link="TestCases\AmqpWebSocketTests.cs" />
     <Compile Include="..\TestCases\ResourcesTests.cs" Link="TestCases\ResourcesTests.cs" />
     <Compile Include="..\TestCases\UtilityTests.cs" Link="TestCases\UtilityTests.cs" />
+    <Compile Include="..\TestCases\SingletonTests.cs" Link="TestCases\SingletonTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

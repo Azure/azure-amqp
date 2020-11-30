@@ -277,6 +277,44 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [Fact]
+        public void AmqpMessageEmptyTest()
+        {
+            string queue = "AmqpMessageEmptyTest";
+            broker.AddQueue(queue);
+
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            connection.Open();
+
+            AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+            session.Open();
+
+            SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnSend));
+            sLink.Open();
+
+            try
+            {
+                var message = AmqpMessage.Create();
+                sLink.SendMessageAsync(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary,
+                    TimeSpan.FromSeconds(30)).GetAwaiter().GetResult();
+            }
+            catch (InvalidOperationException)
+            {
+            }
+
+            try
+            {
+                var message = AmqpMessage.Create(new Data[0]);
+                sLink.SendMessageAsync(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary,
+                    TimeSpan.FromSeconds(30)).GetAwaiter().GetResult();
+            }
+            catch (InvalidOperationException)
+            {
+            }
+
+            connection.Close();
+        }
+
+        [Fact]
         public void AmqpDynamicNodeTest()
         {
             AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);

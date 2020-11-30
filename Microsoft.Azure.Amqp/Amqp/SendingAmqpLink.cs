@@ -83,14 +83,14 @@ namespace Microsoft.Azure.Amqp
             }
 
             message.ThrowIfDisposed();
-            if (message.Sections == 0)
-            {
-                throw new InvalidOperationException(AmqpResources.AmqpEmptyMessageNotAllowed);
-            }
-
             if (message.Link != null)
             {
                 throw new InvalidOperationException(AmqpResources.AmqpCannotResendMessage);
+            }
+
+            if (message.SerializedMessageSize == 0)
+            {
+                throw new InvalidOperationException(AmqpResources.AmqpEmptyMessageNotAllowed);
             }
 
             return new SendAsyncResult(this, message, deliveryTag, txnId, timeout, callback, state);

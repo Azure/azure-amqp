@@ -859,8 +859,13 @@ namespace Microsoft.Azure.Amqp
                 ByteBuffer payload = delivery.GetPayload(payloadSize, out more);
                 transfer.More = more;
 
-                if (!firstTransfer && payload == null)
+                if (payload == null)
                 {
+                    if (firstTransfer)
+                    {
+                        throw new AmqpException(AmqpErrorCode.NotAllowed, AmqpResources.AmqpEmptyMessageNotAllowed);
+                    }
+
                     Fx.Assert(!more, "More flag is set but a null payload is returned.");
                     break;
                 }

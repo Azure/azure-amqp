@@ -206,6 +206,12 @@ namespace Microsoft.Azure.Amqp
 
         internal static ByteBuffer GetPayload(ByteBuffer source, int payloadSize, out bool more)
         {
+            if (source.Length == 0)
+            {
+                more = false;
+                return null;
+            }
+
             int size;
             if (source.Length <= payloadSize)
             {

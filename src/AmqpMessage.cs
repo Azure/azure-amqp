@@ -524,7 +524,7 @@ namespace Microsoft.Azure.Amqp
         public ArraySegment<byte>[] GetPayload()
         {
             var buffer = this.GetPayload(int.MaxValue, out _);
-            return new ArraySegment<byte>[] { buffer.AsSegment() };
+            return buffer == null ? null : new ArraySegment<byte>[] { buffer.AsSegment() };
         }
 
         /// <summary>

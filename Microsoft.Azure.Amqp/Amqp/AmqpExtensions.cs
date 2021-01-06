@@ -6,7 +6,6 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Globalization;
     using System.Text;
-    using System.Collections.Generic;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
@@ -18,13 +17,9 @@ namespace Microsoft.Azure.Amqp
     public static class Extensions
     {
 #if DEBUG
-        public static Action<string> TraceCallback;
 #if !PCL
         static bool AmqpDebug = string.Equals(Environment.GetEnvironmentVariable("AMQP_DEBUG"), "1", StringComparison.Ordinal);
-#else
-        static bool AmqpDebug = false;
 #endif
-        public static Action<bool, AmqpConnection, ushort, Performative, int> PerformativeTraceCallback;
 #endif
 
         public static string GetString(this ArraySegment<byte> binary)
@@ -37,50 +32,6 @@ namespace Microsoft.Azure.Amqp
 
             return sb.ToString();
         }
-
-#if DEBUG
-        public static void Trace(this object target, bool send, AmqpConnection connection, ushort channel, Performative performative, int payload)
-        {
-            if (AmqpDebug)
-            {
-                if (PerformativeTraceCallback != null)
-                {
-                    PerformativeTraceCallback(send, connection, channel, performative, payload);
-                }
-                else
-                {
-                    Trace(target, send);
-                }
-            }
-        }
-
-        public static void Trace(this object target, bool send)
-        {
-            if (AmqpDebug)
-            {
-                string message = string.Format(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "[{0:X3}.{1:X3} {2:HH:mm:ss.fff}] {3} {4}",
-                        Diagnostics.CurrentProcess.ID,
-                        Environment.CurrentManagedThreadId,
-                        DateTime.UtcNow,
-                        send ? "SEND" : "RECV",
-                        target.ToString());
-                if (TraceCallback != null)
-                {
-                    TraceCallback(message);
-                }
-                else
-                {
-#if NETSTANDARD || PCL || WINDOWS_UWP
-                    System.Diagnostics.Debug.WriteLine(message);
-#else
-                    System.Diagnostics.Trace.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}\t{1}", AppDomain.CurrentDomain.FriendlyName, message));
-#endif // NETSTANDARD
-                }
-            }
-        }
-#endif // DEBUG
 
         // open
         public static uint MaxFrameSize(this Open open)

@@ -200,7 +200,7 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 ProtocolHeader header = new ProtocolHeader();
                 header.Decode(buffer);
-                AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Receive, header);
+                AmqpTrace.AmqpSendReceiveHeader(header, false);
 
                 // Protocol id negotiation
                 TransportProvider provider = null;
@@ -249,9 +249,6 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 else
                 {
-#if DEBUG
-                    header.Trace(false);
-#endif
                     AmqpTrace.Provider.AmqpUpgradeTransport(this, args.Transport, newTransport);
                     this.args.Transport = newTransport;
                     this.WriteReplyHeader(header, false);
@@ -268,11 +265,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
             void WriteReplyHeader(ProtocolHeader header, bool fail)
             {
-                AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Send, header);
-#if DEBUG
-                header.Trace(true);
-#endif
-
+                AmqpTrace.AmqpSendReceiveHeader(header, true);
                 ByteBuffer byteBuffer = new ByteBuffer(this.buffer);
                 header.Encode(byteBuffer);
                 this.args.SetBuffer(this.buffer, 0, this.buffer.Length);

@@ -120,14 +120,6 @@ namespace Microsoft.Azure.Amqp
 
         public void SendCommand(Performative command, ushort channel, ArraySegment<byte>[] payload)
         {
-#if DEBUG
-            Frame frame = new Frame();
-            frame.Channel = channel;
-            frame.Command = command;
-            frame.Trace(true, this, channel, command, -1);
-            AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Send, frame);
-#endif
-
             int frameSize = 0;
             if (payload == null)
             {
@@ -154,6 +146,7 @@ namespace Microsoft.Azure.Amqp
                 this.SendBuffers(buffers);
             }
 
+            AmqpTrace.AmqpSendReceiveFrame(FrameType.Amqp, channel, command, true, frameSize);
             this.heartBeat.OnSend();
             if (this.UsageMeter != null)
             {
@@ -222,10 +215,7 @@ namespace Microsoft.Azure.Amqp
 
         protected override void OnProtocolHeader(ProtocolHeader header)
         {
-#if DEBUG
-            header.Trace(false);
-            AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Receive, header);
-#endif
+            AmqpTrace.AmqpSendReceiveFrame(FrameType.Amqp, 0, null, false, AmqpConstants.ProtocolHeaderSize);
             this.heartBeat.OnReceive();
             if (this.UsageMeter != null)
             {
@@ -269,10 +259,7 @@ namespace Microsoft.Azure.Amqp
             using (Frame frame = new Frame())
             {
                 frame.Decode(buffer);
-#if DEBUG
-                frame.Trace(false, this, frame.Channel, frame.Command, frame.Payload.Count);
-                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Receive, frame);
-#endif
+                AmqpTrace.AmqpSendReceiveFrame(frame.Type, frame.Channel, frame.Command, false, frame.Size);
 
                 this.heartBeat.OnReceive();
                 if (this.UsageMeter != null)
@@ -350,10 +337,7 @@ namespace Microsoft.Azure.Amqp
 
         void SendProtocolHeader(ProtocolHeader header)
         {
-#if DEBUG
-            header.Trace(true);
-            AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Send, header);
-#endif
+            AmqpTrace.AmqpSendReceiveFrame(FrameType.Amqp, 0, null, true, AmqpConstants.ProtocolHeaderSize);
             this.TransitState("S:HDR", StateTransition.SendHeader);
             this.SendDatablock(header);
         }

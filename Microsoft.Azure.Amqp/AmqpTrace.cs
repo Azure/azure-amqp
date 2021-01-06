@@ -4,11 +4,19 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Text;
+    using Microsoft.Azure.Amqp.Framing;
 
     public class AmqpTrace
     {
         // Replace this with your own implementation to enable tracing.
         public static AmqpTrace Provider = new AmqpTrace();
+
+        /// <summary>
+        /// Gets or sets a callback to write library traces. It impacts performance and
+        /// should be used for debugging purposes only.
+        /// </summary>
+        public static Action<string> TraceCallback { get; set; }
 
         protected AmqpTrace()
         {
@@ -116,6 +124,56 @@ namespace Microsoft.Azure.Amqp
 
         public virtual void AmqpHandleException(Exception exception, string traceInfo)
         {
+        }
+
+        internal static void AmqpSendReceiveHeader(ProtocolHeader header, bool send)
+        {
+            if (TraceCallback != null)
+            {
+                StringBuilder sb = new StringBuilder();
+                AppendCommon(sb, send);
+                sb.Append(' ');
+                sb.Append(header);
+
+                TraceCallback(sb.ToString());
+            }
+        }
+
+        internal static void AmqpSendReceiveFrame(FrameType type, ushort channel, Performative command, bool send, int frameSize)
+        {
+            if (TraceCallback != null)
+            {
+                StringBuilder sb = new StringBuilder();
+                AppendCommon(sb, send);
+                sb.Append(' ');
+                sb.Append("FRM");
+                sb.Append('(');
+                sb.AppendFormat("{0:X4}", frameSize);
+                sb.Append('|');
+                sb.AppendFormat("{0:X2}", (int)type);
+                sb.AppendFormat("{0:X2}", channel);
+                if (command != null)
+                {
+                    sb.Append(' ');
+                    sb.Append(command);
+                }
+                sb.Append(')');
+
+                TraceCallback(sb.ToString());
+            }
+        }
+
+        static void AppendCommon(StringBuilder sb, bool send)
+        {
+            sb.Append('[');
+            sb.AppendFormat("{0:X3}", Diagnostics.CurrentProcess.ID);
+            sb.Append('.');
+            sb.AppendFormat("{0:X3}", Environment.CurrentManagedThreadId);
+            sb.Append(' ');
+            sb.AppendFormat("{0:HH:mm:ss.fff}", DateTime.UtcNow);
+            sb.Append(']');
+            sb.Append(' ');
+            sb.Append(send ? "SEND" : "RECV");
         }
     }
 }

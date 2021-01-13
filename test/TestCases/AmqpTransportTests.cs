@@ -2,12 +2,12 @@
 {
     using System;
     using System.Diagnostics;
-    using System.Threading;
+    using System.Net;
     using System.Net.Sockets;
+    using System.Threading;
+    using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Transport;
     using Xunit;
-    using System.Net;
-    using global::Microsoft.Azure.Amqp;
 
     [Trait("Category", TestCategory.Current)]
     public class AmqpTransportTests
@@ -21,31 +21,31 @@
         {
             const string localHost = "localhost";
             const int port = 30888;
+            var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+            var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+            this.RunTransportTest(localHost, port, client, server);
+        }
 
-            TransportTestContext serverContext = new TransportTestContext()
-            {
-                MaxNumber = TestMaxNumber,
-                TransportSettings = AmqpUtils.GetTcpSettings(localHost, port, true)
-            };
+        [Fact]
+        public void TcpTransportClientDynamicBufferTest()
+        {
+            const string localHost = "localhost";
+            const int port = 30888;
+            var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+            var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+            client.SendBufferSize = client.ReceiveBufferSize = 0;
+            this.RunTransportTest(localHost, port, client, server);
+        }
 
-            TransportTestContext clientContext = new TransportTestContext()
-            {
-                MaxNumber = TestMaxNumber,
-                TransportSettings = AmqpUtils.GetTcpSettings(localHost, port, false)
-            };
-
-            Thread listenerThread = new Thread(new ParameterizedThreadStart(ListenerThread));
-            listenerThread.Start(serverContext);
-
-            Thread initiatorThread = new Thread(new ParameterizedThreadStart(InitiatorThread));
-            initiatorThread.Start(clientContext);
-
-            listenerThread.Join();
-            initiatorThread.Join();
-
-            Debug.WriteLine("TCP transport test completed.");
-            Assert.True(clientContext.Success);
-            Assert.True(serverContext.Success);
+        [Fact]
+        public void TcpTransportServerDynamicBufferTest()
+        {
+            const string localHost = "localhost";
+            const int port = 30888;
+            var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+            var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+            server.SendBufferSize = server.ReceiveBufferSize = 0;
+            this.RunTransportTest(localHost, port, client, server);
         }
 
         [Fact]
@@ -78,6 +78,34 @@
             {
                 socket.Close();
             }
+        }
+
+        void RunTransportTest(string host, int port, TransportSettings client, TransportSettings server)
+        {
+            TransportTestContext serverContext = new TransportTestContext()
+            {
+                MaxNumber = TestMaxNumber,
+                TransportSettings = client
+            };
+
+            TransportTestContext clientContext = new TransportTestContext()
+            {
+                MaxNumber = TestMaxNumber,
+                TransportSettings = server
+            };
+
+            Thread listenerThread = new Thread(new ParameterizedThreadStart(ListenerThread));
+            listenerThread.Start(serverContext);
+
+            Thread initiatorThread = new Thread(new ParameterizedThreadStart(InitiatorThread));
+            initiatorThread.Start(clientContext);
+
+            listenerThread.Join();
+            initiatorThread.Join();
+
+            Debug.WriteLine("TCP transport test completed.");
+            Assert.True(clientContext.Success);
+            Assert.True(serverContext.Success);
         }
 
         internal static TransportBase AcceptServerTransport(TransportSettings settings)

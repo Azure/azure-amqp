@@ -6,7 +6,6 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Collections.Generic;
     using System.Threading;
-    using System.Runtime.InteropServices;
     using System.Collections.Concurrent;
 
     abstract class InternalBufferManager
@@ -49,47 +48,36 @@ namespace Microsoft.Azure.Amqp
 
         sealed class PreallocatedBufferManager : InternalBufferManager
         {
-            readonly int maxBufferSize;
-            readonly int medBufferSize;
+            readonly int largeBufferSize;
             readonly int smallBufferSize;
             readonly ConcurrentStack<byte[]> freeSmallBuffers;
-            readonly ConcurrentStack<byte[]> freeMedianBuffers;
             readonly ConcurrentStack<byte[]> freeLargeBuffers;
             byte[][] buffersList;
 
             internal PreallocatedBufferManager(long maxMemoryToPool)
             {
-                // Buffer sizes are fixed.
-                this.maxBufferSize = 64 * 1024;
-                this.medBufferSize = 8 * 1024;
-                this.smallBufferSize = 1024;
+                // Buffer sizes are fixed. For default maxPool 48MB,
+                // 64KB (L) = 48, 8KB (S) = 5760
+                this.largeBufferSize = 64 * 1024;
+                this.smallBufferSize = 8 * 1024;
 
-                long numLargeBuffers = 128;
-                long numSmallBuffers = 4096;
-                long medMemorySize = maxMemoryToPool - (numLargeBuffers * this.maxBufferSize) - (numSmallBuffers * this.smallBufferSize);
-                long numMedBuffers = medMemorySize / this.medBufferSize;
-                long numBuffers = numLargeBuffers + numMedBuffers + numSmallBuffers;
+                long largeBufferMemory = maxMemoryToPool / 16;
+                long numLargeBuffers = largeBufferMemory / this.largeBufferSize;
+                long numSmallBuffers = (maxMemoryToPool - largeBufferMemory) / this.smallBufferSize;
+                long numBuffers = numLargeBuffers + numSmallBuffers;
 
                 this.buffersList = new byte[numBuffers][];
                 this.freeSmallBuffers = new ConcurrentStack<byte[]>();
-                this.freeMedianBuffers = new ConcurrentStack<byte[]>();
                 this.freeLargeBuffers = new ConcurrentStack<byte[]>();
 
                 int lastLarge = 0;
                 for (int i = 0; i < numLargeBuffers; i++, lastLarge++)
                 {
-                    buffersList[i] = new byte[maxBufferSize];
+                    buffersList[i] = new byte[largeBufferSize];
                     this.freeLargeBuffers.Push(buffersList[i]);
                 }
 
-                int lastMed = lastLarge;
-                for (int i = lastLarge; i < numMedBuffers + lastLarge; i++, lastMed++)
-                {
-                    buffersList[i] = new byte[this.medBufferSize];
-                    this.freeMedianBuffers.Push(buffersList[i]);
-                }
-
-                for (int i = lastMed; i < numSmallBuffers + lastMed; i++)
+                for (int i = lastLarge; i < numSmallBuffers + lastLarge; i++)
                 {
                     buffersList[i] = new byte[this.smallBufferSize];
                     this.freeSmallBuffers.Push(buffersList[i]);
@@ -98,7 +86,7 @@ namespace Microsoft.Azure.Amqp
 
             public override byte[] TakeBuffer(int bufferSize)
             {
-                if (bufferSize > this.maxBufferSize)
+                if (bufferSize > this.largeBufferSize)
                 {
                     return null;
                 }
@@ -107,12 +95,6 @@ namespace Microsoft.Azure.Amqp
                 if (bufferSize <= this.smallBufferSize)
                 {
                     this.freeSmallBuffers.TryPop(out returnedBuffer);
-                    return returnedBuffer;
-                }
-
-                if (bufferSize <= this.medBufferSize)
-                {
-                    this.freeMedianBuffers.TryPop(out returnedBuffer);
                     return returnedBuffer;
                 }
 
@@ -126,15 +108,11 @@ namespace Microsoft.Azure.Amqp
             /// <param name="buffer"></param>
             public override void ReturnBuffer(byte[] buffer)
             {
-                if (buffer.Length <= this.smallBufferSize)
+                if (buffer.Length == this.smallBufferSize)
                 {
                     this.freeSmallBuffers.Push(buffer);
                 }
-                else if (buffer.Length <= this.medBufferSize)
-                {
-                    this.freeMedianBuffers.Push(buffer);
-                }
-                else
+                else if (buffer.Length == this.largeBufferSize)
                 {
                     this.freeLargeBuffers.Push(buffer);
                 }
@@ -144,7 +122,6 @@ namespace Microsoft.Azure.Amqp
             {
                 this.buffersList = null;
                 this.freeSmallBuffers.Clear();
-                this.freeMedianBuffers.Clear();
                 this.freeLargeBuffers.Clear();
             }
         }

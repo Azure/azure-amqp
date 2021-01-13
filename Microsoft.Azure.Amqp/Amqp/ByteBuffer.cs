@@ -39,13 +39,18 @@ namespace Microsoft.Azure.Amqp
 
         public static void InitBufferManagers()
         {
+            InitBufferManagers(48 * 1024 * 1024);
+        }
+
+        public static void InitBufferManagers(long maxPoolSizeInBytes)
+        {
             if (TransportBufferManager == null)
             {
                 lock (syncRoot)
                 {
                     if (TransportBufferManager == null)
                     {
-                        TransportBufferManager = InternalBufferManager.Create(48 * 1024 * 1024, AmqpConstants.TransportBufferSize, true);
+                        TransportBufferManager = InternalBufferManager.Create(maxPoolSizeInBytes, 64 * 1024, true);
                     }
                 }
             }

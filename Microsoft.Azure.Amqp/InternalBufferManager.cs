@@ -30,7 +30,7 @@ namespace Microsoft.Azure.Amqp
                 Fx.Assert(maxBufferPoolSize > 0 && maxBufferSize >= 0, "bad params, caller should verify");
                 if (isTransportBufferPool)
                 {
-                    return new PreallocatedBufferManager(maxBufferPoolSize, maxBufferSize);
+                    return new PreallocatedBufferManager(maxBufferPoolSize);
                 }
                 else
                 {
@@ -52,30 +52,25 @@ namespace Microsoft.Azure.Amqp
             readonly int maxBufferSize;
             readonly int medBufferSize;
             readonly int smallBufferSize;
-
-            byte[][] buffersList;
-            readonly GCHandle[] handles;
             readonly ConcurrentStack<byte[]> freeSmallBuffers;
             readonly ConcurrentStack<byte[]> freeMedianBuffers;
             readonly ConcurrentStack<byte[]> freeLargeBuffers;
+            byte[][] buffersList;
 
-            internal PreallocatedBufferManager(long maxMemoryToPool, int maxBufferSize)
+            internal PreallocatedBufferManager(long maxMemoryToPool)
             {
-                // default values: maxMemoryToPool = 48MB, maxBufferSize = 64KB
-                // This creates the following buffers:
-                // max: 64KB = 256, med 16KB = 1024, small 4KB = 4096
-                this.maxBufferSize = maxBufferSize;
-                this.medBufferSize = maxBufferSize / 4;
-                this.smallBufferSize = maxBufferSize / 16;
+                // Buffer sizes are fixed.
+                this.maxBufferSize = 64 * 1024;
+                this.medBufferSize = 8 * 1024;
+                this.smallBufferSize = 1024;
 
-                long eachPoolSize = maxMemoryToPool / 3;
-                long numLargeBuffers = eachPoolSize / maxBufferSize;
-                long numMedBuffers = eachPoolSize / medBufferSize;
-                long numSmallBuffers = eachPoolSize / smallBufferSize;
+                long numLargeBuffers = 128;
+                long numSmallBuffers = 4096;
+                long medMemorySize = maxMemoryToPool - (numLargeBuffers * this.maxBufferSize) - (numSmallBuffers * this.smallBufferSize);
+                long numMedBuffers = medMemorySize / this.medBufferSize;
                 long numBuffers = numLargeBuffers + numMedBuffers + numSmallBuffers;
 
                 this.buffersList = new byte[numBuffers][];
-                this.handles = new GCHandle[numBuffers];
                 this.freeSmallBuffers = new ConcurrentStack<byte[]>();
                 this.freeMedianBuffers = new ConcurrentStack<byte[]>();
                 this.freeLargeBuffers = new ConcurrentStack<byte[]>();
@@ -84,7 +79,6 @@ namespace Microsoft.Azure.Amqp
                 for (int i = 0; i < numLargeBuffers; i++, lastLarge++)
                 {
                     buffersList[i] = new byte[maxBufferSize];
-                    handles[i] = GCHandle.Alloc(buffersList[i], GCHandleType.Pinned);
                     this.freeLargeBuffers.Push(buffersList[i]);
                 }
 
@@ -92,14 +86,12 @@ namespace Microsoft.Azure.Amqp
                 for (int i = lastLarge; i < numMedBuffers + lastLarge; i++, lastMed++)
                 {
                     buffersList[i] = new byte[this.medBufferSize];
-                    handles[i] = GCHandle.Alloc(buffersList[i], GCHandleType.Pinned);
                     this.freeMedianBuffers.Push(buffersList[i]);
                 }
 
                 for (int i = lastMed; i < numSmallBuffers + lastMed; i++)
                 {
                     buffersList[i] = new byte[this.smallBufferSize];
-                    handles[i] = GCHandle.Alloc(buffersList[i], GCHandleType.Pinned);
                     this.freeSmallBuffers.Push(buffersList[i]);
                 }
             }
@@ -146,16 +138,10 @@ namespace Microsoft.Azure.Amqp
                 {
                     this.freeLargeBuffers.Push(buffer);
                 }
-
             }
 
             public override void Clear()
             {
-                for (int i = 0; i < this.buffersList.Length; i++)
-                {
-                    this.handles[i].Free();
-                    this.buffersList[i] = null;
-                }
                 this.buffersList = null;
                 this.freeSmallBuffers.Clear();
                 this.freeMedianBuffers.Clear();

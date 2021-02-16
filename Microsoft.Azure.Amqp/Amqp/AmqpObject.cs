@@ -128,6 +128,8 @@ namespace Microsoft.Azure.Amqp
             get { return this.thisLock; }
         }
 
+        internal bool CloseCalled => this.closeCalled;
+
         public void Open()
         {
             this.Open(this.DefaultOpenTimeout);

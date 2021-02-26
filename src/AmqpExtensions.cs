@@ -5,7 +5,6 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Globalization;
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
@@ -37,82 +36,6 @@ namespace Microsoft.Azure.Amqp
             }
 
             return output == null ? sb.ToString() : null;
-        }
-
-        internal static void Trace(this ProtocolHeader header, bool send, AmqpConnection connection)
-        {
-            if (!AmqpTrace.AmqpDebug)
-            {
-                return;
-            }
-
-            string message = string.Format(
-                        "{0} [{1:X3}.{2:X3} {3:HH:mm:ss.fff}] {4} {5}",
-                        AppDomain.CurrentDomain.FriendlyName,
-                        Process.GetCurrentProcess().Id,
-                        Environment.CurrentManagedThreadId,
-                        DateTime.UtcNow,
-                        send ? "SEND" : "RECV",
-                        header.ToString());
-
-            if (AmqpTrace.TraceCallback != null)
-            {
-                AmqpTrace.TraceCallback(message);
-            }
-            else
-            {
-                System.Diagnostics.Trace.WriteLine(message);
-            }
-        }
-
-        internal static void Trace(this Frame frame, bool send, AmqpConnection connection)
-        {
-            if (!AmqpTrace.AmqpDebug)
-            {
-                return;
-            }
-
-            if (AmqpTrace.FrameCallback != null)
-            {
-                AmqpTrace.FrameCallback(send, connection, frame);
-            }
-            else
-            {
-                StringBuilder sb = new StringBuilder(1024);
-                sb.AppendFormat(
-                    "{0} [{1:X3}.{2:X3} {3:HH:mm:ss.fff}] {4} FRM({5:X4}|{6}|{7}|{8:X2}",
-                    AppDomain.CurrentDomain.FriendlyName,
-                    Process.GetCurrentProcess().Id,
-                    Environment.CurrentManagedThreadId,
-                    DateTime.UtcNow,
-                    send ? "SEND" : "RECV",
-                    frame.Size,
-                    frame.DataOffset,
-                    frame.Type,
-                    frame.Channel);
-                if (frame.Command != null)
-                {
-                    sb.Append(' ');
-                    sb.Append(frame.Command);
-                }
-
-                if (frame.Payload.Count > 0)
-                {
-                    sb.Append(' ');
-                    frame.Payload.GetString(128, sb);
-                }
-
-                sb.Append(')');
-
-                if (AmqpTrace.TraceCallback != null)
-                {
-                    AmqpTrace.TraceCallback(sb.ToString());
-                }
-                else
-                {
-                    System.Diagnostics.Trace.WriteLine(sb.ToString());
-                }
-            }
         }
 
         // open

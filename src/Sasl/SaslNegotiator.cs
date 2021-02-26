@@ -99,13 +99,8 @@ namespace Microsoft.Azure.Amqp.Sasl
         {
             try
             {
-#if DEBUG
-                Frame frame = new Frame(FrameType.Sasl) { Command = command };
-                frame.Trace(true, null);
-                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Send, frame);
-#endif
-
                 ByteBuffer buffer = Frame.EncodeCommand(FrameType.Sasl, 0, command, 0);
+                AmqpTrace.OnFrame(0, FrameType.Sasl, 0, command, true, buffer.Length);
                 TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();
                 args.SetWriteBuffer(buffer);
                 args.CompletedCallback = onWriteFrameComplete;
@@ -233,11 +228,7 @@ namespace Microsoft.Azure.Amqp.Sasl
             try
             {
                 frame.Decode(buffer);
-#if DEBUG
-                frame.Trace(false, null);
-                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Receive, frame);
-#endif
-
+                AmqpTrace.OnFrame(0, frame.Type, frame.Channel, frame.Command, false, frame.Size);
                 if (frame.Type != FrameType.Sasl)
                 {
                     throw new AmqpException(AmqpErrorCode.InvalidField, "sasl-frame-type");

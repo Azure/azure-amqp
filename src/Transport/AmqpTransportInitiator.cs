@@ -160,10 +160,7 @@ namespace Microsoft.Azure.Amqp.Transport
             // secure transport: header negotiation
             TransportProvider provider = this.settings.TransportProviders[this.providerIndex];
             this.sentHeader = new ProtocolHeader(provider.ProtocolId, provider.DefaultVersion);
-#if DEBUG
-            this.sentHeader.Trace(true, null);
-            AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Send, this.sentHeader);
-#endif
+            AmqpTrace.OnProtocolHeader(this.sentHeader, true);
 
             ByteBuffer buffer = new ByteBuffer(new byte[AmqpConstants.ProtocolHeaderSize]);
             this.sentHeader.Encode(buffer);
@@ -201,10 +198,7 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 ProtocolHeader receivedHeader = new ProtocolHeader();
                 receivedHeader.Decode(new ByteBuffer(args.Buffer, args.Offset, args.Count));
-#if DEBUG
-                receivedHeader.Trace(false, null);
-                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Receive, receivedHeader);
-#endif
+                AmqpTrace.OnProtocolHeader(receivedHeader, false);
 
                 if (!receivedHeader.Equals(this.sentHeader))
                 {

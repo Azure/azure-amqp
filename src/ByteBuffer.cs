@@ -150,29 +150,7 @@ namespace Microsoft.Azure.Amqp
             this.autoGrow = autoGrow;
             this.bufferManager = bufferManager;
             this.references = 1;
-#if DEBUG
-            if (AmqpTrace.AmqpDebug && bufferManager != null)
-            {
-                this.stack = new StackTrace();
-            }
-#endif
         }
-
-#if DEBUG
-        StackTrace stack;
-
-        /// <summary>
-        /// Finalizer for the object.
-        /// </summary>
-        ~ByteBuffer()
-        {
-            if (this.stack != null)
-            {
-                System.Diagnostics.Trace.WriteLine(string.Format("{0} leak {1} bytes from {2}",
-                    AppDomain.CurrentDomain.FriendlyName, this.end, this.stack));
-            }
-        }
-#endif
 
         static ManagedBuffer AllocateBufferFromPool(int size, bool isTransportBuffer)
         {
@@ -356,12 +334,6 @@ namespace Microsoft.Azure.Amqp
                 return this.innerBuffer.GetSlice(position, length);
             }
 
-#if DEBUG
-            if (AmqpTrace.AmqpDebug && this.bufferManager != null)
-            {
-                this.stack = new StackTrace();
-            }
-#endif
             ByteBuffer wrapped = this.AddReference();
             return new ByteBuffer(wrapped.buffer, position, length, length, false, null)
             {
@@ -435,13 +407,6 @@ namespace Microsoft.Azure.Amqp
         public void RemoveReference()
         {
             int refCount = Interlocked.Decrement(ref this.references);
-#if DEBUG
-            if (refCount <= 0)
-            {
-                this.stack = null;
-            }
-#endif
-
             if (this.innerBuffer != null)
             {
                 this.innerBuffer.RemoveReference();

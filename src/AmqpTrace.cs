@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Text;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transport;
 
@@ -18,27 +19,9 @@ namespace Microsoft.Azure.Amqp
         public static AmqpTrace Provider = new AmqpTrace();
 
         /// <summary>
-        /// A boolean value that controls if frames should be traced. It is set when
-        /// the value of environment variable "AMQP_DEBUG" is "1".
-        /// </summary>
-        /// <remarks>When the flag is true, the library performs the following actioins
-        /// for every frame sent and received.
-        /// 1. Invoke FrameCallback if it is set, or
-        /// 2. Create a string representation of the frame,
-        /// 3. Invoke TraceCallback if it is set, or
-        /// 4. Write the string to <see cref="System.Diagnostics.Debug"/> channel.
-        /// These actions may have significant performance impact, so the flag should
-        /// be turned on only for debugging purposes.
-        /// </remarks>
-        public static bool AmqpDebug = string.Equals(Environment.GetEnvironmentVariable("AMQP_DEBUG"), "1", StringComparison.Ordinal);
-        /// <summary>
-        /// The callback that is invoked when a frame is sent or received.
-        /// </summary>
-        public static Action<bool, AmqpConnection, Frame> FrameCallback;
-        /// <summary>
         /// The callback that is invoked with a string representation of a frame.
         /// </summary>
-        public static Action<string> TraceCallback;
+        public static Action<string> FrameLogger;
 
         /// <summary>
         /// Initializes the object.
@@ -310,6 +293,64 @@ namespace Microsoft.Azure.Amqp
         /// <param name="queueSize">The size that the source maintains for such events.</param>
         public virtual void AmqpIoEvent(AmqpObject source, IoEvent ioEvent, long queueSize)
         {
+        }
+
+        internal static void OnProtocolHeader(ProtocolHeader header, bool send)
+        {
+            if (FrameLogger != null)
+            {
+                LogProtocolHeader(header, send);
+            }
+        }
+
+        internal static void OnFrame(uint id, FrameType type, ushort channel, Performative command, bool send, int frameSize)
+        {
+            if (FrameLogger != null)
+            {
+                LogFrame(id, type, channel, command, send, frameSize);
+            }
+        }
+
+        static void LogProtocolHeader(ProtocolHeader header, bool send)
+        {
+            StringBuilder sb = new StringBuilder();
+            AppendCommon(sb, 0, send);
+            sb.Append(' ');
+            sb.Append(header);
+
+            FrameLogger(sb.ToString());
+        }
+
+        static void LogFrame(uint id, FrameType type, ushort channel, Performative command, bool send, int frameSize)
+        {
+            StringBuilder sb = new StringBuilder();
+            AppendCommon(sb, id, send);
+            sb.Append(' ');
+            sb.Append("FRM");
+            sb.Append('(');
+            sb.AppendFormat("{0:X4}", frameSize);
+            sb.Append('|');
+            sb.AppendFormat("{0:X2}", (int)type);
+            sb.AppendFormat("{0:X2}", channel);
+            if (command != null)
+            {
+                sb.Append(' ');
+                sb.Append(command);
+            }
+            sb.Append(')');
+
+            FrameLogger(sb.ToString());
+        }
+
+        static void AppendCommon(StringBuilder sb, uint id, bool send)
+        {
+            sb.Append('[');
+            sb.AppendFormat("{0:X4}", id);
+            sb.Append(' ');
+            sb.AppendFormat("{0:HH:mm:ss.fff}", DateTime.UtcNow);
+            sb.Append(']');
+            sb.Append(' ');
+            sb.Append(send? "SEND" : "RECV");
         }
     }
 }

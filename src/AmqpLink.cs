@@ -957,7 +957,7 @@ namespace Microsoft.Azure.Amqp
                     }
 
                     ++this.needFlowCount;
-                    if (this.needFlowCount >= this.settings.FlowThreshold)
+                    if (this.needFlowCount >= this.settings.FlowThreshold && !this.CloseCalled)
                     {
                         sendFlow = true;
                         this.needFlowCount = 0;

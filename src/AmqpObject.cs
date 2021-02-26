@@ -136,6 +136,8 @@ namespace Microsoft.Azure.Amqp
             get { return this.thisLock; }
         }
 
+        internal bool CloseCalled => this.closeCalled;
+
         /// <summary>
         /// Opens the object with default timeout.
         /// </summary>

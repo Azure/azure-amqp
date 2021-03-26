@@ -12,6 +12,7 @@ namespace Microsoft.Azure.Amqp.Transport
         static readonly SegmentBufferPool SmallBufferPool = new SegmentBufferPool(FixedWidth.ULong, 100000);
         static readonly EventHandler<SocketAsyncEventArgs> onWriteComplete = OnWriteComplete;
         static readonly EventHandler<SocketAsyncEventArgs> onReadComplete = OnReadComplete;
+        const int MinSocketBufferSize = 1024;
         readonly Socket socket;
         readonly string localEndPoint;
         readonly string remoteEndPoint;
@@ -26,20 +27,10 @@ namespace Microsoft.Azure.Amqp.Transport
             this.socket.NoDelay = true;
             this.localEndPoint = this.socket.LocalEndPoint.ToString();
             this.remoteEndPoint = this.socket.RemoteEndPoint.ToString();
-            this.sendEventArgs = new WriteAsyncEventArgs(transportSettings.SendBufferSize);
-            this.sendEventArgs.Transport = this;
+            this.sendEventArgs = new WriteAsyncEventArgs(this, transportSettings.InternalSendBufferSize);
             this.sendEventArgs.Completed += onWriteComplete;
-            this.receiveEventArgs = new ReadAsyncEventArgs(transportSettings.ReceiveBufferSize);
+            this.receiveEventArgs = new ReadAsyncEventArgs(this, transportSettings.InternalReceiveBufferSize);
             this.receiveEventArgs.Completed += onReadComplete;
-            this.receiveEventArgs.Transport = this;
-            if (transportSettings.InternalSendBufferSize >= 0)
-            {
-                this.socket.SendBufferSize = transportSettings.InternalSendBufferSize;
-            }
-            if (transportSettings.InternalReceiveBufferSize >= 0)
-            {
-                this.socket.ReceiveBufferSize = transportSettings.InternalReceiveBufferSize;
-            }
         }
 
         public override string LocalEndPoint
@@ -319,16 +310,21 @@ namespace Microsoft.Azure.Amqp.Transport
             Timestamp startTime;
             int bufferSize;
 
-            public WriteAsyncEventArgs(int bufferSize)
+            public WriteAsyncEventArgs(TcpTransport tcpTransport, int bufferSize)
             {
+                this.Transport = tcpTransport;
                 this.bufferSize = bufferSize;
                 if (bufferSize == 0)
                 {
                     this.writeTracker = new BufferSizeTracker(1024);
                 }
+                else if (bufferSize > 0)
+                {
+                    this.Transport.socket.SendBufferSize = bufferSize;
+                }
             }
 
-            public TcpTransport Transport { get; set; }
+            public TcpTransport Transport { get; private set; }
 
             public TransportAsyncCallbackArgs Args { get; set; }
 
@@ -343,7 +339,7 @@ namespace Microsoft.Azure.Amqp.Transport
                     AmqpTrace.Provider.AmqpDynamicBufferSizeChange(this.Transport, "write", this.bufferSize, newSize);
 
                     this.bufferSize = newSize;
-                    this.Transport.socket.SendBufferSize = this.bufferSize;
+                    this.Transport.socket.SendBufferSize = Math.Max(this.bufferSize, MinSocketBufferSize);
                 }
             }
 
@@ -369,21 +365,28 @@ namespace Microsoft.Azure.Amqp.Transport
             Timestamp startTime;
             int cacheHits;
 
-            public ReadAsyncEventArgs(int bufferSize)
+            public ReadAsyncEventArgs(TcpTransport tcpTransport, int bufferSize)
             {
+                this.Transport = tcpTransport;
                 this.bufferSize = bufferSize;
                 this.segment = SmallBufferPool.TakeBuffer(FixedWidth.ULong);
-                if (bufferSize == 0)
+                if (bufferSize < 0 && ByteBuffer.TransportBufferManager != null)
+                {
+                    // not set but user enabled transport buffer pool
+                    this.readBuffer = new ByteBuffer(AmqpConstants.TransportBufferSize, false, true);
+                }
+                else if (bufferSize == 0)
                 {
                     this.readTracker = new BufferSizeTracker(512);
                 }
-                else
+                else if (bufferSize > 0)
                 {
                     this.readBuffer = new ByteBuffer(bufferSize, false, true);
+                    this.Transport.socket.ReceiveBufferSize = bufferSize;
                 }
             }
 
-            public TcpTransport Transport { get; set; }
+            public TcpTransport Transport { get; private set; }
 
             public TransportAsyncCallbackArgs Args { get; set; }
 
@@ -398,7 +401,7 @@ namespace Microsoft.Azure.Amqp.Transport
                     AmqpTrace.Provider.AmqpDynamicBufferSizeChange(this.Transport, "read", this.bufferSize, newSize);
 
                     this.bufferSize = newSize;
-                    this.Transport.socket.ReceiveBufferSize = this.bufferSize;
+                    this.Transport.socket.ReceiveBufferSize = Math.Max(this.bufferSize, MinSocketBufferSize);
                 }
 
                 ByteBuffer current = this.readBuffer;
@@ -492,7 +495,7 @@ namespace Microsoft.Azure.Amqp.Transport
             static long durationTicks = TimeSpan.FromSeconds(2).Ticks;
             static int[] thresholds = new int[] { 0, 4 * 1024, 2 * 1024 * 1024 };
             static int[] bufferSizes = new int[] { 0, 8 * 1024, 64 * 1024 };
-            int unitSize;
+            readonly int unitSize;
             DateTime firstOperation;
             int transferedBytes;
             sbyte level;

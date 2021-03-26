@@ -4,6 +4,7 @@
     using System.Diagnostics;
     using System.Net;
     using System.Net.Sockets;
+    using System.Reflection;
     using System.Threading;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Transport;
@@ -38,6 +39,17 @@
         }
 
         [Fact]
+        public void TcpTransportClientFixedBufferTest()
+        {
+            const string localHost = "localhost";
+            const int port = 30888;
+            var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+            var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+            client.SendBufferSize = client.ReceiveBufferSize = 16 * 1024;
+            this.RunTransportTest(localHost, port, client, server);
+        }
+
+        [Fact]
         public void TcpTransportServerDynamicBufferTest()
         {
             const string localHost = "localhost";
@@ -45,6 +57,54 @@
             var client = AmqpUtils.GetTcpSettings(localHost, port, true);
             var server = AmqpUtils.GetTcpSettings(localHost, port, false);
             server.SendBufferSize = server.ReceiveBufferSize = 0;
+            this.RunTransportTest(localHost, port, client, server);
+        }
+
+        [Fact]
+        public void TcpTransportServerPooledBufferTest()
+        {
+            const string localHost = "localhost";
+            const int port = 30888;
+            ByteBuffer.InitBufferManagers(1024 * 1024);
+            try
+            {
+                var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+                var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+                this.RunTransportTest(localHost, port, client, server);
+            }
+            finally
+            {
+                typeof(ByteBuffer).GetField("TransportBufferManager", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, null);
+            }
+        }
+
+        [Fact]
+        public void TcpTransportServerDynamicPooledBufferTest()
+        {
+            const string localHost = "localhost";
+            const int port = 30888;
+            ByteBuffer.InitBufferManagers(1024 * 1024);
+            try
+            {
+                var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+                var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+                server.SendBufferSize = server.ReceiveBufferSize = 0;
+                this.RunTransportTest(localHost, port, client, server);
+            }
+            finally
+            {
+                typeof(ByteBuffer).GetField("TransportBufferManager", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, null);
+            }
+        }
+
+        [Fact]
+        public void TcpTransportServerFixedBufferTest()
+        {
+            const string localHost = "localhost";
+            const int port = 30888;
+            var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+            var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+            server.SendBufferSize = server.ReceiveBufferSize = 16 * 1024;
             this.RunTransportTest(localHost, port, client, server);
         }
 

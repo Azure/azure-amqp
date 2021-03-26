@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Amqp
     {
         static readonly InternalBufferManager BufferManager = InternalBufferManager.Create(50 * 1024 * 1024, int.MaxValue, false);
 
-        static InternalBufferManager TransportBufferManager;
+        internal static InternalBufferManager TransportBufferManager;
         static object syncRoot = new object();
 
         //

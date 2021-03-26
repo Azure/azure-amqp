@@ -78,7 +78,6 @@ namespace Microsoft.Azure.Amqp
         public const uint DefaultWindowSize = 5000;
         public const uint DefaultLinkCredit = 1000;
         public const uint DefaultNextTransferId = 1;
-        public const int DefaultDispositionTimeout = 20;
 
         public const int SegmentSize = 512;
         public const byte AmqpFormat = 1;

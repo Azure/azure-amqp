@@ -18,6 +18,7 @@ namespace TestAmqpBroker
 
     public sealed class TestAmqpBroker : IRuntimeProvider
     {
+        public const uint ConnectionIdleTimeOut = 4 * 60 * 1000;
         readonly Dictionary<string, TestQueue> queues;
         readonly Dictionary<SequenceNumber, AmqpConnection> connections;
         readonly TxnManager txnManager;
@@ -141,7 +142,8 @@ namespace TestAmqpBroker
             AmqpConnectionSettings connectionSettings = new AmqpConnectionSettings()
             {
                 ContainerId = this.containerId,
-                MaxFrameSize = this.maxFrameSize
+                MaxFrameSize = this.maxFrameSize,
+                IdleTimeOut = ConnectionIdleTimeOut
             };
 
             AmqpConnection connection = null;

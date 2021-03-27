@@ -12,6 +12,7 @@
     <Compile Include="..\Common\TestCategory.cs" Link="Common\TestCategory.cs" />
     <Compile Include="..\TestAmqpBroker\TestAmqpBroker.cs" Link="TestAmqpBroker.cs" />
     <Compile Include="..\TestCases\AmqpCodecTests.cs" Link="TestCases\AmqpCodecTests.cs" />
+    <Compile Include="..\TestCases\AmqpConnectionTests.cs" Link="TestCases\AmqpConnectionTests.cs" />
     <Compile Include="..\TestCases\AmqpLinkTests.cs" Link="TestCases\AmqpLinkTests.cs" />
     <Compile Include="..\TestCases\AmqpMessageTests.cs" Link="TestCases\AmqpMessageTests.cs" />
     <Compile Include="..\TestCases\AmqpTransportTests.cs" Link="TestCases\AmqpTransportTests.cs" />

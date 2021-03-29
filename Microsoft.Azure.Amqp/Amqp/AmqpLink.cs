@@ -666,10 +666,15 @@ namespace Microsoft.Azure.Amqp
                 delivery.CompletePayload(payloadSize);
             }
 
-            if (!more && delivery.Settled)
+            if (!more)
             {
-                delivery.State = AmqpConstants.AcceptedOutcome;
-                this.OnDisposeDeliveryInternal(delivery);
+                AmqpTrace.Provider.AmqpSentMessage(this, delivery.DeliveryId.Value, delivery.BytesTransfered);
+
+                if (delivery.Settled)
+                {
+                    delivery.State = AmqpConstants.AcceptedOutcome;
+                    this.OnDisposeDeliveryInternal(delivery);
+                }
             }
 
             return !more;

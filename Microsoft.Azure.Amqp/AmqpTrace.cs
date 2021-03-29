@@ -67,7 +67,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (AmqpEventSource.Log.IsEnabled(EventLevel.Verbose, EventKeywords.None))
             {
-                AmqpEventSource.Log.AmqpDispose(source.ToString(), deliveryId, settled, state.ToString());
+                AmqpEventSource.Log.AmqpDispose(source.ToString(), deliveryId, settled, state == null ? string.Empty : state.ToString());
             }
         }
 
@@ -151,6 +151,14 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        public virtual void AmqpSentMessage(object source, uint deliveryId, long bytes)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Verbose, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpSentMessage(source.ToString(), deliveryId, bytes);
+            }
+        }
+
         public virtual void AmqpReceiveMessage(object source, uint deliveryId, int transferCount)
         {
             if (AmqpEventSource.Log.IsEnabled(EventLevel.Verbose, EventKeywords.None))
@@ -227,7 +235,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (AmqpEventSource.Log.IsEnabled(EventLevel.Error, EventKeywords.None))
             {
-                AmqpEventSource.Log.AmqpHandleException(exception, traceInfo);
+                AmqpEventSource.Log.AmqpHandleException(exception.ToStringSlim(), traceInfo);
             }
         }
 

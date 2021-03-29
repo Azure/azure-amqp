@@ -16,12 +16,6 @@ namespace Microsoft.Azure.Amqp
     /// </summary>
     public static class Extensions
     {
-#if DEBUG
-#if !PCL
-        static bool AmqpDebug = string.Equals(Environment.GetEnvironmentVariable("AMQP_DEBUG"), "1", StringComparison.Ordinal);
-#endif
-#endif
-
         public static string GetString(this ArraySegment<byte> binary)
         {
             StringBuilder sb = new StringBuilder(binary.Count * 2);

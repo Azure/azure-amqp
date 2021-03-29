@@ -49,6 +49,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\Microsoft.Azure.Amqp\AmqpEventSource.cs">
+      <Link>AmqpEventSource.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\AmqpConnectionFactory.cs">
       <Link>Amqp\AmqpConnectionFactory.cs</Link>
     </Compile>

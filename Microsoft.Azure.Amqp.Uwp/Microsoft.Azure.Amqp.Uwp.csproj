@@ -170,6 +170,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Microsoft.Azure.Amqp\ActionItem.cs" />
+    <Compile Include="..\Microsoft.Azure.Amqp\AmqpEventSource.cs">
+      <Link>AmqpEventSource.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\AmqpTrace.cs" />
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Cbs\AmqpCbsLink.cs">
       <Link>Amqp\Cbs\AmqpCbsLink.cs</Link>

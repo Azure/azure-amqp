@@ -224,11 +224,12 @@ namespace Microsoft.Azure.Amqp
         IAsyncResult BeginReceiveMessages(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
         {
             this.ThrowIfClosed();
-            List<AmqpMessage> messages = new List<AmqpMessage>();
+            List<AmqpMessage> messages = null;
             lock (this.SyncRoot)
             {
                 if (this.messageQueue != null && this.messageQueue.Count > 0)
                 {
+                    messages = new List<AmqpMessage>(messageCount);
                     for (int i = 0; i < messageCount && this.messageQueue.Count > 0; i++)
                     {
                         messages.Add(this.messageQueue.Dequeue());
@@ -236,7 +237,7 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            if (!messages.Any() && timeout > TimeSpan.Zero)
+            if (messages == null && timeout > TimeSpan.Zero)
             {
                 ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, callback, state);
                 bool completeWaiter = true;
@@ -248,6 +249,7 @@ namespace Microsoft.Azure.Amqp
                     }
                     else if (this.messageQueue.Count > 0)
                     {
+                        messages = new List<AmqpMessage>(messageCount);
                         for (int i = 0; i < messageCount && this.messageQueue.Count > 0; i++)
                         {
                             messages.Add(this.messageQueue.Dequeue());
@@ -278,7 +280,7 @@ namespace Microsoft.Azure.Amqp
                 return waiter;
             }
 
-            return new CompletedAsyncResult<IEnumerable<AmqpMessage>>(messages, callback, state);
+            return new CompletedAsyncResult<IEnumerable<AmqpMessage>>(messages ?? Enumerable.Empty<AmqpMessage>(), callback, state);
         }
 
         internal override void OnReceiveStateOpenSent(Attach attach)

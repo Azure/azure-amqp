@@ -243,7 +243,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     // closed, so return null message immediately
                 }
-                else if (this.messageQueue.Count > 0)
+                else if (!this.messageQueue.IsEmpty)
                 {
                     messages = new List<AmqpMessage>(messageCount);
                     for (int i = 0; i < messageCount && this.messageQueue.TryDequeue(out var amqpMessage); i++)
@@ -289,7 +289,7 @@ namespace Microsoft.Azure.Amqp
             // Update link credit based on Gateway's return max message size
             lock (this.SyncRoot)
             {
-                var queue = this.messageQueue as SizeBasedFlowQueue;
+                var queue = this.messageQueue;
                 if (queue != null)
                 {
                     queue.SetLinkCreditUsingTotalCacheSize();

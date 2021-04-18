@@ -454,11 +454,8 @@ namespace Microsoft.Azure.Amqp
         {
             if (!this.settings.AutoSendFlow)
             {
-                lock (this.syncRoot)
-                {
-                    this.settings.TotalLinkCredit = credit;
-                    this.linkCredit = credit;
-                }
+                this.settings.TotalLinkCredit = credit;
+                this.linkCredit = credit;
 
                 this.SendFlow(false, drain, txnId);
             }

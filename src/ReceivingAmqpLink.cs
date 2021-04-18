@@ -665,69 +665,75 @@ namespace Microsoft.Azure.Amqp
             if (this.messageListener != null)
             {
                 this.messageListener(message);
+                return;
             }
-            else
+
+            ReceiveAsyncResult waiter = null;
+            int creditToIssue = 0;
+            bool releaseMessage = false;
+
+            // waiter list is only ever modified within locks so count should return non-stale data
+            if (this.waiterList != null && this.waiterList.Count > 0)
             {
-                ReceiveAsyncResult waiter = null;
-                int creditToIssue = 0;
-                bool releaseMessage = false;
                 lock (this.SyncRoot)
                 {
-                    if (this.waiterList != null && this.waiterList.Count > 0)
+                    var firstWaiter = this.waiterList.First.Value;
+
+                    if (this.messageQueue.IsPrefetchingBySize)
                     {
-                        var firstWaiter = this.waiterList.First.Value;
-
-                        if (this.messageQueue.IsPrefetchingBySize)
+                        if (this.messageQueue.UpdateCreditToIssue(message))
                         {
-                            if (this.messageQueue.UpdateCreditToIssue(message))
-                            {
-                                this.SetTotalLinkCredit(this.messageQueue.BoundedTotalLinkCredit, true);
-                            }
-                        }
-
-                        firstWaiter.Add(message);
-                        if (firstWaiter.RequestedMessageCount == 1 || firstWaiter.MessageCount >= firstWaiter.RequestedMessageCount)
-                        {
-                            this.waiterList.RemoveFirst();
-                            firstWaiter.OnRemoved();
-                            creditToIssue = this.Settings.AutoSendFlow ? 0 : this.GetOnDemandReceiveCredit();
-                            waiter = firstWaiter;
+                            this.SetTotalLinkCredit(this.messageQueue.BoundedTotalLinkCredit, true);
                         }
                     }
-                    else if (!this.Settings.AutoSendFlow && this.Settings.SettleType != SettleMode.SettleOnSend)
+
+                    firstWaiter.Add(message);
+                    if (firstWaiter.RequestedMessageCount == 1 ||
+                        firstWaiter.MessageCount >= firstWaiter.RequestedMessageCount)
                     {
-                        releaseMessage = true;
-                    }
-                    else if (this.messageQueue != null)
-                    {
-                        this.messageQueue.Enqueue(message);
-                        AmqpTrace.Provider.AmqpCacheMessage(
-                            this,
-                            message.DeliveryId.Value,
-                            this.messageQueue.Count,
-                            this.messageQueue.IsPrefetchingBySize,
-                            this.TotalCacheSizeInBytes ?? 0,
-                            this.Settings == null ? 0 : this.Settings.TotalLinkCredit,
-                            this.LinkCredit);
+                        this.waiterList.RemoveFirst();
+                        firstWaiter.OnRemoved();
+                        creditToIssue = this.Settings.AutoSendFlow ? 0 : this.GetOnDemandReceiveCredit();
+                        waiter = firstWaiter;
                     }
                 }
+            }
+            else if (!this.Settings.AutoSendFlow && this.Settings.SettleType != SettleMode.SettleOnSend)
+            {
+                releaseMessage = true;
+            }
+            else if (this.messageQueue != null)
+            {
+                this.messageQueue.Enqueue(message);
+                AmqpTrace.Provider.AmqpCacheMessage(
+                    this,
+                    message.DeliveryId.Value,
+                    this.messageQueue.Count,
+                    this.messageQueue.IsPrefetchingBySize,
+                    this.TotalCacheSizeInBytes ?? 0,
+                    this.Settings == null ? 0 : this.Settings.TotalLinkCredit,
+                    this.LinkCredit);
+            }
 
-                if (releaseMessage)
-                {
-                    this.ReleaseMessage(message);
-                    message.Dispose();
-                }
+            if (releaseMessage)
+            {
+                this.ReleaseMessage(message);
+                message.Dispose();
+            }
 
-                if (creditToIssue > 0)
-                {
-                    this.IssueCredit((uint)creditToIssue, false, AmqpConstants.NullBinary);
-                }
+            if (creditToIssue > 0)
+            {
+                this.IssueCredit((uint) creditToIssue, false, AmqpConstants.NullBinary);
+            }
 
-                if (waiter != null)
+            if (waiter != null)
+            {
+                // Schedule the completion on another thread so we don't block the I/O thread
+                ActionItem.Schedule(o =>
                 {
-                    // Schedule the completion on another thread so we don't block the I/O thread
-                    ActionItem.Schedule(o => { var w = (ReceiveAsyncResult)o; w.Signal(false); }, waiter);
-                }
+                    var w = (ReceiveAsyncResult) o;
+                    w.Signal(false);
+                }, waiter);
             }
         }
 

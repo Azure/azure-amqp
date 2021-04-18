@@ -378,10 +378,9 @@ namespace Microsoft.Azure.Amqp
         /// <param name="ioEvent">The transport I/O event.</param>
         protected override void HandleIoEvent(IoEvent ioEvent)
         {
-            IEnumerator<AmqpSession> it = this.sessionsByLocalHandle.GetSafeEnumerator();
-            while (it.MoveNext())
+            foreach (var amqpLink in this.sessionsByLocalHandle.Values)
             {
-                it.Current.OnIoEvent(ioEvent);
+                amqpLink.OnIoEvent(ioEvent);
             }
         }
 

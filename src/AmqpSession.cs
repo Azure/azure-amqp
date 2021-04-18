@@ -311,10 +311,9 @@ namespace Microsoft.Azure.Amqp
 
         internal void OnIoEvent(IoEvent ioEvent)
         {
-            IEnumerator<AmqpLink> it = this.linksByLocalHandle.GetSafeEnumerator();
-            while (it.MoveNext())
+            foreach (var amqpLink in this.linksByLocalHandle.Values)
             {
-                it.Current.OnIoEvent(ioEvent);
+                amqpLink.OnIoEvent(ioEvent);
             }
         }
 

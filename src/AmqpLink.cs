@@ -1281,9 +1281,9 @@ namespace Microsoft.Azure.Amqp
             do
             {
                 Flow flow = new Flow();
-                flow.Handle = this.LocalHandle;
+                flow.Handle = this.settings.Handle;
                 flow.LinkCredit = this.linkCredit;
-                flow.Available = this.Available;
+                flow.Available = this.available;
                 flow.DeliveryCount = this.deliveryCount.Value;
                 if (this.drain)
                 {

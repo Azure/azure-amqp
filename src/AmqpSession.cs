@@ -233,12 +233,9 @@ namespace Microsoft.Azure.Amqp
         /// <param name="flow"></param>
         public void SendFlow(Flow flow)
         {
-            lock (this.ThisLock)
+            if (!this.IsClosing())
             {
-                if (!this.IsClosing())
-                {
-                    this.outgoingChannel.SendFlow(flow);
-                }
+                this.outgoingChannel.SendFlow(flow);
             }
         }
 
@@ -1114,13 +1111,10 @@ namespace Microsoft.Azure.Amqp
 
             public void SendFlow(Flow flow)
             {
-                lock (this.SyncRoot)
-                {
-                    // Outgoing state needs to be sync'ed with transfers
-                    this.AddFlowState(flow, false);
-                    this.Session.incomingChannel.AddFlowState(flow, true);
-                    this.Session.SendCommand(flow, null);
-                }
+                // Outgoing state needs to be sync'ed with transfers
+                this.AddFlowState(flow);
+                this.Session.incomingChannel.AddFlowState(flow, true);
+                this.Session.SendCommand(flow, null);
             }
 
             public void OnBegin(Begin begin)
@@ -1167,13 +1161,10 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            public void AddFlowState(Flow flow, bool reset)
+            public void AddFlowState(Flow flow)
             {
-                lock (this.SyncRoot)
-                {
-                    flow.OutgoingWindow = this.outgoingWindow;
-                    flow.NextOutgoingId = this.nextOutgoingId.Value;
-                }
+                flow.OutgoingWindow = this.outgoingWindow;
+                flow.NextOutgoingId = this.nextOutgoingId.Value;
             }
 
             public override string ToString()
@@ -1256,15 +1247,12 @@ namespace Microsoft.Azure.Amqp
 
             public void AddFlowState(Flow flow, bool reset)
             {
-                lock (this.SyncRoot)
-                {
-                    flow.NextIncomingId = this.nextIncomingId.Value;
-                    flow.IncomingWindow = this.incomingWindow;
+                flow.NextIncomingId = this.nextIncomingId.Value;
+                flow.IncomingWindow = this.incomingWindow;
 
-                    if (reset)
-                    {
-                        this.needFlowCount = 0;
-                    }
+                if (reset)
+                {
+                    this.needFlowCount = 0;
                 }
             }
 

@@ -1285,15 +1285,12 @@ namespace Microsoft.Azure.Amqp
             {
                 Flow flow = new Flow();
                 flow.Handle = this.LocalHandle;
-                lock (this.syncRoot)
+                flow.LinkCredit = this.linkCredit;
+                flow.Available = this.Available;
+                flow.DeliveryCount = this.deliveryCount.Value;
+                if (this.drain)
                 {
-                    flow.LinkCredit = this.linkCredit;
-                    flow.Available = this.Available;
-                    flow.DeliveryCount = this.deliveryCount.Value;
-                    if (this.drain)
-                    {
-                        flow.Drain = true;
-                    }
+                    flow.Drain = true;
                 }
 
                 flow.Echo = echo;

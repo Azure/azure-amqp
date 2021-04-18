@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Concurrent;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -225,15 +226,12 @@ namespace Microsoft.Azure.Amqp
         {
             this.ThrowIfClosed();
             List<AmqpMessage> messages = null;
-            lock (this.SyncRoot)
+            if (this.messageQueue != null && !this.messageQueue.IsEmpty)
             {
-                if (this.messageQueue != null && this.messageQueue.Count > 0)
+                messages = new List<AmqpMessage>(messageCount);
+                for (int i = 0; i < messageCount && this.messageQueue.TryDequeue(out var amqpMessage); i++)
                 {
-                    messages = new List<AmqpMessage>(messageCount);
-                    for (int i = 0; i < messageCount && this.messageQueue.Count > 0; i++)
-                    {
-                        messages.Add(this.messageQueue.Dequeue());
-                    }
+                    messages.Add(amqpMessage);
                 }
             }
 
@@ -241,34 +239,36 @@ namespace Microsoft.Azure.Amqp
             {
                 ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, callback, state);
                 bool completeWaiter = true;
-                lock (this.SyncRoot)
+                if (this.messageQueue == null)
                 {
-                    if (this.messageQueue == null)
+                    // closed, so return null message immediately
+                }
+                else if (this.messageQueue.Count > 0)
+                {
+                    messages = new List<AmqpMessage>(messageCount);
+                    for (int i = 0; i < messageCount && this.messageQueue.TryDequeue(out var amqpMessage); i++)
                     {
-                        // closed, so return null message immediately
+                        messages.Add(amqpMessage);
                     }
-                    else if (this.messageQueue.Count > 0)
-                    {
-                        messages = new List<AmqpMessage>(messageCount);
-                        for (int i = 0; i < messageCount && this.messageQueue.Count > 0; i++)
-                        {
-                            messages.Add(this.messageQueue.Dequeue());
-                        }
-                    }
-                    else
+                }
+                else
+                {
+                    int creditToIssue;
+                    lock (this.SyncRoot)
                     {
                         LinkedListNode<ReceiveAsyncResult> node = this.waiterList.AddLast(waiter);
                         waiter.Initialize(node);
                         completeWaiter = false;
 
                         // If no auto-flow, trigger a flow to get messages.
-                        int creditToIssue = this.Settings.AutoSendFlow ? 0 : this.GetOnDemandReceiveCredit();
-                        if (creditToIssue > 0)
-                        {
-                            // Before the credit is issued, waiters could be completed already. In this case, we will queue the incoming
-                            // messages and wait for the next receive calls.
-                            this.IssueCredit((uint)creditToIssue, false, AmqpConstants.NullBinary);
-                        }
+                        creditToIssue = this.Settings.AutoSendFlow ? 0 : this.GetOnDemandReceiveCredit();
+                    }
+
+                    if (creditToIssue > 0)
+                    {
+                        // Before the credit is issued, waiters could be completed already. In this case, we will queue the incoming
+                        // messages and wait for the next receive calls.
+                        this.IssueCredit((uint) creditToIssue, false, AmqpConstants.NullBinary);
                     }
                 }
 
@@ -533,7 +533,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (this.IsClosing())
                     {
-                        // The closing sequence has been started, so any 
+                        // The closing sequence has been started, so any
                         // transfer is meaningless, so we can treat them as no-op
                         return;
                     }
@@ -574,7 +574,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         protected override void AbortInternal()
         {
-            Queue<AmqpMessage> messages = null;
+            ConcurrentQueue<AmqpMessage> messages = null;
             this.CancelPendingOperations(true, out messages);
 
             if (messages != null)
@@ -600,7 +600,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>True if close is completed.</returns>
         protected override bool CloseInternal()
         {
-            Queue<AmqpMessage> messages = null;
+            ConcurrentQueue<AmqpMessage> messages = null;
             this.CancelPendingOperations(false, out messages);
 
             if (messages != null)
@@ -621,7 +621,7 @@ namespace Microsoft.Azure.Amqp
             return base.CloseInternal();
         }
 
-        void CancelPendingOperations(bool aborted, out Queue<AmqpMessage> messagesToRelease)
+        void CancelPendingOperations(bool aborted, out ConcurrentQueue<AmqpMessage> messagesToRelease)
         {
             messagesToRelease = null;
             LinkedList<ReceiveAsyncResult> waiters = null;
@@ -1037,7 +1037,7 @@ namespace Microsoft.Azure.Amqp
 
         /// <summary>
         /// The different this class from the normal Queue is that
-        /// if we specify a size then we will perform Amqp Flow based on 
+        /// if we specify a size then we will perform Amqp Flow based on
         /// the size, where:
         /// - When en-queuing (cache message from service) we will keep sending credit flow as long as size is not over the cache limit.
         /// - When de-queuing (return message to user) we will issue flow as soon as the size is below the threshold (70%).
@@ -1046,7 +1046,7 @@ namespace Microsoft.Azure.Amqp
         /// - [total cache size] has a 90% cap to try to prevent overflow - but does not enforce it.
         /// - we keep updating [max message size] as we receive message in flow.
         /// </summary>
-        sealed class SizeBasedFlowQueue : Queue<AmqpMessage>
+        sealed class SizeBasedFlowQueue : ConcurrentQueue<AmqpMessage>
         {
             // Basically we stop issuing credit at 90% of queue size, and start again at 50%
             const double IssueCreditThresholdRatio = 0.5;
@@ -1171,10 +1171,10 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            public new AmqpMessage Dequeue()
+            public new bool TryDequeue(out AmqpMessage amqpMessage)
             {
-                var amqpMessage = base.Dequeue();
-                if (amqpMessage != null && this.IsPrefetchingBySize)
+                var wasDequeued = base.TryDequeue(out amqpMessage);
+                if (wasDequeued && this.IsPrefetchingBySize)
                 {
                     // if we are draining the cache (i.e. receiving) we should start giving
                     // credit if we now have credit above the threshold.
@@ -1197,7 +1197,7 @@ namespace Microsoft.Azure.Amqp
                     }
                 }
 
-                return amqpMessage;
+                return wasDequeued;
             }
 
             /// <summary>

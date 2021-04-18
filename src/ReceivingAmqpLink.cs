@@ -1080,7 +1080,8 @@ namespace Microsoft.Azure.Amqp
             {
                 get
                 {
-                    return this.inQueueAverageMessageSizeInBytes > 0 ? this.inQueueAverageMessageSizeInBytes : DefaultMessageSizeForCacheSizeCalulation;
+                    var messageSizeInBytes = Interlocked.Read(ref this.inQueueAverageMessageSizeInBytes);
+                    return messageSizeInBytes > 0 ? messageSizeInBytes : DefaultMessageSizeForCacheSizeCalulation;
                 }
             }
 
@@ -1096,7 +1097,7 @@ namespace Microsoft.Azure.Amqp
             {
                 get
                 {
-                    return this.cacheSizeCredit;
+                    return Interlocked.Read(ref this.cacheSizeCredit);
                 }
             }
 
@@ -1110,63 +1111,74 @@ namespace Microsoft.Azure.Amqp
 
             public void SetLinkCreditUsingTotalCacheSize(bool setTotalLinkCredit = false)
             {
-                if (this.receivingLink.Settings != null && this.IsPrefetchingBySize)
+                if (this.receivingLink.Settings == null || !this.IsPrefetchingBySize)
                 {
-                    this.cacheSizeCredit = this.receivingLink.Settings.TotalCacheSizeInBytes ?? 0;
-                    this.thresholdCacheSizeInBytes = (long)(this.cacheSizeCredit * IssueCreditThresholdRatio);
-                    this.overflowBufferCacheSizeInBytes = (long)(this.cacheSizeCredit * (1 - StoppCreditThresholdRatio));
-                    this.boundedTotalLinkCredit = Convert.ToUInt32(this.cacheSizeCredit / this.AverageMessageSizeInBytes);
-                    if (this.boundedTotalLinkCredit <= 0)
-                    {
-                        // safe guard against cacheSizeCredit being set too low.
-                        this.boundedTotalLinkCredit = 1;
-                    }
-
-                    if (this.boundedTotalLinkCredit > maxCreditToIssuePerFlow)
-                    {
-                        this.boundedTotalLinkCredit = maxCreditToIssuePerFlow;
-                    }
-
-                    this.receivingLink.LinkCredit = this.boundedTotalLinkCredit;
-                    if (setTotalLinkCredit)
-                    {
-                        this.receivingLink.Settings.TotalLinkCredit = this.boundedTotalLinkCredit;
-                    }
-
-                    // This will turn on AutoFlow
-                    this.receivingLink.SetTotalLinkCredit(this.boundedTotalLinkCredit, true, true);
+                    return;
                 }
+
+                var sizeCredit = this.receivingLink.Settings.TotalCacheSizeInBytes ?? 0;
+                var totalLinkCredit = Convert.ToUInt32(sizeCredit / this.AverageMessageSizeInBytes);
+                if (totalLinkCredit <= 0)
+                {
+                    // safe guard against cacheSizeCredit being set too low.
+                    totalLinkCredit = 1;
+                }
+
+                if (totalLinkCredit > maxCreditToIssuePerFlow)
+                {
+                    totalLinkCredit = maxCreditToIssuePerFlow;
+                }
+
+                this.receivingLink.LinkCredit = totalLinkCredit;
+                if (setTotalLinkCredit)
+                {
+                    this.receivingLink.Settings.TotalLinkCredit = totalLinkCredit;
+                }
+
+                boundedTotalLinkCredit = totalLinkCredit;
+                Interlocked.Exchange(ref this.thresholdCacheSizeInBytes, (long)(sizeCredit * (1 - StoppCreditThresholdRatio)));
+                Interlocked.Exchange(ref this.overflowBufferCacheSizeInBytes, (long)(sizeCredit * (1 - StoppCreditThresholdRatio)));
+                Interlocked.Exchange(ref this.cacheSizeCredit, sizeCredit);
+                // This will turn on AutoFlow
+                this.receivingLink.SetTotalLinkCredit(totalLinkCredit, true, true);
             }
 
             public new void Enqueue(AmqpMessage amqpMessage)
             {
-                if (amqpMessage != null)
+                if (amqpMessage == null)
                 {
-                    base.Enqueue(amqpMessage);
-                    if (this.IsPrefetchingBySize)
-                    {
-                        this.cacheSizeCredit -= amqpMessage.Serialize(false);
-                        bool issueCredit = false;
-                        if (this.cacheSizeCredit > 0 && this.cacheSizeCredit > this.overflowBufferCacheSizeInBytes)
-                        {
-                            issueCredit = this.UpdateCreditToIssue();
-                        }
-                        else if (this.cacheSizeCredit <= 0)
-                        {
-                            issueCredit = this.boundedTotalLinkCredit != 0;
-                            this.boundedTotalLinkCredit = 0;
-                        }
-                        else
-                        {
-                            issueCredit = this.boundedTotalLinkCredit != 1;
-                            this.boundedTotalLinkCredit = 1;
-                        }
+                    return;
+                }
+                base.Enqueue(amqpMessage);
 
-                        if (issueCredit)
-                        {
-                            this.receivingLink.SetTotalLinkCredit(this.boundedTotalLinkCredit, true);
-                        }
-                    }
+                if (!this.IsPrefetchingBySize)
+                {
+                    return;
+                }
+
+                var messageSize = amqpMessage.Serialize(false);
+                var sizeCredit = Interlocked.Add(ref this.cacheSizeCredit, -messageSize);
+                var totalLinkCredit = this.boundedTotalLinkCredit;
+                bool issueCredit = false;
+                if (sizeCredit > 0 && sizeCredit > Interlocked.Read(ref this.overflowBufferCacheSizeInBytes))
+                {
+                    issueCredit = this.UpdateCreditToIssue();
+                }
+                else if (sizeCredit <= 0)
+                {
+                    issueCredit = totalLinkCredit != 0;
+                    totalLinkCredit = 0;
+                }
+                else
+                {
+                    issueCredit = totalLinkCredit != 1;
+                    totalLinkCredit = 1;
+                }
+
+                this.boundedTotalLinkCredit = totalLinkCredit;
+                if (issueCredit)
+                {
+                    this.receivingLink.SetTotalLinkCredit(totalLinkCredit, true);
                 }
             }
 
@@ -1177,14 +1189,15 @@ namespace Microsoft.Azure.Amqp
                 {
                     // if we are draining the cache (i.e. receiving) we should start giving
                     // credit if we now have credit above the threshold.
-                    this.cacheSizeCredit += amqpMessage.Serialize(false);
+                    var messageSize = amqpMessage.Serialize(false);
+                    var sizeCredit = Interlocked.Add(ref this.cacheSizeCredit, messageSize);
 
                     bool issueCredit = false;
-                    if (this.cacheSizeCredit >= this.thresholdCacheSizeInBytes)
+                    if (sizeCredit >= Interlocked.Read(ref this.thresholdCacheSizeInBytes))
                     {
                         issueCredit = this.UpdateCreditToIssue();
                     }
-                    else if (this.cacheSizeCredit > 0)
+                    else if (sizeCredit > 0)
                     {
                         issueCredit = this.boundedTotalLinkCredit != 1;
                         this.boundedTotalLinkCredit = 1;
@@ -1210,32 +1223,38 @@ namespace Microsoft.Azure.Amqp
                 long totalSize = this.receivingLink.Settings.TotalCacheSizeInBytes ?? 0;
                 long externalMessageSize = externalMessage == null ? 0 : externalMessage.Serialize(false);
                 int count = externalMessage == null ? this.Count : this.Count + 1;
+                long sizeCredit = Interlocked.Read(ref this.cacheSizeCredit);
                 if (count > 0)
                 {
-                    this.inQueueAverageMessageSizeInBytes = (totalSize - (this.cacheSizeCredit - externalMessageSize)) / count;
-                    if (this.inQueueAverageMessageSizeInBytes <= 0)
+                    long queueAverageMessageSizeInBytes = (totalSize - (sizeCredit - externalMessageSize)) / count;
+                    if (queueAverageMessageSizeInBytes <= 0)
                     {
-                        this.inQueueAverageMessageSizeInBytes = DefaultMessageSizeForCacheSizeCalulation;
+                        Interlocked.Exchange(ref this.inQueueAverageMessageSizeInBytes, DefaultMessageSizeForCacheSizeCalulation);
+                    }
+                    else
+                    {
+                        Interlocked.Exchange(ref this.inQueueAverageMessageSizeInBytes, queueAverageMessageSizeInBytes);
                     }
                 }
 
                 // if cacheSizeCredit is negative that means we are already overflowing.
-                this.boundedTotalLinkCredit = this.cacheSizeCredit > 0 ? Convert.ToUInt32(this.cacheSizeCredit / this.AverageMessageSizeInBytes) : 0;
-                if (this.boundedTotalLinkCredit <= 0 && this.cacheSizeCredit > 0)
+                uint totalLinkCredit =  sizeCredit > 0 ? Convert.ToUInt32(sizeCredit / this.AverageMessageSizeInBytes) : 0;
+                if (totalLinkCredit <= 0 && sizeCredit > 0)
                 {
                     // this condition can only be possible if average message size is larger than the cache credit.
                     // This is not possible in public stamp as we enforce cache size to be larger than 260k and max message size
                     // is 256k. However this assumption can be broken - e.g. in private stamp max message size can be 1Mb.
                     // since technically cache is not full, we set it to 1.
-                    this.boundedTotalLinkCredit = 1;
+                    totalLinkCredit = 1;
                 }
 
-                if (this.boundedTotalLinkCredit > maxCreditToIssuePerFlow)
+                if (totalLinkCredit > maxCreditToIssuePerFlow)
                 {
-                    this.boundedTotalLinkCredit = maxCreditToIssuePerFlow;
+                    totalLinkCredit = maxCreditToIssuePerFlow;
                 }
 
-                return previousCredit != this.boundedTotalLinkCredit;
+                this.boundedTotalLinkCredit = totalLinkCredit;
+                return previousCredit != totalLinkCredit;
             }
         }
     }

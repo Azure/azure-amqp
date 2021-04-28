@@ -39,10 +39,10 @@ namespace Test.Microsoft.Azure.Amqp
             const int messageCount = 10;
             string queue = "AmqpLinkSyncSendReceiveTestQueue";
             broker.AddQueue(queue);
-            
+
             this.SendReceive(queue, messageCount, true, true, false);
         }
-        
+
         [Fact]
         public void AmqpLinkAsyncSendReceiveTest()
         {
@@ -250,7 +250,7 @@ namespace Test.Microsoft.Azure.Amqp
             sLink.Open();
 
             string data = new string('a', 128 * 1024);
-            AmqpMessage message = AmqpMessage.Create(new Data() { Value = new ArraySegment<byte>(System.Text.Encoding.UTF8.GetBytes(data)) });
+            AmqpMessage message = AmqpMessage.Create(new Data() { Segment = new ArraySegment<byte>(System.Text.Encoding.UTF8.GetBytes(data)) });
             message.Header.Priority = 1;
             message.DeliveryAnnotations.Map.Add("test", "da");
             message.MessageAnnotations.Map.Add("test", "ma");

@@ -49,10 +49,10 @@
             RunSerializationTest(message);
 
             // data message
-            message = AmqpMessage.Create(new Data() { Value = new ArraySegment<byte>(new byte[60]) });
+            message = AmqpMessage.Create(new Data() { Segment = new ArraySegment<byte>(new byte[60]) });
             RunSerializationTest(message);
 
-            message = AmqpMessage.Create(new Data[] { new Data() { Value = new ArraySegment<byte>(new byte[60]) }, new Data() { Value = new ArraySegment<byte>(new byte[44]) } });
+            message = AmqpMessage.Create(new Data[] { new Data() { Segment = new ArraySegment<byte>(new byte[60]) }, new Data() { Value = new ArraySegment<byte>(new byte[44]) } });
             AddSection(message, SectionFlag.Header | SectionFlag.ApplicationProperties);
             RunSerializationTest(message);
 
@@ -98,7 +98,7 @@
         {
             var messages = new AmqpMessage[]
             {
-                AmqpMessage.Create(new Data() { Value = new ArraySegment<byte>(new byte[60]) }),
+                AmqpMessage.Create(new Data() { Segment = new ArraySegment<byte>(new byte[60]) }),
                 AmqpMessage.Create(new MemoryStream(new byte[1000]), true)
             };
 
@@ -299,7 +299,7 @@
                         Assert.Equal(enumerator1.Current.List.Count, enumerator2.Current.List.Count);
                         for(int i = 0; i < enumerator1.Current.List.Count; i++)
                         {
-                            Assert.Equal(enumerator1.Current.List[i], enumerator2.Current.List[i]); 
+                            Assert.Equal(enumerator1.Current.List[i], enumerator2.Current.List[i]);
                         }
                     }
                 }

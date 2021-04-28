@@ -814,7 +814,7 @@ namespace Microsoft.Azure.Amqp
 
         /// <summary>
         /// Allow updates in mutalble sections.
-        /// Note: currently this is only used by relay. 
+        /// Note: currently this is only used by relay.
         /// </summary>
         sealed class AmqpClonedMessage : AmqpSectionMessage
         {
@@ -953,7 +953,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     new Data()
                     {
-                        Value = new ArraySegment<byte>(buffer.Buffer, pos, length),
+                        Segment = new ArraySegment<byte>(buffer.Buffer, pos, length),
                         Offset = pos,
                         Length = length
                     }

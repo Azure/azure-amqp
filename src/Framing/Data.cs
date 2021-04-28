@@ -23,19 +23,31 @@ namespace Microsoft.Azure.Amqp.Framing
         {
         }
 
+        /// <summary>
+        /// Gets or sets the value.
+        /// </summary>
+        public ArraySegment<byte> Segment { get; set; }
+
+        /// <inheritdoc />
+        public override object Value
+        {
+            get { return Segment; }
+            set { Segment = (ArraySegment<byte>) value; }
+        }
+
         internal override int GetValueEncodeSize()
         {
-            return BinaryEncoding.GetEncodeSize((ArraySegment<byte>)this.Value);
+            return BinaryEncoding.GetEncodeSize(this.Segment);
         }
 
         internal override void EncodeValue(ByteBuffer buffer)
         {
-            BinaryEncoding.Encode((ArraySegment<byte>)this.Value, buffer);
+            BinaryEncoding.Encode(this.Segment, buffer);
         }
 
         internal override void DecodeValue(ByteBuffer buffer)
         {
-            this.Value = BinaryEncoding.Decode(buffer, 0);
+            this.Segment = BinaryEncoding.Decode(buffer, 0);
         }
 
         /// <summary>

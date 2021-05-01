@@ -16,6 +16,6 @@ namespace Microsoft.Azure.Amqp.Encoding
         public abstract int GetArrayEncodeSize(IList<T> value);
 
         public abstract void EncodeArray(IList<T> value, ByteBuffer buffer);
-        public abstract Array DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode);
+        public abstract T[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode);
     }
 }

@@ -140,7 +140,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
         }
 
-        public override Array DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
+        public override AmqpSymbol[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
         {
             AmqpSymbol[] symbolArray = new AmqpSymbol[count];
             for (int i = 0; i < count; ++i)

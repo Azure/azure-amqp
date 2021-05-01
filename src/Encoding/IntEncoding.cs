@@ -5,7 +5,6 @@ namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
     using System.Buffers.Binary;
-    using System.Collections;
     using System.Collections.Generic;
 
     sealed class IntEncoding : PrimitiveEncoding<int>
@@ -23,10 +22,8 @@ namespace Microsoft.Azure.Amqp.Encoding
                     FixedWidth.IntEncoded :
                     FixedWidth.ByteEncoded;
             }
-            else
-            {
-                return FixedWidth.NullEncoded;
-            }
+
+            return FixedWidth.NullEncoded;
         }
 
         public static void Encode(int? value, ByteBuffer buffer)
@@ -69,10 +66,8 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 return FixedWidth.Int;
             }
-            else
-            {
-                return IntEncoding.GetEncodeSize((int)value);
-            }
+
+            return GetEncodeSize((int)value);
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
@@ -83,13 +78,13 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
             else
             {
-                IntEncoding.Encode((int)value, buffer);
+                Encode((int)value, buffer);
             }
         }
 
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
-            return IntEncoding.Decode(buffer, formatCode);
+            return Decode(buffer, formatCode);
         }
 
         public override int GetArrayEncodeSize(IList<int> value)
@@ -102,6 +97,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             int byteCount = FixedWidth.Int * value.Count;
 
             buffer.Validate(write: true, byteCount);
+
             Span<byte> destination = buffer.GetWriteSpan();
 
             if (value is int[] intArray)
@@ -124,10 +120,9 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Append(byteCount);
         }
 
-        public override Array DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
+        public override int[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
         {
             int byteCount = FixedWidth.Int * count;
-
             buffer.Validate(write: false, byteCount);
             ReadOnlySpan<byte> source = buffer.GetReadSpan();
 

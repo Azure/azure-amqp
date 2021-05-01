@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp.Encoding
     using System.Collections;
     using System.Collections.Generic;
 
-    sealed class IntEncoding : PrimitiveEncoding
+    sealed class IntEncoding : PrimitiveEncoding<int>
     {
         public IntEncoding()
             : base(FormatCode.Int)
@@ -92,18 +92,18 @@ namespace Microsoft.Azure.Amqp.Encoding
             return IntEncoding.Decode(buffer, formatCode);
         }
 
-        public override int GetArrayEncodeSize(IList value)
+        public override int GetArrayEncodeSize(IList<int> value)
         {
             return FixedWidth.Int * value.Count;
         }
 
-        public override void EncodeArray(IList value, ByteBuffer buffer)
+        public override void EncodeArray(IList<int> value, ByteBuffer buffer)
         {
             int byteCount = FixedWidth.Int * value.Count;
 
             buffer.Validate(write: true, byteCount);
             Span<byte> destination = buffer.GetWriteSpan();
-            
+
             if (value is int[] intArray)
             {
                 // fast-path for int[] so the bounds checks can be elided
@@ -130,7 +130,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
             buffer.Validate(write: false, byteCount);
             ReadOnlySpan<byte> source = buffer.GetReadSpan();
-            
+
             int[] array = new int[count];
             for (int i = 0; i < count; ++i)
             {

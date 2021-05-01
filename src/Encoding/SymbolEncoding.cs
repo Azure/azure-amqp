@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp.Encoding
     using System.Collections.Generic;
     using System.Text;
 
-    sealed class SymbolEncoding : PrimitiveEncoding
+    sealed class SymbolEncoding : PrimitiveEncoding<AmqpSymbol>
     {
         public SymbolEncoding()
             : base(FormatCode.Symbol32)
@@ -109,7 +109,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             AmqpBitConverter.WriteBytes(buffer, encodedData, 0, encodedDataLength);
         }
 
-        public override int GetArrayEncodeSize(IList value)
+        public override int GetArrayEncodeSize(IList<AmqpSymbol> value)
         {
             IReadOnlyList<AmqpSymbol> listValue = (IReadOnlyList<AmqpSymbol>)value;
 
@@ -122,12 +122,10 @@ namespace Microsoft.Azure.Amqp.Encoding
             return size;
         }
 
-        public override void EncodeArray(IList value, ByteBuffer buffer)
+        public override void EncodeArray(IList<AmqpSymbol> value, ByteBuffer buffer)
         {
-            IReadOnlyList<AmqpSymbol> listValue = (IReadOnlyList<AmqpSymbol>)value;
-
             byte[] tempBuffer = null;
-            foreach (AmqpSymbol item in listValue)
+            foreach (AmqpSymbol item in value)
             {
                 string s = item.Value;
                 int byteCount = Encoding.ASCII.GetByteCount(s);

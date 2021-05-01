@@ -4,18 +4,18 @@
 namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
-    using System.Collections;
+    using System.Collections.Generic;
 
-    abstract class PrimitiveEncoding : EncodingBase
+    abstract class PrimitiveEncoding<T> : EncodingBase
     {
         protected PrimitiveEncoding(FormatCode formatCode)
             : base(formatCode)
         {
         }
 
-        public abstract int GetArrayEncodeSize(IList value);
+        public abstract int GetArrayEncodeSize(IList<T> value);
 
-        public abstract void EncodeArray(IList value, ByteBuffer buffer);
+        public abstract void EncodeArray(IList<T> value, ByteBuffer buffer);
         public abstract Array DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode);
     }
 }

@@ -3,11 +3,11 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    using Microsoft.Azure.Amqp.Framing;
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using Microsoft.Azure.Amqp.Framing;
 
     sealed class ArrayEncoding : EncodingBase
     {
@@ -16,21 +16,19 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
         }
 
-        public static int GetEncodeSize<T>(IList value)
+        public static int GetEncodeSize<T>(IList<T> value)
         {
             if (value == null)
             {
                 return FixedWidth.NullEncoded;
             }
-            else
-            {
-                Debug.Assert(value is T[] || value is Multiple<T>);
 
-                return ArrayEncoding.GetEncodeSize(value, typeof(T), false);
-            }
+            Debug.Assert(value is T[] || value is Multiple<T>);
+
+            return GetEncodeSize(value, false, out _);
         }
 
-        public static void Encode<T>(IList value, ByteBuffer buffer)
+        public static void Encode<T>(IList<T> value, ByteBuffer buffer)
         {
             if (value == null)
             {
@@ -41,9 +39,9 @@ namespace Microsoft.Azure.Amqp.Encoding
                 Debug.Assert(value is T[] || value is Multiple<T>);
 
                 int width;
-                int encodeSize = ArrayEncoding.GetEncodeSize(value, typeof(T), false, out width);
+                int encodeSize = GetEncodeSize(value, false, out width);
                 AmqpBitConverter.WriteUByte(buffer, width == FixedWidth.UByte ? FormatCode.Array8 : FormatCode.Array32);
-                ArrayEncoding.Encode(value, typeof(T), width, encodeSize, buffer);
+                Encode(value, width, encodeSize, buffer);
             }
         }
 
@@ -59,26 +57,22 @@ namespace Microsoft.Azure.Amqp.Encoding
             AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.Array8, FormatCode.Array32, out size, out count);
 
             formatCode = AmqpEncoding.ReadFormatCode(buffer);
-            return ArrayEncoding.Decode<T>(buffer, size, count, formatCode);
+            return Decode<T>(buffer, size, count, formatCode);
         }
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
         {
             Array array = (Array)value;
-            Type elementType = array.GetType().GetElementType();
-
-            return ArrayEncoding.GetEncodeSize(array, elementType, arrayEncoding);
+            return GetEncodeSize(array, arrayEncoding, out _);
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
         {
             Array array = (Array)value;
-            Type elementType = array.GetType().GetElementType();
-
             int width;
-            int encodeSize = ArrayEncoding.GetEncodeSize(array, elementType, arrayEncoding, out width);
+            int encodeSize = GetEncodeSize(array, arrayEncoding, out width);
             AmqpBitConverter.WriteUByte(buffer, width == FixedWidth.UByte ? FormatCode.Array8 : FormatCode.Array32);
-            ArrayEncoding.Encode(array, elementType, width, encodeSize, buffer);
+            ArrayEncoding.Encode(array, width, encodeSize, buffer);
         }
 
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
@@ -97,74 +91,74 @@ namespace Microsoft.Azure.Amqp.Encoding
             switch (formatCode)
             {
                 case FormatCode.Boolean:
-                    array = ArrayEncoding.Decode<bool>(buffer, size, count, formatCode);
+                    array = Decode<bool>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.UByte:
-                    array = ArrayEncoding.Decode<byte>(buffer, size, count, formatCode);
+                    array = Decode<byte>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.UShort:
-                    array = ArrayEncoding.Decode<ushort>(buffer, size, count, formatCode);
+                    array = Decode<ushort>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.UInt:
                 case FormatCode.SmallUInt:
-                    array = ArrayEncoding.Decode<uint>(buffer, size, count, formatCode);
+                    array = Decode<uint>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.ULong:
                 case FormatCode.SmallULong:
-                    array = ArrayEncoding.Decode<ulong>(buffer, size, count, formatCode);
+                    array = Decode<ulong>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.Byte:
-                    array = ArrayEncoding.Decode<sbyte>(buffer, size, count, formatCode);
+                    array = Decode<sbyte>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.Short:
-                    array = ArrayEncoding.Decode<short>(buffer, size, count, formatCode);
+                    array = Decode<short>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.Int:
                 case FormatCode.SmallInt:
-                    array = ArrayEncoding.Decode<int>(buffer, size, count, formatCode);
+                    array = Decode<int>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.Long:
                 case FormatCode.SmallLong:
-                    array = ArrayEncoding.Decode<long>(buffer, size, count, formatCode);
+                    array = Decode<long>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.Float:
-                    array = ArrayEncoding.Decode<float>(buffer, size, count, formatCode);
+                    array = Decode<float>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.Double:
-                    array = ArrayEncoding.Decode<double>(buffer, size, count, formatCode);
+                    array = Decode<double>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.Char:
-                    array = ArrayEncoding.Decode<char>(buffer, size, count, formatCode);
+                    array = Decode<char>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.TimeStamp:
-                    array = ArrayEncoding.Decode<DateTime>(buffer, size, count, formatCode);
+                    array = Decode<DateTime>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.Uuid:
-                    array = ArrayEncoding.Decode<Guid>(buffer, size, count, formatCode);
+                    array = Decode<Guid>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.Binary32:
                 case FormatCode.Binary8:
-                    array = ArrayEncoding.Decode<ArraySegment<byte>>(buffer, size, count, formatCode);
+                    array = Decode<ArraySegment<byte>>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.String32Utf8:
                 case FormatCode.String8Utf8:
-                    array = ArrayEncoding.Decode<string>(buffer, size, count, formatCode);
+                    array = Decode<string>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.Symbol32:
                 case FormatCode.Symbol8:
-                    array = ArrayEncoding.Decode<AmqpSymbol>(buffer, size, count, formatCode);
+                    array = Decode<AmqpSymbol>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.List32:
                 case FormatCode.List8:
-                    array = ArrayEncoding.Decode<IList>(buffer, size, count, formatCode);
+                    array = Decode<IList>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.Map32:
                 case FormatCode.Map8:
-                    array = ArrayEncoding.Decode<AmqpMap>(buffer, size, count, formatCode);
+                    array = Decode<AmqpMap>(buffer, size, count, formatCode);
                     break;
                 case FormatCode.Array32:
                 case FormatCode.Array8:
-                    array = ArrayEncoding.Decode<Array>(buffer, size, count, formatCode);
+                    array = Decode<Array>(buffer, size, count, formatCode);
                     break;
                 default:
                     throw new NotSupportedException(CommonResources.GetString(CommonResources.NotSupportFrameCode, formatCode));
@@ -173,41 +167,87 @@ namespace Microsoft.Azure.Amqp.Encoding
             return array;
         }
 
-        static int GetEncodeSize(IList array, Type elementType, bool arrayEncoding)
+        static int GetEncodeSize(Array array, bool arrayEncoding, out int width)
         {
-            int unused;
-            return ArrayEncoding.GetEncodeSize(array, elementType, arrayEncoding, out unused);
+            switch (array)
+            {
+                case bool[] concreteArray:
+                    return GetEncodeSize<bool>(concreteArray, arrayEncoding, out width);
+                case byte[] concreteArray:
+                    return GetEncodeSize<byte>(concreteArray, arrayEncoding, out width);
+                case ushort[] concreteArray:
+                    return GetEncodeSize<ushort>(concreteArray, arrayEncoding, out width);
+                case uint[] concreteArray:
+                    return GetEncodeSize<uint>(concreteArray, arrayEncoding, out width);
+                case ulong[] concreteArray:
+                    return GetEncodeSize<ulong>(concreteArray, arrayEncoding, out width);
+                case sbyte[] concreteArray:
+                    return GetEncodeSize<sbyte>(concreteArray, arrayEncoding, out width);
+                case short[] concreteArray:
+                    return GetEncodeSize<short>(concreteArray, arrayEncoding, out width);
+                case int[] concreteArray:
+                    return GetEncodeSize<int>(concreteArray, arrayEncoding, out width);
+                case long[] concreteArray:
+                    return GetEncodeSize<long>(concreteArray, arrayEncoding, out width);
+                case float[] concreteArray:
+                    return GetEncodeSize<float>(concreteArray, arrayEncoding, out width);
+                case double[] concreteArray:
+                    return GetEncodeSize<double>(concreteArray, arrayEncoding, out width);
+                case char[] concreteArray:
+                    return GetEncodeSize<char>(concreteArray, arrayEncoding, out width);
+                case DateTime[] concreteArray:
+                    return GetEncodeSize<DateTime>(concreteArray, arrayEncoding, out width);
+                case Guid[] concreteArray:
+                    return GetEncodeSize<Guid>(concreteArray, arrayEncoding, out width);
+                case ArraySegment<byte>[] concreteArray:
+                    return GetEncodeSize<ArraySegment<byte>>(concreteArray, arrayEncoding, out width);
+                case string[] concreteArray:
+                    return GetEncodeSize<string>(concreteArray, arrayEncoding, out width);
+                case AmqpSymbol[] concreteArray:
+                    return GetEncodeSize<AmqpSymbol>(concreteArray, arrayEncoding, out width);
+                default:
+                    // TODO: better exception message
+                    throw new NotSupportedException();
+            }
+                // case FormatCode.List32:
+                // case FormatCode.List8:
+                //     array = ArrayEncoding.Decode<IList>(buffer, size, count, formatCode);
+                //     break;
+                // case FormatCode.Map32:
+                // case FormatCode.Map8:
+                //     array = ArrayEncoding.Decode<AmqpMap>(buffer, size, count, formatCode);
+                //     break;
+                // case FormatCode.Array32:
+                // case FormatCode.Array8:
+                //     array = ArrayEncoding.Decode<Array>(buffer, size, count, formatCode);
         }
 
-        static int GetEncodeSize(IList array, Type elementType, bool arrayEncoding, out int width)
+        static int GetEncodeSize<T>(IList<T> array, bool arrayEncoding, out int width)
         {
-            int size = FixedWidth.FormatCode + ArrayEncoding.GetValueSize(array, elementType);
+            int size = FixedWidth.FormatCode + GetValueSize(array);
             width = arrayEncoding ? FixedWidth.UInt : AmqpEncoding.GetEncodeWidthByCountAndSize(array.Count, size);
             size += FixedWidth.FormatCode + width + width;
             return size;
         }
 
-        static int GetValueSize(IList value, Type elementType)
+        static int GetValueSize<T>(IList<T> value)
         {
             if (value.Count == 0)
             {
                 return 0;
             }
 
-            EncodingBase encoding = AmqpEncoding.GetEncoding(elementType);
-            if (encoding is PrimitiveEncoding primitiveEncoding)
+            EncodingBase encoding = AmqpEncoding.GetEncoding(typeof(T));
+            if (encoding is PrimitiveEncoding<T> primitiveEncoding)
             {
                 return primitiveEncoding.GetArrayEncodeSize(value);
             }
 
             int valueSize = 0;
-            foreach (object item in value)
+            for (var index = 0; index < value.Count; index++)
             {
-                bool arrayEncoding = true;
-                if (encoding.FormatCode == FormatCode.Described && valueSize == 0)
-                {
-                    arrayEncoding = false;
-                }
+                T item = value[index];
+                bool arrayEncoding = !(encoding.FormatCode == FormatCode.Described && valueSize == 0);
 
                 valueSize += encoding.GetObjectEncodeSize(item, arrayEncoding);
             }
@@ -215,7 +255,80 @@ namespace Microsoft.Azure.Amqp.Encoding
             return valueSize;
         }
 
-        static void Encode(IList value, Type elementType, int width, int encodeSize, ByteBuffer buffer)
+        static void Encode(Array array, int width, int encodeSize, ByteBuffer buffer)
+        {
+            switch (array)
+            {
+                case bool[] concreteArray:
+                    Encode<bool>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case byte[] concreteArray:
+                    Encode<byte>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case ushort[] concreteArray:
+                    Encode<ushort>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case uint[] concreteArray:
+                    Encode<uint>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case ulong[] concreteArray:
+                    Encode<ulong>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case sbyte[] concreteArray:
+                    Encode<sbyte>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case short[] concreteArray:
+                    Encode<short>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case int[] concreteArray:
+                    Encode<int>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case long[] concreteArray:
+                    Encode<long>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case float[] concreteArray:
+                    Encode<float>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case double[] concreteArray:
+                    Encode<double>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case char[] concreteArray:
+                    Encode<char>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case DateTime[] concreteArray:
+                    Encode<DateTime>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case Guid[] concreteArray:
+                    Encode<Guid>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case ArraySegment<byte>[] concreteArray:
+                    Encode<ArraySegment<byte>>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case string[] concreteArray:
+                    Encode<string>(concreteArray, width, encodeSize, buffer);
+                    break;
+                case AmqpSymbol[] concreteArray:
+                    Encode<AmqpSymbol>(concreteArray, width, encodeSize, buffer);
+                    break;
+                default:
+                    // TODO: better exception message
+                    throw new NotSupportedException();
+            }
+
+                // case FormatCode.List32:
+                // case FormatCode.List8:
+                //     array = ArrayEncoding.Decode<IList>(buffer, size, count, formatCode);
+                //     break;
+                // case FormatCode.Map32:
+                // case FormatCode.Map8:
+                //     array = ArrayEncoding.Decode<AmqpMap>(buffer, size, count, formatCode);
+                //     break;
+                // case FormatCode.Array32:
+                // case FormatCode.Array8:
+                //     array = ArrayEncoding.Decode<Array>(buffer, size, count, formatCode);
+        }
+
+        static void Encode<T>(IList<T> value, int width, int encodeSize, ByteBuffer buffer)
         {
             encodeSize -= FixedWidth.FormatCode + width;
             if (width == FixedWidth.UByte)
@@ -231,10 +344,10 @@ namespace Microsoft.Azure.Amqp.Encoding
 
             if (value.Count > 0)
             {
-                EncodingBase encoding = AmqpEncoding.GetEncoding(elementType);
+                EncodingBase encoding = AmqpEncoding.GetEncoding(typeof(T));
                 AmqpBitConverter.WriteUByte(buffer, encoding.FormatCode);
 
-                if (encoding is PrimitiveEncoding primitiveEncoding)
+                if (encoding is PrimitiveEncoding<T> primitiveEncoding)
                 {
                     primitiveEncoding.EncodeArray(value, buffer);
                 }
@@ -242,13 +355,14 @@ namespace Microsoft.Azure.Amqp.Encoding
                 {
                     if (encoding.FormatCode == FormatCode.Described)
                     {
-                        object firstItem = value[0];
-                        DescribedType describedValue = (DescribedType)firstItem;
+                        T firstItem = value[0];
+                        // TODO: CHECK THIS
+                        DescribedType describedValue = firstItem as DescribedType;
                         AmqpEncoding.EncodeObject(describedValue.Descriptor, buffer);
                         AmqpBitConverter.WriteUByte(buffer, AmqpEncoding.GetEncoding(describedValue.Value).FormatCode);
                     }
 
-                    foreach (object item in value)
+                    foreach (T item in value)
                     {
                         encoding.EncodeObject(item, true, buffer);
                     }
@@ -259,7 +373,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         static T[] Decode<T>(ByteBuffer buffer, int size, int count, FormatCode formatCode)
         {
             EncodingBase encoding = AmqpEncoding.GetEncoding(formatCode);
-            if (encoding is PrimitiveEncoding primitiveEncoding)
+            if (encoding is PrimitiveEncoding<T> primitiveEncoding)
             {
                 return (T[])primitiveEncoding.DecodeArray(buffer, count, formatCode);
             }

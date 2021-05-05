@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// Gets or sets the value.
         /// </summary>
-        public object Value
+        public virtual object Value
         {
             get;
             set;

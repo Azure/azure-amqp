@@ -137,7 +137,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         public static AmqpMessage CreateMessage(ArraySegment<byte> binaryData)
         {
-            return AmqpMessage.Create(new Data[] { new Data() { Value = binaryData } });
+            return AmqpMessage.Create(new Data[] { new Data() { Segment = binaryData } });
         }
 
         public static ByteBuffer GetBuffer(this AmqpMessage message)
@@ -261,7 +261,7 @@ namespace Test.Microsoft.Azure.Amqp
                 }
             }
 
-            throw new ArgumentException("No certificate can be found using the find value.");            
+            throw new ArgumentException("No certificate can be found using the find value.");
         }
 
         static void DumpAmqpData(ByteBuffer buffer, int indent)

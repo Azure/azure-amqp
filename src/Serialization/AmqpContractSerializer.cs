@@ -142,7 +142,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             if (listStream != null)
             {
                 ArraySegment<byte> segment = listStream.ReadBytes(int.MaxValue);
-                buffer = new ByteBuffer(segment.Array, segment.Offset, segment.Count);
+                buffer = new ByteBuffer(segment);
             }
             else
             {

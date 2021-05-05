@@ -14,8 +14,7 @@ namespace Microsoft.Azure.Amqp
     /// </summary>
     public class ByteBuffer : IDisposable, IAmqpSerializable
     {
-        static readonly InternalBufferManager PooledBufferManager = InternalBufferManager.CreatePooledBufferManager(
-            50 * 1024 * 1024, int.MaxValue);
+        static readonly InternalBufferManager PooledBufferManager = InternalBufferManager.CreatePooledBufferManager();
 
         static InternalBufferManager TransportBufferManager;
         static readonly object syncRoot = new object();

@@ -698,9 +698,20 @@ namespace Microsoft.Azure.Amqp
 
             public void Signal(bool syncComplete, Exception exception)
             {
-                if (Interlocked.CompareExchange(ref this.state, 2, 0) == 0)
+                int code = Interlocked.CompareExchange(ref this.state, 2, 0);
+                if (code == 0)
                 {
-                    this.CompleteInternal(syncComplete, exception);
+                    this.CompleteInternal(false, null);
+                }
+                else if (code == 1)
+                {
+                    try
+                    {
+                        this.timer.Change(TimeSpan.FromMilliseconds(20), Timeout.InfiniteTimeSpan);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                    }
                 }
             }
 
@@ -725,15 +736,7 @@ namespace Microsoft.Azure.Amqp
             static void OnTimer(object state)
             {
                 ReceiveAsyncResult thisPtr = (ReceiveAsyncResult)state;
-                int code = Interlocked.CompareExchange(ref thisPtr.state, 2, 0);
-                if (code == 0)
-                {
-                    thisPtr.CompleteInternal(false, null);
-                }
-                else if (code == 1)
-                {
-                    thisPtr.timer.Change(thisPtr.batchWaitTimeout, Timeout.InfiniteTimeSpan);
-                }
+                thisPtr.Signal(false, null);
             }
         }
 

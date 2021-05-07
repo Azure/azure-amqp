@@ -4,8 +4,8 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
@@ -18,17 +18,12 @@ namespace Microsoft.Azure.Amqp
     {
         // Workaround for TimeSpan.Zero server wait timeout. Consider supporting this with drain
         static readonly TimeSpan MinReceiveTimeout = TimeSpan.FromSeconds(10);
-
-        // To support non-prefetch mode with multiple BeginReceive calls
-        const int MaxCreditForOnDemandReceive = 200;
-        const int CreditBatchThreshold = 20;    // after this we will batch credit to minimize flows
-        const int PendingReceiversThreshold = 20;    // after this we will batch credit to minimize flows
-
+        readonly ConcurrentQueue<AmqpMessage> messageQueue;
+        readonly WorkCollection<ArraySegment<byte>, DisposeAsyncResult, DeliveryState> pendingDispositions;
+        readonly WaiterManager waiterManager;
         Action<AmqpMessage> messageListener;
-        SizeBasedFlowQueue messageQueue;
-        WorkCollection<ArraySegment<byte>, DisposeAsyncResult, DeliveryState> pendingDispositions;
         AmqpMessage currentMessage;
-        LinkedList<ReceiveAsyncResult> waiterList;
+        int checkWaiterCount;
 
         /// <summary>
         /// Initializes the receiver link without attaching to any session.
@@ -47,72 +42,9 @@ namespace Microsoft.Azure.Amqp
         public ReceivingAmqpLink(AmqpSession session, AmqpLinkSettings settings) :
             base("receiver", session, settings)
         {
-        }
-
-        /// <summary>
-        /// Gets a value of the prefetch cache size. Null if it is not set.
-        /// </summary>
-        public long? TotalCacheSizeInBytes
-        {
-            get
-            {
-                return this.Settings.TotalCacheSizeInBytes;
-            }
-        }
-
-        internal int MessageQueueCount
-        {
-            get
-            {
-                SizeBasedFlowQueue queue = this.messageQueue;
-                return queue != null ? queue.Count : 0;
-            }
-        }
-
-        internal long AvgMessageSize
-        {
-            get
-            {
-                SizeBasedFlowQueue queue = this.messageQueue;
-                return queue != null ? queue.AverageMessageSizeInBytes : 0;
-            }
-        }
-
-        internal long MessageQueueSize
-        {
-            get
-            {
-                SizeBasedFlowQueue queue = this.messageQueue;
-                if (queue != null && queue.IsPrefetchingBySize)
-                {
-                    long totalSize = 0;
-                    if (this.TotalCacheSizeInBytes.HasValue)
-                    {
-                        totalSize = this.TotalCacheSizeInBytes.Value;
-                    }
-
-                    return totalSize - queue.CacheSizeCredit;
-                }
-
-                return 0;
-            }
-        }
-
-        /// <summary>
-        /// Sets the prefetch cache size.
-        /// </summary>
-        /// <param name="cacheSizeInBytes">The cache size.</param>
-        public void SetCacheSizeInBytes(long? cacheSizeInBytes)
-        {
-            if (cacheSizeInBytes != this.Settings.TotalCacheSizeInBytes)
-            {
-                this.Settings.TotalCacheSizeInBytes = cacheSizeInBytes;
-                SizeBasedFlowQueue queue = this.messageQueue;
-                if (queue != null)
-                {
-                    queue.SetLinkCreditUsingTotalCacheSize();
-                }
-            }
+            this.messageQueue = new ConcurrentQueue<AmqpMessage>();
+            this.pendingDispositions = new WorkCollection<ArraySegment<byte>, DisposeAsyncResult, DeliveryState>();
+            this.waiterManager = new WaiterManager(this);
         }
 
         /// <summary>
@@ -168,8 +100,7 @@ namespace Microsoft.Azure.Amqp
                 (c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessage(timeout, c, s),
                 (a) =>
                 {
-                    AmqpMessage message;
-                    ((ReceivingAmqpLink)a.AsyncState).EndReceiveMessage(a, out message);
+                    ((ReceivingAmqpLink)a.AsyncState).EndReceiveMessage(a, out AmqpMessage message);
                     return message;
                 },
                 this);
@@ -196,16 +127,9 @@ namespace Microsoft.Azure.Amqp
         /// <returns>True if the operation is completed within the specified time; false otherwise.</returns>
         public bool EndReceiveMessage(IAsyncResult result, out AmqpMessage message)
         {
-            if (result is ReceiveAsyncResult)
-            {
-                IEnumerable<AmqpMessage> messages;
-                bool retValue = ReceiveAsyncResult.End(result, out messages);
-                message = messages.FirstOrDefault();
-                return retValue;
-            }
-
-            message = CompletedAsyncResult<IEnumerable<AmqpMessage>>.End(result).FirstOrDefault();
-            return true;
+            bool retValue = ReceiveAsyncResult.End(result, out IList<AmqpMessage> messages);
+            message = messages.Count == 0 ? null : messages[0];
+            return retValue;
         }
 
         /// <summary>
@@ -224,77 +148,10 @@ namespace Microsoft.Azure.Amqp
         IAsyncResult BeginReceiveMessages(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
         {
             this.ThrowIfClosed();
-            List<AmqpMessage> messages = null;
-            lock (this.SyncRoot)
-            {
-                if (this.messageQueue != null && this.messageQueue.Count > 0)
-                {
-                    messages = new List<AmqpMessage>(messageCount);
-                    for (int i = 0; i < messageCount && this.messageQueue.Count > 0; i++)
-                    {
-                        messages.Add(this.messageQueue.Dequeue());
-                    }
-                }
-            }
-
-            if (messages == null && timeout > TimeSpan.Zero)
-            {
-                ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, callback, state);
-                bool completeWaiter = true;
-                lock (this.SyncRoot)
-                {
-                    if (this.messageQueue == null)
-                    {
-                        // closed, so return null message immediately
-                    }
-                    else if (this.messageQueue.Count > 0)
-                    {
-                        messages = new List<AmqpMessage>(messageCount);
-                        for (int i = 0; i < messageCount && this.messageQueue.Count > 0; i++)
-                        {
-                            messages.Add(this.messageQueue.Dequeue());
-                        }
-                    }
-                    else
-                    {
-                        LinkedListNode<ReceiveAsyncResult> node = this.waiterList.AddLast(waiter);
-                        waiter.Initialize(node);
-                        completeWaiter = false;
-
-                        // If no auto-flow, trigger a flow to get messages.
-                        int creditToIssue = this.Settings.AutoSendFlow ? 0 : this.GetOnDemandReceiveCredit();
-                        if (creditToIssue > 0)
-                        {
-                            // Before the credit is issued, waiters could be completed already. In this case, we will queue the incoming
-                            // messages and wait for the next receive calls.
-                            this.IssueCredit((uint)creditToIssue, false, AmqpConstants.NullBinary);
-                        }
-                    }
-                }
-
-                if (completeWaiter)
-                {
-                    waiter.Signal(messages, true);
-                }
-
-                return waiter;
-            }
-
-            return new CompletedAsyncResult<IEnumerable<AmqpMessage>>(messages ?? Enumerable.Empty<AmqpMessage>(), callback, state);
-        }
-
-        internal override void OnReceiveStateOpenSent(Attach attach)
-        {
-            // If we uses prefetchBySize logic, then we need to
-            // Update link credit based on Gateway's return max message size
-            lock (this.SyncRoot)
-            {
-                var queue = this.messageQueue as SizeBasedFlowQueue;
-                if (queue != null)
-                {
-                    queue.SetLinkCreditUsingTotalCacheSize();
-                }
-            }
+            ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, callback, state);
+            this.waiterManager.AddWaiter(waiter);
+            this.CheckWaiter();
+            return waiter;
         }
 
         /// <summary>
@@ -305,13 +162,9 @@ namespace Microsoft.Azure.Amqp
         /// <returns>True if the operation is completed within the specified time; false otherwise.</returns>
         public bool EndReceiveMessages(IAsyncResult result, out IEnumerable<AmqpMessage> messages)
         {
-            if (result is ReceiveAsyncResult)
-            {
-                return ReceiveAsyncResult.End(result, out messages);
-            }
-
-            messages = CompletedAsyncResult<IEnumerable<AmqpMessage>>.End(result);
-            return true;
+            bool completed = ReceiveAsyncResult.End(result, out IList<AmqpMessage> list);
+            messages = list;
+            return completed;
         }
 
         /// <summary>
@@ -487,9 +340,6 @@ namespace Microsoft.Azure.Amqp
         /// <returns>True if open is completed.</returns>
         protected override bool OpenInternal()
         {
-            this.messageQueue = new SizeBasedFlowQueue(this);
-            this.waiterList = new LinkedList<ReceiveAsyncResult>();
-            this.pendingDispositions = new WorkCollection<ArraySegment<byte>, DisposeAsyncResult, DeliveryState>(ByteArrayComparer.Instance);
             bool syncComplete = base.OpenInternal();
             if (this.LinkCredit > 0)
             {
@@ -624,26 +474,32 @@ namespace Microsoft.Azure.Amqp
         void CancelPendingOperations(bool aborted, out Queue<AmqpMessage> messagesToRelease)
         {
             messagesToRelease = null;
-            LinkedList<ReceiveAsyncResult> waiters = null;
-            lock (this.SyncRoot)
+            List<ReceiveAsyncResult> waiters = null;
+            if (!this.messageQueue.IsEmpty)
             {
-                messagesToRelease = this.messageQueue;
-                waiters = this.waiterList;
-                this.messageQueue = null;
-                this.waiterList = null;
+                messagesToRelease = new Queue<AmqpMessage>();
+                while (this.messageQueue.TryDequeue(out AmqpMessage message))
+                {
+                    messagesToRelease.Enqueue(message);
+                }
+            }
+
+            if (this.waiterManager.Count > 0)
+            {
+                waiters = this.waiterManager.RemoveAll();
             }
 
             if (waiters != null)
             {
                 ActionItem.Schedule(o =>
                 {
-                    var state = (Tuple<LinkedList<ReceiveAsyncResult>, bool>)o;
-                    LinkedList<ReceiveAsyncResult> waitersToCancel = state.Item1;
+                    var state = (Tuple<List<ReceiveAsyncResult>, bool>)o;
+                    List<ReceiveAsyncResult> waitersToCancel = state.Item1;
                     foreach (ReceiveAsyncResult waiter in waitersToCancel)
                     {
                         if (state.Item2)
                         {
-                            waiter.Cancel();
+                            waiter.Signal(false, new OperationCanceledException("Link aborted", this.TerminalException));
                         }
                         else
                         {
@@ -651,7 +507,7 @@ namespace Microsoft.Azure.Amqp
                         }
                     }
                 },
-                    new Tuple<LinkedList<ReceiveAsyncResult>, bool>(waiters, aborted));
+                new Tuple<List<ReceiveAsyncResult>, bool>(waiters, aborted));
             }
 
             if (this.pendingDispositions != null)
@@ -668,110 +524,82 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                ReceiveAsyncResult waiter = null;
-                int creditToIssue = 0;
-                bool releaseMessage = false;
-                lock (this.SyncRoot)
-                {
-                    if (this.waiterList != null && this.waiterList.Count > 0)
-                    {
-                        var firstWaiter = this.waiterList.First.Value;
-
-                        if (this.messageQueue.IsPrefetchingBySize)
-                        {
-                            if (this.messageQueue.UpdateCreditToIssue(message))
-                            {
-                                this.SetTotalLinkCredit(this.messageQueue.BoundedTotalLinkCredit, true);
-                            }
-                        }
-
-                        firstWaiter.Add(message);
-                        if (firstWaiter.RequestedMessageCount == 1 || firstWaiter.MessageCount >= firstWaiter.RequestedMessageCount)
-                        {
-                            this.waiterList.RemoveFirst();
-                            firstWaiter.OnRemoved();
-                            creditToIssue = this.Settings.AutoSendFlow ? 0 : this.GetOnDemandReceiveCredit();
-                            waiter = firstWaiter;
-                        }
-                    }
-                    else if (!this.Settings.AutoSendFlow && this.Settings.SettleType != SettleMode.SettleOnSend)
-                    {
-                        releaseMessage = true;
-                    }
-                    else if (this.messageQueue != null)
-                    {
-                        this.messageQueue.Enqueue(message);
-                        AmqpTrace.Provider.AmqpCacheMessage(
-                            this,
-                            message.DeliveryId.Value,
-                            this.messageQueue.Count,
-                            this.messageQueue.IsPrefetchingBySize,
-                            this.TotalCacheSizeInBytes ?? 0,
-                            this.Settings == null ? 0 : this.Settings.TotalLinkCredit,
-                            this.LinkCredit);
-                    }
-                }
-
-                if (releaseMessage)
-                {
-                    this.ReleaseMessage(message);
-                    message.Dispose();
-                }
-
-                if (creditToIssue > 0)
-                {
-                    this.IssueCredit((uint)creditToIssue, false, AmqpConstants.NullBinary);
-                }
-
-                if (waiter != null)
-                {
-                    // Schedule the completion on another thread so we don't block the I/O thread
-                    ActionItem.Schedule(o => { var w = (ReceiveAsyncResult)o; w.Signal(false); }, waiter);
-                }
+                this.messageQueue.Enqueue(message);
+                this.CheckWaiter();
             }
         }
 
-        // Must be called with lock held
-        int GetOnDemandReceiveCredit()
+        void CheckWaiter()
         {
-            Fx.Assert(!this.Settings.AutoSendFlow, "This is only valid when auto-flow is false");
-            int credit = 0;
-            int currentCredit = (int)this.LinkCredit;
-            int totalRequestedMessageCount = 0;
-            foreach (var waiter in this.waiterList)
+            if (Interlocked.Increment(ref this.checkWaiterCount) == 1)
             {
-                totalRequestedMessageCount += waiter.RequestedMessageCount;
+                ActionItem.Schedule(o => CheckCallback(o), this);
             }
+        }
 
-            if (this.waiterList.Count == totalRequestedMessageCount)
+        static void CheckCallback(object state)
+        {
+            var thisPtr = (ReceivingAmqpLink)state;
+            try
             {
-                if (this.waiterList.Count > currentCredit &&
-                    currentCredit < MaxCreditForOnDemandReceive)
+                int count = 1;
+                do
                 {
-                    int needCredit = Math.Min(this.waiterList.Count, MaxCreditForOnDemandReceive) - currentCredit;
-                    if (this.waiterList.Count <= CreditBatchThreshold ||
-                        currentCredit == 0 ||
-                        needCredit % CreditBatchThreshold == 0)
+                    thisPtr.DoCheckWaiter();
+                    count = Interlocked.Add(ref thisPtr.checkWaiterCount, -count);
+                }
+                while (count > 0);
+            }
+            catch (Exception exception)
+            {
+                thisPtr.SafeClose(exception);
+            }
+        }
+
+        // This should be the only place where waiters' requests are fulfilled.
+        void DoCheckWaiter()
+        {
+            if (!this.Settings.AutoSendFlow)
+            {
+                bool sendFlow = false;
+                lock (this.SyncRoot)
+                {
+                    int count = this.waiterManager.ResetRequestCount();
+                    if (count > 0)
                     {
-                        credit = currentCredit + needCredit;
+                        this.LinkCredit += (uint)count;
+                        sendFlow = true;
                     }
                 }
-            }
-            else
-            {
-                if (totalRequestedMessageCount > currentCredit)
+
+                if (sendFlow)
                 {
-                    int needCredit = totalRequestedMessageCount - currentCredit;
-                    if (this.waiterList.Count <= PendingReceiversThreshold ||
-                        currentCredit == 0 ||
-                        this.waiterList.Count % PendingReceiversThreshold == 0)
-                    {
-                        credit = currentCredit + needCredit;
-                    }
+                    this.SendFlow(false);
                 }
             }
 
-            return credit;
+            if (this.messageQueue.IsEmpty)
+            {
+                return;
+            }
+
+            ReceiveAsyncResult waiter = this.waiterManager.PeekWaiter();
+            while (waiter != null && this.messageQueue.TryPeek(out AmqpMessage message))
+            {
+                if (waiter.TryAdd(message))
+                {
+                    this.messageQueue.TryDequeue(out _);
+                    if (waiter.MessageCount >= waiter.RequestedMessageCount)
+                    {
+                        waiter.Signal(false, null);
+                        waiter = this.waiterManager.PeekWaiter();
+                    }
+                }
+                else
+                {
+                    waiter = this.waiterManager.PeekWaiter();
+                }
+            }
         }
 
         sealed class ReceiveAsyncResult : AsyncResult
@@ -782,16 +610,16 @@ namespace Microsoft.Azure.Amqp
             readonly TimeSpan timeout;
             Timer timer;
             LinkedListNode<ReceiveAsyncResult> node;
-            int completed;  // 1: signaled, 2: timeout
+            int state;  // 0: active idle, 1: busy adding, 2: completed
             List<AmqpMessage> messages;
 
-            public ReceiveAsyncResult(ReceivingAmqpLink parent, int requestedMessageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
+            public ReceiveAsyncResult(ReceivingAmqpLink parent, int requestedMessageCount,
+                TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
                 : base(callback, state)
             {
                 this.parent = parent;
                 this.batchWaitTimeout = batchWaitTimeout;
                 this.requestedMessageCount = requestedMessageCount;
-                Fx.Assert(timeout > TimeSpan.Zero, "must have a non-zero timeout");
                 this.timeout = timeout;
             }
 
@@ -811,129 +639,178 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
+            public LinkedListNode<ReceiveAsyncResult> Node
+            {
+                get { return this.node; }
+            }
+
             public void Initialize(LinkedListNode<ReceiveAsyncResult> node)
             {
                 this.node = node;
-                if (this.timeout != TimeSpan.MaxValue &&
-                    this.timeout != Timeout.InfiniteTimeSpan)
+                if (this.timeout != TimeSpan.MaxValue && this.timeout != Timeout.InfiniteTimeSpan)
                 {
                     this.timer = new Timer(s => OnTimer(s), this, this.timeout, Timeout.InfiniteTimeSpan);
                 }
             }
 
-            // Needs caller to hold lock to ReceivingAmqpLink.SyncRoot
-            public void Add(AmqpMessage message)
+            public bool TryAdd(AmqpMessage message)
             {
-                if (this.messages == null)
+                if (Interlocked.CompareExchange(ref this.state, 1, 0) == 0)
                 {
-                    this.messages = new List<AmqpMessage>();
-                    this.messages.Add(message);
-                    if (this.requestedMessageCount > 1 && this.batchWaitTimeout != TimeSpan.MaxValue)
+                    try
                     {
-                        this.timer.Change(this.batchWaitTimeout, Timeout.InfiniteTimeSpan);
+                        if (this.messages == null)
+                        {
+                            this.messages = new List<AmqpMessage>(Math.Min(8, this.requestedMessageCount));
+                            this.messages.Add(message);
+                            if (this.requestedMessageCount > 1 && this.batchWaitTimeout != TimeSpan.MaxValue)
+                            {
+                                this.timer.Change(this.batchWaitTimeout, Timeout.InfiniteTimeSpan);
+                            }
+                        }
+                        else
+                        {
+                            this.messages.Add(message);
+                        }
+
+                        return true;
+                    }
+                    finally
+                    {
+                        Interlocked.Exchange(ref this.state, 0);
                     }
                 }
-                else
-                {
-                    this.messages.Add(message);
-                }
+
+                return false;
             }
 
-            public static bool End(IAsyncResult result, out IEnumerable<AmqpMessage> messages)
+            public static bool End(IAsyncResult result, out IList<AmqpMessage> messages)
             {
                 ReceiveAsyncResult thisPtr = AsyncResult.End<ReceiveAsyncResult>(result);
-                messages = thisPtr.messages;
-                return thisPtr.completed == 1;
+                messages = thisPtr.messages ?? AmqpConstants.EmptyMessages;
+                return messages.Count > 0;
             }
 
-            // Ensure the lock is held when calling this function
             public void OnRemoved()
             {
                 this.node = null;
             }
 
-            public void Cancel()
-            {
-                if (this.parent.TerminalException != null)
-                {
-                    this.Signal(false, new OperationCanceledException(this.parent.TerminalException.Message, this.parent.TerminalException));
-                }
-                else
-                {
-                    this.Signal(false, new OperationCanceledException());
-                }
-            }
-
-            public void Signal(bool syncComplete)
-            {
-                this.Signal(syncComplete, null);
-            }
-
-            public void Signal(List<AmqpMessage> messages, bool syncComplete)
-            {
-                if (this.messages != null)
-                {
-                    this.messages.AddRange(messages);
-                }
-                else
-                {
-                    this.messages = messages;
-                }
-
-                this.Signal(syncComplete, null);
-            }
-
             public void Signal(bool syncComplete, Exception exception)
             {
-                Timer t = this.timer;
-                if (t != null)
+                if (Interlocked.CompareExchange(ref this.state, 2, 0) == 0)
                 {
-                    t.Dispose();
+                    this.CompleteInternal(syncComplete, exception);
                 }
-
-                this.CompleteInternal(syncComplete, 1, exception);
             }
 
-            void CompleteInternal(bool syncComplete, int code, Exception exception)
+            void CompleteInternal(bool syncComplete, Exception exception)
             {
-                if (Interlocked.CompareExchange(ref this.completed, code, 0) == 0)
+                this.timer?.Dispose();
+                if (this.node != null)
                 {
-                    if (this.messages == null)
-                    {
-                        this.messages = new List<AmqpMessage>();
-                    }
+                    this.parent.waiterManager.RemoveWaiter(this);
+                }
 
-                    if (exception != null)
-                    {
-                        this.Complete(syncComplete, exception);
-                    }
-                    else
-                    {
-                        this.Complete(syncComplete);
-                    }
+                if (exception != null)
+                {
+                    this.Complete(syncComplete, exception);
+                }
+                else
+                {
+                    this.Complete(syncComplete);
                 }
             }
 
             static void OnTimer(object state)
             {
                 ReceiveAsyncResult thisPtr = (ReceiveAsyncResult)state;
-                lock (thisPtr.parent.SyncRoot)
+                int code = Interlocked.CompareExchange(ref thisPtr.state, 2, 0);
+                if (code == 0)
                 {
-                    if (thisPtr.parent.waiterList == null || thisPtr.node == null)
-                    {
-                        return;
-                    }
-
-                    thisPtr.parent.waiterList.Remove(thisPtr.node);
-                    Timer t = thisPtr.timer;
-                    if (t != null)
-                    {
-                        t.Dispose();
-                    }
-                    thisPtr.node = null;
+                    thisPtr.CompleteInternal(false, null);
                 }
+                else if (code == 1)
+                {
+                    thisPtr.timer.Change(thisPtr.batchWaitTimeout, Timeout.InfiniteTimeSpan);
+                }
+            }
+        }
 
-                thisPtr.CompleteInternal(false, thisPtr.MessageCount > 0 ? 1 : 2, null); // 1: signaled, 2: timeout
+        sealed class WaiterManager : LinkedList<ReceiveAsyncResult>
+        {
+            readonly object syncRoot;
+            readonly ReceivingAmqpLink link;
+            int totalCount;
+            int leftoverCount;
+
+            public WaiterManager(ReceivingAmqpLink link)
+            {
+                this.syncRoot = new object();
+                this.link = link;
+            }
+
+            public int ResetRequestCount()
+            {
+                lock (this.syncRoot)
+                {
+                    int count = this.totalCount;
+                    this.totalCount = 0;
+                    return count;
+                }
+            }
+
+            public void AddWaiter(ReceiveAsyncResult waiter)
+            {
+                var node = new LinkedListNode<ReceiveAsyncResult>(waiter);
+                waiter.Initialize(node);
+                lock (this.syncRoot)
+                {
+                    this.AddLast(node);
+                    int count = Math.Min(waiter.RequestedMessageCount, this.leftoverCount);
+                    this.leftoverCount -= count;
+                    this.totalCount += waiter.RequestedMessageCount - count;
+                }
+            }
+
+            public bool RemoveWaiter(ReceiveAsyncResult waiter)
+            {
+                lock (this.syncRoot)
+                {
+                    if (waiter.Node == null)
+                    {
+                        return false;
+                    }
+
+                    this.Remove(waiter.Node);
+                    waiter.OnRemoved();
+                    this.leftoverCount += waiter.RequestedMessageCount - waiter.MessageCount;
+                    return true;
+                }
+            }
+
+            public ReceiveAsyncResult PeekWaiter()
+            {
+                lock (this.syncRoot)
+                {
+                    return this.First?.Value;
+                }
+            }
+
+            public List<ReceiveAsyncResult> RemoveAll()
+            {
+                var list = new List<ReceiveAsyncResult>(this.Count);
+                lock (this.syncRoot)
+                {
+                    foreach (var waiter in this)
+                    {
+                        waiter.OnRemoved();
+                        list.Add(waiter);
+                    }
+
+                    this.Clear();
+                    return list;
+                }
             }
         }
 
@@ -1032,211 +909,6 @@ namespace Microsoft.Azure.Amqp
                 {
                     base.CompleteOnTimer();
                 }
-            }
-        }
-
-        /// <summary>
-        /// The different this class from the normal Queue is that
-        /// if we specify a size then we will perform Amqp Flow based on 
-        /// the size, where:
-        /// - When en-queuing (cache message from service) we will keep sending credit flow as long as size is not over the cache limit.
-        /// - When de-queuing (return message to user) we will issue flow as soon as the size is below the threshold (70%).
-        /// - When issuing credit we always issue in increment of boundedTotalLinkCredit
-        /// - boundedTotalLinkCredit is based on [total cache size] / [max message size]
-        /// - [total cache size] has a 90% cap to try to prevent overflow - but does not enforce it.
-        /// - we keep updating [max message size] as we receive message in flow.
-        /// </summary>
-        sealed class SizeBasedFlowQueue : Queue<AmqpMessage>
-        {
-            // Basically we stop issuing credit at 90% of queue size, and start again at 50%
-            const double IssueCreditThresholdRatio = 0.5;
-            const double StoppCreditThresholdRatio = 0.9;
-            const long DefaultMessageSizeForCacheSizeCalulation = 256 * 1024;
-            const uint maxCreditToIssuePerFlow = 500;
-            readonly ReceivingAmqpLink receivingLink;
-
-            // the amount of credit that we have, in terms of size. This is used to calculate boundedTotalLinkCredit
-            // Note: think of this as the "free space" that we can still fit message with.
-            long cacheSizeCredit;
-
-            // average message size that gets updated as message flows in. This is used to calculate boundedTotalLinkCredit
-            long inQueueAverageMessageSizeInBytes;
-
-            // the amount of credit in size at which we will start issuing credit again if amount of data is less than this threshold
-            long thresholdCacheSizeInBytes;
-
-            // the amount of credit in size at which we will stop issuing credit to avoid an overflow
-            long overflowBufferCacheSizeInBytes;
-
-            // the actual credit that we issue over the flow. This can be bounded by maxCreditToIssuePerFlow
-            uint boundedTotalLinkCredit;
-
-            public SizeBasedFlowQueue(ReceivingAmqpLink receivingLink)
-            {
-                this.receivingLink = receivingLink;
-                this.SetLinkCreditUsingTotalCacheSize(true);
-            }
-
-            internal long AverageMessageSizeInBytes
-            {
-                get
-                {
-                    return this.inQueueAverageMessageSizeInBytes > 0 ? this.inQueueAverageMessageSizeInBytes : DefaultMessageSizeForCacheSizeCalulation;
-                }
-            }
-
-            internal bool IsPrefetchingBySize
-            {
-                get
-                {
-                    return this.receivingLink.Settings.TotalCacheSizeInBytes.HasValue;
-                }
-            }
-
-            internal long CacheSizeCredit
-            {
-                get
-                {
-                    return this.cacheSizeCredit;
-                }
-            }
-
-            internal uint BoundedTotalLinkCredit
-            {
-                get
-                {
-                    return this.boundedTotalLinkCredit;
-                }
-            }
-
-            public void SetLinkCreditUsingTotalCacheSize(bool setTotalLinkCredit = false)
-            {
-                if (this.receivingLink.Settings != null && this.IsPrefetchingBySize)
-                {
-                    this.cacheSizeCredit = this.receivingLink.Settings.TotalCacheSizeInBytes ?? 0;
-                    this.thresholdCacheSizeInBytes = (long)(this.cacheSizeCredit * IssueCreditThresholdRatio);
-                    this.overflowBufferCacheSizeInBytes = (long)(this.cacheSizeCredit * (1 - StoppCreditThresholdRatio));
-                    this.boundedTotalLinkCredit = Convert.ToUInt32(this.cacheSizeCredit / this.AverageMessageSizeInBytes);
-                    if (this.boundedTotalLinkCredit <= 0)
-                    {
-                        // safe guard against cacheSizeCredit being set too low.
-                        this.boundedTotalLinkCredit = 1;
-                    }
-
-                    if (this.boundedTotalLinkCredit > maxCreditToIssuePerFlow)
-                    {
-                        this.boundedTotalLinkCredit = maxCreditToIssuePerFlow;
-                    }
-
-                    this.receivingLink.LinkCredit = this.boundedTotalLinkCredit;
-                    if (setTotalLinkCredit)
-                    {
-                        this.receivingLink.Settings.TotalLinkCredit = this.boundedTotalLinkCredit;
-                    }
-
-                    // This will turn on AutoFlow
-                    this.receivingLink.SetTotalLinkCredit(this.boundedTotalLinkCredit, true, true);
-                }
-            }
-
-            public new void Enqueue(AmqpMessage amqpMessage)
-            {
-                if (amqpMessage != null)
-                {
-                    base.Enqueue(amqpMessage);
-                    if (this.IsPrefetchingBySize)
-                    {
-                        this.cacheSizeCredit -= amqpMessage.Serialize(false);
-                        bool issueCredit = false;
-                        if (this.cacheSizeCredit > 0 && this.cacheSizeCredit > this.overflowBufferCacheSizeInBytes)
-                        {
-                            issueCredit = this.UpdateCreditToIssue();
-                        }
-                        else if (this.cacheSizeCredit <= 0)
-                        {
-                            issueCredit = this.boundedTotalLinkCredit != 0;
-                            this.boundedTotalLinkCredit = 0;
-                        }
-                        else
-                        {
-                            issueCredit = this.boundedTotalLinkCredit != 1;
-                            this.boundedTotalLinkCredit = 1;
-                        }
-
-                        if (issueCredit)
-                        {
-                            this.receivingLink.SetTotalLinkCredit(this.boundedTotalLinkCredit, true);
-                        }
-                    }
-                }
-            }
-
-            public new AmqpMessage Dequeue()
-            {
-                var amqpMessage = base.Dequeue();
-                if (amqpMessage != null && this.IsPrefetchingBySize)
-                {
-                    // if we are draining the cache (i.e. receiving) we should start giving
-                    // credit if we now have credit above the threshold.
-                    this.cacheSizeCredit += amqpMessage.Serialize(false);
-
-                    bool issueCredit = false;
-                    if (this.cacheSizeCredit >= this.thresholdCacheSizeInBytes)
-                    {
-                        issueCredit = this.UpdateCreditToIssue();
-                    }
-                    else if (this.cacheSizeCredit > 0)
-                    {
-                        issueCredit = this.boundedTotalLinkCredit != 1;
-                        this.boundedTotalLinkCredit = 1;
-                    }
-
-                    if (issueCredit)
-                    {
-                        this.receivingLink.SetTotalLinkCredit(this.boundedTotalLinkCredit, true);
-                    }
-                }
-
-                return amqpMessage;
-            }
-
-            /// <summary>
-            /// This method updates the credit that we will send to service to fetch more
-            /// data based on the current average message size. Only call this method if
-            /// we already check and cache credit is within range (&gt; 0%, &lt; 90%).
-            /// </summary>
-            internal bool UpdateCreditToIssue(AmqpMessage externalMessage = null)
-            {
-                var previousCredit = this.boundedTotalLinkCredit;
-                long totalSize = this.receivingLink.Settings.TotalCacheSizeInBytes ?? 0;
-                long externalMessageSize = externalMessage == null ? 0 : externalMessage.Serialize(false);
-                int count = externalMessage == null ? this.Count : this.Count + 1;
-                if (count > 0)
-                {
-                    this.inQueueAverageMessageSizeInBytes = (totalSize - (this.cacheSizeCredit - externalMessageSize)) / count;
-                    if (this.inQueueAverageMessageSizeInBytes <= 0)
-                    {
-                        this.inQueueAverageMessageSizeInBytes = DefaultMessageSizeForCacheSizeCalulation;
-                    }
-                }
-
-                // if cacheSizeCredit is negative that means we are already overflowing.
-                this.boundedTotalLinkCredit = this.cacheSizeCredit > 0 ? Convert.ToUInt32(this.cacheSizeCredit / this.AverageMessageSizeInBytes) : 0;
-                if (this.boundedTotalLinkCredit <= 0 && this.cacheSizeCredit > 0)
-                {
-                    // this condition can only be possible if average message size is larger than the cache credit.
-                    // This is not possible in public stamp as we enforce cache size to be larger than 260k and max message size
-                    // is 256k. However this assumption can be broken - e.g. in private stamp max message size can be 1Mb.
-                    // since technically cache is not full, we set it to 1.
-                    this.boundedTotalLinkCredit = 1;
-                }
-
-                if (this.boundedTotalLinkCredit > maxCreditToIssuePerFlow)
-                {
-                    this.boundedTotalLinkCredit = maxCreditToIssuePerFlow;
-                }
-
-                return previousCredit != this.boundedTotalLinkCredit;
             }
         }
     }

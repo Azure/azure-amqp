@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Generic;
     using System.Globalization;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
@@ -56,6 +57,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public static readonly ArraySegment<byte> EmptyBinary = new ArraySegment<byte>(new byte[0]);
 
+        internal static readonly IList<AmqpMessage> EmptyMessages = new AmqpMessage[0];
         internal static readonly AmqpVersion DefaultProtocolVersion = new AmqpVersion(1, 0, 0);
         internal static readonly DateTime StartOfEpoch = DateTime.Parse("1970-01-01T00:00:00.0000000Z", CultureInfo.InvariantCulture).ToUniversalTime();
         /// <summary>

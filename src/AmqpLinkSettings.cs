@@ -38,16 +38,6 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Gets or sets the cache size of the prefetch queue. When set, the link
-        /// does a best effor to ensure prefetched messages fit into the specified size.
-        /// </summary>
-        public long? TotalCacheSizeInBytes
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// The number of messages that have been settled by the application by
         /// calling one of the state update methods on <see cref="ReceivingAmqpLink"/>.
         /// A flow is sent when the threshold is reached.

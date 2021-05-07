@@ -815,11 +815,6 @@ namespace Microsoft.Azure.Amqp
         /// <param name="delivery">The delivery whose state is updated.</param>
         protected abstract void OnDisposeDeliveryInternal(Delivery delivery);
 
-        internal virtual void OnReceiveStateOpenSent(Attach attach)
-        {
-            // no op by default
-        }
-
         internal bool SendDelivery(Delivery delivery)
         {
             bool settled = delivery.Settled;
@@ -1019,8 +1014,6 @@ namespace Microsoft.Azure.Amqp
                     {
                         source.Address = ((Source)attach.Source).Address;
                     }
-
-                    this.OnReceiveStateOpenSent(attach);
                 }
                 else
                 {

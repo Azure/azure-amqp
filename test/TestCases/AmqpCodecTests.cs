@@ -757,7 +757,7 @@
             // Create an object to be serialized
             Person p = new Student("Tom")
                 {
-                    Address = new Address() { FullAddress = new string('B', 1024) }, 
+                    Address = new Address() { FullAddress = new string('B', 1024) },
                     Grades = new List<int>() { 1, 2, 3, 4, 5 }
                 };
             p.Age = 20;
@@ -769,7 +769,7 @@
             var stream = new MemoryStream(new byte[4096], 0, 4096, true, true);
             AmqpContractSerializer.WriteObject(stream, p);
             stream.Flush();
-            
+
             // Deserialize and verify
             stream.Seek(0, SeekOrigin.Begin);
             Person p3 = AmqpContractSerializer.ReadObject<Person>(stream);

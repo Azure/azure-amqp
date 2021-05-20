@@ -4,13 +4,14 @@
 namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
+    using System.Buffers.Binary;
     using System.Collections.Generic;
 
     /// <summary>
     /// Decoding from AMQP decimal to C# decimal can lose precision and
     /// can also cause OverflowException.
     /// </summary>
-    sealed class DecimalEncoding : EncodingBase
+    sealed class DecimalEncoding : PrimitiveEncoding<decimal>
     {
         const int Decimal32Bias = 101;
         const int Decimal64Bias = 398;
@@ -243,19 +244,51 @@ namespace Microsoft.Azure.Amqp.Encoding
             return value;
         }
 
-        // public override int GetArrayEncodeSize(IList<decimal> value)
-        // {
-        //     return FixedWidth.Decimal128 * value.Count;
-        // }
-        //
-        // public override void EncodeArray(IList<decimal> value, ByteBuffer buffer)
-        // {
-        //     throw new NotImplementedException();
-        // }
-        //
-        // public override decimal[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
-        // {
-        //     throw new NotImplementedException();
-        // }
+        public override int GetArrayEncodeSize(IList<decimal> value)
+        {
+            return FixedWidth.Decimal128 * value.Count;
+        }
+
+        public override void EncodeArray(IList<decimal> value, ByteBuffer buffer)
+        {
+            int byteCount = FixedWidth.Decimal128 * value.Count;
+
+            buffer.Validate(write: true, byteCount);
+
+            if (value is decimal[] decimalArray)
+            {
+                // fast-path for int[] so the bounds checks can be elided
+                for (int i = 0; i < decimalArray.Length; i++)
+                {
+                    EncodeValue(decimalArray[i], buffer);
+                }
+            }
+            else
+            {
+                IReadOnlyList<decimal> listValue = (IReadOnlyList<decimal>)value;
+                for (int i = 0; i < listValue.Count; i++)
+                {
+                    EncodeValue(listValue[i], buffer);
+                }
+            }
+
+            buffer.Append(byteCount);
+        }
+
+        public override decimal[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
+        {
+            int byteCount = FixedWidth.Decimal128 * count;
+            buffer.Validate(write: false, byteCount);
+
+            decimal[] array = new decimal[count];
+            for (int i = 0; i < count; ++i)
+            {
+                array[i] = DecodeValue(buffer, formatCode);
+            }
+
+            buffer.Complete(byteCount);
+
+            return array;
+        }
     }
 }

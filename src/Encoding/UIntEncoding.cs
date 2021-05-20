@@ -3,7 +3,11 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    sealed class UIntEncoding : EncodingBase
+    using System;
+    using System.Buffers.Binary;
+    using System.Collections.Generic;
+
+    sealed class UIntEncoding : PrimitiveEncoding<uint>
     {
         public UIntEncoding()
             : base(FormatCode.UInt)
@@ -18,15 +22,11 @@ namespace Microsoft.Azure.Amqp.Encoding
                 {
                     return FixedWidth.ZeroEncoded;
                 }
-                else
-                {
-                    return value.Value <= byte.MaxValue ? FixedWidth.UByteEncoded : FixedWidth.UIntEncoded;
-                }
+
+                return value.Value <= byte.MaxValue ? FixedWidth.UByteEncoded : FixedWidth.UIntEncoded;
             }
-            else
-            {
-                return FixedWidth.NullEncoded;
-            }
+
+            return FixedWidth.NullEncoded;
         }
 
         public static void Encode(uint? value, ByteBuffer buffer)
@@ -66,24 +66,15 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 return 0;
             }
-            else
-            {
-                return formatCode == FormatCode.SmallUInt ?
-                    AmqpBitConverter.ReadUByte(buffer) :
-                    AmqpBitConverter.ReadUInt(buffer);
-            }
+
+            return formatCode == FormatCode.SmallUInt ?
+                AmqpBitConverter.ReadUByte(buffer) :
+                AmqpBitConverter.ReadUInt(buffer);
         }
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
         {
-            if (arrayEncoding)
-            {
-                return FixedWidth.UInt;
-            }
-            else
-            {
-                return UIntEncoding.GetEncodeSize((uint)value);
-            }
+            return arrayEncoding ? FixedWidth.UInt : UIntEncoding.GetEncodeSize((uint)value);
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
@@ -101,6 +92,56 @@ namespace Microsoft.Azure.Amqp.Encoding
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
             return UIntEncoding.Decode(buffer, formatCode);
+        }
+
+        public override int GetArrayEncodeSize(IList<uint> value)
+        {
+            return FixedWidth.UInt * value.Count;
+        }
+
+        public override void EncodeArray(IList<uint> value, ByteBuffer buffer)
+        {
+            int byteCount = FixedWidth.UInt * value.Count;
+
+            buffer.Validate(write: true, byteCount);
+
+            Span<byte> destination = buffer.GetWriteSpan();
+
+            if (value is uint[] intArray)
+            {
+                // fast-path for int[] so the bounds checks can be elided
+                for (int i = 0; i < intArray.Length; i++)
+                {
+                    BinaryPrimitives.WriteUInt32BigEndian(destination.Slice(FixedWidth.UInt * i), intArray[i]);
+                }
+            }
+            else
+            {
+                IReadOnlyList<uint> listValue = (IReadOnlyList<uint>)value;
+                for (int i = 0; i < listValue.Count; i++)
+                {
+                    BinaryPrimitives.WriteUInt32BigEndian(destination.Slice(FixedWidth.UInt * i), listValue[i]);
+                }
+            }
+
+            buffer.Append(byteCount);
+        }
+
+        public override uint[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
+        {
+            int byteCount = FixedWidth.UInt * count;
+            buffer.Validate(write: false, byteCount);
+            ReadOnlySpan<byte> source = buffer.GetReadSpan();
+
+            uint[] array = new uint[count];
+            for (int i = 0; i < count; ++i)
+            {
+                array[i] = BinaryPrimitives.ReadUInt32BigEndian(source.Slice(FixedWidth.UInt * i));
+            }
+
+            buffer.Complete(byteCount);
+
+            return array;
         }
     }
 }

@@ -582,10 +582,10 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.Append(count);
         }
 
-        internal static void WriteBytes(ByteBuffer buffer, ReadOnlySpan<byte> data, int count)
+        internal static void WriteBytes(ByteBuffer buffer, ReadOnlySpan<byte> data, int offset, int count)
         {
             buffer.Validate(true, count);
-            data.CopyTo(buffer.GetWriteSpan());
+            data.CopyTo(buffer.GetWriteSpan().Slice(offset, count));
             buffer.Append(count);
         }
 

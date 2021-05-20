@@ -107,7 +107,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             bytes[14] = p[1];
             bytes[15] = p[0];
 
-            AmqpBitConverter.WriteBytes(buffer, bytes, bytes.Length);
+            AmqpBitConverter.WriteBytes(buffer, bytes, 0, bytes.Length);
         }
 
         static decimal DecodeValue(ByteBuffer buffer, FormatCode formatCode)
@@ -271,8 +271,6 @@ namespace Microsoft.Azure.Amqp.Encoding
                     EncodeValue(listValue[i], buffer);
                 }
             }
-
-            buffer.Append(byteCount);
         }
 
         public override decimal[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
@@ -285,8 +283,6 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 array[i] = DecodeValue(buffer, formatCode);
             }
-
-            buffer.Complete(byteCount);
 
             return array;
         }

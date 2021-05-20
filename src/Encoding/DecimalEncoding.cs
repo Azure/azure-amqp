@@ -4,9 +4,10 @@
 namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
+    using System.Collections.Generic;
 
     /// <summary>
-    /// Decoding from AMQP decimal to C# decimal can lose precision and 
+    /// Decoding from AMQP decimal to C# decimal can lose precision and
     /// can also cause OverflowException.
     /// </summary>
     sealed class DecimalEncoding : EncodingBase
@@ -50,14 +51,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
         {
-            if (arrayEncoding)
-            {
-                return FixedWidth.Decimal128;
-            }
-            else
-            {
-                return FixedWidth.Decimal128Encoded;
-            }
+            return arrayEncoding ? FixedWidth.Decimal128 : FixedWidth.Decimal128Encoded;
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
@@ -85,7 +79,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             int highSignificant = bits[2];
             int signAndExponent = bits[3];
 
-            byte[] bytes = new byte[FixedWidth.Decimal128];
+            Span<byte> bytes = stackalloc byte[FixedWidth.Decimal128];
             byte* p = (byte*)&signAndExponent;
             int exponent = Decimal128Bias - p[2];
             bytes[0] = p[3];    // sign
@@ -112,7 +106,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             bytes[14] = p[1];
             bytes[15] = p[0];
 
-            AmqpBitConverter.WriteBytes(buffer, bytes, 0, bytes.Length);
+            AmqpBitConverter.WriteBytes(buffer, bytes, bytes.Length);
         }
 
         static decimal DecodeValue(ByteBuffer buffer, FormatCode formatCode)
@@ -138,7 +132,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         static decimal DecodeDecimal32(ByteBuffer buffer)
         {
-            byte[] bytes = new byte[FixedWidth.Decimal32];
+            Span<byte> bytes = stackalloc byte[FixedWidth.Decimal32];
             AmqpBitConverter.ReadBytes(buffer, bytes, 0, bytes.Length);
             int sign = 1;
             int exponent = 0;
@@ -170,7 +164,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         static decimal DecodeDecimal64(ByteBuffer buffer)
         {
-            byte[] bytes = new byte[FixedWidth.Decimal64];
+            Span<byte> bytes = stackalloc byte[FixedWidth.Decimal64];
             AmqpBitConverter.ReadBytes(buffer, bytes, 0, bytes.Length);
             int sign = 1;
             int exponent = 0;
@@ -203,7 +197,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         static decimal DecodeDecimal128(ByteBuffer buffer)
         {
-            byte[] bytes = new byte[FixedWidth.Decimal128];
+            Span<byte> bytes = stackalloc byte[FixedWidth.Decimal128];
             AmqpBitConverter.ReadBytes(buffer, bytes, 0, bytes.Length);
             int sign = 1;
             int exponent = 0;
@@ -239,16 +233,29 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 return new decimal(low, middle, high, sign < 0, (byte)-exponent);
             }
-            else
-            {
-                decimal value = new decimal(low, middle, high, sign < 0, 0);
-                for (int i = 0; i < exponent; ++i)
-                {
-                    value *= 10;
-                }
 
-                return value;
+            decimal value = new decimal(low, middle, high, sign < 0, 0);
+            for (int i = 0; i < exponent; ++i)
+            {
+                value *= 10;
             }
+
+            return value;
         }
+
+        // public override int GetArrayEncodeSize(IList<decimal> value)
+        // {
+        //     return FixedWidth.Decimal128 * value.Count;
+        // }
+        //
+        // public override void EncodeArray(IList<decimal> value, ByteBuffer buffer)
+        // {
+        //     throw new NotImplementedException();
+        // }
+        //
+        // public override decimal[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
+        // {
+        //     throw new NotImplementedException();
+        // }
     }
 }

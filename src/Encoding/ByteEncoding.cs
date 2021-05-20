@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
-    using System.Buffers.Binary;
     using System.Collections.Generic;
 
     sealed class ByteEncoding : PrimitiveEncoding<sbyte>

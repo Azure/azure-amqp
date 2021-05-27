@@ -3,7 +3,12 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    sealed class DoubleEncoding : EncodingBase
+    using System;
+    using System.Buffers.Binary;
+    using System.Collections.Generic;
+    using System.Runtime.CompilerServices;
+
+    sealed class DoubleEncoding : PrimitiveEncoding<double>
     {
         public DoubleEncoding()
             : base(FormatCode.Double)
@@ -40,14 +45,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
         {
-            if (arrayEncoding)
-            {
-                return FixedWidth.Double;
-            }
-            else
-            {
-                return DoubleEncoding.GetEncodeSize((double)value);
-            }
+            return arrayEncoding ? FixedWidth.Double : DoubleEncoding.GetEncodeSize((double)value);
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
@@ -65,6 +63,59 @@ namespace Microsoft.Azure.Amqp.Encoding
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
             return DoubleEncoding.Decode(buffer, formatCode);
+        }
+
+        public override int GetArrayEncodeSize(IList<double> value)
+        {
+            return FixedWidth.Double * value.Count;
+        }
+
+        public override void EncodeArray(IList<double> value, ByteBuffer buffer)
+        {
+            int byteCount = FixedWidth.Double * value.Count;
+
+            buffer.Validate(write: true, byteCount);
+
+            Span<byte> destination = buffer.GetWriteSpan();
+
+            if (value is double[] doubleArray)
+            {
+                // fast-path for double[] so the bounds checks can be elided
+                for (int i = 0; i < doubleArray.Length; i++)
+                {
+                    long doubleAsLong = Unsafe.As<double, long>(ref doubleArray[i]);
+                    BinaryPrimitives.WriteInt64BigEndian(destination.Slice(FixedWidth.Double * i), doubleAsLong);
+                }
+            }
+            else
+            {
+                IReadOnlyList<double> listValue = (IReadOnlyList<double>)value;
+                for (int i = 0; i < listValue.Count; i++)
+                {
+                    var source = listValue[i];
+                    long doubleAsLong = Unsafe.As<double, long>(ref source);
+                    BinaryPrimitives.WriteInt64BigEndian(destination.Slice(FixedWidth.Double * i), doubleAsLong);
+                }
+            }
+
+            buffer.Append(byteCount);
+        }
+
+        public override double[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
+        {
+            int byteCount = FixedWidth.Double * count;
+            buffer.Validate(write: false, byteCount);
+            ReadOnlySpan<byte> source = buffer.GetReadSpan();
+
+            double[] array = new double[count];
+            for (int i = 0; i < count; ++i)
+            {
+                array[i] = BitConverter.Int64BitsToDouble(BinaryPrimitives.ReadInt64BigEndian(source.Slice(FixedWidth.Double * i)));
+            }
+
+            buffer.Complete(byteCount);
+
+            return array;
         }
     }
 }

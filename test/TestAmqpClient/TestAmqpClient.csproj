@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net461;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net48;netcoreapp3.1</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -13,7 +13,7 @@
     <Optimize>true</Optimize>
     <OutputPath>..\..\bin\$(Configuration)\$(MSBuildProjectName)\</OutputPath>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Azure.Amqp.csproj" />
   </ItemGroup>

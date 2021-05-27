@@ -375,7 +375,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             EncodingBase encoding = AmqpEncoding.GetEncoding(formatCode);
             if (encoding is PrimitiveEncoding<T> primitiveEncoding)
             {
-                return (T[])primitiveEncoding.DecodeArray(buffer, count, formatCode);
+                return primitiveEncoding.DecodeArray(buffer, count, formatCode);
             }
 
             object descriptor = null;

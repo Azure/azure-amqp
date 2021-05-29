@@ -116,20 +116,48 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override void EncodeArray(IList<AmqpSymbol> value, ByteBuffer buffer)
         {
-            for (var index = 0; index < value.Count; index++)
+            // Refactor with inlinable method?
+            if (value is AmqpSymbol[] symbolArray)
             {
-                AmqpSymbol item = value[index];
-                string stringValue = item.Value;
-                int byteCount = Encoding.ASCII.GetByteCount(stringValue);
+                // fast-path for AmqpSymbol[] so the bounds checks can be elided
+                for (int i = 0; i < symbolArray.Length; i++)
+                {
+                    AmqpSymbol item = value[i];
 
-                var pool = ArrayPool<byte>.Shared;
-                var tempBuffer = pool.Rent(byteCount);
+                    string stringValue = item.Value;
+                    int byteCount = Encoding.ASCII.GetByteCount(stringValue);
 
-                int encodedByteCount = Encoding.ASCII.GetBytes(stringValue, 0, stringValue.Length, tempBuffer, 0);
-                AmqpBitConverter.WriteUInt(buffer, (uint)encodedByteCount);
-                AmqpBitConverter.WriteBytes(buffer, tempBuffer, 0, encodedByteCount);
+                    var pool = ArrayPool<byte>.Shared;
+                    var tempBuffer = pool.Rent(byteCount);
+                    ReadOnlySpan<byte> bufferAsSpan = tempBuffer;
 
-                pool.Return(tempBuffer);
+                    int encodedByteCount = Encoding.ASCII.GetBytes(stringValue, 0, stringValue.Length, tempBuffer, 0);
+                    AmqpBitConverter.WriteUInt(buffer, (uint)encodedByteCount);
+                    AmqpBitConverter.WriteBytes(buffer, bufferAsSpan.Slice(0, encodedByteCount), 0, encodedByteCount);
+
+                    pool.Return(tempBuffer);
+                }
+            }
+            else
+            {
+                IReadOnlyList<AmqpSymbol> listValue = (IReadOnlyList<AmqpSymbol>)value;
+                for (int i = 0; i < listValue.Count; i++)
+                {
+                    AmqpSymbol item = listValue[i];
+
+                    string stringValue = item.Value;
+                    int byteCount = Encoding.ASCII.GetByteCount(stringValue);
+
+                    var pool = ArrayPool<byte>.Shared;
+                    var tempBuffer = pool.Rent(byteCount);
+                    ReadOnlySpan<byte> bufferAsSpan = tempBuffer;
+
+                    int encodedByteCount = Encoding.ASCII.GetBytes(stringValue, 0, stringValue.Length, tempBuffer, 0);
+                    AmqpBitConverter.WriteUInt(buffer, (uint)encodedByteCount);
+                    AmqpBitConverter.WriteBytes(buffer, bufferAsSpan.Slice(0, encodedByteCount), 0, encodedByteCount);
+
+                    pool.Return(tempBuffer);
+                }
             }
         }
 

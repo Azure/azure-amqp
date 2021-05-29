@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
+    using System.Buffers;
     using System.Collections;
     using System.Collections.Generic;
     using System.Text;
@@ -124,19 +125,19 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override void EncodeArray(IList<AmqpSymbol> value, ByteBuffer buffer)
         {
-            byte[] tempBuffer = null;
-            foreach (AmqpSymbol item in value)
+            for (var index = 0; index < value.Count; index++)
             {
-                string s = item.Value;
-                int byteCount = Encoding.ASCII.GetByteCount(s);
-                if (tempBuffer == null || tempBuffer.Length < byteCount)
-                {
-                    tempBuffer = new byte[byteCount];
-                }
+                AmqpSymbol item = value[index];
+                string stringValue = item.Value;
+                int byteCount = Encoding.ASCII.GetByteCount(stringValue);
 
-                int encodedByteCount = Encoding.ASCII.GetBytes(s, 0, s.Length, tempBuffer, 0);
+                var pool = ArrayPool<byte>.Shared;
 
+                var tempBuffer = pool.Rent(byteCount);
+                int encodedByteCount = Encoding.ASCII.GetBytes(stringValue, 0, stringValue.Length, tempBuffer, 0);
                 Encode(tempBuffer, encodedByteCount, FixedWidth.UInt, buffer);
+                
+                pool.Return(tempBuffer);
             }
         }
 

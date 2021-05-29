@@ -5,7 +5,6 @@ namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
     using System.Buffers;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Text;
 
@@ -40,7 +39,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
             else
             {
-                byte[] encodedData = Encoding.ASCII.GetBytes(value.Value);
+                ReadOnlySpan<byte> encodedData = Encoding.ASCII.GetBytes(value.Value);
                 int encodeWidth = AmqpEncoding.GetEncodeWidthBySize(encodedData.Length);
                 AmqpBitConverter.WriteUByte(buffer, encodeWidth == FixedWidth.UByte ? FormatCode.Symbol8 : FormatCode.Symbol32);
                 SymbolEncoding.Encode(encodedData, encodeWidth, buffer);
@@ -88,23 +87,18 @@ namespace Microsoft.Azure.Amqp.Encoding
             return SymbolEncoding.Decode(buffer, formatCode);
         }
 
-        static void Encode(byte[] encodedData, int width, ByteBuffer buffer)
-        {
-            Encode(encodedData, encodedData.Length, width, buffer);
-        }
-
-        static void Encode(byte[] encodedData, int encodedDataLength, int width, ByteBuffer buffer)
+        static void Encode(ReadOnlySpan<byte> encodedData, int width, ByteBuffer buffer)
         {
             if (width == FixedWidth.UByte)
             {
-                AmqpBitConverter.WriteUByte(buffer, (byte)encodedDataLength);
+                AmqpBitConverter.WriteUByte(buffer, (byte)encodedData.Length);
             }
             else
             {
-                AmqpBitConverter.WriteUInt(buffer, (uint)encodedDataLength);
+                AmqpBitConverter.WriteUInt(buffer, (uint)encodedData.Length);
             }
 
-            AmqpBitConverter.WriteBytes(buffer, encodedData, 0, encodedDataLength);
+            AmqpBitConverter.WriteBytes(buffer, encodedData, 0, encodedData.Length);
         }
 
         public override int GetArrayEncodeSize(IList<AmqpSymbol> value)

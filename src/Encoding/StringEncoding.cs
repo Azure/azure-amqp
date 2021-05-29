@@ -4,9 +4,10 @@
 namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
+    using System.Collections.Generic;
     using System.Text;
 
-    sealed class StringEncoding : EncodingBase
+    sealed class StringEncoding : PrimitiveEncoding<string>
     {
         public StringEncoding()
             : base(FormatCode.String32Utf8)
@@ -109,6 +110,54 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
 
             AmqpBitConverter.WriteBytes(buffer, encodedData, 0, encodedData.Length);
+        }
+
+        public override int GetArrayEncodeSize(IList<string> value)
+        {
+            int size = 0;
+            for (int i = 0; i < value.Count; i++)
+            {
+                size += FixedWidth.UInt + Encoding.UTF8.GetByteCount(value[i]);
+            }
+            return size;
+        }
+
+        public override void EncodeArray(IList<string> value, ByteBuffer buffer)
+        {
+            if (value is string[] strings)
+            {
+                // fast-path for string[] so the bounds checks can be elided
+                for (int i = 0; i < strings.Length; i++)
+                {
+                    var @string = strings[i];
+                    ReadOnlySpan<byte> encodedData = Encoding.UTF8.GetBytes(@string);
+                    AmqpBitConverter.WriteUInt(buffer, (uint)encodedData.Length);
+                    AmqpBitConverter.WriteBytes(buffer, encodedData, 0, encodedData.Length);
+                }
+            }
+            else
+            {
+                IReadOnlyList<string> listValue = (IReadOnlyList<string>)value;
+                for (int i = 0; i < listValue.Count; i++)
+                {
+                    var @string = listValue[i];
+                    ReadOnlySpan<byte> encodedData = Encoding.UTF8.GetBytes(@string);
+                    AmqpBitConverter.WriteUInt(buffer, (uint)encodedData.Length);
+                    AmqpBitConverter.WriteBytes(buffer, encodedData, 0, encodedData.Length);
+                }
+            }
+        }
+
+        public override string[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
+        {
+            string[] array = new string[count];
+            for (int i = 0; i < count; ++i)
+            {
+                var length = (int) AmqpBitConverter.ReadUInt(buffer);
+                array[i] = Encoding.UTF8.GetString(buffer.Buffer, buffer.Offset, length);
+                buffer.Complete(length);
+            }
+            return array;
         }
     }
 }

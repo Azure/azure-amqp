@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
+    using System;
     using System.Text;
 
     sealed class StringEncoding : EncodingBase
@@ -31,7 +32,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
             else
             {
-                byte[] encodedData = Encoding.UTF8.GetBytes(value);
+                ReadOnlySpan<byte> encodedData = Encoding.UTF8.GetBytes(value);
                 int encodeWidth = AmqpEncoding.GetEncodeWidthBySize(encodedData.Length);
                 AmqpBitConverter.WriteUByte(buffer, encodeWidth == FixedWidth.UByte ? FormatCode.String8Utf8 : FormatCode.String32Utf8);
                 StringEncoding.Encode(encodedData, encodeWidth, buffer);
@@ -50,7 +51,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
             if (formatCode == FormatCode.String8Utf8)
             {
-                count = (int)AmqpBitConverter.ReadUByte(buffer);
+                count = AmqpBitConverter.ReadUByte(buffer);
                 encoding = Encoding.UTF8;
             }
             else if (formatCode == FormatCode.String32Utf8)
@@ -75,10 +76,8 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 return FixedWidth.UInt + Encoding.UTF8.GetByteCount((string)value);
             }
-            else
-            {
-                return StringEncoding.GetEncodeSize((string)value);
-            }
+
+            return StringEncoding.GetEncodeSize((string)value);
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
@@ -98,7 +97,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             return StringEncoding.Decode(buffer, formatCode);
         }
 
-        static void Encode(byte[] encodedData, int width, ByteBuffer buffer)
+        static void Encode(ReadOnlySpan<byte> encodedData, int width, ByteBuffer buffer)
         {
             if (width == FixedWidth.UByte)
             {

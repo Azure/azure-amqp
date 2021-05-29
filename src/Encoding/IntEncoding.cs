@@ -62,12 +62,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
         {
-            if (arrayEncoding)
-            {
-                return FixedWidth.Int;
-            }
-
-            return GetEncodeSize((int)value);
+            return arrayEncoding ? FixedWidth.Int : GetEncodeSize((int)value);
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)

@@ -3,7 +3,6 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    using System;
     using System.Collections.Generic;
 
     abstract class PrimitiveEncoding<T> : EncodingBase

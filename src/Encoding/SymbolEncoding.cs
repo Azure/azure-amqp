@@ -129,10 +129,11 @@ namespace Microsoft.Azure.Amqp.Encoding
                 int byteCount = Encoding.ASCII.GetByteCount(stringValue);
 
                 var pool = ArrayPool<byte>.Shared;
-
                 var tempBuffer = pool.Rent(byteCount);
+
                 int encodedByteCount = Encoding.ASCII.GetBytes(stringValue, 0, stringValue.Length, tempBuffer, 0);
-                Encode(tempBuffer, encodedByteCount, FixedWidth.UInt, buffer);
+                AmqpBitConverter.WriteUInt(buffer, (uint)encodedByteCount);
+                AmqpBitConverter.WriteBytes(buffer, tempBuffer, 0, encodedByteCount);
 
                 pool.Return(tempBuffer);
             }
@@ -140,12 +141,14 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override AmqpSymbol[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
         {
-            AmqpSymbol[] symbolArray = new AmqpSymbol[count];
+            AmqpSymbol[] array = new AmqpSymbol[count];
             for (int i = 0; i < count; ++i)
             {
-                symbolArray[i] = SymbolEncoding.Decode(buffer, formatCode);
+                var length = (int) AmqpBitConverter.ReadUInt(buffer);
+                array[i] = Encoding.ASCII.GetString(buffer.Buffer, buffer.Offset, length);
+                buffer.Complete(length);
             }
-            return symbolArray;
+            return array;
         }
     }
 }

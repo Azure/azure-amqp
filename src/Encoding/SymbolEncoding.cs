@@ -54,8 +54,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 return new AmqpSymbol();
             }
 
-            int count;
-            AmqpEncoding.ReadCount(buffer, formatCode, FormatCode.Symbol8, FormatCode.Symbol32, out count);
+            AmqpEncoding.ReadCount(buffer, formatCode, FormatCode.Symbol8, FormatCode.Symbol32, out var count);
             string value = Encoding.ASCII.GetString(buffer.Buffer, buffer.Offset, count);
             buffer.Complete(count);
 
@@ -68,10 +67,8 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 return FixedWidth.UInt + Encoding.ASCII.GetByteCount(((AmqpSymbol)value).Value);
             }
-            else
-            {
-                return SymbolEncoding.GetEncodeSize((AmqpSymbol)value);
-            }
+
+            return SymbolEncoding.GetEncodeSize((AmqpSymbol)value);
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
@@ -115,11 +112,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             IReadOnlyList<AmqpSymbol> listValue = (IReadOnlyList<AmqpSymbol>)value;
 
             int size = 0;
-            foreach (AmqpSymbol item in listValue)
+            for (var index = 0; index < listValue.Count; index++)
             {
+                AmqpSymbol item = listValue[index];
                 size += Encoding.ASCII.GetByteCount(item.Value);
             }
-
             return size;
         }
 
@@ -136,7 +133,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 var tempBuffer = pool.Rent(byteCount);
                 int encodedByteCount = Encoding.ASCII.GetBytes(stringValue, 0, stringValue.Length, tempBuffer, 0);
                 Encode(tempBuffer, encodedByteCount, FixedWidth.UInt, buffer);
-                
+
                 pool.Return(tempBuffer);
             }
         }

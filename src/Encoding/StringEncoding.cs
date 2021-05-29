@@ -85,7 +85,8 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (arrayEncoding)
             {
-                StringEncoding.Encode(Encoding.UTF8.GetBytes((string)value), FixedWidth.UInt, buffer);
+                var encodedData = Encoding.UTF8.GetBytes((string)value);
+                StringEncoding.Encode(encodedData, FixedWidth.UInt, buffer);
             }
             else
             {

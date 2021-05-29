@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
+    using System.Buffers;
     using System.Collections.Generic;
     using System.Text;
 
@@ -125,15 +126,26 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override void EncodeArray(IList<string> value, ByteBuffer buffer)
         {
+            // Refactor with inlinable method?
             if (value is string[] strings)
             {
                 // fast-path for string[] so the bounds checks can be elided
                 for (int i = 0; i < strings.Length; i++)
                 {
-                    var @string = strings[i];
-                    ReadOnlySpan<byte> encodedData = Encoding.UTF8.GetBytes(@string);
-                    AmqpBitConverter.WriteUInt(buffer, (uint)encodedData.Length);
-                    AmqpBitConverter.WriteBytes(buffer, encodedData, 0, encodedData.Length);
+                    var stringValue = strings[i];
+
+                    int byteCount = Encoding.UTF8.GetByteCount(stringValue);
+
+                    var pool = ArrayPool<byte>.Shared;
+                    var tempBuffer = pool.Rent(byteCount);
+                    ReadOnlySpan<byte> bufferAsSpan = tempBuffer;
+
+                    int encodedByteCount = Encoding.UTF8.GetBytes(stringValue, 0, stringValue.Length, tempBuffer, 0);
+
+                    AmqpBitConverter.WriteUInt(buffer, (uint)encodedByteCount);
+                    AmqpBitConverter.WriteBytes(buffer, bufferAsSpan.Slice(0, encodedByteCount), 0, encodedByteCount);
+
+                    pool.Return(tempBuffer);
                 }
             }
             else
@@ -141,10 +153,20 @@ namespace Microsoft.Azure.Amqp.Encoding
                 IReadOnlyList<string> listValue = (IReadOnlyList<string>)value;
                 for (int i = 0; i < listValue.Count; i++)
                 {
-                    var @string = listValue[i];
-                    ReadOnlySpan<byte> encodedData = Encoding.UTF8.GetBytes(@string);
-                    AmqpBitConverter.WriteUInt(buffer, (uint)encodedData.Length);
-                    AmqpBitConverter.WriteBytes(buffer, encodedData, 0, encodedData.Length);
+                    var stringValue = listValue[i];
+
+                    int byteCount = Encoding.UTF8.GetByteCount(stringValue);
+
+                    var pool = ArrayPool<byte>.Shared;
+                    var tempBuffer = pool.Rent(byteCount);
+                    ReadOnlySpan<byte> bufferAsSpan = tempBuffer;
+
+                    int encodedByteCount = Encoding.UTF8.GetBytes(stringValue, 0, stringValue.Length, tempBuffer, 0);
+
+                    AmqpBitConverter.WriteUInt(buffer, (uint)encodedByteCount);
+                    AmqpBitConverter.WriteBytes(buffer, bufferAsSpan.Slice(0, encodedByteCount), 0, encodedByteCount);
+
+                    pool.Return(tempBuffer);
                 }
             }
         }

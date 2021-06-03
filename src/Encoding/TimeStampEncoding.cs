@@ -4,8 +4,10 @@
 namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
+    using System.Buffers.Binary;
+    using System.Collections.Generic;
 
-    sealed class TimeStampEncoding : EncodingBase
+    sealed class TimeStampEncoding : PrimitiveEncoding<DateTime>
     {
         static readonly long MaxMilliseconds = (long)(DateTime.MaxValue.ToUniversalTime() - AmqpConstants.StartOfEpoch).TotalMilliseconds;
 
@@ -24,7 +26,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             if (value.HasValue)
             {
                 AmqpBitConverter.WriteUByte(buffer, FormatCode.TimeStamp);
-                AmqpBitConverter.WriteLong(buffer, TimeStampEncoding.GetMilliseconds(value.Value));
+                AmqpBitConverter.WriteLong(buffer, GetMilliseconds(value.Value));
             }
             else
             {
@@ -44,25 +46,18 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
         {
-            if (arrayEncoding)
-            {
-                return FixedWidth.TimeStamp;
-            }
-            else
-            {
-                return TimeStampEncoding.GetEncodeSize((DateTime)value);
-            }
+            return arrayEncoding ? FixedWidth.TimeStamp : GetEncodeSize((DateTime)value);
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
         {
             if (arrayEncoding)
             {
-                AmqpBitConverter.WriteLong(buffer, TimeStampEncoding.GetMilliseconds((DateTime)value));
+                AmqpBitConverter.WriteLong(buffer, GetMilliseconds((DateTime)value));
             }
             else
             {
-                TimeStampEncoding.Encode((DateTime)value, buffer);
+                Encode((DateTime)value, buffer);
             }
         }
 
@@ -71,22 +66,67 @@ namespace Microsoft.Azure.Amqp.Encoding
             return TimeStampEncoding.Decode(buffer, formatCode);
         }
 
-        public static long GetMilliseconds(DateTime value)
+        private static long GetMilliseconds(DateTime value)
         {
             DateTime utcValue = value.ToUniversalTime();
             double millisends = (utcValue - AmqpConstants.StartOfEpoch).TotalMilliseconds;
             return (long)millisends;
         }
 
-        public static DateTime ToDateTime(long milliseconds)
+        private static DateTime ToDateTime(long milliseconds)
         {
             milliseconds = milliseconds < 0 ? 0 : milliseconds;
-            if (milliseconds >= MaxMilliseconds)
+            return milliseconds >= MaxMilliseconds ? DateTime.MaxValue : AmqpConstants.StartOfEpoch.AddMilliseconds(milliseconds);
+        }
+
+        public override int GetArrayEncodeSize(IList<DateTime> value)
+        {
+            return FixedWidth.TimeStamp * value.Count;
+        }
+
+        public override void EncodeArray(IList<DateTime> value, ByteBuffer buffer)
+        {
+            int byteCount = FixedWidth.TimeStamp * value.Count;
+
+            buffer.Validate(write: true, byteCount);
+
+            Span<byte> destination = buffer.GetWriteSpan();
+
+            if (value is DateTime[] dateTimeArray)
             {
-                return DateTime.MaxValue;
+                // fast-path for long[] so the bounds checks can be elided
+                for (int i = 0; i < dateTimeArray.Length; i++)
+                {
+                    BinaryPrimitives.WriteInt64BigEndian(destination.Slice(FixedWidth.TimeStamp * i), GetMilliseconds(dateTimeArray[i]));
+                }
+            }
+            else
+            {
+                IReadOnlyList<DateTime> listValue = (IReadOnlyList<DateTime>)value;
+                for (int i = 0; i < listValue.Count; i++)
+                {
+                    BinaryPrimitives.WriteInt64BigEndian(destination.Slice(FixedWidth.TimeStamp * i), GetMilliseconds(listValue[i]));
+                }
             }
 
-            return AmqpConstants.StartOfEpoch.AddMilliseconds(milliseconds);
+            buffer.Append(byteCount);
+        }
+
+        public override DateTime[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
+        {
+            int byteCount = FixedWidth.TimeStamp * count;
+            buffer.Validate(write: false, byteCount);
+            ReadOnlySpan<byte> source = buffer.GetReadSpan();
+
+            DateTime[] array = new DateTime[count];
+            for (int i = 0; i < count; ++i)
+            {
+                array[i] = ToDateTime(BinaryPrimitives.ReadInt64BigEndian(source.Slice(FixedWidth.TimeStamp * i)));
+            }
+
+            buffer.Complete(byteCount);
+
+            return array;
         }
     }
 }

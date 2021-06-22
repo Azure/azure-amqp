@@ -208,6 +208,21 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Starts a task to open the object.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        /// <returns>A task.</returns>
+        public Task OpenAsync(CancellationToken cancellationToken)
+        {
+            return Task.Factory.FromAsync(
+                (t, k, c, s) => ((AmqpObject)s).BeginOpen(t, k, c, s),
+                r => ((AmqpObject)r.AsyncState).EndOpen(r),
+                AmqpConstants.DefaultTimeout,
+                cancellationToken,
+                this);
+        }
+
+        /// <summary>
         /// Begins to open the object.
         /// </summary>
         /// <param name="timeout">The open timeout.</param>
@@ -216,18 +231,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>An IAsyncResult for the operation.</returns>
         public IAsyncResult BeginOpen(TimeSpan timeout, AsyncCallback callback, object state)
         {
-            lock (this.thisLock)
-            {
-                if (this.openCalled)
-                {
-                    throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpInvalidReOpenOperation, this, this.State));
-                }
-
-                this.openCalled = true;
-            }
-
-            AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(BeginOpen));
-            return new OpenAsyncResult(this, timeout, callback, state);
+            return this.BeginOpen(timeout, CancellationToken.None, callback, state);
         }
 
         /// <summary>
@@ -308,6 +312,21 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Starts a task to close the object.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        /// <returns>A task.</returns>
+        public Task CloseAsync(CancellationToken cancellationToken)
+        {
+            return Task.Factory.FromAsync(
+                (t, k, c, s) => ((AmqpObject)s).BeginClose(t, k, c, s),
+                r => ((AmqpObject)r.AsyncState).EndClose(r),
+                AmqpConstants.DefaultTimeout,
+                cancellationToken,
+                this);
+        }
+
+        /// <summary>
         /// Begins to close the object.
         /// </summary>
         /// <param name="timeout">The close timeout.</param>
@@ -316,24 +335,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>An IAsyncResult for the operation.</returns>
         public IAsyncResult BeginClose(TimeSpan timeout, AsyncCallback callback, object state)
         {
-            bool closed = false;
-            lock (this.ThisLock)
-            {
-                closed = (this.closeCalled ||
-                    this.State == AmqpObjectState.End ||
-                    this.State == AmqpObjectState.CloseSent);
-                this.closeCalled = true;
-            }
-
-            if (closed)
-            {
-                return new CompletedAsyncResult(callback, state);
-            }
-            else
-            {
-                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(BeginClose));
-                return new CloseAsyncResult(this, timeout, callback, state);
-            }
+            return this.BeginClose(timeout, CancellationToken.None, callback, state);
         }
 
         /// <summary>
@@ -639,6 +641,56 @@ namespace Microsoft.Azure.Amqp
                 AmqpTrace.Provider.AmqpLogError(thisPtr, "SafeCloseComplete", exception);
 
                 thisPtr.Abort();
+            }
+        }
+
+        internal IAsyncResult BeginOpen(TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
+        {
+            lock (this.thisLock)
+            {
+                if (this.openCalled)
+                {
+                    throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpInvalidReOpenOperation, this, this.State));
+                }
+
+                this.openCalled = true;
+            }
+
+            AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(BeginOpen));
+            var openResult = new OpenAsyncResult(this, timeout, callback, state);
+            if (cancellationToken.CanBeCanceled)
+            {
+                cancellationToken.Register(o => ((AmqpObject)o).CompleteOpen(false, new TaskCanceledException()), this);
+            }
+
+            return openResult;
+        }
+
+        IAsyncResult BeginClose(TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
+        {
+            bool closed = false;
+            lock (this.ThisLock)
+            {
+                closed = (this.closeCalled ||
+                    this.State == AmqpObjectState.End ||
+                    this.State == AmqpObjectState.CloseSent);
+                this.closeCalled = true;
+            }
+
+            if (closed)
+            {
+                return new CompletedAsyncResult(callback, state);
+            }
+            else
+            {
+                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(BeginClose));
+                var closeResult = new CloseAsyncResult(this, timeout, callback, state);
+                if (cancellationToken.CanBeCanceled)
+                {
+                    cancellationToken.Register(o => ((AmqpObject)o).CompleteClose(false, new TaskCanceledException()), this);
+                }
+
+                return closeResult;
             }
         }
 

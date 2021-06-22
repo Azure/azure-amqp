@@ -58,8 +58,9 @@ namespace Microsoft.Azure.Amqp.Transport
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Connect, this.transportSettings);
             TransportInitiator innerInitiator = this.transportSettings.CreateInitiator();
             TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();
-            args.CompletedCallback = this.OnConnectComplete;
-            args.UserToken = callbackArgs;
+            args.UserToken = this;
+            args.CompletedCallback = _args => ((AmqpTransportInitiator)_args.UserToken).OnConnectComplete(_args);
+            args.UserToken2 = callbackArgs;
             callbackArgs.CompletedSynchronously = false;
             this.timeoutHelper = new TimeoutHelper(timeout);
             if (innerInitiator.ConnectAsync(timeout, args))
@@ -109,23 +110,67 @@ namespace Microsoft.Azure.Amqp.Transport
         /// </summary>
         /// <param name="timeout">The operation timeout.</param>
         /// <returns>A task that returns a transport when it is completed.</returns>
+        [Obsolete]
         public Task<TransportBase> ConnectTaskAsync(TimeSpan timeout)
+        {
+            return this.ConnectAsync(timeout);
+        }
+
+        /// <summary>
+        /// Starts the connect operation.
+        /// </summary>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns>A task that returns a transport when it is completed.</returns>
+        public Task<TransportBase> ConnectAsync(TimeSpan timeout)
+        {
+            return this.ConnectAsync(timeout, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Starts the connect operation.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        /// <returns>A task that returns a transport when it is completed.</returns>
+        public Task<TransportBase> ConnectAsync(CancellationToken cancellationToken)
+        {
+            return this.ConnectAsync(TimeSpan.MaxValue, cancellationToken);
+        }
+
+        internal Task<TransportBase> ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             var tcs = new TaskCompletionSource<TransportBase>();
             var args = new TransportAsyncCallbackArgs
             {
-                CompletedCallback = a =>
+                UserToken = tcs,
+                CompletedCallback = _args =>
                 {
-                    if (a.Exception != null)
+                    var _tcs = (TaskCompletionSource<TransportBase>)_args.UserToken;
+                    if (_args.Exception != null)
                     {
-                        tcs.TrySetException(a.Exception);
+                        _tcs.TrySetException(_args.Exception);
                     }
                     else
                     {
-                        tcs.TrySetResult(a.Transport);
+                        if (!_tcs.TrySetResult(_args.Transport))
+                        {
+                            _args.Transport.Abort();
+                        }
                     }
                 }
             };
+
+            if (cancellationToken.CanBeCanceled)
+            {
+                cancellationToken.Register(
+                    o =>
+                    {
+                        var _args = (TransportAsyncCallbackArgs)o;
+                        _args.Transport?.Abort();
+
+                        ((TaskCompletionSource<TransportBase>)_args.UserToken).TrySetCanceled();
+                    },
+                    args);
+            }
 
             if (!this.ConnectAsync(timeout, args))
             {
@@ -273,7 +318,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 args.Transport = null;
             }
 
-            TransportAsyncCallbackArgs innerArgs = (TransportAsyncCallbackArgs)args.UserToken;
+            TransportAsyncCallbackArgs innerArgs = (TransportAsyncCallbackArgs)args.UserToken2;
             innerArgs.Transport = args.Transport;
             innerArgs.Exception = args.Exception;
 

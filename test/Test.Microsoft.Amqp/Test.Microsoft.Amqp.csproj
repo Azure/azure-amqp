@@ -19,6 +19,7 @@
     <Compile Include="..\Common\Person.cs" Link="Common\Person.cs" />
     <Compile Include="..\Common\TestAmqpBrokerFixture.cs" Link="Common\TestAmqpBrokerFixture.cs" />
     <Compile Include="..\Common\TestCategory.cs" Link="Common\TestCategory.cs" />
+    <Compile Include="..\Common\TestRuntimeProvider.cs" Link="Common\TestRuntimeProvider.cs" />
     <Compile Include="..\TestAmqpBroker\TestAmqpBroker.cs" Link="TestAmqpBroker.cs" />
     <Compile Include="..\TestCases\AmqpCodecTests.cs" Link="TestCases\AmqpCodecTests.cs" />
     <Compile Include="..\TestCases\AmqpConnectionListenerTests.cs" Link="TestCases\AmqpConnectionListenerTests.cs" />
@@ -28,6 +29,7 @@
     <Compile Include="..\TestCases\AmqpSamples.cs" Link="TestCases\AmqpSamples.cs" />
     <Compile Include="..\TestCases\AmqpTransportTests.cs" Link="TestCases\AmqpTransportTests.cs" />
     <Compile Include="..\TestCases\AmqpWebSocketTests.cs" Link="TestCases\AmqpWebSocketTests.cs" />
+    <Compile Include="..\TestCases\CancellationTokenTests.cs" Link="TestCases\CancellationTokenTests.cs" />
     <Compile Include="..\TestCases\ResourcesTests.cs" Link="TestCases\ResourcesTests.cs" />
     <Compile Include="..\TestCases\UtilityTests.cs" Link="TestCases\UtilityTests.cs" />
   </ItemGroup>

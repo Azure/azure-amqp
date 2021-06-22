@@ -9,12 +9,19 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Net.Sockets;
     using System.Threading;
 
-    sealed class TcpTransportListener : TransportListener
+    /// <summary>
+    /// This listener accepts TCP transports.
+    /// </summary>
+    public sealed class TcpTransportListener : TransportListener
     {
         readonly WaitCallback acceptTransportLoop;
         readonly TcpTransportSettings transportSettings;
         Socket[] listenSockets;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="transportSettings">The TCP transport settings.</param>
         public TcpTransportListener(TcpTransportSettings transportSettings)
             : base("tcp-listener")
         {
@@ -22,17 +29,27 @@ namespace Microsoft.Azure.Amqp.Transport
             this.transportSettings = transportSettings;
         }
 
+        /// <summary>
+        /// Closes the listener.
+        /// </summary>
+        /// <returns>True.</returns>
         protected override bool CloseInternal()
         {
             this.CloseOrAbortListenSockets(false);
             return true;
         }
 
+        /// <summary>
+        /// Aborts the listener.
+        /// </summary>
         protected override void AbortInternal()
         {
             this.CloseOrAbortListenSockets(true);
         }
 
+        /// <summary>
+        /// Starts listening for incoming transports.
+        /// </summary>
         protected override void OnListen()
         {
             string listenHost = this.transportSettings.Host;

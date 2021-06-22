@@ -63,7 +63,7 @@
                 var amqp = new AmqpSettings();
                 amqp.TransportProviders.Add(new AmqpTransportProvider());
                 var initiator = new AmqpTransportInitiator(amqp, tcp);
-                var task = initiator.ConnectTaskAsync(TimeSpan.FromSeconds(1));
+                var task = initiator.ConnectAsync(TimeSpan.FromSeconds(1));
                 Assert.False(task.IsCompleted);
 
                 Thread.Sleep(2000);

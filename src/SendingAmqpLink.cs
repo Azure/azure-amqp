@@ -56,15 +56,12 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Sends a messages and not wait for the disposition.
+        /// Sends a message and does not wait for the disposition.
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <param name="deliveryTag">The delivery tag.</param>
         /// <param name="txnId">The transaction id.</param>
-        public void SendMessageNoWait(
-            AmqpMessage message, 
-            ArraySegment<byte> deliveryTag, 
-            ArraySegment<byte> txnId)
+        public void SendMessageNoWait(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId)
         {
             this.SendMessageInternal(message, deliveryTag, txnId);
         }
@@ -76,10 +73,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A task that completes with the delivery outcome.</returns>
         public Task<Outcome> SendMessageAsync(AmqpMessage message)
         {
-            return Task.Factory.FromAsync<Outcome>(
-                (c, s) => this.BeginSendMessage(message, CreateTag(), AmqpConstants.NullBinary, AmqpConstants.DefaultTimeout, c, s),
-                this.EndSendMessage,
-                null);
+            return this.SendMessageAsync(message, CreateTag(), AmqpConstants.NullBinary, CancellationToken.None);
         }
 
         /// <summary>
@@ -90,16 +84,32 @@ namespace Microsoft.Azure.Amqp
         /// <param name="txnId">The transaction id.</param>
         /// <param name="timeout">The operation timeout.</param>
         /// <returns>A task that completes with the delivery outcome.</returns>
-        public Task<Outcome> SendMessageAsync(
-            AmqpMessage message,
-            ArraySegment<byte> deliveryTag,
-            ArraySegment<byte> txnId,
-            TimeSpan timeout)
+        public Task<Outcome> SendMessageAsync(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, TimeSpan timeout)
         {
-            return Task.Factory.FromAsync<Outcome>(
-                (c,s) => this.BeginSendMessage(message, deliveryTag, txnId, timeout, c, s),
-                this.EndSendMessage,
-                null);
+            return Task.Factory.FromAsync(
+                (p, t, c, s) => ((SendingAmqpLink)s).BeginSendMessage(p.Message, p.DeliveryTag, p.TxnId, t, CancellationToken.None, c, s),
+                r => ((SendingAmqpLink)r.AsyncState).EndSendMessage(r),
+                new SendMessageParam(message, deliveryTag, txnId),
+                timeout,
+                this);
+        }
+
+        /// <summary>
+        /// Starts an operation to send a message.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <param name="deliveryTag">The delivery tag.</param>
+        /// <param name="txnId">The transaction id.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        /// <returns></returns>
+        public Task<Outcome> SendMessageAsync(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, CancellationToken cancellationToken)
+        {
+            return Task.Factory.FromAsync(
+                (p, k, c, s) => ((SendingAmqpLink)s).BeginSendMessage(p.Message, p.DeliveryTag, p.TxnId, TimeSpan.MaxValue, k, c, s),
+                r => ((SendingAmqpLink)r.AsyncState).EndSendMessage(r),
+                new SendMessageParam(message, deliveryTag, txnId),
+                cancellationToken,
+                this);
         }
 
         /// <summary>
@@ -112,32 +122,9 @@ namespace Microsoft.Azure.Amqp
         /// <param name="callback">The callback to invoke when the operation completes.</param>
         /// <param name="state">The object associated with the operation.</param>
         /// <returns>An <see cref="IAsyncResult"/>.</returns>
-        public IAsyncResult BeginSendMessage(
-            AmqpMessage message, 
-            ArraySegment<byte> deliveryTag, 
-            ArraySegment<byte> txnId,
-            TimeSpan timeout, 
-            AsyncCallback callback, 
-            object state)
+        public IAsyncResult BeginSendMessage(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, TimeSpan timeout, AsyncCallback callback, object state)
         {
-            this.ThrowIfClosed();
-            if (this.dispositionListener != null)
-            {
-                throw new InvalidOperationException(CommonResources.DispositionListenerSetNotSupported);
-            }
-
-            message.ThrowIfDisposed();
-            if (message.Link != null)
-            {
-                throw new InvalidOperationException(AmqpResources.AmqpCannotResendMessage);
-            }
-
-            if (message.Serialize(false) == 0)
-            {
-                throw new InvalidOperationException(AmqpResources.AmqpEmptyMessageNotAllowed);
-            }
-
-            return new SendAsyncResult(this, message, deliveryTag, txnId, timeout, callback, state);
+            return this.BeginSendMessage(message, deliveryTag, txnId, timeout, CancellationToken.None, callback, state);
         }
 
         /// <summary>
@@ -266,6 +253,35 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        IAsyncResult BeginSendMessage(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId,
+            TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
+        {
+            this.ThrowIfClosed();
+            if (this.dispositionListener != null)
+            {
+                throw new InvalidOperationException(CommonResources.DispositionListenerSetNotSupported);
+            }
+
+            message.ThrowIfDisposed();
+            if (message.Link != null)
+            {
+                throw new InvalidOperationException(AmqpResources.AmqpCannotResendMessage);
+            }
+
+            if (message.Serialize(false) == 0)
+            {
+                throw new InvalidOperationException(AmqpResources.AmqpEmptyMessageNotAllowed);
+            }
+
+            var sendResult = new SendAsyncResult(this, message, deliveryTag, txnId, timeout, callback, state);
+            if (cancellationToken.CanBeCanceled)
+            {
+                cancellationToken.Register(o => ((SendAsyncResult)o).Cancel(), sendResult);
+            }
+
+            return sendResult;
+        }
+
         void AbortDeliveries()
         {
             if (this.pendingDeliveries != null)
@@ -309,6 +325,20 @@ namespace Microsoft.Azure.Amqp
             return success;
         }
 
+        struct SendMessageParam
+        {
+            public SendMessageParam(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId)
+            {
+                this.Message = message;
+                this.DeliveryTag = deliveryTag;
+                this.TxnId = txnId;
+            }
+
+            public readonly AmqpMessage Message;
+            public readonly ArraySegment<byte> DeliveryTag;
+            public readonly ArraySegment<byte> TxnId;
+        }
+
         sealed class SendAsyncResult : TimeoutAsyncResult<string>, IWork<Outcome>
         {
             readonly SendingAmqpLink link;
@@ -339,6 +369,11 @@ namespace Microsoft.Azure.Amqp
                 return AsyncResult.End<SendAsyncResult>(result).outcome;
             }
 
+            public Outcome Outcome
+            {
+                get { return this.outcome; }
+            }
+
             public void Start()
             {
                 this.SetTimer();
@@ -349,6 +384,12 @@ namespace Microsoft.Azure.Amqp
             {
                 this.outcome = outcome;
                 this.CompleteSelf(completedSynchronously);
+            }
+
+            public void Cancel()
+            {
+                this.CancelInflight();
+                this.CompleteSelf(false, new TaskCanceledException());
             }
 
             public void Cancel(bool completedSynchronously, Exception exception)
@@ -376,8 +417,13 @@ namespace Microsoft.Azure.Amqp
 
             protected override void CompleteOnTimer()
             {
-                SendAsyncResult temp;
-                if (this.link.inflightSends.TryRemoveWork(this.deliveryTag, out temp))
+                this.CancelInflight();
+                base.CompleteOnTimer();
+            }
+
+            void CancelInflight()
+            {
+                if (this.link.inflightSends.TryRemoveWork(this.deliveryTag, out _))
                 {
                     // try to remove this delivery on the other side, note that the message may
                     // still be sent and accepted by the broker already. This race is by design.
@@ -390,8 +436,6 @@ namespace Microsoft.Azure.Amqp
                         this.message.State = AmqpConstants.ReleasedOutcome;
                     }
                 }
-
-                base.CompleteOnTimer();
             }
         }
     }

@@ -84,21 +84,49 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public Task<TransportBase> ConnectTaskAsync(TimeSpan timeout)
         {
+            return this.ConnectAsync(timeout, CancellationToken.None);
+        }
+
+        public Task<TransportBase> ConnectAsync(CancellationToken cancellationToken)
+        {
+            return this.ConnectAsync(TimeSpan.MaxValue, cancellationToken);
+        }
+
+        internal Task<TransportBase> ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        {
             var tcs = new TaskCompletionSource<TransportBase>();
             var args = new TransportAsyncCallbackArgs
             {
-                CompletedCallback = a =>
+                UserToken = tcs,
+                CompletedCallback = _args =>
                 {
-                    if (a.Exception != null)
+                    var _tcs = (TaskCompletionSource<TransportBase>)_args.UserToken;
+                    if (_args.Exception != null)
                     {
-                        tcs.TrySetException(a.Exception);
+                        _tcs.TrySetException(_args.Exception);
                     }
                     else
                     {
-                        tcs.TrySetResult(a.Transport);
+                        if (!_tcs.TrySetResult(_args.Transport))
+                        {
+                            _args.Transport.Abort();
+                        }
                     }
                 }
             };
+
+            if (cancellationToken.CanBeCanceled)
+            {
+                cancellationToken.Register(
+                    o =>
+                    {
+                        var _args = (TransportAsyncCallbackArgs)o;
+                        _args.Transport?.Abort();
+ 
+                        ((TaskCompletionSource<TransportBase>)_args.UserToken).TrySetCanceled();
+                    },
+                    args);
+            }
 
             if (!this.ConnectAsync(timeout, args))
             {

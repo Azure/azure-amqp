@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Sasl;
     using Microsoft.Azure.Amqp.Transport;
@@ -36,11 +37,30 @@ namespace Microsoft.Azure.Amqp
 
         public Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, TimeSpan timeout)
         {
-            SaslHandler saslHandler = null;
+            return this.OpenConnectionAsync(addressUri, addressUri.UserInfo, null, timeout, CancellationToken.None);
+        }
 
-            if (!string.IsNullOrEmpty(addressUri.UserInfo))
+        public Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, SaslHandler saslHandler, TimeSpan timeout)
+        {
+            return this.OpenConnectionAsync(addressUri, null, saslHandler, timeout, CancellationToken.None);
+        }
+
+        public Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, CancellationToken cancellationToken)
+        {
+            return this.OpenConnectionAsync(addressUri, addressUri.UserInfo, null, TimeSpan.MaxValue, cancellationToken);
+        }
+
+        public Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, SaslHandler saslHandler, CancellationToken cancellationToken)
+        {
+            return this.OpenConnectionAsync(addressUri, null, saslHandler, TimeSpan.MaxValue, cancellationToken);
+        }
+
+        async Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, string userInfo, SaslHandler saslHandler, TimeSpan timeout, CancellationToken cancellationToken)
+        {
+#if !PCL
+            if (saslHandler == null && !string.IsNullOrEmpty(userInfo))
             {
-                string[] parts = addressUri.UserInfo.Split(':');
+                string[] parts = userInfo.Split(':');
                 if (parts.Length > 2)
                 {
                     throw new ArgumentException("addressUri.UserInfo " + addressUri.UserInfo);
@@ -49,16 +69,10 @@ namespace Microsoft.Azure.Amqp
                 string userName = Uri.UnescapeDataString(parts[0]);
                 string password = parts.Length > 1 ? Uri.UnescapeDataString(parts[1]) : string.Empty;
 
-#if !PCL
                 saslHandler = new SaslPlainHandler() { AuthenticationIdentity = userName, Password = password };
-#endif
             }
+#endif
 
-            return OpenConnectionAsync(addressUri, saslHandler, timeout);
-        }
-
-        public async Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, SaslHandler saslHandler, TimeSpan timeout)
-        {
             TransportSettings transportSettings;
             if (addressUri.Scheme.Equals(AmqpConstants.SchemeAmqp, StringComparison.OrdinalIgnoreCase))
             {
@@ -117,11 +131,9 @@ namespace Microsoft.Azure.Amqp
             amqpProvider.Versions.Add(new AmqpVersion(new Version(1, 0, 0, 0)));
             settings.TransportProviders.Add(amqpProvider);
 
+            TimeoutHelper timeoutHelper = new TimeoutHelper(timeout);
             AmqpTransportInitiator initiator = new AmqpTransportInitiator(settings, transportSettings);
-            TransportBase transport = await Task.Factory.FromAsync(
-                (c, s) => initiator.BeginConnect(timeout, c, s),
-                (r) => initiator.EndConnect(r),
-                null).ConfigureAwait(false);
+            TransportBase transport = await initiator.ConnectAsync(timeoutHelper.RemainingTime(), cancellationToken).ConfigureAwait(false);
 
             try
             {
@@ -132,7 +144,13 @@ namespace Microsoft.Azure.Amqp
                 };
 
                 AmqpConnection connection = new AmqpConnection(transport, settings, connectionSettings);
-                await connection.OpenAsync(timeout).ConfigureAwait(false);
+                await Task.Factory.FromAsync(
+                    (t, k, c, s) => ((AmqpConnection)s).BeginOpen(t, k, c, s),
+                    r => ((AmqpConnection)r.AsyncState).EndOpen(r),
+                    timeoutHelper.RemainingTime(),
+                    cancellationToken,
+                    connection)
+                    .ConfigureAwait(false);
 
                 return connection;
             }

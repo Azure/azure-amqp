@@ -9,7 +9,7 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Net.Sockets;
     using System.Threading;
 
-    sealed class TcpTransportListener : TransportListener
+    public sealed class TcpTransportListener : TransportListener
     {
         readonly WaitCallback acceptTransportLoop;
         readonly TcpTransportSettings transportSettings;

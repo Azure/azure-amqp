@@ -125,6 +125,22 @@ namespace Microsoft.Azure.Amqp
                 this);
         }
 
+        public Task<AmqpMessage> RequestAsync(AmqpMessage request, CancellationToken cancellationToken)
+        {
+            return Task.Factory.FromAsync(
+                (c, s) =>
+                {
+                    var requestResult = new RequestAsyncResult(this, request, AmqpConstants.NullBinary, TimeSpan.MaxValue, c, s);
+                    if (cancellationToken.CanBeCanceled)
+                    {
+                        cancellationToken.Register(o => ((RequestAsyncResult)o).Cancel(), requestResult);
+                    }
+                    return requestResult;
+                },
+                (r) => RequestAsyncResult.End(r),
+                this);
+        }
+
         public IAsyncResult BeginRequest(AmqpMessage request, TimeSpan timeout, AsyncCallback callback, object state)
         {
             return this.BeginRequest(request, AmqpConstants.NullBinary, timeout, callback, state);
@@ -294,6 +310,14 @@ namespace Microsoft.Azure.Amqp
             {
                 this.response = response;
                 this.CompleteSelf(completedSynchronously);
+            }
+
+            public void Cancel()
+            {
+                if (this.parent.inflightRequests.TryRemoveWork(this.requestId, out _))
+                {
+                    this.CompleteSelf(false, new TaskCanceledException());
+                }
             }
 
             public void Cancel(bool completedSynchronously, Exception exception)

@@ -603,23 +603,15 @@ namespace Microsoft.Azure.Amqp
 
             if (waiters != null)
             {
-                ActionItem.Schedule(o =>
+                ActionItem.Schedule(state =>
                 {
-                    var state = (Tuple<List<ReceiveAsyncResult>, bool>)o;
-                    List<ReceiveAsyncResult> waitersToCancel = state.Item1;
-                    foreach (ReceiveAsyncResult waiter in waitersToCancel)
+                    var (innerWaiters, innerAborted, terminalException) = state;
+                    foreach (ReceiveAsyncResult waiter in innerWaiters)
                     {
-                        if (state.Item2)
-                        {
-                            waiter.Signal(false, new OperationCanceledException("Link aborted", this.TerminalException));
-                        }
-                        else
-                        {
-                            waiter.Signal(false, null);
-                        }
+                        waiter.Signal(false, innerAborted ? new OperationCanceledException("Link aborted", terminalException) : null);
                     }
                 },
-                new Tuple<List<ReceiveAsyncResult>, bool>(waiters, aborted));
+                new ValueTuple<List<ReceiveAsyncResult>, bool, Exception>(waiters, aborted, this.TerminalException));
             }
 
             if (this.pendingDispositions != null)
@@ -645,7 +637,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (Interlocked.Increment(ref this.checkWaiterCount) == 1)
             {
-                ActionItem.Schedule(o => CheckCallback(o), this);
+                ActionItem.Schedule(state => CheckCallback(state), this);
             }
         }
 

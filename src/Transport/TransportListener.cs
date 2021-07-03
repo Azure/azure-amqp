@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Amqp.Transport
     /// </summary>
     public abstract class TransportListener : AmqpObject
     {
-        WaitCallback notifyAccept;
+        Action<TransportAsyncCallbackArgs> notifyAccept;
         Action<TransportListener, TransportAsyncCallbackArgs> acceptCallback;
 
         /// <summary>

@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Amqp.Transport
     /// </summary>
     public sealed class TcpTransportListener : TransportListener
     {
-        readonly WaitCallback acceptTransportLoop;
+        readonly Action<SocketAsyncEventArgs> acceptTransportLoop;
         readonly TcpTransportSettings transportSettings;
         Socket[] listenSockets;
 
@@ -123,9 +123,8 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
-        void AcceptTransportLoop(object state)
+        void AcceptTransportLoop(SocketAsyncEventArgs args)
         {
-            SocketAsyncEventArgs args = (SocketAsyncEventArgs)state;
             Socket listenSocket = (Socket)args.UserToken;
             while (this.State != AmqpObjectState.End)
             {

@@ -319,7 +319,7 @@ namespace Microsoft.Azure.Amqp
             {
                 // Tell the other side that we have some messages to send
                 this.lastFlowRequestTime = DateTime.UtcNow;
-                ActionItem.Schedule(s => OnRequestCredit(s), this);
+                ActionItem.Schedule(state => OnRequestCredit(state), this);
             }
 
             return success;

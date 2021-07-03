@@ -3,14 +3,19 @@
 
 namespace Microsoft.Azure.Amqp
 {
-    using System.Threading;
+    using System;
+    using System.Threading.Tasks;
 
     static class ActionItem
     {
-        public static void Schedule(WaitCallback callback, object state)
+        public static void Schedule<TState>(Action<TState> callback, TState state)
         {
             Fx.Assert(callback != null, "A null callback was passed for Schedule!");
-            ThreadPool.QueueUserWorkItem(callback, state);
+
+            _ = Task.Factory.FromAsync(
+                (stateParameter, c, callbackState) => ((Action<TState>)callbackState).BeginInvoke(stateParameter, c, callbackState),
+                r => ((Action<TState>)r.AsyncState).EndInvoke(r), state,
+                callback);
         }
     }
 }

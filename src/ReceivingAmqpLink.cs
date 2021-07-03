@@ -714,7 +714,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        struct DisposeParam
+        readonly struct DisposeParam
         {
             public DisposeParam(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable)
             {

@@ -325,7 +325,7 @@ namespace Microsoft.Azure.Amqp
             return success;
         }
 
-        struct SendMessageParam
+        readonly struct SendMessageParam
         {
             public SendMessageParam(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId)
             {
@@ -348,12 +348,12 @@ namespace Microsoft.Azure.Amqp
             Outcome outcome;
 
             public SendAsyncResult(
-                SendingAmqpLink link, 
-                AmqpMessage message, 
-                ArraySegment<byte> deliveryTag, 
+                SendingAmqpLink link,
+                AmqpMessage message,
+                ArraySegment<byte> deliveryTag,
                 ArraySegment<byte> txnId,
-                TimeSpan timeout, 
-                AsyncCallback callback, 
+                TimeSpan timeout,
+                AsyncCallback callback,
                 object state)
                 : base(timeout, callback, state)
             {

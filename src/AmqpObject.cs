@@ -13,31 +13,31 @@ namespace Microsoft.Azure.Amqp
     //                 .=======.
     //                 | start |
     //                 .=======.
-    //             S:Open  |   R:Open           
-    //           +---------+-----------+          
-    //           |                     |          
+    //             S:Open  |   R:Open
+    //           +---------+-----------+
+    //           |                     |
     //       .==========.     .==============.
     //       | OpenSent |     | OpenReceived |
     //       .==========.     .==============.
-    //           | R:Open              |S:Open    
-    //           +---------+-----------+          
-    //                     |                   
-    //                .========.               
-    //                | Opened |               
-    //                .========.               
-    //             S:Close |  R:Close          
-    //           +---------+-----------+          
-    //           |                     |          
-    //      .===========.    .===============. 
-    //      | CloseSent |    | CloseReceived | 
-    //      .===========.    .===============. 
-    //           | R:Close             |S:Close   
-    //           +---------+-----------+          
-    //                     |                   
-    //                 .=======.               
+    //           | R:Open              |S:Open
+    //           +---------+-----------+
+    //                     |
+    //                .========.
+    //                | Opened |
+    //                .========.
+    //             S:Close |  R:Close
+    //           +---------+-----------+
+    //           |                     |
+    //      .===========.    .===============.
+    //      | CloseSent |    | CloseReceived |
+    //      .===========.    .===============.
+    //           | R:Close             |S:Close
+    //           +---------+-----------+
+    //                     |
+    //                 .=======.
     //                 |  End  |
     //                 .=======.
-    //        
+    //
     //      OpenInternal  = Init1 + S:Open + Init2 if Opened
     //      CloseInternal = Cleanup1 + S:Close + Cleanup2 if End
     //
@@ -201,8 +201,8 @@ namespace Microsoft.Azure.Amqp
         public Task OpenAsync(TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
-                (t, c, s) => ((AmqpObject)s).BeginOpen(t, c, s),
-                (a) => ((AmqpObject)a.AsyncState).EndOpen(a),
+                static (t, c, s) => ((AmqpObject)s).BeginOpen(t, c, s),
+                static (a) => ((AmqpObject)a.AsyncState).EndOpen(a),
                 timeout,
                 this);
         }
@@ -215,8 +215,8 @@ namespace Microsoft.Azure.Amqp
         public Task OpenAsync(CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
-                (t, k, c, s) => ((AmqpObject)s).BeginOpen(t, k, c, s),
-                r => ((AmqpObject)r.AsyncState).EndOpen(r),
+                static (t, k, c, s) => ((AmqpObject)s).BeginOpen(t, k, c, s),
+                static r => ((AmqpObject)r.AsyncState).EndOpen(r),
                 AmqpConstants.DefaultTimeout,
                 cancellationToken,
                 this);
@@ -305,8 +305,8 @@ namespace Microsoft.Azure.Amqp
         public Task CloseAsync(TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
-                (t, c, s) => ((AmqpObject)s).BeginClose(t, c, s),
-                (a) => ((AmqpObject)a.AsyncState).EndClose(a),
+                static (t, c, s) => ((AmqpObject)s).BeginClose(t, c, s),
+                static (a) => ((AmqpObject)a.AsyncState).EndClose(a),
                 timeout,
                 this);
         }
@@ -319,8 +319,8 @@ namespace Microsoft.Azure.Amqp
         public Task CloseAsync(CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
-                (t, k, c, s) => ((AmqpObject)s).BeginClose(t, k, c, s),
-                r => ((AmqpObject)r.AsyncState).EndClose(r),
+                static (t, k, c, s) => ((AmqpObject)s).BeginClose(t, k, c, s),
+                static r => ((AmqpObject)r.AsyncState).EndClose(r),
                 AmqpConstants.DefaultTimeout,
                 cancellationToken,
                 this);

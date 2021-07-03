@@ -87,8 +87,8 @@ namespace Microsoft.Azure.Amqp
         public Task<Outcome> SendMessageAsync(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
-                (p, t, c, s) => ((SendingAmqpLink)s).BeginSendMessage(p.Message, p.DeliveryTag, p.TxnId, t, CancellationToken.None, c, s),
-                r => ((SendingAmqpLink)r.AsyncState).EndSendMessage(r),
+                static (p, t, c, s) => ((SendingAmqpLink)s).BeginSendMessage(p.Message, p.DeliveryTag, p.TxnId, t, CancellationToken.None, c, s),
+                static r => ((SendingAmqpLink)r.AsyncState).EndSendMessage(r),
                 new SendMessageParam(message, deliveryTag, txnId),
                 timeout,
                 this);
@@ -105,8 +105,8 @@ namespace Microsoft.Azure.Amqp
         public Task<Outcome> SendMessageAsync(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
-                (p, k, c, s) => ((SendingAmqpLink)s).BeginSendMessage(p.Message, p.DeliveryTag, p.TxnId, TimeSpan.MaxValue, k, c, s),
-                r => ((SendingAmqpLink)r.AsyncState).EndSendMessage(r),
+                static (p, k, c, s) => ((SendingAmqpLink)s).BeginSendMessage(p.Message, p.DeliveryTag, p.TxnId, TimeSpan.MaxValue, k, c, s),
+                static r => ((SendingAmqpLink)r.AsyncState).EndSendMessage(r),
                 new SendMessageParam(message, deliveryTag, txnId),
                 cancellationToken,
                 this);
@@ -348,12 +348,12 @@ namespace Microsoft.Azure.Amqp
             Outcome outcome;
 
             public SendAsyncResult(
-                SendingAmqpLink link, 
-                AmqpMessage message, 
-                ArraySegment<byte> deliveryTag, 
+                SendingAmqpLink link,
+                AmqpMessage message,
+                ArraySegment<byte> deliveryTag,
                 ArraySegment<byte> txnId,
-                TimeSpan timeout, 
-                AsyncCallback callback, 
+                TimeSpan timeout,
+                AsyncCallback callback,
                 object state)
                 : base(timeout, callback, state)
             {
@@ -401,7 +401,7 @@ namespace Microsoft.Azure.Amqp
                     // the link was canceled because of some termination exception.
                     // Since the termination exception might not be caused
                     // by this specific async result, we should keep throwing
-                    // OperationCancelledException (which is transient) but 
+                    // OperationCancelledException (which is transient) but
                     // use the TerminalException message to allow user to
                     // debug.
                     completionException = new OperationCanceledException(this.link.TerminalException.Message, this.link.TerminalException);

@@ -76,8 +76,8 @@ namespace Microsoft.Azure.Amqp
         public Task<AmqpMessage> ReceiveMessageAsync(TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
-                (t, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessage(t, c, s),
-                (a) =>
+                static (t, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessage(t, c, s),
+                static (a) =>
                 {
                     ((ReceivingAmqpLink)a.AsyncState).EndReceiveMessage(a, out AmqpMessage message);
                     return message;
@@ -94,8 +94,8 @@ namespace Microsoft.Azure.Amqp
         public Task<AmqpMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
-                (k, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessageBatch(1, TimeSpan.Zero, TimeSpan.MaxValue, k, c, s),
-                r => { ((ReceivingAmqpLink)r.AsyncState).EndReceiveMessageBatch(r, out var messages); return messages.Count > 0 ? messages[0] : null; },
+                static (k, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessageBatch(1, TimeSpan.Zero, TimeSpan.MaxValue, k, c, s),
+                static r => { ((ReceivingAmqpLink)r.AsyncState).EndReceiveMessageBatch(r, out var messages); return messages.Count > 0 ? messages[0] : null; },
                 cancellationToken,
                 this);
         }
@@ -121,8 +121,8 @@ namespace Microsoft.Azure.Amqp
         public Task<IReadOnlyList<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout, CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
-                (n, b, k, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessageBatch(n, b, TimeSpan.MaxValue, k, c, s),
-                r => { ((ReceivingAmqpLink)r.AsyncState).EndReceiveMessageBatch(r, out var messages); return messages; },
+                static (n, b, k, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessageBatch(n, b, TimeSpan.MaxValue, k, c, s),
+                static r => { ((ReceivingAmqpLink)r.AsyncState).EndReceiveMessageBatch(r, out var messages); return messages; },
                 messageCount,
                 batchWaitTimeout,
                 cancellationToken,
@@ -238,8 +238,8 @@ namespace Microsoft.Azure.Amqp
         public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable, TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
-                (p, t, c, s) => ((ReceivingAmqpLink)s).BeginDisposeMessage(p.DeliveryTag, p.TxnId, p.Outcome, p.Batchable, t, CancellationToken.None, c, s),
-                r => ((ReceivingAmqpLink)r.AsyncState).EndDisposeMessage(r),
+                static (p, t, c, s) => ((ReceivingAmqpLink)s).BeginDisposeMessage(p.DeliveryTag, p.TxnId, p.Outcome, p.Batchable, t, CancellationToken.None, c, s),
+                static r => ((ReceivingAmqpLink)r.AsyncState).EndDisposeMessage(r),
                 new DisposeParam(deliveryTag, txnId, outcome, batchable),
                 timeout,
                 this);
@@ -269,8 +269,8 @@ namespace Microsoft.Azure.Amqp
         public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable, CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
-                (p, k, c, s) => ((ReceivingAmqpLink)s).BeginDisposeMessage(p.DeliveryTag, p.TxnId, p.Outcome, p.Batchable, TimeSpan.MaxValue, k, c, s),
-                r => ((ReceivingAmqpLink)r.AsyncState).EndDisposeMessage(r),
+                static (p, k, c, s) => ((ReceivingAmqpLink)s).BeginDisposeMessage(p.DeliveryTag, p.TxnId, p.Outcome, p.Batchable, TimeSpan.MaxValue, k, c, s),
+                static r => ((ReceivingAmqpLink)r.AsyncState).EndDisposeMessage(r),
                 new DisposeParam(deliveryTag, txnId, outcome, batchable),
                 cancellationToken,
                 this);
@@ -461,7 +461,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (this.IsClosing())
                     {
-                        // The closing sequence has been started, so any 
+                        // The closing sequence has been started, so any
                         // transfer is meaningless, so we can treat them as no-op
                         return;
                     }

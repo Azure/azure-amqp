@@ -342,7 +342,7 @@ namespace Microsoft.Azure.Amqp
             var requestResult = new RequestAsyncResult(this, request, txnId, timeout, callback, state);
             if (cancellationToken.CanBeCanceled)
             {
-                cancellationToken.Register(o => ((RequestAsyncResult)o).Cancel(), requestResult);
+                cancellationToken.Register(static o => ((RequestAsyncResult)o).Cancel(), requestResult);
             }
 
             return requestResult;

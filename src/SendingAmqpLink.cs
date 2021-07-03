@@ -276,7 +276,7 @@ namespace Microsoft.Azure.Amqp
             var sendResult = new SendAsyncResult(this, message, deliveryTag, txnId, timeout, callback, state);
             if (cancellationToken.CanBeCanceled)
             {
-                cancellationToken.Register(o => ((SendAsyncResult)o).Cancel(), sendResult);
+                cancellationToken.Register(static o => ((SendAsyncResult)o).Cancel(), sendResult);
             }
 
             return sendResult;

@@ -556,7 +556,7 @@ namespace Microsoft.Azure.Amqp
             this.waiterManager.AddWaiter(waiter);
             if (cancellationToken.CanBeCanceled)
             {
-                cancellationToken.Register(o => ((ReceiveAsyncResult)o).Cancel(), waiter);
+                cancellationToken.Register(static o => ((ReceiveAsyncResult)o).Cancel(), waiter);
             }
 
             this.CheckWaiter();
@@ -577,7 +577,7 @@ namespace Microsoft.Azure.Amqp
             var disposeResult = new DisposeAsyncResult(this, deliveryTag, txnId, outcome, batchable, timeout, callback, state);
             if (cancellationToken.CanBeCanceled)
             {
-                cancellationToken.Register(o => ((DisposeAsyncResult)o).Cancel(), disposeResult);
+                cancellationToken.Register(static o => ((DisposeAsyncResult)o).Cancel(), disposeResult);
             }
 
             return disposeResult;

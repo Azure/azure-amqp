@@ -660,7 +660,7 @@ namespace Microsoft.Azure.Amqp
             var openResult = new OpenAsyncResult(this, timeout, callback, state);
             if (cancellationToken.CanBeCanceled)
             {
-                cancellationToken.Register(o => ((AmqpObject)o).CompleteOpen(false, new TaskCanceledException()), this);
+                cancellationToken.Register(static o => ((AmqpObject)o).CompleteOpen(false, new TaskCanceledException()), this);
             }
 
             return openResult;
@@ -687,7 +687,7 @@ namespace Microsoft.Azure.Amqp
                 var closeResult = new CloseAsyncResult(this, timeout, callback, state);
                 if (cancellationToken.CanBeCanceled)
                 {
-                    cancellationToken.Register(o => ((AmqpObject)o).CompleteClose(false, new TaskCanceledException()), this);
+                    cancellationToken.Register(static o => ((AmqpObject)o).CompleteClose(false, new TaskCanceledException()), this);
                 }
 
                 return closeResult;

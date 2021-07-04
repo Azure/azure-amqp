@@ -540,7 +540,7 @@ namespace Microsoft.Azure.Amqp
                 if (waiter != null)
                 {
                     // Schedule the completion on another thread so we don't block the I/O thread
-                    ActionItem.Schedule(o => { var w = (ReceiveAsyncResult)o; w.Signal(false); }, waiter);
+                    Task.Run(() => waiter.Signal(false));
                 }
             }
         }

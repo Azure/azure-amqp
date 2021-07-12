@@ -60,7 +60,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Starts the operation to receive a message with the default timeout.
+        /// Starts the operation to receive a message with the default wait timeout.
         /// </summary>
         /// <returns>A message when the task is completed. Null if there is no message available.</returns>
         public Task<AmqpMessage> ReceiveMessageAsync()
@@ -75,57 +75,72 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A message when the task is completed. Null if there is no message available.</returns>
         public Task<AmqpMessage> ReceiveMessageAsync(TimeSpan timeout)
         {
-            return Task.Factory.FromAsync(
-                static (t, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessage(t, c, s),
-                static (a) =>
-                {
-                    ((ReceivingAmqpLink)a.AsyncState).EndReceiveMessage(a, out AmqpMessage message);
-                    return message;
-                },
-                timeout,
-                this);
+            return this.ReceiveMessageAsync(timeout, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Starts the operation to receive a message. The Operation completes when a message is available or the cancellationToken is cancelled.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        /// <returns>A message when the task is completed. Null if there is no message available.</returns>
+        public Task<AmqpMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
+        {
+            return this.ReceiveMessageAsync(TimeSpan.MaxValue, cancellationToken);
         }
 
         /// <summary>
         /// Starts the operation to receive a message.
         /// </summary>
+        /// <param name="timeout">The time to wait for any message.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
-        /// <returns></returns>
-        public Task<AmqpMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
+        /// <returns>A message when the task is completed. Null if there is no message available.</returns>
+        public Task<AmqpMessage> ReceiveMessageAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
-                static (k, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessageBatch(1, TimeSpan.Zero, TimeSpan.MaxValue, k, c, s),
+                static (t, k, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessageBatch(1, TimeSpan.Zero, t, k, c, s),
                 static r => { ((ReceivingAmqpLink)r.AsyncState).EndReceiveMessageBatch(r, out var messages); return messages.Count > 0 ? messages[0] : null; },
+                timeout,
                 cancellationToken,
                 this);
         }
 
         /// <summary>
-        /// Starts the operation to receive a batch of messages.
+        /// Starts the operation to receive a batch of messages with default wait timeout.
         /// </summary>
         /// <param name="messageCount">The desired number of messages.</param>
-        /// <param name="batchWaitTimeout">The time to wait for a batch after the first message is available.</param>
+        /// <param name="batchWaitTimeout">The time to wait for more messages in the batch after the first message is available.</param>
         /// <returns>A list of messages when the task is completed. Empty if there is no message available.</returns>
         public Task<IReadOnlyList<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout)
         {
-            return this.ReceiveMessagesAsync(messageCount, batchWaitTimeout, CancellationToken.None);
+            return this.ReceiveMessagesAsync(messageCount, batchWaitTimeout, AmqpConstants.DefaultTimeout, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Starts the operation to receive a batch of messages. The Operation completes when message(s) are available or the cancellationToken is cancelled.
+        /// </summary>
+        /// <param name="messageCount">The desired number of messages.</param>
+        /// <param name="batchWaitTimeout">The time to wait for more messages in the batch after the first message is available.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        /// <returns>A list of messages when the task is completed. Empty if there is no message available.</returns>
+        public Task<IReadOnlyList<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout, CancellationToken cancellationToken)
+        {
+            return this.ReceiveMessagesAsync(messageCount, batchWaitTimeout, TimeSpan.MaxValue, cancellationToken);
         }
 
         /// <summary>
         /// Starts the operation to receive a batch of messages.
         /// </summary>
         /// <param name="messageCount">The desired number of messages.</param>
-        /// <param name="batchWaitTimeout">The time to wait for a batch after the first message is available.</param>
+        /// <param name="batchWaitTimeout">The time to wait for more messages in the batch after the first message is available.</param>
+        /// <param name="timeout">The time to wait for the first message to become available.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
         /// <returns>A list of messages when the task is completed. Empty if there is no message available.</returns>
-        public Task<IReadOnlyList<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout, CancellationToken cancellationToken)
+        public Task<IReadOnlyList<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
-                static (n, b, k, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessageBatch(n, b, TimeSpan.MaxValue, k, c, s),
+                static (p, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessageBatch(p.MessageCount, p.BatchWaitTime, p.Timeout, p.CancellationToken, c, s),
                 static r => { ((ReceivingAmqpLink)r.AsyncState).EndReceiveMessageBatch(r, out var messages); return messages; },
-                messageCount,
-                batchWaitTimeout,
-                cancellationToken,
+                new ReceiveParam(messageCount, batchWaitTimeout, timeout, cancellationToken),
                 this);
         }
 
@@ -712,6 +727,22 @@ namespace Microsoft.Azure.Amqp
                     waiter = this.waiterManager.PeekWaiter();
                 }
             }
+        }
+
+        readonly struct ReceiveParam
+        {
+            public ReceiveParam(int messageCount, TimeSpan batchWaitTime, TimeSpan timeout, CancellationToken cancellationToken)
+            {
+                this.MessageCount = messageCount;
+                this.BatchWaitTime = batchWaitTime;
+                this.Timeout = timeout;
+                this.CancellationToken = cancellationToken;
+            }
+
+            public readonly int MessageCount;
+            public readonly TimeSpan BatchWaitTime;
+            public readonly TimeSpan Timeout;
+            public readonly CancellationToken CancellationToken;
         }
 
         readonly struct DisposeParam

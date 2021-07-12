@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     static class ActionItem
@@ -12,10 +12,12 @@ namespace Microsoft.Azure.Amqp
         {
             Fx.Assert(callback != null, "A null callback was passed for Schedule!");
 
-            _ = Task.Factory.FromAsync(
-                (stateParameter, c, callbackState) => ((Action<TState>)callbackState).BeginInvoke(stateParameter, c, callbackState),
-                r => ((Action<TState>)r.AsyncState).EndInvoke(r), state,
-                callback);
+            _ = Task.Factory.StartNew(static state =>
+                {
+                    var (callback, callbackState) = (Tuple<Action<TState>, TState>) state;
+                    callback(callbackState);
+                }, (callback, state), CancellationToken.None,
+                TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
         }
     }
 }

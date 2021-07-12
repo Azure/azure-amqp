@@ -171,8 +171,8 @@ namespace Microsoft.Azure.Amqp
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
-                (r, t, c, s) => ((RequestResponseAmqpLink)s).BeginRequest(r, AmqpConstants.NullBinary, t, CancellationToken.None, c, s),
-                (r) => ((RequestResponseAmqpLink)r.AsyncState).EndRequest(r),
+                static (r, t, c, s) => ((RequestResponseAmqpLink)s).BeginRequest(r, AmqpConstants.NullBinary, t, CancellationToken.None, c, s),
+                static (r) => ((RequestResponseAmqpLink)r.AsyncState).EndRequest(r),
                 request,
                 timeout,
                 this);
@@ -187,8 +187,8 @@ namespace Microsoft.Azure.Amqp
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
-                (r, k, c, s) => ((RequestResponseAmqpLink)s).BeginRequest(r, AmqpConstants.NullBinary, TimeSpan.MaxValue, k, c, s),
-                (r) => ((RequestResponseAmqpLink)r.AsyncState).EndRequest(r),
+                static (r, k, c, s) => ((RequestResponseAmqpLink)s).BeginRequest(r, AmqpConstants.NullBinary, TimeSpan.MaxValue, k, c, s),
+                static (r) => ((RequestResponseAmqpLink)r.AsyncState).EndRequest(r),
                 request,
                 cancellationToken,
                 this);
@@ -342,7 +342,7 @@ namespace Microsoft.Azure.Amqp
             var requestResult = new RequestAsyncResult(this, request, txnId, timeout, callback, state);
             if (cancellationToken.CanBeCanceled)
             {
-                cancellationToken.Register(o => ((RequestAsyncResult)o).Cancel(), requestResult);
+                cancellationToken.Register(static o => ((RequestAsyncResult)o).Cancel(), requestResult);
             }
 
             return requestResult;

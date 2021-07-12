@@ -213,8 +213,8 @@ namespace Microsoft.Azure.Amqp
 
                 AmqpConnection connection = new AmqpConnection(transport, settings, connectionSettings);
                 await Task.Factory.FromAsync(
-                    (t, k, c, s) => ((AmqpConnection)s).BeginOpen(t, k, c, s),
-                    r => ((AmqpConnection)r.AsyncState).EndOpen(r),
+                    static (t, k, c, s) => ((AmqpConnection)s).BeginOpen(t, k, c, s),
+                    static r => ((AmqpConnection)r.AsyncState).EndOpen(r),
                     timeoutHelper.RemainingTime(),
                     cancellationToken,
                     connection)

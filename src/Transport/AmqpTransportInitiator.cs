@@ -142,7 +142,7 @@ namespace Microsoft.Azure.Amqp.Transport
             var args = new TransportAsyncCallbackArgs
             {
                 UserToken = tcs,
-                CompletedCallback = _args =>
+                CompletedCallback = static _args =>
                 {
                     var _tcs = (TaskCompletionSource<TransportBase>)_args.UserToken;
                     if (_args.Exception != null)
@@ -162,7 +162,7 @@ namespace Microsoft.Azure.Amqp.Transport
             if (cancellationToken.CanBeCanceled)
             {
                 cancellationToken.Register(
-                    o =>
+                    static o =>
                     {
                         var _args = (TransportAsyncCallbackArgs)o;
                         _args.Transport?.Abort();
@@ -225,7 +225,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "ReadHeader");
             byte[] headerBuffer = new byte[AmqpConstants.ProtocolHeaderSize];
-            args.SetBuffer(headerBuffer, 0, headerBuffer.Length); 
+            args.SetBuffer(headerBuffer, 0, headerBuffer.Length);
             args.CompletedCallback = this.OnReadHeaderComplete;
             this.reader.ReadBuffer(args);
         }

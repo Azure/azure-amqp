@@ -325,7 +325,7 @@ namespace Microsoft.Azure.Amqp
             return success;
         }
 
-        struct SendMessageParam
+        readonly struct SendMessageParam
         {
             public SendMessageParam(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId)
             {

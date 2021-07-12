@@ -15,8 +15,16 @@ namespace Microsoft.Azure.Amqp
             _ = Task.Factory.StartNew(static state =>
                 {
                     var (callback, callbackState) = (Tuple<Action<TState>, TState>) state;
-                    callback(callbackState);
-                }, (callback, state), CancellationToken.None,
+                    try
+                    {
+                        callback(callbackState);
+                    }
+                    catch (Exception e)
+                    {
+                        // to make sure the application crashes on unhandled exceptions
+                        ThreadPool.QueueUserWorkItem(static state => throw ((Exception) state), e);
+                    }
+                }, Tuple.Create(callback, state), CancellationToken.None,
                 TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
         }
     }

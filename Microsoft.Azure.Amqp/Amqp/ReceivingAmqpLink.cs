@@ -120,39 +120,44 @@ namespace Microsoft.Azure.Amqp
 
         public Task<AmqpMessage> ReceiveMessageAsync(TimeSpan timeout)
         {
-            return Task.Factory.FromAsync(
-                (t, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessage(t, c, s),
-                (a) =>
-                {
-                    AmqpMessage message;
-                    ((ReceivingAmqpLink)a.AsyncState).EndReceiveMessage(a, out message);
-                    return message;
-                },
-                timeout,
-                this);
+            return this.ReceiveMessageAsync(timeout, CancellationToken.None);
         }
 
         public Task<AmqpMessage> ReceiveMessageAsync(CancellationToken cancellationToken)
         {
+            return this.ReceiveMessageAsync(TimeSpan.MaxValue, cancellationToken);
+        }
+
+        public Task<AmqpMessage> ReceiveMessageAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        {
             return Task.Factory.FromAsync(
-                (k, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessages(1, TimeSpan.Zero, TimeSpan.MaxValue, k, c, s),
+                (t, k, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessages(1, TimeSpan.Zero, t, k, c, s),
                 r =>
                 {
                     ((ReceivingAmqpLink)r.AsyncState).EndReceiveMessages(r, out var messages);
                     return messages.FirstOrDefault();
                 },
+                timeout,
                 cancellationToken,
                 this);
         }
 
+        public Task<IEnumerable<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout)
+        {
+            return this.ReceiveMessagesAsync(messageCount, batchWaitTimeout, AmqpConstants.DefaultTimeout, CancellationToken.None);
+        }
+
         public Task<IEnumerable<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout, CancellationToken cancellationToken)
         {
+            return this.ReceiveMessagesAsync(messageCount, batchWaitTimeout, TimeSpan.MaxValue, cancellationToken);
+        }
+
+        public Task<IEnumerable<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, CancellationToken cancellationToken)
+        {
             return Task.Factory.FromAsync(
-                (n, b, k, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessages(n, b, TimeSpan.MaxValue, k, c, s),
+                (p, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessages(p.MessageCount, p.BatchWaitTime, p.Timeout, p.CancellationToken, c, s),
                 r => { ((ReceivingAmqpLink)r.AsyncState).EndReceiveMessages(r, out var messages); return messages; },
-                messageCount,
-                batchWaitTimeout,
-                cancellationToken,
+                new ReceiveParam(messageCount, batchWaitTimeout, timeout, cancellationToken),
                 this);
         }
 
@@ -197,7 +202,7 @@ namespace Microsoft.Azure.Amqp
 
             if (messages.Count == 0 && timeout > TimeSpan.Zero)
             {
-                ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, callback, state);
+                ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, cancellationToken, callback, state);
                 bool completeWaiter = true;
                 lock (this.SyncRoot)
                 {
@@ -232,10 +237,6 @@ namespace Microsoft.Azure.Amqp
                 if (completeWaiter)
                 {
                     waiter.Signal(messages, true);
-                }
-                else if (cancellationToken.CanBeCanceled)
-                {
-                    cancellationToken.Register(o => ReceiveAsyncResult.OnTimer(o), waiter);
                 }
 
                 return waiter;
@@ -276,9 +277,11 @@ namespace Microsoft.Azure.Amqp
 
         public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable, TimeSpan timeout)
         {
-            return TaskHelpers.CreateTask(
-                (c, s) => this.BeginDisposeMessage(deliveryTag, txnId, outcome, batchable, timeout, CancellationToken.None, c, s),
-                a => ((ReceivingAmqpLink)a.AsyncState).EndDisposeMessage(a),
+            return Task.Factory.FromAsync(
+                (p, t, c, s) => ((ReceivingAmqpLink)s).BeginDisposeMessage(p.DeliveryTag, p.TxnId, p.Outcome, p.Batchable, t, CancellationToken.None, c, s),
+                r => ((ReceivingAmqpLink)r.AsyncState).EndDisposeMessage(r),
+                new DisposeParam(deliveryTag, txnId, outcome, batchable),
+                timeout,
                 this);
         }
 
@@ -289,9 +292,11 @@ namespace Microsoft.Azure.Amqp
 
         public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable, CancellationToken cancellationToken)
         {
-            return TaskHelpers.CreateTask(
-                (c, s) => this.BeginDisposeMessage(deliveryTag, txnId, outcome, batchable, TimeSpan.MaxValue, cancellationToken, c, s),
-                a => ((ReceivingAmqpLink)a.AsyncState).EndDisposeMessage(a),
+            return Task.Factory.FromAsync(
+                (p, k, c, s) => ((ReceivingAmqpLink)s).BeginDisposeMessage(p.DeliveryTag, p.TxnId, p.Outcome, p.Batchable, TimeSpan.MaxValue, k, c, s),
+                r => ((ReceivingAmqpLink)r.AsyncState).EndDisposeMessage(r),
+                new DisposeParam(deliveryTag, txnId, outcome, batchable),
+                cancellationToken,
                 this);
         }
 
@@ -480,13 +485,7 @@ namespace Microsoft.Azure.Amqp
             TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
         {
             this.ThrowIfClosed();
-            var disposeResult = new DisposeAsyncResult(this, deliveryTag, txnId, outcome, batchable, timeout, callback, state);
-            if (cancellationToken.CanBeCanceled)
-            {
-                cancellationToken.Register(o => ((DisposeAsyncResult)o).Cancel(), disposeResult);
-            }
-
-            return disposeResult;
+            return new DisposeAsyncResult(this, deliveryTag, txnId, outcome, batchable, timeout, cancellationToken, callback, state);
         }
 
         void CancelPendingOperations(bool aborted, out Queue<AmqpMessage> messagesToRelease)
@@ -642,18 +641,52 @@ namespace Microsoft.Azure.Amqp
             return credit;
         }
 
+        struct ReceiveParam
+        {
+            public ReceiveParam(int messageCount, TimeSpan batchWaitTime, TimeSpan timeout, CancellationToken cancellationToken)
+            {
+                this.MessageCount = messageCount;
+                this.BatchWaitTime = batchWaitTime;
+                this.Timeout = timeout;
+                this.CancellationToken = cancellationToken;
+            }
+
+            public readonly int MessageCount;
+            public readonly TimeSpan BatchWaitTime;
+            public readonly TimeSpan Timeout;
+            public readonly CancellationToken CancellationToken;
+        }
+
+        struct DisposeParam
+        {
+            public DisposeParam(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable)
+            {
+                this.DeliveryTag = deliveryTag;
+                this.TxnId = txnId;
+                this.Outcome = outcome;
+                this.Batchable = batchable;
+            }
+
+            public readonly ArraySegment<byte> DeliveryTag;
+            public readonly ArraySegment<byte> TxnId;
+            public readonly Outcome Outcome;
+            public readonly bool Batchable;
+        }
+
         sealed class ReceiveAsyncResult : AsyncResult
         {
             readonly ReceivingAmqpLink parent;
             readonly int requestedMessageCount;
             readonly TimeSpan batchWaitTimeout;
             readonly TimeSpan timeout;
+            readonly CancellationTokenRegistration cancellationTokenRegistration;
             Timer timer;
             LinkedListNode<ReceiveAsyncResult> node;
             int completed;  // 1: signaled, 2: timeout
             List<AmqpMessage> messages;
 
-            public ReceiveAsyncResult(ReceivingAmqpLink parent, int requestedMessageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
+            public ReceiveAsyncResult(ReceivingAmqpLink parent, int requestedMessageCount, TimeSpan batchWaitTimeout,
+                TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
                 : base(callback, state)
             {
                 this.parent = parent;
@@ -661,6 +694,10 @@ namespace Microsoft.Azure.Amqp
                 this.requestedMessageCount = requestedMessageCount;
                 Fx.Assert(timeout > TimeSpan.Zero, "must have a non-zero timeout");
                 this.timeout = timeout;
+                if (cancellationToken.CanBeCanceled)
+                {
+                    this.cancellationTokenRegistration = cancellationToken.Register(o => ((ReceiveAsyncResult)o).Signal(false, null), this);
+                }
             }
 
             public int RequestedMessageCount
@@ -763,6 +800,7 @@ namespace Microsoft.Azure.Amqp
                     t.Dispose();
                 }
 
+                this.cancellationTokenRegistration.Dispose();
                 if (Interlocked.CompareExchange(ref this.completed, code, 0) == 0)
                 {
                     if (this.messages == null)
@@ -814,9 +852,10 @@ namespace Microsoft.Azure.Amqp
                 Outcome outcome,
                 bool batchable,
                 TimeSpan timeout,
+                CancellationToken cancellationToken,
                 AsyncCallback callback,
                 object state)
-                : base(timeout, callback, state)
+                : base(timeout, cancellationToken, callback, state)
             {
                 this.link = link;
                 this.deliveryTag = deliveryTag;
@@ -877,7 +916,7 @@ namespace Microsoft.Azure.Amqp
                 this.CompleteSelf(completedSynchronously);
             }
 
-            public void Cancel()
+            public override void Cancel()
             {
                 if (this.link.pendingDispositions.TryRemoveWork(this.deliveryTag, out _))
                 {

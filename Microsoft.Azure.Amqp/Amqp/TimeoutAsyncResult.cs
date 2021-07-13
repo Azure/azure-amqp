@@ -9,21 +9,28 @@ namespace Microsoft.Azure.Amqp
     abstract class TimeoutAsyncResult<T> : AsyncResult where T : class
     {
         readonly TimeSpan timeout;
+        readonly CancellationTokenRegistration cancellationTokenRegistration;
         Timer timer;
 #if DEBUG
         bool setTimerCalled;  // make sure derived class always call SetTimer
 #endif
 
-        protected TimeoutAsyncResult(TimeSpan timeout, AsyncCallback callback, object state)
+        protected TimeoutAsyncResult(TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
             : base(callback, state)
         {
             // The derived class must call SetTimer to start the timer.
             // Timer is not started here because it could fire before the
             // derived class ctor completes.
             this.timeout = timeout;
+            if (cancellationToken.CanBeCanceled)
+            {
+                this.cancellationTokenRegistration = cancellationToken.Register(o => ((TimeoutAsyncResult<T>)o).Cancel(), this);
+            }
         }
 
         protected abstract T Target { get; }
+
+        public abstract void Cancel();
 
         protected void SetTimer()
         {
@@ -79,6 +86,7 @@ namespace Microsoft.Azure.Amqp
                 this.timer.Dispose();
             }
 
+            this.cancellationTokenRegistration.Dispose();
             return this.TryComplete(syncComplete, exception);
         }
     }

@@ -486,7 +486,7 @@ namespace Microsoft.Azure.Amqp
         /// </remarks>
         protected virtual void OnOpen(TimeSpan timeout)
         {
-            OpenAsyncResult.End(new OpenAsyncResult(this, timeout, null, null));
+            OpenAsyncResult.End(new OpenAsyncResult(this, timeout, CancellationToken.None, null, null));
         }
 
         /// <summary>
@@ -499,7 +499,7 @@ namespace Microsoft.Azure.Amqp
         /// </remarks>
         protected virtual void OnClose(TimeSpan timeout)
         {
-            CloseAsyncResult.End(new CloseAsyncResult(this, timeout, null, null));
+            CloseAsyncResult.End(new CloseAsyncResult(this, timeout, CancellationToken.None, null, null));
         }
 
         /// <summary>
@@ -657,13 +657,7 @@ namespace Microsoft.Azure.Amqp
             }
 
             AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(BeginOpen));
-            var openResult = new OpenAsyncResult(this, timeout, callback, state);
-            if (cancellationToken.CanBeCanceled)
-            {
-                cancellationToken.Register(static o => ((AmqpObject)o).CompleteOpen(false, new TaskCanceledException()), this);
-            }
-
-            return openResult;
+            return new OpenAsyncResult(this, timeout, cancellationToken, callback, state);
         }
 
         IAsyncResult BeginClose(TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
@@ -684,13 +678,7 @@ namespace Microsoft.Azure.Amqp
             else
             {
                 AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(BeginClose));
-                var closeResult = new CloseAsyncResult(this, timeout, callback, state);
-                if (cancellationToken.CanBeCanceled)
-                {
-                    cancellationToken.Register(static o => ((AmqpObject)o).CompleteClose(false, new TaskCanceledException()), this);
-                }
-
-                return closeResult;
+                return new CloseAsyncResult(this, timeout, cancellationToken, callback, state);
             }
         }
 
@@ -733,8 +721,8 @@ namespace Microsoft.Azure.Amqp
         {
             readonly AmqpObject amqpObject;
 
-            protected AmqpObjectAsyncResult(AmqpObject amqpObject, TimeSpan timeout, AsyncCallback callback, object asyncState)
-                : base(timeout, callback, asyncState)
+            protected AmqpObjectAsyncResult(AmqpObject amqpObject, TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object asyncState)
+                : base(timeout, cancellationToken, callback, asyncState)
             {
                 this.amqpObject = amqpObject;
             }
@@ -782,8 +770,8 @@ namespace Microsoft.Azure.Amqp
 
         sealed class OpenAsyncResult : AmqpObjectAsyncResult
         {
-            public OpenAsyncResult(AmqpObject amqpObject, TimeSpan timeout, AsyncCallback callback, object asyncState)
-                : base(amqpObject, timeout, callback, asyncState)
+            public OpenAsyncResult(AmqpObject amqpObject, TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object asyncState)
+                : base(amqpObject, timeout, cancellationToken, callback, asyncState)
             {
                 amqpObject.pendingOpen = this;
                 this.Start();
@@ -793,6 +781,11 @@ namespace Microsoft.Azure.Amqp
             {
                 OpenAsyncResult thisPtr = AsyncResult.End<OpenAsyncResult>(result);
                 thisPtr.Target.NotifyOpened();
+            }
+
+            public override void Cancel()
+            {
+                this.Target.CompleteOpen(false, new TaskCanceledException());
             }
 
             protected override bool OnStart()
@@ -821,8 +814,8 @@ namespace Microsoft.Azure.Amqp
 
         sealed class CloseAsyncResult : AmqpObjectAsyncResult
         {
-            public CloseAsyncResult(AmqpObject amqpObject, TimeSpan timeout, AsyncCallback callback, object asyncState)
-                : base(amqpObject, timeout, callback, asyncState)
+            public CloseAsyncResult(AmqpObject amqpObject, TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object asyncState)
+                : base(amqpObject, timeout, cancellationToken, callback, asyncState)
             {
                 amqpObject.pendingClose = this;
                 this.Start();
@@ -831,6 +824,11 @@ namespace Microsoft.Azure.Amqp
             public static void End(IAsyncResult result)
             {
                 AsyncResult.End<CloseAsyncResult>(result);
+            }
+
+            public override void Cancel()
+            {
+                this.Target.CompleteClose(false, new TaskCanceledException());
             }
 
             protected override bool OnStart()

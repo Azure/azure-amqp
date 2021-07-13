@@ -567,13 +567,8 @@ namespace Microsoft.Azure.Amqp
         IAsyncResult BeginReceiveMessageBatch(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
         {
             this.ThrowIfClosed();
-            ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, callback, state);
+            ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, cancellationToken, callback, state);
             this.waiterManager.AddWaiter(waiter);
-            if (cancellationToken.CanBeCanceled)
-            {
-                cancellationToken.Register(static o => ((ReceiveAsyncResult)o).Cancel(), waiter);
-            }
-
             this.CheckWaiter();
             return waiter;
         }
@@ -589,12 +584,7 @@ namespace Microsoft.Azure.Amqp
             TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
         {
             this.ThrowIfClosed();
-            var disposeResult = new DisposeAsyncResult(this, deliveryTag, txnId, outcome, batchable, timeout, callback, state);
-            if (cancellationToken.CanBeCanceled)
-            {
-                cancellationToken.Register(static o => ((DisposeAsyncResult)o).Cancel(), disposeResult);
-            }
-
+            var disposeResult = new DisposeAsyncResult(this, deliveryTag, txnId, outcome, batchable, timeout, cancellationToken, callback, state);
             return disposeResult;
         }
 
@@ -767,19 +757,24 @@ namespace Microsoft.Azure.Amqp
             readonly int requestedMessageCount;
             readonly TimeSpan batchWaitTimeout;
             readonly TimeSpan timeout;
+            readonly CancellationTokenRegistration cancellationTokenRegistration;
             Timer timer;
             LinkedListNode<ReceiveAsyncResult> node;
             int state;  // 0: active idle, 1: busy adding, 2: completed
             List<AmqpMessage> messages;
 
             public ReceiveAsyncResult(ReceivingAmqpLink parent, int requestedMessageCount,
-                TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
+                TimeSpan batchWaitTimeout, TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
                 : base(callback, state)
             {
                 this.parent = parent;
                 this.batchWaitTimeout = batchWaitTimeout;
                 this.requestedMessageCount = requestedMessageCount;
                 this.timeout = timeout;
+                if (cancellationToken.CanBeCanceled)
+                {
+                    this.cancellationTokenRegistration = cancellationToken.Register(static o => ((ReceiveAsyncResult)o).Cancel(), this);
+                }
             }
 
             public int RequestedMessageCount
@@ -865,7 +860,7 @@ namespace Microsoft.Azure.Amqp
                 int code = Interlocked.CompareExchange(ref this.state, 2, 0);
                 if (code == 0)
                 {
-                    this.CompleteInternal(false, null);
+                    this.CompleteInternal(syncComplete, exception);
                 }
                 else if (code == 1)
                 {
@@ -882,6 +877,7 @@ namespace Microsoft.Azure.Amqp
             void CompleteInternal(bool syncComplete, Exception exception)
             {
                 this.timer?.Dispose();
+                this.cancellationTokenRegistration.Dispose();   // No-op if not registered.
                 if (this.node != null)
                 {
                     this.parent.waiterManager.RemoveWaiter(this);
@@ -996,9 +992,10 @@ namespace Microsoft.Azure.Amqp
                 Outcome outcome,
                 bool batchable,
                 TimeSpan timeout,
+                CancellationToken cancellationToken,
                 AsyncCallback callback,
                 object state)
-                : base(timeout, callback, state)
+                : base(timeout, cancellationToken, callback, state)
             {
                 this.link = link;
                 this.deliveryTag = deliveryTag;
@@ -1059,7 +1056,7 @@ namespace Microsoft.Azure.Amqp
                 this.CompleteSelf(completedSynchronously);
             }
 
-            public void Cancel()
+            public override void Cancel()
             {
                 if (this.link.pendingDispositions.TryRemoveWork(this.deliveryTag, out _))
                 {

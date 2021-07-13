@@ -273,13 +273,7 @@ namespace Microsoft.Azure.Amqp
                 throw new InvalidOperationException(AmqpResources.AmqpEmptyMessageNotAllowed);
             }
 
-            var sendResult = new SendAsyncResult(this, message, deliveryTag, txnId, timeout, callback, state);
-            if (cancellationToken.CanBeCanceled)
-            {
-                cancellationToken.Register(static o => ((SendAsyncResult)o).Cancel(), sendResult);
-            }
-
-            return sendResult;
+            return new SendAsyncResult(this, message, deliveryTag, txnId, timeout, cancellationToken, callback, state);
         }
 
         void AbortDeliveries()
@@ -353,9 +347,10 @@ namespace Microsoft.Azure.Amqp
                 ArraySegment<byte> deliveryTag,
                 ArraySegment<byte> txnId,
                 TimeSpan timeout,
+                CancellationToken cancellationToken,
                 AsyncCallback callback,
                 object state)
-                : base(timeout, callback, state)
+                : base(timeout, cancellationToken, callback, state)
             {
                 this.link = link;
                 this.message = message;
@@ -386,7 +381,7 @@ namespace Microsoft.Azure.Amqp
                 this.CompleteSelf(completedSynchronously);
             }
 
-            public void Cancel()
+            public override void Cancel()
             {
                 this.CancelInflight();
                 this.CompleteSelf(false, new TaskCanceledException());

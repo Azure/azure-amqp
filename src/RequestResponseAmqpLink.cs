@@ -339,12 +339,7 @@ namespace Microsoft.Azure.Amqp
 
         IAsyncResult BeginRequest(AmqpMessage request, ArraySegment<byte> txnId, TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
         {
-            var requestResult = new RequestAsyncResult(this, request, txnId, timeout, callback, state);
-            if (cancellationToken.CanBeCanceled)
-            {
-                cancellationToken.Register(static o => ((RequestAsyncResult)o).Cancel(), requestResult);
-            }
-
+            var requestResult = new RequestAsyncResult(this, request, txnId, timeout, cancellationToken, callback, state);
             return requestResult;
         }
 
@@ -378,8 +373,9 @@ namespace Microsoft.Azure.Amqp
             AmqpMessage request;
             AmqpMessage response;
 
-            public RequestAsyncResult(RequestResponseAmqpLink parent, AmqpMessage request, ArraySegment<byte> txnId, TimeSpan timeout, AsyncCallback callback, object state)
-                : base(timeout, callback, state)
+            public RequestAsyncResult(RequestResponseAmqpLink parent, AmqpMessage request, ArraySegment<byte> txnId,
+                TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
+                : base(timeout, cancellationToken, callback, state)
             {
                 this.parent = parent;
                 this.request = request;
@@ -407,11 +403,11 @@ namespace Microsoft.Azure.Amqp
                 this.request = null;
             }
 
-            public void Cancel()
+            public override void Cancel()
             {
                 if (this.parent.inflightRequests.TryRemoveWork(this.requestId, out _))
                 {
-                    this.CompleteSelf(false, new OperationCanceledException());
+                    this.CompleteSelf(false, new TaskCanceledException());
                 }
             }
 

@@ -744,6 +744,7 @@ namespace Test.Microsoft.Azure.Amqp
             Assert.Equal(uint.MaxValue, link.LinkCredit);
             Assert.Equal(0u, bufferedCredit.GetValue(link));
 
+            link.Abort();
             connection.Close();
         }
 

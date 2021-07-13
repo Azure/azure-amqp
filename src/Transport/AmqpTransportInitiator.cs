@@ -83,7 +83,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// <returns>An <see cref="IAsyncResult"/>.</returns>
         public IAsyncResult BeginConnect(TimeSpan timeout, AsyncCallback callback, object state)
         {
-            return new ConnectAsyncResult(this, timeout, callback, state);
+            return new ConnectAsyncResult(this, timeout, CancellationToken.None, callback, state);
         }
 
         /// <summary>
@@ -138,46 +138,13 @@ namespace Microsoft.Azure.Amqp.Transport
 
         internal Task<TransportBase> ConnectAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
-            var tcs = new TaskCompletionSource<TransportBase>();
-            var args = new TransportAsyncCallbackArgs
-            {
-                UserToken = tcs,
-                CompletedCallback = static _args =>
-                {
-                    var _tcs = (TaskCompletionSource<TransportBase>)_args.UserToken;
-                    if (_args.Exception != null)
-                    {
-                        _tcs.TrySetException(_args.Exception);
-                    }
-                    else
-                    {
-                        if (!_tcs.TrySetResult(_args.Transport))
-                        {
-                            _args.Transport.Abort();
-                        }
-                    }
-                }
-            };
-
-            if (cancellationToken.CanBeCanceled)
-            {
-                cancellationToken.Register(
-                    static o =>
-                    {
-                        var _args = (TransportAsyncCallbackArgs)o;
-                        _args.Transport?.Abort();
-
-                        ((TaskCompletionSource<TransportBase>)_args.UserToken).TrySetCanceled();
-                    },
-                    args);
-            }
-
-            if (!this.ConnectAsync(timeout, args))
-            {
-                args.CompletedCallback(args);
-            }
-
-            return tcs.Task;
+            return Task.Factory.FromAsync(
+                static (thisPtr, t, k, c, s) => new ConnectAsyncResult(thisPtr, t, k, c, s),
+                static r => ConnectAsyncResult.End(r),
+                this,
+                timeout,
+                cancellationToken,
+                null);
         }
 
         void OnConnectComplete(TransportAsyncCallbackArgs args)
@@ -332,13 +299,13 @@ namespace Microsoft.Azure.Amqp.Transport
 
         sealed class ConnectAsyncResult : TimeoutAsyncResult<string>
         {
-            static Action<TransportAsyncCallbackArgs> onConnect = OnConnect;
+            static readonly Action<TransportAsyncCallbackArgs> onConnect = OnConnect;
             readonly AmqpTransportInitiator initiator;
             readonly TransportAsyncCallbackArgs args;
 
             public ConnectAsyncResult(AmqpTransportInitiator initiator,
-                TimeSpan timeout, AsyncCallback callback, object state)
-                : base(timeout, callback, state)
+                TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
+                : base(timeout, cancellationToken, callback, state)
             {
                 this.initiator = initiator;
                 this.args = new TransportAsyncCallbackArgs();
@@ -363,6 +330,12 @@ namespace Microsoft.Azure.Amqp.Transport
             public static TransportBase End(IAsyncResult result)
             {
                 return AsyncResult.End<ConnectAsyncResult>(result).args.Transport;
+            }
+
+            public override void Cancel()
+            {
+                this.args.Transport?.Abort();
+                this.CompleteSelf(false, new TaskCanceledException());
             }
 
             protected override void CompleteOnTimer()

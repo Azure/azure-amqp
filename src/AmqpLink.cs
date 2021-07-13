@@ -1292,7 +1292,9 @@ namespace Microsoft.Azure.Amqp
                 flow.Echo = echo;
                 flow.Properties = properties;
 
-                if (!this.IsClosing())
+                if (this.State == AmqpObjectState.Opened ||
+                    this.State == AmqpObjectState.OpenSent ||
+                    this.State == AmqpObjectState.OpenReceived)
                 {
                     this.Session.SendFlow(flow);
                 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Amqp;
 using Xunit;
@@ -15,7 +16,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             var singleton = new SingletonTester(createTcs.Task, closeTcs.Task);
 
-            var creating = singleton.GetOrCreateAsync(TimeSpan.FromSeconds(1));
+            var creating = singleton.GetOrCreateAsync(CancellationToken.None);
             var closing = singleton.CloseAsync();
 
             closeTcs.SetResult(new object());
@@ -24,7 +25,7 @@ namespace Test.Microsoft.Azure.Amqp
             createTcs.SetResult(new object());
             await creating;
 
-            await Assert.ThrowsAsync<ObjectDisposedException>(() => singleton.GetOrCreateAsync(TimeSpan.FromSeconds(1)));
+            await Assert.ThrowsAsync<ObjectDisposedException>(() => singleton.GetOrCreateAsync(CancellationToken.None));
 
             var createdObj = GetInternalProperty<object>(singleton, "Value");
             Assert.Null(createdObj);
@@ -41,7 +42,7 @@ namespace Test.Microsoft.Azure.Amqp
                 _onSafeCloseComplete = onSafeCloseComplete;
             }
 
-            protected override async Task<object> OnCreateAsync(TimeSpan timeout)
+            protected override async Task<object> OnCreateAsync(CancellationToken cancellationToken)
             {
                 await _onCreateComplete;
                 return new object();

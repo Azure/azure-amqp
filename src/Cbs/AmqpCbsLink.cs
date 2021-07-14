@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
 
@@ -23,7 +24,7 @@ namespace Microsoft.Azure.Amqp
         {
             this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
             this.linkFactory = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(
-                timeout => this.CreateCbsLinkAsync(timeout),
+                ct => this.CreateCbsLinkAsync(ct),
                 link => CloseLink(link));
 
             this.connection.AddExtension(this);
@@ -45,16 +46,16 @@ namespace Microsoft.Azure.Amqp
         /// <param name="audience">The audience. In most cases it is the same as resource.</param>
         /// <param name="resource">The resource to access.</param>
         /// <param name="requiredClaims">The required claims to access the resource.</param>
-        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
         /// <returns></returns>
-        public async Task<DateTime> SendTokenAsync(ICbsTokenProvider tokenProvider, Uri namespaceAddress, string audience, string resource, string[] requiredClaims, TimeSpan timeout)
+        public async Task<DateTime> SendTokenAsync(ICbsTokenProvider tokenProvider, Uri namespaceAddress, string audience, string resource, string[] requiredClaims, CancellationToken cancellationToken)
         {
             if (this.connection.IsClosing())
             {
                 throw new OperationCanceledException("Connection is closing or closed.");
             }
 
-            CbsToken token = await tokenProvider.GetTokenAsync(namespaceAddress, resource, requiredClaims).ConfigureAwait(false);
+            CbsToken token = await tokenProvider.GetTokenAsync(namespaceAddress, resource, requiredClaims, cancellationToken).ConfigureAwait(false);
             string tokenType = token.TokenType;
             if (tokenType == null)
             {
@@ -64,7 +65,7 @@ namespace Microsoft.Azure.Amqp
             RequestResponseAmqpLink requestResponseLink;
             if (!this.linkFactory.TryGetOpenedObject(out requestResponseLink))
             {
-                requestResponseLink = await this.linkFactory.GetOrCreateAsync(timeout).ConfigureAwait(false);
+                requestResponseLink = await this.linkFactory.GetOrCreateAsync(cancellationToken).ConfigureAwait(false);
             }
 
             AmqpValue value = new AmqpValue();
@@ -75,7 +76,7 @@ namespace Microsoft.Azure.Amqp
             putTokenRequest.ApplicationProperties.Map[CbsConstants.PutToken.Audience] = audience;
             putTokenRequest.ApplicationProperties.Map[CbsConstants.PutToken.Expiration] = token.ExpiresAtUtc;
 
-            AmqpMessage putTokenResponse = await requestResponseLink.RequestAsync(putTokenRequest, timeout).ConfigureAwait(false);
+            AmqpMessage putTokenResponse = await requestResponseLink.RequestAsync(putTokenRequest, cancellationToken).ConfigureAwait(false);
 
             int statusCode = (int)putTokenResponse.ApplicationProperties.Map[CbsConstants.PutToken.StatusCode];
             string statusDescription = (string)putTokenResponse.ApplicationProperties.Map[CbsConstants.PutToken.StatusDescription];
@@ -115,31 +116,30 @@ namespace Microsoft.Azure.Amqp
             session?.SafeClose();
         }
 
-        async Task<RequestResponseAmqpLink> CreateCbsLinkAsync(TimeSpan timeout)
+        async Task<RequestResponseAmqpLink> CreateCbsLinkAsync(CancellationToken cancellationToken)
         {
             string address = CbsConstants.CbsAddress;
-            TimeoutHelper timeoutHelper = new TimeoutHelper(timeout);
             AmqpSession session = null;
             RequestResponseAmqpLink link = null;
             Exception lastException = null;
 
-            while (timeoutHelper.RemainingTime() > TimeSpan.Zero)
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
                     AmqpSessionSettings sessionSettings = new AmqpSessionSettings() { Properties = new Fields() };
                     session = this.connection.CreateSession(sessionSettings);
-                    await session.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                    await session.OpenAsync(cancellationToken).ConfigureAwait(false);
 
                     Fields properties = new Fields();
-                    properties.Add(CbsConstants.TimeoutName, (uint)timeoutHelper.RemainingTime().TotalMilliseconds);
+                    properties.Add(CbsConstants.TimeoutName, (uint)AmqpConstants.DefaultTimeout.TotalMilliseconds);
                     link = new RequestResponseAmqpLink("cbs", session, address, properties);
-                    await link.OpenAsync(timeoutHelper.RemainingTime()).ConfigureAwait(false);
+                    await link.OpenAsync(cancellationToken).ConfigureAwait(false);
 
                     AmqpTrace.Provider.AmqpOpenEntitySucceeded(this, link.Name, address);
                     return link;
                 }
-                catch (Exception exception)
+                catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
                 {
                     if (this.connection.IsClosing())
                     {
@@ -156,7 +156,9 @@ namespace Microsoft.Azure.Amqp
             link?.Abort();
             session?.SafeClose();
 
-            throw new TimeoutException(AmqpResources.GetString(AmqpResources.AmqpTimeout, timeout, address), lastException);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            throw lastException;
         }
     }
 }

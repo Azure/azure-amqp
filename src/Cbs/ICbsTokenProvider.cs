@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -14,6 +15,6 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Generate a Token for use with CBS.
         /// </summary>
-        Task<CbsToken> GetTokenAsync(Uri namespaceAddress, string appliesTo, string[] requiredClaims);
+        Task<CbsToken> GetTokenAsync(Uri namespaceAddress, string appliesTo, string[] requiredClaims, CancellationToken cancellationToken);
     }
 }

@@ -388,7 +388,7 @@
             var faultTolerantObject = new FaultTolerantAmqpObject<TestAmqpObject>(
                 span => Task.FromResult(new TestAmqpObject("string")),
                 amqpObject => { isCloseHandlerInvoked = true; });
-            var testAmqpObject = faultTolerantObject.GetOrCreateAsync(TimeSpan.FromSeconds(3)).Result;
+            var testAmqpObject = faultTolerantObject.GetOrCreateAsync(CancellationToken.None).Result;
             testAmqpObject.Close();
             Assert.True(isCloseHandlerInvoked);
         }

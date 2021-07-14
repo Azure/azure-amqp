@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -11,7 +12,7 @@ namespace Microsoft.Azure.Amqp
     /// </summary>
     public sealed class FaultTolerantAmqpObject<T> : Singleton<T> where T : AmqpObject
     {
-        readonly Func<TimeSpan, Task<T>> createObjectAsync;
+        readonly Func<CancellationToken, Task<T>> createObjectAsync;
         readonly Action<T> closeObject;
         readonly EventHandler onObjectClosed;
 
@@ -20,7 +21,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="createObjectAsync">The function to create the AmqpObject.</param>
         /// <param name="closeObject">The action to close the AmqpObject.</param>
-        public FaultTolerantAmqpObject(Func<TimeSpan, Task<T>> createObjectAsync, Action<T> closeObject)
+        public FaultTolerantAmqpObject(Func<CancellationToken, Task<T>> createObjectAsync, Action<T> closeObject)
         {
             this.createObjectAsync = createObjectAsync;
             this.closeObject = closeObject;
@@ -55,14 +56,10 @@ namespace Microsoft.Azure.Amqp
             return value.State == AmqpObjectState.Opened;
         }
 
-        /// <summary>
-        /// Creates the singleton AmqpObject.
-        /// </summary>
-        /// <param name="timeout">The operation timeout.</param>
-        /// <returns>A task for the operation.</returns>
-        protected override async Task<T> OnCreateAsync(TimeSpan timeout)
+        /// <inheritdoc cref="Singleton{TValue}"/>
+        protected override async Task<T> OnCreateAsync(CancellationToken cancellationToken)
         {
-            T amqpObject = await this.createObjectAsync(timeout).ConfigureAwait(false);
+            T amqpObject = await this.createObjectAsync(cancellationToken).ConfigureAwait(false);
             amqpObject.SafeAddClosed(OnObjectClosed);
             return amqpObject;
         }

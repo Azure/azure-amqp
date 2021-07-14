@@ -329,7 +329,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the array.</returns>
         public static int GetArrayEncodeSize<T>(T[] value)
         {
-            return ArrayEncoding.GetEncodeSize(value);
+            return ArrayEncoding.GetEncodeSize<T>(value);
         }
 
         /// <summary>
@@ -580,7 +580,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeArray<T>(T[] data, ByteBuffer buffer)
         {
-            ArrayEncoding.Encode(data, buffer);
+            ArrayEncoding.Encode<T>(data, buffer);
         }
 
         /// <summary>

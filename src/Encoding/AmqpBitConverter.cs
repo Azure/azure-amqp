@@ -142,6 +142,21 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
+        internal static uint ReadUInt(ReadOnlySpan<byte> buffer, int offset, int count)
+        {
+            Validate(count, FixedWidth.UInt);
+            uint data;
+            fixed (byte* p = &buffer[offset])
+            {
+                byte* d = (byte*)&data;
+                d[0] = p[3];
+                d[1] = p[2];
+                d[2] = p[1];
+                d[3] = p[0];
+            }
+            return data;
+        }
+
         /// <summary>
         /// Reads a 64-bit signed number from a buffer.
         /// </summary>
@@ -298,6 +313,13 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             buffer.Validate(false, count);
             Buffer.BlockCopy(buffer.Buffer, buffer.Offset, data, offset, count);
+            buffer.Complete(count);
+        }
+
+        internal static void ReadBytes(ByteBuffer buffer, Span<byte> data, int offset, int count)
+        {
+            buffer.Validate(false, count);
+            buffer.GetReadSpan().Slice(offset, count).CopyTo(data);
             buffer.Complete(count);
         }
 
@@ -557,6 +579,13 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             buffer.Validate(true, count);
             Buffer.BlockCopy(data, offset, buffer.Buffer, buffer.WritePos, count);
+            buffer.Append(count);
+        }
+
+        internal static void WriteBytes(ByteBuffer buffer, ReadOnlySpan<byte> data, int offset, int count)
+        {
+            buffer.Validate(true, count);
+            data.CopyTo(buffer.GetWriteSpan().Slice(offset, count));
             buffer.Append(count);
         }
 

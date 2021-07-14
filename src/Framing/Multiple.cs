@@ -38,14 +38,13 @@ namespace Microsoft.Azure.Amqp.Framing
             {
                 return FixedWidth.NullEncoded;
             }
-            else if (multiple.Count == 1)
+
+            if (multiple.Count == 1)
             {
                 return AmqpEncoding.GetObjectEncodeSize(multiple[0]);
             }
-            else
-            {
-                return ArrayEncoding.GetEncodeSize(multiple.ToArray());
-            }
+
+            return ArrayEncoding.GetEncodeSize(multiple);
         }
 
         internal static void Encode(Multiple<T> multiple, ByteBuffer buffer)
@@ -60,31 +59,23 @@ namespace Microsoft.Azure.Amqp.Framing
             }
             else
             {
-                ArrayEncoding.Encode(multiple.ToArray(), buffer);
+                ArrayEncoding.Encode(multiple, buffer);
             }
         }
 
         internal static Multiple<T> Decode(ByteBuffer buffer)
         {
             object value = AmqpEncoding.DecodeObject(buffer);
-            if (value == null)
+            switch (value)
             {
-                return null;
-            }
-            else if (value is T)
-            {
-                Multiple<T> multiple = new Multiple<T>();
-                multiple.Add((T)value);
-                return multiple;
-            }
-            else if (value.GetType().IsArray)
-            {
-                Multiple<T> multiple = new Multiple<T>((T[])value);
-                return multiple;
-            }
-            else
-            {
-                throw new AmqpException(AmqpErrorCode.InvalidField, null);
+                case null:
+                    return null;
+                case T value1:
+                    return new Multiple<T> { value1 };
+                case T[] valueArray:
+                    return new Multiple<T>(valueArray);
+                default:
+                    throw new AmqpException(AmqpErrorCode.InvalidField, null);
             }
         }
 
@@ -102,8 +93,9 @@ namespace Microsoft.Azure.Amqp.Framing
                 return list;
             }
 
-            foreach (T t1 in multiple1)
+            for (var index = 0; index < multiple1.Count; index++)
             {
+                T t1 = multiple1[index];
                 if (multiple2.Contains(t1))
                 {
                     list.Add(t1);
@@ -121,14 +113,14 @@ namespace Microsoft.Azure.Amqp.Framing
         {
             StringBuilder sb = new StringBuilder("[");
             bool firstItem = true;
-            foreach (object item in this)
+            foreach (var item in this)
             {
                 if (!firstItem)
                 {
                     sb.Append(',');
                 }
 
-                sb.Append(item.ToString());
+                sb.Append(item);
                 firstItem = false;
             }
 

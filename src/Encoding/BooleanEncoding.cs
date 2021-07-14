@@ -3,7 +3,10 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    sealed class BooleanEncoding : EncodingBase
+    using System;
+    using System.Collections.Generic;
+
+    sealed class BooleanEncoding : PrimitiveEncoding<bool>
     {
         public BooleanEncoding()
             : base(FormatCode.Boolean)
@@ -39,10 +42,8 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 return AmqpBitConverter.ReadUByte(buffer) != 0;
             }
-            else
-            {
-                return formatCode == FormatCode.BooleanTrue ? true : false;
-            }
+
+            return formatCode == FormatCode.BooleanTrue ? true : false;
         }
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
@@ -51,10 +52,8 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 return FixedWidth.BooleanVar;
             }
-            else
-            {
-                return BooleanEncoding.GetEncodeSize((bool)value);
-            }
+
+            return GetEncodeSize((bool)value);
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
@@ -65,13 +64,63 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
             else
             {
-                BooleanEncoding.Encode((bool)value, buffer);
+                Encode((bool)value, buffer);
             }
         }
 
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
-            return BooleanEncoding.Decode(buffer, formatCode);
+            return Decode(buffer, formatCode);
+        }
+
+        public override int GetArrayEncodeSize(IList<bool> value)
+        {
+            return FixedWidth.BooleanVar * value.Count;
+        }
+
+        public override void EncodeArray(IList<bool> value, ByteBuffer buffer)
+        {
+            int byteCount = FixedWidth.BooleanVar * value.Count;
+            buffer.Validate(write: true, byteCount);
+
+            Span<byte> destination = buffer.GetWriteSpan();
+
+            if (value is bool[] boolArray)
+            {
+                // fast-path for int[] so the bounds checks can be elided
+                for (int i = 0; i < boolArray.Length; i++)
+                {
+                    destination.Slice(FixedWidth.BooleanVar * i)[0] = (byte) (boolArray[i] ? 1 : 0);
+                }
+            }
+            else
+            {
+                IReadOnlyList<bool> listValue = (IReadOnlyList<bool>)value;
+                for (int i = 0; i < listValue.Count; i++)
+                {
+                    destination.Slice(FixedWidth.BooleanVar * i)[0] = (byte) (listValue[i] ? 1 : 0);
+                }
+            }
+
+            buffer.Append(byteCount);
+        }
+
+        public override bool[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
+        {
+            int byteCount = FixedWidth.BooleanVar * count;
+
+            buffer.Validate(write: false, byteCount);
+            ReadOnlySpan<byte> source = buffer.GetReadSpan();
+
+            bool[] array = new bool[count];
+            for (int i = 0; i < count; ++i)
+            {
+                array[i] = source.Slice(FixedWidth.BooleanVar * i)[0] == 1;
+            }
+
+            buffer.Complete(byteCount);
+
+            return array;
         }
     }
 }

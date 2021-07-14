@@ -4,8 +4,10 @@
 namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
+    using System.Buffers.Binary;
+    using System.Collections.Generic;
 
-    sealed class CharEncoding : EncodingBase
+    sealed class CharEncoding : PrimitiveEncoding<char>
     {
         public CharEncoding()
             : base(FormatCode.Char)
@@ -49,14 +51,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
         {
-            if (arrayEncoding)
-            {
-                return FixedWidth.Char;
-            }
-            else
-            {
-                return CharEncoding.GetEncodeSize((char)value);
-            }
+            return arrayEncoding ? FixedWidth.Char : CharEncoding.GetEncodeSize((char)value);
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
@@ -74,6 +69,59 @@ namespace Microsoft.Azure.Amqp.Encoding
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
             return CharEncoding.Decode(buffer, formatCode);
+        }
+
+        public override int GetArrayEncodeSize(IList<char> value)
+        {
+            return FixedWidth.Char * value.Count;
+        }
+
+        public override void EncodeArray(IList<char> value, ByteBuffer buffer)
+        {
+            int byteCount = FixedWidth.Char * value.Count;
+
+            buffer.Validate(write: true, byteCount);
+
+            Span<byte> destination = buffer.GetWriteSpan();
+
+            if (value is char[] charArray)
+            {
+                // fast-path for char[] so the bounds checks can be elided
+                for (int i = 0; i < charArray.Length; i++)
+                {
+                    // There is probably a more efficient way but let's go with this one for now
+                    BinaryPrimitives.WriteInt32BigEndian(destination.Slice(FixedWidth.Char * i), char.ConvertToUtf32(new string(charArray[i], 1), 0));
+                }
+            }
+            else
+            {
+                IReadOnlyList<char> listValue = (IReadOnlyList<char>)value;
+                for (int i = 0; i < listValue.Count; i++)
+                {
+                    // There is probably a more efficient way but let's go with this one for now
+                    BinaryPrimitives.WriteInt32BigEndian(destination.Slice(FixedWidth.Char * i), char.ConvertToUtf32(new string(listValue[i], 1), 0));
+                }
+            }
+
+            buffer.Append(byteCount);
+        }
+
+        public override char[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
+        {
+            int byteCount = FixedWidth.Char * count;
+            buffer.Validate(write: false, byteCount);
+            ReadOnlySpan<byte> source = buffer.GetReadSpan();
+
+            char[] array = new char[count];
+            for (int i = 0; i < count; ++i)
+            {
+                // There is probably a more efficient way but let's go with this one for now
+                array[i] = char.ConvertFromUtf32(BinaryPrimitives.ReadInt32BigEndian(source.Slice(FixedWidth.Char * i)))[0];
+            }
+
+            buffer.Complete(byteCount);
+
+            return array;
         }
     }
 }

@@ -3,7 +3,11 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    sealed class ULongEncoding : EncodingBase
+    using System;
+    using System.Buffers.Binary;
+    using System.Collections.Generic;
+
+    sealed class ULongEncoding : PrimitiveEncoding<ulong>
     {
         public ULongEncoding()
             : base(FormatCode.ULong)
@@ -18,15 +22,11 @@ namespace Microsoft.Azure.Amqp.Encoding
                 {
                     return FixedWidth.ZeroEncoded;
                 }
-                else
-                {
-                    return value.Value <= byte.MaxValue ? FixedWidth.UByteEncoded : FixedWidth.ULongEncoded;
-                }
+
+                return value.Value <= byte.MaxValue ? FixedWidth.UByteEncoded : FixedWidth.ULongEncoded;
             }
-            else
-            {
-                return FixedWidth.NullEncoded;
-            }
+
+            return FixedWidth.NullEncoded;
         }
 
         public static void Encode(ulong? value, ByteBuffer buffer)
@@ -66,24 +66,15 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 return 0;
             }
-            else
-            {
-                return formatCode == FormatCode.SmallULong ?
-                    AmqpBitConverter.ReadUByte(buffer) :
-                    AmqpBitConverter.ReadULong(buffer);
-            }
+
+            return formatCode == FormatCode.SmallULong ?
+                AmqpBitConverter.ReadUByte(buffer) :
+                AmqpBitConverter.ReadULong(buffer);
         }
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
         {
-            if (arrayEncoding)
-            {
-                return FixedWidth.ULong;
-            }
-            else
-            {
-                return ULongEncoding.GetEncodeSize((ulong)value);
-            }
+            return arrayEncoding ? FixedWidth.ULong : ULongEncoding.GetEncodeSize((ulong)value);
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
@@ -101,6 +92,56 @@ namespace Microsoft.Azure.Amqp.Encoding
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
             return ULongEncoding.Decode(buffer, formatCode);
+        }
+
+        public override int GetArrayEncodeSize(IList<ulong> value)
+        {
+            return FixedWidth.ULong * value.Count;
+        }
+
+        public override void EncodeArray(IList<ulong> value, ByteBuffer buffer)
+        {
+            int byteCount = FixedWidth.ULong * value.Count;
+
+            buffer.Validate(write: true, byteCount);
+
+            Span<byte> destination = buffer.GetWriteSpan();
+
+            if (value is ulong[] longArray)
+            {
+                // fast-path for long[] so the bounds checks can be elided
+                for (int i = 0; i < longArray.Length; i++)
+                {
+                    BinaryPrimitives.WriteUInt64BigEndian(destination.Slice(FixedWidth.ULong * i), longArray[i]);
+                }
+            }
+            else
+            {
+                IReadOnlyList<ulong> listValue = (IReadOnlyList<ulong>)value;
+                for (int i = 0; i < listValue.Count; i++)
+                {
+                    BinaryPrimitives.WriteUInt64BigEndian(destination.Slice(FixedWidth.ULong * i), listValue[i]);
+                }
+            }
+
+            buffer.Append(byteCount);
+        }
+
+        public override ulong[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
+        {
+            int byteCount = FixedWidth.ULong * count;
+            buffer.Validate(write: false, byteCount);
+            ReadOnlySpan<byte> source = buffer.GetReadSpan();
+
+            ulong[] array = new ulong[count];
+            for (int i = 0; i < count; ++i)
+            {
+                array[i] = BinaryPrimitives.ReadUInt64BigEndian(source.Slice(FixedWidth.ULong * i));
+            }
+
+            buffer.Complete(byteCount);
+
+            return array;
         }
     }
 }

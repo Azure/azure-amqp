@@ -3,7 +3,11 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    sealed class LongEncoding : EncodingBase
+    using System;
+    using System.Buffers.Binary;
+    using System.Collections.Generic;
+
+    sealed class LongEncoding : PrimitiveEncoding<long>
     {
         public LongEncoding()
             : base(FormatCode.Long)
@@ -18,10 +22,8 @@ namespace Microsoft.Azure.Amqp.Encoding
                     FixedWidth.LongEncoded :
                     FixedWidth.UByteEncoded;
             }
-            else
-            {
-                return FixedWidth.NullEncoded;
-            }
+
+            return FixedWidth.NullEncoded;
         }
 
         public static void Encode(long? value, ByteBuffer buffer)
@@ -60,14 +62,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
         {
-            if (arrayEncoding)
-            {
-                return FixedWidth.Long;
-            }
-            else
-            {
-                return LongEncoding.GetEncodeSize((long)value);
-            }
+            return arrayEncoding ? FixedWidth.Long : LongEncoding.GetEncodeSize((long)value);
         }
 
         public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
@@ -85,6 +80,56 @@ namespace Microsoft.Azure.Amqp.Encoding
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
             return LongEncoding.Decode(buffer, formatCode);
+        }
+
+        public override int GetArrayEncodeSize(IList<long> value)
+        {
+            return FixedWidth.Long * value.Count;
+        }
+
+        public override void EncodeArray(IList<long> value, ByteBuffer buffer)
+        {
+            int byteCount = FixedWidth.Long * value.Count;
+
+            buffer.Validate(write: true, byteCount);
+
+            Span<byte> destination = buffer.GetWriteSpan();
+
+            if (value is long[] longArray)
+            {
+                // fast-path for long[] so the bounds checks can be elided
+                for (int i = 0; i < longArray.Length; i++)
+                {
+                    BinaryPrimitives.WriteInt64BigEndian(destination.Slice(FixedWidth.Long * i), longArray[i]);
+                }
+            }
+            else
+            {
+                IReadOnlyList<long> listValue = (IReadOnlyList<long>)value;
+                for (int i = 0; i < listValue.Count; i++)
+                {
+                    BinaryPrimitives.WriteInt64BigEndian(destination.Slice(FixedWidth.Long * i), listValue[i]);
+                }
+            }
+
+            buffer.Append(byteCount);
+        }
+
+        public override long[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
+        {
+            int byteCount = FixedWidth.Long * count;
+            buffer.Validate(write: false, byteCount);
+            ReadOnlySpan<byte> source = buffer.GetReadSpan();
+
+            long[] array = new long[count];
+            for (int i = 0; i < count; ++i)
+            {
+                array[i] = BinaryPrimitives.ReadInt64BigEndian(source.Slice(FixedWidth.Long * i));
+            }
+
+            buffer.Complete(byteCount);
+
+            return array;
         }
     }
 }

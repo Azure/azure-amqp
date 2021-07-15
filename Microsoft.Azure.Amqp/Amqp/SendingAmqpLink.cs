@@ -56,28 +56,26 @@ namespace Microsoft.Azure.Amqp
             this.SendMessageInternal(message, deliveryTag, txnId);
         }
 
-        public Task<Outcome> SendMessageAsync(
-            AmqpMessage message,
-            ArraySegment<byte> deliveryTag,
-            ArraySegment<byte> txnId,
-            TimeSpan timeout)
+        public Task<Outcome> SendMessageAsync(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, TimeSpan timeout)
         {
-            return Task.Factory.FromAsync<Outcome>(
-                (c,s) => this.BeginSendMessage(message, deliveryTag, txnId, timeout, c, s),
-                this.EndSendMessage,
-                null);
+            return Task.Factory.FromAsync(
+                (p, t, k, c, s) => ((SendingAmqpLink)s).BeginSendMessage(p.Message, p.DeliveryTag, p.TxnId, t, k, c, s),
+                r => ((SendingAmqpLink)r.AsyncState).EndSendMessage(r),
+                new SendMessageParam(message, deliveryTag, txnId),
+                timeout,
+                CancellationToken.None,
+                this);
         }
 
-        public Task<Outcome> SendMessageAsync(
-            AmqpMessage message,
-            ArraySegment<byte> deliveryTag,
-            ArraySegment<byte> txnId,
-            CancellationToken cancellationToken)
+        public Task<Outcome> SendMessageAsync(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, CancellationToken cancellationToken)
         {
-            return Task.Factory.FromAsync<Outcome>(
-                (c, s) => this.BeginSendMessage(message, deliveryTag, txnId, TimeSpan.MaxValue, cancellationToken, c, s),
-                this.EndSendMessage,
-                null);
+            return Task.Factory.FromAsync(
+                (p, t, k, c, s) => ((SendingAmqpLink)s).BeginSendMessage(p.Message, p.DeliveryTag, p.TxnId, t, k, c, s),
+                r => ((SendingAmqpLink)r.AsyncState).EndSendMessage(r),
+                new SendMessageParam(message, deliveryTag, txnId),
+                this.Settings.OperationTimeout,
+                cancellationToken,
+                this);
         }
 
         public IAsyncResult BeginSendMessage(
@@ -249,6 +247,20 @@ namespace Microsoft.Azure.Amqp
             }
 
             return success;
+        }
+
+        struct SendMessageParam
+        {
+            public SendMessageParam(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId)
+            {
+                this.Message = message;
+                this.DeliveryTag = deliveryTag;
+                this.TxnId = txnId;
+            }
+
+            public readonly AmqpMessage Message;
+            public readonly ArraySegment<byte> DeliveryTag;
+            public readonly ArraySegment<byte> TxnId;
         }
 
         sealed class SendAsyncResult : TimeoutAsyncResult<string>, IWork<Outcome>

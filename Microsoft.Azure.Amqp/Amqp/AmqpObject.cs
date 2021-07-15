@@ -178,7 +178,7 @@ namespace Microsoft.Azure.Amqp
             return Task.Factory.FromAsync(
                 (t, k, c, s) => ((AmqpObject)s).BeginOpen(t, k, c, s),
                 r => ((AmqpObject)r.AsyncState).EndOpen(r),
-                TimeSpan.MaxValue,
+                this.DefaultOpenTimeout,
                 cancellationToken,
                 this);
         }
@@ -188,7 +188,7 @@ namespace Microsoft.Azure.Amqp
             return Task.Factory.FromAsync(
                 (t, k, c, s) => ((AmqpObject) s).BeginClose(t, k, c, s),
                 r => ((AmqpObject) r.AsyncState).EndClose(r),
-                TimeSpan.MaxValue,
+                this.DefaultCloseTimeout,
                 cancellationToken,
                 this);
         }

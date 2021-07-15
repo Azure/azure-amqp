@@ -134,7 +134,7 @@ namespace Microsoft.Azure.Amqp
                 (r, t, k, c, s) => new RequestAsyncResult((RequestResponseAmqpLink)s, r, AmqpConstants.NullBinary, t, k, c, s),
                 (r) => RequestAsyncResult.End(r),
                 request,
-                TimeSpan.MaxValue,
+                this.sender.Settings.OperationTimeout,
                 cancellationToken,
                 this);
         }

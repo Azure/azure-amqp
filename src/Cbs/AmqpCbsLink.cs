@@ -150,7 +150,7 @@ namespace Microsoft.Azure.Amqp
                     AmqpTrace.Provider.AmqpOpenEntityFailed(this, this.GetType().Name, address, exception);
                 }
 
-                await Task.Delay(1000).ConfigureAwait(false);
+                await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
             }
 
             link?.Abort();

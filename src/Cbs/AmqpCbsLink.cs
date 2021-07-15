@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Runtime.ExceptionServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
@@ -121,7 +122,7 @@ namespace Microsoft.Azure.Amqp
             string address = CbsConstants.CbsAddress;
             AmqpSession session = null;
             RequestResponseAmqpLink link = null;
-            Exception lastException = null;
+            ExceptionDispatchInfo lastException = null;
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -146,7 +147,7 @@ namespace Microsoft.Azure.Amqp
                         throw new OperationCanceledException("Connection is closing or closed.", exception);
                     }
 
-                    lastException = exception;
+                    lastException = ExceptionDispatchInfo.Capture(exception);
                     AmqpTrace.Provider.AmqpOpenEntityFailed(this, this.GetType().Name, address, exception);
                 }
 
@@ -158,7 +159,8 @@ namespace Microsoft.Azure.Amqp
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            throw lastException;
+            lastException?.Throw();
+            return null;
         }
     }
 }

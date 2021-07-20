@@ -1,123 +1,85 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    using System;
-    using System.Buffers.Binary;
-    using System.Collections.Generic;
-    using System.Runtime.CompilerServices;
-
-    sealed class FloatEncoding : PrimitiveEncoding<float>
+    sealed class FloatEncoding : EncodingBase<float>
     {
         public FloatEncoding()
-            : base(FormatCode.Float)
+            : base(FormatCode.Float, FixedWidth.Float)
         {
         }
 
-        public static int GetEncodeSize(float? value)
+        public static int GetEncodeSize(float value)
         {
-            return value.HasValue ? FixedWidth.FloatEncoded : FixedWidth.NullEncoded;
+            return FixedWidth.FloatEncoded;
         }
 
-        public static void Encode(float? value, ByteBuffer buffer)
+        public static void Encode(float value, ByteBuffer buffer)
         {
-            if (value.HasValue)
-            {
-                AmqpBitConverter.WriteUByte(buffer, FormatCode.Float);
-                AmqpBitConverter.WriteFloat(buffer, value.Value);
-            }
-            else
-            {
-                AmqpEncoding.EncodeNull(buffer);
-            }
+            AmqpBitConverter.WriteUByte(buffer, FormatCode.Float);
+            AmqpBitConverter.WriteFloat(buffer, value);
         }
 
-        public static float? Decode(ByteBuffer buffer, FormatCode formatCode)
+        public static float Decode(ByteBuffer buffer, FormatCode formatCode)
         {
-            if (formatCode == 0 && (formatCode = AmqpEncoding.ReadFormatCode(buffer)) == FormatCode.Null)
-            {
-                return null;
-            }
-
             return AmqpBitConverter.ReadFloat(buffer);
         }
 
-        public override int GetObjectEncodeSize(object value, bool arrayEncoding)
+        public override int GetArrayValueSize(float[] array)
         {
-            return arrayEncoding ? FixedWidth.Float : FloatEncoding.GetEncodeSize((float)value);
+            return array.Length * FixedWidth.Float;
         }
 
-        public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
+        public override void WriteArrayValue(float[] array, ByteBuffer buffer)
         {
-            if (arrayEncoding)
+            int size = this.GetArrayValueSize(array);
+            buffer.ValidateWrite(size);
+            for (int i = 0, pos = buffer.WritePos; i < array.Length; i++, pos += FixedWidth.Float)
             {
-                AmqpBitConverter.WriteFloat(buffer, (float)value);
+                AmqpBitConverter.WriteUInt(buffer.Buffer, pos, Unsafe.As<float, uint>(ref array[i]));
             }
-            else
-            {
-                FloatEncoding.Encode((float)value, buffer);
-            }
+
+            buffer.Append(size);
         }
 
-        public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
+        public override float[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, float[] array)
         {
-            return FloatEncoding.Decode(buffer, formatCode);
-        }
-
-        public override int GetArrayEncodeSize(IList<float> value)
-        {
-            return FixedWidth.Float * value.Count;
-        }
-
-        public override void EncodeArray(IList<float> value, ByteBuffer buffer)
-        {
-            int byteCount = FixedWidth.Float * value.Count;
-
-            buffer.Validate(write: true, byteCount);
-
-            Span<byte> destination = buffer.GetWriteSpan();
-
-            if (value is float[] floatArray)
+            int size = this.GetArrayValueSize(array);
+            buffer.ValidateRead(size);
+            for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos += FixedWidth.Float)
             {
-                // fast-path for float[] so the bounds checks can be elided
-                for (int i = 0; i < floatArray.Length; i++)
-                {
-                    var source = floatArray[i];
-                    int floatAsInt = Unsafe.As<float, int>(ref source);
-                    BinaryPrimitives.WriteInt32BigEndian(destination.Slice(FixedWidth.Float * i), floatAsInt);
-                }
-            }
-            else
-            {
-                IReadOnlyList<float> listValue = (IReadOnlyList<float>)value;
-                for (int i = 0; i < listValue.Count; i++)
-                {
-                    var source = listValue[i];
-                    int floatAsInt = Unsafe.As<float, int>(ref source);
-                    BinaryPrimitives.WriteInt32BigEndian(destination.Slice(FixedWidth.Float * i), floatAsInt);
-                }
+                uint data = AmqpBitConverter.ReadUInt(buffer.Buffer, pos, FixedWidth.UInt);
+                array[i] = Unsafe.As<uint, float>(ref data);
             }
 
-            buffer.Append(byteCount);
-        }
-
-        public override float[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
-        {
-            int byteCount = FixedWidth.Float * count;
-            buffer.Validate(write: false, byteCount);
-            ReadOnlySpan<byte> source = buffer.GetReadSpan();
-
-            float[] array = new float[count];
-            for (int i = 0; i < count; ++i)
-            {
-                var value = BinaryPrimitives.ReadInt32BigEndian(source.Slice(FixedWidth.Float * i));
-                array[i] = Unsafe.As<int, float>(ref value);
-            }
-
-            buffer.Complete(byteCount);
+            buffer.Complete(size);
 
             return array;
+        }
+
+        protected override int OnGetSize(float value, int arrayIndex)
+        {
+            return arrayIndex < 0 ? FixedWidth.FloatEncoded : FixedWidth.Float;
+        }
+
+        protected override void OnWrite(float value, ByteBuffer buffer, int arrayIndex)
+        {
+            if (arrayIndex < 0)
+            {
+                Encode(value, buffer);
+            }
+            else
+            {
+                AmqpBitConverter.WriteFloat(buffer, value);
+            }
+        }
+
+        protected override float OnRead(ByteBuffer buffer, FormatCode formatCode)
+        {
+            return AmqpBitConverter.ReadFloat(buffer);
         }
     }
 }

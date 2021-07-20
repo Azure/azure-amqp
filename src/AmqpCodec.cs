@@ -108,7 +108,7 @@ namespace Microsoft.Azure.Amqp
 
         internal static int GetFrameSize(ByteBuffer buffer)
         {
-            return (int)AmqpBitConverter.PeekUInt(buffer);
+            return (int)AmqpBitConverter.ReadUInt(buffer.Buffer, buffer.Offset, FixedWidth.UInt);
         }
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the boolean value.</returns>
         public static int GetBooleanEncodeSize(bool? value)
         {
-            return BooleanEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : BooleanEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the 8-bit unsigned integer.</returns>
         public static int GetUByteEncodeSize(byte? value)
         {
-            return UByteEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : UByteEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the 16-bit unsigned integer.</returns>
         public static int GetUShortEncodeSize(ushort? value)
         {
-            return UShortEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : UShortEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the 32-bit unsigned integer.</returns>
         public static int GetUIntEncodeSize(uint? value)
         {
-            return UIntEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : UIntEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -178,7 +178,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the 64-bit unsigned integer.</returns>
         public static int GetULongEncodeSize(ulong? value)
         {
-            return ULongEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : ULongEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -188,7 +188,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the 8-bit signed integer.</returns>
         public static int GetByteEncodeSize(sbyte? value)
         {
-            return ByteEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : ByteEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -198,7 +198,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the 16-bit signed integer.</returns>
         public static int GetShortEncodeSize(short? value)
         {
-            return ShortEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : ShortEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -208,7 +208,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the 32-bit signed integer.</returns>
         public static int GetIntEncodeSize(int? value)
         {
-            return IntEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : IntEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the 64-bit signed integer.</returns>
         public static int GetLongEncodeSize(long? value)
         {
-            return LongEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : LongEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the 32-bit floating pointer number.</returns>
         public static int GetFloatEncodeSize(float? value)
         {
-            return FloatEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : FloatEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -238,7 +238,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the 64-bit floating pointer number.</returns>
         public static int GetDoubleEncodeSize(double? value)
         {
-            return DoubleEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : DoubleEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -248,7 +248,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the Unicode character.</returns>
         public static int GetCharEncodeSize(char? value)
         {
-            return CharEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : CharEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -258,7 +258,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the timestamp.</returns>
         public static int GetTimeStampEncodeSize(DateTime? value)
         {
-            return TimeStampEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : TimeStampEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -268,7 +268,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the uuid.</returns>
         public static int GetUuidEncodeSize(Guid? value)
         {
-            return UuidEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : UuidEncoding.GetEncodeSize(value.Value);
         }
 
         /// <summary>
@@ -278,7 +278,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the binary value.</returns>
         public static int GetBinaryEncodeSize(ArraySegment<byte> value)
         {
-            return BinaryEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : BinaryEncoding.GetEncodeSize(value);
         }
 
         /// <summary>
@@ -288,7 +288,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the symbol.</returns>
         public static int GetSymbolEncodeSize(AmqpSymbol value)
         {
-            return SymbolEncoding.GetEncodeSize(value);
+            return value.Value == null ? FixedWidth.NullEncoded : SymbolEncoding.GetEncodeSize(value);
         }
 
         /// <summary>
@@ -298,7 +298,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the string.</returns>
         public static int GetStringEncodeSize(string value)
         {
-            return StringEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : StringEncoding.GetEncodeSize(value);
         }
 
         /// <summary>
@@ -308,7 +308,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the list.</returns>
         public static int GetListEncodeSize(IList value)
         {
-            return ListEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : ListEncoding.GetEncodeSize(value);
         }
 
         /// <summary>
@@ -318,7 +318,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the map.</returns>
         public static int GetMapEncodeSize(AmqpMap value)
         {
-            return MapEncoding.GetEncodeSize(value);
+            return value == null ? FixedWidth.NullEncoded : MapEncoding.GetEncodeSize(value);
         }
 
         /// <summary>
@@ -329,7 +329,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the array.</returns>
         public static int GetArrayEncodeSize<T>(T[] value)
         {
-            return ArrayEncoding.GetEncodeSize<T>(value);
+            return value == null ? FixedWidth.NullEncoded : ArrayEncoding.GetEncodeSize(value, AmqpEncoding.GetEncoding<T>());
         }
 
         /// <summary>
@@ -339,14 +339,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>Encode size in bytes of the serializable.</returns>
         public static int GetSerializableEncodeSize(IAmqpSerializable value)
         {
-            if (value == null)
-            {
-                return FixedWidth.NullEncoded;
-            }
-            else
-            {
-                return value.EncodeSize;
-            }
+            return value == null ? FixedWidth.NullEncoded : value.EncodeSize;
         }
 
         /// <summary>
@@ -379,7 +372,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeBoolean(bool? data, ByteBuffer buffer)
         {
-            BooleanEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                BooleanEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -389,7 +389,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeUByte(byte? data, ByteBuffer buffer)
         {
-            UByteEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                UByteEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -399,7 +406,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeUShort(ushort? data, ByteBuffer buffer)
         {
-            UShortEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                UShortEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -409,7 +423,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeUInt(uint? data, ByteBuffer buffer)
         {
-            UIntEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                UIntEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -419,7 +440,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeULong(ulong? data, ByteBuffer buffer)
         {
-            ULongEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                ULongEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -429,7 +457,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeByte(sbyte? data, ByteBuffer buffer)
         {
-            ByteEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                ByteEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -439,7 +474,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeShort(short? data, ByteBuffer buffer)
         {
-            ShortEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                ShortEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -449,7 +491,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeInt(int? data, ByteBuffer buffer)
         {
-            IntEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                IntEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -459,7 +508,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeLong(long? data, ByteBuffer buffer)
         {
-            LongEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                LongEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -469,7 +525,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeChar(char? data, ByteBuffer buffer)
         {
-            CharEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                CharEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -479,7 +542,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeFloat(float? data, ByteBuffer buffer)
         {
-            FloatEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                FloatEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -489,7 +559,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeDouble(double? data, ByteBuffer buffer)
         {
-            DoubleEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                DoubleEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -499,7 +576,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeDecimal(decimal? data, ByteBuffer buffer)
         {
-            DecimalEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                DecimalEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -509,7 +593,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeTimeStamp(DateTime? data, ByteBuffer buffer)
         {
-            TimeStampEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                TimeStampEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -519,7 +610,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeUuid(Guid? data, ByteBuffer buffer)
         {
-            UuidEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                UuidEncoding.Encode(data.Value, buffer);
+            }
         }
 
         /// <summary>
@@ -529,7 +627,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeBinary(ArraySegment<byte> data, ByteBuffer buffer)
         {
-            BinaryEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                BinaryEncoding.Encode(data, buffer);
+            }
         }
 
         /// <summary>
@@ -539,7 +644,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeString(string data, ByteBuffer buffer)
         {
-            StringEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                StringEncoding.Encode(data, buffer);
+            }
         }
 
         /// <summary>
@@ -549,7 +661,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeSymbol(AmqpSymbol data, ByteBuffer buffer)
         {
-            SymbolEncoding.Encode(data, buffer);
+            if (data.Value == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                SymbolEncoding.Encode(data, buffer);
+            }
         }
 
         /// <summary>
@@ -559,7 +678,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeList(IList data, ByteBuffer buffer)
         {
-            ListEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                ListEncoding.Encode(data, buffer);
+            }
         }
 
         /// <summary>
@@ -569,7 +695,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeMap(AmqpMap data, ByteBuffer buffer)
         {
-            MapEncoding.Encode(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                MapEncoding.Encode(data, buffer);
+            }
         }
 
         /// <summary>
@@ -580,7 +713,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The destination buffer.</param>
         public static void EncodeArray<T>(T[] data, ByteBuffer buffer)
         {
-            ArrayEncoding.Encode<T>(data, buffer);
+            if (data == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                ArrayEncoding.Encode(buffer, data, AmqpEncoding.GetEncoding<T>());
+            }
         }
 
         /// <summary>
@@ -630,7 +770,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A boolean value.</returns>
         public static bool? DecodeBoolean(ByteBuffer buffer)
         {
-            return BooleanEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return BooleanEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -640,7 +786,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>An 8-bit unsigned integer.</returns>
         public static byte? DecodeUByte(ByteBuffer buffer)
         {
-            return UByteEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return UByteEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -650,7 +802,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A 16-bit unsigned integer.</returns>
         public static ushort? DecodeUShort(ByteBuffer buffer)
         {
-            return UShortEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return UShortEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -660,7 +818,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A 32-bit unsigned integer.</returns>
         public static uint? DecodeUInt(ByteBuffer buffer)
         {
-            return UIntEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return UIntEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -670,7 +834,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A 64-bit unsigned integer.</returns>
         public static ulong? DecodeULong(ByteBuffer buffer)
         {
-            return ULongEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return ULongEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -680,7 +850,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>An 8-bit signed integer.</returns>
         public static sbyte? DecodeByte(ByteBuffer buffer)
         {
-            return ByteEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return ByteEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -690,7 +866,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A 16-bit signed integer.</returns>
         public static short? DecodeShort(ByteBuffer buffer)
         {
-            return ShortEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return ShortEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -700,7 +882,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A 32-bit signed integer.</returns>
         public static int? DecodeInt(ByteBuffer buffer)
         {
-            return IntEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return IntEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -710,7 +898,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A 64-bit signed integer.</returns>
         public static long? DecodeLong(ByteBuffer buffer)
         {
-            return LongEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return LongEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -720,7 +914,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A 32-bit floating point number.</returns>
         public static float? DecodeFloat(ByteBuffer buffer)
         {
-            return FloatEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return FloatEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -730,7 +930,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A 64-bit floating point number.</returns>
         public static double? DecodeDouble(ByteBuffer buffer)
         {
-            return DoubleEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return DoubleEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -740,7 +946,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A decimal number.</returns>
         public static decimal? DecodeDecimal(ByteBuffer buffer)
         {
-            return DecimalEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return DecimalEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -750,7 +962,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A Unicode character.</returns>
         public static char? DecodeChar(ByteBuffer buffer)
         {
-            return CharEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return CharEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -760,7 +978,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A timestamp.</returns>
         public static DateTime? DecodeTimeStamp(ByteBuffer buffer)
         {
-            return TimeStampEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return TimeStampEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -770,7 +994,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A uuid.</returns>
         public static Guid? DecodeUuid(ByteBuffer buffer)
         {
-            return UuidEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return UuidEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -782,7 +1012,18 @@ namespace Microsoft.Azure.Amqp
         /// To avoid allocation, call <see cref="BinaryEncoding.Decode(ByteBuffer, FormatCode, bool)"/>.</remarks>
         public static ArraySegment<byte> DecodeBinary(ByteBuffer buffer)
         {
-            return BinaryEncoding.Decode(buffer, 0);
+            return DecodeBinary(buffer, true);
+        }
+
+        internal static ArraySegment<byte> DecodeBinary(ByteBuffer buffer, bool copy)
+        {
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return default;
+            }
+
+            return BinaryEncoding.Decode(buffer, formatCode, copy);
         }
 
         /// <summary>
@@ -792,7 +1033,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A string.</returns>
         public static string DecodeString(ByteBuffer buffer)
         {
-            return StringEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return StringEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -802,7 +1049,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A symbol.</returns>
         public static AmqpSymbol DecodeSymbol(ByteBuffer buffer)
         {
-            return SymbolEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return default;
+            }
+
+            return SymbolEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -812,7 +1065,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A list.</returns>
         public static IList DecodeList(ByteBuffer buffer)
         {
-            return ListEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return ListEncoding.Decode(buffer, formatCode);
         }
 
         /// <summary>
@@ -822,12 +1081,18 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A map.</returns>
         public static AmqpMap DecodeMap(ByteBuffer buffer)
         {
-            return MapEncoding.Decode(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return MapEncoding.Decode(buffer, formatCode);
         }
 
         internal static T DecodeMap<T>(ByteBuffer buffer) where T : RestrictedMap, new()
         {
-            AmqpMap map = MapEncoding.Decode(buffer, 0);
+            AmqpMap map = DecodeMap(buffer);
             T restrictedMap = null;
             if (map != null)
             {
@@ -845,7 +1110,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>An array.</returns>
         public static T[] DecodeArray<T>(ByteBuffer buffer)
         {
-            return ArrayEncoding.Decode<T>(buffer, 0);
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
+            {
+                return null;
+            }
+
+            return ArrayEncoding.Decode<T>(buffer, formatCode, AmqpEncoding.GetEncoding<T>());
         }
 
         /// <summary>
@@ -928,7 +1199,7 @@ namespace Microsoft.Azure.Amqp
                 return null;
             }
 
-            EncodingBase.VerifyFormatCode(formatCode, buffer.Offset, FormatCode.Described);
+            AmqpEncoding.VerifyFormatCode(formatCode, buffer.Offset, FormatCode.Described);
 
             Func<AmqpDescribed> knownTypeCtor = null;
             formatCode = AmqpEncoding.ReadFormatCode(buffer);
@@ -939,7 +1210,7 @@ namespace Microsoft.Azure.Amqp
             }
             else if (formatCode == FormatCode.ULong0 || formatCode == FormatCode.ULong || formatCode == FormatCode.SmallULong)
             {
-                ulong code = ULongEncoding.Decode(buffer, formatCode).Value;
+                ulong code = ULongEncoding.Decode(buffer, formatCode);
                 byCode.TryGetValue(code, out knownTypeCtor);
             }
 

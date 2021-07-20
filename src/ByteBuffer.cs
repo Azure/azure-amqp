@@ -220,61 +220,49 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Validates if the buffer has sufficient bytes for read.
+        /// </summary>
+        /// <param name="dataSize">The requested size.</param>
+        public void ValidateRead(int dataSize)
+        {
+            if (this.Length < dataSize)
+            {
+                throw new AmqpException(AmqpErrorCode.DecodeError, AmqpResources.GetString(AmqpResources.AmqpInsufficientBufferSize, dataSize, this.Length));
+            }
+        }
+
+        /// <summary>
+        /// Validates if the buffer has sufficient space for write.
+        /// </summary>
+        /// <param name="dataSize">The requested size.</param>
+        public void ValidateWrite(int dataSize)
+        {
+            if (this.Size < dataSize)
+            {
+                if (!this.autoGrow)
+                {
+                    throw new AmqpException(AmqpErrorCode.DecodeError, AmqpResources.GetString(AmqpResources.AmqpInsufficientBufferSize, dataSize, this.Size));
+                }
+
+                this.GrowBuffer(dataSize);
+            }
+        }
+
+        /// <summary>
         /// Validates if the buffer has sufficient bytes for read or space for write.
         /// </summary>
         /// <param name="write">true if validation is for writing bytes.</param>
         /// <param name="dataSize">The requested size.</param>
+        [Obsolete]
         public void Validate(bool write, int dataSize)
         {
-            bool valid = false;
             if (write)
             {
-                if (this.Size < dataSize && this.autoGrow)
-                {
-                    if (this.references != 1)
-                    {
-                        throw new InvalidOperationException("Cannot grow the current buffer because it has more than one references");
-                    }
-
-                    int newSize = Math.Max(this.Capacity * 2, this.Capacity + dataSize);
-                    ManagedBuffer newBuffer;
-                    if (this.bufferManager != null)
-                    {
-                        newBuffer = ByteBuffer.AllocateBuffer(newSize, this.bufferManager);
-                    }
-                    else
-                    {
-                        newBuffer = new ManagedBuffer(new byte[newSize], null);
-                    }
-
-                    System.Buffer.BlockCopy(this.buffer, this.start, newBuffer.Buffer, 0, this.Capacity);
-
-                    int consumed = this.read - this.start;
-                    int written = this.write - this.start;
-
-                    this.start = 0;
-                    this.read = consumed;
-                    this.write = written;
-                    this.end = newSize;
-
-                    if (this.bufferManager != null)
-                    {
-                        this.bufferManager.ReturnBuffer(this.buffer);
-                    }
-                    this.buffer = newBuffer.Buffer;
-                    this.bufferManager = newBuffer.BufferManager;
-                }
-
-                valid = this.Size >= dataSize;
+                this.ValidateWrite(dataSize);
             }
             else
             {
-                valid = this.Length >= dataSize;
-            }
-
-            if (!valid)
-            {
-                throw new AmqpException(AmqpErrorCode.DecodeError, AmqpResources.GetString(AmqpResources.AmqpInsufficientBufferSize, dataSize, write ? this.Size : this.Length));
+                this.ValidateRead(dataSize);
             }
         }
 
@@ -421,13 +409,15 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal ReadOnlySpan<byte> GetReadSpan()
+        internal ReadOnlySpan<byte> GetReadSpan(int size)
         {
+            this.ValidateRead(size);
             return this.buffer.AsSpan(this.Offset, this.Length);
         }
 
-        internal Span<byte> GetWriteSpan()
+        internal Span<byte> GetWriteSpan(int size)
         {
+            this.ValidateWrite(size);
             return this.buffer.AsSpan(this.WritePos, this.Size);
         }
 
@@ -463,6 +453,43 @@ namespace Microsoft.Azure.Amqp
             this.buffer = segment.Array;
             this.start = this.read = segment.Offset;
             this.write = this.end = segment.Offset + segment.Count;
+        }
+
+        void GrowBuffer(int dataSize)
+        {
+            if (this.references != 1)
+            {
+                throw new InvalidOperationException("Cannot grow the current buffer because it has more than one references");
+            }
+
+            int newSize = Math.Max(this.Capacity * 2, this.Capacity + dataSize);
+            ManagedBuffer newBuffer;
+            if (this.bufferManager != null)
+            {
+                newBuffer = ByteBuffer.AllocateBuffer(newSize, this.bufferManager);
+            }
+            else
+            {
+                newBuffer = new ManagedBuffer(new byte[newSize], null);
+            }
+
+            System.Buffer.BlockCopy(this.buffer, this.start, newBuffer.Buffer, 0, this.Capacity);
+
+            int consumed = this.read - this.start;
+            int written = this.write - this.start;
+
+            this.start = 0;
+            this.read = consumed;
+            this.write = written;
+            this.end = newSize;
+
+            if (this.bufferManager != null)
+            {
+                this.bufferManager.ReturnBuffer(this.buffer);
+            }
+
+            this.buffer = newBuffer.Buffer;
+            this.bufferManager = newBuffer.BufferManager;
         }
 
         readonly struct ManagedBuffer

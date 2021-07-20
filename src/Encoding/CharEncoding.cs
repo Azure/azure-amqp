@@ -3,125 +3,101 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    using System;
-    using System.Buffers.Binary;
-    using System.Collections.Generic;
+    using UTF32Encoding = System.Text.UTF32Encoding;
 
-    sealed class CharEncoding : PrimitiveEncoding<char>
+    sealed class CharEncoding : EncodingBase<char>
     {
+        static readonly UTF32Encoding AmqpUTF32 = new UTF32Encoding(true, false);
+
         public CharEncoding()
-            : base(FormatCode.Char)
+            : base(FormatCode.Char, FixedWidth.Char)
         {
         }
 
-        public static int GetEncodeSize(char? value)
+        public static int GetEncodeSize(char value)
         {
-            return value.HasValue ? FixedWidth.CharEncoded : FixedWidth.NullEncoded;
+            return FixedWidth.CharEncoded;
         }
 
-        public static void Encode(char? value, ByteBuffer buffer)
+        public static void Encode(char value, ByteBuffer buffer)
         {
-            if (value.HasValue)
-            {
-                AmqpBitConverter.WriteUByte(buffer, FormatCode.Char);
-                AmqpBitConverter.WriteInt(buffer, char.ConvertToUtf32(new string(value.Value, 1), 0));
-            }
-            else
-            {
-                AmqpEncoding.EncodeNull(buffer);
-            }
+            AmqpBitConverter.WriteUByte(buffer, FormatCode.Char);
+            FastEncode(value, buffer);
         }
 
-        public static char? Decode(ByteBuffer buffer, FormatCode formatCode)
+        public static char Decode(ByteBuffer buffer, FormatCode formatCode)
         {
-            if (formatCode == 0 && (formatCode = AmqpEncoding.ReadFormatCode(buffer)) == FormatCode.Null)
-            {
-                return null;
-            }
-
-            int intValue = AmqpBitConverter.ReadInt(buffer);
-            string value = char.ConvertFromUtf32(intValue);
-            if (value.Length > 1)
-            {
-                throw new ArgumentOutOfRangeException(CommonResources.ErrorConvertingToChar);
-            }
-
-            return value[0];
+            return FastDecode(buffer, formatCode);
         }
 
-        public override int GetObjectEncodeSize(object value, bool arrayEncoding)
+        public override int GetArrayValueSize(char[] array)
         {
-            return arrayEncoding ? FixedWidth.Char : CharEncoding.GetEncodeSize((char)value);
+            return FixedWidth.Char * array.Length;
         }
 
-        public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
+        public override void WriteArrayValue(char[] array, ByteBuffer buffer)
         {
-            if (arrayEncoding)
-            {
-                AmqpBitConverter.WriteInt(buffer, char.ConvertToUtf32(new string((char)value, 1), 0));
-            }
-            else
-            {
-                CharEncoding.Encode((char)value, buffer);
-            }
+            int size = FixedWidth.Char * array.Length;
+            buffer.ValidateWrite(size);
+            AmqpUTF32.GetBytes(array, 0, array.Length, buffer.Buffer, buffer.WritePos);
+            buffer.Append(size);
         }
 
-        public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
+        public override char[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, char[] array)
         {
-            return CharEncoding.Decode(buffer, formatCode);
-        }
-
-        public override int GetArrayEncodeSize(IList<char> value)
-        {
-            return FixedWidth.Char * value.Count;
-        }
-
-        public override void EncodeArray(IList<char> value, ByteBuffer buffer)
-        {
-            int byteCount = FixedWidth.Char * value.Count;
-
-            buffer.Validate(write: true, byteCount);
-
-            Span<byte> destination = buffer.GetWriteSpan();
-
-            if (value is char[] charArray)
-            {
-                // fast-path for char[] so the bounds checks can be elided
-                for (int i = 0; i < charArray.Length; i++)
-                {
-                    // There is probably a more efficient way but let's go with this one for now
-                    BinaryPrimitives.WriteInt32BigEndian(destination.Slice(FixedWidth.Char * i), char.ConvertToUtf32(new string(charArray[i], 1), 0));
-                }
-            }
-            else
-            {
-                IReadOnlyList<char> listValue = (IReadOnlyList<char>)value;
-                for (int i = 0; i < listValue.Count; i++)
-                {
-                    // There is probably a more efficient way but let's go with this one for now
-                    BinaryPrimitives.WriteInt32BigEndian(destination.Slice(FixedWidth.Char * i), char.ConvertToUtf32(new string(listValue[i], 1), 0));
-                }
-            }
-
-            buffer.Append(byteCount);
-        }
-
-        public override char[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
-        {
-            int byteCount = FixedWidth.Char * count;
-            buffer.Validate(write: false, byteCount);
-            ReadOnlySpan<byte> source = buffer.GetReadSpan();
-
-            char[] array = new char[count];
-            for (int i = 0; i < count; ++i)
-            {
-                // There is probably a more efficient way but let's go with this one for now
-                array[i] = char.ConvertFromUtf32(BinaryPrimitives.ReadInt32BigEndian(source.Slice(FixedWidth.Char * i)))[0];
-            }
-
-            buffer.Complete(byteCount);
-
+            int size = FixedWidth.Char * array.Length;
+            buffer.ValidateRead(size);
+            AmqpUTF32.GetChars(buffer.Buffer, buffer.Offset, size, array, 0);
+            buffer.Complete(size);
             return array;
+        }
+
+        protected override int OnGetSize(char value, int arrayIndex)
+        {
+            return arrayIndex < 0 ? FixedWidth.CharEncoded : FixedWidth.Char;
+        }
+
+        protected override void OnWrite(char value, ByteBuffer buffer, int arrayIndex)
+        {
+            if (arrayIndex < 0)
+            {
+                Encode(value, buffer);
+            }
+            else
+            {
+                FastEncode(value, buffer);
+            }
+        }
+
+        protected override char OnRead(ByteBuffer buffer, FormatCode formatCode)
+        {
+            return FastDecode(buffer, formatCode);
+        }
+
+        static unsafe void FastEncode(char value, ByteBuffer buffer)
+        {
+            buffer.ValidateWrite(FixedWidth.Char);
+            char* array = stackalloc char[1];
+            array[0] = value;
+            fixed (byte* ptr = &buffer.Buffer[buffer.WritePos])
+            {
+                AmqpUTF32.GetBytes(array, 1, ptr, FixedWidth.Char);
+            }
+
+            buffer.Append(FixedWidth.Char);
+        }
+
+        static unsafe char FastDecode(ByteBuffer buffer, FormatCode formatCode)
+        {
+            buffer.ValidateRead(FixedWidth.Char);
+            char* array = stackalloc char[1];
+            fixed (byte* ptr = &buffer.Buffer[buffer.Offset])
+            {
+                AmqpUTF32.GetChars(ptr, FixedWidth.Char, array, 1);
+            }
+
+            buffer.Complete(FixedWidth.Char);
+            return array[0];
         }
     }
 }

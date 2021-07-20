@@ -72,7 +72,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <returns>The total encode size.</returns>
         protected override int OnValueSize()
         {
-            return ListEncoding.GetValueSize(this.innerList);
+            return ListEncoding.GetEncodeSize(this.innerList);
         }
 
         /// <summary>

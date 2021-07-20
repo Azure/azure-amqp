@@ -3,145 +3,121 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    using System;
-    using System.Buffers.Binary;
-    using System.Collections.Generic;
-
-    sealed class UIntEncoding : PrimitiveEncoding<uint>
+    sealed class UIntEncoding : EncodingBase<uint>
     {
         public UIntEncoding()
             : base(FormatCode.UInt)
         {
         }
 
-        public static int GetEncodeSize(uint? value)
+        public static int GetEncodeSize(uint value)
         {
-            if (value.HasValue)
-            {
-                if (value.Value == 0)
-                {
-                    return FixedWidth.ZeroEncoded;
-                }
-
-                return value.Value <= byte.MaxValue ? FixedWidth.UByteEncoded : FixedWidth.UIntEncoded;
-            }
-
-            return FixedWidth.NullEncoded;
+            return value == 0u ? FixedWidth.FormatCode : (value <= byte.MaxValue ? FixedWidth.UByteEncoded : FixedWidth.UIntEncoded);
         }
 
-        public static void Encode(uint? value, ByteBuffer buffer)
+        public static void Encode(uint value, ByteBuffer buffer)
         {
-            if (value.HasValue)
+            if (value == 0u)
             {
-                if (value == 0)
-                {
-                    AmqpBitConverter.WriteUByte(buffer, FormatCode.UInt0);
-                }
-                else if (value.Value <= byte.MaxValue)
-                {
-                    AmqpBitConverter.WriteUByte(buffer, FormatCode.SmallUInt);
-                    AmqpBitConverter.WriteUByte(buffer, (byte)value.Value);
-                }
-                else
-                {
-                    AmqpBitConverter.WriteUByte(buffer, FormatCode.UInt);
-                    AmqpBitConverter.WriteUInt(buffer, value.Value);
-                }
+                AmqpBitConverter.WriteUByte(buffer, FormatCode.UInt0);
+            }
+            else if (value <= byte.MaxValue)
+            {
+                AmqpBitConverter.Write(buffer, FormatCode.SmallUInt, (byte)value);
             }
             else
             {
-                AmqpEncoding.EncodeNull(buffer);
+                AmqpBitConverter.Write(buffer, FormatCode.UInt, value);
             }
         }
 
-        public static uint? Decode(ByteBuffer buffer, FormatCode formatCode)
+        public static uint Decode(ByteBuffer buffer, FormatCode formatCode)
         {
-            if (formatCode == 0 && (formatCode = AmqpEncoding.ReadFormatCode(buffer)) == FormatCode.Null)
-            {
-                return null;
-            }
-
-            VerifyFormatCode(formatCode, buffer.Offset, FormatCode.UInt, FormatCode.SmallUInt, FormatCode.UInt0);
             if (formatCode == FormatCode.UInt0)
             {
-                return 0;
+                return 0u;
+            }
+            else if (formatCode == FormatCode.SmallUInt)
+            {
+                return AmqpBitConverter.ReadUByte(buffer);
+            }
+            else if (formatCode == FormatCode.UInt)
+            {
+                return AmqpBitConverter.ReadUInt(buffer);
             }
 
-            return formatCode == FormatCode.SmallUInt ?
-                AmqpBitConverter.ReadUByte(buffer) :
-                AmqpBitConverter.ReadUInt(buffer);
+            throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
         }
 
-        public override int GetObjectEncodeSize(object value, bool arrayEncoding)
+        public override int GetArrayValueSize(uint[] array)
         {
-            return arrayEncoding ? FixedWidth.UInt : UIntEncoding.GetEncodeSize((uint)value);
+            return FixedWidth.UInt * array.Length;
         }
 
-        public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
+        public override void WriteArrayValue(uint[] array, ByteBuffer buffer)
         {
-            if (arrayEncoding)
+            int size = this.GetArrayValueSize(array);
+            buffer.ValidateWrite(size);
+            for (int i = 0, pos = buffer.WritePos; i < array.Length; i++, pos += FixedWidth.UInt)
             {
-                AmqpBitConverter.WriteUInt(buffer, (uint)value);
+                AmqpBitConverter.WriteUInt(buffer.Buffer, pos, array[i]);
             }
-            else
+
+            buffer.Append(size);
+        }
+
+        public override uint[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, uint[] array)
+        {
+            if (formatCode == FormatCode.UInt0)
             {
-                UIntEncoding.Encode((uint)value, buffer);
+                return array;
             }
-        }
 
-        public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
-        {
-            return UIntEncoding.Decode(buffer, formatCode);
-        }
-
-        public override int GetArrayEncodeSize(IList<uint> value)
-        {
-            return FixedWidth.UInt * value.Count;
-        }
-
-        public override void EncodeArray(IList<uint> value, ByteBuffer buffer)
-        {
-            int byteCount = FixedWidth.UInt * value.Count;
-
-            buffer.Validate(write: true, byteCount);
-
-            Span<byte> destination = buffer.GetWriteSpan();
-
-            if (value is uint[] intArray)
+            AmqpEncoding.VerifyFormatCode(formatCode, buffer.Offset, FormatCode.SmallUInt, FormatCode.UInt);
+            int size;
+            if (formatCode == FormatCode.SmallUInt)
             {
-                // fast-path for int[] so the bounds checks can be elided
-                for (int i = 0; i < intArray.Length; i++)
+                size = array.Length;
+                buffer.ValidateRead(size);
+                for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos++)
                 {
-                    BinaryPrimitives.WriteUInt32BigEndian(destination.Slice(FixedWidth.UInt * i), intArray[i]);
+                    array[i] = buffer.Buffer[pos];
                 }
             }
             else
             {
-                IReadOnlyList<uint> listValue = (IReadOnlyList<uint>)value;
-                for (int i = 0; i < listValue.Count; i++)
+                size = FixedWidth.UInt * array.Length;
+                buffer.ValidateRead(size);
+                for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos += FixedWidth.UInt)
                 {
-                    BinaryPrimitives.WriteUInt32BigEndian(destination.Slice(FixedWidth.UInt * i), listValue[i]);
+                    array[i] = AmqpBitConverter.ReadUInt(buffer.Buffer, pos, FixedWidth.UInt);
                 }
             }
 
-            buffer.Append(byteCount);
-        }
-
-        public override uint[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
-        {
-            int byteCount = FixedWidth.UInt * count;
-            buffer.Validate(write: false, byteCount);
-            ReadOnlySpan<byte> source = buffer.GetReadSpan();
-
-            uint[] array = new uint[count];
-            for (int i = 0; i < count; ++i)
-            {
-                array[i] = BinaryPrimitives.ReadUInt32BigEndian(source.Slice(FixedWidth.UInt * i));
-            }
-
-            buffer.Complete(byteCount);
-
+            buffer.Complete(size);
             return array;
+        }
+
+        protected override int OnGetSize(uint value, int arrayIndex)
+        {
+            return arrayIndex < 0 ? GetEncodeSize(value) : FixedWidth.UInt;
+        }
+
+        protected override void OnWrite(uint value, ByteBuffer buffer, int arrayIndex)
+        {
+            if (arrayIndex < 0)
+            {
+                Encode(value, buffer);
+            }
+            else
+            {
+                AmqpBitConverter.WriteUInt(buffer, value);
+            }
+        }
+
+        protected override uint OnRead(ByteBuffer buffer, FormatCode formatCode)
+        {
+            return Decode(buffer, formatCode);
         }
     }
 }

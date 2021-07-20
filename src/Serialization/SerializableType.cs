@@ -66,7 +66,7 @@ namespace Microsoft.Azure.Amqp.Serialization
         internal static SerializableType CreatePrimitiveType(Type type)
         {
             // encoder is pre-determined
-            EncodingBase encoder = AmqpEncoding.GetEncoding(type);
+            IEncoding encoder = AmqpEncoding.GetEncoding(type);
             return new Primitive(type, encoder);
         }
 
@@ -93,9 +93,9 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         internal sealed class Primitive : SerializableType
         {
-            readonly EncodingBase encoder;
+            readonly IEncoding encoder;
 
-            public Primitive(Type type, EncodingBase encoder)
+            public Primitive(Type type, IEncoding encoder)
                 : base(null, type)
             {
                 this.AmqpType = AmqpType.Primitive;
@@ -104,12 +104,18 @@ namespace Microsoft.Azure.Amqp.Serialization
 
             public override void WriteObject(ByteBuffer buffer, object value)
             {
-                this.encoder.EncodeObject(value, false, buffer);
+                this.encoder.Write(value, buffer, -1);
             }
 
             public override object ReadObject(ByteBuffer buffer)
             {
-                return this.encoder.DecodeObject(buffer, 0);
+                FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+                if (formatCode == FormatCode.Null)
+                {
+                    return null;
+                }
+
+                return this.encoder.Read(buffer, formatCode);
             }
         }
 
@@ -135,25 +141,23 @@ namespace Microsoft.Azure.Amqp.Serialization
 
             public override object ReadObject(ByteBuffer buffer)
             {
-                buffer.Validate(false, FixedWidth.FormatCode);
+                buffer.ValidateRead(FixedWidth.FormatCode);
                 FormatCode formatCode = buffer.Buffer[buffer.Offset];
                 if (formatCode == FormatCode.Null)
                 {
                     buffer.Complete(FixedWidth.FormatCode);
                     return null;
                 }
-                else
-                {
-                    object container = this.CreateInstance();
-                    ((IAmqpSerializable)container).Decode(buffer);
-                    return container;
-                }
+
+                object container = this.CreateInstance();
+                ((IAmqpSerializable)container).Decode(buffer);
+                return container;
             }
         }
 
         internal sealed class Converted : SerializableType
         {
-            readonly EncodingBase encoder;
+            readonly IEncoding encoder;
             readonly Type source;
             readonly Type target;
             readonly Func<object, Type, object> getTarget;
@@ -189,7 +193,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 }
                 else
                 {
-                    this.encoder.EncodeObject(this.getTarget(value, this.target), false, buffer);
+                    this.encoder.Write(this.getTarget(value, this.target), buffer, -1);
                 }
             }
 
@@ -357,13 +361,8 @@ namespace Microsoft.Azure.Amqp.Serialization
                     return;
                 }
 
-                if (formatCode != FormatCode.List32 && formatCode != FormatCode.List8)
-                {
-                    throw new AmqpException(AmqpErrorCode.InvalidField, AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
-                }
-
-                encodeWidth = formatCode == FormatCode.List8 ? FixedWidth.UByte : FixedWidth.UInt;
                 AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.List8, FormatCode.List32, out size, out count);
+                encodeWidth = formatCode == FormatCode.List8 ? FixedWidth.UByte : FixedWidth.UInt;
                 effectiveType = this;
             }
 
@@ -436,13 +435,8 @@ namespace Microsoft.Azure.Amqp.Serialization
             protected override void Initialize(ByteBuffer buffer, FormatCode formatCode,
                 out int size, out int count, out int encodeWidth, out Collection effectiveType)
             {
-                if (formatCode != FormatCode.Map32 && formatCode != FormatCode.Map8)
-                {
-                    throw new AmqpException(AmqpErrorCode.InvalidField, AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
-                }
-
-                encodeWidth = formatCode == FormatCode.Map8 ? FixedWidth.UByte : FixedWidth.UInt;
                 AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.Map8, FormatCode.Map32, out size, out count);
+                encodeWidth = formatCode == FormatCode.Map8 ? FixedWidth.UByte : FixedWidth.UInt;
                 effectiveType = this;
             }
 
@@ -522,7 +516,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 AmqpBitConverter.WriteUByte(buffer, (byte)FormatCode.Described);
                 if (this.descriptorCode != null)
                 {
-                    ULongEncoding.Encode(this.descriptorCode, buffer);
+                    ULongEncoding.Encode(this.descriptorCode.Value, buffer);
                 }
                 else
                 {

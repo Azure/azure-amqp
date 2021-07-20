@@ -722,6 +722,124 @@
                 new DescribedType[] { described4, described4, described4, described4 },
                 (n1, n2) => { });
         }
+        
+        [Fact]
+        public void AmqpCodecArraySmallFixedTest()
+        {
+            // array8: uint0
+            {
+                byte[] buffer = new byte[] { 0xe0, 0x02, 0x11, 0x43 };
+                var array = AmqpCodec.DecodeArray<uint>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(0x11, array.Length);
+                Assert.Equal(0u, array[3]);
+            }
+            // array32: uint0
+            {
+                byte[] buffer = new byte[] { 0xf0, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x11, 0x43 };
+                var array = AmqpCodec.DecodeArray<uint>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(0x11, array.Length);
+                Assert.Equal(0u, array[3]);
+            }
+            // array8: ulong0
+            {
+                byte[] buffer = new byte[] { 0xe0, 0x02, 0x11, 0x44 };
+                var array = AmqpCodec.DecodeArray<ulong>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(0x11, array.Length);
+                Assert.Equal(0UL, array[3]);
+            }
+            // array32: ulong0
+            {
+                byte[] buffer = new byte[] { 0xf0, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x11, 0x44 };
+                var array = AmqpCodec.DecodeArray<ulong>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(0x11, array.Length);
+                Assert.Equal(0UL, array[3]);
+            }
+            // array8: small-uint
+            {
+                byte[] buffer = new byte[] { 0xe0, 0x05, 0x03, 0x52, 0x01, 0x7F, 0xFF };
+                var array = AmqpCodec.DecodeArray<uint>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(0x03, array.Length);
+                Assert.Equal(0x7Fu, array[1]);
+            }
+            // array32: small-uint
+            {
+                byte[] buffer = new byte[] { 0xf0, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x03, 0x52, 0x01, 0x7F, 0xFF };
+                var array = AmqpCodec.DecodeArray<uint>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(0x03, array.Length);
+                Assert.Equal(0x7Fu, array[1]);
+            }
+            // array8: small-int
+            {
+                byte[] buffer = new byte[] { 0xe0, 0x05, 0x03, 0x54, 0x01, 0x7F, 0xFF };
+                var array = AmqpCodec.DecodeArray<int>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(0x03, array.Length);
+                Assert.Equal(0x7F, array[1]);
+            }
+            // array32: small-int
+            {
+                byte[] buffer = new byte[] { 0xf0, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x03, 0x54, 0x01, 0x7F, 0xFF };
+                var array = AmqpCodec.DecodeArray<int>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(0x03, array.Length);
+                Assert.Equal(0x7F, array[1]);
+            }
+            // array8: small-long
+            {
+                byte[] buffer = new byte[] { 0xe0, 0x05, 0x03, 0x55, 0x01, 0x7F, 0xFF };
+                var array = AmqpCodec.DecodeArray<long>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(0x03, array.Length);
+                Assert.Equal(0x7FL, array[1]);
+            }
+            // array32: small-long
+            {
+                byte[] buffer = new byte[] { 0xf0, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x03, 0x55, 0x01, 0x7F, 0xFF };
+                var array = AmqpCodec.DecodeArray<long>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(0x03, array.Length);
+                Assert.Equal(0x7FL, array[1]);
+            }
+            // array8: small-ulong
+            {
+                byte[] buffer = new byte[] { 0xe0, 0x05, 0x03, 0x53, 0x01, 0x7F, 0xFF };
+                var array = AmqpCodec.DecodeArray<ulong>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(0x03, array.Length);
+                Assert.Equal(0x7FUL, array[1]);
+            }
+            // array32: small-ulong
+            {
+                byte[] buffer = new byte[] { 0xf0, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x03, 0x53, 0x01, 0x7F, 0xFF };
+                var array = AmqpCodec.DecodeArray<ulong>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(0x03, array.Length);
+                Assert.Equal(0x7FUL, array[1]);
+            }
+        }
+
+        [Fact]
+        public void AmqpCodecArraySmallVariableTest()
+        {
+            // array8: bin8
+            {
+                byte[] buffer = new byte[] { 0xe0, 0x09, 0x02, 0xa0, 0x02, 0xaa, 0x0b, 0x03, 0x33, 0x22, 0x00 };
+                var array = AmqpCodec.DecodeArray<ArraySegment<byte>>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(0x02, array.Length);
+                Assert.Equal(2, array[0].Count);
+                Assert.Equal(3, array[1].Count);
+            }
+            // array32: str8
+            {
+                byte[] buffer = new byte[] { 0xe0, 0x09, 0x02, 0xa1, 0x02, 0x98, 0x99, 0x03, 0x33, 0x34, 0x35 };
+                var array = AmqpCodec.DecodeArray<string>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(2, array.Length);
+                Assert.Equal(2, array[0].Length);
+                Assert.Equal(3, array[1].Length);
+            }
+            // array8: sym8
+            {
+                byte[] buffer = new byte[] { 0xe0, 0x09, 0x02, 0xa3, 0x02, 0x98, 0x99, 0x03, 0x33, 0x34, 0x35 };
+                var array = AmqpCodec.DecodeArray<AmqpSymbol>(new ByteBuffer(buffer, 0, buffer.Length));
+                Assert.Equal(2, array.Length);
+                Assert.Equal(2, array[0].Value.Length);
+                Assert.Equal(3, array[1].Value.Length);
+            }
+        }
 
         [Fact]
         public void AmqpSerializerListEncodingTest()
@@ -881,14 +999,31 @@
 
             DescribedType describedType = new DescribedType(descriptor2, new List<object>(values2));
             AmqpEncoding.EncodeObject(describedType, buffer);
+
+            int size = AmqpEncoding.GetObjectEncodeSize(describedType);
+            // testing buffer auto grow
+
+            using (ByteBuffer temp = new ByteBuffer(size / 2, true))
+            {
+                AmqpEncoding.EncodeObject(describedType, temp);
+                AmqpEncoding.DecodeObject(temp);
+            }
+
+            // testing encode size
+            using (ByteBuffer temp = new ByteBuffer(size, false))
+            {
+                AmqpEncoding.EncodeObject(describedType, temp);
+                AmqpEncoding.DecodeObject(temp);
+            }
         }
 
         static void ArrayTest<T>(T[] array, Action<T, T> validate)
         {
             Debug.WriteLine(string.Format("Array testing for type {0}", typeof(T).ToString()));
-            byte[] workBuffer = new byte[4096];
-            ByteBuffer buffer = null;
-            AmqpCodec.EncodeArray(array, buffer = new ByteBuffer(workBuffer));
+            int size = AmqpCodec.GetArrayEncodeSize(array);
+            ByteBuffer buffer = new ByteBuffer(128, true);
+            AmqpCodec.EncodeArray(array, buffer);
+            Assert.True(buffer.Length <= size);
 
             T[] decodedArray = AmqpCodec.DecodeArray<T>(buffer);
             Assert.True(array.Length == decodedArray.Length, "Count not equal.");

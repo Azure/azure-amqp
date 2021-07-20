@@ -37,17 +37,17 @@ namespace Microsoft.Azure.Amqp.Framing
 
         internal override int GetValueEncodeSize()
         {
-            return BinaryEncoding.GetEncodeSize(this.Segment);
+            return AmqpCodec.GetBinaryEncodeSize(this.Segment);
         }
 
         internal override void EncodeValue(ByteBuffer buffer)
         {
-            BinaryEncoding.Encode(this.Segment, buffer);
+            AmqpCodec.EncodeBinary(this.Segment, buffer);
         }
 
         internal override void DecodeValue(ByteBuffer buffer)
         {
-            this.Segment = BinaryEncoding.Decode(buffer, 0);
+            this.Segment = AmqpCodec.DecodeBinary(buffer);
         }
 
         /// <summary>

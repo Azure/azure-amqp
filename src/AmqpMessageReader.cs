@@ -144,7 +144,7 @@ namespace Microsoft.Azure.Amqp
                             section = info.Ctor();
                             if (section.DescriptorCode == Data.Code)
                             {
-                                section.Value = BinaryEncoding.Decode(buffer, 0, false);
+                                section.Value = AmqpCodec.DecodeBinary(buffer, false);
                             }
                             else
                             {

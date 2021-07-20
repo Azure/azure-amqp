@@ -90,7 +90,7 @@ namespace Microsoft.Azure.Amqp.Framing
                 formatCode == FormatCode.ULong0 ||
                 formatCode == FormatCode.SmallULong)
             {
-                code = ULongEncoding.Decode(buffer, formatCode).Value;
+                code = ULongEncoding.Decode(buffer, formatCode);
             }
             else
             {

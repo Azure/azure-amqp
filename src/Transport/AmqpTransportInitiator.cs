@@ -299,13 +299,15 @@ namespace Microsoft.Azure.Amqp.Transport
 
         sealed class ConnectAsyncResult : TimeoutAsyncResult<string>
         {
+            // Inner initiator may also have a timer, so don't compete with them.
+            const int BufferedTimeInTicks = 5000 * 10000;
             static readonly Action<TransportAsyncCallbackArgs> onConnect = OnConnect;
             readonly AmqpTransportInitiator initiator;
             readonly TransportAsyncCallbackArgs args;
 
             public ConnectAsyncResult(AmqpTransportInitiator initiator,
                 TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
-                : base(timeout, cancellationToken, callback, state)
+                : base(GetBufferedTimeout(timeout), cancellationToken, callback, state)
             {
                 this.initiator = initiator;
                 this.args = new TransportAsyncCallbackArgs();
@@ -346,6 +348,16 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
 
                 base.CompleteOnTimer();
+            }
+
+            static TimeSpan GetBufferedTimeout(TimeSpan timeout)
+            {
+                if (timeout.Ticks < TimeSpan.MaxValue.Ticks - BufferedTimeInTicks)
+                {
+                    return TimeSpan.FromTicks(timeout.Ticks + BufferedTimeInTicks);
+                }
+
+                return TimeSpan.MaxValue;
             }
 
             static void OnConnect(TransportAsyncCallbackArgs args)

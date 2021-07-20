@@ -12,141 +12,150 @@ namespace Microsoft.Azure.Amqp.Encoding
     /// </summary>
     public static class AmqpEncoding
     {
-        static Dictionary<Type, EncodingBase> encodingsByType;
-        static Dictionary<FormatCode, EncodingBase> encodingsByCode;
+        static Dictionary<Type, IEncoding> encodingsByType;
+        static Dictionary<FormatCode, IEncoding> encodingsByCode;
 
-        static BooleanEncoding booleanEncoding = new BooleanEncoding();
-        static UByteEncoding ubyteEncoding = new UByteEncoding();
-        static UShortEncoding ushortEncoding = new UShortEncoding();
-        static UIntEncoding uintEncoding = new UIntEncoding();
-        static ULongEncoding ulongEncoding = new ULongEncoding();
-        static ByteEncoding byteEncoding = new ByteEncoding();
-        static ShortEncoding shortEncoding = new ShortEncoding();
-        static IntEncoding intEncoding = new IntEncoding();
-        static LongEncoding longEncoding = new LongEncoding();
-        static FloatEncoding floatEncoding = new FloatEncoding();
-        static DoubleEncoding doubleEncoding = new DoubleEncoding();
-        static DecimalEncoding decimal128Encoding = new DecimalEncoding();
-        static CharEncoding charEncoding = new CharEncoding();
-        static TimeStampEncoding timeStampEncoding = new TimeStampEncoding();
-        static UuidEncoding uuidEncoding = new UuidEncoding();
-        static BinaryEncoding binaryEncoding = new BinaryEncoding();
-        static SymbolEncoding symbolEncoding = new SymbolEncoding();
-        static StringEncoding stringEncoding = new StringEncoding();
-        static ListEncoding listEncoding = new ListEncoding();
-        static MapEncoding mapEncoding = new MapEncoding();
-        static ArrayEncoding arrayEncoding = new ArrayEncoding();
-        static DescribedEncoding describedTypeEncoding = new DescribedEncoding();
+        internal static BooleanEncoding Boolean = new BooleanEncoding();
+        internal static UByteEncoding UByte = new UByteEncoding();
+        internal static UShortEncoding UShort = new UShortEncoding();
+        internal static UIntEncoding UInt = new UIntEncoding();
+        internal static ULongEncoding ULong = new ULongEncoding();
+        internal static ByteEncoding Byte = new ByteEncoding();
+        internal static ShortEncoding Short = new ShortEncoding();
+        internal static IntEncoding Int = new IntEncoding();
+        internal static LongEncoding Long = new LongEncoding();
+        internal static FloatEncoding Float = new FloatEncoding();
+        internal static DoubleEncoding Double = new DoubleEncoding();
+        internal static DecimalEncoding Decimal = new DecimalEncoding();
+        internal static CharEncoding Char = new CharEncoding();
+        internal static TimeStampEncoding Timestamp = new TimeStampEncoding();
+        internal static UuidEncoding Uuid = new UuidEncoding();
+        internal static BinaryEncoding Binary = new BinaryEncoding();
+        internal static SymbolEncoding Symbol = new SymbolEncoding();
+        internal static StringEncoding String = new StringEncoding();
+        internal static ListEncoding List = new ListEncoding();
+        internal static MapEncoding Map = new MapEncoding();
+        internal static ArrayEncoding Array = new ArrayEncoding();
+        internal static DescribedEncoding Described = new DescribedEncoding();
 
         static AmqpEncoding()
         {
-            encodingsByType = new Dictionary<Type, EncodingBase>()
+            encodingsByType = new Dictionary<Type, IEncoding>()
             {
-                { typeof(bool),             booleanEncoding },
-                { typeof(byte),             ubyteEncoding },
-                { typeof(ushort),           ushortEncoding },
-                { typeof(uint),             uintEncoding },
-                { typeof(ulong),            ulongEncoding },
-                { typeof(sbyte),            byteEncoding },
-                { typeof(short),            shortEncoding },
-                { typeof(int),              intEncoding },
-                { typeof(long),             longEncoding },
-                { typeof(float),            floatEncoding },
-                { typeof(double),           doubleEncoding },
-                { typeof(decimal),          decimal128Encoding },
-                { typeof(char),             charEncoding },
-                { typeof(DateTime),         timeStampEncoding },
-                { typeof(Guid),             uuidEncoding },
-                { typeof(ArraySegment<byte>), binaryEncoding },
-                { typeof(AmqpSymbol),       symbolEncoding },
-                { typeof(string),           stringEncoding },
-                { typeof(AmqpMap),          mapEncoding },
+                { typeof(bool),             Boolean },
+                { typeof(byte),             UByte },
+                { typeof(ushort),           UShort },
+                { typeof(uint),             UInt },
+                { typeof(ulong),            ULong },
+                { typeof(sbyte),            Byte },
+                { typeof(short),            Short },
+                { typeof(int),              Int },
+                { typeof(long),             Long },
+                { typeof(float),            Float },
+                { typeof(double),           Double },
+                { typeof(decimal),          Decimal },
+                { typeof(char),             Char },
+                { typeof(DateTime),         Timestamp },
+                { typeof(Guid),             Uuid },
+                { typeof(ArraySegment<byte>), Binary },
+                { typeof(AmqpSymbol),       Symbol },
+                { typeof(string),           String },
+                { typeof(AmqpMap),          Map },
             };
 
-            encodingsByCode = new Dictionary<FormatCode, EncodingBase>()
+            encodingsByCode = new Dictionary<FormatCode, IEncoding>()
             {
-                { FormatCode.BooleanFalse,  booleanEncoding },
-                { FormatCode.BooleanTrue,   booleanEncoding },
-                { FormatCode.Boolean,       booleanEncoding },
-                { FormatCode.UByte,         ubyteEncoding },
-                { FormatCode.UShort,        ushortEncoding },
-                { FormatCode.UInt,          uintEncoding },
-                { FormatCode.SmallUInt,     uintEncoding },
-                { FormatCode.UInt0,         uintEncoding },
-                { FormatCode.ULong,         ulongEncoding },
-                { FormatCode.SmallULong,    ulongEncoding },
-                { FormatCode.ULong0,        ulongEncoding },
-                { FormatCode.Byte,          byteEncoding },
-                { FormatCode.Short,         shortEncoding },
-                { FormatCode.Int,           intEncoding },
-                { FormatCode.SmallInt,      intEncoding },
-                { FormatCode.Long,          longEncoding },
-                { FormatCode.SmallLong,     longEncoding },
-                { FormatCode.Float,         floatEncoding },
-                { FormatCode.Double,        doubleEncoding },
-                { FormatCode.Decimal128,    decimal128Encoding },
-                { FormatCode.Char,          charEncoding },
-                { FormatCode.TimeStamp,     timeStampEncoding },
-                { FormatCode.Uuid,          uuidEncoding },
-                { FormatCode.Binary8,       binaryEncoding },
-                { FormatCode.Binary32,      binaryEncoding },
-                { FormatCode.Symbol8,       symbolEncoding },
-                { FormatCode.Symbol32,      symbolEncoding },
-                { FormatCode.String8Utf8,   stringEncoding },
-                { FormatCode.String32Utf8,  stringEncoding },
-                { FormatCode.List0,         listEncoding },
-                { FormatCode.List8,         listEncoding },
-                { FormatCode.List32,        listEncoding },
-                { FormatCode.Map8,          mapEncoding },
-                { FormatCode.Map32,         mapEncoding },
-                { FormatCode.Array8,        arrayEncoding },
-                { FormatCode.Array32,       arrayEncoding },
-                { FormatCode.Described,     describedTypeEncoding }
+                { FormatCode.BooleanFalse,  Boolean },
+                { FormatCode.BooleanTrue,   Boolean },
+                { FormatCode.Boolean,       Boolean },
+                { FormatCode.UByte,         UByte },
+                { FormatCode.UShort,        UShort },
+                { FormatCode.UInt,          UInt },
+                { FormatCode.SmallUInt,     UInt },
+                { FormatCode.UInt0,         UInt },
+                { FormatCode.ULong,         ULong },
+                { FormatCode.SmallULong,    ULong },
+                { FormatCode.ULong0,        ULong },
+                { FormatCode.Byte,          Byte },
+                { FormatCode.Short,         Short },
+                { FormatCode.Int,           Int },
+                { FormatCode.SmallInt,      Int },
+                { FormatCode.Long,          Long },
+                { FormatCode.SmallLong,     Long },
+                { FormatCode.Float,         Float },
+                { FormatCode.Double,        Double },
+                { FormatCode.Decimal128,    Decimal },
+                { FormatCode.Char,          Char },
+                { FormatCode.TimeStamp,     Timestamp },
+                { FormatCode.Uuid,          Uuid },
+                { FormatCode.Binary8,       Binary },
+                { FormatCode.Binary32,      Binary },
+                { FormatCode.Symbol8,       Symbol },
+                { FormatCode.Symbol32,      Symbol },
+                { FormatCode.String8Utf8,   String },
+                { FormatCode.String32Utf8,  String },
+                { FormatCode.List0,         List },
+                { FormatCode.List8,         List },
+                { FormatCode.List32,        List },
+                { FormatCode.Map8,          Map },
+                { FormatCode.Map32,         Map },
+                { FormatCode.Array8,        Array },
+                { FormatCode.Array32,       Array },
+                { FormatCode.Described,     Described }
             };
         }
 
-        internal static EncodingBase GetEncoding(object value)
+        internal static IEncoding GetEncoding(FormatCode formatCode)
         {
-            return GetEncoding(value.GetType());
-        }
-
-        /// <summary>
-        /// Gets a <see cref="EncodingBase"/> for a given type.
-        /// </summary>
-        /// <param name="type">The type.</param>
-        /// <returns>A <see cref="EncodingBase"/> for the type.</returns>
-        internal static EncodingBase GetEncoding(Type type)
-        {
-            EncodingBase encoding = null;
-            if (encodingsByType.TryGetValue(type, out encoding))
+            if (encodingsByCode.TryGetValue(formatCode, out IEncoding encoding))
             {
                 return encoding;
             }
-            else if (type.IsArray)
+
+            throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, formatCode));
+        }
+
+        internal static EncodingBase<T> GetEncoding<T>()
+        {
+            return (EncodingBase<T>)GetEncoding(typeof(T));
+        }
+
+        internal static bool TryGetEncoding(Type type, out IEncoding encoding)
+        {
+            if (encodingsByType.TryGetValue(type, out encoding))
             {
-                return arrayEncoding;
+                return true;
             }
-            else if (typeof(IList).IsAssignableFrom(type))
+
+            if (type.IsArray)
             {
-                return listEncoding;
+                encoding = Array;
+                return true;
             }
-            else if (typeof(DescribedType).IsAssignableFrom(type))
+
+            if (typeof(IList).IsAssignableFrom(type))
             {
-                return describedTypeEncoding;
+                encoding = List;
+                return true;
+            }
+
+            if (typeof(DescribedType).IsAssignableFrom(type))
+            {
+                encoding = Described;
+                return true;
+            }
+
+            return false;
+        }
+
+        internal static IEncoding GetEncoding(Type type)
+        {
+            if (TryGetEncoding(type, out IEncoding encoding))
+            {
+                return encoding;
             }
 
             throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, type.FullName));
-        }
-
-        internal static EncodingBase GetEncoding(FormatCode formatCode)
-        {
-            EncodingBase encoding;
-            if (encodingsByCode.TryGetValue(formatCode, out encoding))
-            {
-                return encoding;
-            }
-
-            return null;
         }
 
         internal static int GetEncodeWidthBySize(int size)
@@ -223,8 +232,8 @@ namespace Microsoft.Azure.Amqp.Encoding
                 return serializable.EncodeSize;
             }
 
-            EncodingBase encoding = GetEncoding(value);
-            return encoding.GetObjectEncodeSize(value, false);
+            IEncoding encoding = GetEncoding(value.GetType());
+            return encoding.GetSize(value);
         }
 
         internal static void EncodeNull(ByteBuffer buffer)
@@ -245,15 +254,19 @@ namespace Microsoft.Azure.Amqp.Encoding
                 return;
             }
 
-            IAmqpSerializable serializable = value as IAmqpSerializable;
-            if (serializable != null)
+            if (TryGetEncoding(value.GetType(), out IEncoding encoding))
+            {
+                encoding.Write(value, buffer, -1);
+                return;
+            }
+
+            if (value is IAmqpSerializable serializable)
             {
                 serializable.Encode(buffer);
                 return;
             }
 
-            EncodingBase encoding = GetEncoding(value);
-            encoding.EncodeObject(value, false, buffer);
+            throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, value.GetType().FullName));
         }
 
         /// <summary>
@@ -274,10 +287,10 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         internal static object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
-            EncodingBase encoding;
+            IEncoding encoding;
             if (encodingsByCode.TryGetValue(formatCode, out encoding))
             {
-                return encoding.DecodeObject(buffer, formatCode);
+                return encoding.Read(buffer, formatCode);
             }
 
             throw GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
@@ -286,6 +299,35 @@ namespace Microsoft.Azure.Amqp.Encoding
         internal static AmqpException GetEncodingException(string message)
         {
             return new AmqpException(AmqpErrorCode.InvalidField, message);
+        }
+
+        internal static void VerifyFormatCode(FormatCode formatCode, int offset, FormatCode expected)
+        {
+            if (formatCode != expected)
+            {
+                ThrowInvalidFormatCodeException(formatCode, offset);
+            }
+        }
+
+        internal static void VerifyFormatCode(FormatCode formatCode, int offset, FormatCode expected1, FormatCode expected2)
+        {
+            if (formatCode != expected1 && formatCode != expected2)
+            {
+                ThrowInvalidFormatCodeException(formatCode, offset);
+            }
+        }
+
+        internal static void VerifyFormatCode(FormatCode formatCode, int offset, FormatCode expected1, FormatCode expected2, FormatCode expected3)
+        {
+            if (formatCode != expected1 && formatCode != expected2 && formatCode != expected3)
+            {
+                ThrowInvalidFormatCodeException(formatCode, offset);
+            }
+        }
+
+        internal static void ThrowInvalidFormatCodeException(FormatCode formatCode, int offset)
+        {
+            throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, offset));
         }
     }
 }

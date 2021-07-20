@@ -99,6 +99,8 @@ namespace Microsoft.Azure.Amqp.Framing
 
         internal static ByteBuffer EncodeCommand(FrameType type, ushort channel, Performative command, int payloadSize)
         {
+            // frameSize is used to allocate a buffer. It may not be the exact encoding size.
+            // however, it should be always greater.
             int frameSize = HeaderSize;
             if (command != null)
             {
@@ -108,6 +110,7 @@ namespace Microsoft.Azure.Amqp.Framing
             frameSize += payloadSize;
 
             ByteBuffer buffer = new ByteBuffer(frameSize, false, false);
+            var sizeTracker = SizeTracker.Track(buffer);
             AmqpBitConverter.WriteUInt(buffer, (uint)frameSize);
             AmqpBitConverter.WriteUByte(buffer, DefaultDataOffset);
             AmqpBitConverter.WriteUByte(buffer, (byte)type);
@@ -118,6 +121,7 @@ namespace Microsoft.Azure.Amqp.Framing
                 AmqpCodec.EncodeSerializable(command, buffer);
             }
 
+            sizeTracker.CommitInclusive(payloadSize);
             return buffer;
         }
 

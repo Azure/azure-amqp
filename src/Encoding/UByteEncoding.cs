@@ -4,105 +4,68 @@
 namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
-    using System.Collections.Generic;
 
-    sealed class UByteEncoding : PrimitiveEncoding<byte>
+    sealed class UByteEncoding : EncodingBase<byte>
     {
         public UByteEncoding()
-            : base(FormatCode.UByte)
+            : base(FormatCode.UByte, FixedWidth.UByte)
         {
         }
 
-        public static int GetEncodeSize(byte? value)
+        public static int GetEncodeSize(byte value)
         {
-            return value.HasValue ? FixedWidth.UByteEncoded : FixedWidth.NullEncoded;
+            return FixedWidth.UByteEncoded;
         }
 
-        public static void Encode(byte? value, ByteBuffer buffer)
+        public static void Encode(byte value, ByteBuffer buffer)
         {
-            if (value.HasValue)
-            {
-                AmqpBitConverter.WriteUByte(buffer, FormatCode.UByte);
-                AmqpBitConverter.WriteUByte(buffer, value.Value);
-            }
-            else
-            {
-                AmqpEncoding.EncodeNull(buffer);
-            }
+            AmqpBitConverter.WriteUByte(buffer, FormatCode.UByte);
+            AmqpBitConverter.WriteUByte(buffer, value);
         }
 
-        public static byte? Decode(ByteBuffer buffer, FormatCode formatCode)
+        public static byte Decode(ByteBuffer buffer, FormatCode formatCode)
         {
-            if (formatCode == 0 && (formatCode = AmqpEncoding.ReadFormatCode(buffer)) == FormatCode.Null)
-            {
-                return null;
-            }
-
             return AmqpBitConverter.ReadUByte(buffer);
         }
 
-        public override int GetObjectEncodeSize(object value, bool arrayEncoding)
+        public override int GetArrayValueSize(byte[] array)
         {
-            return arrayEncoding ? FixedWidth.UByte : UByteEncoding.GetEncodeSize((byte)value);
+            return array.Length;
         }
 
-        public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
+        public override void WriteArrayValue(byte[] array, ByteBuffer buffer)
         {
-            if (arrayEncoding)
-            {
-                AmqpBitConverter.WriteUByte(buffer, (byte)value);
-            }
-            else
-            {
-                UByteEncoding.Encode((byte)value, buffer);
-            }
+            AmqpBitConverter.WriteBytes(buffer, array, 0, array.Length);
         }
 
-        public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
+        public override byte[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, byte[] array)
         {
-            return UByteEncoding.Decode(buffer, formatCode);
-        }
-
-        public override int GetArrayEncodeSize(IList<byte> value)
-        {
-            return FixedWidth.UByte * value.Count;
-        }
-
-        public override void EncodeArray(IList<byte> value, ByteBuffer buffer)
-        {
-            int byteCount = FixedWidth.UByte * value.Count;
-
-            buffer.Validate(write: true, byteCount);
-
-            Span<byte> destination = buffer.GetWriteSpan();
-
-            if (value is byte[] byteArray)
-            {
-                // fast-path for byte[] so the bounds checks can be elided
-                byteArray.AsSpan().CopyTo(destination);
-            }
-            else
-            {
-                IReadOnlyList<byte> listValue = (IReadOnlyList<byte>)value;
-                for (int i = 0; i < listValue.Count; i++)
-                {
-                    destination.Slice(FixedWidth.UByte * i)[0] = listValue[i];
-                }
-            }
-
-            buffer.Append(byteCount);
-        }
-
-        public override byte[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
-        {
-            int byteCount = FixedWidth.UByte * count;
-            buffer.Validate(write: false, byteCount);
-            ReadOnlySpan<byte> source = buffer.GetReadSpan();
-
-            byte[] array = new byte[count];
-            source.CopyTo(array);
-            buffer.Complete(byteCount);
+            buffer.ValidateRead(array.Length);
+            Buffer.BlockCopy(buffer.Buffer, buffer.Offset, array, 0, array.Length);
+            buffer.Complete(array.Length);
             return array;
+        }
+
+        protected override int OnGetSize(byte value, int arrayIndex)
+        {
+            return arrayIndex < 0 ? FixedWidth.UByteEncoded : FixedWidth.UByte;
+        }
+
+        protected override void OnWrite(byte value, ByteBuffer buffer, int arrayIndex)
+        {
+            if (arrayIndex < 0)
+            {
+                Encode(value, buffer);
+            }
+            else
+            {
+                AmqpBitConverter.WriteUByte(buffer, value);
+            }
+        }
+
+        protected override byte OnRead(ByteBuffer buffer, FormatCode formatCode)
+        {
+            return Decode(buffer, formatCode);
         }
     }
 }

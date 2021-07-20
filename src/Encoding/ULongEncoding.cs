@@ -3,145 +3,96 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    using System;
-    using System.Buffers.Binary;
-    using System.Collections.Generic;
-
-    sealed class ULongEncoding : PrimitiveEncoding<ulong>
+    sealed class ULongEncoding : EncodingBase<ulong>
     {
         public ULongEncoding()
             : base(FormatCode.ULong)
         {
         }
 
-        public static int GetEncodeSize(ulong? value)
+        public static int GetEncodeSize(ulong value)
         {
-            if (value.HasValue)
-            {
-                if (value.Value == 0)
-                {
-                    return FixedWidth.ZeroEncoded;
-                }
-
-                return value.Value <= byte.MaxValue ? FixedWidth.UByteEncoded : FixedWidth.ULongEncoded;
-            }
-
-            return FixedWidth.NullEncoded;
+            return value == 0ul ? FixedWidth.Zero : (value <= byte.MaxValue ? FixedWidth.UByteEncoded : FixedWidth.ULongEncoded);
         }
 
-        public static void Encode(ulong? value, ByteBuffer buffer)
+        public static void Encode(ulong value, ByteBuffer buffer)
         {
-            if (value.HasValue)
+            if (value == 0ul)
             {
-                if (value == 0)
-                {
-                    AmqpBitConverter.WriteUByte(buffer, FormatCode.ULong0);
-                }
-                else if (value <= byte.MaxValue)
-                {
-                    AmqpBitConverter.WriteUByte(buffer, FormatCode.SmallULong);
-                    AmqpBitConverter.WriteUByte(buffer, (byte)value.Value);
-                }
-                else
-                {
-                    AmqpBitConverter.WriteUByte(buffer, FormatCode.ULong);
-                    AmqpBitConverter.WriteULong(buffer, value.Value);
-                }
+                AmqpBitConverter.WriteUByte(buffer, FormatCode.ULong0);
+            }
+            else if (value <= byte.MaxValue)
+            {
+                AmqpBitConverter.Write(buffer, FormatCode.SmallULong, (byte)value);
             }
             else
             {
-                AmqpEncoding.EncodeNull(buffer);
+                AmqpBitConverter.WriteUByte(buffer, FormatCode.ULong);
+                AmqpBitConverter.WriteULong(buffer, value);
             }
         }
 
-        public static ulong? Decode(ByteBuffer buffer, FormatCode formatCode)
+        public static ulong Decode(ByteBuffer buffer, FormatCode formatCode)
         {
-            if (formatCode == 0 && (formatCode = AmqpEncoding.ReadFormatCode(buffer)) == FormatCode.Null)
-            {
-                return null;
-            }
-
-            VerifyFormatCode(formatCode, buffer.Offset, FormatCode.ULong, FormatCode.SmallULong, FormatCode.ULong0);
             if (formatCode == FormatCode.ULong0)
             {
-                return 0;
+                return 0ul;
             }
-
-            return formatCode == FormatCode.SmallULong ?
-                AmqpBitConverter.ReadUByte(buffer) :
-                AmqpBitConverter.ReadULong(buffer);
-        }
-
-        public override int GetObjectEncodeSize(object value, bool arrayEncoding)
-        {
-            return arrayEncoding ? FixedWidth.ULong : ULongEncoding.GetEncodeSize((ulong)value);
-        }
-
-        public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
-        {
-            if (arrayEncoding)
+            else if (formatCode == FormatCode.SmallULong)
             {
-                AmqpBitConverter.WriteULong(buffer, (ulong)value);
+                return AmqpBitConverter.ReadUByte(buffer);
             }
-            else
+            else if (formatCode == FormatCode.ULong)
             {
-                ULongEncoding.Encode((ulong)value, buffer);
+                return AmqpBitConverter.ReadULong(buffer);
+            }
+
+            throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
+        }
+
+        public override int GetArrayValueSize(ulong[] array)
+        {
+            return FixedWidth.ULong * array.Length;
+        }
+
+        public override void WriteArrayValue(ulong[] array, ByteBuffer buffer)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                AmqpBitConverter.WriteULong(buffer, array[i]);
             }
         }
 
-        public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
+        public override ulong[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, ulong[] array)
         {
-            return ULongEncoding.Decode(buffer, formatCode);
-        }
-
-        public override int GetArrayEncodeSize(IList<ulong> value)
-        {
-            return FixedWidth.ULong * value.Count;
-        }
-
-        public override void EncodeArray(IList<ulong> value, ByteBuffer buffer)
-        {
-            int byteCount = FixedWidth.ULong * value.Count;
-
-            buffer.Validate(write: true, byteCount);
-
-            Span<byte> destination = buffer.GetWriteSpan();
-
-            if (value is ulong[] longArray)
+            for (int i = 0; i < array.Length; i++)
             {
-                // fast-path for long[] so the bounds checks can be elided
-                for (int i = 0; i < longArray.Length; i++)
-                {
-                    BinaryPrimitives.WriteUInt64BigEndian(destination.Slice(FixedWidth.ULong * i), longArray[i]);
-                }
+                array[i] = Decode(buffer, formatCode);
             }
-            else
-            {
-                IReadOnlyList<ulong> listValue = (IReadOnlyList<ulong>)value;
-                for (int i = 0; i < listValue.Count; i++)
-                {
-                    BinaryPrimitives.WriteUInt64BigEndian(destination.Slice(FixedWidth.ULong * i), listValue[i]);
-                }
-            }
-
-            buffer.Append(byteCount);
-        }
-
-        public override ulong[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
-        {
-            int byteCount = FixedWidth.ULong * count;
-            buffer.Validate(write: false, byteCount);
-            ReadOnlySpan<byte> source = buffer.GetReadSpan();
-
-            ulong[] array = new ulong[count];
-            for (int i = 0; i < count; ++i)
-            {
-                array[i] = BinaryPrimitives.ReadUInt64BigEndian(source.Slice(FixedWidth.ULong * i));
-            }
-
-            buffer.Complete(byteCount);
 
             return array;
+        }
+
+        protected override int OnGetSize(ulong value, int arrayIndex)
+        {
+            return arrayIndex < 0 ? GetEncodeSize(value) : FixedWidth.ULong;
+        }
+
+        protected override void OnWrite(ulong value, ByteBuffer buffer, int arrayIndex)
+        {
+            if (arrayIndex < 0)
+            {
+                Encode(value, buffer);
+            }
+            else
+            {
+                AmqpBitConverter.WriteULong(buffer, value);
+            }
+        }
+
+        protected override ulong OnRead(ByteBuffer buffer, FormatCode formatCode)
+        {
+            return Decode(buffer, formatCode);
         }
     }
 }

@@ -3,115 +3,72 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    using System;
-    using System.Buffers.Binary;
-    using System.Collections.Generic;
-
-    sealed class UShortEncoding : PrimitiveEncoding<ushort>
+    sealed class UShortEncoding : EncodingBase<ushort>
     {
         public UShortEncoding()
             : base(FormatCode.UShort)
         {
         }
 
-        public static int GetEncodeSize(ushort? value)
+        public static int GetEncodeSize(ushort value)
         {
-            return value.HasValue ? FixedWidth.UShortEncoded : FixedWidth.NullEncoded;
+            return FixedWidth.UShortEncoded;
         }
 
-        public static void Encode(ushort? value, ByteBuffer buffer)
+        public static void Encode(ushort value, ByteBuffer buffer)
         {
-            if (value.HasValue)
-            {
-                AmqpBitConverter.WriteUByte(buffer, FormatCode.UShort);
-                AmqpBitConverter.WriteUShort(buffer, value.Value);
-            }
-            else
-            {
-                AmqpEncoding.EncodeNull(buffer);
-            }
+            AmqpBitConverter.WriteUByte(buffer, FormatCode.UShort);
+            AmqpBitConverter.WriteUShort(buffer, value);
         }
 
-        public static ushort? Decode(ByteBuffer buffer, FormatCode formatCode)
+        public static ushort Decode(ByteBuffer buffer, FormatCode formatCode)
         {
-            if (formatCode == 0 && (formatCode = AmqpEncoding.ReadFormatCode(buffer)) == FormatCode.Null)
-            {
-                return null;
-            }
-
             return AmqpBitConverter.ReadUShort(buffer);
         }
 
-        public override int GetObjectEncodeSize(object value, bool arrayEncoding)
+        public override int GetArrayValueSize(ushort[] array)
         {
-            return arrayEncoding ? FixedWidth.UShort : UShortEncoding.GetEncodeSize((ushort)value);
+            return FixedWidth.UShort * array.Length;
         }
 
-        public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
+        public override void WriteArrayValue(ushort[] array, ByteBuffer buffer)
         {
-            if (arrayEncoding)
+            for (int i = 0; i < array.Length; i++)
             {
-                AmqpBitConverter.WriteUShort(buffer, (ushort)value);
-            }
-            else
-            {
-                UShortEncoding.Encode((ushort)value, buffer);
+                AmqpBitConverter.WriteUShort(buffer, array[i]);
             }
         }
 
-        public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
+        public override ushort[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, ushort[] array)
         {
-            return UShortEncoding.Decode(buffer, formatCode);
-        }
-
-        public override int GetArrayEncodeSize(IList<ushort> value)
-        {
-            return FixedWidth.UShort * value.Count;
-        }
-
-        public override void EncodeArray(IList<ushort> value, ByteBuffer buffer)
-        {
-            int byteCount = FixedWidth.UShort * value.Count;
-
-            buffer.Validate(write: true, byteCount);
-
-            Span<byte> destination = buffer.GetWriteSpan();
-
-            if (value is ushort[] ushortArray)
+            for (int i = 0; i < array.Length; i++)
             {
-                // fast-path for ushort[] so the bounds checks can be elided
-                for (int i = 0; i < ushortArray.Length; i++)
-                {
-                    BinaryPrimitives.WriteUInt16BigEndian(destination.Slice(FixedWidth.UShort * i), ushortArray[i]);
-                }
+                array[i] = Decode(buffer, formatCode);
             }
-            else
-            {
-                IReadOnlyList<ushort> listValue = (IReadOnlyList<ushort>)value;
-                for (int i = 0; i < listValue.Count; i++)
-                {
-                    BinaryPrimitives.WriteUInt16BigEndian(destination.Slice(FixedWidth.UShort * i), listValue[i]);
-                }
-            }
-
-            buffer.Append(byteCount);
-        }
-
-        public override ushort[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
-        {
-            int byteCount = FixedWidth.UShort * count;
-            buffer.Validate(write: false, byteCount);
-            ReadOnlySpan<byte> source = buffer.GetReadSpan();
-
-            ushort[] array = new ushort[count];
-            for (int i = 0; i < count; ++i)
-            {
-                array[i] = BinaryPrimitives.ReadUInt16BigEndian(source.Slice(FixedWidth.UShort * i));
-            }
-
-            buffer.Complete(byteCount);
 
             return array;
+        }
+
+        protected override int OnGetSize(ushort value, int arrayIndex)
+        {
+            return arrayIndex < 0 ? GetEncodeSize(value) : FixedWidth.UShort;
+        }
+
+        protected override void OnWrite(ushort value, ByteBuffer buffer, int arrayIndex)
+        {
+            if (arrayIndex < 0)
+            {
+                Encode(value, buffer);
+            }
+            else
+            {
+                AmqpBitConverter.WriteUShort(buffer, value);
+            }
+        }
+
+        protected override ushort OnRead(ByteBuffer buffer, FormatCode formatCode)
+        {
+            return Decode(buffer, formatCode);
         }
     }
 }

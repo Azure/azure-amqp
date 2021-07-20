@@ -16,6 +16,8 @@ namespace Microsoft.Azure.Amqp.Framing
     /// Examples are <see cref="Open.OfferedCapabilities"/> and <see cref="Source.Capabilities"/></remarks>
     public sealed class Multiple<T> : List<T>
     {
+        static readonly EncodingBase<T> encoding = AmqpEncoding.GetEncoding<T>();
+
         /// <summary>
         /// Initializes a Multiple object.
         /// </summary>
@@ -28,7 +30,16 @@ namespace Microsoft.Azure.Amqp.Framing
         /// </summary>
         /// <param name="value">The list of objects to add to the Multiple object.</param>
         public Multiple(IList<T> value)
-            : base(value)
+            : base(value.Count)
+        {
+            for (int i = 0; i < value.Count; i++)
+            {
+                this.Add(value[i]);
+            }
+        }
+
+        Multiple(int capacity)
+            : base(capacity)
         {
         }
 
@@ -41,10 +52,17 @@ namespace Microsoft.Azure.Amqp.Framing
 
             if (multiple.Count == 1)
             {
-                return AmqpEncoding.GetObjectEncodeSize(multiple[0]);
+                return encoding.GetSize(multiple[0]);
             }
 
-            return ArrayEncoding.GetEncodeSize(multiple);
+            // encoded as array32
+            int size = ArrayEncoding.PrefixSize;
+            for (int i = 0; i < multiple.Count; i++)
+            {
+                size += encoding.GetSize(multiple[i], i);
+            }
+
+            return size;
         }
 
         internal static void Encode(Multiple<T> multiple, ByteBuffer buffer)
@@ -55,28 +73,48 @@ namespace Microsoft.Azure.Amqp.Framing
             }
             else if (multiple.Count == 1)
             {
-                AmqpEncoding.EncodeObject(multiple[0], buffer);
+                encoding.Write(multiple[0], buffer);
             }
             else
             {
-                ArrayEncoding.Encode(multiple, buffer);
+                AmqpBitConverter.WriteUByte(buffer, FormatCode.Array32);
+                var tracker = SizeTracker.Track(buffer);
+                AmqpBitConverter.WriteUInt(buffer, FixedWidth.Int);  // size
+                AmqpBitConverter.WriteInt(buffer, multiple.Count);   // count
+                AmqpBitConverter.WriteUByte(buffer, encoding.FormatCode);
+                for (int i = 0; i < multiple.Count; i++)
+                {
+                    encoding.Write(multiple[i], buffer, i);
+                }
+
+                tracker.CommitExclusive(0);
             }
         }
 
         internal static Multiple<T> Decode(ByteBuffer buffer)
         {
-            object value = AmqpEncoding.DecodeObject(buffer);
-            switch (value)
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
             {
-                case null:
-                    return null;
-                case T value1:
-                    return new Multiple<T> { value1 };
-                case T[] valueArray:
-                    return new Multiple<T>(valueArray);
-                default:
-                    throw new AmqpException(AmqpErrorCode.InvalidField, null);
+                return null;
             }
+
+            if (formatCode != FormatCode.Array8 && formatCode != FormatCode.Array32)
+            {
+                T item = encoding.Read(buffer, formatCode);
+                return new Multiple<T>(1) { item };
+            }
+
+            AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.Array8, FormatCode.Array32, out int size, out int count);
+            Multiple<T> multiple = new Multiple<T>(count);
+            formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            for (int i = 0; i < count; i++)
+            {
+                T item = encoding.Read(buffer, formatCode);
+                multiple.Add(item);
+            }
+
+            return multiple;
         }
 
         /// <summary>

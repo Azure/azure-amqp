@@ -914,7 +914,7 @@ namespace Microsoft.Azure.Amqp
             protected override void EncodeBody(ByteBuffer buffer)
             {
                 int pos = buffer.WritePos;
-                buffer.Validate(true, 8);
+                buffer.ValidateWrite(8);
                 buffer.Append(8);
                 int length = 0;
                 long streamPos = this.bodyStream.CanSeek ? this.bodyStream.Position : -1;
@@ -922,7 +922,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     while (true)
                     {
-                        buffer.Validate(true, 512);
+                        buffer.ValidateWrite(512);
                         int size = this.bodyStream.Read(buffer.Buffer, buffer.WritePos, 512);
                         if (size == 0)
                         {
@@ -941,10 +941,10 @@ namespace Microsoft.Azure.Amqp
                     }
                 }
 
-                AmqpBitConverter.WriteUByte(buffer.Buffer, pos, FormatCode.Described);
-                AmqpBitConverter.WriteUByte(buffer.Buffer, pos + 1, FormatCode.SmallULong);
-                AmqpBitConverter.WriteUByte(buffer.Buffer, pos + 2, (byte)Data.Code);
-                AmqpBitConverter.WriteUByte(buffer.Buffer, pos + 3, FormatCode.Binary32);
+                buffer.Buffer[pos] = FormatCode.Described;
+                buffer.Buffer[pos + 1] = FormatCode.SmallULong;
+                buffer.Buffer[pos + 2] = (byte)Data.Code;
+                buffer.Buffer[pos + 3] = FormatCode.Binary32;
                 AmqpBitConverter.WriteUInt(buffer.Buffer, pos + 4, (uint)length);
 
                 this.bodyOffset = pos;

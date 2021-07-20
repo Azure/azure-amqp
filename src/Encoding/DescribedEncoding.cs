@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
-    sealed class DescribedEncoding : EncodingBase
+    sealed class DescribedEncoding : EncodingBase<DescribedType>
     {
         public DescribedEncoding()
             : base(FormatCode.Described)
@@ -12,86 +12,85 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static int GetEncodeSize(DescribedType value)
         {
-            return value == null ?
-                FixedWidth.NullEncoded :
-                FixedWidth.FormatCode + AmqpEncoding.GetObjectEncodeSize(value.Descriptor) + AmqpEncoding.GetObjectEncodeSize(value.Value);
+            int descriptorSize = AmqpEncoding.GetObjectEncodeSize(value.Descriptor);
+            int valueSize = AmqpEncoding.GetObjectEncodeSize(value.Value);
+            return FixedWidth.FormatCode + descriptorSize + valueSize;
         }
 
         public static void Encode(DescribedType value, ByteBuffer buffer)
         {
-            if (value == null)
-            {
-                AmqpEncoding.EncodeNull(buffer);
-            }
-            else
-            {
-                AmqpBitConverter.WriteUByte(buffer, FormatCode.Described);
-                AmqpEncoding.EncodeObject(value.Descriptor, buffer);
-                AmqpEncoding.EncodeObject(value.Value, buffer);
-            }
+            AmqpBitConverter.WriteUByte(buffer, FormatCode.Described);
+            AmqpEncoding.EncodeObject(value.Descriptor, buffer);
+            AmqpEncoding.EncodeObject(value.Value, buffer);
         }
 
-        public static DescribedType Decode(ByteBuffer buffer)
+        public static DescribedType Decode(ByteBuffer buffer, FormatCode formatCode)
         {
-            FormatCode formatCode;
-            if ((formatCode = AmqpEncoding.ReadFormatCode(buffer)) == FormatCode.Null)
-            {
-                return null;
-            }
-
-            return DescribedEncoding.Decode(buffer, formatCode);
-        }
-
-        public override int GetObjectEncodeSize(object value, bool arrayEncoding)
-        {
-            if (arrayEncoding)
-            {
-                object describedValue = ((DescribedType)value).Value;
-                EncodingBase encoding = AmqpEncoding.GetEncoding(describedValue);
-                return encoding.GetObjectEncodeSize(describedValue, true);
-            }
-            else
-            {
-                return DescribedEncoding.GetEncodeSize((DescribedType)value);
-            }
-        }
-
-        public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
-        {
-            if (arrayEncoding)
-            {
-                object describedValue = ((DescribedType)value).Value;
-                EncodingBase encoding = AmqpEncoding.GetEncoding(describedValue);
-                encoding.EncodeObject(describedValue, true, buffer);
-            }
-            else
-            {
-                DescribedEncoding.Encode((DescribedType)value, buffer);
-            }
-        }
-
-        public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
-        {
-            if (formatCode == FormatCode.Described)
-            {
-                return DescribedEncoding.Decode(buffer, formatCode);
-            }
-            else
-            {
-                return AmqpEncoding.DecodeObject(buffer, formatCode);
-            }
-        }
-
-        static DescribedType Decode(ByteBuffer buffer, FormatCode formatCode)
-        {
-            if (formatCode != FormatCode.Described)
-            {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
-            }
-
+            AmqpEncoding.VerifyFormatCode(formatCode, buffer.Offset, FormatCode.Described);
             object descriptor = AmqpEncoding.DecodeObject(buffer);
             object value = AmqpEncoding.DecodeObject(buffer);
             return new DescribedType(descriptor, value);
+        }
+
+        public override DescribedType[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, DescribedType[] array)
+        {
+            object descriptor = AmqpEncoding.DecodeObject(buffer);
+            formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            IEncoding encoding = AmqpEncoding.GetEncoding(formatCode);
+            for (int i = 0; i < array.Length; i++)
+            {
+                object value = encoding.Read(buffer, formatCode);
+                array[i] = new DescribedType(descriptor, value);
+            }
+
+            return array;
+        }
+
+        protected override int OnGetSize(DescribedType value, int arrayIndex)
+        {
+            return arrayIndex < 0 ? GetEncodeSize(value) : GetArrayItemSize(value, arrayIndex);
+        }
+
+        protected override void OnWrite(DescribedType value, ByteBuffer buffer, int arrayIndex)
+        {
+            if (arrayIndex < 0)
+            {
+                Encode(value, buffer);
+            }
+            else
+            {
+                EncodeArrayItem(value, arrayIndex, buffer);
+            }
+        }
+
+        protected override DescribedType OnRead(ByteBuffer buffer, FormatCode formatCode)
+        {
+            return Decode(buffer, formatCode);
+        }
+
+        static int GetArrayItemSize(DescribedType value, int index)
+        {
+            int size = 0;
+            if (index == 0)
+            {
+                size += AmqpEncoding.GetObjectEncodeSize(value.Descriptor);
+                size += FixedWidth.FormatCode;
+            }
+
+            size += AmqpEncoding.GetObjectEncodeSize(value.Value) - FixedWidth.FormatCode;
+            return size;
+        }
+
+        static void EncodeArrayItem(DescribedType value, int index, ByteBuffer buffer)
+        {
+            IEncoding encoding = AmqpEncoding.GetEncoding(value.Value.GetType());
+            if (index == 0)
+            {
+                AmqpEncoding.EncodeObject(value.Descriptor, buffer);
+                AmqpBitConverter.WriteUByte(buffer, encoding.FormatCode);
+            }
+
+            encoding.Write(value.Value, buffer, index);
         }
     }
 }

@@ -4,9 +4,9 @@
 namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
-    using System.Collections.Generic;
+    using System.Diagnostics;
 
-    sealed class BinaryEncoding : PrimitiveEncoding<ArraySegment<byte>>
+    sealed class BinaryEncoding : EncodingBase<ArraySegment<byte>>
     {
         public BinaryEncoding()
             : base(FormatCode.Binary32)
@@ -15,9 +15,12 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static int GetEncodeSize(ArraySegment<byte> value)
         {
-            return value.Array == null ?
-                FixedWidth.NullEncoded :
-                FixedWidth.FormatCode + AmqpEncoding.GetEncodeWidthBySize(value.Count) + value.Count;
+            if (value.Array == null)
+            {
+                return FixedWidth.NullEncoded;
+            }
+
+            return FixedWidth.FormatCode + AmqpEncoding.GetEncodeWidthBySize(value.Count) + value.Count;
         }
 
         public static void Encode(ArraySegment<byte> value, ByteBuffer buffer)
@@ -25,39 +28,25 @@ namespace Microsoft.Azure.Amqp.Encoding
             if (value.Array == null)
             {
                 AmqpEncoding.EncodeNull(buffer);
+                return;
+            }
+
+            if (value.Count <= byte.MaxValue)
+            {
+                AmqpBitConverter.Write(buffer, FormatCode.Binary8, (byte)value.Count);
             }
             else
             {
-                int width = AmqpEncoding.GetEncodeWidthBySize(value.Count);
-                if (width == FixedWidth.UByte)
-                {
-                    AmqpBitConverter.WriteUByte(buffer, FormatCode.Binary8);
-                    AmqpBitConverter.WriteUByte(buffer, (byte)value.Count);
-                }
-                else
-                {
-                    AmqpBitConverter.WriteUByte(buffer, FormatCode.Binary32);
-                    AmqpBitConverter.WriteUInt(buffer, (uint)value.Count);
-                }
-
-                AmqpBitConverter.WriteBytes(buffer, value, value.Offset, value.Count);
+                AmqpBitConverter.Write(buffer, FormatCode.Binary32, (uint)value.Count);
             }
-        }
 
-        public static ArraySegment<byte> Decode(ByteBuffer buffer, FormatCode formatCode)
-        {
-            return Decode(buffer, formatCode, true);
+            AmqpBitConverter.WriteBytes(buffer, value.Array, value.Offset, value.Count);
         }
 
         public static ArraySegment<byte> Decode(ByteBuffer buffer, FormatCode formatCode, bool copy)
         {
-            if (formatCode == 0 && (formatCode = AmqpEncoding.ReadFormatCode(buffer)) == FormatCode.Null)
-            {
-                return AmqpConstants.NullBinary;
-            }
-
-            int count;
-            AmqpEncoding.ReadCount(buffer, formatCode, FormatCode.Binary8, FormatCode.Binary32, out count);
+            Debug.Assert(formatCode > 0);
+            AmqpEncoding.ReadCount(buffer, formatCode, FormatCode.Binary8, FormatCode.Binary32, out int count);
             if (count == 0)
             {
                 return AmqpConstants.EmptyBinary;
@@ -79,82 +68,27 @@ namespace Microsoft.Azure.Amqp.Encoding
             return value;
         }
 
-        public override int GetObjectEncodeSize(object value, bool arrayEncoding)
+        protected override int OnGetSize(ArraySegment<byte> value, int arrayIndex)
         {
-            if (arrayEncoding)
-            {
-                return FixedWidth.UInt + ((ArraySegment<byte>)value).Count;
-            }
-
-            return BinaryEncoding.GetEncodeSize((ArraySegment<byte>)value);
+            return arrayIndex < 0 ? GetEncodeSize(value) : FixedWidth.Int + value.Count;
         }
 
-        public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
+        protected override void OnWrite(ArraySegment<byte> value, ByteBuffer buffer, int arrayIndex)
         {
-            if (arrayEncoding)
+            if (arrayIndex < 0)
             {
-                ArraySegment<byte> binaryValue = (ArraySegment<byte>)value;
-                AmqpBitConverter.WriteUInt(buffer, (uint)binaryValue.Count);
-                AmqpBitConverter.WriteBytes(buffer, binaryValue, binaryValue.Offset, binaryValue.Count);
+                Encode(value, buffer);
             }
             else
             {
-                BinaryEncoding.Encode((ArraySegment<byte>)value, buffer);
+                AmqpBitConverter.WriteInt(buffer, value.Count);
+                AmqpBitConverter.WriteBytes(buffer, value.Array, value.Offset, value.Count);
             }
         }
 
-        public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
+        protected override ArraySegment<byte> OnRead(ByteBuffer buffer, FormatCode formatCode)
         {
-            return BinaryEncoding.Decode(buffer, formatCode, false);
-        }
-
-        public override int GetArrayEncodeSize(IList<ArraySegment<byte>> value)
-        {
-            int size = 0;
-            for (int i = 0; i < value.Count; i++)
-            {
-                size += AmqpEncoding.GetEncodeWidthBySize(value[i].Count);
-            }
-            return size;
-        }
-
-        public override void EncodeArray(IList<ArraySegment<byte>> value, ByteBuffer buffer)
-        {
-            if (value is ArraySegment<byte>[] arraySegments)
-            {
-                // fast-path for ArraySegment<byte>[] so the bounds checks can be elided
-                for (int i = 0; i < arraySegments.Length; i++)
-                {
-                    var segment = arraySegments[i];
-                    AmqpBitConverter.WriteUInt(buffer, (uint)segment.Count);
-                    AmqpBitConverter.WriteBytes(buffer, segment, segment.Offset, segment.Count);
-                }
-            }
-            else
-            {
-                IReadOnlyList<ArraySegment<byte>> listValue = (IReadOnlyList<ArraySegment<byte>>)value;
-                for (int i = 0; i < listValue.Count; i++)
-                {
-                    var segment = listValue[i];
-                    AmqpBitConverter.WriteUInt(buffer, (uint)segment.Count);
-                    AmqpBitConverter.WriteBytes(buffer, segment, segment.Offset, segment.Count);
-                }
-            }
-        }
-
-        public override ArraySegment<byte>[] DecodeArray(ByteBuffer buffer, int count, FormatCode formatCode)
-        {
-            ArraySegment<byte>[] array = new ArraySegment<byte>[count];
-            for (int i = 0; i < count; ++i)
-            {
-                AmqpEncoding.ReadCount(buffer, formatCode, FormatCode.Binary8, FormatCode.Binary32, out count);
-                // always copy?
-                byte[] valueBuffer = new byte[count];
-                var arraySegment = new ArraySegment<byte>(valueBuffer, 0, count);
-                AmqpBitConverter.ReadBytes(buffer, arraySegment, 0, count);
-                array[i] = arraySegment;
-            }
-            return array;
+            return Decode(buffer, formatCode, true);
         }
     }
 }

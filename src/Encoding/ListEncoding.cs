@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Amqp.Encoding
     using System.Collections;
     using System.Collections.Generic;
 
-    sealed class ListEncoding : EncodingBase
+    sealed class ListEncoding : EncodingBase<IList>
     {
         public ListEncoding()
             : base(FormatCode.List32)
@@ -15,101 +15,85 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static int GetEncodeSize(IList value)
         {
-            if (value == null)
-            {
-                return FixedWidth.NullEncoded;
-            }
-            else if (value.Count == 0)
+            if (value.Count == 0)
             {
                 return FixedWidth.FormatCode;
             }
-            else
-            {
-                int valueSize = ListEncoding.GetValueSize(value);
-                int width = AmqpEncoding.GetEncodeWidthByCountAndSize(value.Count, valueSize);
-                return FixedWidth.FormatCode + (width * 2) + valueSize;
-            }
+
+            // Return the max possible size because Encode needs the space to avoid calling GetEncodeSize again.
+            int size = GetListSize(value);
+            return FixedWidth.FormatCode + FixedWidth.Int + FixedWidth.Int + size;
         }
 
         public static void Encode(IList value, ByteBuffer buffer)
         {
-            if (value == null)
-            {
-                AmqpEncoding.EncodeNull(buffer);
-            }
-            else if (value.Count == 0)
+            if (value.Count == 0)
             {
                 AmqpBitConverter.WriteUByte(buffer, FormatCode.List0);
+                return;
+            }
+
+            var tracker = SizeTracker.Track(buffer);
+            AmqpBitConverter.WriteUByte(buffer, FormatCode.List32);
+            AmqpBitConverter.WriteInt(buffer, FixedWidth.Int);
+            AmqpBitConverter.WriteInt(buffer, value.Count);
+            foreach (object item in value)
+            {
+                AmqpEncoding.EncodeObject(item, buffer);
+            }
+
+            // compact if necessary
+            int size = tracker.Length - 9;
+            if (size < byte.MaxValue && value.Count <= byte.MaxValue)
+            {
+                tracker.Compact(FormatCode.List8, (byte)(size + 1), (byte)value.Count, 9);
             }
             else
             {
-                int valueSize = ListEncoding.GetValueSize(value);
-                int width = AmqpEncoding.GetEncodeWidthByCountAndSize(value.Count, valueSize);
-                AmqpBitConverter.WriteUByte(buffer, width == FixedWidth.UByte ? FormatCode.List8 : FormatCode.List32);
-
-                int size = width + valueSize;
-                ListEncoding.Encode(value, width, size, buffer);
+                tracker.CommitExclusive(FixedWidth.FormatCode);
             }
         }
 
         public static IList Decode(ByteBuffer buffer, FormatCode formatCode)
         {
-            if (formatCode == 0 && (formatCode = AmqpEncoding.ReadFormatCode(buffer)) == FormatCode.Null)
-            {
-                return null;
-            }
-
-            IList list = new List<object>();
             if (formatCode == FormatCode.List0)
             {
-                return list;
+                return new object[0];
             }
 
-            int size;
-            int count;
-            AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.List8, FormatCode.List32, out size, out count);
-
-            for (; count > 0; --count)
+            AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.List8, FormatCode.List32, out int size, out int count);
+            List<object> list = new List<object>(count);
+            for (int i = 0; i < count; i++)
             {
-                object item = AmqpEncoding.DecodeObject(buffer);
-                list.Add(item);
+                list.Add(AmqpEncoding.DecodeObject(buffer));
             }
 
             return list;
         }
 
-        public override int GetObjectEncodeSize(object value, bool arrayEncoding)
+        protected override int OnGetSize(IList value, int arrayIndex)
         {
-            if (arrayEncoding)
+            return arrayIndex < 0 ? GetEncodeSize(value) : FixedWidth.Int + FixedWidth.Int + GetListSize(value);
+        }
+
+        protected override void OnWrite(IList value, ByteBuffer buffer, int arrayIndex)
+        {
+            if (arrayIndex < 0)
             {
-                return FixedWidth.UInt + FixedWidth.UInt + GetValueSize((IList)value);
+                Encode(value, buffer);
             }
             else
             {
-                return ListEncoding.GetEncodeSize((IList)value);
+                EncodeArrayItem(value, arrayIndex, buffer);
             }
         }
 
-        public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
+        protected override IList OnRead(ByteBuffer buffer, FormatCode formatCode)
         {
-            if (arrayEncoding)
-            {
-                IList listValue = (IList)value;
-                int size = FixedWidth.UInt + GetValueSize(listValue);
-                ListEncoding.Encode(listValue, FixedWidth.UInt, size, buffer);
-            }
-            else
-            {
-                ListEncoding.Encode((IList)value, buffer);
-            }
+            return Decode(buffer, formatCode);
         }
 
-        public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
-        {
-            return ListEncoding.Decode(buffer, formatCode);
-        }
-
-        public static int GetValueSize(IList value)
+        static int GetListSize(IList value)
         {
             int size = 0;
             if (value.Count > 0)
@@ -123,25 +107,19 @@ namespace Microsoft.Azure.Amqp.Encoding
             return size;
         }
 
-        static void Encode(IList value, int width, int size, ByteBuffer buffer)
+        static void EncodeArrayItem(IList value, int index, ByteBuffer buffer)
         {
-            if (width == FixedWidth.UByte)
-            {
-                AmqpBitConverter.WriteUByte(buffer, (byte)size);
-                AmqpBitConverter.WriteUByte(buffer, (byte)value.Count);
-            }
-            else
-            {
-                AmqpBitConverter.WriteUInt(buffer, (uint)size);
-                AmqpBitConverter.WriteUInt(buffer, (uint)value.Count);
-            }
-
+            var tracker = SizeTracker.Track(buffer);
+            AmqpBitConverter.WriteInt(buffer, FixedWidth.Int);
+            AmqpBitConverter.WriteInt(buffer, value.Count);
             if (value.Count > 0)
             {
                 foreach (object item in value)
                 {
                     AmqpEncoding.EncodeObject(item, buffer);
                 }
+
+                tracker.CommitExclusive(0);
             }
         }
     }

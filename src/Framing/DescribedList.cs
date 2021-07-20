@@ -36,52 +36,31 @@ namespace Microsoft.Azure.Amqp.Framing
             }
 
             int valueSize = this.OnValueSize();
-            int width = AmqpEncoding.GetEncodeWidthByCountAndSize(this.FieldCount, valueSize);
-            return FixedWidth.FormatCode + width + width + valueSize;
+            return FixedWidth.FormatCode + FixedWidth.Int + FixedWidth.Int + valueSize;
         }
 
         internal override void EncodeValue(ByteBuffer buffer)
         {
-            if (this.FieldCount == 0)
+            int fieldCount = this.FieldCount;
+            if (fieldCount == 0)
             {
                 AmqpBitConverter.WriteUByte(buffer, FormatCode.List0);
             }
             else
             {
-                int valueSize = this.OnValueSize();
-                int encodeWidth = AmqpEncoding.GetEncodeWidthByCountAndSize(this.FieldCount, valueSize);
-                int sizeOffset;
-                if (encodeWidth == FixedWidth.UByte)
-                {
-                    AmqpBitConverter.WriteUByte(buffer, FormatCode.List8);
-                    sizeOffset = buffer.Length;
-                    AmqpBitConverter.WriteUByte(buffer, 0);
-                    AmqpBitConverter.WriteUByte(buffer, (byte)this.FieldCount);
-                }
-                else
-                {
-                    AmqpBitConverter.WriteUByte(buffer, FormatCode.List32);
-                    sizeOffset = buffer.Length;
-                    AmqpBitConverter.WriteUInt(buffer, 0);
-                    AmqpBitConverter.WriteUInt(buffer, (uint)this.FieldCount);
-                }
-
+                var tracker = SizeTracker.Track(buffer);
+                AmqpBitConverter.WriteUByte(buffer, FormatCode.List32);
+                AmqpBitConverter.WriteUInt(buffer, FixedWidth.UInt);
+                AmqpBitConverter.WriteUInt(buffer, (uint)fieldCount);
                 this.OnEncode(buffer);
-
-                // the actual encoded value size may be different from the calculated
-                // valueSize. However, it can only become smaller. This allows for
-                // reserving space in the buffer using the longest encoding form of a 
-                // value. For example, if the delivery id of a transfer is unknown, we
-                // can use uint.Max for calculating encode size, but the actual encoding
-                // could be small uint.
-                int size = buffer.Length - sizeOffset - encodeWidth;
-                if (encodeWidth == FixedWidth.UByte)
+                int size = tracker.Length - 9;
+                if (size < byte.MaxValue && fieldCount <= byte.MaxValue)
                 {
-                    AmqpBitConverter.WriteUByte(buffer.Buffer, sizeOffset, (byte)size);
+                    tracker.Compact(FormatCode.List8, (byte)(size + 1), (byte)fieldCount, 9);
                 }
                 else
                 {
-                    AmqpBitConverter.WriteUInt(buffer.Buffer, sizeOffset, (uint)size);
+                    tracker.CommitExclusive(FixedWidth.FormatCode);
                 }
             }
         }
@@ -94,9 +73,7 @@ namespace Microsoft.Azure.Amqp.Framing
                 return;
             }
 
-            int size = 0;
-            int count = 0;
-            AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.List8, FormatCode.List32, out size, out count);
+            AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.List8, FormatCode.List32, out int size, out int count);
             
             int offset = buffer.Offset;
             this.DecodeValue(buffer, size, count);

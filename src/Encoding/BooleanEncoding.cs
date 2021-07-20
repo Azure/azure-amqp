@@ -54,7 +54,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 array[i] = buffer.Buffer[pos] == 1;
             }
 
-            buffer.Append(array.Length);
+            buffer.Complete(array.Length);
             return array;
         }
 

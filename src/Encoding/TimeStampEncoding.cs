@@ -37,19 +37,27 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override void WriteArrayValue(DateTime[] array, ByteBuffer buffer)
         {
-            for (int i = 0; i < array.Length; i++)
+            int size = this.GetArrayValueSize(array);
+            buffer.ValidateWrite(size);
+            for (int i = 0, pos = buffer.WritePos; i < array.Length; i++, pos += FixedWidth.Long)
             {
-                AmqpBitConverter.WriteLong(buffer, GetMilliseconds(array[i]));
+                AmqpBitConverter.WriteULong(buffer.Buffer, pos, (ulong)GetMilliseconds(array[i]));
             }
+
+            buffer.Append(size);
         }
 
         public override DateTime[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, DateTime[] array)
         {
-            for (int i = 0; i < array.Length; i++)
+            int size = this.GetArrayValueSize(array);
+            buffer.ValidateRead(size);
+            for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos += FixedWidth.Long)
             {
-                array[i] = Decode(buffer, formatCode);
+                long data = (long)AmqpBitConverter.ReadULong(buffer.Buffer, pos, FixedWidth.Long);
+                array[i] = ToDateTime(data);
             }
 
+            buffer.Complete(size);
             return array;
         }
 

@@ -33,19 +33,26 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override void WriteArrayValue(short[] array, ByteBuffer buffer)
         {
-            for (int i = 0; i < array.Length; i++)
+            int size = this.GetArrayValueSize(array);
+            buffer.ValidateWrite(size);
+            for (int i = 0, pos = buffer.WritePos; i < array.Length; i++, pos += FixedWidth.Short)
             {
-                AmqpBitConverter.WriteShort(buffer, array[i]);
+                AmqpBitConverter.WriteUShort(buffer.Buffer, pos, (ushort)array[i]);
             }
+
+            buffer.Append(size);
         }
 
         public override short[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, short[] array)
         {
-            for (int i = 0; i < array.Length; i++)
+            int size = this.GetArrayValueSize(array);
+            buffer.ValidateRead(size);
+            for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos += FixedWidth.Short)
             {
-                array[i] = Decode(buffer, formatCode);
+                array[i] = (short)AmqpBitConverter.ReadUShort(buffer.Buffer, pos, FixedWidth.UShort);
             }
 
+            buffer.Complete(size);
             return array;
         }
 

@@ -75,11 +75,6 @@ namespace Microsoft.Azure.Amqp.Encoding
             return data;
         }
 
-        internal static uint PeekUInt(ByteBuffer buffer)
-        {
-            return BinaryPrimitives.ReadUInt32BigEndian(buffer.GetReadSpan(FixedWidth.UInt));
-        }
-
         /// <summary>
         /// Reads a 32-bit unsigned number from a buffer.
         /// </summary>
@@ -102,6 +97,11 @@ namespace Microsoft.Azure.Amqp.Encoding
         public static uint ReadUInt(byte[] buffer, int offset, int count)
         {
             return BinaryPrimitives.ReadUInt32BigEndian(buffer.AsSpan<byte>(offset, count));
+        }
+
+        internal static ushort ReadUShort(byte[] buffer, int offset, int count)
+        {
+            return BinaryPrimitives.ReadUInt16BigEndian(buffer.AsSpan<byte>(offset, count));
         }
 
         internal static uint ReadUInt(ReadOnlySpan<byte> buffer, int offset, int count)
@@ -319,7 +319,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         /// <param name="data">The 64-bit unsigned number.</param>
         public static void WriteULong(byte[] buffer, int offset, ulong data)
         {
-            BinaryPrimitives.WriteUInt64BigEndian(buffer.AsSpan(offset, FixedWidth.UInt), data);
+            BinaryPrimitives.WriteUInt64BigEndian(buffer.AsSpan(offset, FixedWidth.ULong), data);
         }
 
         /// <summary>

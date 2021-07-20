@@ -52,9 +52,9 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             int size = this.GetArrayValueSize(array);
             buffer.ValidateWrite(size);
-            for (int i = 0; i < array.Length; i++)
+            for (int i = 0, pos = buffer.WritePos; i < array.Length; i++, pos += FixedWidth.Int)
             {
-                AmqpBitConverter.WriteUInt(buffer.Buffer, buffer.WritePos + i * FixedWidth.Int, (uint)array[i]);
+                AmqpBitConverter.WriteUInt(buffer.Buffer, pos, (uint)array[i]);
             }
 
             buffer.Append(size);
@@ -62,11 +62,28 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override int[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, int[] array)
         {
-            for (int i = 0; i < array.Length; i++)
+            AmqpEncoding.VerifyFormatCode(formatCode, buffer.Offset, FormatCode.SmallInt, FormatCode.Int);
+            int size;
+            if (formatCode == FormatCode.SmallInt)
             {
-                array[i] = Decode(buffer, formatCode);
+                size = array.Length;
+                buffer.ValidateRead(size);
+                for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos++)
+                {
+                    array[i] = buffer.Buffer[pos];
+                }
+            }
+            else
+            {
+                size = FixedWidth.Int * array.Length;
+                buffer.ValidateRead(size);
+                for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos += FixedWidth.Int)
+                {
+                    array[i] = (int)AmqpBitConverter.ReadUInt(buffer.Buffer, pos, FixedWidth.UInt);
+                }
             }
 
+            buffer.Complete(size);
             return array;
         }
 

@@ -43,6 +43,50 @@ namespace Microsoft.Azure.Amqp.Encoding
             throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
         }
 
+        public override int GetArrayValueSize(long[] array)
+        {
+            return FixedWidth.Long * array.Length;
+        }
+
+        public override void WriteArrayValue(long[] array, ByteBuffer buffer)
+        {
+            int size = this.GetArrayValueSize(array);
+            buffer.ValidateWrite(size);
+            for (int i = 0, pos = buffer.WritePos; i < array.Length; i++, pos += FixedWidth.Long)
+            {
+                AmqpBitConverter.WriteULong(buffer.Buffer, pos, (ulong)array[i]);
+            }
+
+            buffer.Append(size);
+        }
+
+        public override long[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, long[] array)
+        {
+            AmqpEncoding.VerifyFormatCode(formatCode, buffer.Offset, FormatCode.SmallLong, FormatCode.Long);
+            int size;
+            if (formatCode == FormatCode.SmallLong)
+            {
+                size = array.Length;
+                buffer.ValidateRead(size);
+                for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos++)
+                {
+                    array[i] = buffer.Buffer[pos];
+                }
+            }
+            else
+            {
+                size = FixedWidth.Long * array.Length;
+                buffer.ValidateRead(size);
+                for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos += FixedWidth.Long)
+                {
+                    array[i] = (long)AmqpBitConverter.ReadULong(buffer.Buffer, pos, FixedWidth.ULong);
+                }
+            }
+
+            buffer.Complete(size);
+            return array;
+        }
+
         protected override int OnGetSize(long value, int arrayIndex)
         {
             return arrayIndex < 0 ? GetEncodeSize(value) : FixedWidth.Long;
@@ -63,29 +107,6 @@ namespace Microsoft.Azure.Amqp.Encoding
         protected override long OnRead(ByteBuffer buffer, FormatCode formatCode)
         {
             return Decode(buffer, formatCode);
-        }
-
-        public override int GetArrayValueSize(long[] array)
-        {
-            return FixedWidth.Long * array.Length;
-        }
-
-        public override void WriteArrayValue(long[] array, ByteBuffer buffer)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                AmqpBitConverter.WriteLong(buffer, array[i]);
-            }
-        }
-
-        public override long[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, long[] array)
-        {
-            for (int i = 0; i < array.Length; i++)
-            {
-                array[i] = Decode(buffer, formatCode);
-            }
-
-            return array;
         }
     }
 }

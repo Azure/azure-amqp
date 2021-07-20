@@ -50,7 +50,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 array[i] = (sbyte)buffer.Buffer[pos];
             }
 
-            buffer.Append(array.Length);
+            buffer.Complete(array.Length);
             return array;
         }
 

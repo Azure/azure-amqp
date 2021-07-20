@@ -42,7 +42,13 @@ namespace Microsoft.Azure.Amqp.Encoding
                 throw new AmqpException(AmqpErrorCode.DecodeError, $"Format code '{formatCode}' is different from expected '{encoding.FormatCode}'.");
             }
 
-            return encoding.ReadArrayValue(buffer, formatCode, new T[count]);
+            T[] array = new T[count];
+            if (count > 0)
+            {
+                array = encoding.ReadArrayValue(buffer, formatCode, array);
+            }
+
+            return array;
         }
 
         protected override int OnGetSize(Array value, int arrayIndex)

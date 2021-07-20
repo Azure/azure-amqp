@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 namespace Microsoft.Azure.Amqp.Encoding
 {
     sealed class DoubleEncoding : EncodingBase<double>
@@ -33,19 +35,27 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override void WriteArrayValue(double[] array, ByteBuffer buffer)
         {
-            for (int i = 0; i < array.Length; i++)
+            int size = this.GetArrayValueSize(array);
+            buffer.ValidateWrite(size);
+            for (int i = 0, pos = buffer.WritePos; i < array.Length; i++, pos += FixedWidth.Double)
             {
-                AmqpBitConverter.WriteDouble(buffer, array[i]);
+                AmqpBitConverter.WriteULong(buffer.Buffer, pos, Unsafe.As<double, ulong>(ref array[i]));
             }
+
+            buffer.Append(size);
         }
 
         public override double[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, double[] array)
         {
-            for (int i = 0; i < array.Length; i++)
+            int size = this.GetArrayValueSize(array);
+            buffer.ValidateRead(size);
+            for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos += FixedWidth.Double)
             {
-                array[i] = AmqpBitConverter.ReadDouble(buffer);
+                ulong data = AmqpBitConverter.ReadULong(buffer.Buffer, pos, FixedWidth.ULong);
+                array[i] = Unsafe.As<ulong, double>(ref data);
             }
 
+            buffer.Complete(size);
             return array;
         }
 

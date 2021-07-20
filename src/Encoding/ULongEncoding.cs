@@ -57,19 +57,45 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override void WriteArrayValue(ulong[] array, ByteBuffer buffer)
         {
-            for (int i = 0; i < array.Length; i++)
+            int size = this.GetArrayValueSize(array);
+            buffer.ValidateWrite(size);
+            for (int i = 0, pos = buffer.WritePos; i < array.Length; i++, pos += FixedWidth.ULong)
             {
-                AmqpBitConverter.WriteULong(buffer, array[i]);
+                AmqpBitConverter.WriteULong(buffer.Buffer, pos, array[i]);
             }
+
+            buffer.Append(size);
         }
 
         public override ulong[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, ulong[] array)
         {
-            for (int i = 0; i < array.Length; i++)
+            if (formatCode == FormatCode.ULong0)
             {
-                array[i] = Decode(buffer, formatCode);
+                return array;
             }
 
+            AmqpEncoding.VerifyFormatCode(formatCode, buffer.Offset, FormatCode.SmallULong, FormatCode.ULong);
+            int size;
+            if (formatCode == FormatCode.SmallULong)
+            {
+                size = array.Length;
+                buffer.ValidateRead(size);
+                for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos++)
+                {
+                    array[i] = buffer.Buffer[pos];
+                }
+            }
+            else
+            {
+                size = FixedWidth.ULong * array.Length;
+                buffer.ValidateRead(size);
+                for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos += FixedWidth.ULong)
+                {
+                    array[i] = AmqpBitConverter.ReadULong(buffer.Buffer, pos, FixedWidth.ULong);
+                }
+            }
+
+            buffer.Complete(size);
             return array;
         }
 

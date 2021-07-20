@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 namespace Microsoft.Azure.Amqp.Encoding
 {
     sealed class FloatEncoding : EncodingBase<float>
@@ -33,18 +35,27 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override void WriteArrayValue(float[] array, ByteBuffer buffer)
         {
-            for (int i = 0; i < array.Length; i++)
+            int size = this.GetArrayValueSize(array);
+            buffer.ValidateWrite(size);
+            for (int i = 0, pos = buffer.WritePos; i < array.Length; i++, pos += FixedWidth.Float)
             {
-                AmqpBitConverter.WriteFloat(buffer, array[i]);
+                AmqpBitConverter.WriteUInt(buffer.Buffer, pos, Unsafe.As<float, uint>(ref array[i]));
             }
+
+            buffer.Append(size);
         }
 
         public override float[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, float[] array)
         {
-            for (int i = 0; i < array.Length; i++)
+            int size = this.GetArrayValueSize(array);
+            buffer.ValidateRead(size);
+            for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos += FixedWidth.Float)
             {
-                array[i] = AmqpBitConverter.ReadFloat(buffer);
+                uint data = AmqpBitConverter.ReadUInt(buffer.Buffer, pos, FixedWidth.UInt);
+                array[i] = Unsafe.As<uint, float>(ref data);
             }
+
+            buffer.Complete(size);
 
             return array;
         }

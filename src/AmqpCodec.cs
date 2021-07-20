@@ -108,7 +108,7 @@ namespace Microsoft.Azure.Amqp
 
         internal static int GetFrameSize(ByteBuffer buffer)
         {
-            return (int)AmqpBitConverter.PeekUInt(buffer);
+            return (int)AmqpBitConverter.ReadUInt(buffer.Buffer, buffer.Offset, FixedWidth.UInt);
         }
 
         /// <summary>

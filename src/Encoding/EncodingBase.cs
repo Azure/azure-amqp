@@ -150,7 +150,13 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         Array IEncoding.ReadArray(ByteBuffer buffer, FormatCode formatCode, int count)
         {
-            return this.ReadArrayValue(buffer, formatCode, new T[count]);
+            T[] array = new T[count];
+            if (count > 0)
+            {
+                array = this.ReadArrayValue(buffer, formatCode, array);
+            }
+
+            return array;
         }
     }
 }

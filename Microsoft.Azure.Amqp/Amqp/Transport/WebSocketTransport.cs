@@ -30,7 +30,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
-        internal WebSocketTransport(WebSocket webSocket, Uri uri)
+        public WebSocketTransport(WebSocket webSocket, Uri uri)
             : base(WebSocketTransportSettings.WebSockets)
         {
             this.webSocket = webSocket;

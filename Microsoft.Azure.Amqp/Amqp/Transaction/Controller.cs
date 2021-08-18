@@ -38,22 +38,39 @@ namespace Microsoft.Azure.Amqp.Transaction
             this.controllerLink = new SendingAmqpLink(amqpSession, settings);
         }
 
-        public async Task<ArraySegment<byte>> DeclareAsync()
+        public Task<ArraySegment<byte>> DeclareAsync()
+        {
+            return this.DeclareAsync(CancellationToken.None);
+        }
+
+        public async Task<ArraySegment<byte>> DeclareAsync(CancellationToken cancellationToken)
         {
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "BeginDeclare");
             Declare declare = new Declare();
 
             AmqpMessage message = Controller.CreateCommandMessage(declare);
             DeliveryState deliveryState = await Task<DeliveryState>.Factory.FromAsync(
-                this.controllerLink.BeginSendMessage(message, this.GetDeliveryTag(), AmqpConstants.NullBinary, this.operationTimeout, null, null),
-                this.controllerLink.EndSendMessage);
+                (m, k, c, s) =>
+                {
+                    var thisPtr = (Controller)s;
+                    return thisPtr.controllerLink.BeginSendMessage(m, thisPtr.GetDeliveryTag(), AmqpConstants.NullBinary, thisPtr.operationTimeout, k, c, s);
+                },
+                r => ((Controller)r.AsyncState).controllerLink.EndSendMessage(r),
+                message,
+                cancellationToken,
+                this);
 
             this.ThrowIfRejected(deliveryState);
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "EndDeclare");
             return ((Declared)deliveryState).TxnId;
         }
 
-        public async Task DischargeAsync(ArraySegment<byte> txnId, bool fail)
+        public Task DischargeAsync(ArraySegment<byte> txnId, bool fail)
+        {
+            return this.DischargeAsync(txnId, fail, CancellationToken.None);
+        }
+
+        public async Task DischargeAsync(ArraySegment<byte> txnId, bool fail, CancellationToken cancellationToken)
         {
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "BeginDischange");
             Discharge discharge = new Discharge
@@ -64,8 +81,16 @@ namespace Microsoft.Azure.Amqp.Transaction
 
             AmqpMessage message = Controller.CreateCommandMessage(discharge);
             DeliveryState deliveryState = await Task<DeliveryState>.Factory.FromAsync(
-                this.controllerLink.BeginSendMessage(message, this.GetDeliveryTag(), AmqpConstants.NullBinary, this.operationTimeout, null, null),
-                this.controllerLink.EndSendMessage);
+                (m, k, c, s) =>
+                {
+                    var thisPtr = (Controller)s;
+                    return thisPtr.controllerLink.BeginSendMessage(m, thisPtr.GetDeliveryTag(), AmqpConstants.NullBinary, thisPtr.operationTimeout, k, c, s);
+                },
+                r => ((Controller)r.AsyncState).controllerLink.EndSendMessage(r),
+                message,
+                cancellationToken,
+                this);
+
             this.ThrowIfRejected(deliveryState);
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "EndDischange");
         }

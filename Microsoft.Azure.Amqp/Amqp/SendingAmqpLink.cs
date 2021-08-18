@@ -89,7 +89,7 @@ namespace Microsoft.Azure.Amqp
             return this.BeginSendMessage(message, deliveryTag, txnId, timeout, CancellationToken.None, callback, state);
         }
 
-        IAsyncResult BeginSendMessage(
+        internal IAsyncResult BeginSendMessage(
             AmqpMessage message,
             ArraySegment<byte> deliveryTag,
             ArraySegment<byte> txnId,

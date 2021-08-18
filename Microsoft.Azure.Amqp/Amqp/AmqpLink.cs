@@ -50,6 +50,8 @@ namespace Microsoft.Azure.Amqp
             this.syncRoot = new object();
             this.settings = linkSettings;
             this.linkCredit = this.settings.TotalLinkCredit;
+            this.DefaultOpenTimeout = this.settings.OperationTimeout;
+            this.DefaultCloseTimeout = this.settings.OperationTimeout;
 
             Source source = (Source)this.settings.Source;
             if (source != null)

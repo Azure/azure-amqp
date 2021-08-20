@@ -9,37 +9,36 @@ namespace Microsoft.Azure.Amqp
     abstract class TimeoutAsyncResult<T> : AsyncResult where T : class
     {
         readonly TimeSpan timeout;
-        readonly CancellationTokenRegistration cancellationTokenRegistration;
+        readonly CancellationToken cancellationToken;
+        CancellationTokenRegistration cancellationTokenRegistration;
         Timer timer;
-#if DEBUG
-        bool setTimerCalled;  // make sure derived class always call SetTimer
-#endif
 
         protected TimeoutAsyncResult(TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
             : base(callback, state)
         {
-            // The derived class must call SetTimer to start the timer.
-            // Timer is not started here because it could fire before the
-            // derived class ctor completes.
+            // The derived class must call StartTracking to start the timer and cancelation token registration.
+            // Timer is not started here because it could fire before the derived class ctor completes.
             this.timeout = timeout;
-            if (cancellationToken.CanBeCanceled)
-            {
-                this.cancellationTokenRegistration = cancellationToken.Register(o => ((TimeoutAsyncResult<T>)o).Cancel(), this);
-            }
+            this.cancellationToken = cancellationToken;
         }
 
         protected abstract T Target { get; }
 
         public abstract void Cancel();
 
-        protected void SetTimer()
+        protected void StartTracking()
         {
-#if DEBUG
-            this.setTimerCalled = true;
-#endif
-            if (this.timeout != TimeSpan.MaxValue)
+            if (!this.IsCompleted)
             {
-                this.timer = new Timer(s => OnTimerCallback(s), this, this.timeout, Timeout.InfiniteTimeSpan);
+                if (this.timeout != Timeout.InfiniteTimeSpan && this.timeout != TimeSpan.MaxValue)
+                {
+                    this.timer = new Timer(s => OnTimerCallback(s), this, this.timeout, Timeout.InfiniteTimeSpan);
+                }
+
+                if (this.cancellationToken.CanBeCanceled)
+                {
+                    this.cancellationTokenRegistration = this.cancellationToken.Register(o => ((TimeoutAsyncResult<T>)o).Cancel(), this);
+                }
             }
         }
 
@@ -78,9 +77,6 @@ namespace Microsoft.Azure.Amqp
 
         bool CompleteInternal(bool syncComplete, Exception exception)
         {
-#if DEBUG
-            Fx.AssertAndThrow(exception != null || this.setTimerCalled, "Must call SetTimer.");
-#endif
             if (this.timer != null)
             {
                 this.timer.Dispose();

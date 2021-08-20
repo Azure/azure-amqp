@@ -265,12 +265,12 @@ namespace Microsoft.Azure.Amqp.Transport
                 this.args = new TransportAsyncCallbackArgs();
                 this.args.CompletedCallback = onConnect;
                 this.args.UserToken = this;
-                this.SetTimer();
-
                 if (!initiator.ConnectAsync(timeout, this.args))
                 {
                     OnConnect(this.args);
                 }
+
+                this.StartTracking();
             }
 
             protected override string Target

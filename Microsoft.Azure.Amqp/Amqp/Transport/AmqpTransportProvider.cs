@@ -10,6 +10,12 @@ namespace Microsoft.Azure.Amqp.Transport
             this.ProtocolId = ProtocolId.Amqp;
         }
 
+        internal AmqpTransportProvider(AmqpVersion version)
+            : this()
+        {
+            this.Versions.Add(version);
+        }
+
         protected override TransportBase OnCreateTransport(TransportBase innerTransport, bool isInitiator)
         {
             return innerTransport;

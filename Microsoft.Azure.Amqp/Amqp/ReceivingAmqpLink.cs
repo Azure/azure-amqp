@@ -874,7 +874,6 @@ namespace Microsoft.Azure.Amqp
 
             public void Start()
             {
-                this.SetTimer();
                 DeliveryState deliveryState;
                 if (txnId.Array != null)
                 {
@@ -894,6 +893,8 @@ namespace Microsoft.Azure.Amqp
                     // Delivery tag not found
                     link.pendingDispositions.CompleteWork(deliveryTag, true, AmqpConstants.RejectedNotFoundOutcome);
                 }
+
+                this.StartTracking();
             }
 
             public void Done(bool completedSynchronously, DeliveryState state)

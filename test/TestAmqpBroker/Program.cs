@@ -44,6 +44,7 @@ namespace TestAmqpBroker
             string sslValue = null;
             string[] queues = null;
             bool parseEndpoint = true;
+            bool headless = false;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -66,6 +67,10 @@ namespace TestAmqpBroker
                     {
                         sslValue = args[i].Substring(6);
                     }
+                    else if (args[i].Equals("/headless", StringComparison.OrdinalIgnoreCase))
+                    {
+                        headless = true;
+                    }
                     else
                     {
                         Console.WriteLine("Unknown argument: {0}", args[i]);
@@ -78,7 +83,13 @@ namespace TestAmqpBroker
             var broker = new TestAmqpBroker(endpoints, creds, sslValue, queues);
             broker.Start();
 
-            Console.WriteLine("Broker started. Press the enter key to exit...");
+            Console.Write("Broker started.");
+            if (headless)
+            {
+                Console.WriteLine();
+                new System.Threading.AutoResetEvent(false).WaitOne();
+            }
+            Console.WriteLine(" Press the enter key to exit...");
             Console.ReadLine();
 
             broker.Stop();

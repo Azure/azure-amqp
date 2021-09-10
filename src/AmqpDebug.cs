@@ -3,10 +3,7 @@
 
 namespace Microsoft.Azure.Amqp
 {
-    using System.Collections.Concurrent;
     using System.Diagnostics;
-    using System.Globalization;
-    using System.Threading;
     using Microsoft.Azure.Amqp.Framing;
 
     /// <summary>

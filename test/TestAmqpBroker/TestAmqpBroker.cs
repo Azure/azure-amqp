@@ -98,7 +98,8 @@ namespace TestAmqpBroker
                     listeners[i] = tcpSettings.CreateListener();
                 }
 #if !NETSTANDARD
-                else if (addressUri.Scheme.Equals("ws", StringComparison.OrdinalIgnoreCase))
+                else if (addressUri.Scheme.Equals("ws", StringComparison.OrdinalIgnoreCase) ||
+                    addressUri.Scheme.Equals("wss", StringComparison.OrdinalIgnoreCase))
                 {
                     WebSocketTransportSettings wsSettings = new WebSocketTransportSettings() { Uri = addressUri };
                     listeners[i] = wsSettings.CreateListener();

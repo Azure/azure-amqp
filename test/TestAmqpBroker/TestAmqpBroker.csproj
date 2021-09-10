@@ -12,9 +12,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Microsoft.Azure.Amqp\Microsoft.Azure.Amqp.csproj" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
 
 </Project>

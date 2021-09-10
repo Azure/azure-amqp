@@ -442,34 +442,6 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [Fact]
-        public async Task AmqpConcurrentConnectionsTest()
-        {
-            Exception lastException = null;
-            Func<Task> func = async () =>
-            {
-                try
-                {
-                    AmqpConnection connection = await AmqpConnection.Factory.OpenConnectionAsync(addressUri, TimeSpan.FromSeconds(10));
-                    await connection.CloseAsync(TimeSpan.FromSeconds(10));
-                }
-                catch (Exception exp)
-                {
-                    lastException = exp;
-                }
-            };
-
-            Task[] tasks = new Task[32];
-            for (int i = 0; i < tasks.Length; ++i)
-            {
-                tasks[i] = func();
-            }
-
-            await Task.WhenAll(tasks);
-
-            Assert.True(lastException == null, string.Format("Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString()));
-        }
-
-        [Fact]
         public void NonPrefetchConcurrentReceiveTest()
         {
             string queue = "NonPrefetchConcurrentReceiveTest";

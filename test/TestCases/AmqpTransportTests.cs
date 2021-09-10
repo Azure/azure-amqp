@@ -4,6 +4,7 @@
     using System.Diagnostics;
     using System.Net;
     using System.Net.Sockets;
+    using System.Reflection;
     using System.Threading;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Transport;
@@ -12,8 +13,6 @@
     [Trait("Category", TestCategory.Current)]
     public class AmqpTransportTests
     {
-        const int TestBytes = 1024;
-        const int Iterations = 2;
         const int TestMaxNumber = 9999;
 
         [Fact]
@@ -21,31 +20,90 @@
         {
             const string localHost = "localhost";
             const int port = 30888;
+            var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+            var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+            this.RunTransportTest("TcpTransportTest", localHost, port, client, server);
+        }
 
-            TransportTestContext serverContext = new TransportTestContext()
+        [Fact]
+        public void TcpTransportClientDynamicBufferTest()
+        {
+            const string localHost = "localhost";
+            const int port = 30888;
+            var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+            var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+            client.SendBufferSize = client.ReceiveBufferSize = 0;
+            this.RunTransportTest("TcpTransportClientDynamicBufferTest", localHost, port, client, server);
+        }
+
+        [Fact]
+        public void TcpTransportClientFixedBufferTest()
+        {
+            const string localHost = "localhost";
+            const int port = 30888;
+            var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+            var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+            client.SendBufferSize = client.ReceiveBufferSize = 16 * 1024;
+            this.RunTransportTest("TcpTransportClientFixedBufferTest", localHost, port, client, server);
+        }
+
+        [Fact]
+        public void TcpTransportServerDynamicBufferTest()
+        {
+            const string localHost = "localhost";
+            const int port = 30888;
+            var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+            var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+            server.SendBufferSize = server.ReceiveBufferSize = 0;
+            this.RunTransportTest("TcpTransportClientFixedBufferTest", localHost, port, client, server);
+        }
+
+        [Fact]
+        public void TcpTransportServerPooledBufferTest()
+        {
+            const string localHost = "localhost";
+            const int port = 30888;
+            ByteBuffer.InitTransportBufferManager(4 * 1024, 200);
+            try
             {
-                MaxNumber = TestMaxNumber,
-                TransportSettings = AmqpUtils.GetTcpSettings(localHost, port, true)
-            };
-
-            TransportTestContext clientContext = new TransportTestContext()
+                var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+                var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+                this.RunTransportTest("TcpTransportServerPooledBufferTest", localHost, port, client, server);
+            }
+            finally
             {
-                MaxNumber = TestMaxNumber,
-                TransportSettings = AmqpUtils.GetTcpSettings(localHost, port, false)
-            };
+                typeof(ByteBuffer).GetField("TransportBufferManager", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, null);
+            }
+        }
 
-            Thread listenerThread = new Thread(new ParameterizedThreadStart(ListenerThread));
-            listenerThread.Start(serverContext);
+        [Fact]
+        public void TcpTransportServerDynamicPooledBufferTest()
+        {
+            const string localHost = "localhost";
+            const int port = 30888;
+            ByteBuffer.InitTransportBufferManager(4 * 1024, 200);
+            try
+            {
+                var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+                var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+                server.SendBufferSize = server.ReceiveBufferSize = 0;
+                this.RunTransportTest("TcpTransportServerDynamicPooledBufferTest", localHost, port, client, server);
+            }
+            finally
+            {
+                typeof(ByteBuffer).GetField("TransportBufferManager", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, null);
+            }
+        }
 
-            Thread initiatorThread = new Thread(new ParameterizedThreadStart(InitiatorThread));
-            initiatorThread.Start(clientContext);
-
-            listenerThread.Join();
-            initiatorThread.Join();
-
-            Debug.WriteLine("TCP transport test completed.");
-            Assert.True(clientContext.Success);
-            Assert.True(serverContext.Success);
+        [Fact]
+        public void TcpTransportServerFixedBufferTest()
+        {
+            const string localHost = "localhost";
+            const int port = 30888;
+            var client = AmqpUtils.GetTcpSettings(localHost, port, true);
+            var server = AmqpUtils.GetTcpSettings(localHost, port, false);
+            server.SendBufferSize = server.ReceiveBufferSize = 16 * 1024;
+            this.RunTransportTest("TcpTransportServerFixedBufferTest", localHost, port, client, server);
         }
 
         [Fact]
@@ -80,7 +138,32 @@
             }
         }
 
-        internal static TransportBase AcceptServerTransport(TransportSettings settings)
+        void RunTransportTest(string test, string host, int port, TransportSettings client, TransportSettings server)
+        {
+            Debug.WriteLine($"Test '{test}' start.");
+
+            TransportTestContext context = new TransportTestContext()
+            {
+                MaxNumber = TestMaxNumber,
+                Client = client,
+                Server = server,
+                ServerReady = new ManualResetEvent(false),
+            };
+
+            Thread listenerThread = new Thread(new ParameterizedThreadStart(ListenerThread));
+            listenerThread.Start(context);
+
+            Thread initiatorThread = new Thread(new ParameterizedThreadStart(InitiatorThread));
+            initiatorThread.Start(context);
+
+            listenerThread.Join();
+            initiatorThread.Join();
+
+            Debug.WriteLine($"Test '{test}' end.");
+            Assert.True(context.Success, context.Exception?.ToString());
+        }
+
+        static TransportBase AcceptServerTransport(TransportTestContext testContext)
         {
             ManualResetEvent complete = new ManualResetEvent(false);
             int closed = 0;
@@ -91,6 +174,7 @@
                 if (a.Exception != null)
                 {
                     Debug.WriteLine(a.Exception.Message);
+                    testContext.Exception = a.Exception;
                 }
                 else
                 {
@@ -104,20 +188,25 @@
                 }
             };
 
-            TransportListener listener = settings.CreateListener();
-            Debug.WriteLine("Listeners are waiting for connections...");
+            TransportListener listener = testContext.Server.CreateListener();
             listener.Listen(onTransport);
+            testContext.ServerReady.Set();
+            Debug.WriteLine("Listeners are waiting for connections...");
 
             complete.WaitOne();
             complete.Dispose();
+
             listener.Close();
             Debug.WriteLine("Listeners Closed.");
 
             return transport;
         }
 
-        internal static TransportBase EstablistClientTransport(TransportSettings settings)
+        static TransportBase EstablistClientTransport(TransportTestContext testContext)
         {
+            testContext.ServerReady.WaitOne();
+            testContext.ServerReady.Dispose();
+
             ManualResetEvent complete = new ManualResetEvent(false);
             TransportBase transport = null;
 
@@ -126,21 +215,26 @@
                 if (a.Exception != null)
                 {
                     Debug.WriteLine(a.Exception.Message);
+                    testContext.Exception = a.Exception;
                 }
                 else
                 {
                     Debug.WriteLine("Initiator established a transport.");
+                    testContext.Exception = null;
                     transport = a.Transport;
                 }
 
                 complete.Set();
             };
 
-            TransportInitiator initiator = settings.CreateInitiator();
+            TransportInitiator initiator = testContext.Client.CreateInitiator();
             Debug.WriteLine("Initiator is connecting to the server...");
             TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();
             args.CompletedCallback = onTransport;
-            initiator.ConnectAsync(TimeSpan.FromSeconds(10), args);
+            if (!initiator.ConnectAsync(TimeSpan.FromSeconds(6), args))
+            {
+                onTransport(args);
+            }
 
             complete.WaitOne();
             complete.Dispose();
@@ -163,8 +257,11 @@
         class TransportTestContext
         {
             public int MaxNumber { get; set; }
-            public bool Success { get; set; }
-            public TransportSettings TransportSettings { get; set; }
+            public Exception Exception { get; set; }
+            public bool Success { get { return Exception == null; } }
+            public TransportSettings Client { get; set; }
+            public TransportSettings Server { get; set; }
+            public ManualResetEvent ServerReady { get; set; }
         }
 
         class TransportTestHelper
@@ -179,11 +276,15 @@
             public void RunServerTest(TransportTestContext testContext)
             {
                 this.testContext = testContext;
-                this.testContext.Success = true;
-                this.transport = AcceptServerTransport(testContext.TransportSettings);
 
                 try
                 {
+                    this.transport = AcceptServerTransport(testContext);
+                    if (!testContext.Success)
+                    {
+                        return;
+                    }
+
                     int expect = 1;
                     while (expect > 0)
                     {
@@ -192,16 +293,14 @@
                         {
                             if (expect < this.testContext.MaxNumber)
                             {
-                                Debug.WriteLine(string.Format("Got eof before finishing all numbers (expect={0})", expect));
-                                this.testContext.Success = false;
+                                this.testContext.Exception = new Exception(string.Format("Got eof before finishing all numbers (expect={0})", expect));
                             }
 
                             break;
                         }
                         else if (num != expect)
                         {
-                            Debug.WriteLine(string.Format("Expect {0} but got {1}", expect, num));
-                            this.testContext.Success = false;
+                            this.testContext.Exception = new Exception(string.Format("Expect {0} but got {1}", expect, num));
                             break;
                         }
 
@@ -211,41 +310,42 @@
                 }
                 catch (Exception exception)
                 {
-                    Debug.WriteLine("Server got exception: " + exception.ToString());
-                    this.testContext.Success = false;
+                    this.testContext.Exception = exception;
                 }
 
-                this.transport.Close();
+                this.transport?.Close();
                 Debug.WriteLine("Done server.");
             }
 
             public void RunClientTest(TransportTestContext testContext)
             {
                 this.testContext = testContext;
-                this.testContext.Success = true;
-                this.transport = EstablistClientTransport(testContext.TransportSettings);
 
                 try
                 {
+                    this.transport = EstablistClientTransport(testContext);
+                    if (!testContext.Success)
+                    {
+                        return;
+                    }
+
                     for (int i = 1; i < this.testContext.MaxNumber; ++i)
                     {
                         this.Write(i);
                         int num = this.Read();
                         if (num != i * 2)
                         {
-                            Debug.WriteLine(string.Format("Wrote {0} but got {1}", i, num));
-                            this.testContext.Success = false;
+                            this.testContext.Exception = new Exception(string.Format("Wrote {0} but got {1}", i, num));
                             break;
                         }
                     }
                 }
-                catch(Exception exception)
+                catch (Exception exception)
                 {
-                    Debug.WriteLine("Client got exception: " + exception.ToString());
-                    this.testContext.Success = false;
+                    this.testContext.Exception = exception;
                 }
 
-                this.transport.Close();
+                this.transport?.Close();
                 Debug.WriteLine("Done client.");
             }
 

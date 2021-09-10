@@ -16,7 +16,7 @@ namespace Microsoft.Azure.Amqp
     {
         static readonly InternalBufferManager PooledBufferManager = InternalBufferManager.CreatePooledBufferManager();
 
-        static InternalBufferManager TransportBufferManager;
+        internal static InternalBufferManager TransportBufferManager;
         static readonly object syncRoot = new object();
 
         //

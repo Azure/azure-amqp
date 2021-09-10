@@ -73,7 +73,14 @@ namespace Microsoft.Azure.Amqp
         static void OnTimerCallback(object state)
         {
             TimeoutAsyncResult<T> thisPtr = (TimeoutAsyncResult<T>)state;
-            thisPtr.CompleteOnTimer();
+            try
+            {
+                thisPtr.CompleteOnTimer();
+            }
+            catch (Exception ex) when (!Fx.IsFatal(ex))
+            {
+                AmqpTrace.Provider.AmqpLogError(thisPtr.Target, "OnTimerCallback", ex);
+            }
         }
 
         bool CompleteInternal(bool syncComplete, Exception exception)

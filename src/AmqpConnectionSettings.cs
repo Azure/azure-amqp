@@ -114,7 +114,7 @@ namespace Microsoft.Azure.Amqp
             newSettings.HostName = this.HostName;
             newSettings.MaxFrameSize = this.MaxFrameSize;
             newSettings.ChannelMax = this.ChannelMax;
-            newSettings.IdleTimeOut = this.IdleTimeOut;
+            newSettings.CopyIdleTimeOut(this);
             newSettings.OutgoingLocales = this.OutgoingLocales;
             newSettings.IncomingLocales = this.IncomingLocales;
             newSettings.OfferedCapabilities = this.OfferedCapabilities;

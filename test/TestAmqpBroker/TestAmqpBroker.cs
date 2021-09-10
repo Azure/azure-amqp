@@ -18,6 +18,7 @@ namespace TestAmqpBroker
 
     public sealed class TestAmqpBroker : IRuntimeProvider
     {
+        public const uint ConnectionIdleTimeOut = 4 * 60 * 1000;
         readonly IList<string> endpoints;
         readonly string userInfo;
         readonly string sslValue;
@@ -145,7 +146,8 @@ namespace TestAmqpBroker
             AmqpConnectionSettings connectionSettings = new AmqpConnectionSettings()
             {
                 ContainerId = this.containerId,
-                MaxFrameSize = this.maxFrameSize
+                MaxFrameSize = this.maxFrameSize,
+                IdleTimeOut = ConnectionIdleTimeOut
             };
 
             AmqpConnection connection = null;

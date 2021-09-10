@@ -17,6 +17,15 @@ namespace Microsoft.Azure.Amqp.Framing
         public static readonly ulong Code = 0x0000000000000010;
         const int Fields = 10;
 
+        // AMQP spec: To avoid spurious timeouts, the value in idle-time-out
+        // SHOULD be half the peer’s actual timeout threshold.
+        // Behavior of idle timeout depends on how it is set.
+        // 1. If set by user, it is the actual timeout. On the protocol level
+        //    half of that value is sent to the remote peer.
+        // 2. If set by decoder, it is used as is.
+        uint? idleTimeOut;
+        bool isUserIdleTimeOut;
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -47,7 +56,11 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// Gets or sets the "idle-time-out" field.
         /// </summary>
-        public uint? IdleTimeOut { get; set; }
+        public uint? IdleTimeOut
+        {
+            get { return this.idleTimeOut; }
+            set { this.idleTimeOut = value; this.isUserIdleTimeOut = true; }
+        }
 
         /// <summary>
         /// Gets or sets the "outgoing-locales" field.
@@ -82,6 +95,11 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return Fields; }
         }
 
+        uint? ProtocolIdleTimeout
+        {
+            get { return this.isUserIdleTimeOut ? this.idleTimeOut / 2 : this.idleTimeOut; }
+        }
+
         /// <summary>
         /// Returns a string that represents the object.
         /// </summary>
@@ -94,7 +112,7 @@ namespace Microsoft.Azure.Amqp.Framing
             this.AddFieldToString(this.HostName != null, sb, "host-name", this.HostName, ref count);
             this.AddFieldToString(this.MaxFrameSize != null, sb, "max-frame-size", this.MaxFrameSize, ref count);
             this.AddFieldToString(this.ChannelMax != null, sb, "channel-max", this.ChannelMax, ref count);
-            this.AddFieldToString(this.IdleTimeOut != null, sb, "idle-time-out", this.IdleTimeOut, ref count);
+            this.AddFieldToString(this.ProtocolIdleTimeout != null, sb, "idle-time-out", this.ProtocolIdleTimeout, ref count);
             this.AddFieldToString(this.OutgoingLocales != null, sb, "outgoing-locales", this.OutgoingLocales, ref count);
             this.AddFieldToString(this.IncomingLocales != null, sb, "incoming-locales", this.IncomingLocales, ref count);
             this.AddFieldToString(this.OfferedCapabilities != null, sb, "offered-capabilities", this.OfferedCapabilities, ref count);
@@ -122,7 +140,7 @@ namespace Microsoft.Azure.Amqp.Framing
             AmqpCodec.EncodeString(this.HostName, buffer);
             AmqpCodec.EncodeUInt(this.MaxFrameSize, buffer);
             AmqpCodec.EncodeUShort(this.ChannelMax, buffer);
-            AmqpCodec.EncodeUInt(this.IdleTimeOut, buffer);
+            AmqpCodec.EncodeUInt(this.ProtocolIdleTimeout, buffer);
             AmqpCodec.EncodeMultiple(this.OutgoingLocales, buffer);
             AmqpCodec.EncodeMultiple(this.IncomingLocales, buffer);
             AmqpCodec.EncodeMultiple(this.OfferedCapabilities, buffer);
@@ -159,7 +177,8 @@ namespace Microsoft.Azure.Amqp.Framing
 
             if (count-- > 0)
             {
-                this.IdleTimeOut = AmqpCodec.DecodeUInt(buffer);
+                this.idleTimeOut = AmqpCodec.DecodeUInt(buffer);
+                this.isUserIdleTimeOut = false;
             }
 
             if (count-- > 0)
@@ -200,7 +219,7 @@ namespace Microsoft.Azure.Amqp.Framing
             valueSize += AmqpCodec.GetStringEncodeSize(this.HostName);
             valueSize += AmqpCodec.GetUIntEncodeSize(this.MaxFrameSize);
             valueSize += AmqpCodec.GetUShortEncodeSize(this.ChannelMax);
-            valueSize += AmqpCodec.GetUIntEncodeSize(this.IdleTimeOut);
+            valueSize += AmqpCodec.GetUIntEncodeSize(this.ProtocolIdleTimeout);
             valueSize += AmqpCodec.GetMultipleEncodeSize(this.OutgoingLocales);
             valueSize += AmqpCodec.GetMultipleEncodeSize(this.IncomingLocales);
             valueSize += AmqpCodec.GetMultipleEncodeSize(this.OfferedCapabilities);
@@ -208,6 +227,12 @@ namespace Microsoft.Azure.Amqp.Framing
             valueSize += AmqpCodec.GetMapEncodeSize(this.Properties);
 
             return valueSize;
+        }
+
+        internal void CopyIdleTimeOut(Open source)
+        {
+            this.idleTimeOut = source.idleTimeOut;
+            this.isUserIdleTimeOut = source.isUserIdleTimeOut;
         }
     }
 }

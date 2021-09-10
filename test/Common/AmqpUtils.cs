@@ -197,10 +197,7 @@ namespace Test.Microsoft.Azure.Amqp
             AmqpSettings settings = GetAmqpSettings(true, sslHost, doSslUpgrade, saslHandler);
             TransportBase transport = CreateTransport(host, port, sslHost, doSslUpgrade, saslHandler);
             AmqpConnectionSettings connSettings = GetConnectionSettings(maxFrameSize);
-            if (idleTimeoutMs != null)
-            {
-                connSettings.IdleTimeOut = idleTimeoutMs;
-            }
+            connSettings.IdleTimeOut = idleTimeoutMs;
             connSettings.HostName = host;
             return new AmqpConnection(transport, settings, connSettings);
         }

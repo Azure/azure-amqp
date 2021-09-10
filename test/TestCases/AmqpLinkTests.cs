@@ -820,11 +820,16 @@ namespace Test.Microsoft.Azure.Amqp
             string queue = "AmqpConnectionIdleTimeoutTest";
             broker.AddQueue(queue);
 
-            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null,
-                65536, 60 * 1000);
-
+            uint? localIdelTimeOut = 60 * 1000;
+            uint? remoteIdleTimeOut = null;
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536, localIdelTimeOut);
+            Assert.Equal(localIdelTimeOut, connection.Settings.IdleTimeOut);
+            connection.Opening += (c, o) => remoteIdleTimeOut = ((Open)o.Command).IdleTimeOut;
             connection.Open();
             connection.Close();
+
+            Assert.NotNull(remoteIdleTimeOut);
+            Assert.Equal(TestAmqpBroker.ConnectionIdleTimeOut / 2, remoteIdleTimeOut.Value);
 
             bool gotException = false;
             connection = AmqpUtils.CreateConnection(addressUri, null, false, null,

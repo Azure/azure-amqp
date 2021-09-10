@@ -21,7 +21,6 @@ namespace Microsoft.Azure.Amqp
             this.OutgoingWindow = AmqpConstants.DefaultWindowSize;
             this.HandleMax = AmqpConstants.DefaultMaxLinkHandles - 1;
             this.DispositionThreshold = Math.Min(500, (int)AmqpConstants.DefaultWindowSize * 2 / 3);
-            this.DispositionInterval = TimeSpan.FromMilliseconds(AmqpConstants.DefaultDispositionTimeout);
         }
 
         /// <summary>

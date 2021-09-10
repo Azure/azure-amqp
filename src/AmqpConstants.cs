@@ -120,7 +120,6 @@ namespace Microsoft.Azure.Amqp
         internal const uint DefaultWindowSize = 5000;
         internal const uint DefaultLinkCredit = 1000;
         internal const uint DefaultNextTransferId = 1;
-        internal const int DefaultDispositionTimeout = 20;
         internal const int SegmentSize = 512;
     }
 }

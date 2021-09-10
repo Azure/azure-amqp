@@ -371,8 +371,8 @@ namespace Microsoft.Azure.Amqp
 
             public void Start()
             {
-                this.SetTimer();
                 this.link.SendMessageInternal(this.message, this.deliveryTag, this.txnId);
+                this.StartTracking();
             }
 
             public void Done(bool completedSynchronously, Outcome outcome)

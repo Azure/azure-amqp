@@ -740,8 +740,6 @@ namespace Microsoft.Azure.Amqp
 
             protected void Start()
             {
-                this.SetTimer();
-
                 bool shouldComplete = false;
                 Exception completeException = null;
 
@@ -761,6 +759,8 @@ namespace Microsoft.Azure.Amqp
                 {
                     this.Signal(true, completeException);
                 }
+
+                this.StartTracking();
             }
 
             protected abstract bool OnStart();

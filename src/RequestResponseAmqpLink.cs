@@ -398,9 +398,9 @@ namespace Microsoft.Azure.Amqp
 
             public void Start()
             {
-                this.SetTimer();
                 this.parent.sender.SendMessageNoWait(this.request, AmqpConstants.EmptyBinary, this.transactionId);
                 this.request = null;
+                this.StartTracking();
             }
 
             public override void Cancel()

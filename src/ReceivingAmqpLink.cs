@@ -170,7 +170,7 @@ namespace Microsoft.Azure.Amqp
         public IAsyncResult BeginReceiveRemoteMessages(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
         {
             // If the caller expects some messages and pass TimeSpan.Zero, we wait to mimic a service call
-            if (timeout == TimeSpan.Zero)
+            if (timeout == TimeSpan.Zero && !this.Settings.AutoSendFlow)
             {
                 timeout = MinReceiveTimeout;
             }

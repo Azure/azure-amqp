@@ -255,7 +255,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        IAsyncResult BeginSendMessage(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId,
+        internal IAsyncResult BeginSendMessage(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId,
             TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
         {
             this.ThrowIfClosed();

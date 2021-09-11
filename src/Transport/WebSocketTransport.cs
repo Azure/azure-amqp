@@ -157,7 +157,7 @@ namespace Microsoft.Azure.Amqp.Transport
             Task task = webSocket.CloseAsync(WebSocketCloseStatus.Empty, string.Empty, CancellationToken.None);
             if (task.IsCompleted)
             {
-                return false;
+                return true;
             }
 
             task.ContinueWith(t =>
@@ -165,7 +165,8 @@ namespace Microsoft.Azure.Amqp.Transport
                 Exception exception = t.IsFaulted ? t.Exception.InnerException : (t.IsCanceled ? new OperationCanceledException() : null);
                 this.CompleteClose(false, exception);
             });
-            return true;
+
+            return false;
         }
 
         /// <summary>

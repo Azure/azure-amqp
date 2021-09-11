@@ -138,12 +138,14 @@ namespace Microsoft.Azure.Amqp
 
         internal bool CloseCalled => this.closeCalled;
 
+        internal virtual TimeSpan OperationTimeout => AmqpConstants.DefaultTimeout;
+
         /// <summary>
         /// Opens the object with default timeout.
         /// </summary>
         public void Open()
         {
-            this.Open(AmqpConstants.DefaultTimeout);
+            this.Open(this.OperationTimeout);
         }
 
         /// <summary>
@@ -190,7 +192,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A task.</returns>
         public Task OpenAsync()
         {
-            return this.OpenAsync(AmqpConstants.DefaultTimeout);
+            return this.OpenAsync(this.OperationTimeout);
         }
 
         /// <summary>
@@ -217,7 +219,7 @@ namespace Microsoft.Azure.Amqp
             return Task.Factory.FromAsync(
                 static (t, k, c, s) => ((AmqpObject)s).BeginOpen(t, k, c, s),
                 static r => ((AmqpObject)r.AsyncState).EndOpen(r),
-                AmqpConstants.DefaultTimeout,
+                this.OperationTimeout,
                 cancellationToken,
                 this);
         }
@@ -249,7 +251,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public void Close()
         {
-            this.Close(AmqpConstants.DefaultTimeout);
+            this.Close(this.OperationTimeout);
         }
 
         /// <summary>
@@ -294,7 +296,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A task.</returns>
         public Task CloseAsync()
         {
-            return this.CloseAsync(AmqpConstants.DefaultTimeout);
+            return this.CloseAsync(this.OperationTimeout);
         }
 
         /// <summary>
@@ -321,7 +323,7 @@ namespace Microsoft.Azure.Amqp
             return Task.Factory.FromAsync(
                 static (t, k, c, s) => ((AmqpObject)s).BeginClose(t, k, c, s),
                 static r => ((AmqpObject)r.AsyncState).EndClose(r),
-                AmqpConstants.DefaultTimeout,
+                this.OperationTimeout,
                 cancellationToken,
                 this);
         }
@@ -415,7 +417,7 @@ namespace Microsoft.Azure.Amqp
 
             try
             {
-                this.BeginClose(AmqpConstants.DefaultTimeout, onSafeCloseComplete, this);
+                this.BeginClose(this.OperationTimeout, onSafeCloseComplete, this);
             }
             catch (Exception exp) when (!Fx.IsFatal(exp))
             {

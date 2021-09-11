@@ -16,7 +16,6 @@ namespace Microsoft.Azure.Amqp
     /// </summary>
     public class RequestResponseAmqpLink : AmqpObject
     {
-        static readonly TimeSpan OperationTimeout = AmqpConstants.DefaultTimeout;
         static readonly AsyncCallback onSenderOpen = OnSenderOpen;
         static readonly AsyncCallback onReceiverOpen = OnReceiverOpen;
         static readonly AsyncCallback onSenderClose = OnSenderClose;
@@ -171,10 +170,11 @@ namespace Microsoft.Azure.Amqp
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
-                static (r, t, c, s) => ((RequestResponseAmqpLink)s).BeginRequest(r, AmqpConstants.NullBinary, t, CancellationToken.None, c, s),
+                static (r, t, k, c, s) => ((RequestResponseAmqpLink)s).BeginRequest(r, AmqpConstants.NullBinary, t, k, c, s),
                 static (r) => ((RequestResponseAmqpLink)r.AsyncState).EndRequest(r),
                 request,
                 timeout,
+                CancellationToken.None,
                 this);
         }
 
@@ -187,9 +187,10 @@ namespace Microsoft.Azure.Amqp
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
-                static (r, k, c, s) => ((RequestResponseAmqpLink)s).BeginRequest(r, AmqpConstants.NullBinary, TimeSpan.MaxValue, k, c, s),
+                static (r, t, k, c, s) => ((RequestResponseAmqpLink)s).BeginRequest(r, AmqpConstants.NullBinary, t, k, c, s),
                 static (r) => ((RequestResponseAmqpLink)r.AsyncState).EndRequest(r),
                 request,
+                this.sender.OperationTimeout,
                 cancellationToken,
                 this);
         }

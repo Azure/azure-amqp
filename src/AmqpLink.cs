@@ -203,6 +203,8 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public bool Drain => this.drain;
 
+        internal override TimeSpan OperationTimeout => this.settings.OperationTimeout;
+
         /// <summary>
         /// Attaches the link to a session.
         /// </summary>
@@ -1072,7 +1074,7 @@ namespace Microsoft.Azure.Amqp
             {
                 try
                 {
-                    this.Session.LinkFactory.BeginOpenLink(this, AmqpConstants.DefaultTimeout, onProviderLinkOpened, this);
+                    this.Session.LinkFactory.BeginOpenLink(this, this.OperationTimeout, onProviderLinkOpened, this);
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {

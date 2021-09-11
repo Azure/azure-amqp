@@ -18,6 +18,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public AmqpLinkSettings()
         {
+            this.OperationTimeout = AmqpConstants.DefaultTimeout;
         }
 
         /// <summary>
@@ -83,6 +84,15 @@ namespace Microsoft.Azure.Amqp
                         break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets or sets the default operation timeout when not explicitly specified in an API.
+        /// </summary>
+        public TimeSpan OperationTimeout
+        {
+            get;
+            set;
         }
 
         /// <summary>

@@ -87,10 +87,11 @@ namespace Microsoft.Azure.Amqp
         public Task<Outcome> SendMessageAsync(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
-                static (p, t, c, s) => ((SendingAmqpLink)s).BeginSendMessage(p.Message, p.DeliveryTag, p.TxnId, t, CancellationToken.None, c, s),
+                static (p, t, k, c, s) => ((SendingAmqpLink)s).BeginSendMessage(p.Message, p.DeliveryTag, p.TxnId, t, k, c, s),
                 static r => ((SendingAmqpLink)r.AsyncState).EndSendMessage(r),
                 new SendMessageParam(message, deliveryTag, txnId),
                 timeout,
+                CancellationToken.None,
                 this);
         }
 
@@ -105,9 +106,10 @@ namespace Microsoft.Azure.Amqp
         public Task<Outcome> SendMessageAsync(AmqpMessage message, ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
-                static (p, k, c, s) => ((SendingAmqpLink)s).BeginSendMessage(p.Message, p.DeliveryTag, p.TxnId, TimeSpan.MaxValue, k, c, s),
+                static (p, t, k, c, s) => ((SendingAmqpLink)s).BeginSendMessage(p.Message, p.DeliveryTag, p.TxnId, t, k, c, s),
                 static r => ((SendingAmqpLink)r.AsyncState).EndSendMessage(r),
                 new SendMessageParam(message, deliveryTag, txnId),
+                this.OperationTimeout,
                 cancellationToken,
                 this);
         }

@@ -65,7 +65,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A message when the task is completed. Null if there is no message available.</returns>
         public Task<AmqpMessage> ReceiveMessageAsync()
         {
-            return this.ReceiveMessageAsync(AmqpConstants.DefaultTimeout);
+            return this.ReceiveMessageAsync(this.OperationTimeout);
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A list of messages when the task is completed. Empty if there is no message available.</returns>
         public Task<IReadOnlyList<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout)
         {
-            return this.ReceiveMessagesAsync(messageCount, batchWaitTimeout, AmqpConstants.DefaultTimeout, CancellationToken.None);
+            return this.ReceiveMessagesAsync(messageCount, batchWaitTimeout, this.OperationTimeout, CancellationToken.None);
         }
 
         /// <summary>
@@ -225,7 +225,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>An <see cref="Outcome"/> from remote peer when the task is completed.</returns>
         public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, Outcome outcome)
         {
-            return this.DisposeMessageAsync(deliveryTag, AmqpConstants.NullBinary, outcome, true, AmqpConstants.DefaultTimeout);
+            return this.DisposeMessageAsync(deliveryTag, AmqpConstants.NullBinary, outcome, true, this.OperationTimeout);
         }
 
         /// <summary>
@@ -253,10 +253,11 @@ namespace Microsoft.Azure.Amqp
         public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable, TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
-                static (p, t, c, s) => ((ReceivingAmqpLink)s).BeginDisposeMessage(p.DeliveryTag, p.TxnId, p.Outcome, p.Batchable, t, CancellationToken.None, c, s),
+                static (p, t, k, c, s) => ((ReceivingAmqpLink)s).BeginDisposeMessage(p.DeliveryTag, p.TxnId, p.Outcome, p.Batchable, t, k, c, s),
                 static r => ((ReceivingAmqpLink)r.AsyncState).EndDisposeMessage(r),
                 new DisposeParam(deliveryTag, txnId, outcome, batchable),
                 timeout,
+                CancellationToken.None,
                 this);
         }
 
@@ -284,9 +285,10 @@ namespace Microsoft.Azure.Amqp
         public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable, CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
-                static (p, k, c, s) => ((ReceivingAmqpLink)s).BeginDisposeMessage(p.DeliveryTag, p.TxnId, p.Outcome, p.Batchable, TimeSpan.MaxValue, k, c, s),
+                static (p, t, k, c, s) => ((ReceivingAmqpLink)s).BeginDisposeMessage(p.DeliveryTag, p.TxnId, p.Outcome, p.Batchable, t, k, c, s),
                 static r => ((ReceivingAmqpLink)r.AsyncState).EndDisposeMessage(r),
                 new DisposeParam(deliveryTag, txnId, outcome, batchable),
+                this.OperationTimeout,
                 cancellationToken,
                 this);
         }

@@ -875,10 +875,15 @@ namespace Microsoft.Azure.Amqp
                 delivery.CompletePayload(payload.Length);
             }
 
-            if (!more && settled)
+            if (!more)
             {
-                delivery.State = AmqpConstants.AcceptedOutcome;
-                this.OnDisposeDeliveryInternal(delivery);
+                AmqpTrace.Provider.AmqpSentMessage(this, delivery.DeliveryId.Value, delivery.BytesTransfered);
+
+                if (delivery.Settled)
+                {
+                    delivery.State = AmqpConstants.AcceptedOutcome;
+                    this.OnDisposeDeliveryInternal(delivery);
+                }
             }
 
             return !more;

@@ -641,6 +641,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
+                AmqpTrace.Provider.AmqpCacheMessage(this, message.DeliveryId.Value, message.Segments, this.Settings.TotalLinkCredit, this.LinkCredit);
                 this.messageQueue.Enqueue(message);
                 this.CheckWaiter();
             }

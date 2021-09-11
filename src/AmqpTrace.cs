@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Diagnostics.Tracing;
     using System.Text;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transport;
@@ -33,18 +34,28 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Called when a connection is opening.
         /// </summary>
+        /// <param name="source">The object that calls this method.</param>
         /// <param name="connection">The connection.</param>
-        public virtual void AmqpOpenConnection(AmqpConnection connection)
+        public virtual void AmqpOpenConnection(object source, AmqpConnection connection)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpOpenConnection(source.ToString(), connection.ToString());
+            }
         }
 
         /// <summary>
         /// Called when a connection is closing or aborting.
         /// </summary>
+        /// <param name="source">The object that calls this method.</param>
         /// <param name="connection">The connection.</param>
         /// <param name="abort">true if the connection is aborted.</param>
-        public virtual void AmqpCloseConnection(AmqpConnection connection, bool abort)
+        public virtual void AmqpCloseConnection(object source, AmqpConnection connection, bool abort)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpCloseConnection(source.ToString(), connection.ToString(), abort);
+            }
         }
 
         /// <summary>
@@ -56,11 +67,16 @@ namespace Microsoft.Azure.Amqp
         /// <param name="remoteChannel">Remote channel number of the session.</param>
         public virtual void AmqpAddSession(AmqpConnection connection, AmqpSession session, ushort localChannel, ushort remoteChannel)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpAddSession(connection.ToString(), session.ToString(), localChannel, remoteChannel);
+            }
         }
 
         /// <summary>
         /// Called when a link is being added to a session.
         /// </summary>
+        /// <param name="connection">The connection.</param>
         /// <param name="session">The session.</param>
         /// <param name="link">The lin.</param>
         /// <param name="localHandle">Local handle of the link.</param>
@@ -69,8 +85,14 @@ namespace Microsoft.Azure.Amqp
         /// <param name="role">Role of the link.</param>
         /// <param name="source"><see cref="Source"/> of the link.</param>
         /// <param name="target"><see cref="Target"/> of the link.</param>
-        public virtual void AmqpAttachLink(AmqpSession session, AmqpLink link, uint localHandle, uint remoteHandle, string linkName, string role, object source, object target)
+        public virtual void AmqpAttachLink(AmqpConnection connection, AmqpSession session, AmqpLink link,
+            uint localHandle, uint remoteHandle, string linkName, string role, object source, object target)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpAttachLink(connection.ToString(), session.ToString(), link.ToString(),
+                    localHandle, remoteHandle, linkName, role, string.Empty);
+            }
         }
 
         /// <summary>
@@ -80,6 +102,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="deliveryTag">See <see cref="Delivery.DeliveryTag"/> for details.</param>
         public virtual void AmqpDeliveryNotFound(AmqpLink link, string deliveryTag)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpDeliveryNotFound(link.ToString(), deliveryTag);
+            }
         }
 
         /// <summary>
@@ -91,6 +117,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="state">The delivery state.</param>
         public virtual void AmqpDispose(AmqpLink link, uint deliveryId, bool settled, object state)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Verbose, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpDispose(link.ToString(), deliveryId, settled, state?.ToString() ?? string.Empty);
+            }
         }
 
         /// <summary>
@@ -102,6 +132,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="newSize">The current buffer size.</param>
         public virtual void AmqpDynamicBufferSizeChange(TransportBase transport, string type, int oldSize, int newSize)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpDynamicBufferSizeChange(transport.ToString(), type, oldSize, newSize);
+            }
         }
 
         /// <summary>
@@ -113,6 +147,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="isAuthenticated">true if the transport is authenticated, or false otherwise.</param>
         public virtual void AmqpInsecureTransport(AmqpTransportListener listener, TransportBase transport, bool isSecure, bool isAuthenticated)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpInsecureTransport(listener.ToString(), transport.ToString(), isSecure, isAuthenticated);
+            }
         }
 
         /// <summary>
@@ -125,6 +163,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="error">Error message associated with the detach.</param>
         public virtual void AmqpLinkDetach(AmqpLink link, string name, uint handle, string action, string error)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpLinkDetach(link.ToString(), name, handle, action, error);
+            }
         }
 
         /// <summary>
@@ -135,6 +177,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="error">The error message.</param>
         public virtual void AmqpListenSocketAcceptError(TransportListener listener, bool willRetry, string error)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Error, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpListenSocketAcceptError(listener.ToString(), willRetry, error);
+            }
         }
 
         /// <summary>
@@ -145,6 +191,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="exception">The exception.</param>
         public virtual void AmqpLogError(object source, string operation, Exception exception)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Error, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpLogError(source.ToString(), operation, exception.ToString());
+            }
         }
 
         /// <summary>
@@ -155,6 +205,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="detail">The object that is associated with the operation.</param>
         public virtual void AmqpLogOperationInformational(object source, TraceOperation operation, object detail)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpLogOperationInformational(source.ToString(), operation, detail.ToString());
+            }
         }
 
         /// <summary>
@@ -165,17 +219,24 @@ namespace Microsoft.Azure.Amqp
         /// <param name="detail">The object that is associated with the operation.</param>
         public virtual void AmqpLogOperationVerbose(object source, TraceOperation operation, object detail)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Verbose, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpLogOperationVerbose(source.ToString(), operation, detail.ToString());
+            }
         }
 
         /// <summary>
         /// Called when a channel number is not found in a connection or a link handle is not found in a session.
         /// </summary>
-        /// <param name="connection">The connection.</param>
-        /// <param name="session">Null if it is for a session channel, or the session of the missing link handle.</param>
+        /// <param name="container">The <see cref="AmqpObject"/> that owns the handle table.</param>
         /// <param name="type">Type of the handle ("session" or "link").</param>
         /// <param name="handle">The session channel or the link handle.</param>
-        public virtual void AmqpMissingHandle(AmqpConnection connection, AmqpSession session, string type, uint handle)
+        public virtual void AmqpMissingHandle(AmqpObject container, string type, uint handle)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Warning, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpMissingHandle(container.ToString(), type, handle);
+            }
         }
 
         /// <summary>
@@ -187,6 +248,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="error">The error.</param>
         public virtual void AmqpOpenEntityFailed(object source, string name, string entityName, Exception error)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Error, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpOpenEntityFailed(source.ToString(), name, entityName, error.ToString());
+            }
         }
 
         /// <summary>
@@ -197,6 +262,24 @@ namespace Microsoft.Azure.Amqp
         /// <param name="entityName">The entity name (typically the address where the link attaches).</param>
         public virtual void AmqpOpenEntitySucceeded(object source, string name, string entityName)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpOpenEntitySucceeded(source.ToString(), name, entityName);
+            }
+        }
+
+        /// <summary>
+        /// Called when a message is received.
+        /// </summary>
+        /// <param name="link">The sending link.</param>
+        /// <param name="deliveryId">The delivery id of the message.</param>
+        /// <param name="bytes">Total bytes transferred.</param>
+        public virtual void AmqpSentMessage(AmqpLink link, uint deliveryId, long bytes)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Verbose, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpSentMessage(link.ToString(), deliveryId, bytes);
+            }
         }
 
         /// <summary>
@@ -207,6 +290,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="transferCount">Number of transfers of the message.</param>
         public virtual void AmqpReceiveMessage(AmqpLink link, uint deliveryId, int transferCount)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Verbose, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpReceiveMessage(link.ToString(), deliveryId, transferCount);
+            }
         }
 
         /// <summary>
@@ -219,6 +306,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="linkName">Name of the link.</param>
         public virtual void AmqpRemoveLink(AmqpSession session, object link, uint localHandle, uint remoteHandle, string linkName)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpRemoveLink(session.Connection.ToString(), session.ToString(), link.ToString(), localHandle, remoteHandle, linkName);
+            }
         }
 
         /// <summary>
@@ -230,6 +321,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="remoteChannel">Remote channel of the session.</param>
         public virtual void AmqpRemoveSession(AmqpConnection connection, AmqpSession session, ushort localChannel, ushort remoteChannel)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpRemoveSession(connection.ToString(), session.ToString(), localChannel, remoteChannel);
+            }
         }
 
         /// <summary>
@@ -239,6 +334,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="nextId">Next transfer id.</param>
         public virtual void AmqpSessionWindowClosed(AmqpSession session, int nextId)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpSessionWindowClosed(session.ToString(), nextId);
+            }
         }
 
         /// <summary>
@@ -250,6 +349,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="toState">The current state.</param>
         public virtual void AmqpStateTransition(AmqpObject source, string operation, AmqpObjectState fromState, AmqpObjectState toState)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpStateTransition(source.ToString(), operation, fromState.ToString(), toState.ToString());
+            }
         }
 
         /// <summary>
@@ -260,6 +363,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="to">The current transport.</param>
         public virtual void AmqpUpgradeTransport(object source, TransportBase from, TransportBase to)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpUpgradeTransport(source.ToString(), from.ToString(), to.ToString());
+            }
         }
 
         /// <summary>
@@ -268,6 +375,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="exception">The exception.</param>
         public virtual void AmqpAbortThrowingException(Exception exception)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Critical, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpAbortThrowingException(exception.ToString());
+            }
         }
 
         /// <summary>
@@ -276,13 +387,15 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="link">The receiving link.</param>
         /// <param name="deliveryId">Delivery id of the message.</param>
-        /// <param name="count">Number of messages in the buffer queue.</param>
-        /// <param name="isPrefecthingBySize">true if the buffer queue is limited by size.</param>
-        /// <param name="totalCacheSizeInBytes">The buffer queue limit.</param>
+        /// <param name="transfers">The number of transfer frames received for this message.</param>
         /// <param name="totalLinkCredit">The total credit set on the link.</param>
         /// <param name="linkCredit">The current link credit of the link.</param>
-        public virtual void AmqpCacheMessage(AmqpLink link, uint deliveryId, int count, bool isPrefecthingBySize, long totalCacheSizeInBytes, uint totalLinkCredit, uint linkCredit)
+        public virtual void AmqpCacheMessage(AmqpLink link, uint deliveryId, int transfers, uint totalLinkCredit, uint linkCredit)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Verbose, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpCacheMessage(link.ToString(), deliveryId, transfers, totalLinkCredit, linkCredit);
+            }
         }
 
         /// <summary>
@@ -293,6 +406,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="queueSize">The size that the source maintains for such events.</param>
         public virtual void AmqpIoEvent(AmqpObject source, IoEvent ioEvent, long queueSize)
         {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpIoEvent(source.ToString(), (int)ioEvent, queueSize);
+            }
         }
 
         internal static void OnProtocolHeader(ProtocolHeader header, bool send)

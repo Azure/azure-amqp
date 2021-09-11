@@ -183,7 +183,7 @@ namespace Microsoft.Azure.Amqp
                 link.LocalHandle = this.linksByLocalHandle.Add(link);
             }
 
-            AmqpTrace.Provider.AmqpAttachLink(this, link, link.LocalHandle.Value,
+            AmqpTrace.Provider.AmqpAttachLink(this.connection, this, link, link.LocalHandle.Value,
                 link.RemoteHandle ?? 0u, link.Name, link.IsReceiver ? "receiver" : "sender", link.Settings.Source, link.Settings.Target);
         }
 
@@ -532,7 +532,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (this.Settings.IgnoreMissingLinks)
                     {
-                        AmqpTrace.Provider.AmqpMissingHandle(this.connection, this, "link", flow.Handle.Value);
+                        AmqpTrace.Provider.AmqpMissingHandle(this, "link", flow.Handle.Value);
                         return;
                     }
 
@@ -583,7 +583,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (this.Settings.IgnoreMissingLinks)
                     {
-                        AmqpTrace.Provider.AmqpMissingHandle(this.connection, this, "link", linkBody.Handle.Value);
+                        AmqpTrace.Provider.AmqpMissingHandle(this, "link", linkBody.Handle.Value);
                         return;
                     }
 

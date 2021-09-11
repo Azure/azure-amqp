@@ -233,7 +233,7 @@ namespace Microsoft.Azure.Amqp
         /// remote peer.</remarks>
         protected override bool OpenInternal()
         {
-            AmqpTrace.Provider.AmqpOpenConnection(this);
+            AmqpTrace.Provider.AmqpOpenConnection(this, this);
             if (this.isInitiator)
             {
                 this.SendProtocolHeader(this.initialHeader);
@@ -262,7 +262,7 @@ namespace Microsoft.Azure.Amqp
         /// remote peer.</remarks>
         protected override bool CloseInternal()
         {
-            AmqpTrace.Provider.AmqpCloseConnection(this, false);
+            AmqpTrace.Provider.AmqpCloseConnection(this, this, false);
             this.heartBeat.Stop();
             this.CloseSessions(!this.SessionFrameAllowed());
 
@@ -297,7 +297,7 @@ namespace Microsoft.Azure.Amqp
         /// with the remote peer.</remarks>
         protected override void AbortInternal()
         {
-            AmqpTrace.Provider.AmqpCloseConnection(this, true);
+            AmqpTrace.Provider.AmqpCloseConnection(this, this, true);
             this.heartBeat.Stop();
             this.CloseSessions(true);
             this.AsyncIO.Abort();
@@ -558,7 +558,7 @@ namespace Microsoft.Azure.Amqp
                         this.Settings.IgnoreMissingSessions)
                     {
                         // The session close may timed out already
-                        AmqpTrace.Provider.AmqpMissingHandle(this, null, "session", channel);
+                        AmqpTrace.Provider.AmqpMissingHandle(this, "session", channel);
                         return;
                     }
 

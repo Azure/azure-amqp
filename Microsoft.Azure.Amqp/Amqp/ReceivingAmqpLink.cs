@@ -698,7 +698,12 @@ namespace Microsoft.Azure.Amqp
                 this.timeout = timeout;
                 if (cancellationToken.CanBeCanceled)
                 {
-                    this.cancellationTokenRegistration = cancellationToken.Register(o => ((ReceiveAsyncResult)o).Signal(false, null), this);
+                    this.cancellationTokenRegistration = cancellationToken.Register(o =>
+                    {
+                        ReceiveAsyncResult result = (ReceiveAsyncResult)o;
+                        RemoveFromWaiterList(result);
+                        result.Signal(false, null);
+                    }, this);
                 }
             }
 
@@ -824,18 +829,23 @@ namespace Microsoft.Azure.Amqp
             internal static void OnTimer(object state)
             {
                 ReceiveAsyncResult thisPtr = (ReceiveAsyncResult)state;
-                lock (thisPtr.parent.SyncRoot)
+                RemoveFromWaiterList(thisPtr);
+
+                thisPtr.CompleteInternal(false, thisPtr.MessageCount > 0 ? 1 : 2, null); // 1: signaled, 2: timeout
+            }
+
+            private static void RemoveFromWaiterList(ReceiveAsyncResult result)
+            {
+                lock (result.parent.SyncRoot)
                 {
-                    if (thisPtr.parent.waiterList == null || thisPtr.node == null)
+                    if (result.parent.waiterList == null || result.node == null)
                     {
                         return;
                     }
 
-                    thisPtr.parent.waiterList.Remove(thisPtr.node);
-                    thisPtr.node = null;
+                    result.parent.waiterList.Remove(result.node);
+                    result.node = null;
                 }
-
-                thisPtr.CompleteInternal(false, thisPtr.MessageCount > 0 ? 1 : 2, null); // 1: signaled, 2: timeout
             }
         }
 

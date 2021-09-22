@@ -702,7 +702,7 @@ namespace Microsoft.Azure.Amqp
                     {
                         ReceiveAsyncResult result = (ReceiveAsyncResult)o;
                         RemoveFromWaiterList(result);
-                        result.Signal(false, null);
+                        result.Signal(false, new TaskCanceledException());
                     }, this);
                 }
             }

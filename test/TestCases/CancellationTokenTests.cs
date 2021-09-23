@@ -517,7 +517,7 @@ namespace Test.Microsoft.Azure.Amqp
 
                 var completedTask = await Task.WhenAny(task, Task.Delay(5000));
                 Assert.Equal(task, completedTask);
-                Assert.Null(task.Result);
+                Assert.True(task.IsCanceled);
             }
             finally
             {

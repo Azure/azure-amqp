@@ -130,9 +130,11 @@
                 Assert.True(task.IsFaulted);
                 Assert.NotNull(task.Exception);
 
-                var ex = task.Exception.GetBaseException() as SocketException;
+                var ex = task.Exception.GetBaseException();
                 Assert.NotNull(ex);
-                Assert.Equal(SocketError.TimedOut, (SocketError)ex.ErrorCode);
+                Assert.Equal(typeof(SocketException).FullName, ex.GetType().FullName);
+                var socketException = ex as SocketException;
+                Assert.Equal(SocketError.TimedOut, (SocketError)socketException.ErrorCode);
             }
             finally
             {

@@ -202,7 +202,7 @@ namespace Microsoft.Azure.Amqp
 
             if (messages.Count == 0 && timeout > TimeSpan.Zero)
             {
-                ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, cancellationToken, callback, state);
+                ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, callback, state);
                 bool completeWaiter = true;
                 lock (this.SyncRoot)
                 {
@@ -220,7 +220,7 @@ namespace Microsoft.Azure.Amqp
                     else
                     {
                         LinkedListNode<ReceiveAsyncResult> node = this.waiterList.AddLast(waiter);
-                        waiter.Initialize(node);
+                        waiter.Initialize(node, cancellationToken);
                         completeWaiter = false;
 
                         // If no auto-flow, trigger a flow to get messages.
@@ -681,14 +681,14 @@ namespace Microsoft.Azure.Amqp
             readonly int requestedMessageCount;
             readonly TimeSpan batchWaitTimeout;
             readonly TimeSpan timeout;
-            readonly CancellationTokenRegistration cancellationTokenRegistration;
+            CancellationTokenRegistration cancellationTokenRegistration;
             Timer timer;
             LinkedListNode<ReceiveAsyncResult> node;
             int completed;  // 1: signaled, 2: timeout
             List<AmqpMessage> messages;
 
             public ReceiveAsyncResult(ReceivingAmqpLink parent, int requestedMessageCount, TimeSpan batchWaitTimeout,
-                TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
+                TimeSpan timeout, AsyncCallback callback, object state)
                 : base(callback, state)
             {
                 this.parent = parent;
@@ -696,15 +696,6 @@ namespace Microsoft.Azure.Amqp
                 this.requestedMessageCount = requestedMessageCount;
                 Fx.Assert(timeout > TimeSpan.Zero, "must have a non-zero timeout");
                 this.timeout = timeout;
-                if (cancellationToken.CanBeCanceled)
-                {
-                    this.cancellationTokenRegistration = cancellationToken.Register(o =>
-                    {
-                        ReceiveAsyncResult result = (ReceiveAsyncResult)o;
-                        RemoveFromWaiterList(result);
-                        result.Signal(false, new TaskCanceledException());
-                    }, this);
-                }
             }
 
             public int RequestedMessageCount
@@ -723,12 +714,21 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            public void Initialize(LinkedListNode<ReceiveAsyncResult> node)
+            public void Initialize(LinkedListNode<ReceiveAsyncResult> node, CancellationToken cancellationToken)
             {
                 this.node = node;
                 if (this.timeout != TimeSpan.MaxValue)
                 {
                     this.timer = new Timer(s => OnTimer(s), this, this.timeout, Timeout.InfiniteTimeSpan);
+                }
+                if (cancellationToken.CanBeCanceled)
+                {
+                    this.cancellationTokenRegistration = cancellationToken.Register(o =>
+                    {
+                        ReceiveAsyncResult result = (ReceiveAsyncResult)o;
+                        RemoveFromWaiterList(result);
+                        result.Signal(false, new TaskCanceledException());
+                    }, this);
                 }
             }
 

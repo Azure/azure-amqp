@@ -507,17 +507,12 @@ namespace Test.Microsoft.Azure.Amqp
                 {
                     cts.Cancel();
                 }
-
-                var task = link.ReceiveMessageAsync(cts.Token);
-                if (!cancelBefore)
+                else
                 {
-                    await Task.Delay(100);
-                    cts.Cancel();
+                    cts.CancelAfter(100);
                 }
 
-                var completedTask = await Task.WhenAny(task, Task.Delay(5000));
-                Assert.Equal(task, completedTask);
-                Assert.True(task.IsCanceled);
+                await Assert.ThrowsAsync<TaskCanceledException>(async () => await link.ReceiveMessageAsync(cts.Token));
             }
             finally
             {

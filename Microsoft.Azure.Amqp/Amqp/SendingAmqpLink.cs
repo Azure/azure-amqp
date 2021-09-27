@@ -306,10 +306,12 @@ namespace Microsoft.Azure.Amqp
                 this.CompleteSelf(completedSynchronously);
             }
 
-            public override void Cancel()
+            public override void Cancel(bool isSynchronous)
             {
-                this.CancelInflight();
-                this.CompleteSelf(false, new TaskCanceledException());
+                if (this.CancelInflight())
+                {
+                    this.CompleteSelf(isSynchronous, new TaskCanceledException());
+                }
             }
 
             public void Cancel(bool completedSynchronously, Exception exception)
@@ -337,11 +339,13 @@ namespace Microsoft.Azure.Amqp
 
             protected override void CompleteOnTimer()
             {
-                this.CancelInflight();
-                base.CompleteOnTimer();
+                if (this.CancelInflight())
+                {
+                    base.CompleteOnTimer();
+                }
             }
 
-            void CancelInflight()
+            bool CancelInflight()
             {
                 if (this.link.inflightSends.TryRemoveWork(this.deliveryTag, out _))
                 {
@@ -355,7 +359,11 @@ namespace Microsoft.Azure.Amqp
                     {
                         this.message.State = AmqpConstants.ReleasedOutcome;
                     }
+
+                    return true;
                 }
+
+                return false;
             }
         }
     }

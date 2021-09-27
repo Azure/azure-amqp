@@ -128,12 +128,34 @@ namespace Microsoft.Azure.Amqp
                 this);
         }
 
+        public Task<AmqpMessage> RequestAsync(AmqpMessage request, ArraySegment<byte> txnId, TimeSpan timeout)
+        {
+            return Task.Factory.FromAsync(
+                (p, t, k, c, s) => new RequestAsyncResult((RequestResponseAmqpLink)s, p.Request, p.TxnId, t, k, c, s),
+                (r) => RequestAsyncResult.End(r),
+                new RequestParam(request, txnId),
+                timeout,
+                CancellationToken.None,
+                this);
+        }
+
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
                 (r, t, k, c, s) => new RequestAsyncResult((RequestResponseAmqpLink)s, r, AmqpConstants.NullBinary, t, k, c, s),
                 (r) => RequestAsyncResult.End(r),
                 request,
+                this.sender.Settings.OperationTimeout,
+                cancellationToken,
+                this);
+        }
+
+        public Task<AmqpMessage> RequestAsync(AmqpMessage request, ArraySegment<byte> txnId, CancellationToken cancellationToken)
+        {
+            return Task.Factory.FromAsync(
+                (p, t, k, c, s) => new RequestAsyncResult((RequestResponseAmqpLink)s, p.Request, p.TxnId, t, k, c, s),
+                (r) => RequestAsyncResult.End(r),
+                new RequestParam(request, txnId),
                 this.sender.Settings.OperationTimeout,
                 cancellationToken,
                 this);
@@ -255,6 +277,18 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        struct RequestParam
+        {
+            public RequestParam(AmqpMessage request, ArraySegment<byte> txnId)
+            {
+                this.Request = request;
+                this.TxnId = txnId;
+            }
+
+            public readonly AmqpMessage Request;
+            public readonly ArraySegment<byte> TxnId;
+        }
+
         sealed class OperationState
         {
             int pending = 2;
@@ -311,11 +345,11 @@ namespace Microsoft.Azure.Amqp
                 this.CompleteSelf(completedSynchronously);
             }
 
-            public override void Cancel()
+            public override void Cancel(bool isSynchronous)
             {
                 if (this.parent.inflightRequests.TryRemoveWork(this.requestId, out _))
                 {
-                    this.CompleteSelf(false, new TaskCanceledException());
+                    this.CompleteSelf(isSynchronous, new TaskCanceledException());
                 }
             }
 

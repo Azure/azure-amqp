@@ -286,10 +286,10 @@ namespace Microsoft.Azure.Amqp.Transport
                 return AsyncResult.End<ConnectAsyncResult>(result).args.Transport;
             }
 
-            public override void Cancel()
+            public override void Cancel(bool isSynchronous)
             {
                 this.args.Transport?.Abort();
-                this.CompleteSelf(false, new TaskCanceledException());
+                this.CompleteSelf(isSynchronous, new TaskCanceledException());
             }
 
             protected override void CompleteOnTimer()

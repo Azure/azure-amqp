@@ -640,9 +640,9 @@ namespace Microsoft.Azure.Amqp
                 thisPtr.Target.NotifyOpened();
             }
 
-            public override void Cancel()
+            public override void Cancel(bool isSynchronous)
             {
-                this.Target.CompleteOpen(false, new TaskCanceledException());
+                this.Target.CompleteOpen(isSynchronous, new TaskCanceledException());
             }
 
             protected override bool OnStart()
@@ -681,9 +681,9 @@ namespace Microsoft.Azure.Amqp
                 AsyncResult.End<CloseAsyncResult>(result);
             }
 
-            public override void Cancel()
+            public override void Cancel(bool isSynchronous)
             {
-                this.Target.CompleteClose(false, new TaskCanceledException());
+                this.Target.CompleteClose(isSynchronous, new TaskCanceledException());
             }
 
             protected override bool OnStart()

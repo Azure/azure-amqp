@@ -42,7 +42,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAsync<TaskCanceledException>(() =>
+                await Assert.ThrowsAsync<TaskCanceledException>(async () =>
                 {
                     AmqpSettings settings = new AmqpSettings();
                     var provider = new AmqpTransportProvider();
@@ -59,10 +59,11 @@ namespace Test.Microsoft.Azure.Amqp
                     Task task = initiator.ConnectAsync(cts.Token);
                     if (!cancelBefore)
                     {
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
-                    return task;
+                    await task;
                 });
             }
             finally
@@ -90,7 +91,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAnyAsync<TaskCanceledException>(() =>
+                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
                 {
                     var factory = new AmqpConnectionFactory();
                     var cts = new CancellationTokenSource();
@@ -99,13 +100,14 @@ namespace Test.Microsoft.Azure.Amqp
                         cts.Cancel();
                     }
 
-                    Task task = factory.OpenConnectionAsync(this.addressUri, cts.Token);
+                    var task = factory.OpenConnectionAsync(this.addressUri, cts.Token);
                     if (!cancelBefore)
                     {
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
-                    return task;
+                    await task;
                 });
             }
             finally
@@ -154,7 +156,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = connection.OpenAsync(cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -208,7 +210,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = connection.CloseAsync(cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -255,7 +257,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = session.OpenAsync(cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -303,7 +305,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = session.CloseAsync(cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -352,7 +354,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = link.OpenAsync(cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -403,7 +405,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = link.CloseAsync(cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -458,7 +460,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = link.SendMessageAsync(AmqpMessage.Create(new AmqpValue() { Value = "test" }), AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -507,12 +509,15 @@ namespace Test.Microsoft.Azure.Amqp
                 {
                     cts.Cancel();
                 }
-                else
+
+                var task = link.ReceiveMessageAsync(cts.Token);
+                if (!cancelBefore)
                 {
-                    cts.CancelAfter(100);
+                    await Task.Yield();
+                    cts.Cancel();
                 }
 
-                await Assert.ThrowsAsync<TaskCanceledException>(async () => await link.ReceiveMessageAsync(cts.Token));
+                await Assert.ThrowsAsync<TaskCanceledException>(async () => await task);
             }
             finally
             {
@@ -565,7 +570,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = link.DisposeMessageAsync(message.DeliveryTag, AmqpConstants.AcceptedOutcome, false, cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 

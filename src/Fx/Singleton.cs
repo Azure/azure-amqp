@@ -118,7 +118,7 @@ namespace Microsoft.Azure.Amqp
                     this.Invalidate(current);
                 }
 
-                tcs = new TaskCompletionSource<TValue>();
+                tcs = new TaskCompletionSource<TValue>(TaskCreationOptions.RunContinuationsAsynchronously);
                 if (this.TrySet(tcs))
                 {
                     try

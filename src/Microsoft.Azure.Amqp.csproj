@@ -50,4 +50,12 @@
     <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 
+  <!--
+    Build time packages
+    All should have PrivateAssets="All" set so they don't become package dependencies
+  -->
+  <ItemGroup>
+    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+  </ItemGroup>
+
 </Project>

@@ -685,6 +685,11 @@ namespace Test.Microsoft.Azure.Amqp
                     this.DisposeDelivery(delivery, true, AmqpConstants.AcceptedOutcome);
                 }
             }
+
+            protected override void OnReceiveRemoteUnsettledDeliveries(Attach attach)
+            {
+                return;
+            }
         }
     }
 }

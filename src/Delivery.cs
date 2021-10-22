@@ -40,6 +40,15 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Gets or set the resume field.
+        /// </summary>
+        public bool Resume
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets the settled field.
         /// </summary>
         public bool Settled
@@ -115,6 +124,15 @@ namespace Microsoft.Azure.Amqp
         /// Gets or sets the next delivery for creating a linked list of deliveries.
         /// </summary>
         internal Delivery Next
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Used to indicate if the transfer frame should set the "aborted" field when sending this delivery.
+        /// </summary>
+        internal bool Aborted
         {
             get;
             set;

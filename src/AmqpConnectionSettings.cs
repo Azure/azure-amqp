@@ -103,6 +103,15 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// True if this connection should enable link recovery feature, where closed links are able to be resumed with their outstanding deliveries.
+        /// </summary>
+        public bool EnableLinkRecovery
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Clones the settings object. Properties of remote peer are not copied.
         /// </summary>
         /// <returns>A new connection settings object.</returns>
@@ -126,6 +135,7 @@ namespace Microsoft.Azure.Amqp
             newSettings.WriteBufferFullLimit = this.WriteBufferFullLimit;
             newSettings.WriteBufferEmptyLimit = this.WriteBufferEmptyLimit;
             newSettings.MinIdleTimeout = this.MinIdleTimeout;
+            newSettings.EnableLinkRecovery = this.EnableLinkRecovery;
 
             return newSettings;
         }

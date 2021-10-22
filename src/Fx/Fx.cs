@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Amqp
     using System.Runtime.InteropServices;
     using System.Threading;
 
-    static class Fx
+    internal static class Fx
     {
         [Conditional("DEBUG")]
         public static void Assert(bool condition, string description)

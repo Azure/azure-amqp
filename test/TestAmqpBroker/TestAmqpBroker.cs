@@ -4,6 +4,7 @@
 namespace TestAmqpBroker
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Security.Cryptography.X509Certificates;
@@ -11,10 +12,13 @@ namespace TestAmqpBroker
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp;
+    using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Sasl;
     using Microsoft.Azure.Amqp.Transaction;
     using Microsoft.Azure.Amqp.Transport;
+    using Test.Microsoft.Azure.Amqp;
+    using Address = Microsoft.Azure.Amqp.Framing.Address;
 
     public sealed class TestAmqpBroker : IRuntimeProvider
     {
@@ -42,6 +46,7 @@ namespace TestAmqpBroker
             this.txnManager = new TxnManager();
             this.connections = new Dictionary<SequenceNumber, AmqpConnection>();
             this.queues = new Dictionary<string, TestQueue>();
+            this.MockUnsettledReceivingDeliveries = new ConcurrentDictionary<string, ICollection<Delivery>>();
             if (queues != null)
             {
                 foreach (string q in queues)
@@ -54,6 +59,12 @@ namespace TestAmqpBroker
                 this.implicitQueue = true;
             }
         }
+
+        /// <summary>
+        /// Used to mock unsettled deliveries when the broker is on the receiving side. Key is the link name, values are the unsettled deliveries to be mocked.
+        /// Be aware that the unsettled deliveries will apply to both the senders and receivers with the same link name.
+        /// </summary>
+        internal ConcurrentDictionary<string, ICollection<Delivery>> MockUnsettledReceivingDeliveries { get; }
 
         public void Start()
         {
@@ -123,6 +134,21 @@ namespace TestAmqpBroker
         public void Stop()
         {
             this.transportListener?.Close();
+            this.MockUnsettledReceivingDeliveries.Clear();
+            lock (this.connections)
+            {
+                if (this.connections.Count > 0)
+                {
+                    // Need to copy the connection references because calling Close on the connection will remove
+                    // the connection from the collection, thus modifying the collection while looping through it.
+                    AmqpConnection[] connections = new AmqpConnection[this.connections.Count];
+                    this.connections.Values.CopyTo(connections, 0);
+                    foreach (var connection in connections)
+                    {
+                        connection.SafeClose();
+                    }
+                }
+            }
         }
 
         public void AddQueue(string queue)
@@ -131,6 +157,25 @@ namespace TestAmqpBroker
             {
                 this.queues.Add(queue, new TestQueue(this));
             }
+        }
+
+        /// <summary>
+        /// Find and return the first AmqpConnection object which matches the given containerId. Keep in mind that containId may not be unique.
+        /// </summary>
+        internal AmqpConnection FindConnection(string containerId)
+        {
+            lock (this.connections)
+            {
+                foreach (AmqpConnection connection in this.connections.Values)
+                {
+                    if (connection.Settings.RemoteContainerId.Equals(containerId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return connection;
+                    }
+                }
+            }
+
+            return null;
         }
 
         void connection_Closed(object sender, EventArgs e)
@@ -194,7 +239,7 @@ namespace TestAmqpBroker
         public AmqpConnection CreateConnection(TransportBase transport, ProtocolHeader protocolHeader, 
             bool isInitiator, AmqpSettings amqpSettings, AmqpConnectionSettings connectionSettings)
         {
-            return new AmqpConnection(transport, protocolHeader, false, amqpSettings, connectionSettings);
+            return new TestAmqpConnection(transport, protocolHeader, false, amqpSettings, connectionSettings);
         }
 
         public AmqpSession CreateSession(AmqpConnection connection, AmqpSessionSettings settings)
@@ -205,12 +250,13 @@ namespace TestAmqpBroker
         public AmqpLink CreateLink(AmqpSession session, AmqpLinkSettings settings)
         {
             bool isReceiver = settings.Role.Value;
+            string name;
             AmqpLink link;
             if (isReceiver)
             {
                 if (settings.Target is Target && ((Target)settings.Target).Dynamic())
                 {
-                    string name = string.Format("$dynamic.{0}", Interlocked.Increment(ref this.dynamicId));
+                    name = string.Format("$dynamic.{0}", Interlocked.Increment(ref this.dynamicId));
                     lock (this.queues)
                     {
                         this.queues.Add(name, new TestQueue(this));
@@ -225,7 +271,7 @@ namespace TestAmqpBroker
             {
                 if (((Source)settings.Source).Dynamic())
                 {
-                    string name = string.Format("$dynamic.{0}", Interlocked.Increment(ref this.dynamicId));
+                    name = string.Format("$dynamic.{0}", Interlocked.Increment(ref this.dynamicId));
                     lock (this.queues)
                     {
                         this.queues.Add(name, new TestQueue(this));
@@ -237,6 +283,26 @@ namespace TestAmqpBroker
                 link = new SendingAmqpLink(session, settings);
             }
 
+            Fx.Assert(settings.Unsettled == null, "The unsettled messages should be null at this point without anybody setting it.");
+            if (this.MockUnsettledReceivingDeliveries.TryGetValue(settings.LinkName, out ICollection<Delivery> unsettledDeliveries))
+            {
+                Dictionary<ArraySegment<byte>, DeliveryState> unsettled = new Dictionary<ArraySegment<byte>, DeliveryState>(ByteArrayComparer.Instance);
+                AmqpLinkTerminus terminus = new AmqpLinkTerminus(settings);
+
+                foreach (Delivery unsettledDelivery in unsettledDeliveries)
+                {
+                    unsettled.Add(unsettledDelivery.DeliveryTag, unsettledDelivery.State);
+                    terminus.UnsettledMap.Add(unsettledDelivery.DeliveryTag, unsettledDelivery);
+                }
+
+                if (unsettled.Count > 0)
+                {
+                    terminus.Settings.Unsettled = new AmqpMap(unsettled, ByteArrayComparer.MapKeyByteArrayComparer.Instance);
+                    link.Terminus = terminus;
+                }
+            }
+
+            link.Closed += new EventHandler((object sender, EventArgs e) => this.RemoveMockUnsettledDelivery(link.Name));
             return link;
         }
 
@@ -282,6 +348,11 @@ namespace TestAmqpBroker
         void ILinkFactory.EndOpenLink(IAsyncResult result)
         {
             CompletedAsyncResult.End(result);
+        }
+
+        void RemoveMockUnsettledDelivery(string linkName)
+        {
+            this.MockUnsettledReceivingDeliveries.TryRemove(linkName, out _);
         }
 
         static X509Certificate2 GetCertificate(string certFindValue)
@@ -368,7 +439,7 @@ namespace TestAmqpBroker
             }
         }
 
-        sealed class BrokerMessage : AmqpMessage
+        internal sealed class BrokerMessage : AmqpMessage
         {
             readonly int pos;
 
@@ -378,6 +449,8 @@ namespace TestAmqpBroker
                 this.pos = this.Buffer.Offset;
             }
 
+            // In case of link recovery, lock by the link name of the consumer instead of the consumer itself,
+            // so when the connection closes the lock object will not be set to null.
             public object LockedBy { get; set; }
 
             public LinkedListNode<BrokerMessage> Node { get; set; }
@@ -484,7 +557,7 @@ namespace TestAmqpBroker
                     }
                     else if (consumer.SettleMode != SettleMode.SettleOnSend)
                     {
-                        message.LockedBy = consumer;
+                        message.LockedBy = consumer.Link.Session.Connection.Settings.EnableLinkRecovery ? consumer.Link.Settings.LinkName : consumer as object;
                         message.Node = this.messages.AddLast(message);
                     }
                 }
@@ -516,7 +589,7 @@ namespace TestAmqpBroker
                             }
                             else
                             {
-                                current.Value.LockedBy = consumer;
+                                current.Value.LockedBy = consumer.Link.Session.Connection.Settings.EnableLinkRecovery ? consumer.Link.Settings.LinkName : consumer as object;
                             }
 
                             consumer.Credit--;
@@ -566,7 +639,7 @@ namespace TestAmqpBroker
                         }
                         else
                         {
-                            message.LockedBy = consumer;
+                            message.LockedBy = consumer.Link.Session.Connection.Settings.EnableLinkRecovery ? consumer.Link.Settings.LinkName : consumer as object;
                         }
                     }
                 }
@@ -672,6 +745,8 @@ namespace TestAmqpBroker
                 public int Credit { get; set; }
 
                 public SettleMode SettleMode { get { return this.link.Settings.SettleType; } }
+
+                internal AmqpLink Link { get { return this.link; } }
 
                 public void Signal(BrokerMessage message)
                 {

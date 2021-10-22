@@ -119,6 +119,19 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Return a new instance of <see cref="AmqpConnectionSettings"/> with identical fields and properties that would be used for connection recovery.
+        /// The fields from the remote peer are removed so that it is clean for establishing a new connection.
+        /// </summary>
+        public AmqpConnectionSettings GetSettingsForRecovery()
+        {
+            AmqpConnectionSettings settings = this.settings.Clone();
+            settings.RemoteContainerId = null;
+            settings.RemoteHostName = null;
+            settings.EnableLinkRecovery = true;
+            return settings;
+        }
+
+        /// <summary>
         /// Sends two buffers. The first may be a command and the second may be optional payload.
         /// </summary>
         /// <param name="cmdBuffer">The first buffer.</param>

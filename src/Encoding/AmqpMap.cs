@@ -27,9 +27,29 @@ namespace Microsoft.Azure.Amqp.Encoding
         public AmqpMap(IDictionary value)
             : this()
         {
-            foreach (DictionaryEntry entry in value)
+            if (value != null)
             {
-                this.Add(new MapKey(entry.Key), entry.Value);
+                foreach (DictionaryEntry entry in value)
+                {
+                    this.Add(entry.Key is MapKey ? (MapKey)entry.Key : new MapKey(entry.Key), entry.Value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Initializes the object from a dictionary and a given comparer.
+        /// </summary>
+        /// <param name="value">The dictionary.</param>
+        /// <param name="comparer">The equality comparer.</param>
+        public AmqpMap(IDictionary value, IEqualityComparer<MapKey> comparer)
+            : base(comparer)
+        {
+            if (value != null)
+            {
+                foreach (DictionaryEntry entry in value)
+                {
+                    this.Add(entry.Key is MapKey ? (MapKey)entry.Key : new MapKey(entry.Key), entry.Value);
+                }
             }
         }
 

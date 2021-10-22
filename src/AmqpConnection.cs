@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
@@ -25,6 +26,7 @@ namespace Microsoft.Azure.Amqp
         readonly HandleTable<AmqpSession> sessionsByRemoteHandle;
         HeartBeat heartBeat;
         Dictionary<Type, object> extensions;
+        ConcurrentDictionary<AmqpLinkTerminus, AmqpLink> linkTermini;
 
         /// <summary>
         /// The default factory instance to create connections.
@@ -92,6 +94,10 @@ namespace Microsoft.Azure.Amqp
             this.sessionsByRemoteHandle = new HandleTable<AmqpSession>(this.Settings.ChannelMax ?? AmqpConstants.DefaultMaxConcurrentChannels - 1);
             this.SessionFactory = this;
             this.heartBeat = HeartBeat.None;
+            if (connectionSettings.EnableLinkRecovery)
+            {
+                this.linkTermini = new ConcurrentDictionary<AmqpLinkTerminus, AmqpLink>();
+            }
         }
 
         /// <summary>
@@ -151,6 +157,18 @@ namespace Microsoft.Azure.Amqp
                 {
                     return this.sessionsByLocalHandle.Values;
                 }
+            }
+        }
+
+        /// <summary>
+        /// The link termini used by link recovery. The combination of link name+role must be unique under the connection scope to enable link recovery.
+        /// Should only be initialized if link recovery is enabled on the connection settings.
+        /// </summary>
+        internal ConcurrentDictionary<AmqpLinkTerminus, AmqpLink> LinkTermini
+        {
+            get
+            {
+                return this.linkTermini;
             }
         }
 
@@ -418,7 +436,11 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        void ProcessFrame(Frame frame)
+        /// <summary>
+        /// Process an AMQP frame given to this connection.
+        /// </summary>
+        /// <param name="frame"></param>
+        protected void ProcessFrame(Frame frame)
         {
             Performative command = frame.Command;
             Fx.Assert(command != null, "Must have a valid command");
@@ -450,6 +472,16 @@ namespace Microsoft.Azure.Amqp
             if (this.TerminalException != null)
             {
                 this.Settings.AddProperty(AmqpConstants.OpenErrorName, Error.FromException(this.TerminalException));
+            }
+
+            if (this.Settings.EnableLinkRecovery)
+            {
+                if (this.Settings.DesiredCapabilities == null)
+                {
+                    this.Settings.DesiredCapabilities = new Framing.Multiple<Encoding.AmqpSymbol>();
+                }
+
+                this.Settings.DesiredCapabilities.Add(AmqpConstants.LinkRecovery);
             }
 
             this.SendCommand(this.Settings, 0, null);
@@ -584,6 +616,18 @@ namespace Microsoft.Azure.Amqp
             if (open.MaxFrameSize.HasValue)
             {
                 this.Settings.MaxFrameSize = Math.Min(this.Settings.MaxFrameSize.Value, open.MaxFrameSize.Value);
+            }
+
+            if (open.DesiredCapabilities?.Contains(AmqpConstants.LinkRecovery) == true)
+            {
+                this.Settings.EnableLinkRecovery = true;
+                this.linkTermini = this.linkTermini ?? new ConcurrentDictionary<AmqpLinkTerminus, AmqpLink>();
+                if (this.Settings.OfferedCapabilities == null)
+                {
+                    this.Settings.OfferedCapabilities = new Multiple<Encoding.AmqpSymbol>();
+                }
+
+                this.Settings.OfferedCapabilities.Add(AmqpConstants.LinkRecovery);
             }
         }
 

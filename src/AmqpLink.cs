@@ -5,7 +5,9 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
+    using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
 
@@ -204,6 +206,8 @@ namespace Microsoft.Azure.Amqp
         public bool Drain => this.drain;
 
         internal override TimeSpan OperationTimeout => this.settings.OperationTimeout;
+
+        internal AmqpLinkTerminus Terminus { get; set; }
 
         /// <summary>
         /// Attaches the link to a session.
@@ -614,6 +618,32 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Get the terminus info of this link for link recovery, which includes copying all its current settings and the unsettled deliveries.
+        /// </summary>
+        public AmqpLinkTerminus GetLinkTerminus()
+        {
+            if (!this.Session.Connection.Settings.EnableLinkRecovery)
+            {
+                throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpLinkRecoveryNotEnabled, nameof(this.Session.Connection.Settings.EnableLinkRecovery)));
+            }
+
+            // The AmqpLinkSettings (or Attach) unsettled map must only contain the DeliveryState as the value, not the actual Delivery
+            Dictionary<ArraySegment<byte>, Delivery> unsettledMap;
+            lock (this.syncRoot)
+            {
+                unsettledMap = new Dictionary<ArraySegment<byte>, Delivery>(this.unsettledMap, this.unsettledMap.Comparer);
+            }
+
+            this.Terminus.UnsettledMap = unsettledMap;
+            this.Terminus.Settings.Unsettled = new AmqpMap(
+                unsettledMap.ToDictionary(
+                    kvPair => kvPair.Key,
+                    kvPair => kvPair.Value.State),
+                ByteArrayComparer.MapKeyByteArrayComparer.Instance);
+            return this.Terminus;
+        }
+
+        /// <summary>
         /// Creates a delivery from a received transfer command.
         /// </summary>
         /// <param name="transfer">The received transfer command.</param>
@@ -777,7 +807,15 @@ namespace Microsoft.Azure.Amqp
                 {
                     lock (this.syncRoot)
                     {
-                        this.unsettledMap.Add(delivery.DeliveryTag, delivery);
+                        if (this.unsettledMap.TryGetValue(delivery.DeliveryTag, out Delivery existing) && Extensions.IsTerminal(existing.State) && Extensions.IsTerminal(delivery.State))
+                        {
+                            // this delivery is reached terminal outcome on both sides, which means it's already been processed.
+                            // No need to process this delivery again anymore, just need to simply settle it with the sender side outcome.
+                        }
+                        else
+                        {
+                            this.unsettledMap.Add(delivery.DeliveryTag, delivery);
+                        }
                     }
                 }
             }
@@ -817,6 +855,12 @@ namespace Microsoft.Azure.Amqp
         /// <param name="delivery">The delivery whose state is updated.</param>
         protected abstract void OnDisposeDeliveryInternal(Delivery delivery);
 
+        /// <summary>
+        /// A method to negotiate the remote unsettled deliveries with the local ones for link recovery.
+        /// </summary>
+        /// <param name="attach">The Attach frame received from the remote peer.</param>
+        protected abstract void OnReceiveRemoteUnsettledDeliveries(Attach attach);
+
         internal bool SendDelivery(Delivery delivery)
         {
             bool settled = delivery.Settled;
@@ -827,6 +871,8 @@ namespace Microsoft.Azure.Amqp
                 Transfer transfer = new Transfer();
                 transfer.Handle = this.LocalHandle;
                 transfer.More = more;
+                transfer.Aborted = delivery.Aborted;
+                transfer.Resume = delivery.Resume;
                 if (firstTransfer)
                 {
                     transfer.DeliveryId = uint.MaxValue;    // reserve the space first
@@ -912,9 +958,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        void StartSendDelivery(Delivery delivery)
+        internal void StartSendDelivery(Delivery delivery)
         {
-            delivery.Settled = this.settings.SettleType == SettleMode.SettleOnSend;
+            // The delivery may already be determined to be settled in scenarios such as link recovery.
+            delivery.Settled = delivery.Settled || this.settings.SettleType == SettleMode.SettleOnSend;
             if (!delivery.Settled)
             {
                 lock (this.syncRoot)
@@ -983,6 +1030,12 @@ namespace Microsoft.Azure.Amqp
         AmqpObjectState SendDetach()
         {
             StateTransition transition = this.TransitState("S:DETACH", StateTransition.SendClose);
+
+            if (this.settings.LinkName.Equals("ClientSenderTerminalDeliveryStateBrokerNoDeliveryStateTest1", StringComparison.OrdinalIgnoreCase)
+                || this.settings.LinkName.Equals("ClientSenderTerminalDeliveryStateBrokerNoDeliveryStateTest", StringComparison.OrdinalIgnoreCase))
+            {
+                transition = transition ?? null;
+            }
 
             Detach detach = new Detach();
             detach.Handle = this.LocalHandle;
@@ -1102,6 +1155,7 @@ namespace Microsoft.Azure.Amqp
                 delivery.Link = this;
                 delivery.DeliveryId = transfer.DeliveryId.Value;
                 delivery.DeliveryTag = transfer.DeliveryTag;
+                delivery.Aborted = transfer.Aborted == true;
                 delivery.Settled = transfer.Settled();
                 delivery.Batchable = transfer.Batchable();
                 delivery.MessageFormat = transfer.MessageFormat;
@@ -1142,12 +1196,21 @@ namespace Microsoft.Azure.Amqp
 
         Error Negotiate(Attach attach)
         {
-            if (attach.MaxMessageSize() != 0)
+            Error error = null;
+            try
             {
-                this.settings.MaxMessageSize = Math.Min(this.settings.MaxMessageSize(), attach.MaxMessageSize());
+                this.OnReceiveRemoteUnsettledDeliveries(attach);
+                if (attach.MaxMessageSize() != 0)
+                {
+                    this.settings.MaxMessageSize = Math.Min(this.settings.MaxMessageSize(), attach.MaxMessageSize());
+                }
+            }
+            catch (Exception e)
+            {
+                error = Error.FromException(e);
             }
 
-            return null;
+            return error;
         }
 
         static void OnProviderLinkOpened(IAsyncResult result)

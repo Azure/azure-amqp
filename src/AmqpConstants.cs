@@ -47,6 +47,7 @@ namespace Microsoft.Azure.Amqp
         internal static readonly AmqpSymbol NetworkHost = "network-host";
         internal static readonly AmqpSymbol Port = "port";
         internal static readonly AmqpSymbol Address = "address";
+        internal static readonly AmqpSymbol LinkRecovery = Vendor + ":link-receovery";
 
         /// <summary>
         /// Null binary.

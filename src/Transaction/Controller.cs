@@ -43,6 +43,14 @@ namespace Microsoft.Azure.Amqp.Transaction
             };
 
             this.controllerLink = new SendingAmqpLink(amqpSession, settings);
+            if (amqpSession.Connection.Settings.EnableLinkRecovery)
+            {
+                this.controllerLink.Terminus = new AmqpLinkTerminus(settings)
+                {
+                    ContainerId = amqpSession.Connection.Settings.ContainerId,
+                    RemoteContainerId = amqpSession.Connection.Settings.RemoteContainerId
+                };
+            }
         }
 
         /// <summary>

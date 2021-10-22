@@ -291,4 +291,16 @@
   <data name="AmqpTransportUpgradeNotAllowed" xml:space="preserve">
     <value>Cannot upgrade transport from type '{0}' to '{1}'.</value>
   </data>
+  <data name="AmqpLinkRecoveryNotEnabled" xml:space="preserve">
+    <value>To enable link recovery, the {0} option on the connection must be set to true.</value>
+  </data>
+  <data name="AmqpLinkOpenInvalidType" xml:space="preserve">
+    <value>Cannot open a {0} when the link settings represent a {1}.</value>
+  </data>
+  <data name="AmqpLinkStolen" xml:space="preserve">
+    <value>The link with link name {0} under connection with containerId {1} has been closed due to link stealing. </value>
+  </data>
+  <data name="AmqpRecoverableLinkNameInUse" xml:space="preserve">
+    <value>A recoverable link with name '{0}' is already attached under connection with containerId {1}.</value>
+  </data>
 </root>

@@ -54,7 +54,6 @@
 
   <ItemGroup>
     <Folder Include="Common\" />
-    <Folder Include="TestCases\" />
   </ItemGroup>
 
 </Project>

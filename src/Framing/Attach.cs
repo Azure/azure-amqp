@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Framing
 {
     using System;
+    using System.Linq;
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
@@ -212,7 +213,8 @@ namespace Microsoft.Azure.Amqp.Framing
 
             if (count-- > 0)
             {
-                this.Unsettled = AmqpCodec.DecodeMap(buffer);
+                AmqpMap mapWithGenericComparer = AmqpCodec.DecodeMap(buffer);
+                this.Unsettled = new AmqpMap(mapWithGenericComparer, ByteArrayComparer.MapKeyByteArrayComparer.Instance);
             }
 
             if (count-- > 0)

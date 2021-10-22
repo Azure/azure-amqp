@@ -4,8 +4,10 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
 
@@ -17,6 +19,7 @@ namespace Microsoft.Azure.Amqp
         static readonly TimeSpan MinRequestCreditWindow = TimeSpan.FromSeconds(10);
         readonly SerializedWorker<AmqpMessage> pendingDeliveries;   // need link credit
         readonly WorkCollection<ArraySegment<byte>, SendAsyncResult, Outcome> inflightSends;
+        readonly List<Delivery> unsettledDeliveriesToBeResent; // deliveries to be sent upon opening this link (for link recovery)
         Action<Delivery> dispositionListener;
         DateTime lastFlowRequestTime;
 
@@ -41,6 +44,7 @@ namespace Microsoft.Azure.Amqp
             this.pendingDeliveries = new SerializedWorker<AmqpMessage>(this);
             this.inflightSends = new WorkCollection<ArraySegment<byte>, SendAsyncResult, Outcome>(ByteArrayComparer.Instance);
             this.lastFlowRequestTime = DateTime.UtcNow;
+            this.unsettledDeliveriesToBeResent = new List<Delivery>();
         }
 
         /// <summary>
@@ -234,6 +238,140 @@ namespace Microsoft.Azure.Amqp
             base.AbortInternal();
         }
 
+        /// <summary>
+        /// Opens the link.
+        /// </summary>
+        /// <returns>True if open is completed.</returns>
+        protected override bool OpenInternal()
+        {
+            bool syncComplete = base.OpenInternal();
+            if (this.Session.Connection.Settings.EnableLinkRecovery && this.State == AmqpObjectState.Opened)
+            {
+                this.ResendUnsettledDeliveriesUponOpen();
+            }
+
+            return syncComplete;
+        }
+
+        /// <summary>
+        /// Decide on which unsettled deliveries should be resent to the remote, based on the remote delivery states.
+        /// </summary>
+        protected override void OnReceiveRemoteUnsettledDeliveries(Attach attach)
+        {
+            if (this.Session.Connection.Settings.EnableLinkRecovery && this.Terminus.Settings.Unsettled != null)
+            {
+                Fx.Assert(this.Terminus != null, "If link recovery is enabled, the link terminus should not be null.");
+                foreach (KeyValuePair<MapKey, object> pair in this.Terminus.Settings.Unsettled)
+                {
+                    var deliveryTagMapKey = pair.Key;
+                    ArraySegment<byte> deliveryTag = (ArraySegment<byte>)deliveryTagMapKey.Key;
+                    var localDeliveryState = pair.Value as DeliveryState;
+                    DeliveryState peerDeliveryState = null;
+                    bool peerHasDelivery = attach.Unsettled?.TryGetValue(deliveryTagMapKey, out peerDeliveryState) == true;
+                    bool remoteReachedTerminal = peerDeliveryState is Outcome;
+                    bool alreadySettledOnSend = this.Settings.SettleType == SettleMode.SettleOnSend && (!peerHasDelivery || (localDeliveryState == null && peerDeliveryState == null));
+
+                    Delivery unsettledDeliveryToBeResent = null;
+                    if (localDeliveryState == null || localDeliveryState is Received)
+                    {
+                        // remoteReachedTerminal: OASIS AMQP doc section 3.4.6, delivery 3, 8
+                        // alreadySettledOnSend: OASIS AMQP doc section 3.4.6, delivery 1, 4, 5
+                        if (!remoteReachedTerminal && !alreadySettledOnSend)
+                        {
+                            // should ideally always be true, Terminus.Settings.Unsettled should be consistent with Terminus.UnsettledMap.
+                            if (this.Terminus.UnsettledMap.TryGetValue(deliveryTag, out unsettledDeliveryToBeResent))
+                            {
+                                // we don't support resume sending partial payload with Received state.
+                                unsettledDeliveryToBeResent.State = null;
+
+                                // abort the delivery when the remote receiver somehow has it transactional
+                                // or this sender has only delivered partially, OASIS AMQP doc section 3.4.6, delivery 6, 7, 9.
+                                unsettledDeliveryToBeResent.Aborted = peerDeliveryState is TransactionalState || (localDeliveryState is Received && peerHasDelivery);
+                            }
+                        }
+                    }
+                    else if (localDeliveryState is Outcome)
+                    {
+                        // should ideally always be true, Terminus.Settings.Unsettled should be consistent with Terminus.UnsettledMap.
+                        if (peerHasDelivery && this.Terminus.UnsettledMap.TryGetValue(deliveryTag, out unsettledDeliveryToBeResent))
+                        {
+                            if (remoteReachedTerminal)
+                            {
+                                // OASIS AMQP doc section 3.4.6, delivery 12, 13.
+                                unsettledDeliveryToBeResent.Settled = peerDeliveryState.GetType() == localDeliveryState.GetType();
+                            }
+                            else
+                            {
+                                // OASIS AMQP doc section 3.4.6, delivery 11, 14, or when remote receiver is Transactional
+                                unsettledDeliveryToBeResent.Aborted = true;
+                            }
+                        }
+                        else
+                        {
+                            // OASIS AMQP doc section 3.4.6, delivery 10. Do nothing.
+                        }
+                    }
+                    else if (localDeliveryState is TransactionalState localTransactionalState)
+                    {
+                        if (this.Terminus.UnsettledMap.TryGetValue(deliveryTag, out unsettledDeliveryToBeResent))
+                        {
+                            if (localTransactionalState.Outcome != null)
+                            {
+                                if (!peerHasDelivery)
+                                {
+                                    // no need to resend the delivery if local sender has reached terminal state and remote receiver does not have this deliery, similar to OASIS AMQP doc section 3.4.6, delivery 10.
+                                    unsettledDeliveryToBeResent = null;
+                                }
+                                else if (peerDeliveryState is TransactionalState peerTransactionalState && peerTransactionalState.Outcome != null)
+                                {
+                                    // both the sender and receiver reached transactional terminal state, similar to OASIS AMQP doc section 3.4.6, delivery 12, 13.
+                                    unsettledDeliveryToBeResent.Settled = peerTransactionalState.Outcome.GetType() == localTransactionalState.Outcome.GetType();
+                                }
+                                else
+                                {
+                                    // the receiver side is not in a transactional state, which should not happen because the sender is in transactional state.
+                                    // OR, the receiver side is also in a transactional state but has not reached terminal outcome, similar to OASIS AMQP doc section 3.4.6, delivery 11, 14.
+                                    unsettledDeliveryToBeResent.Aborted = true;
+                                }
+                            }
+                            else
+                            {
+                                if (!peerHasDelivery)
+                                {
+                                    // The receiver does not have any record of the delivery, similar to OASIS AMQP doc section 3.4.6, delivery 1.
+                                    if (alreadySettledOnSend)
+                                    {
+                                        unsettledDeliveryToBeResent = null;
+                                    }
+                                }
+                                else if (peerDeliveryState is TransactionalState peerTransactionalState && peerTransactionalState.Outcome != null)
+                                {
+                                    // the receiver has already reached terminal oucome, no need to resend, similar to OASIS AMQP doc section 3.4.6, delivery 3, 8
+                                    unsettledDeliveryToBeResent = null;
+                                }
+                                else
+                                {
+                                    // the receiver has not reached terminal outcome and may or may not have received the whole delivery. Abort to be safe.
+                                    unsettledDeliveryToBeResent.Aborted = true;
+                                }
+                            }
+                        }
+                    }
+
+                    if (unsettledDeliveryToBeResent != null)
+                    {
+                        unsettledDeliveryToBeResent.Resume = peerHasDelivery;
+                        this.unsettledDeliveriesToBeResent.Add(unsettledDeliveryToBeResent);
+                    }
+                }
+
+                if (this.Session.Connection.Settings.EnableLinkRecovery && this.State == AmqpObjectState.Opened)
+                {
+                    this.ResendUnsettledDeliveriesUponOpen();
+                }
+            }
+        }
+
         static ArraySegment<byte> CreateTag()
         {
             return new ArraySegment<byte>(Guid.NewGuid().ToByteArray());
@@ -319,6 +457,16 @@ namespace Microsoft.Azure.Amqp
             }
 
             return success;
+        }
+
+        void ResendUnsettledDeliveriesUponOpen()
+        {
+            foreach (Delivery delivery in this.unsettledDeliveriesToBeResent)
+            {
+                this.StartSendDelivery(delivery);
+            }
+
+            this.unsettledDeliveriesToBeResent.Clear();
         }
 
         readonly struct SendMessageParam

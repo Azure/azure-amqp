@@ -73,7 +73,7 @@ namespace Microsoft.Azure.Amqp
                 (p, t, k, c, s) => ((SendingAmqpLink)s).BeginSendMessage(p.Message, p.DeliveryTag, p.TxnId, t, k, c, s),
                 r => ((SendingAmqpLink)r.AsyncState).EndSendMessage(r),
                 new SendMessageParam(message, deliveryTag, txnId),
-                this.Settings.OperationTimeout,
+                this.OperationTimeout,
                 cancellationToken,
                 this);
         }

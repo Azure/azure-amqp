@@ -74,6 +74,8 @@ namespace Microsoft.Azure.Amqp
             get { return this.asyncIO; }
         }
 
+        internal override TimeSpan OperationTimeout => this.settings.OperationTimeout;
+
         public void SendDatablock(IAmqpSerializable dataBlock)
         {
             ByteBuffer buffer = new ByteBuffer(new byte[dataBlock.EncodeSize]);

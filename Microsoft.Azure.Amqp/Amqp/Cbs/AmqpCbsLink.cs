@@ -27,12 +27,6 @@ namespace Microsoft.Azure.Amqp
             this.cbsSingleton = new CbsSingleton(this);
         }
 
-        public TimeSpan OperationTimeout
-        {
-            get { return this.cbsSingleton.OperationTimeout; }
-            set { this.cbsSingleton.OperationTimeout = value; }
-        }
-
         public void Close()
         {
             this.cbsSingleton.Close();
@@ -55,7 +49,7 @@ namespace Microsoft.Azure.Amqp
                 (p, t, k, c, s) => ((AmqpCbsLink)s).BeginSendToken(p.TokenProvider, p.NamespaceAddress, p.Audience, p.Resource, p.RequiredClaims, t, k, c, s),
                 (r) => ((AmqpCbsLink)r.AsyncState).EndSendToken(r),
                 new SendTokenParams() { TokenProvider = tokenProvider, NamespaceAddress = namespaceAddress, Audience = audience, Resource = resource, RequiredClaims = requiredClaims },
-                AmqpConstants.DefaultTimeout,
+                this.connection.OperationTimeout,
                 cancellationToken,
                 this);
         }
@@ -186,8 +180,6 @@ namespace Microsoft.Azure.Amqp
                     Fields properties = new Fields();
                     properties.Add(CbsConstants.TimeoutName, (uint)this.RemainingTime().TotalMilliseconds);
                     this.Link = new RequestResponseAmqpLink("cbs", this.session, address, properties);
-                    this.Link.SendingLink.Settings.OperationTimeout = this.parent.cbsSingleton.OperationTimeout;
-                    this.Link.ReceivingLink.Settings.OperationTimeout = this.parent.cbsSingleton.OperationTimeout;
 
                     yield return this.CallAsync(
                         (thisPtr, t, c, s) => thisPtr.Link.BeginOpen(t, thisPtr.cancellationToken, c, s),

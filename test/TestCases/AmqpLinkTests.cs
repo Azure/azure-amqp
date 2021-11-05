@@ -469,7 +469,7 @@ namespace Test.Microsoft.Azure.Amqp
                 while (!done)
                 {
                     AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "Test" });
-                    Outcome outcome = await sLink.SendMessageAsync(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, sLink.Settings.OperationTimeout);
+                    Outcome outcome = await sLink.SendMessageAsync(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, CancellationToken.None);
                     Assert.Equal(outcome.DescriptorCode, Accepted.Code);
                 }
             });
@@ -544,6 +544,31 @@ namespace Test.Microsoft.Azure.Amqp
             //addResult(session.BeginClose(TimeSpan.FromSeconds(10), null, null), session.EndClose);
             addResult(connection.BeginClose(TimeSpan.FromSeconds(10), null, null), connection.EndClose);
             foreach (var item in results) item();
+        }
+
+        [Fact]
+        public void AmqpOperationTimeoutTest()
+        {
+            string queue = "AmqpOperationTimeoutTest";
+            broker.AddQueue(queue);
+
+            Func<AmqpObject, TimeSpan> func = obj => (TimeSpan)obj.GetType().GetProperty("OperationTimeout", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(obj);
+            TimeSpan timeout = TimeSpan.FromSeconds(28);
+
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 1024);
+            connection.Settings.OperationTimeout = timeout;
+            Assert.Equal(timeout, func(connection));
+
+            AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+            Assert.Equal(timeout, func(session));
+
+            SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnReceive));
+            Assert.Equal(timeout, func(sLink));
+
+            sLink.Settings.OperationTimeout = TimeSpan.MaxValue;
+            Assert.Equal(TimeSpan.MaxValue, func(sLink));
+
+            connection.Close();
         }
 
 #if !WINDOWS_UWP

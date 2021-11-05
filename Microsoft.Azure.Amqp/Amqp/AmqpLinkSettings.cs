@@ -9,10 +9,10 @@ namespace Microsoft.Azure.Amqp
     public sealed class AmqpLinkSettings : Attach
     {
         uint linkCredit;
+        TimeSpan operationTimeout;
 
         public AmqpLinkSettings()
         {
-            this.OperationTimeout = AmqpConstants.DefaultTimeout;
         }
 
         public uint TotalLinkCredit
@@ -77,9 +77,11 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public TimeSpan OperationTimeout
         {
-            get;
-            set;
+            get { return this.operationTimeout == default ? AmqpConstants.DefaultTimeout : this.operationTimeout; }
+            set { this.operationTimeout = value; }
         }
+
+        internal TimeSpan OperationTimeoutInternal => this.operationTimeout;
 
         public static AmqpLinkSettings Create(Attach attach)
         {

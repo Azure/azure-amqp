@@ -82,8 +82,6 @@ namespace Microsoft.Azure.Amqp
         {
             this.identifier = identifier;
             this.name = type + this.identifier;
-            this.DefaultOpenTimeout = AmqpConstants.DefaultTimeout;
-            this.DefaultCloseTimeout = AmqpConstants.DefaultTimeout;
         }
 
         public SequenceNumber Identifier
@@ -103,12 +101,14 @@ namespace Microsoft.Azure.Amqp
             protected set;
         }
 
+        [Obsolete("Use connection or link settings operation timeout.")]
         public TimeSpan DefaultOpenTimeout
         {
             get;
             protected set;
         }
 
+        [Obsolete("Use connection or link settings operation timeout.")]
         public TimeSpan DefaultCloseTimeout
         {
             get;
@@ -130,9 +130,14 @@ namespace Microsoft.Azure.Amqp
 
         internal bool CloseCalled => this.closeCalled;
 
+        internal virtual TimeSpan OperationTimeout
+        {
+            get { return AmqpConstants.DefaultTimeout; }
+        }
+
         public void Open()
         {
-            this.Open(this.DefaultOpenTimeout);
+            this.Open(this.OperationTimeout);
         }
 
         public void Open(TimeSpan timeout)
@@ -178,7 +183,7 @@ namespace Microsoft.Azure.Amqp
             return Task.Factory.FromAsync(
                 (t, k, c, s) => ((AmqpObject)s).BeginOpen(t, k, c, s),
                 r => ((AmqpObject)r.AsyncState).EndOpen(r),
-                this.DefaultOpenTimeout,
+                this.OperationTimeout,
                 cancellationToken,
                 this);
         }
@@ -188,7 +193,7 @@ namespace Microsoft.Azure.Amqp
             return Task.Factory.FromAsync(
                 (t, k, c, s) => ((AmqpObject) s).BeginClose(t, k, c, s),
                 r => ((AmqpObject) r.AsyncState).EndClose(r),
-                this.DefaultCloseTimeout,
+                this.OperationTimeout,
                 cancellationToken,
                 this);
         }
@@ -206,7 +211,7 @@ namespace Microsoft.Azure.Amqp
 
         public void Close()
         {
-            this.Close(this.DefaultCloseTimeout);
+            this.Close(this.OperationTimeout);
         }
 
         public void Close(TimeSpan timeout)

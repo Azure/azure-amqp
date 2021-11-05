@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.Amqp
 {
+    using System;
     using Microsoft.Azure.Amqp.Framing;
 
     public sealed class AmqpConnectionSettings : Open
@@ -15,6 +16,7 @@ namespace Microsoft.Azure.Amqp
             this.ChannelMax = AmqpConstants.DefaultMaxConcurrentChannels - 1;
             this.WriteBufferFullLimit = int.MaxValue;
             this.MinIdleTimeout = AmqpConstants.MinimumHeartBeatIntervalMs;
+            this.OperationTimeout = AmqpConstants.DefaultTimeout;
         }
 
         public string RemoteContainerId
@@ -65,6 +67,12 @@ namespace Microsoft.Azure.Amqp
             set;
         }
 
+        public TimeSpan OperationTimeout
+        {
+            get;
+            set;
+        }
+
         /// <summary> doesn't clone - RemoteSettings: HostName/ContainerId </summary>
         public AmqpConnectionSettings Clone()
         {
@@ -86,6 +94,7 @@ namespace Microsoft.Azure.Amqp
             newSettings.WriteBufferFullLimit = this.WriteBufferFullLimit;
             newSettings.WriteBufferEmptyLimit = this.WriteBufferEmptyLimit;
             newSettings.MinIdleTimeout = this.MinIdleTimeout;
+            newSettings.OperationTimeout = this.OperationTimeout;
 
             return newSettings;
         }

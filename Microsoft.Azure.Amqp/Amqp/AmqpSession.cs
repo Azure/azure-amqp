@@ -104,6 +104,8 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        internal override TimeSpan OperationTimeout => this.connection.OperationTimeout;
+
         public void AttachLink(AmqpLink link)
         {
             Fx.Assert(link.Session == this, "The link is not owned by this session.");

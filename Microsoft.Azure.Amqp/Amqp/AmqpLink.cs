@@ -50,8 +50,6 @@ namespace Microsoft.Azure.Amqp
             this.syncRoot = new object();
             this.settings = linkSettings;
             this.linkCredit = this.settings.TotalLinkCredit;
-            this.DefaultOpenTimeout = this.settings.OperationTimeout;
-            this.DefaultCloseTimeout = this.settings.OperationTimeout;
 
             Source source = (Source)this.settings.Source;
             if (source != null)
@@ -154,6 +152,16 @@ namespace Microsoft.Azure.Amqp
             get
             {
                 return this.syncRoot;
+            }
+        }
+
+        internal override TimeSpan OperationTimeout
+        {
+            get
+            {
+                return this.settings.OperationTimeoutInternal == default ?
+                    this.Session.Connection.OperationTimeout :
+                    this.settings.OperationTimeoutInternal;
             }
         }
 
@@ -869,7 +877,7 @@ namespace Microsoft.Azure.Amqp
             {
                 try
                 {
-                    this.Session.LinkFactory.BeginOpenLink(this, this.DefaultOpenTimeout, onProviderLinkOpened, this);
+                    this.Session.LinkFactory.BeginOpenLink(this, this.OperationTimeout, onProviderLinkOpened, this);
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {

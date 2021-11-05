@@ -12,7 +12,6 @@ namespace Microsoft.Azure.Amqp
 
     public class RequestResponseAmqpLink : AmqpObject
     {
-        static readonly TimeSpan OperationTimeout = AmqpConstants.DefaultTimeout;
         static readonly AsyncCallback onSenderOpen = OnSenderOpen;
         static readonly AsyncCallback onReceiverOpen = OnReceiverOpen;
         static readonly AsyncCallback onSenderClose = OnSenderClose;
@@ -117,6 +116,8 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        internal override TimeSpan OperationTimeout => this.Session.Connection.OperationTimeout;
+
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, TimeSpan timeout)
         {
             return Task.Factory.FromAsync(
@@ -145,7 +146,7 @@ namespace Microsoft.Azure.Amqp
                 (r, t, k, c, s) => new RequestAsyncResult((RequestResponseAmqpLink)s, r, AmqpConstants.NullBinary, t, k, c, s),
                 (r) => RequestAsyncResult.End(r),
                 request,
-                this.sender.Settings.OperationTimeout,
+                this.OperationTimeout,
                 cancellationToken,
                 this);
         }
@@ -156,7 +157,7 @@ namespace Microsoft.Azure.Amqp
                 (p, t, k, c, s) => new RequestAsyncResult((RequestResponseAmqpLink)s, p.Request, p.TxnId, t, k, c, s),
                 (r) => RequestAsyncResult.End(r),
                 new RequestParam(request, txnId),
-                this.sender.Settings.OperationTimeout,
+                this.OperationTimeout,
                 cancellationToken,
                 this);
         }

@@ -19,14 +19,7 @@ namespace Microsoft.Azure.Amqp
 
         public Singleton()
         {
-            this.OperationTimeout = AmqpConstants.DefaultTimeout;
             this.syncLock = new object();
-        }
-
-        public TimeSpan OperationTimeout
-        {
-            get;
-            set;
         }
 
         protected TaskCompletionSource<TValue> TaskCompletionSource
@@ -109,7 +102,7 @@ namespace Microsoft.Azure.Amqp
 
         public Task<TValue> GetOrCreateAsync(CancellationToken cancellationToken)
         {
-            return this.GetOrCreateAsync(this.OperationTimeout, cancellationToken);
+            return this.GetOrCreateAsync(TimeSpan.MaxValue, cancellationToken);
         }
 
         protected void Invalidate(TValue instance)

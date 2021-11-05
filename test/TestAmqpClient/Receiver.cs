@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Amqp;
 using Microsoft.Azure.Amqp.Framing;
@@ -16,7 +17,7 @@ namespace TestAmqpClient
         {
             while (true)
             {
-                AmqpMessage message = await this.link.ReceiveMessageAsync(this.link.DefaultOpenTimeout);
+                AmqpMessage message = await this.link.ReceiveMessageAsync(CancellationToken.None);
                 if (message != null)
                 {
                     this.link.DisposeDelivery(message, true, AmqpConstants.AcceptedOutcome);

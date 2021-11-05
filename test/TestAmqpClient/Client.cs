@@ -56,8 +56,8 @@ namespace TestAmqpClient
             this.session = this.connection.CreateSession(new AmqpSessionSettings());
             this.link = this.CreateLink();
             await Task.WhenAll(
-                this.session.OpenAsync(this.session.DefaultOpenTimeout),
-                this.link.OpenAsync(this.link.DefaultOpenTimeout));
+                this.session.OpenAsync(CancellationToken.None),
+                this.link.OpenAsync(CancellationToken.None));
         }
 
         public Task RunAsync()
@@ -76,7 +76,7 @@ namespace TestAmqpClient
         {
             if (this.connection != null)
             {
-                return this.connection.CloseAsync(this.connection.DefaultCloseTimeout);
+                return this.connection.CloseAsync(CancellationToken.None);
             }
 
             return CompletedTask;

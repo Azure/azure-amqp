@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Amqp;
 using Microsoft.Azure.Amqp.Framing;
@@ -23,7 +24,7 @@ namespace TestAmqpClient
                     new string('A', this.options.BodySize);
                 AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = body });
                 ArraySegment<byte> tag = new ArraySegment<byte>(BitConverter.GetBytes(i++));
-                Outcome outcome = await this.link.SendMessageAsync(message, tag, AmqpConstants.NullBinary, this.link.DefaultOpenTimeout);
+                Outcome outcome = await this.link.SendMessageAsync(message, tag, AmqpConstants.NullBinary, CancellationToken.None);
                 if (outcome.DescriptorCode == Accepted.Code)
                 {
                     this.Success();

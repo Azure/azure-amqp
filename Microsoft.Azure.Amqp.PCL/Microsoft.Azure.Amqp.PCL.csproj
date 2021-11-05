@@ -165,9 +165,6 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Delivery.cs">
       <Link>Amqp\Delivery.cs</Link>
     </Compile>
-    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\DuplexAmqpLink.cs">
-      <Link>Amqp\DuplexAmqpLink.cs</Link>
-    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\FaultTolerantAmqpObject.cs">
       <Link>Amqp\FaultTolerantAmqpObject.cs</Link>
     </Compile>

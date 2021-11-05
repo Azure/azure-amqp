@@ -14,6 +14,7 @@
     <Compile Include="..\Common\Person.cs" Link="Common\Person.cs" />
     <Compile Include="..\Common\TestAmqpBrokerFixture.cs" Link="Common\TestAmqpBrokerFixture.cs" />
     <Compile Include="..\Common\TestCategory.cs" Link="Common\TestCategory.cs" />
+    <Compile Include="..\TestAmqpBroker\Node.cs" Link="Node.cs" />
     <Compile Include="..\TestAmqpBroker\TestAmqpBroker.cs" Link="TestAmqpBroker.cs" />
     <Compile Include="..\TestCases\AmqpCodecTests.cs" Link="TestCases\AmqpCodecTests.cs" />
     <Compile Include="..\TestCases\AmqpConnectionTests.cs" Link="TestCases\AmqpConnectionTests.cs" />

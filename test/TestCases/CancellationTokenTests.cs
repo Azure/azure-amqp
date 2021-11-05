@@ -10,6 +10,7 @@ namespace Test.Microsoft.Azure.Amqp
     using global::Microsoft.Azure.Amqp.Framing;
     using global::Microsoft.Azure.Amqp.Transport;
     using Xunit;
+    using TestAmqpBroker;
 
     [Trait("Category", TestCategory.Current)]
     public class CancellationTokenTests
@@ -580,6 +581,87 @@ namespace Test.Microsoft.Azure.Amqp
             finally
             {
                 listener.Close();
+            }
+        }
+
+        [Fact]
+        public async Task CbsSendTokenNoCancelTest()
+        {
+            var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, null, null, null);
+            broker.AddNode(new CbsNode());
+            broker.Start();
+
+            try
+            {
+                var factory = new AmqpConnectionFactory();
+                var connection = await factory.OpenConnectionAsync(addressUri, CancellationToken.None);
+                var cbsLink = new AmqpCbsLink(connection);
+                await cbsLink.SendTokenAsync(new TestTokenProvider(), addressUri, addressUri.OriginalString,
+                    addressUri.OriginalString, new[] { "Send" }, CancellationToken.None);
+                await connection.CloseAsync(CancellationToken.None);
+            }
+            finally
+            {
+                broker.Stop();
+            }
+        }
+
+        [Fact]
+        public Task CbsSendTokenTest()
+        {
+            return this.RunCbsSendTokenTest(false);
+        }
+
+        [Fact]
+        public Task CbsSendTokenCancelledTest()
+        {
+            return this.RunCbsSendTokenTest(true);
+        }
+
+        async Task RunCbsSendTokenTest(bool cancelBefore)
+        {
+            var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, null, null, null);
+            broker.AddNode(new CbsNode() { ProcessingTime = TimeSpan.FromSeconds(10) });
+            broker.Start();
+
+            try
+            {
+                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
+                {
+                    var factory = new AmqpConnectionFactory();
+                    var connection = await factory.OpenConnectionAsync(this.addressUri, CancellationToken.None);
+                    var cbsLink = new AmqpCbsLink(connection);
+
+                    var cts = new CancellationTokenSource();
+                    if (cancelBefore)
+                    {
+                        cts.Cancel();
+                    }
+
+                    var task = cbsLink.SendTokenAsync(new TestTokenProvider(), addressUri, addressUri.OriginalString,
+                        addressUri.OriginalString, new[] { "Send" }, cts.Token);
+
+                    if (!cancelBefore)
+                    {
+                        await Task.Yield();
+                        cts.Cancel();
+                    }
+
+                    await task;
+                });
+            }
+            finally
+            {
+                broker.Stop();
+            }
+        }
+
+        class TestTokenProvider : ICbsTokenProvider
+        {
+            public Task<CbsToken> GetTokenAsync(Uri namespaceAddress, string appliesTo, string[] requiredClaims)
+            {
+                var token = new CbsToken("test:token", "tt", DateTime.UtcNow.AddHours(1));
+                return Task.FromResult(token);
             }
         }
 

@@ -459,17 +459,18 @@ namespace Test.Microsoft.Azure.Amqp
             ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnSend, 0));
             rLink.Open();
 
+            SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnSend));
+            sLink.Open();
+
             bool done = false;
             int count = 0;
-            Task sendTask = Task.Run(() =>
+            Task sendTask = Task.Run(async () =>
             {
-                SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnReceive));
-                sLink.Open();
                 while (!done)
                 {
                     AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "Test" });
-                    Outcome outcome = sLink.EndSendMessage(sLink.BeginSendMessage(message, new ArraySegment<byte>(new byte[2]), new ArraySegment<byte>(), TimeSpan.FromSeconds(5), null, null));
-                    Assert.True(outcome.DescriptorCode == Accepted.Code, "message is not accepted.");
+                    Outcome outcome = await sLink.SendMessageAsync(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, sLink.Settings.OperationTimeout);
+                    Assert.Equal(outcome.DescriptorCode, Accepted.Code);
                 }
             });
 

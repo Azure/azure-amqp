@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
 
@@ -14,7 +15,7 @@ namespace Microsoft.Azure.Amqp
     public sealed class AmqpCbsLink
     {
         readonly AmqpConnection connection;
-        readonly FaultTolerantAmqpObject<RequestResponseAmqpLink> linkFactory;
+        readonly CbsSingleton cbsSingleton;
 
         /// <summary>
         /// Constructs a new instance
@@ -22,40 +23,46 @@ namespace Microsoft.Azure.Amqp
         public AmqpCbsLink(AmqpConnection connection)
         {
             this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
-            this.linkFactory = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(
-                t => TaskHelpers.CreateTask<RequestResponseAmqpLink>((c, s) => this.BeginCreateCbsLink(t, c, s), this.EndCreateCbsLink),
-                link => CloseLink(link));
-
             this.connection.Extensions.Add(this);
+            this.cbsSingleton = new CbsSingleton(this);
+        }
+
+        public TimeSpan OperationTimeout
+        {
+            get { return this.cbsSingleton.OperationTimeout; }
+            set { this.cbsSingleton.OperationTimeout = value; }
         }
 
         public void Close()
         {
-            this.linkFactory.Close();
+            this.cbsSingleton.Close();
         }
 
         public Task<DateTime> SendTokenAsync(ICbsTokenProvider tokenProvider, Uri namespaceAddress, string audience, string resource, string[] requiredClaims, TimeSpan timeout)
         {
-            return TaskHelpers.CreateTask(
-                (c, s) => this.BeginSendToken(
-                    tokenProvider, namespaceAddress, audience, resource, requiredClaims, timeout, c, s),
-                (a) => this.EndSendToken(a));
+            return Task.Factory.FromAsync(
+                (p, t, k, c, s) => ((AmqpCbsLink)s).BeginSendToken(p.TokenProvider, p.NamespaceAddress, p.Audience, p.Resource, p.RequiredClaims, t, k, c, s),
+                (r) => ((AmqpCbsLink)r.AsyncState).EndSendToken(r),
+                new SendTokenParams() { TokenProvider = tokenProvider, NamespaceAddress = namespaceAddress, Audience = audience, Resource = resource, RequiredClaims = requiredClaims },
+                timeout,
+                CancellationToken.None,
+                this);
+        }
+
+        public Task<DateTime> SendTokenAsync(ICbsTokenProvider tokenProvider, Uri namespaceAddress, string audience, string resource, string[] requiredClaims, CancellationToken cancellationToken)
+        {
+            return Task.Factory.FromAsync(
+                (p, t, k, c, s) => ((AmqpCbsLink)s).BeginSendToken(p.TokenProvider, p.NamespaceAddress, p.Audience, p.Resource, p.RequiredClaims, t, k, c, s),
+                (r) => ((AmqpCbsLink)r.AsyncState).EndSendToken(r),
+                new SendTokenParams() { TokenProvider = tokenProvider, NamespaceAddress = namespaceAddress, Audience = audience, Resource = resource, RequiredClaims = requiredClaims },
+                AmqpConstants.DefaultTimeout,
+                cancellationToken,
+                this);
         }
 
         public IAsyncResult BeginSendToken(ICbsTokenProvider tokenProvider, Uri namespaceAddress, string audience, string resource, string[] requiredClaims, TimeSpan timeout, AsyncCallback callback, object state)
         {
-            if (tokenProvider == null || namespaceAddress == null || audience == null || resource == null || requiredClaims == null)
-            {
-                throw new ArgumentNullException(
-                    tokenProvider == null ? "tokenProvider" : namespaceAddress == null ? "namespaceAddress" : audience == null ? "audience" : resource == null ? "resource" : "requiredClaims");
-            }
-
-            if (this.connection.IsClosing())
-            {
-                throw new ObjectDisposedException(CbsConstants.CbsAddress);
-            }
-
-            return new SendTokenAsyncResult(this, tokenProvider, namespaceAddress, audience, resource, requiredClaims, timeout, callback, state);
+            return this.BeginSendToken(tokenProvider, namespaceAddress, audience, resource, requiredClaims, timeout, CancellationToken.None, callback, state);
         }
 
         public DateTime EndSendToken(IAsyncResult result)
@@ -63,33 +70,82 @@ namespace Microsoft.Azure.Amqp
             return SendTokenAsyncResult.End(result).ExpiresAtUtc;
         }
 
-        static void CloseLink(RequestResponseAmqpLink link)
+        static void ThrowIfNull<T>(T arg, string name) where T : class
         {
-            AmqpSession session = link.SendingLink?.Session;
-            link.Abort();
-            session?.SafeClose();
+            if (arg == null)
+            {
+                throw new ArgumentNullException(name);
+            }
         }
 
-        IAsyncResult BeginCreateCbsLink(TimeSpan timeout, AsyncCallback callback, object state)
+        IAsyncResult BeginSendToken(ICbsTokenProvider tokenProvider, Uri namespaceAddress, string audience, string resource,
+            string[] requiredClaims, TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
         {
-            return new OpenCbsRequestResponseLinkAsyncResult(this.connection, timeout, callback, state);
+            ThrowIfNull(tokenProvider, nameof(tokenProvider));
+            ThrowIfNull(namespaceAddress, nameof(namespaceAddress));
+            ThrowIfNull(audience, nameof(audience));
+            ThrowIfNull(resource, nameof(resource));
+            ThrowIfNull(requiredClaims, nameof(requiredClaims));
+            if (this.connection.IsClosing())
+            {
+                throw new ObjectDisposedException(CbsConstants.CbsAddress);
+            }
+
+            return new SendTokenAsyncResult(this, tokenProvider, namespaceAddress, audience, resource, requiredClaims, timeout, cancellationToken, callback, state);
         }
 
-        RequestResponseAmqpLink EndCreateCbsLink(IAsyncResult result)
+        struct SendTokenParams
         {
-            RequestResponseAmqpLink link = OpenCbsRequestResponseLinkAsyncResult.End(result).Link;
-            return link;
+            public ICbsTokenProvider TokenProvider { get; set; }
+
+            public Uri NamespaceAddress { get; set; }
+
+            public string Audience { get; set; }
+
+            public string Resource { get; set; }
+
+            public string[] RequiredClaims { get; set; }
+        }
+
+        sealed class CbsSingleton : Singleton<RequestResponseAmqpLink>
+        {
+            readonly AmqpCbsLink parent;
+
+            public CbsSingleton(AmqpCbsLink parent)
+            {
+                this.parent = parent;
+            }
+
+            protected override Task<RequestResponseAmqpLink> OnCreateAsync(TimeSpan timeout, CancellationToken cancellationToken)
+            {
+                return Task.Factory.FromAsync(
+                    (p, t, k, c, s) => new OpenCbsRequestResponseLinkAsyncResult(p, t, k, c, s),
+                    (r) => OpenCbsRequestResponseLinkAsyncResult.End(r).Link,
+                    this.parent,
+                    timeout,
+                    cancellationToken,
+                    this);
+            }
+
+            protected override void OnSafeClose(RequestResponseAmqpLink value)
+            {
+                value.Abort();
+                value.Session.SafeClose();
+            }
         }
 
         sealed class OpenCbsRequestResponseLinkAsyncResult : IteratorAsyncResult<OpenCbsRequestResponseLinkAsyncResult>, ILinkFactory
         {
-            readonly AmqpConnection connection;
-            AmqpSession session = null;
+            readonly AmqpCbsLink parent;
+            readonly CancellationToken cancellationToken;
+            AmqpSession session;
 
-            public OpenCbsRequestResponseLinkAsyncResult(AmqpConnection connection, TimeSpan timeout, AsyncCallback callback, object state)
+            public OpenCbsRequestResponseLinkAsyncResult(AmqpCbsLink parent, TimeSpan timeout,
+                CancellationToken cancellationToken, AsyncCallback callback, object state)
                 : base(timeout, callback, state)
             {
-                this.connection = connection;
+                this.parent = parent;
+                this.cancellationToken = cancellationToken;
 
                 this.Start();
             }
@@ -104,8 +160,8 @@ namespace Microsoft.Azure.Amqp
                     try
                     {
                         AmqpSessionSettings sessionSettings = new AmqpSessionSettings() { Properties = new Fields() };
-                        this.session = new AmqpSession(this.connection, sessionSettings, this);
-                        connection.AddSession(session, null);
+                        this.session = new AmqpSession(this.parent.connection, sessionSettings, this);
+                        this.parent.connection.AddSession(session, null);
                     }
                     catch (InvalidOperationException exception)
                     {
@@ -114,14 +170,14 @@ namespace Microsoft.Azure.Amqp
                     }
 
                     yield return this.CallAsync(
-                        (thisPtr, t, c, s) => thisPtr.session.BeginOpen(t, c, s),
+                        (thisPtr, t, c, s) => thisPtr.session.BeginOpen(t, thisPtr.cancellationToken, c, s),
                         (thisPtr, r) => thisPtr.session.EndOpen(r),
                         ExceptionPolicy.Continue);
 
                     Exception lastException = this.LastAsyncStepException;
                     if (lastException != null)
                     {
-                        AmqpTrace.Provider.AmqpOpenEntityFailed(this.connection, this.session, string.Empty, address, lastException.Message);
+                        AmqpTrace.Provider.AmqpOpenEntityFailed(this.parent.connection, this.session, string.Empty, address, lastException.Message);
                         this.session.Abort();
                         this.Complete(lastException);
                         yield break;
@@ -130,22 +186,25 @@ namespace Microsoft.Azure.Amqp
                     Fields properties = new Fields();
                     properties.Add(CbsConstants.TimeoutName, (uint)this.RemainingTime().TotalMilliseconds);
                     this.Link = new RequestResponseAmqpLink("cbs", this.session, address, properties);
+                    this.Link.SendingLink.Settings.OperationTimeout = this.parent.cbsSingleton.OperationTimeout;
+                    this.Link.ReceivingLink.Settings.OperationTimeout = this.parent.cbsSingleton.OperationTimeout;
+
                     yield return this.CallAsync(
-                        (thisPtr, t, c, s) => thisPtr.Link.BeginOpen(t, c, s),
+                        (thisPtr, t, c, s) => thisPtr.Link.BeginOpen(t, thisPtr.cancellationToken, c, s),
                         (thisPtr, r) => thisPtr.Link.EndOpen(r),
                         ExceptionPolicy.Continue);
 
                     lastException = this.LastAsyncStepException;
                     if (lastException != null)
                     {
-                        AmqpTrace.Provider.AmqpOpenEntityFailed(this.connection, this.Link, this.Link.Name, address, lastException.Message);
+                        AmqpTrace.Provider.AmqpOpenEntityFailed(this.parent.connection, this.Link, this.Link.Name, address, lastException.Message);
                         this.session.SafeClose();
                         this.Link = null;
                         this.Complete(lastException);
                         yield break;
                     }
 
-                    AmqpTrace.Provider.AmqpOpenEntitySucceeded(this.connection, this.Link, this.Link.Name, address);
+                    AmqpTrace.Provider.AmqpOpenEntitySucceeded(this.parent.connection, this.Link, this.Link.Name, address);
                     yield break;
                 }
 
@@ -192,8 +251,12 @@ namespace Microsoft.Azure.Amqp
             readonly Uri namespaceAddress;
             readonly string audience;
             readonly string resource;
-            CbsToken token;
+            readonly CancellationToken cancellationToken;
+            Task<CbsToken> tokenTask;
             Task<RequestResponseAmqpLink> requestResponseLinkTask;
+            RequestResponseAmqpLink requestResponseLink;
+            AmqpMessage putTokenRequest;
+            AmqpMessage putTokenResponse;
 
             public SendTokenAsyncResult(
                 AmqpCbsLink cbsLink,
@@ -203,6 +266,7 @@ namespace Microsoft.Azure.Amqp
                 string resource,
                 string[] requiredClaims,
                 TimeSpan timeout,
+                CancellationToken cancellationToken,
                 AsyncCallback callback,
                 object state)
                 : base(timeout, callback, state)
@@ -213,6 +277,7 @@ namespace Microsoft.Azure.Amqp
                 this.resource = resource;
                 this.requiredClaims = requiredClaims;
                 this.tokenProvider = tokenProvider;
+                this.cancellationToken = cancellationToken;
 
                 this.Start();
             }
@@ -221,52 +286,48 @@ namespace Microsoft.Azure.Amqp
 
             protected override IEnumerator<AsyncStep> GetAsyncSteps()
             {
-                Task<CbsToken> getTokenTask = null;
                 yield return this.CallTask(
-                    (thisPtr, t) => getTokenTask = thisPtr.tokenProvider.GetTokenAsync(thisPtr.namespaceAddress, thisPtr.resource, thisPtr.requiredClaims),
+                    (thisPtr, t) => thisPtr.tokenTask = thisPtr.tokenProvider.GetTokenAsync(thisPtr.namespaceAddress, thisPtr.resource, thisPtr.requiredClaims),
                     ExceptionPolicy.Transfer);
-                this.token = getTokenTask.Result;
 
-                string tokenType = this.token.TokenType;
+                CbsToken token = this.tokenTask.Result;
+                string tokenType = token.TokenType;
                 if (tokenType == null)
                 {
                     this.Complete(new InvalidOperationException(AmqpResources.AmqpUnsupportedTokenType));
                     yield break;
                 }
 
-                RequestResponseAmqpLink requestResponseLink;
-                if (this.cbsLink.linkFactory.TryGetOpenedObject(out requestResponseLink))
-                {
-                    this.requestResponseLinkTask = Task.FromResult(requestResponseLink);
-                }
-                else
+                if (!this.cbsLink.cbsSingleton.TryGet(out this.requestResponseLink, link => link.State == AmqpObjectState.Opened))
                 {
                     yield return this.CallTask(
-                        (thisPtr, t) => thisPtr.requestResponseLinkTask = thisPtr.cbsLink.linkFactory.GetOrCreateAsync(t),
+                        (thisPtr, t) => thisPtr.requestResponseLinkTask = thisPtr.cbsLink.cbsSingleton.GetOrCreateAsync(t, thisPtr.cancellationToken),
                         ExceptionPolicy.Transfer);
+
+                    this.requestResponseLink = this.requestResponseLinkTask.Result;
+                    Fx.AssertIsNotNull(this.requestResponseLink, "requestResponseLink cannot be null without exception");
                 }
 
-                AmqpValue value = new AmqpValue();
-                value.Value = this.token.TokenValue;
-                AmqpMessage putTokenRequest = AmqpMessage.Create(value);
-                putTokenRequest.ApplicationProperties = new ApplicationProperties();
-                putTokenRequest.ApplicationProperties.Map[CbsConstants.Operation] = CbsConstants.PutToken.OperationValue;
-                putTokenRequest.ApplicationProperties.Map[CbsConstants.PutToken.Type] = tokenType;
-                putTokenRequest.ApplicationProperties.Map[CbsConstants.PutToken.Audience] = this.audience;
-                putTokenRequest.ApplicationProperties.Map[CbsConstants.PutToken.Expiration] = this.token.ExpiresAtUtc;
+                AmqpValue value = new AmqpValue() { Value = token.TokenValue };
+                this.putTokenRequest = AmqpMessage.Create(value);
+                this.putTokenRequest.ApplicationProperties = new ApplicationProperties();
+                this.putTokenRequest.ApplicationProperties.Map[CbsConstants.Operation] = CbsConstants.PutToken.OperationValue;
+                this.putTokenRequest.ApplicationProperties.Map[CbsConstants.PutToken.Type] = tokenType;
+                this.putTokenRequest.ApplicationProperties.Map[CbsConstants.PutToken.Audience] = this.audience;
+                this.putTokenRequest.ApplicationProperties.Map[CbsConstants.PutToken.Expiration] = token.ExpiresAtUtc;
 
-                AmqpMessage putTokenResponse = null;
-                Fx.AssertIsNotNull(this.requestResponseLinkTask.Result, "requestResponseLink cannot be null without exception");
                 yield return this.CallAsync(
-                    (thisPtr, t, c, s) => thisPtr.requestResponseLinkTask.Result.BeginRequest(putTokenRequest, t, c, s),
-                    (thisPtr, r) => putTokenResponse = thisPtr.requestResponseLinkTask.Result.EndRequest(r),
+                    (thisPtr, t, c, s) => thisPtr.requestResponseLink.BeginRequest(thisPtr.putTokenRequest, AmqpConstants.NullBinary, t, thisPtr.cancellationToken, c, s),
+                    (thisPtr, r) => thisPtr.putTokenResponse = thisPtr.requestResponseLink.EndRequest(r),
                     ExceptionPolicy.Transfer);
 
-                int statusCode = (int)putTokenResponse.ApplicationProperties.Map[CbsConstants.PutToken.StatusCode];
-                string statusDescription = (string)putTokenResponse.ApplicationProperties.Map[CbsConstants.PutToken.StatusDescription];
+                int statusCode = (int)this.putTokenResponse.ApplicationProperties.Map[CbsConstants.PutToken.StatusCode];
+                string statusDescription = (string)this.putTokenResponse.ApplicationProperties.Map[CbsConstants.PutToken.StatusDescription];
+                this.putTokenResponse.Dispose();
+
                 if (statusCode == (int)AmqpResponseStatusCode.Accepted || statusCode == (int)AmqpResponseStatusCode.OK)
                 {
-                    this.ExpiresAtUtc = this.token.ExpiresAtUtc;
+                    this.ExpiresAtUtc = token.ExpiresAtUtc;
                 }
                 else
                 {

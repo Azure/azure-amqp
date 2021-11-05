@@ -10,10 +10,11 @@ namespace TestAmqpBroker
     {
         static void Usage()
         {
-            Console.WriteLine("AmqpTestBroker url [url] [/creds:user:pwd] [/cert:ssl_cert] [/queues:q1;q2;...]");
+            Console.WriteLine("AmqpTestBroker url [url] [/creds:user:pwd] [/cert:ssl_cert] [/cbs] [/queues:q1;q2;...]");
             Console.WriteLine("  url=amqp|amqps://host[:port] (can be multiple)");
-            Console.WriteLine("  creds=username:passwrod");
+            Console.WriteLine("  creds=username:password");
             Console.WriteLine("  cert=ssl cert find value (thumbprint or subject), default to url.host");
+            Console.WriteLine("  cbs: enables a test CBS node with no token validation");
             Console.WriteLine("  queues: semicolon seperated queue names. If not specified, the broker implicitly");
             Console.WriteLine("          creates a new node for any non-existing address.");
         }
@@ -44,6 +45,7 @@ namespace TestAmqpBroker
             string sslValue = null;
             string[] queues = null;
             bool parseEndpoint = true;
+            bool enableCbs = false;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -57,6 +59,10 @@ namespace TestAmqpBroker
                     if (args[i].StartsWith("/creds:", StringComparison.OrdinalIgnoreCase))
                     {
                         creds = args[i].Substring(7);
+                    }
+                    if (args[i].Equals("/cbs", StringComparison.OrdinalIgnoreCase))
+                    {
+                        enableCbs = true;
                     }
                     else if (args[i].StartsWith("/queues:", StringComparison.OrdinalIgnoreCase))
                     {
@@ -76,6 +82,11 @@ namespace TestAmqpBroker
             }
 
             var broker = new TestAmqpBroker(endpoints, creds, sslValue, queues);
+            if (enableCbs)
+            {
+                broker.AddNode(new CbsNode());
+            }
+
             broker.Start();
 
             Console.WriteLine("Broker started. Press the enter key to exit...");

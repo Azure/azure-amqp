@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Amqp;
 using Xunit;
@@ -41,7 +42,7 @@ namespace Test.Microsoft.Azure.Amqp
                 _onSafeCloseComplete = onSafeCloseComplete;
             }
 
-            protected override async Task<object> OnCreateAsync(TimeSpan timeout)
+            protected override async Task<object> OnCreateAsync(TimeSpan timeout, CancellationToken cancellationToken)
             {
                 await _onCreateComplete;
                 return new object();

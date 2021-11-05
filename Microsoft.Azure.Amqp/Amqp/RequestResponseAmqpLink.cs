@@ -206,6 +206,11 @@ namespace Microsoft.Azure.Amqp
             this.inflightRequests.Abort();
         }
 
+        internal IAsyncResult BeginRequest(AmqpMessage request, ArraySegment<byte> txnId, TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
+        {
+            return new RequestAsyncResult(this, request, txnId, timeout, cancellationToken, callback, state);
+        }
+
         static void OnSenderOpen(IAsyncResult result)
         {
             OnOperationComplete(result, true, true);

@@ -14,13 +14,19 @@ namespace Microsoft.Azure.Amqp
     public abstract class Singleton<TValue> : IDisposable where TValue : class
     {
         readonly object syncLock;
-
         TaskCompletionSource<TValue> taskCompletionSource;
         volatile bool disposed;
 
         public Singleton()
         {
+            this.OperationTimeout = AmqpConstants.DefaultTimeout;
             this.syncLock = new object();
+        }
+
+        public TimeSpan OperationTimeout
+        {
+            get;
+            set;
         }
 
         protected TaskCompletionSource<TValue> TaskCompletionSource
@@ -41,15 +47,24 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        public Task OpenAsync(TimeSpan timeout)
+        public Task OpenAsync()
         {
-            return this.GetOrCreateAsync(timeout);
+            return this.OpenAsync(CancellationToken.None);
+        }
+
+        public Task OpenAsync(CancellationToken cancellationToken)
+        {
+            return this.GetOrCreateAsync(cancellationToken);
         }
 
         public Task CloseAsync()
         {
-            this.Dispose();
+            return this.CloseAsync(CancellationToken.None);
+        }
 
+        public Task CloseAsync(CancellationToken cancellationToken)
+        {
+            this.Dispose();
             return TaskHelpers.CompletedTask;
         }
 
@@ -82,12 +97,60 @@ namespace Microsoft.Azure.Amqp
                     thisTaskCompletionSource.Task.Status == TaskStatus.RanToCompletion &&
                     this.TryRemove())
                 {
-                    OnSafeClose(thisTaskCompletionSource.Task.Result);
+                    this.OnSafeClose(thisTaskCompletionSource.Task.Result);
                 }
             }
         }
 
-        public async Task<TValue> GetOrCreateAsync(TimeSpan timeout)
+        public Task<TValue> GetOrCreateAsync(TimeSpan timeout)
+        {
+            return this.GetOrCreateAsync(timeout, CancellationToken.None);
+        }
+
+        public Task<TValue> GetOrCreateAsync(CancellationToken cancellationToken)
+        {
+            return this.GetOrCreateAsync(this.OperationTimeout, cancellationToken);
+        }
+
+        protected void Invalidate(TValue instance)
+        {
+            lock (this.syncLock)
+            {
+                if (this.taskCompletionSource != null &&
+                    this.taskCompletionSource.Task.Status == TaskStatus.RanToCompletion &&
+                    this.taskCompletionSource.Task.Result == instance)
+                {
+                    Volatile.Write<TaskCompletionSource<TValue>>(ref this.taskCompletionSource, null);
+                }
+            }
+        }
+
+        protected virtual bool IsValid(TValue value)
+        {
+            return true;
+        }
+
+        protected abstract Task<TValue> OnCreateAsync(TimeSpan timeout, CancellationToken cancellationToken);
+
+        protected abstract void OnSafeClose(TValue value);
+
+        internal bool TryGet(out TValue value, Func<TValue, bool> condition)
+        {
+            var taskCompletionSource = this.TaskCompletionSource;
+            if (taskCompletionSource != null && taskCompletionSource.Task.Status == TaskStatus.RanToCompletion)
+            {
+                value = TaskCompletionSource.Task.Result;
+                if (value != null && condition(value))
+                {
+                    return true;
+                }
+            }
+
+            value = null;
+            return false;
+        }
+
+        internal async Task<TValue> GetOrCreateAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             var timeoutHelper = new TimeoutHelper(timeout);
 
@@ -111,7 +174,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     try
                     {
-                        TValue value = await this.OnCreateAsync(timeout).ConfigureAwait(false);
+                        TValue value = await this.OnCreateAsync(timeout, cancellationToken).ConfigureAwait(false);
                         tcs.SetResult(value);
 
                         if (this.disposed && this.TryRemove())
@@ -136,28 +199,6 @@ namespace Microsoft.Azure.Amqp
 
             throw new TimeoutException(string.Format(CultureInfo.InvariantCulture, "Creation of {0} did not complete in {1} milliseconds.", typeof(TValue).Name, timeout.TotalMilliseconds));
         }
-
-        protected void Invalidate(TValue instance)
-        {
-            lock (this.syncLock)
-            {
-                if (this.taskCompletionSource != null &&
-                    this.taskCompletionSource.Task.Status == TaskStatus.RanToCompletion &&
-                    this.taskCompletionSource.Task.Result == instance)
-                {
-                    Volatile.Write<TaskCompletionSource<TValue>>(ref this.taskCompletionSource, null);
-                }
-            }
-        }
-
-        protected virtual bool IsValid(TValue value)
-        {
-            return true;
-        }
-
-        protected abstract Task<TValue> OnCreateAsync(TimeSpan timeout);
-
-        protected abstract void OnSafeClose(TValue value);
 
         bool TryGet(out TaskCompletionSource<TValue> tcs)
         {

@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -46,7 +47,7 @@ namespace Microsoft.Azure.Amqp
             return value.State == AmqpObjectState.Opened;
         }
 
-        protected override async Task<T> OnCreateAsync(TimeSpan timeout)
+        protected override async Task<T> OnCreateAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             T amqpObject = await this.createObjectAsync(timeout).ConfigureAwait(false);
             amqpObject.SafeAddClosed(OnObjectClosed);

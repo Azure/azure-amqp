@@ -8,18 +8,23 @@
         <copyright>© Microsoft Corporation. All rights reserved.</copyright>
         <requireLicenseAcceptance>true</requireLicenseAcceptance>
         <projectUrl>https://github.com/Azure/azure-amqp</projectUrl>
-        <licenseUrl>https://github.com/Azure/azure-amqp/blob/master/LICENSE.txt</licenseUrl>
+        <license type="expression">MIT</license>
         <description>Package for Azure AMQP</description>
-        <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288890</iconUrl>
+        <icon>images\icon.png</icon>
         <language>en-US</language>
         <dependencies>
+          <group targetFramework="net45" />
           <group targetFramework="netstandard1.3">
             <dependency id="System.Runtime.Serialization.Primitives" version="4.1.1" />
             <dependency id="System.Net.WebSockets.Client" version="4.0.2" />
           </group>
-        </dependencies>
+          <group targetFramework="netstandard2.0" />
+          <group targetFramework="uap10.0" />
+          <group targetFramework="monoandroid" />
+       </dependencies>
     </metadata>
     <files>
-        <file src="$InputDirectory$\lib\**" target="lib"/>
+      <file src="$InputDirectory$\images\**" target="images"/>
+      <file src="$InputDirectory$\lib\**" target="lib"/>
     </files>
 </package>

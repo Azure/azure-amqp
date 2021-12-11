@@ -83,11 +83,12 @@ namespace Microsoft.Azure.Amqp.Transport
                 return false;
             }
 
-            task.ContinueWith(t =>
+            task.ContinueWith(static (t, s) =>
             {
+                var (transport, args, buffer, mergedBuffer, startTime) = (Tuple<WebSocketTransport, TransportAsyncCallbackArgs, ArraySegment<byte>, ByteBuffer, DateTime>) s;
                 if (t.IsFaulted)
                 {
-                    args.Exception = t.Exception.InnerException;
+                    args.Exception = t.Exception?.InnerException;
                 }
                 else if (t.IsCanceled)
                 {
@@ -95,11 +96,11 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 else
                 {
-                    this.OnWriteComplete(args, buffer, mergedBuffer, startTime);
+                    transport.OnWriteComplete(args, buffer, mergedBuffer, startTime);
                 }
 
                 args.CompletedCallback(args);
-            });
+            }, Tuple.Create(this, args, buffer, mergedBuffer, startTime));
             return true;
         }
 
@@ -119,11 +120,12 @@ namespace Microsoft.Azure.Amqp.Transport
                 return false;
             }
 
-            task.ContinueWith(t =>
+            task.ContinueWith(static (t, s) =>
             {
+                var (transport, args, startTime) = (Tuple<WebSocketTransport, TransportAsyncCallbackArgs, DateTime>) s;
                 if (t.IsFaulted)
                 {
-                    args.Exception = t.Exception.InnerException;
+                    args.Exception = t.Exception?.InnerException;
                 }
                 else if (t.IsCanceled)
                 {
@@ -131,11 +133,11 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 else
                 {
-                    this.OnReadComplete(args, t.Result.Count, startTime);
+                    transport.OnReadComplete(args, t.Result.Count, startTime);
                 }
 
                 args.CompletedCallback(args);
-            });
+            }, Tuple.Create(this, args, startTime));
             return true;
         }
 
@@ -160,11 +162,12 @@ namespace Microsoft.Azure.Amqp.Transport
                 return true;
             }
 
-            task.ContinueWith(t =>
+            task.ContinueWith(static (t, s) =>
             {
-                Exception exception = t.IsFaulted ? t.Exception.InnerException : (t.IsCanceled ? new OperationCanceledException() : null);
-                this.CompleteClose(false, exception);
-            });
+                var thisPtr = (WebSocketTransport) s;
+                var exception = t.IsFaulted ? t.Exception?.InnerException : t.IsCanceled ? new OperationCanceledException() : null;
+                thisPtr.CompleteClose(false, exception);
+            }, this);
 
             return false;
         }

@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Amqp
             this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
             this.linkFactory = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(
                 ct => this.CreateCbsLinkAsync(ct),
-                link => CloseLink(link));
+                static link => CloseLink(link));
 
             this.connection.AddExtension(this);
         }

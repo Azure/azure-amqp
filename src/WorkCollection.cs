@@ -81,7 +81,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     // Schedule the completion so we do not block the I/O thread
                     ActionItem.Schedule(
-                        o => { var state = (Tuple<TWork, TOutcome>)o; state.Item1.Done(false, state.Item2); },
+                        static o => { var state = (Tuple<TWork, TOutcome>)o; state.Item1.Done(false, state.Item2); },
                         new Tuple<TWork, TOutcome>(work, outcome));
                 }
             }
@@ -95,14 +95,13 @@ namespace Microsoft.Azure.Amqp
         public void Abort()
         {
             this.closed = true;
-            ActionItem.Schedule(o =>
+            ActionItem.Schedule(static o =>
                 {
                     var thisPtr = (WorkCollection<TKey, TWork, TOutcome>)o;
-                    List<TKey> keys = new List<TKey>(thisPtr.pendingWork.Keys);
-                    foreach (TKey key in keys)
+                    var keys = new List<TKey>(thisPtr.pendingWork.Keys);
+                    foreach (var key in keys)
                     {
-                        TWork work;
-                        if (thisPtr.pendingWork.TryRemove(key, out work))
+                        if (thisPtr.pendingWork.TryRemove(key, out var work))
                         {
                             work.Cancel(false, new OperationCanceledException());
                         }

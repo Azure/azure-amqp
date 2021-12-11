@@ -368,7 +368,7 @@ namespace Microsoft.Azure.Amqp
         public void DisposeDelivery(Delivery delivery, bool settled, DeliveryState state, bool noFlush)
         {
             this.DoActionIfNotClosed(
-                (thisPtr, paramDelivery, paramSettled, paramState, paramNoFlush) =>
+                static (thisPtr, paramDelivery, paramSettled, paramState, paramNoFlush) =>
                 {
                     thisPtr.DisposeDeliveryInternal(paramDelivery, paramSettled, paramState, paramNoFlush);
                     return true;
@@ -638,7 +638,7 @@ namespace Microsoft.Azure.Amqp
         bool IWorkDelegate<Delivery>.Invoke(Delivery delivery)
         {
             return this.DoActionIfNotClosed(
-                (thisPtr, paramDelivery, p1, p2, p3) =>
+                static (thisPtr, paramDelivery, p1, p2, p3) =>
                 {
                     bool sent = thisPtr.SendDelivery(paramDelivery);
                     if (!sent)

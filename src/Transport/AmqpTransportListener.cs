@@ -160,7 +160,7 @@ namespace Microsoft.Azure.Amqp.Transport
             public static void SpawnHandler(AmqpTransportListener parent, TransportListener innerListener, TransportAsyncCallbackArgs args)
             {
                 TransportHandler handler = new TransportHandler(parent, innerListener, args);
-                ActionItem.Schedule(s => Start(s), handler);
+                ActionItem.Schedule(static s => Start(s), handler);
             }
 
             public override string ToString()

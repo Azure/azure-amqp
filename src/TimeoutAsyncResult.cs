@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Amqp
             {
                 if (this.timeout != Timeout.InfiniteTimeSpan && this.timeout != TimeSpan.MaxValue)
                 {
-                    this.timer = new Timer(s => OnTimerCallback(s), this, this.timeout, Timeout.InfiniteTimeSpan);
+                    this.timer = new Timer(static s => OnTimerCallback(s), this, this.timeout, Timeout.InfiniteTimeSpan);
                 }
 
                 if (this.cancellationToken.CanBeCanceled)

@@ -59,7 +59,7 @@ namespace Microsoft.Azure.Amqp.Transport
             TransportInitiator innerInitiator = this.transportSettings.CreateInitiator();
             TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();
             args.UserToken = this;
-            args.CompletedCallback = _args => ((AmqpTransportInitiator)_args.UserToken).OnConnectComplete(_args);
+            args.CompletedCallback = static _args => ((AmqpTransportInitiator)_args.UserToken).OnConnectComplete(_args);
             args.UserToken2 = callbackArgs;
             callbackArgs.CompletedSynchronously = false;
             this.timeoutHelper = new TimeoutHelper(timeout);

@@ -52,20 +52,20 @@ namespace Microsoft.Azure.Amqp.Serialization
                 AmqpType.Converted,
                 typeof(TimeSpan),
                 typeof(DescribedType),
-                (o, t) => new DescribedType(AmqpConstants.TimeSpanName, ((TimeSpan)o).Ticks),
-                (o, t) => TimeSpan.FromTicks((long)((DescribedType)o).Value));
+                static (o, t) => new DescribedType(AmqpConstants.TimeSpanName, ((TimeSpan)o).Ticks),
+                static (o, t) => TimeSpan.FromTicks((long)((DescribedType)o).Value));
             builtInTypes[typeof(Uri)] = new SerializableType.Converted(
                 AmqpType.Converted,
                 typeof(Uri),
                 typeof(DescribedType),
-                (o, t) => new DescribedType(AmqpConstants.UriName, ((Uri)o).AbsoluteUri),
-                (o, t) => new Uri((string)((DescribedType)o).Value));
+                static (o, t) => new DescribedType(AmqpConstants.UriName, ((Uri)o).AbsoluteUri),
+                static (o, t) => new Uri((string)((DescribedType)o).Value));
             builtInTypes[typeof(DateTimeOffset)] = new SerializableType.Converted(
                 AmqpType.Converted,
                 typeof(DateTimeOffset),
                 typeof(DescribedType),
-                (o, t) => new DescribedType(AmqpConstants.DateTimeOffsetName, ((DateTimeOffset)o).UtcTicks),
-                (o, t) => new DateTimeOffset(new DateTime((long)((DescribedType)o).Value, DateTimeKind.Utc)));
+                static (o, t) => new DescribedType(AmqpConstants.DateTimeOffsetName, ((DateTimeOffset)o).UtcTicks),
+                static (o, t) => new DateTimeOffset(new DateTime((long)((DescribedType)o).Value, DateTimeKind.Utc)));
         }
 
         /// <summary>
@@ -435,8 +435,8 @@ namespace Microsoft.Azure.Amqp.Serialization
                     AmqpType.Converted,
                     type,
                     underlyingType,
-                    (o, t) => Convert.ChangeType(o, t),
-                    (o, t) => Enum.ToObject(t, o));
+                    static (o, t) => Convert.ChangeType(o, t),
+                    static (o, t) => Enum.ToObject(t, o));
             }
 
             if (type.GetInterfaces().Any(it => it == typeof(IAmqpSerializable)))

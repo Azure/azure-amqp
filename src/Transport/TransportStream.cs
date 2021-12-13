@@ -62,7 +62,7 @@ namespace Microsoft.Azure.Amqp.Transport
             // is called in mono environment.
             using (var doneEvent = new ManualResetEventSlim())
             {
-                var asyncResult = this.BeginRead(buffer, offset, count, ar => ((ManualResetEventSlim)ar.AsyncState).Set(), doneEvent);
+                var asyncResult = this.BeginRead(buffer, offset, count, static ar => ((ManualResetEventSlim)ar.AsyncState).Set(), doneEvent);
                 doneEvent.Wait();
                 return this.EndRead(asyncResult);
             }
@@ -73,7 +73,7 @@ namespace Microsoft.Azure.Amqp.Transport
             // This should not be called but implement it anyway
             using (var doneEvent = new ManualResetEventSlim())
             {
-                var asyncResult = this.BeginWrite(buffer, offset, count, ar => ((ManualResetEventSlim)ar.AsyncState).Set(), doneEvent);
+                var asyncResult = this.BeginWrite(buffer, offset, count, static ar => ((ManualResetEventSlim)ar.AsyncState).Set(), doneEvent);
                 doneEvent.Wait();
                 this.EndWrite(asyncResult);
             }

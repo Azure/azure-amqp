@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Amqp.Transport
             var task = new TimeoutTaskSource<ClientWebSocket>(
                 cws,
                 s => s.ConnectAsync(this.settings.Uri, CancellationToken.None),
-                s => s.Abort(),
+                static s => s.Abort(),
                 timeout).Task;
 
             if (task.IsCompleted)
@@ -45,11 +45,12 @@ namespace Microsoft.Azure.Amqp.Transport
                 return false;
             }
 
-            task.ContinueWith(t =>
+            task.ContinueWith(static (t,s) =>
             {
+                var (transport, callbackArgs, cws) = (Tuple<WebSocketTransportInitiator, TransportAsyncCallbackArgs, ClientWebSocket>) s;
                 if (t.IsFaulted)
                 {
-                    callbackArgs.Exception = t.Exception.InnerException;
+                    callbackArgs.Exception = t.Exception?.InnerException;
                 }
                 else if (t.IsCanceled)
                 {
@@ -57,12 +58,12 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 else
                 {
-                    callbackArgs.Transport = new WebSocketTransport(cws, this.settings.Uri, null,
-                        new DnsEndPoint(this.settings.Uri.Host, this.settings.Uri.Port));
+                    callbackArgs.Transport = new WebSocketTransport(cws, transport.settings.Uri, null,
+                        new DnsEndPoint(transport.settings.Uri.Host, transport.settings.Uri.Port));
                 }
 
                 callbackArgs.CompletedCallback(callbackArgs);
-            });
+            }, Tuple.Create(this, callbackArgs, cws));
             return true;
         }
 
@@ -78,10 +79,10 @@ namespace Microsoft.Azure.Amqp.Transport
                 this.t = t;
                 this.onTimeout = onTimeout;
                 this.timeout = timeout;
-                this.timer = new Timer(s => OnTimer(s), this, timeout, Timeout.InfiniteTimeSpan);
+                this.timer = new Timer(static s => OnTimer(s), this, timeout, Timeout.InfiniteTimeSpan);
 
                 Task task = onStart(t);
-                task.ContinueWith((_t, _s) => ((TimeoutTaskSource<T>)_s).OnTask(_t), this);
+                task.ContinueWith(static (_t, _s) => ((TimeoutTaskSource<T>)_s).OnTask(_t), this);
             }
 
             static void OnTimer(object state)

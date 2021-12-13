@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
             if (timeout < TimeSpan.MaxValue)
             {
-                this.timer = new Timer(s => OnTimer(s), this, timeout, Timeout.InfiniteTimeSpan);
+                this.timer = new Timer(static s => OnTimer(s), this, timeout, Timeout.InfiniteTimeSpan);
             }
 
             // On Linux platform, socket connections are allowed to be initiated on the socket instance 

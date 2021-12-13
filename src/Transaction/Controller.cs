@@ -71,7 +71,7 @@ namespace Microsoft.Azure.Amqp.Transaction
                     var thisPtr = (Controller)s;
                     return thisPtr.controllerLink.BeginSendMessage(m, thisPtr.GetDeliveryTag(), AmqpConstants.NullBinary, thisPtr.operationTimeout, k, c, s);
                 },
-                r => ((Controller)r.AsyncState).controllerLink.EndSendMessage(r),
+                static r => ((Controller)r.AsyncState).controllerLink.EndSendMessage(r),
                 message,
                 cancellationToken,
                 this);
@@ -110,12 +110,12 @@ namespace Microsoft.Azure.Amqp.Transaction
 
             AmqpMessage message = Controller.CreateCommandMessage(discharge);
             DeliveryState deliveryState = await Task<DeliveryState>.Factory.FromAsync(
-                (m, k, c, s) =>
+                static (m, k, c, s) =>
                 {
                     var thisPtr = (Controller)s;
                     return thisPtr.controllerLink.BeginSendMessage(m, thisPtr.GetDeliveryTag(), AmqpConstants.NullBinary, thisPtr.operationTimeout, k, c, s);
                 },
-                r => ((Controller)r.AsyncState).controllerLink.EndSendMessage(r),
+                static r => ((Controller)r.AsyncState).controllerLink.EndSendMessage(r),
                 message,
                 cancellationToken,
                 this);

@@ -610,15 +610,15 @@ namespace Microsoft.Azure.Amqp
 
             if (waiters != null)
             {
-                ActionItem.Schedule(o =>
+                ActionItem.Schedule(static o =>
                 {
-                    var state = (Tuple<List<ReceiveAsyncResult>, bool>)o;
+                    var state = (Tuple<List<ReceiveAsyncResult>, bool, Exception>)o;
                     List<ReceiveAsyncResult> waitersToCancel = state.Item1;
                     foreach (ReceiveAsyncResult waiter in waitersToCancel)
                     {
                         if (state.Item2)
                         {
-                            waiter.Signal(false, new OperationCanceledException("Link aborted", this.TerminalException));
+                            waiter.Signal(false, new OperationCanceledException("Link aborted", state.Item3));
                         }
                         else
                         {
@@ -626,7 +626,7 @@ namespace Microsoft.Azure.Amqp
                         }
                     }
                 },
-                new Tuple<List<ReceiveAsyncResult>, bool>(waiters, aborted));
+                new Tuple<List<ReceiveAsyncResult>, bool, Exception>(waiters, aborted, this.TerminalException));
             }
 
             if (this.pendingDispositions != null)
@@ -653,7 +653,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (Interlocked.Increment(ref this.checkWaiterCount) == 1)
             {
-                ActionItem.Schedule(o => CheckCallback(o), this);
+                ActionItem.Schedule(static o => CheckCallback(o), this);
             }
         }
 
@@ -813,7 +813,7 @@ namespace Microsoft.Azure.Amqp
                 this.node = node;
                 if (this.timeout != TimeSpan.MaxValue && this.timeout != Timeout.InfiniteTimeSpan)
                 {
-                    this.timer = new Timer(s => OnTimer(s), this, this.timeout, Timeout.InfiniteTimeSpan);
+                    this.timer = new Timer(static s => OnTimer(s), this, this.timeout, Timeout.InfiniteTimeSpan);
                 }
             }
 

@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.ComponentModel;
     using System.Globalization;
     using System.Threading;
     using System.Threading.Tasks;
@@ -43,6 +44,15 @@ namespace Microsoft.Azure.Amqp
         public Task OpenAsync()
         {
             return this.OpenAsync(CancellationToken.None);
+        }
+
+        // Deprecated, but needs to stay available to avoid
+        // breaking changes. The attribute removes it from
+        // any code completion listings and doc generation.
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public Task OpenAsync(TimeSpan timeout)
+        {
+            return this.GetOrCreateAsync(timeout);
         }
 
         public Task OpenAsync(CancellationToken cancellationToken)
@@ -123,6 +133,12 @@ namespace Microsoft.Azure.Amqp
             return true;
         }
 
+        // Deprecated, but needs to stay available to avoid
+        // breaking changes. The attribute removes it from
+        // any code completion listings and doc generation.
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected virtual Task<TValue> OnCreateAsync(TimeSpan timeout) => OnCreateAsync(timeout, CancellationToken.None);
+
         protected abstract Task<TValue> OnCreateAsync(TimeSpan timeout, CancellationToken cancellationToken);
 
         protected abstract void OnSafeClose(TValue value);
@@ -143,7 +159,11 @@ namespace Microsoft.Azure.Amqp
             return false;
         }
 
-        internal async Task<TValue> GetOrCreateAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        // Deprecated, but needs to stay available to avoid
+        // breaking changes. The attribute removes it from
+        // any code completion listings and doc generation.
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public async Task<TValue> GetOrCreateAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             var timeoutHelper = new TimeoutHelper(timeout);
 

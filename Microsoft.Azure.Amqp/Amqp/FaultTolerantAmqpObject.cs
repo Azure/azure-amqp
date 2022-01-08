@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.ComponentModel;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -53,6 +54,12 @@ namespace Microsoft.Azure.Amqp
             amqpObject.SafeAddClosed(OnObjectClosed);
             return amqpObject;
         }
+
+        // Deprecated, but needs to stay available to avoid
+        // breaking changes. The attribute removes it from
+        // any code completion listings and doc generation.
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected override Task<T> OnCreateAsync(TimeSpan timeout) => OnCreateAsync(timeout, CancellationToken.None);
 
         protected override void OnSafeClose(T value)
         {

@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
@@ -120,6 +121,12 @@ namespace Microsoft.Azure.Amqp
                     cancellationToken,
                     this);
             }
+
+            // Deprecated, but needs to stay available to avoid
+            // breaking changes. The attribute removes it from
+            // any code completion listings and doc generation.
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            protected override Task<RequestResponseAmqpLink> OnCreateAsync(TimeSpan timeout) => OnCreateAsync(timeout, CancellationToken.None);
 
             protected override void OnSafeClose(RequestResponseAmqpLink value)
             {

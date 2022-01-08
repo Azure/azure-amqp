@@ -136,10 +136,20 @@ namespace Microsoft.Azure.Amqp
         // Deprecated, but needs to stay available to avoid
         // breaking changes. The attribute removes it from
         // any code completion listings and doc generation.
+        //
+        // This method used to be abstract, but can no longer be to
+        // to avoid callers bound to the new versions from needing to
+        // implement, despite it being deprecated.
         [EditorBrowsable(EditorBrowsableState.Never)]
-        protected virtual Task<TValue> OnCreateAsync(TimeSpan timeout) => OnCreateAsync(timeout, CancellationToken.None);
+        protected virtual Task<TValue> OnCreateAsync(TimeSpan timeout) => throw new NotImplementedException();
 
-        protected abstract Task<TValue> OnCreateAsync(TimeSpan timeout, CancellationToken cancellationToken);
+        // This approach is not ideal, as the cancellation token is silently
+        // ignored if this method is not overridden in derived classes.
+        //
+        // However, it is necessary to avoid breaking changes for callers bound
+        // to earlier versions, as they will not have implemented this new method,
+        // so it cannot be abstract and must delegate to the legacy implementation.
+        protected virtual Task<TValue> OnCreateAsync(TimeSpan timeout, CancellationToken cancellationToken) => OnCreateAsync(timeout);
 
         protected abstract void OnSafeClose(TValue value);
 

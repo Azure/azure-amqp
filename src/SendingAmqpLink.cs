@@ -258,7 +258,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         protected override void OnReceiveRemoteUnsettledDeliveries(Attach attach)
         {
-            if (this.Session.Connection.Settings.EnableLinkRecovery && this.Terminus.Settings.Unsettled != null)
+            if (this.Session.Connection.Settings.EnableLinkRecovery && this.Terminus?.Settings.Unsettled != null)
             {
                 Fx.Assert(this.Terminus != null, "If link recovery is enabled, the link terminus should not be null.");
                 foreach (KeyValuePair<MapKey, object> pair in this.Terminus.Settings.Unsettled)
@@ -278,7 +278,8 @@ namespace Microsoft.Azure.Amqp
                         // alreadySettledOnSend: OASIS AMQP doc section 3.4.6, delivery 1, 4, 5
                         if (!remoteReachedTerminal && !alreadySettledOnSend)
                         {
-                            // should ideally always be true, Terminus.Settings.Unsettled should be consistent with Terminus.UnsettledMap.
+                            // should ideally always be true, since this deliveryTag is already in this.Terminus.Settings.Unsettled from above.
+                            // this.Terminus.Settings.Unsettled should be consistent with Terminus.UnsettledMap because the snapshot should be taken within a lock in AmqpLink.GetLinkTerminus().
                             if (this.Terminus.UnsettledMap.TryGetValue(deliveryTag, out unsettledDeliveryToBeResent))
                             {
                                 // we don't support resume sending partial payload with Received state.
@@ -287,6 +288,10 @@ namespace Microsoft.Azure.Amqp
                                 // abort the delivery when the remote receiver somehow has it transactional
                                 // or this sender has only delivered partially, OASIS AMQP doc section 3.4.6, delivery 6, 7, 9.
                                 unsettledDeliveryToBeResent.Aborted = peerDeliveryState is TransactionalState || (localDeliveryState is Received && peerHasDelivery);
+                            }
+                            else
+                            {
+                                // if it got here, then it means that the unsettled delivery was 
                             }
                         }
                     }

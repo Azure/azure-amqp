@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Amqp
         readonly HandleTable<AmqpSession> sessionsByRemoteHandle;
         HeartBeat heartBeat;
         Dictionary<Type, object> extensions;
-        ConcurrentDictionary<AmqpLinkTerminus, AmqpLink> linkTermini;
+        ConcurrentDictionary<AmqpLinkSettings, AmqpLink> recoverableLinkEndpoints;
 
         /// <summary>
         /// The default factory instance to create connections.
@@ -96,7 +96,7 @@ namespace Microsoft.Azure.Amqp
             this.heartBeat = HeartBeat.None;
             if (connectionSettings.EnableLinkRecovery)
             {
-                this.linkTermini = new ConcurrentDictionary<AmqpLinkTerminus, AmqpLink>();
+                this.recoverableLinkEndpoints = new ConcurrentDictionary<AmqpLinkSettings, AmqpLink>();
             }
         }
 
@@ -164,11 +164,11 @@ namespace Microsoft.Azure.Amqp
         /// The link termini used by link recovery. The combination of link name+role must be unique under the connection scope to enable link recovery.
         /// Should only be initialized if link recovery is enabled on the connection settings.
         /// </summary>
-        internal ConcurrentDictionary<AmqpLinkTerminus, AmqpLink> LinkTermini
+        internal ConcurrentDictionary<AmqpLinkSettings, AmqpLink> RecoverableLinkEndpoints
         {
             get
             {
-                return this.linkTermini;
+                return this.recoverableLinkEndpoints;
             }
         }
 
@@ -621,7 +621,7 @@ namespace Microsoft.Azure.Amqp
             if (open.DesiredCapabilities?.Contains(AmqpConstants.LinkRecovery) == true)
             {
                 this.Settings.EnableLinkRecovery = true;
-                this.linkTermini = this.linkTermini ?? new ConcurrentDictionary<AmqpLinkTerminus, AmqpLink>();
+                this.recoverableLinkEndpoints = this.recoverableLinkEndpoints ?? new ConcurrentDictionary<AmqpLinkSettings, AmqpLink>();
                 if (this.Settings.OfferedCapabilities == null)
                 {
                     this.Settings.OfferedCapabilities = new Multiple<Encoding.AmqpSymbol>();

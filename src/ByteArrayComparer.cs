@@ -70,19 +70,11 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public class MapKeyByteArrayComparer : IEqualityComparer<MapKey>
         {
-            static readonly MapKeyByteArrayComparer instance = new MapKeyByteArrayComparer();
-
             MapKeyByteArrayComparer()
             {
             }
 
-            public static MapKeyByteArrayComparer Instance
-            {
-                get
-                {
-                    return instance;
-                }
-            }
+            public static MapKeyByteArrayComparer Instance { get; } = new MapKeyByteArrayComparer();
 
             public bool Equals(MapKey x, MapKey y)
             {

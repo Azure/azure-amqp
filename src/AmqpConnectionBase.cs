@@ -122,7 +122,7 @@ namespace Microsoft.Azure.Amqp
         /// Return a new instance of <see cref="AmqpConnectionSettings"/> with identical fields and properties that would be used for connection recovery.
         /// The fields from the remote peer are removed so that it is clean for establishing a new connection.
         /// </summary>
-        public AmqpConnectionSettings GetSettingsForRecovery()
+        public AmqpConnectionSettings CreateSettingsForRecovery()
         {
             AmqpConnectionSettings settings = this.settings.Clone();
             settings.RemoteContainerId = null;

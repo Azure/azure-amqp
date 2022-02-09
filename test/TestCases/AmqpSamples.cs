@@ -72,11 +72,10 @@ namespace Test.Microsoft.Azure.Amqp
                 Assert.Throws<AmqpException>(() => receiver.AcceptMessage(message));
 
                 // We need to reconnect with the same connection and link settings for link recovery.
-                AmqpConnectionSettings connectionRecoverySettings = connection.GetSettingsForRecovery();
+                AmqpConnectionSettings connectionRecoverySettings = connection.CreateSettingsForRecovery();
                 connection = await factory.OpenConnectionAsync(addressUri, connectionRecoverySettings, AmqpConstants.DefaultTimeout);
                 session = await connection.OpenSessionAsync();
-                AmqpLinkTerminus receiverTerminus = receiver.GetLinkTerminus();
-                receiver = await session.RecoverLinkAsync<ReceivingAmqpLink>(receiverTerminus);
+                receiver = await session.RecoverLinkAsync<ReceivingAmqpLink>(receiver);
                 receiver.AcceptMessage(message);
             }
             catch (Exception e)

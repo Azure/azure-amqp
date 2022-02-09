@@ -31,7 +31,7 @@ namespace Test.Microsoft.Amqp.TestCases
             broker = testAmqpBrokerFixture.Broker;
         }
 
-        // Test that the connection settings obtained from AmqpConnection.GetSettingsForRecovery() can be used to open new connections with identical settings.
+        // Test that the connection settings obtained from AmqpConnection.CreateSettingsForRecovery() can be used to open new connections with identical settings.
         [Fact]
         public async Task ConnectionRecoveryTest()
         {
@@ -48,7 +48,7 @@ namespace Test.Microsoft.Amqp.TestCases
             try
             {
                 // Test createing a new connection with the settings obtained while original connection is still active.
-                connectionSettings = originalConnection.GetSettingsForRecovery();
+                connectionSettings = originalConnection.CreateSettingsForRecovery();
                 Assert.Null(connectionSettings.RemoteContainerId);
                 Assert.Null(connectionSettings.RemoteHostName);
                 newConnection = await AmqpConnection.Factory.OpenConnectionAsync(addressUri, connectionSettings, AmqpConstants.DefaultTimeout);
@@ -60,7 +60,7 @@ namespace Test.Microsoft.Amqp.TestCases
 
                 // Test createing a new connection with the settings obtained, while original connection is already closed.
                 await originalConnection.CloseAsync();
-                connectionSettings = originalConnection.GetSettingsForRecovery();
+                connectionSettings = originalConnection.CreateSettingsForRecovery();
                 Assert.Null(connectionSettings.RemoteContainerId);
                 Assert.Null(connectionSettings.RemoteHostName);
                 newConnection = await AmqpConnection.Factory.OpenConnectionAsync(addressUri, connectionSettings, AmqpConstants.DefaultTimeout);
@@ -84,7 +84,7 @@ namespace Test.Microsoft.Amqp.TestCases
             {
                 connection = await OpenTestConnectionAsync(addressUri);
                 AmqpSession session = await connection.OpenSessionAsync();
-                SendingAmqpLink originalSender = await session.OpenLinkAsync<SendingAmqpLink>(nameof(SenderRecoveryTest) + "-sender", nameof(SenderRecoveryTest));
+                SendingAmqpLink originalSender = await session.OpenLinkAsync<SendingAmqpLink>(nameof(SenderRecoveryTest) + Guid.NewGuid().ToString(), nameof(SenderRecoveryTest));
                 originalSender.Settings.AddProperty("MyProp", "MyPropValue");
                 AmqpMessage[] messages = CreateMessages();
                 foreach (AmqpMessage m in messages)
@@ -93,23 +93,22 @@ namespace Test.Microsoft.Amqp.TestCases
                 }
 
                 await originalSender.CloseAsync();
-                AmqpLinkTerminus linkTerminus = originalSender.GetLinkTerminus();
+
+                // verrify that the link terminus object has captured the unsettled messages.
+                AmqpLinkTerminus linkTerminus = originalSender.Terminus;
                 foreach (AmqpMessage m in messages)
                 {
                     linkTerminus.UnsettledMap.TryGetValue(m.DeliveryTag, out Delivery delivery);
                     Assert.Equal(m, delivery);
-                    linkTerminus.Settings.Unsettled.TryGetValue(new MapKey(m.DeliveryTag), out DeliveryState state);
-                    Assert.Equal(m.State, state);
                 }
 
-                SendingAmqpLink newSender = await session.RecoverLinkAsync<SendingAmqpLink>(linkTerminus);
+                SendingAmqpLink newSender = await session.RecoverLinkAsync<SendingAmqpLink>(originalSender);
                 Assert.Equal(originalSender.Name, newSender.Name);
-                Assert.Equal(originalSender.Settings.LinkName, newSender.Settings.LinkName);
                 Assert.Equal(originalSender.IsReceiver, newSender.IsReceiver);
                 Assert.Equal("MyPropValue", newSender.Settings.Properties["MyProp"]);
 
                 // verify that sending works with this recovered link
-                ReceivingAmqpLink testReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(nameof(SenderRecoveryTest) + "-receiver", nameof(SenderRecoveryTest));
+                ReceivingAmqpLink testReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(nameof(SenderRecoveryTest) + Guid.NewGuid().ToString(), nameof(SenderRecoveryTest));
                 await newSender.SendMessageAsync(AmqpMessage.Create("Hello World!"));
                 Assert.NotNull(await testReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(5000)));
             }
@@ -128,7 +127,7 @@ namespace Test.Microsoft.Amqp.TestCases
             {
                 connection = await OpenTestConnectionAsync(addressUri);
                 AmqpSession session = await connection.OpenSessionAsync();
-                ReceivingAmqpLink originalReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(nameof(ReceiverRecoveryTest) + "-receiver", nameof(SenderRecoveryTest));
+                ReceivingAmqpLink originalReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(nameof(ReceiverRecoveryTest) + Guid.NewGuid().ToString(), nameof(ReceiverRecoveryTest));
                 originalReceiver.Settings.AddProperty("MyProp", "MyPropValue");
                 originalReceiver.Settings.SettleType = SettleMode.SettleOnDispose;
                 AmqpMessage[] messages = CreateMessages();
@@ -138,24 +137,23 @@ namespace Test.Microsoft.Amqp.TestCases
                 }
 
                 await originalReceiver.CloseAsync();
-                AmqpLinkTerminus linkTerminus = originalReceiver.GetLinkTerminus();
+
+                // verify that the link terminus object has captured the unsettled messages.
+                AmqpLinkTerminus linkTerminus = originalReceiver.Terminus;
                 foreach (AmqpMessage m in messages)
                 {
                     linkTerminus.UnsettledMap.TryGetValue(m.DeliveryTag, out Delivery delivery);
                     Assert.Equal(m, delivery);
-                    linkTerminus.Settings.Unsettled.TryGetValue(new MapKey(m.DeliveryTag), out DeliveryState state);
-                    Assert.Equal(m.State, state);
                 }
 
-                ReceivingAmqpLink newReceiver = await session.RecoverLinkAsync<ReceivingAmqpLink>(linkTerminus);
+                ReceivingAmqpLink newReceiver = await session.RecoverLinkAsync<ReceivingAmqpLink>(originalReceiver);
                 Assert.Equal(originalReceiver.Name, newReceiver.Name);
-                Assert.Equal(originalReceiver.Settings.LinkName, newReceiver.Settings.LinkName);
                 Assert.Equal(originalReceiver.IsReceiver, newReceiver.IsReceiver);
                 Assert.Equal("MyPropValue", newReceiver.Settings.Properties["MyProp"]);
                 Assert.Equal(originalReceiver.Settings.SettleType, newReceiver.Settings.SettleType);
 
                 // verify that receiving and accepting works with this recovered link
-                SendingAmqpLink testSender = await session.OpenLinkAsync<SendingAmqpLink>(nameof(ReceiverRecoveryTest) + "-sender", nameof(SenderRecoveryTest));
+                SendingAmqpLink testSender = await session.OpenLinkAsync<SendingAmqpLink>(nameof(ReceiverRecoveryTest) + Guid.NewGuid().ToString(), nameof(ReceiverRecoveryTest));
                 await testSender.SendMessageAsync(AmqpMessage.Create("Hello World2!"));
                 AmqpMessage received = await newReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(5000));
                 Assert.NotNull(received);
@@ -983,6 +981,44 @@ namespace Test.Microsoft.Amqp.TestCases
                 true);
         }
 
+        [Fact]
+        public async Task CannotRecoverOpenLinkTest()
+        {
+            await CannotRecoverOpenLinkTestCase<SendingAmqpLink>();
+            await CannotRecoverOpenLinkTestCase<ReceivingAmqpLink>();
+        }
+
+        async Task CannotRecoverOpenLinkTestCase<T>() where T : AmqpLink
+        {
+            string linkName = Guid.NewGuid().ToString();
+            AmqpConnection connection = await OpenTestConnectionAsync(addressUri);
+            AmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId);
+            try
+            {
+                AmqpSession session = await connection.OpenSessionAsync();
+                var localLink = await session.OpenLinkAsync<T>(linkName, addressUri.AbsoluteUri);
+                
+                // should not be able to recover a still open link because the link terminus info with the unsettled map is captured during close.
+                await Assert.ThrowsAsync<InvalidOperationException>(() => session.RecoverLinkAsync<T>(localLink));
+                
+                // close the link and recover it now, should work.
+                await localLink.CloseAsync();
+                var newLocalLink = await session.RecoverLinkAsync<T>(localLink);
+
+                // the recovered link should be blocked from recovering as well when it's still open.
+                await Assert.ThrowsAsync<InvalidOperationException>(() => session.RecoverLinkAsync<T>(newLocalLink));
+
+                // try closing the link from the remote side. Should be able to recover it now.
+                brokerConnection.RecoverableLinkEndpoints.TryGetValue(new AmqpLinkSettings() { LinkName = localLink.Name, Role = !localLink.Settings.Role }, out AmqpLink brokerlink);
+                await brokerlink.CloseAsync();
+                newLocalLink = await session.RecoverLinkAsync<T>(localLink);
+            }
+            finally
+            {
+                await connection.CloseAsync();
+            }
+        }
+
         /// <summary>
         /// Test if the terminus uniqueness under a connection would be enforced given links with the same link names.
         /// </summary>
@@ -1015,7 +1051,7 @@ namespace Test.Microsoft.Amqp.TestCases
                 }
 
                 bool shouldThrow = linkRecoveryEnabled && !shouldClose && !shouldAbort && typeof(T1) == typeof(T2);
-                Task openLink2Task = openNewLink ? recoverableSession2.OpenLinkAsync<T2>(linkName, addressUri.AbsoluteUri) : recoverableSession2.RecoverLinkAsync<T2>(link1.GetLinkTerminus());
+                Task openLink2Task = openNewLink ? recoverableSession2.OpenLinkAsync<T2>(linkName, addressUri.AbsoluteUri) : recoverableSession2.RecoverLinkAsync<T2>(link1);
                 if (shouldThrow)
                 {
                     await Assert.ThrowsAsync<InvalidOperationException>(() => openLink2Task);
@@ -1232,9 +1268,18 @@ namespace Test.Microsoft.Amqp.TestCases
             }
 
             linkSettings.SettleType = settleMode;
-            var terminus = new AmqpLinkTerminus(linkSettings);
-            terminus.UnsettledMap = unsettledMap;
-            AmqpLink link = await session.RecoverLinkAsync<T>(terminus);
+            var terminus = new AmqpLinkTerminus(linkSettings, unsettledMap);
+            AmqpLink mockExistingLink;
+            if (typeof(T) == typeof(SendingAmqpLink))
+            {
+                mockExistingLink = new SendingAmqpLink(linkSettings) { Terminus = terminus };
+            }
+            else
+            {
+                mockExistingLink = new ReceivingAmqpLink(linkSettings) { Terminus = terminus };
+            }
+
+            AmqpLink link = await session.RecoverLinkAsync<T>(mockExistingLink);
             await Task.Delay(1000); // wait for the sender to potentially send the initial deliveries
             return link;
         }

@@ -468,7 +468,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         protected override void OnReceiveRemoteUnsettledDeliveries(Attach attach)
         {
-            if (this.Session.Connection.Settings.EnableLinkRecovery && this.Terminus.Settings.Unsettled != null)
+            if (this.Session.Connection.Settings.EnableLinkRecovery && this.Terminus?.Settings.Unsettled != null)
             {
                 Fx.Assert(this.Terminus != null, "If link recovery is enabled, the link terminus should not be null.");
                 foreach (KeyValuePair<MapKey, object> pair in this.Terminus.Settings.Unsettled)
@@ -492,8 +492,6 @@ namespace Microsoft.Azure.Amqp
                         }
                     }
                 }
-
-                this.Terminus.UnsettledMap = null;
             }
         }
 

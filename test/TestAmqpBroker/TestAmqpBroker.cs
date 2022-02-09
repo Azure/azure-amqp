@@ -287,7 +287,7 @@ namespace TestAmqpBroker
             if (this.MockUnsettledReceivingDeliveries.TryGetValue(settings.LinkName, out ICollection<Delivery> unsettledDeliveries))
             {
                 Dictionary<ArraySegment<byte>, DeliveryState> unsettled = new Dictionary<ArraySegment<byte>, DeliveryState>(ByteArrayComparer.Instance);
-                AmqpLinkTerminus terminus = new AmqpLinkTerminus(settings);
+                AmqpLinkTerminus terminus = new AmqpLinkTerminus(settings, new Dictionary<ArraySegment<byte>, Delivery>(ByteArrayComparer.Instance));
 
                 foreach (Delivery unsettledDelivery in unsettledDeliveries)
                 {

@@ -1089,6 +1089,47 @@ namespace Test.Microsoft.Azure.Amqp
             await connection.CloseAsync(TimeSpan.FromSeconds(20));
         }
 
+        [Fact]
+        public async Task AbortedTransferTest()
+        {
+            string queue = "AbortedTransferTest-" + Guid.NewGuid().ToString("N").Substring(6);
+            broker.AddQueue(queue);
+
+            AmqpConnection connection = await AmqpConnection.Factory.OpenConnectionAsync(addressUri, TimeSpan.FromSeconds(20));
+            try
+            {
+                AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+                await session.OpenAsync(TimeSpan.FromSeconds(20));
+
+                // test both scenarios when the message has settled flag set, even though spec says that aborted messages are implicitly settled.
+                bool[] settled = new bool[] { true, false };
+
+                SendingAmqpLink sendLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnSend));
+                await sendLink.OpenAsync(TimeSpan.FromSeconds(20));
+
+                ReceivingAmqpLink receiveLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnSend));
+                await receiveLink.OpenAsync(TimeSpan.FromSeconds(20));
+
+                foreach (bool isSettled in settled)
+                {
+                    AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "AmqpConnectionFactoryTest" });
+                    message.Aborted = true;
+                    message.Settled = isSettled;
+                    Outcome outcome = await sendLink.SendMessageAsync(message, new ArraySegment<byte>(Guid.NewGuid().ToByteArray()), NullBinary, TimeSpan.FromSeconds(10));
+                    Assert.Equal(0, sendLink.UnsettledMap.Count);
+                    Assert.Equal(Accepted.Code, outcome.DescriptorCode);
+
+                    AmqpMessage received = await receiveLink.ReceiveMessageAsync(TimeSpan.FromSeconds(2));
+                    Assert.Null(received); // aborted sent message should not be processed
+                    Assert.Equal(0, receiveLink.UnsettledMap.Count);
+                }
+            }
+            finally
+            {
+                await connection.CloseAsync(TimeSpan.FromSeconds(20));
+            }
+        }
+
         void SendReceive(
             string queue,
             int messageCount = 1,

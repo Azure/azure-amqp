@@ -618,32 +618,6 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Get the terminus info of this link for link recovery, which includes copying all its current settings and the unsettled deliveries.
-        /// </summary>
-        public AmqpLinkTerminus GetLinkTerminus()
-        {
-            if (!this.Session.Connection.Settings.EnableLinkRecovery)
-            {
-                throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpLinkRecoveryNotEnabled, nameof(this.Session.Connection.Settings.EnableLinkRecovery)));
-            }
-
-            // The AmqpLinkSettings (or Attach) unsettled map must only contain the DeliveryState as the value, not the actual Delivery
-            Dictionary<ArraySegment<byte>, Delivery> unsettledMap;
-            lock (this.syncRoot)
-            {
-                unsettledMap = new Dictionary<ArraySegment<byte>, Delivery>(this.unsettledMap, this.unsettledMap.Comparer);
-            }
-
-            this.Terminus.UnsettledMap = unsettledMap;
-            this.Terminus.Settings.Unsettled = new AmqpMap(
-                unsettledMap.ToDictionary(
-                    kvPair => kvPair.Key,
-                    kvPair => kvPair.Value.State),
-                ByteArrayComparer.MapKeyByteArrayComparer.Instance);
-            return this.Terminus;
-        }
-
-        /// <summary>
         /// Creates a delivery from a received transfer command.
         /// </summary>
         /// <param name="transfer">The received transfer command.</param>
@@ -715,6 +689,15 @@ namespace Microsoft.Azure.Amqp
         /// <remarks>All inflight deliveries are canceled.</remarks>
         protected override bool CloseInternal()
         {
+            if (this.Session.Connection.Settings.EnableLinkRecovery)
+            {
+                lock (this.syncRoot)
+                {
+                    // get a copy of the unsettled deliveries upon link close, so the unsettled deliveries may be resumed later on a new recovered link. 
+                    this.Terminus = new AmqpLinkTerminus(this.Settings, new Dictionary<ArraySegment<byte>, Delivery>(this.unsettledMap, this.unsettledMap.Comparer));
+                }
+            }
+
             AmqpObjectState state = this.State;
             if (state == AmqpObjectState.OpenReceived ||
                 state == AmqpObjectState.ClosePipe)
@@ -1030,12 +1013,6 @@ namespace Microsoft.Azure.Amqp
         AmqpObjectState SendDetach()
         {
             StateTransition transition = this.TransitState("S:DETACH", StateTransition.SendClose);
-
-            if (this.settings.LinkName.Equals("ClientSenderTerminalDeliveryStateBrokerNoDeliveryStateTest1", StringComparison.OrdinalIgnoreCase)
-                || this.settings.LinkName.Equals("ClientSenderTerminalDeliveryStateBrokerNoDeliveryStateTest", StringComparison.OrdinalIgnoreCase))
-            {
-                transition = transition ?? null;
-            }
 
             Detach detach = new Detach();
             detach.Handle = this.LocalHandle;

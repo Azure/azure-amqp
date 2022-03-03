@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Called when the cancellation token is cancelled.
         /// </summary>
-        public abstract void Cancel();
+        public abstract void Cancel(bool isSynchronous);
 
         protected void StartTracking()
         {
@@ -40,7 +40,14 @@ namespace Microsoft.Azure.Amqp
 
                 if (this.cancellationToken.CanBeCanceled)
                 {
-                    this.cancellationTokenRegistration = this.cancellationToken.Register(static o => ((TimeoutAsyncResult<T>)o).Cancel(), this);
+                    this.cancellationTokenRegistration = this.cancellationToken.Register(
+                        static o =>
+                        {
+                            var thisPtr = (TimeoutAsyncResult<T>)o;
+                            bool isSynchronous = thisPtr.cancellationTokenRegistration == default;
+                            thisPtr.Cancel(isSynchronous);
+                        },
+                        this);
                 }
             }
         }

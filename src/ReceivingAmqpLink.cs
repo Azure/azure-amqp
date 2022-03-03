@@ -1066,11 +1066,11 @@ namespace Microsoft.Azure.Amqp
                 this.CompleteSelf(completedSynchronously);
             }
 
-            public override void Cancel()
+            public override void Cancel(bool isSynchronous)
             {
                 if (this.link.pendingDispositions.TryRemoveWork(this.deliveryTag, out _))
                 {
-                    this.CompleteSelf(false, new TaskCanceledException());
+                    this.CompleteSelf(isSynchronous, new TaskCanceledException());
                 }
             }
 

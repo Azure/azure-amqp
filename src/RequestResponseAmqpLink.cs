@@ -169,10 +169,22 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A task representing the asynchronous operation.</returns>
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, TimeSpan timeout)
         {
+            return this.RequestAsync(request, AmqpConstants.NullBinary, timeout);
+        }
+
+        /// <summary>
+        /// Starts an asynchronous request.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <param name="txnId">The transaction to which the request belongs.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <returns></returns>
+        public Task<AmqpMessage> RequestAsync(AmqpMessage request, ArraySegment<byte> txnId, TimeSpan timeout)
+        {
             return Task.Factory.FromAsync(
-                static (r, t, k, c, s) => ((RequestResponseAmqpLink)s).BeginRequest(r, AmqpConstants.NullBinary, t, k, c, s),
-                static (r) => ((RequestResponseAmqpLink)r.AsyncState).EndRequest(r),
-                request,
+                static (p, t, k, c, s) => new RequestAsyncResult((RequestResponseAmqpLink)s, p.Request, p.TxnId, t, k, c, s),
+                static (r) => RequestAsyncResult.End(r),
+                new RequestParam(request, txnId),
                 timeout,
                 CancellationToken.None,
                 this);
@@ -186,11 +198,23 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A task representing the asynchronous operation.</returns>
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, CancellationToken cancellationToken)
         {
+            return this.RequestAsync(request, AmqpConstants.NullBinary, cancellationToken);
+        }
+
+        /// <summary>
+        /// Starts an asynchronous request.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <param name="txnId">The transaction to which the request belongs.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        /// <returns></returns>
+        public Task<AmqpMessage> RequestAsync(AmqpMessage request, ArraySegment<byte> txnId, CancellationToken cancellationToken)
+        {
             return Task.Factory.FromAsync(
-                static (r, t, k, c, s) => ((RequestResponseAmqpLink)s).BeginRequest(r, AmqpConstants.NullBinary, t, k, c, s),
-                static (r) => ((RequestResponseAmqpLink)r.AsyncState).EndRequest(r),
-                request,
-                this.sender.OperationTimeout,
+                static (p, t, k, c, s) => new RequestAsyncResult((RequestResponseAmqpLink)s, p.Request, p.TxnId, t, k, c, s),
+                static (r) => RequestAsyncResult.End(r),
+                new RequestParam(request, txnId),
+                this.sender.Settings.OperationTimeout,
                 cancellationToken,
                 this);
         }
@@ -354,6 +378,18 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        readonly struct RequestParam
+        {
+            public RequestParam(AmqpMessage request, ArraySegment<byte> txnId)
+            {
+                this.Request = request;
+                this.TxnId = txnId;
+            }
+
+            public readonly AmqpMessage Request;
+            public readonly ArraySegment<byte> TxnId;
+        }
+
         sealed class OperationState
         {
             int pending = 2;
@@ -404,11 +440,11 @@ namespace Microsoft.Azure.Amqp
                 this.StartTracking();
             }
 
-            public override void Cancel()
+            public override void Cancel(bool isSynchronous)
             {
                 if (this.parent.inflightRequests.TryRemoveWork(this.requestId, out _))
                 {
-                    this.CompleteSelf(false, new TaskCanceledException());
+                    this.CompleteSelf(isSynchronous, new TaskCanceledException());
                 }
             }
 

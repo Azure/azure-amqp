@@ -569,8 +569,8 @@ namespace Microsoft.Azure.Amqp
         IAsyncResult BeginReceiveMessageBatch(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
         {
             this.ThrowIfClosed();
-            ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, cancellationToken, callback, state);
-            this.waiterManager.AddWaiter(waiter);
+            ReceiveAsyncResult waiter = new ReceiveAsyncResult(this, messageCount, batchWaitTimeout, timeout, callback, state);
+            this.waiterManager.AddWaiter(waiter, cancellationToken);
             this.CheckWaiter();
             return waiter;
         }
@@ -760,24 +760,20 @@ namespace Microsoft.Azure.Amqp
             readonly int requestedMessageCount;
             readonly TimeSpan batchWaitTimeout;
             readonly TimeSpan timeout;
-            readonly CancellationTokenRegistration cancellationTokenRegistration;
+            CancellationTokenRegistration cancellationTokenRegistration;
             Timer timer;
             LinkedListNode<ReceiveAsyncResult> node;
             int state;  // 0: active idle, 1: busy adding, 2: completed
             List<AmqpMessage> messages;
 
             public ReceiveAsyncResult(ReceivingAmqpLink parent, int requestedMessageCount,
-                TimeSpan batchWaitTimeout, TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
+                TimeSpan batchWaitTimeout, TimeSpan timeout, AsyncCallback callback, object state)
                 : base(callback, state)
             {
                 this.parent = parent;
                 this.batchWaitTimeout = batchWaitTimeout;
                 this.requestedMessageCount = requestedMessageCount;
                 this.timeout = timeout;
-                if (cancellationToken.CanBeCanceled)
-                {
-                    this.cancellationTokenRegistration = cancellationToken.Register(static o => ((ReceiveAsyncResult)o).Cancel(), this);
-                }
             }
 
             public int RequestedMessageCount
@@ -808,18 +804,27 @@ namespace Microsoft.Azure.Amqp
                 return messages.Count > 0;
             }
 
-            public void Initialize(LinkedListNode<ReceiveAsyncResult> node)
+            public void Initialize(LinkedListNode<ReceiveAsyncResult> node, CancellationToken cancellationToken)
             {
                 this.node = node;
                 if (this.timeout != TimeSpan.MaxValue && this.timeout != Timeout.InfiniteTimeSpan)
                 {
                     this.timer = new Timer(static s => OnTimer(s), this, this.timeout, Timeout.InfiniteTimeSpan);
                 }
+
+                if (cancellationToken.CanBeCanceled)
+                {
+                    this.cancellationTokenRegistration = cancellationToken.Register(o =>
+                    {
+                        ReceiveAsyncResult result = (ReceiveAsyncResult)o;
+                        result.Cancel();
+                    }, this);
+                }
             }
 
             public void Cancel()
             {
-                this.Signal(false, null);
+                this.Signal(false, new TaskCanceledException());
             }
 
             public bool TryAdd(AmqpMessage message)
@@ -926,10 +931,9 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            public void AddWaiter(ReceiveAsyncResult waiter)
+            public void AddWaiter(ReceiveAsyncResult waiter, CancellationToken cancellationToken)
             {
                 var node = new LinkedListNode<ReceiveAsyncResult>(waiter);
-                waiter.Initialize(node);
                 lock (this.syncRoot)
                 {
                     this.AddLast(node);
@@ -937,6 +941,8 @@ namespace Microsoft.Azure.Amqp
                     this.leftoverCount -= count;
                     this.totalCount += waiter.RequestedMessageCount - count;
                 }
+
+                waiter.Initialize(node, cancellationToken);
             }
 
             public bool RemoveWaiter(ReceiveAsyncResult waiter)

@@ -42,7 +42,7 @@ namespace Test.Microsoft.Azure.Amqp
                 _onSafeCloseComplete = onSafeCloseComplete;
             }
 
-            protected override async Task<object> OnCreateAsync(CancellationToken cancellationToken)
+            protected override async Task<object> OnCreateAsync(TimeSpan timeout, CancellationToken cancellationToken)
             {
                 await _onCreateComplete;
                 return new object();

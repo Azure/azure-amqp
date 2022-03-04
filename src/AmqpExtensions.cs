@@ -7,6 +7,7 @@ namespace Microsoft.Azure.Amqp
     using System.Collections.Generic;
     using System.Globalization;
     using System.Text;
+    using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
@@ -593,6 +594,30 @@ namespace Microsoft.Azure.Amqp
             }
 
             return default;
+        }
+
+        internal static IAsyncResult ToAsyncResult<T>(this Task<T> task, AsyncCallback callback, object state)
+        {
+            var tcs = new TaskCompletionSource<T>(state);
+            task.ContinueWith(_t =>
+            {
+                if (_t.IsFaulted)
+                    tcs.TrySetException(_t.Exception.InnerExceptions);
+                else if (_t.IsCanceled)
+                    tcs.TrySetCanceled();
+                else
+                    tcs.TrySetResult(_t.Result);
+
+                if (callback != null)
+                    callback(tcs.Task);
+            }, TaskScheduler.Default);
+
+            return tcs.Task;
+        }
+
+        internal static T EndAsyncResult<T>(IAsyncResult asyncResult)
+        {
+            return ((Task<T>)asyncResult).Result;
         }
     }
 }

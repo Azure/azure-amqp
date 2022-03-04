@@ -39,6 +39,25 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Opens the object.
         /// </summary>
+        /// <returns>A task for the async operation.</returns>
+        public Task OpenAsync()
+        {
+            return this.OpenAsync(CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Opens the object.
+        /// </summary>
+        /// <param name="timeout">A timeout for the open operation.</param>
+        /// <returns>A task for the async operation.</returns>
+        public Task OpenAsync(TimeSpan timeout)
+        {
+            return this.OpenAsync(new CancellationTokenSource(timeout).Token);
+        }
+
+        /// <summary>
+        /// Opens the object.
+        /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
         /// <returns>A task for the async operation.</returns>
         public Task OpenAsync(CancellationToken cancellationToken)
@@ -52,8 +71,17 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A task for the async operation.</returns>
         public Task CloseAsync()
         {
-            this.Dispose();
+            return this.CloseAsync(CancellationToken.None);
+        }
 
+        /// <summary>
+        /// Closes the object.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        /// <returns>A task for the async operation.</returns>
+        public Task CloseAsync(CancellationToken cancellationToken)
+        {
+            this.Dispose();
             return Task.CompletedTask;
         }
 
@@ -97,13 +125,39 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets or creates TValue object.
         /// </summary>
+        /// <param name="timeout">A timeout for the operation.</param>
+        /// <returns>A task for the async operation.</returns>
+        public Task<TValue> GetOrCreateAsync(TimeSpan timeout)
+        {
+            return this.GetOrCreateAsync(timeout, CancellationToken.None);
+        }
+
+        /// <summary>
+        /// Gets or creates TValue object.
+        /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
         /// <returns>A task for the async operation.</returns>
-        public async Task<TValue> GetOrCreateAsync(CancellationToken cancellationToken)
+        public Task<TValue> GetOrCreateAsync(CancellationToken cancellationToken)
         {
-            while (!this.disposed)
+            return this.GetOrCreateAsync(AmqpConstants.DefaultTimeout, cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets or creates TValue object (for internal use only).
+        /// </summary>
+        /// <param name="timeout">A timeout for the operation.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        /// <returns></returns>
+        public async Task<TValue> GetOrCreateAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            TimeoutHelper timeoutHelper = new TimeoutHelper(timeout);
+            while (timeoutHelper.RemainingTime() > TimeSpan.Zero)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                if (this.disposed)
+                {
+                    throw new OperationCanceledException();
+                }
 
                 TaskCompletionSource<TValue> tcs;
 
@@ -123,7 +177,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     try
                     {
-                        TValue value = await this.OnCreateAsync(cancellationToken).ConfigureAwait(false);
+                        TValue value = await this.OnCreateAsync(timeoutHelper.RemainingTime(), cancellationToken).ConfigureAwait(false);
                         tcs.SetResult(value);
 
                         if (this.disposed && this.TryRemove())
@@ -141,7 +195,7 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            throw new ObjectDisposedException(this.GetType().Name);
+            throw new TimeoutException(AmqpResources.GetString(AmqpResources.AmqpTimeout, timeout, typeof(TValue).Name));
         }
 
         /// <summary>
@@ -174,9 +228,17 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Creates the singleton.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        /// <param name="timeout">A timeout for the operation.</param>
         /// <returns>A task for the async operation.</returns>
-        protected abstract Task<TValue> OnCreateAsync(CancellationToken cancellationToken);
+        protected virtual Task<TValue> OnCreateAsync(TimeSpan timeout) => throw new NotImplementedException();
+
+        /// <summary>
+        /// Creates the singleton.
+        /// </summary>
+        /// <param name="timeout">A timeout for the operation.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        /// <returns></returns>
+        protected virtual Task<TValue> OnCreateAsync(TimeSpan timeout, CancellationToken cancellationToken) => OnCreateAsync(timeout);
 
         /// <summary>
         /// Closes the singleton.

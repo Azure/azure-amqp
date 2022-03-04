@@ -169,7 +169,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A task representing the asynchronous operation.</returns>
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, TimeSpan timeout)
         {
-            return this.RequestAsync(request, AmqpConstants.NullBinary, timeout);
+            return this.RequestAsync(request, AmqpConstants.NullBinary, timeout, CancellationToken.None);
         }
 
         /// <summary>
@@ -181,13 +181,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns></returns>
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, ArraySegment<byte> txnId, TimeSpan timeout)
         {
-            return Task.Factory.FromAsync(
-                static (p, t, k, c, s) => new RequestAsyncResult((RequestResponseAmqpLink)s, p.Request, p.TxnId, t, k, c, s),
-                static (r) => RequestAsyncResult.End(r),
-                new RequestParam(request, txnId),
-                timeout,
-                CancellationToken.None,
-                this);
+            return this.RequestAsync(request, txnId, timeout, CancellationToken.None);
         }
 
         /// <summary>
@@ -198,7 +192,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A task representing the asynchronous operation.</returns>
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, CancellationToken cancellationToken)
         {
-            return this.RequestAsync(request, AmqpConstants.NullBinary, cancellationToken);
+            return this.RequestAsync(request, AmqpConstants.NullBinary, this.OperationTimeout, cancellationToken);
         }
 
         /// <summary>
@@ -210,13 +204,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns></returns>
         public Task<AmqpMessage> RequestAsync(AmqpMessage request, ArraySegment<byte> txnId, CancellationToken cancellationToken)
         {
-            return Task.Factory.FromAsync(
-                static (p, t, k, c, s) => new RequestAsyncResult((RequestResponseAmqpLink)s, p.Request, p.TxnId, t, k, c, s),
-                static (r) => RequestAsyncResult.End(r),
-                new RequestParam(request, txnId),
-                this.sender.Settings.OperationTimeout,
-                cancellationToken,
-                this);
+            return this.RequestAsync(request, txnId, this.OperationTimeout, cancellationToken);
         }
 
         /// <summary>
@@ -299,6 +287,17 @@ namespace Microsoft.Azure.Amqp
             this.sender.Abort();
             this.receiver.Abort();
             this.inflightRequests.Abort();
+        }
+
+        internal Task<AmqpMessage> RequestAsync(AmqpMessage request, ArraySegment<byte> txnId, TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            return Task.Factory.FromAsync(
+                static (p, t, k, c, s) => new RequestAsyncResult((RequestResponseAmqpLink)s, p.Request, p.TxnId, t, k, c, s),
+                static (r) => RequestAsyncResult.End(r),
+                new RequestParam(request, txnId),
+                timeout,
+                cancellationToken,
+                this);
         }
 
         static void OnSenderOpen(IAsyncResult result)

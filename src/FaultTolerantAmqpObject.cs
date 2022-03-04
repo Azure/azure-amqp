@@ -12,9 +12,26 @@ namespace Microsoft.Azure.Amqp
     /// </summary>
     public sealed class FaultTolerantAmqpObject<T> : Singleton<T> where T : AmqpObject
     {
+        readonly Func<TimeSpan, Task<T>> createObjectOld;
         readonly Func<CancellationToken, Task<T>> createObjectAsync;
+        readonly Func<TimeSpan, CancellationToken, Task<T>> createObjectInternal;
         readonly Action<T> closeObject;
-        readonly EventHandler onObjectClosed;
+
+        FaultTolerantAmqpObject(Action<T> closeObject)
+        {
+            this.closeObject = closeObject;
+        }
+
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="createObjectAsync">The function to create the AmqpObject.</param>
+        /// <param name="closeObject">The action to close the AmqpObject.</param>
+        public FaultTolerantAmqpObject(Func<TimeSpan, Task<T>> createObjectAsync, Action<T> closeObject)
+            : this(closeObject)
+        {
+            this.createObjectOld = createObjectAsync;
+        }
 
         /// <summary>
         /// Initializes the object.
@@ -22,10 +39,15 @@ namespace Microsoft.Azure.Amqp
         /// <param name="createObjectAsync">The function to create the AmqpObject.</param>
         /// <param name="closeObject">The action to close the AmqpObject.</param>
         public FaultTolerantAmqpObject(Func<CancellationToken, Task<T>> createObjectAsync, Action<T> closeObject)
+            : this(closeObject)
         {
             this.createObjectAsync = createObjectAsync;
-            this.closeObject = closeObject;
-            this.onObjectClosed = new EventHandler(this.OnObjectClosed);
+        }
+
+        internal FaultTolerantAmqpObject(Func<TimeSpan, CancellationToken, Task<T>> createObjectAsync, Action<T> closeObject)
+            : this(closeObject)
+        {
+            this.createObjectInternal = createObjectAsync;
         }
 
         /// <summary>
@@ -46,28 +68,33 @@ namespace Microsoft.Azure.Amqp
             return false;
         }
 
-        /// <summary>
-        /// Determines if the singleton is in valid state.
-        /// </summary>
-        /// <param name="value">The AmqpObject.</param>
-        /// <returns>true if it is open.</returns>
+        /// <inheritdoc cref="Singleton{TValue}"/>
         protected override bool IsValid(T value)
         {
             return value.State == AmqpObjectState.Opened;
         }
 
         /// <inheritdoc cref="Singleton{TValue}"/>
-        protected override async Task<T> OnCreateAsync(CancellationToken cancellationToken)
+        protected override async Task<T> OnCreateAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
-            T amqpObject = await this.createObjectAsync(cancellationToken).ConfigureAwait(false);
+            T amqpObject;
+            if (this.createObjectAsync != null)
+            {
+                amqpObject = await this.createObjectAsync(cancellationToken).ConfigureAwait(false);
+            }
+            else if (this.createObjectOld != null)
+            {
+                amqpObject = await this.createObjectOld(timeout).ConfigureAwait(false);
+            }
+            {
+                amqpObject = await this.createObjectInternal(timeout, cancellationToken).ConfigureAwait(false);
+            }
+
             amqpObject.SafeAddClosed(OnObjectClosed);
             return amqpObject;
         }
 
-        /// <summary>
-        /// Closes the singleton object.
-        /// </summary>
-        /// <param name="value"></param>
+        /// <inheritdoc cref="Singleton{TValue}"/>
         protected override void OnSafeClose(T value)
         {
             this.closeObject(value);

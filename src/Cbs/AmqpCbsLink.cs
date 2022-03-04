@@ -31,15 +31,6 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Gets or sets the timeout for CBS operations.
-        /// </summary>
-        public TimeSpan OperationTimeout
-        {
-            get { return this.connection.OperationTimeout; }
-            set { }
-        }
-
-        /// <summary>
         /// Closes the link.
         /// </summary>
         public void Close()
@@ -74,7 +65,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>The expiration time of the token as the task result.</returns>
         public Task<DateTime> SendTokenAsync(ICbsTokenProvider tokenProvider, Uri namespaceAddress, string audience, string resource, string[] requiredClaims, CancellationToken cancellationToken)
         {
-            return this.SendTokenAsync(tokenProvider, namespaceAddress, audience, resource, requiredClaims, this.OperationTimeout, cancellationToken);
+            return this.SendTokenAsync(tokenProvider, namespaceAddress, audience, resource, requiredClaims, this.connection.OperationTimeout, cancellationToken);
         }
 
         /// <summary>

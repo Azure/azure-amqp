@@ -110,6 +110,8 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        internal override TimeSpan OperationTimeout => this.connection.OperationTimeout;
+
         /// <summary>
         /// Opens an <see cref="AmqpLink"/> to a node at the given address.
         /// </summary>

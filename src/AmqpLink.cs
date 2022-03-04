@@ -203,7 +203,15 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public bool Drain => this.drain;
 
-        internal override TimeSpan OperationTimeout => this.settings.OperationTimeout;
+        internal override TimeSpan OperationTimeout
+        {
+            get
+            {
+                return this.settings.OperationTimeoutInternal == default ?
+                    this.Session.Connection.OperationTimeout :
+                    this.settings.OperationTimeoutInternal;
+            }
+        }
 
         /// <summary>
         /// Attaches the link to a session.

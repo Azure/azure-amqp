@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.Amqp
 {
+    using System;
     using Microsoft.Azure.Amqp.Framing;
 
     /// <summary>
@@ -21,6 +22,7 @@ namespace Microsoft.Azure.Amqp
             this.ChannelMax = AmqpConstants.DefaultMaxConcurrentChannels - 1;
             this.WriteBufferFullLimit = int.MaxValue;
             this.MinIdleTimeout = AmqpConstants.MinimumHeartBeatIntervalMs;
+            this.OperationTimeout = AmqpConstants.DefaultTimeout;
         }
 
         /// <summary>
@@ -103,6 +105,15 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Gets or sets a default timeout value for operations over this connection.
+        /// </summary>
+        public TimeSpan OperationTimeout
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Clones the settings object. Properties of remote peer are not copied.
         /// </summary>
         /// <returns>A new connection settings object.</returns>
@@ -126,6 +137,7 @@ namespace Microsoft.Azure.Amqp
             newSettings.WriteBufferFullLimit = this.WriteBufferFullLimit;
             newSettings.WriteBufferEmptyLimit = this.WriteBufferEmptyLimit;
             newSettings.MinIdleTimeout = this.MinIdleTimeout;
+            newSettings.OperationTimeout = this.OperationTimeout;
 
             return newSettings;
         }

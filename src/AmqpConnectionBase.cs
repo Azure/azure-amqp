@@ -97,6 +97,8 @@ namespace Microsoft.Azure.Amqp
             get { return this.asyncIO; }
         }
 
+        internal override TimeSpan OperationTimeout => this.settings.OperationTimeout;
+
         /// <summary>
         /// Sends a serializable object. The buffer is initialized by the
         /// <see cref="IAmqpSerializable.Encode(ByteBuffer)"/> method.

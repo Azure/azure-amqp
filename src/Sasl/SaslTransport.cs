@@ -29,31 +29,13 @@ namespace Microsoft.Azure.Amqp.Sasl
             this.negotiator = new SaslNegotiator(this, provider, isInitiator);
         }
 
-        /// <summary>
-        /// Gets the local endpoint.
-        /// </summary>
-        public override EndPoint LocalEndPoint
-        {
-            get
-            {
-                return this.innerTransport.LocalEndPoint;
-            }
-        }
+        /// <inheritdoc cref="TransportBase.LocalEndPoint"/>
+        public override EndPoint LocalEndPoint => this.innerTransport.LocalEndPoint;
 
-        /// <summary>
-        /// Gets the remote endpoint.
-        /// </summary>
-        public override EndPoint RemoteEndPoint
-        {
-            get
-            {
-                return this.innerTransport.RemoteEndPoint;
-            }
-        }
+        /// <inheritdoc cref="TransportBase.RemoteEndPoint"/>
+        public override EndPoint RemoteEndPoint => this.innerTransport.RemoteEndPoint;
 
-        /// <summary>
-        /// true if the transport is encrypted, otherwise false.
-        /// </summary>
+        /// <inheritdoc cref="TransportBase.IsSecure"/>
         public override bool IsSecure
         {
             get { return this.innerTransport.IsSecure; }

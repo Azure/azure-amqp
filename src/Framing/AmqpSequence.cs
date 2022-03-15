@@ -15,11 +15,11 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// The descriptor name.
         /// </summary>
-        public const string Name = "amqp:amqp-sequence:list";
+        public static readonly string Name = "amqp:amqp-sequence:list";
         /// <summary>
         /// The descriptor code.
         /// </summary>
-        public const ulong Code = 0x0000000000000076;
+        public static readonly ulong Code = 0x0000000000000076;
 
         IList innerList;
 

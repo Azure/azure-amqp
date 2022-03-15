@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Amqp.Framing
     /// The base class of AMQP defined composite types where descriptor is
     /// a name (symbol) or a code (ulong).
     /// </summary>
-    public class AmqpDescribed : IAmqpSerializable
+    public class AmqpDescribed : DescribedType, IAmqpSerializable
     {
         AmqpSymbol name;
         ulong code;
@@ -23,6 +23,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <param name="name">The descriptor name.</param>
         /// <param name="code">The descriptor code.</param>
         public AmqpDescribed(AmqpSymbol name, ulong code)
+            : base(name.Value, null)
         {
             this.name = name;
             this.code = code;
@@ -42,15 +43,6 @@ namespace Microsoft.Azure.Amqp.Framing
         public ulong DescriptorCode
         {
             get { return this.code; }
-        }
-
-        /// <summary>
-        /// Gets or sets the value.
-        /// </summary>
-        public virtual object Value
-        {
-            get;
-            set;
         }
 
         /// <summary>

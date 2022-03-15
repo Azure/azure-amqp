@@ -20,14 +20,10 @@ namespace Microsoft.Azure.Amqp.Transport
         readonly EndPoint remote;
         ITransportMonitor usageMeter;
 
-        /// <summary>
-        /// Gets the local endpoint.
-        /// </summary>
+        /// <inheritdoc cref="TransportBase.LocalEndPoint"/>
         public override EndPoint LocalEndPoint => this.local;
 
-        /// <summary>
-        /// Gets the remote endpoint.
-        /// </summary>
+        /// <inheritdoc cref="TransportBase.RemoteEndPoint"/>
         public override EndPoint RemoteEndPoint => this.remote;
 
         internal WebSocketTransport(WebSocket webSocket, Uri uri, EndPoint local, EndPoint remote)

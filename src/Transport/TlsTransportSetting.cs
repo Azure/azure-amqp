@@ -13,6 +13,7 @@ namespace Microsoft.Azure.Amqp.Transport
     /// </summary>
     public class TlsTransportSettings : TransportSettings
     {
+        const SslProtocols DefaultSslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
         readonly TransportSettings innerSettings;
 
         /// <summary>
@@ -44,7 +45,7 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             this.innerSettings = innerSettings;
             this.IsInitiator = isInitiator;
-            this.Protocols = SslProtocols.Default;
+            this.Protocols = DefaultSslProtocols;
             this.CheckCertificateRevocation = true;
         }
 

@@ -153,10 +153,14 @@ namespace Microsoft.Azure.Amqp
             TimeoutHelper timeoutHelper = new TimeoutHelper(timeout);
             while (timeoutHelper.RemainingTime() > TimeSpan.Zero)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    throw new TaskCanceledException();
+                }
+
                 if (this.disposed)
                 {
-                    throw new OperationCanceledException();
+                    throw new ObjectDisposedException(this.GetType().Name);
                 }
 
                 TaskCompletionSource<TValue> tcs;

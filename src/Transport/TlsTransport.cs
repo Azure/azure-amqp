@@ -40,14 +40,10 @@ namespace Microsoft.Azure.Amqp.Transport
                 new CustomSslStream(new TransportStream(this.innerTransport), false, this.ValidateRemoteCertificate, tlsSettings.IsInitiator);
         }
 
-        /// <summary>
-        /// Gets the local endpoint.
-        /// </summary>
+        /// <inheritdoc cref="TransportBase.LocalEndPoint"/>
         public override EndPoint LocalEndPoint => this.innerTransport.LocalEndPoint;
 
-        /// <summary>
-        /// Gets the remote endpoint.
-        /// </summary>
+        /// <inheritdoc cref="TransportBase.RemoteEndPoint"/>
         public override EndPoint RemoteEndPoint => this.innerTransport.RemoteEndPoint;
 
         /// <summary>

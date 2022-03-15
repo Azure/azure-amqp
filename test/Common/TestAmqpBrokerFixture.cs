@@ -1,7 +1,6 @@
 namespace Test.Microsoft.Azure.Amqp
 {
     using System;
-    using System.Diagnostics;
     using TestAmqpBroker;
 
     public class TestAmqpBrokerFixture : IDisposable
@@ -27,12 +26,7 @@ namespace Test.Microsoft.Azure.Amqp
                 if (++refs == 1)
                 {
                     broker = new TestAmqpBroker(new string[] { address, wsAddress }, "guest:guest", null, null);
-#if !WINDOWS_UWP    // UWP requires external test broker
-                    if (Process.GetProcessesByName("TestAmqpBroker").Length == 0)
-#endif
-                    {
-                        broker.Start();
-                    }
+                    broker.Start();
                 }
             }
         }

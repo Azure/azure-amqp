@@ -15,6 +15,6 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Generate a Token for use with CBS.
         /// </summary>
-        Task<CbsToken> GetTokenAsync(Uri namespaceAddress, string appliesTo, string[] requiredClaims, CancellationToken cancellationToken);
+        Task<CbsToken> GetTokenAsync(Uri namespaceAddress, string appliesTo, string[] requiredClaims);
     }
 }

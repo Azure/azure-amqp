@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Gets or sets the total credit.
+        /// Gets or sets the total link credit.
         /// </summary>
         public uint TotalLinkCredit
         {
@@ -36,6 +36,17 @@ namespace Microsoft.Azure.Amqp
                 this.linkCredit = value;
                 this.FlowThreshold = Math.Min(100, (int)(this.linkCredit * 2 / 3));
             }
+        }
+
+        /// <summary>
+        /// Gets or sets the cache size for prefetched messages. Applies to <see cref="ReceivingAmqpLink"/> only.
+        /// </summary>
+        /// <remarks>If set, it takes precedence over <see cref="TotalLinkCredit"/>. The link does it best effort to limit
+        /// the total prefetched messages to this limit. It is ignored when a message listener callback is registered.</remarks>
+        public long? TotalCacheSizeInBytes
+        {
+            get;
+            set;
         }
 
         /// <summary>

@@ -254,15 +254,15 @@ namespace Microsoft.Azure.Amqp.Encoding
                 return;
             }
 
-            if (TryGetEncoding(value.GetType(), out IEncoding encoding))
-            {
-                encoding.Write(value, buffer, -1);
-                return;
-            }
-
             if (value is IAmqpSerializable serializable)
             {
                 serializable.Encode(buffer);
+                return;
+            }
+
+            if (TryGetEncoding(value.GetType(), out IEncoding encoding))
+            {
+                encoding.Write(value, buffer, -1);
                 return;
             }
 

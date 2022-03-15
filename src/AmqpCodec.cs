@@ -106,7 +106,20 @@ namespace Microsoft.Azure.Amqp
             };
         }
 
-        internal static int GetFrameSize(ByteBuffer buffer)
+        /// <summary>
+        /// Gets the minimum buffer size to decode a frame.
+        /// </summary>
+        public static int MinimumFrameDecodeSize
+        {
+            get { return Frame.HeaderSize; }
+        }
+
+        /// <summary>
+        /// Reads the size a frame from a buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to read from.</param>
+        /// <returns>The frame size.</returns>
+        public static int GetFrameSize(ByteBuffer buffer)
         {
             return (int)AmqpBitConverter.ReadUInt(buffer.Buffer, buffer.Offset, FixedWidth.UInt);
         }
@@ -1090,7 +1103,13 @@ namespace Microsoft.Azure.Amqp
             return MapEncoding.Decode(buffer, formatCode);
         }
 
-        internal static T DecodeMap<T>(ByteBuffer buffer) where T : RestrictedMap, new()
+        /// <summary>
+        /// Decodes a <see cref="RestrictedMap"/> from the buffer and advances the buffer's position.
+        /// </summary>
+        /// <typeparam name="T">A type of <see cref="RestrictedMap"/></typeparam>
+        /// <param name="buffer">The buffer to read.</param>
+        /// <returns>A restricted map.</returns>
+        public static T DecodeMap<T>(ByteBuffer buffer) where T : RestrictedMap, new()
         {
             AmqpMap map = DecodeMap(buffer);
             T restrictedMap = null;
@@ -1179,7 +1198,22 @@ namespace Microsoft.Azure.Amqp
         /// <returns>An AmqpDescribed object.</returns>
         public static AmqpDescribed DecodeAmqpDescribed(ByteBuffer buffer)
         {
-            AmqpDescribed value = CreateAmqpDescribed(buffer, knownTypesByName, knownTypesByCode);
+            return DecodeAmqpDescribed(buffer, knownTypesByName, knownTypesByCode);
+        }
+
+        /// <summary>
+        /// Decodes an <see cref="AmqpDescribed"/> object from the buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to read from.</param>
+        /// <param name="byName">The function delegates to create an object by the descriptor name.</param>
+        /// <param name="byCode">The function delegates to create an object by the descriptor code.</param>
+        /// <returns>An AmqpDescribed object.</returns>
+        public static AmqpDescribed DecodeAmqpDescribed(
+            ByteBuffer buffer,
+            Dictionary<string, Func<AmqpDescribed>> byName,
+            Dictionary<ulong, Func<AmqpDescribed>> byCode)
+        {
+            AmqpDescribed value = CreateAmqpDescribed(buffer, byName, byCode);
             if (value != null)
             {
                 value.DecodeValue(buffer);
@@ -1188,7 +1222,24 @@ namespace Microsoft.Azure.Amqp
             return value;
         }
 
-        internal static AmqpDescribed CreateAmqpDescribed(
+        /// <summary>
+        /// Creates an <see cref="AmqpDescribed"/> object from the buffer without decoding the value.
+        /// </summary>
+        /// <param name="buffer">The buffer to read from.</param>
+        /// <returns>An AmqpDescribed object.</returns>
+        public static AmqpDescribed CreateAmqpDescribed(ByteBuffer buffer)
+        {
+            return CreateAmqpDescribed(buffer, knownTypesByName, knownTypesByCode);
+        }
+
+        /// <summary>
+        /// Creates an <see cref="AmqpDescribed"/> object from the buffer without decoding the value.
+        /// </summary>
+        /// <param name="buffer">The buffer to read from.</param>
+        /// <param name="byName">The function delegates to create an object by the descriptor name.</param>
+        /// <param name="byCode">The function delegates to create an object by the descriptor code.</param>
+        /// <returns>An AmqpDescribed object.</returns>
+        public static AmqpDescribed CreateAmqpDescribed(
             ByteBuffer buffer,
             Dictionary<string, Func<AmqpDescribed>> byName,
             Dictionary<ulong, Func<AmqpDescribed>> byCode)

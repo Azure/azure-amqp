@@ -80,6 +80,17 @@ namespace Microsoft.Azure.Amqp.Framing
             {
                 return this.address;
             }
+
+            public override int GetHashCode()
+            {
+                return this.address.GetHashCode();
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is AddressString other &&
+                    string.Equals(this.address, other.address, StringComparison.Ordinal);
+            }
         }
     }
 }

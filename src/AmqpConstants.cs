@@ -37,16 +37,18 @@ namespace Microsoft.Azure.Amqp
         /// A string constant as the domain name for Apache extensions.
         /// </summary>
         public const string Apache = "apache.org";
-        internal const string TimeSpanName = Vendor + ":timespan";
-        internal const string UriName = Vendor + ":uri";
-        internal const string DateTimeOffsetName = Vendor + ":datetime-offset";
-        internal const string OpenErrorName = Vendor + ":open-error";
-        internal static readonly AmqpSymbol IoEvent = "io-event";
-        internal static readonly AmqpSymbol BatchedMessageFormat = Vendor + ":batched-message-format";
-        internal static readonly AmqpSymbol HostName = "hostname";
-        internal static readonly AmqpSymbol NetworkHost = "network-host";
-        internal static readonly AmqpSymbol Port = "port";
-        internal static readonly AmqpSymbol Address = "address";
+        /// <summary>A symbol constant for IO event.</summary>
+        public static readonly AmqpSymbol IoEvent = "io-event";
+        /// <summary>A symbol constant for batched message format.</summary>
+        public static readonly AmqpSymbol BatchedMessageFormat = Vendor + ":batched-message-format";
+        /// <summary>A symbol constant for hostname</summary>
+        public static readonly AmqpSymbol HostName = "hostname";
+        /// <summary>A symbol constant for network host.</summary>
+        public static readonly AmqpSymbol NetworkHost = "network-host";
+        /// <summary>A symbol constant for port number.</summary>
+        public static readonly AmqpSymbol Port = "port";
+        /// <summary>A symbol constant for 'address'</summary>
+        public static readonly AmqpSymbol Address = "address";
 
         /// <summary>
         /// Null binary.
@@ -57,9 +59,10 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public static readonly ArraySegment<byte> EmptyBinary = new ArraySegment<byte>(new byte[0]);
 
-        internal static readonly List<AmqpMessage> EmptyMessages = new List<AmqpMessage>(0);
-        internal static readonly AmqpVersion DefaultProtocolVersion = new AmqpVersion(1, 0, 0);
-        internal static readonly DateTime StartOfEpoch = DateTime.Parse("1970-01-01T00:00:00.0000000Z", CultureInfo.InvariantCulture).ToUniversalTime();
+        /// <summary>The default AMQP verion 1.0.0.</summary>
+        public static readonly AmqpVersion DefaultProtocolVersion = new AmqpVersion(1, 0, 0);
+        /// <summary>The start of epoch of an AMQP timestamp.</summary>
+        public static readonly DateTime StartOfEpoch = DateTime.Parse("1970-01-01T00:00:00.0000000Z", CultureInfo.InvariantCulture).ToUniversalTime();
         /// <summary>
         /// The maximum message absolute expiry time. It is deprecated and should not be used.
         /// </summary>
@@ -103,16 +106,23 @@ namespace Microsoft.Azure.Amqp
         /// The standard AMQP secure tcp port.
         /// </summary>
         public const int DefaultSecurePort = 5671;
-        internal const int ProtocolHeaderSize = 8;
+        /// <summary>The size in bytes of an AMQP protocol header.</summary>
+        public const int ProtocolHeaderSize = 8;
         /// <summary>
         /// The default transport buffer size.
         /// </summary>
         public const int TransportBufferSize = 8 * 1024;
-        internal const int MinMaxFrameSize = 512;
+        /// <summary>The minimum max-frame-size (<see cref="Open.MaxFrameSize"/>) an implementation must support.</summary>
+        public const int MinMaxFrameSize = 512;
         /// <summary>
         /// The default maximum frame size used by the library.
         /// </summary>
         public const uint DefaultMaxFrameSize = 64 * 1024;
+
+        internal const string TimeSpanName = Vendor + ":timespan";
+        internal const string UriName = Vendor + ":uri";
+        internal const string DateTimeOffsetName = Vendor + ":datetime-offset";
+        internal const string OpenErrorName = Vendor + ":open-error";
         internal const ushort DefaultMaxConcurrentChannels = 8 * 1024;
         internal const uint DefaultMaxLinkHandles = 256 * 1024;
         internal const uint DefaultHeartBeatInterval = 90000;
@@ -121,5 +131,6 @@ namespace Microsoft.Azure.Amqp
         internal const uint DefaultLinkCredit = 1000;
         internal const uint DefaultNextTransferId = 1;
         internal const int SegmentSize = 512;
+        internal static readonly List<AmqpMessage> EmptyMessages = new List<AmqpMessage>(0);
     }
 }

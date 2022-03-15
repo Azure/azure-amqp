@@ -10,6 +10,7 @@ namespace Test.Microsoft.Azure.Amqp
     using global::Microsoft.Azure.Amqp.Framing;
     using global::Microsoft.Azure.Amqp.Transport;
     using Xunit;
+    using TestAmqpBroker;
 
     [Trait("Category", TestCategory.Current)]
     public class CancellationTokenTests
@@ -42,7 +43,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAsync<TaskCanceledException>(() =>
+                await Assert.ThrowsAsync<TaskCanceledException>(async () =>
                 {
                     AmqpSettings settings = new AmqpSettings();
                     settings.TransportProviders.Add(new AmqpTransportProvider(AmqpVersion.V100));
@@ -57,10 +58,11 @@ namespace Test.Microsoft.Azure.Amqp
                     Task task = initiator.ConnectAsync(cts.Token);
                     if (!cancelBefore)
                     {
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
-                    return task;
+                    await task;
                 });
             }
             finally
@@ -68,7 +70,7 @@ namespace Test.Microsoft.Azure.Amqp
                 listener.Close();
             }
         }
-        
+
         [Fact]
         public Task ConnectionFactoryTest()
         {
@@ -88,7 +90,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAnyAsync<TaskCanceledException>(() =>
+                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
                 {
                     var factory = new AmqpConnectionFactory();
                     var cts = new CancellationTokenSource();
@@ -97,13 +99,14 @@ namespace Test.Microsoft.Azure.Amqp
                         cts.Cancel();
                     }
 
-                    Task task = factory.OpenConnectionAsync(this.addressUri, cts.Token);
+                    var task = factory.OpenConnectionAsync(this.addressUri, cts.Token);
                     if (!cancelBefore)
                     {
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
-                    return task;
+                    await task;
                 });
             }
             finally
@@ -150,7 +153,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = connection.OpenAsync(cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -202,7 +205,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = connection.CloseAsync(cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -214,7 +217,7 @@ namespace Test.Microsoft.Azure.Amqp
                 listener.Close();
             }
         }
-        
+
         [Fact]
         public Task SessionOpenTest()
         {
@@ -226,7 +229,7 @@ namespace Test.Microsoft.Azure.Amqp
         {
             return this.RunSessionOpenTest(true);
         }
-        
+
         async Task RunSessionOpenTest(bool cancelBefore)
         {
             AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
@@ -249,7 +252,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = session.OpenAsync(cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -261,7 +264,7 @@ namespace Test.Microsoft.Azure.Amqp
                 listener.Close();
             }
         }
-        
+
         [Fact]
         public Task SessionCloseTest()
         {
@@ -297,7 +300,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = session.CloseAsync(cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -346,7 +349,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = link.OpenAsync(cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -397,7 +400,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = link.CloseAsync(cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -452,7 +455,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = link.SendMessageAsync(AmqpMessage.Create(new AmqpValue() { Value = "test" }), AmqpConstants.EmptyBinary, AmqpConstants.NullBinary, cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -505,13 +508,11 @@ namespace Test.Microsoft.Azure.Amqp
                 var task = link.ReceiveMessageAsync(cts.Token);
                 if (!cancelBefore)
                 {
-                    await Task.Delay(100);
+                    await Task.Yield();
                     cts.Cancel();
                 }
 
-                var completedTask = await Task.WhenAny(task, Task.Delay(5000));
-                Assert.Equal(task, completedTask);
-                Assert.Null(task.Result);
+                await Assert.ThrowsAsync<TaskCanceledException>(async () => await task);
             }
             finally
             {
@@ -564,7 +565,7 @@ namespace Test.Microsoft.Azure.Amqp
                     var task = link.DisposeMessageAsync(message.DeliveryTag, AmqpConstants.AcceptedOutcome, cts.Token);
                     if (!cancelBefore)
                     {
-                        await Task.Delay(100);
+                        await Task.Yield();
                         cts.Cancel();
                     }
 
@@ -574,6 +575,87 @@ namespace Test.Microsoft.Azure.Amqp
             finally
             {
                 listener.Close();
+            }
+        }
+
+        [Fact]
+        public async Task CbsSendTokenNoCancelTest()
+        {
+            var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, null, null, null);
+            broker.AddNode(new CbsNode());
+            broker.Start();
+
+            try
+            {
+                var factory = new AmqpConnectionFactory();
+                var connection = await factory.OpenConnectionAsync(addressUri, CancellationToken.None);
+                var cbsLink = new AmqpCbsLink(connection);
+                await cbsLink.SendTokenAsync(new TestTokenProvider(), addressUri, addressUri.OriginalString,
+                    addressUri.OriginalString, new[] { "Send" }, CancellationToken.None);
+                await connection.CloseAsync(CancellationToken.None);
+            }
+            finally
+            {
+                broker.Stop();
+            }
+        }
+
+        [Fact]
+        public Task CbsSendTokenTest()
+        {
+            return this.RunCbsSendTokenTest(false);
+        }
+
+        [Fact]
+        public Task CbsSendTokenCancelledTest()
+        {
+            return this.RunCbsSendTokenTest(true);
+        }
+
+        async Task RunCbsSendTokenTest(bool cancelBefore)
+        {
+            var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, null, null, null);
+            broker.AddNode(new CbsNode() { ProcessingTime = TimeSpan.FromSeconds(10) });
+            broker.Start();
+
+            try
+            {
+                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
+                {
+                    var factory = new AmqpConnectionFactory();
+                    var connection = await factory.OpenConnectionAsync(this.addressUri, CancellationToken.None);
+                    var cbsLink = new AmqpCbsLink(connection);
+
+                    var cts = new CancellationTokenSource();
+                    if (cancelBefore)
+                    {
+                        cts.Cancel();
+                    }
+
+                    var task = cbsLink.SendTokenAsync(new TestTokenProvider(), addressUri, addressUri.OriginalString,
+                        addressUri.OriginalString, new[] { "Send" }, cts.Token);
+
+                    if (!cancelBefore)
+                    {
+                        await Task.Yield();
+                        cts.Cancel();
+                    }
+
+                    await task;
+                });
+            }
+            finally
+            {
+                broker.Stop();
+            }
+        }
+
+        class TestTokenProvider : ICbsTokenProvider
+        {
+            public Task<CbsToken> GetTokenAsync(Uri namespaceAddress, string appliesTo, string[] requiredClaims)
+            {
+                var token = new CbsToken("test:token", "tt", DateTime.UtcNow.AddHours(1));
+                return Task.FromResult(token);
             }
         }
 

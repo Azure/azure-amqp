@@ -18,12 +18,14 @@ namespace TestAmqpBroker
 
     public sealed class TestAmqpBroker : IRuntimeProvider
     {
+        const ulong MaxMessageSize = 64 * 1024 * 1024;
         public const uint ConnectionIdleTimeOut = 4 * 60 * 1000;
         readonly IList<string> endpoints;
         readonly string userInfo;
         readonly string sslValue;
-        readonly Dictionary<string, TestQueue> queues;
+        readonly Dictionary<string, TestQueue> queues;  // not thread safe
         readonly Dictionary<SequenceNumber, AmqpConnection> connections;
+        readonly Dictionary<string, INode> nodes;       // not thread safe
         readonly TxnManager txnManager;
         readonly string containerId;
         readonly uint maxFrameSize;
@@ -41,7 +43,8 @@ namespace TestAmqpBroker
             this.maxFrameSize = 64 * 1024;
             this.txnManager = new TxnManager();
             this.connections = new Dictionary<SequenceNumber, AmqpConnection>();
-            this.queues = new Dictionary<string, TestQueue>();
+            this.queues = new Dictionary<string, TestQueue>(StringComparer.OrdinalIgnoreCase);
+            this.nodes = new Dictionary<string, INode>(StringComparer.Ordinal);
             if (queues != null)
             {
                 foreach (string q in queues)
@@ -77,6 +80,11 @@ namespace TestAmqpBroker
 
             SaslTransportProvider saslProvider = new SaslTransportProvider(AmqpVersion.V100);
             saslProvider.AddHandler(saslHandler);
+            if (this.nodes.ContainsKey("$cbs"))
+            {
+                saslProvider.AddHandler(new SaslAnonymousHandler("MSSBCBS"));
+            }
+
             settings.TransportProviders.Add(saslProvider);
 
             AmqpTransportProvider amqpProvider = new AmqpTransportProvider(AmqpVersion.V100);
@@ -131,6 +139,11 @@ namespace TestAmqpBroker
             {
                 this.queues.Add(queue, new TestQueue(this));
             }
+        }
+
+        public void AddNode(INode node)
+        {
+            this.nodes.Add(node.Name, node);
         }
 
         void connection_Closed(object sender, EventArgs e)
@@ -208,7 +221,7 @@ namespace TestAmqpBroker
             AmqpLink link;
             if (isReceiver)
             {
-                if (settings.Target is Target && ((Target)settings.Target).Dynamic())
+                if (settings.Target is Target target && target.Dynamic())
                 {
                     string name = string.Format("$dynamic.{0}", Interlocked.Increment(ref this.dynamicId));
                     lock (this.queues)
@@ -219,6 +232,7 @@ namespace TestAmqpBroker
                     ((Target)settings.Target).Address = name;
                 }
 
+                settings.MaxMessageSize = MaxMessageSize;
                 link = new ReceivingAmqpLink(session, settings);
             }
             else
@@ -257,23 +271,30 @@ namespace TestAmqpBroker
                     throw new AmqpException(AmqpErrorCode.InvalidField, "Address not set");
                 }
 
-                string node = address.ToString();
-                TestQueue queue;
-                lock (this.queues)
+                string addressName = address.ToString();
+                if (this.nodes.TryGetValue(addressName, out INode node))
                 {
-                    if (!this.queues.TryGetValue(node, out queue))
-                    {
-                        if (!this.implicitQueue)
-                        {
-                            throw new AmqpException(AmqpErrorCode.NotFound, string.Format("Node '{0}' not found", address));
-                        }
-
-                        queue = new TestQueue(this);
-                        this.queues.Add(node, queue);
-                    }
+                    node.OnAttachLink(link);
                 }
+                else
+                {
+                    TestQueue queue;
+                    lock (this.queues)
+                    {
+                        if (!this.queues.TryGetValue(addressName, out queue))
+                        {
+                            if (!this.implicitQueue)
+                            {
+                                throw new AmqpException(AmqpErrorCode.NotFound, string.Format("Node '{0}' not found", address));
+                            }
 
-                queue.CreateClient(link);
+                            queue = new TestQueue(this);
+                            this.queues.Add(addressName, queue);
+                        }
+                    }
+
+                    queue.CreateClient(link);
+                }
             }
 
             return new CompletedAsyncResult(callback, state);

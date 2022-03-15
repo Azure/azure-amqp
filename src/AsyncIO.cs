@@ -5,17 +5,22 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Transport;
 
-    sealed class AsyncIO : AmqpObject
+    /// <summary>
+    /// Supports asynchronous I/O over a <see cref="TransportBase"/> (For internal use only).
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public sealed class AsyncIO : AmqpObject
     {
         readonly IIoHandler ioHandler;
         readonly TransportBase transport;
         readonly AsyncWriter writer;
         readonly AsyncReader reader;
 
-        public AsyncIO(IIoHandler parent, int maxFrameSize, int writeQueueFullLimit,
+        internal AsyncIO(IIoHandler parent, int maxFrameSize, int writeQueueFullLimit,
             int writeQueueEmptyLimit, TransportBase transport, bool isInitiator)
             : base("async-io", transport.Identifier)
         {
@@ -26,49 +31,54 @@ namespace Microsoft.Azure.Amqp
             this.reader = new AsyncReader(this, maxFrameSize, isInitiator);
         }
 
-        public TransportBase Transport
+        internal TransportBase Transport
         {
             get { return this.transport; }
         }
 
-        public long WriteBufferQueueSize
+        internal long WriteBufferQueueSize
         {
             get { return this.writer.BufferQueueSize; }
         }
 
-        public void WriteBuffer(ByteBuffer buffer)
+        internal void WriteBuffer(ByteBuffer buffer)
         {
             this.writer.WriteBuffer(buffer);
         }
 
-        public void WriteBuffer(ByteBuffer buffer, ByteBuffer extra)
+        internal void WriteBuffer(ByteBuffer buffer, ByteBuffer extra)
         {
             this.writer.WriteBuffer(buffer, extra);
         }
 
+        /// <inheritdoc cref="AmqpObject.OnOpen(TimeSpan)"/>
         protected override void OnOpen(TimeSpan timeout)
         {
             this.OpenInternal();
             this.State = AmqpObjectState.Opened;
         }
 
+        /// <inheritdoc cref="AmqpObject.OnClose(TimeSpan)"/>
         protected override void OnClose(TimeSpan timeout)
         {
             this.writer.IssueClose();
         }
 
+        /// <inheritdoc cref="AmqpObject.OpenInternal"/>
         protected override bool OpenInternal()
         {
             this.reader.StartReading();
             return true;
         }
 
+        /// <inheritdoc cref="AmqpObject.CloseInternal"/>
         protected override bool CloseInternal()
         {
             this.writer.IssueClose();
             return true;
         }
 
+        /// <inheritdoc cref="AmqpObject.AbortInternal"/>
         protected override void AbortInternal()
         {
             this.transport.Abort();
@@ -313,7 +323,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// A reader that reads specified bytes and notifies caller upon completion (pull).
         /// </summary>
-        public class AsyncBufferReader
+        internal class AsyncBufferReader
         {
             static Action<TransportAsyncCallbackArgs> onReadComplete = OnReadComplete;
             readonly TransportBase transport;
@@ -399,7 +409,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// A reader that reads AMQP frame buffers. Not thread safe.
         /// </summary>
-        public sealed class FrameBufferReader
+        internal sealed class FrameBufferReader
         {
             static readonly Action<TransportAsyncCallbackArgs> onSizeComplete = OnReadSizeComplete;
             static readonly Action<TransportAsyncCallbackArgs> onFrameComplete = OnReadFrameComplete;
@@ -540,7 +550,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// A writer that writes buffers. Buffer writes may be batched. Writer owns closing the transport.
         /// </summary>
-        public class AsyncWriter
+        internal class AsyncWriter
         {
             const int MaxBatchSize = 32 * 1024;
             static readonly Action<TransportAsyncCallbackArgs> writeCompleteCallback = WriteCompleteCallback;
@@ -755,7 +765,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// A writer that writes fixed-size buffer and notify caller upon completion.
         /// </summary>
-        public class AsyncBufferWriter
+        internal class AsyncBufferWriter
         {
             readonly TransportBase transport;
             static Action<TransportAsyncCallbackArgs> onWriteComplete = OnWriteComplete;

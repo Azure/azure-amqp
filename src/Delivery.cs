@@ -199,10 +199,23 @@ namespace Microsoft.Azure.Amqp
             this.BytesTransfered += payloadSize;
         }
 
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
         /// <summary>
-        /// Disposes the delivery.
+        /// Releases unmanaged resources and optionally releases managed resources.
         /// </summary>
-        public abstract void Dispose();
+        /// <param name="disposing">
+        /// true to release both managed and unmanaged resources;
+        /// false to release only unmanaged resources.
+        /// </param>
+        protected virtual void Dispose(bool disposing)
+        {
+        }
 
         internal static ByteBuffer GetPayload(ByteBuffer source, int payloadSize, out bool more)
         {

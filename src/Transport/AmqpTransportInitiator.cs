@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
+    using System.ComponentModel;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
@@ -106,11 +107,11 @@ namespace Microsoft.Azure.Amqp.Transport
         }
 
         /// <summary>
-        /// Starts the connect operation.
+        /// Starts the connect operation (deprecated, use ConnectAsync instead).
         /// </summary>
         /// <param name="timeout">The operation timeout.</param>
         /// <returns>A task that returns a transport when it is completed.</returns>
-        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public Task<TransportBase> ConnectTaskAsync(TimeSpan timeout)
         {
             return this.ConnectAsync(timeout);

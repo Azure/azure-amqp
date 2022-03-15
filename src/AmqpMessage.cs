@@ -193,9 +193,9 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Gets the Data list body.
+        /// Gets the Data sections from the body.
         /// </summary>
-        public IList<Data> DataBody
+        public virtual IEnumerable<Data> DataBody
         {
             get
             {
@@ -205,9 +205,9 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Gets the AmqpSequence body.
+        /// Gets the AmqpSequence sections from the body.
         /// </summary>
-        public IList<AmqpSequence> SequenceBody
+        public virtual IEnumerable<AmqpSequence> SequenceBody
         {
             get
             {
@@ -219,7 +219,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets the AmqpValue body.
         /// </summary>
-        public AmqpValue ValueBody
+        public virtual AmqpValue ValueBody
         {
             get
             {
@@ -302,7 +302,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets the number of bytes of the serialized message.
         /// </summary>
-        public long SerializedMessageSize
+        public virtual long SerializedMessageSize
         {
             get => this.Serialize(true);
         }
@@ -354,13 +354,13 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Creates a message with a Data list as the body.
+        /// Creates a message with one or more Data sections as the body.
         /// </summary>
-        /// <param name="dataList"></param>
+        /// <param name="dataList">The Data sections.</param>
         /// <returns>An AmqpMessage.</returns>
-        public static AmqpMessage Create(IList<Data> dataList)
+        public static AmqpMessage Create(IEnumerable<Data> dataList)
         {
-            return new AmqpDataMessage(dataList);
+            return new AmqpDataMessage(dataList is IList<Data> list ? list : dataList.ToArray());
         }
 
         /// <summary>
@@ -388,9 +388,9 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="amqpSequence"></param>
         /// <returns>An AmqpMessage.</returns>
-        public static AmqpMessage Create(IList<AmqpSequence> amqpSequence)
+        public static AmqpMessage Create(IEnumerable<AmqpSequence> amqpSequence)
         {
-            return new AmqpSequenceMessage(amqpSequence);
+            return new AmqpSequenceMessage(amqpSequence is IList<AmqpSequence> list ? list : amqpSequence.ToArray());
         }
 
         /// <summary>
@@ -452,7 +452,7 @@ namespace Microsoft.Azure.Amqp
         /// Creates a stream from the bytes of the serialized message.
         /// </summary>
         /// <returns></returns>
-        public Stream ToStream()
+        public virtual Stream ToStream()
         {
             this.Initialize(SectionFlag.All, true);
             return new MemoryStream(this.buffer.Buffer, this.buffer.Offset, this.buffer.Length);
@@ -527,16 +527,17 @@ namespace Microsoft.Azure.Amqp
             return buffer == null ? null : new ArraySegment<byte>[] { buffer.AsSegment() };
         }
 
-        /// <summary>
-        /// Disposes the message and releases the buffer.
-        /// </summary>
-        public override void Dispose()
+        /// <inheritdoc />
+        protected override void Dispose(bool disposing)
         {
             this.disposeState |= MessageDisposed;
             this.ReleaseBuffer();
         }
 
-        internal void ThrowIfDisposed()
+        /// <summary>
+        /// Throws an <see cref="ObjectDisposedException"/> if the message is already disposed.
+        /// </summary>
+        public void ThrowIfDisposed()
         {
             if ((this.disposeState & MessageDisposed) > 0)
             {
@@ -866,7 +867,7 @@ namespace Microsoft.Azure.Amqp
                 this.messageSize = buffer.Length;
             }
 
-            public override void Dispose()
+            protected override void Dispose(bool disposing)
             {
                 this.source?.Dispose();
                 base.Dispose();
@@ -960,7 +961,7 @@ namespace Microsoft.Azure.Amqp
                 };
             }
 
-            public override void Dispose()
+            protected override void Dispose(bool disposing)
             {
                 base.Dispose();
                 if (this.ownStream)

@@ -4,13 +4,14 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.ComponentModel;
     using System.Diagnostics.Tracing;
     using System.Text;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transport;
 
     /// <summary>
-    /// Defines whether and how frames should be traced. Handles AMQP protocol events.
+    /// Handles AMQP protocol events and writes <see cref="EventSource"/> events by default.
     /// </summary>
     public class AmqpTrace
     {
@@ -411,6 +412,261 @@ namespace Microsoft.Azure.Amqp
                 AmqpEventSource.Log.AmqpIoEvent(source.ToString(), (int)ioEvent, queueSize);
             }
         }
+
+#pragma warning disable 1591
+        // These APIs are deprecated. Provide there for back compat only. Implementations will
+        // not get called but at least they will not get runtime errors.
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpOpenConnection(object source, object connection)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpOpenConnection(source.ToString(), connection.ToString());
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpCloseConnection(object source, object connection, bool abort)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpCloseConnection(source.ToString(), connection.ToString(), abort);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpAddSession(object source, object session, ushort localChannel, ushort remoteChannel)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpAddSession(source.ToString(), session.ToString(), localChannel, remoteChannel);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpAttachLink(object connection, object session, object link, uint localHandle, uint remoteHandle, string linkName, string role, object source, object target)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpAttachLink(connection.ToString(), session.ToString(), link.ToString(), localHandle, remoteHandle, linkName, role, string.Empty);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpDeliveryNotFound(object source, string deliveryTag)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpDeliveryNotFound(source.ToString(), deliveryTag);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpDispose(object source, uint deliveryId, bool settled, object state)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Verbose, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpDispose(source.ToString(), deliveryId, settled, state == null ? string.Empty : state.ToString());
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpDynamicBufferSizeChange(object source, string type, int oldSize, int newSize)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpDynamicBufferSizeChange(source.ToString(), type, oldSize, newSize);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpInsecureTransport(object source, object transport, bool isSecure, bool isAuthenticated)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpInsecureTransport(source.ToString(), transport.ToString(), isSecure, isAuthenticated);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpLinkDetach(object source, string name, uint handle, string action, string error)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpLinkDetach(source.ToString(), name, handle, action, error);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpListenSocketAcceptError(object source, bool willRetry, string error)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Error, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpListenSocketAcceptError(source.ToString(), willRetry, error);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpLogError(object source, string operation, string message)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Error, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpLogError(source.ToString(), operation, message);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpMissingHandle(object source, string type, uint handle)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Warning, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpMissingHandle(source.ToString(), type, handle);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpOpenEntityFailed(object source, object obj, string name, string entityName, string error)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Error, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpOpenEntityFailed(source.ToString(), name, entityName, error);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpOpenEntitySucceeded(object source, object obj, string name, string entityName)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpOpenEntitySucceeded(source.ToString(), name, entityName);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpSentMessage(object source, uint deliveryId, long bytes)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Verbose, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpSentMessage(source.ToString(), deliveryId, bytes);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpReceiveMessage(object source, uint deliveryId, int transferCount)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Verbose, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpReceiveMessage(source.ToString(), deliveryId, transferCount);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpRemoveLink(object connection, object session, object link, uint localHandle, uint remoteHandle, string linkName)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpRemoveLink(connection.ToString(), session.ToString(), link.ToString(), localHandle, remoteHandle, linkName);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpRemoveSession(object source, object session, ushort localChannel, ushort remoteChannel)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpRemoveSession(source.ToString(), session.ToString(), localChannel, remoteChannel);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpSessionWindowClosed(object source, int nextId)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpSessionWindowClosed(source.ToString(), nextId);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpStateTransition(object source, string operation, object fromState, object toState)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpStateTransition(source.ToString(), operation, fromState.ToString(), toState.ToString());
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpUpgradeTransport(object source, object from, object to)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpUpgradeTransport(source.ToString(), from.ToString(), to.ToString());
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpAbortThrowingException(string exception)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Error, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpAbortThrowingException(exception);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpCacheMessage(object source, uint deliveryId, int count, bool isPrefecthingBySize, long totalCacheSizeInBytes, uint totalLinkCredit, uint linkCredit)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Verbose, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpCacheMessage(source.ToString(), deliveryId, count, totalLinkCredit, linkCredit);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpIoEvent(object source, int ioEvent, long queueSize)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Informational, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpIoEvent(source.ToString(), ioEvent, queueSize);
+            }
+        }
+
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public virtual void AmqpHandleException(Exception exception, string traceInfo)
+        {
+            if (AmqpEventSource.Log.IsEnabled(EventLevel.Error, EventKeywords.None))
+            {
+                AmqpEventSource.Log.AmqpHandleException(exception.ToString(), traceInfo);
+            }
+        }
+#pragma warning restore 1591
 
         internal static void OnProtocolHeader(ProtocolHeader header, bool send)
         {

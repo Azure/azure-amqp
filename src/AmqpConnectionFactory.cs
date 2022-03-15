@@ -15,6 +15,7 @@ namespace Microsoft.Azure.Amqp
     public class AmqpConnectionFactory
     {
         readonly AmqpSettings settings;
+        TlsTransportSettings tlsSettings;
 
         /// <summary>
         /// Initializes a factory with default protocol settings.
@@ -37,6 +38,22 @@ namespace Microsoft.Azure.Amqp
         /// Gets the protocol settings of the factory.
         /// </summary>
         public AmqpSettings Settings => this.settings;
+
+        /// <summary>
+        /// Gets the TLS transport settings.
+        /// </summary>
+        public TlsTransportSettings TlsSettings
+        {
+            get
+            {
+                if (this.tlsSettings == null)
+                {
+                    this.tlsSettings = new TlsTransportSettings();
+                }
+
+                return this.tlsSettings;
+            }
+        }
 
         /// <summary>
         /// Opens a connection to the specified address with a default operation timeout.
@@ -162,6 +179,7 @@ namespace Microsoft.Azure.Amqp
                     Port = addressUri.Port > -1 ? addressUri.Port : AmqpConstants.DefaultSecurePort
                 };
 
+                // Provider first, then TLS settings
                 var tls = new TlsTransportSettings(tcpSettings) { TargetHost = addressUri.Host };
                 TlsTransportProvider tlsProvider = this.settings.GetTransportProvider<TlsTransportProvider>();
                 if (tlsProvider != null)
@@ -170,6 +188,14 @@ namespace Microsoft.Azure.Amqp
                     tls.CheckCertificateRevocation = tlsProvider.Settings.CheckCertificateRevocation;
                     tls.Certificate = tlsProvider.Settings.Certificate;
                     tls.Protocols = tlsProvider.Settings.Protocols;
+                }
+
+                if (this.tlsSettings != null)
+                {
+                    tls.CertificateValidationCallback = this.tlsSettings.CertificateValidationCallback;
+                    tls.CheckCertificateRevocation = this.tlsSettings.CheckCertificateRevocation;
+                    tls.Certificate = this.tlsSettings.Certificate;
+                    tls.Protocols = this.tlsSettings.Protocols;
                 }
 
                 transportSettings = tls;

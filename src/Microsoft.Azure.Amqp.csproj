@@ -21,7 +21,7 @@
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <Configurations>Debug;Release;Signed</Configurations>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <LangVersion>9</LangVersion>
   </PropertyGroup>
 
@@ -50,6 +50,19 @@
     <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <RunApiCompat Condition="!Exists('..\apicompat\$(AssemblyName).dll')">false</RunApiCompat>
+    <ApiCompatExcludeAttributeList>..\apicompat\attr-exclude.txt</ApiCompatExcludeAttributeList>
+    <ApiCompatBaseline>..\apicompat\baseline.txt</ApiCompatBaseline>
+    <BaselineAllAPICompatError>true</BaselineAllAPICompatError>
+  </PropertyGroup>
+  <ItemGroup>
+    <ResolvedMatchingContract Include="..\apicompat\$(AssemblyName).dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.19557.20" PrivateAssets="All" />
+  </ItemGroup>
+  
   <!--
     Build time packages
     All should have PrivateAssets="All" set so they don't become package dependencies

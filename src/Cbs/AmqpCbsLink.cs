@@ -109,7 +109,7 @@ namespace Microsoft.Azure.Amqp
             }
 
             TimeoutHelper timeoutHelper = new TimeoutHelper(timeout);
-            CbsToken token = await tokenProvider.GetTokenAsync(namespaceAddress, resource, requiredClaims, cancellationToken).ConfigureAwait(false);
+            CbsToken token = await tokenProvider.GetTokenAsync(namespaceAddress, resource, requiredClaims).ConfigureAwait(false);
             string tokenType = token.TokenType;
             if (tokenType == null)
             {
@@ -208,7 +208,7 @@ namespace Microsoft.Azure.Amqp
                     link = new RequestResponseAmqpLink("cbs", session, address, properties);
                     await Task.Factory.FromAsync(
                         (lk, t, k, c, s) => lk.BeginOpen(t, k, c, s),
-                        (r) => ((AmqpLink)r.AsyncState).EndOpen(r),
+                        (r) => ((RequestResponseAmqpLink)r.AsyncState).EndOpen(r),
                         link,
                         timeoutHelper.RemainingTime(),
                         cancellationToken,

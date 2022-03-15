@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.ComponentModel;
     using System.Net;
     using System.Security.Principal;
     using Microsoft.Azure.Amqp.Encoding;
@@ -67,6 +68,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets the remote endpoint.
         /// </summary>
+        [Obsolete]
         public EndPoint RemoteEndpoint
         {
             get { return this.asyncIO.Transport.RemoteEndPoint; }
@@ -92,7 +94,11 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal AsyncIO AsyncIO
+        /// <summary>
+        /// Gets the AsyncIO of the connection (for internal use only).
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        protected AsyncIO AsyncIO
         {
             get { return this.asyncIO; }
         }
@@ -128,6 +134,16 @@ namespace Microsoft.Azure.Amqp
         public void SendBuffer(ByteBuffer cmdBuffer, ByteBuffer payload)
         {
             this.asyncIO.WriteBuffer(cmdBuffer, payload);
+        }
+
+        /// <summary>
+        /// Must not be used.
+        /// </summary>
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void SendBuffers(ByteBuffer[] buffers)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

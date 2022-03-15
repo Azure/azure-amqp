@@ -86,6 +86,7 @@ namespace Microsoft.Azure.Amqp
             {
                 amqpObject = await this.createObjectOld(timeout).ConfigureAwait(false);
             }
+            else
             {
                 amqpObject = await this.createObjectInternal(timeout, cancellationToken).ConfigureAwait(false);
             }

@@ -14,7 +14,10 @@ function GetAssemblyVersionFromFile($filename)
 
 function Build-Solution
 {
-	Param($Configuration, $Platform)
+	Param(
+	    [String] $Configuration = 'Debug',
+		[String] $Platform = 'Any CPU'
+	)
 
 	msbuild.exe amqp.sln /t:restore /p:Configuration=$Configuration /p:Platform="$Platform" /verbosity:minimal
 	if (-Not $?)
@@ -31,7 +34,9 @@ function Build-Solution
 
 function Run-Tests
 {
-	Param($Configuration)
+	Param(
+	    [String] $Configuration = 'Debug'
+	)
 
 	dotnet.exe test -c $Configuration --no-build .\test\Test.Microsoft.Amqp\Test.Microsoft.Amqp.csproj
 	if (-Not $?)
@@ -42,7 +47,9 @@ function Run-Tests
 
 function Create-Package
 {
-	Param($Configuration)
+	Param(
+	    [String] $Configuration = 'Signed'
+	)
 
 	$ver = GetAssemblyVersionFromFile(".\src\Properties\Version.cs")
 	dotnet.exe pack -p:Version=$ver -c $Configuration --no-build .\src\Microsoft.Azure.Amqp.csproj

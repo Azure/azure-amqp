@@ -16,6 +16,8 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>Descriptor code.</summary>
         public static readonly ulong Code = 0x0000000000000075;
 
+        ArraySegment<byte> segment;
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -24,15 +26,29 @@ namespace Microsoft.Azure.Amqp.Framing
         }
 
         /// <summary>
-        /// Gets or sets the value.
+        /// Gets or sets the value. If this property is used, the <see cref="DescribedType.Value"/>
+        /// base property must not be used.
         /// </summary>
-        public ArraySegment<byte> Segment { get; set; }
-
-        /// <inheritdoc />
-        public override object Value
+        public ArraySegment<byte> Segment
         {
-            get { return Segment; }
-            set { Segment = (ArraySegment<byte>) value; }
+            get
+            {
+                if (this.segment.Array != null)
+                {
+                    return this.segment;
+                }
+
+                if (this.Value != null)
+                {
+                    return (ArraySegment<byte>)this.Value;
+                }
+
+                return default;
+            }
+            set
+            {
+                this.segment = value;
+            }
         }
 
         internal override int GetValueEncodeSize()

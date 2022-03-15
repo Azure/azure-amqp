@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
@@ -24,7 +25,7 @@ namespace Microsoft.Azure.Amqp
         readonly HandleTable<AmqpSession> sessionsByLocalHandle;
         readonly HandleTable<AmqpSession> sessionsByRemoteHandle;
         HeartBeat heartBeat;
-        Dictionary<Type, object> extensions;
+        KeyedByTypeCollection<object> extensions;
 
         /// <summary>
         /// The default factory instance to create connections.
@@ -117,13 +118,13 @@ namespace Microsoft.Azure.Amqp
         /// <remarks><see cref="Extensions.AddExtension(AmqpConnection, object)"/> and
         /// <see cref="Extensions.TryGetExtension{T}(AmqpConnection, out T)"/> should be used
         /// to add or find objects from the collection.</remarks>
-        public IDictionary<Type, object> Extensions
+        public KeyedByTypeCollection<object> Extensions
         {
             get
             {
                 if (this.extensions == null)
                 {
-                    this.extensions = new Dictionary<Type, object>();
+                    this.extensions = new KeyedByTypeCollection<object>();
                 }
 
                 return this.extensions;
@@ -193,6 +194,16 @@ namespace Microsoft.Azure.Amqp
                 session.SafeClose();
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Must not be used.
+        /// </summary>
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void SendCommand(Performative command, ushort channel, ArraySegment<byte>[] payload)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -452,7 +463,7 @@ namespace Microsoft.Azure.Amqp
                 this.Settings.AddProperty(AmqpConstants.OpenErrorName, Error.FromException(this.TerminalException));
             }
 
-            this.SendCommand(this.Settings, 0, null);
+            this.SendCommand(this.Settings, 0, (ByteBuffer)null);
         }
 
         void SendClose()
@@ -464,7 +475,7 @@ namespace Microsoft.Azure.Amqp
                 close.Error = Error.FromException(this.TerminalException);
             }
 
-            this.SendCommand(close, 0, null);
+            this.SendCommand(close, 0, (ByteBuffer)null);
         }
 
         void OnReceiveOpen(Open open)
@@ -753,7 +764,7 @@ namespace Microsoft.Azure.Amqp
                         if (thisPtr.remoteInterval < uint.MaxValue &&
                             now.Subtract(thisPtr.lastSendTime).TotalMilliseconds >= thisPtr.remoteInterval)
                         {
-                            thisPtr.connection.SendCommand(null, 0, null);
+                            thisPtr.connection.SendCommand(null, 0, (ByteBuffer)null);
                         }
 
                         thisPtr.heartBeatTimer.Change(thisPtr.GetTimerInterval(now), Timeout.InfiniteTimeSpan);

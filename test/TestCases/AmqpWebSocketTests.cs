@@ -8,14 +8,10 @@ namespace Test.Microsoft.Azure.Amqp
     using global::Microsoft.Azure.Amqp.Framing;
     using Xunit;
     using TestAmqpBroker;
-    using System.Diagnostics;
 
     [Trait("Category", TestCategory.Current)]
     public class AmqpWebSocketTests : IClassFixture<TestAmqpBrokerFixture>
     {
-        static readonly ArraySegment<byte> NullBinary = new ArraySegment<byte>();
-        static readonly ArraySegment<byte> EmptyBinary = new ArraySegment<byte>(new byte[0]);
-
         TestAmqpBroker broker;
 
         public AmqpWebSocketTests(TestAmqpBrokerFixture testAmqpBrokerFixture)
@@ -42,8 +38,7 @@ namespace Test.Microsoft.Azure.Amqp
             for (int i = 0; i < messageCount; i++)
             {
                 AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "message" + i });
-                sLink.SendMessageAsync(message, EmptyBinary, NullBinary, TimeSpan.FromSeconds(10)).Wait();
-
+                sLink.SendMessageAsync(message).Wait();
             }
 
             sLink.Close();

@@ -21,6 +21,7 @@ namespace Microsoft.Azure.Amqp
         readonly ConcurrentQueue<AmqpMessage> messageQueue;
         readonly WorkCollection<ArraySegment<byte>, DisposeAsyncResult, DeliveryState> pendingDispositions;
         readonly WaiterManager waiterManager;
+        readonly PrefetchSizeTracker prefetchSizeTracker;
         Action<AmqpMessage> messageListener;
         AmqpMessage currentMessage;
         int checkWaiterCount;
@@ -45,6 +46,11 @@ namespace Microsoft.Azure.Amqp
             this.messageQueue = new ConcurrentQueue<AmqpMessage>();
             this.pendingDispositions = new WorkCollection<ArraySegment<byte>, DisposeAsyncResult, DeliveryState>();
             this.waiterManager = new WaiterManager(this);
+            if (settings.TotalCacheSizeInBytes != null)
+            {
+                this.prefetchSizeTracker = new PrefetchSizeTracker(this, settings.TotalCacheSizeInBytes.Value);
+                this.prefetchSizeTracker.Update();
+            }
         }
 
         /// <summary>
@@ -98,7 +104,7 @@ namespace Microsoft.Azure.Amqp
         {
             return Task.Factory.FromAsync(
                 static (t, k, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessageBatch(1, TimeSpan.Zero, t, k, c, s),
-                static r => { ((ReceivingAmqpLink)r.AsyncState).EndReceiveMessageBatch(r, out var messages); return messages.Count > 0 ? messages[0] : null; },
+                static r => { ((ReceivingAmqpLink)r.AsyncState).EndReceiveMessageSingle(r, out var message); return message; },
                 timeout,
                 cancellationToken,
                 this);
@@ -110,7 +116,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="messageCount">The desired number of messages.</param>
         /// <param name="batchWaitTimeout">The time to wait for more messages in the batch after the first message is available.</param>
         /// <returns>A list of messages when the task is completed. Empty if there is no message available.</returns>
-        public Task<IReadOnlyList<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout)
+        public Task<IEnumerable<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout)
         {
             return this.ReceiveMessagesAsync(messageCount, batchWaitTimeout, this.OperationTimeout, CancellationToken.None);
         }
@@ -122,7 +128,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="batchWaitTimeout">The time to wait for more messages in the batch after the first message is available.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
         /// <returns>A list of messages when the task is completed. Empty if there is no message available.</returns>
-        public Task<IReadOnlyList<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout, CancellationToken cancellationToken)
+        public Task<IEnumerable<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout, CancellationToken cancellationToken)
         {
             return this.ReceiveMessagesAsync(messageCount, batchWaitTimeout, TimeSpan.MaxValue, cancellationToken);
         }
@@ -135,7 +141,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="timeout">The time to wait for the first message to become available.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
         /// <returns>A list of messages when the task is completed. Empty if there is no message available.</returns>
-        public Task<IReadOnlyList<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, CancellationToken cancellationToken)
+        public Task<IEnumerable<AmqpMessage>> ReceiveMessagesAsync(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
                 static (p, c, s) => ((ReceivingAmqpLink)s).BeginReceiveMessageBatch(p.MessageCount, p.BatchWaitTime, p.Timeout, p.CancellationToken, c, s),
@@ -575,7 +581,14 @@ namespace Microsoft.Azure.Amqp
             return waiter;
         }
 
-        bool EndReceiveMessageBatch(IAsyncResult result, out IReadOnlyList<AmqpMessage> messages)
+        bool EndReceiveMessageSingle(IAsyncResult result, out AmqpMessage message)
+        {
+            bool completed = ReceiveAsyncResult.End(result, out List<AmqpMessage> list);
+            message = list.Count > 0 ? list[0] : null;
+            return completed;
+        }
+
+        bool EndReceiveMessageBatch(IAsyncResult result, out IEnumerable<AmqpMessage> messages)
         {
             bool completed = ReceiveAsyncResult.End(result, out List<AmqpMessage> list);
             messages = list;
@@ -644,6 +657,7 @@ namespace Microsoft.Azure.Amqp
             else
             {
                 AmqpTrace.Provider.AmqpCacheMessage(this, message.DeliveryId.Value, message.Segments, this.Settings.TotalLinkCredit, this.LinkCredit);
+                this.prefetchSizeTracker?.Track(message);
                 this.messageQueue.Enqueue(message);
                 this.CheckWaiter();
             }
@@ -752,6 +766,82 @@ namespace Microsoft.Azure.Amqp
             public readonly ArraySegment<byte> TxnId;
             public readonly Outcome Outcome;
             public readonly bool Batchable;
+        }
+
+        sealed class PrefetchSizeTracker
+        {
+            const uint MinCredit = 10;
+            const uint MaxCredit = 10000;
+            const ulong CreditUpdateInterval = 50;
+            const ulong ResetThreshold = ulong.MaxValue - MaxCredit * 100 * 1024;
+            readonly ReceivingAmqpLink parent;
+            readonly ulong totalCacheSize;
+            ulong totalMessageSize;
+            ulong totalMessageCount;
+            uint credit;
+
+            public PrefetchSizeTracker(ReceivingAmqpLink parent, long totalCacheSize)
+            {
+                this.parent = parent;
+                this.totalCacheSize = (ulong)totalCacheSize;
+                this.credit = MinCredit;   // start small
+            }
+
+            public void Track(AmqpMessage message)
+            {
+                this.totalMessageSize += (ulong)message.SerializedMessageSize;
+                this.totalMessageCount++;
+                if (this.totalMessageCount % CreditUpdateInterval == 0)
+                {
+                    this.Update();
+                }
+            }
+
+            public void Update()
+            {
+                ulong size = this.totalMessageSize;
+                ulong count = this.totalMessageCount;
+                bool sendFlow = false;
+                if (size > 0 && count > 0)
+                {
+                    ulong average = size / count;
+                    uint result = (uint)(this.totalCacheSize / average);
+                    if (result < MinCredit)
+                    {
+                        result = MinCredit;
+                    }
+                    else if (result > MaxCredit)
+                    {
+                        result = MaxCredit;
+                    }
+                    else
+                    {
+                        // make it multiples of min to reduce flows
+                        result = result / MinCredit * MinCredit;
+                    }
+
+                    sendFlow = result > this.credit;
+                    this.credit = result;
+
+                    if (size >= ResetThreshold)
+                    {
+                        // Do not reset to 0. Try to keep the learnt average.
+                        this.totalMessageCount = MaxCredit;
+                        this.totalMessageSize = MaxCredit * average;
+                    }
+                }
+
+                lock (this.parent.SyncRoot)
+                {
+                    this.parent.Settings.TotalLinkCredit = this.credit;
+                    this.parent.LinkCredit = this.credit;
+                }
+
+                if (sendFlow)
+                {
+                    this.parent.SendFlow(false);
+                }
+            }
         }
 
         sealed class ReceiveAsyncResult : AsyncResult

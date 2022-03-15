@@ -34,6 +34,17 @@ namespace Microsoft.Azure.Amqp.Encoding
         }
 
         /// <summary>
+        /// Gets or sets a value for a given key.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>The value. Null if the key doesn't exist.</returns>
+        public new object this[MapKey key]
+        {
+            get { return base.TryGetValue(key, out object value) ? value : null; }
+            set { base[key] = value; }
+        }
+
+        /// <summary>
         /// Gets a value from the map for a given key.
         /// </summary>
         /// <typeparam name="TValue">The expected type of the value.</typeparam>

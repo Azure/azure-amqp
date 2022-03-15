@@ -268,8 +268,8 @@
                     {
                         while (enumerator1.MoveNext() && enumerator2.MoveNext())
                         {
-                            ArraySegment<byte> data1 = (ArraySegment<byte>)enumerator1.Current.Value;
-                            ArraySegment<byte> data2 = (ArraySegment<byte>)enumerator1.Current.Value;
+                            ArraySegment<byte> data1 = enumerator1.Current.Segment;
+                            ArraySegment<byte> data2 = (ArraySegment<byte>)enumerator2.Current.Value;
                             Assert.Equal(data1.Count, data2.Count);
                         }
                     }

@@ -63,7 +63,9 @@ namespace Microsoft.Azure.Amqp.Framing
 
         internal override void DecodeValue(ByteBuffer buffer)
         {
-            this.Segment = AmqpCodec.DecodeBinary(buffer);
+            this.segment = AmqpCodec.DecodeBinary(buffer);
+            // Have to set this for back compat
+            this.Value = this.segment;
         }
 
         /// <summary>

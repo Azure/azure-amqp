@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Amqp
             base("receiver", session, settings)
         {
             this.messageQueue = new ConcurrentQueue<AmqpMessage>();
-            this.pendingDispositions = new WorkCollection<ArraySegment<byte>, DisposeAsyncResult, DeliveryState>();
+            this.pendingDispositions = new WorkCollection<ArraySegment<byte>, DisposeAsyncResult, DeliveryState>(ByteArrayComparer.Instance);
             this.waiterManager = new WaiterManager(this);
             if (settings.TotalCacheSizeInBytes != null)
             {

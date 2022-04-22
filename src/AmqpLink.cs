@@ -712,7 +712,16 @@ namespace Microsoft.Azure.Amqp
             }
 
             this.Session.Flush();
-            state = this.SendDetach();
+
+            if (StateTransition.CanTransite(state, StateTransition.SendClose))
+            {
+                state = this.SendDetach();
+            }
+            else
+            {
+                state = this.State = AmqpObjectState.End;
+            }
+
             return state == AmqpObjectState.End;
         }
 

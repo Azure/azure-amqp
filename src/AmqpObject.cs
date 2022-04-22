@@ -405,16 +405,6 @@ namespace Microsoft.Azure.Amqp
         {
             this.TerminalException = exception;
 
-            lock (this.thisLock)
-            {
-                if (this.State != AmqpObjectState.OpenReceived &&
-                    !this.IsClosing() &&
-                    !StateTransition.CanTransite(this.State, StateTransition.SendClose))
-                {
-                    this.State = AmqpObjectState.Faulted;
-                }
-            }
-
             try
             {
                 this.BeginClose(this.OperationTimeout, onSafeCloseComplete, this);
@@ -474,8 +464,7 @@ namespace Microsoft.Azure.Amqp
             return state == AmqpObjectState.CloseSent ||
                 state == AmqpObjectState.CloseReceived ||
                 state == AmqpObjectState.ClosePipe ||
-                state == AmqpObjectState.End ||
-                state == AmqpObjectState.Faulted;
+                state == AmqpObjectState.End;
         }
 
         /// <summary>
@@ -669,7 +658,8 @@ namespace Microsoft.Azure.Amqp
             {
                 closed = (this.closeCalled ||
                     this.State == AmqpObjectState.End ||
-                    this.State == AmqpObjectState.CloseSent);
+                    this.State == AmqpObjectState.CloseSent ||
+                    this.State == AmqpObjectState.ClosePipe);
                 this.closeCalled = true;
             }
 

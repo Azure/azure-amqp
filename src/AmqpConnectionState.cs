@@ -61,10 +61,5 @@ namespace Microsoft.Azure.Amqp
         /// A close/end/detach is exchanged with the peer.
         /// </summary>
         End = 12,
-        /// <summary>
-        /// The object is in a state that is not allowed by the state machine.
-        /// It does a best effort to notify the remote peer to end the object.
-        /// </summary>
-        Faulted = 13,
     }
 }

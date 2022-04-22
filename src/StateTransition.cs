@@ -26,7 +26,6 @@ namespace Microsoft.Azure.Amqp
             new StateTransition(AmqpObjectState.CloseReceived, AmqpObjectState.End),
             new StateTransition(AmqpObjectState.OpenSent, AmqpObjectState.ClosePipe),
             new StateTransition(AmqpObjectState.OpenPipe, AmqpObjectState.OpenClosePipe),
-            new StateTransition(AmqpObjectState.Faulted, AmqpObjectState.Faulted),
         };
 
         static StateTransition[] receiveHeader = new StateTransition[]
@@ -51,7 +50,6 @@ namespace Microsoft.Azure.Amqp
             new StateTransition(AmqpObjectState.Opened, AmqpObjectState.CloseReceived),
             new StateTransition(AmqpObjectState.CloseSent, AmqpObjectState.End),
             new StateTransition(AmqpObjectState.OpenReceived, AmqpObjectState.ClosePipe),
-            new StateTransition(AmqpObjectState.Faulted, AmqpObjectState.End),
         };
 
         public StateTransition(AmqpObjectState from, AmqpObjectState to)

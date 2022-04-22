@@ -89,7 +89,6 @@ namespace Microsoft.Azure.Amqp.Transport
         /// </summary>
         protected override void AbortInternal()
         {
-            this.State = AmqpObjectState.Faulted;
             foreach (TransportListener listener in this.innerListeners.ToArray())
             {
                 listener.Abort();

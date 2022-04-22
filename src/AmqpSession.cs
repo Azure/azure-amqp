@@ -337,14 +337,24 @@ namespace Microsoft.Azure.Amqp
         /// <remarks>All links in the session are also closed.</remarks>
         protected override bool CloseInternal()
         {
-            if (this.State == AmqpObjectState.OpenReceived)
+            AmqpObjectState state = this.State;
+            if (state == AmqpObjectState.OpenReceived)
             {
-                this.SendBegin();
+                state = this.SendBegin();
             }
 
             this.CloseLinks(!this.LinkFrameAllowed());
             AmqpDebug.Dump(this);
-            AmqpObjectState state = this.SendEnd();
+
+            if (StateTransition.CanTransite(state, StateTransition.SendClose))
+            {
+                state = this.SendEnd();
+            }
+            else
+            {
+                state = this.State = AmqpObjectState.End;
+            }
+
             return state == AmqpObjectState.End;
         }
 

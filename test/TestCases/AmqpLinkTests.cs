@@ -546,6 +546,49 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [Fact]
+        public void AmqpConnectionCreateCloseTest()
+        {
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 1024);
+            connection.Close();
+        }
+
+        [Fact]
+        public void AmqpSessionCreateCloseTest()
+        {
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 1024);
+            connection.Open();
+            AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+            session.Close();
+            connection.Close();
+        }
+
+        [Fact]
+        public void AmqpLinkCreateAttachFailCloseTest()
+        {
+            string queue = "AmqpLinkCreateAttachFailCloseTest";
+
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 1024);
+            connection.Open();
+            AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+            session.Open();
+            SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnReceive));
+            sLink.Open();
+
+            SendingAmqpLink sLink2 = new SendingAmqpLink(AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnReceive));
+            try
+            {
+                sLink2.AttachTo(session);
+            }
+            catch (AmqpException ae) when (ae.Error.Condition.Equals(AmqpErrorCode.ResourceLocked))
+            {
+            }
+
+            sLink2.Close();
+
+            connection.Close();
+        }
+
+        [Fact]
         public void AmqpTransactionTest()
         {
             const int messageCount = 6;

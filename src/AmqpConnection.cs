@@ -277,18 +277,19 @@ namespace Microsoft.Azure.Amqp
             this.heartBeat.Stop();
             this.CloseSessions(!this.SessionFrameAllowed());
 
-            if (this.State == AmqpObjectState.OpenReceived)
+            AmqpObjectState state = this.State;
+            if (state == AmqpObjectState.OpenReceived)
             {
-                this.SendOpen();
+                state = this.SendOpen();
             }
 
-            try
+            if (StateTransition.CanTransite(state, StateTransition.SendClose))
             {
-                this.SendClose();
+                state = this.SendClose();
             }
-            catch (AmqpException)
+            else
             {
-                this.State = AmqpObjectState.End;
+                state = this.State = AmqpObjectState.End;
             }
 
             bool completed = this.State == AmqpObjectState.End;
@@ -455,20 +456,22 @@ namespace Microsoft.Azure.Amqp
             this.SendDatablock(header);
         }
 
-        void SendOpen()
+        AmqpObjectState SendOpen()
         {
-            this.TransitState("S:OPEN", StateTransition.SendOpen);
+            StateTransition transition = this.TransitState("S:OPEN", StateTransition.SendOpen);
             if (this.TerminalException != null)
             {
                 this.Settings.AddProperty(AmqpConstants.OpenErrorName, Error.FromException(this.TerminalException));
             }
 
             this.SendCommand(this.Settings, 0, (ByteBuffer)null);
+
+            return transition.To;
         }
 
-        void SendClose()
+        AmqpObjectState SendClose()
         {
-            this.TransitState("S:CLOSE", StateTransition.SendClose);
+            StateTransition transition = this.TransitState("S:CLOSE", StateTransition.SendClose);
             Close close = new Close();
             if (this.TerminalException != null)
             {
@@ -476,6 +479,8 @@ namespace Microsoft.Azure.Amqp
             }
 
             this.SendCommand(close, 0, (ByteBuffer)null);
+
+            return transition.To;
         }
 
         void OnReceiveOpen(Open open)

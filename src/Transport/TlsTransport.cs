@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
+    using System.IO;
     using System.Net;
     using System.Net.Security;
     using System.Security.Cryptography.X509Certificates;
@@ -109,7 +110,20 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
             }
 
-            IAsyncResult result = this.sslStream.BeginWrite(buffer.Array, buffer.Offset, buffer.Count, onWriteComplete, this);
+            IAsyncResult result;
+            try
+            {
+                result = this.sslStream.BeginWrite(buffer.Array, buffer.Offset, buffer.Count, onWriteComplete, this);
+            }
+            catch (ObjectDisposedException ode)
+            {
+                throw new IOException($"Transport '{this}' is closed", ode);
+            }
+            catch (InvalidOperationException ioe)
+            {
+                throw new IOException($"Transport '{this}' is valid for write operations.", ioe);
+            }
+
             bool completedSynchronously = result.CompletedSynchronously;
             if (completedSynchronously)
             {
@@ -130,7 +144,20 @@ namespace Microsoft.Azure.Amqp.Transport
             Fx.Assert(args.Buffer != null, "must have buffer to read");
             Fx.Assert(this.readState.Args == null, "Cannot read when a read is still in progress");
             this.readState.Args = args;
-            IAsyncResult result = this.sslStream.BeginRead(args.Buffer, args.Offset, args.Count, onReadComplete, this);
+            IAsyncResult result;
+            try
+            {
+                result = this.sslStream.BeginRead(args.Buffer, args.Offset, args.Count, onReadComplete, this);
+            }
+            catch (ObjectDisposedException ode)
+            {
+                throw new IOException($"Transport '{this}' is closed", ode);
+            }
+            catch (InvalidOperationException ioe)
+            {
+                throw new IOException($"Transport '{this}' is valid for read operations.", ioe);
+            }
+
             bool completedSynchronously = result.CompletedSynchronously;
             if (completedSynchronously)
             {
@@ -315,6 +342,11 @@ namespace Microsoft.Azure.Amqp.Transport
             }
             catch (Exception exception) when (!Fx.IsFatal(exception))
             {
+                if (exception is InvalidOperationException)
+                {
+                    exception = new IOException($"Transport '{this}' is valid for IO operations.", exception);
+                }
+
                 args.Exception = exception;
             }
 

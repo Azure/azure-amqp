@@ -1132,6 +1132,74 @@ namespace Test.Microsoft.Azure.Amqp
             await connection.CloseAsync(TimeSpan.FromSeconds(20));
         }
 
+        /// <summary>
+        /// Test link stealing where two links have the same link name but different link types. They should both be able to open without interfering each other.
+        /// </summary>
+        [Fact]
+        public async Task LinkStealingDifferentLinkTypesTest()
+        {
+            await LinkStealingTestCase(false, false);
+        }
+
+        /// <summary>
+        /// Test link stealing where two links have the same link name and type, but the link1 is closed before link2 is opened. This should not trigger any link stealing at all.
+        /// </summary>
+        [Fact]
+        public async Task LinkStealingCloseLink1TypesTest()
+        {
+            await LinkStealingTestCase(true, true);
+        }
+
+        /// <summary>
+        /// Test link stealing where two links have the same link name and type. This should trigger link stealing and close link1 due to link stealing.
+        /// </summary>
+        [Fact]
+        public async Task LinkStealingTest()
+        {
+            await LinkStealingTestCase(true, false);
+        }
+
+        async Task LinkStealingTestCase(bool sameType, bool closeLink1BeforeOpenLink2)
+        {
+            string linkName = "LinkStealing-" + Guid.NewGuid().ToString().Substring(0, 6);
+            string queueName = "link-stealing-test-queue";
+            AmqpConnection connection = await AmqpConnection.Factory.OpenConnectionAsync(addressUri, TimeSpan.FromSeconds(20));
+
+            AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+            await session.OpenAsync(TimeSpan.FromSeconds(20));
+
+            SendingAmqpLink link1 = await session.OpenLinkAsync<SendingAmqpLink>(linkName, queueName);
+
+            if (closeLink1BeforeOpenLink2)
+            {
+                await link1.CloseAsync();
+            }
+
+            bool shouldLinkBeStolen = sameType && !closeLink1BeforeOpenLink2;
+            AmqpLink link2;
+            if (sameType)
+            {
+                link2 = await session.OpenLinkAsync<SendingAmqpLink>(linkName, queueName);
+            }
+            else
+            {
+                link2 = await session.OpenLinkAsync<ReceivingAmqpLink>(linkName, queueName);
+            }
+
+            Assert.True(link2.State == AmqpObjectState.Opened);
+            if (shouldLinkBeStolen)
+            {
+                Assert.True(link1.State == AmqpObjectState.End);
+                Assert.Contains("link stealing", link1.TerminalException.Message);
+            }
+            else if (!sameType)
+            {
+                Assert.True(link1.State == AmqpObjectState.Opened);
+            }
+
+            await connection.CloseAsync();
+        }
+
         void SendReceive(
             string queue,
             int messageCount = 1,

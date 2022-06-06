@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Amqp
         readonly AmqpConnection connection;
         readonly AmqpSessionSettings settings;
         readonly ILinkFactory linkFactory;
-        Dictionary<string, AmqpLink> links;
+        Dictionary<AmqpLinkIdentifier, AmqpLink> links;
         HandleTable<AmqpLink> linksByLocalHandle;
         HandleTable<AmqpLink> linksByRemoteHandle;
         OutgoingSessionChannel outgoingChannel;
@@ -51,7 +51,7 @@ namespace Microsoft.Azure.Amqp
             this.settings = settings;
             this.linkFactory = linkFactory;
             this.State = AmqpObjectState.Start;
-            this.links = new Dictionary<string, AmqpLink>();
+            this.links = new Dictionary<AmqpLinkIdentifier, AmqpLink>();
             this.linksByLocalHandle = new HandleTable<AmqpLink>(settings.HandleMax ?? AmqpConstants.DefaultMaxLinkHandles - 1);
             this.linksByRemoteHandle = new HandleTable<AmqpLink>(settings.HandleMax ?? AmqpConstants.DefaultMaxLinkHandles - 1);
             this.outgoingChannel = new OutgoingSessionChannel(this);
@@ -175,13 +175,17 @@ namespace Microsoft.Azure.Amqp
                     throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpIllegalOperationState, "attach", this.State));
                 }
 
-                if (this.links.ContainsKey(link.Name))
+                if (this.links.TryGetValue(link.Settings.LinkIdentifier, out AmqpLink existingLink))
                 {
-                    throw new AmqpException(AmqpErrorCode.ResourceLocked, AmqpResources.GetString(AmqpResources.AmqpLinkNameInUse, link.Name, this.LocalChannel));
+                    // even though link onclose handler already removes the link from the links collection,
+                    // calling Close() is fire and forget, so we will not be waiting for the link onClose handler to trigger
+                    // before trying to add the new link to the links collection down below in this method, therefore remove it now.
+                    this.links.Remove(link.Settings.LinkIdentifier);
+                    existingLink.OnLinkStolen();
                 }
 
                 link.Closed += onLinkClosed;
-                this.links.Add(link.Name, link);
+                this.links.Add(link.Settings.LinkIdentifier, link);
                 link.LocalHandle = this.linksByLocalHandle.Add(link);
             }
 
@@ -397,16 +401,15 @@ namespace Microsoft.Azure.Amqp
             return transition.To;
         }
 
-        internal bool TryCreateRemoteLink(Attach attach, out AmqpLink link)
+        internal bool TryCreateRemoteLink(AmqpLinkSettings linkSettings, out AmqpLink link)
         {
             link = null;
+            Exception error = null;
+
             if (this.linkFactory == null)
             {
                 return false;
             }
-
-            AmqpLinkSettings linkSettings = AmqpLinkSettings.Create(attach);
-            Exception error = null;
 
             try
             {
@@ -431,8 +434,8 @@ namespace Microsoft.Azure.Amqp
                 error = exception;
             }
 
-            link.RemoteHandle = attach.Handle;
-            this.linksByRemoteHandle.Add(attach.Handle.Value, link);
+            link.RemoteHandle = linkSettings.Handle;
+            this.linksByRemoteHandle.Add(linkSettings.Handle.Value, link);
 
             if (error != null)
             {
@@ -567,14 +570,15 @@ namespace Microsoft.Azure.Amqp
             if (command.DescriptorCode == Attach.Code)
             {
                 Attach attach = (Attach)command;
+                AmqpLinkSettings linkSettings = AmqpLinkSettings.Create(attach);
                 lock (this.ThisLock)
                 {
-                    this.links.TryGetValue(attach.LinkName, out link);
+                    this.links.TryGetValue(linkSettings.LinkIdentifier, out link);
                 }
 
                 if (link == null)
                 {
-                    if (!this.TryCreateRemoteLink(attach, out link))
+                    if (!this.TryCreateRemoteLink(linkSettings, out link))
                     {
                         return;
                     }
@@ -650,7 +654,11 @@ namespace Microsoft.Azure.Amqp
             lock (thisPtr.ThisLock)
             {
                 link.Closed -= onLinkClosed;
-                thisPtr.links.Remove(link.Name);
+                if (thisPtr.links.TryGetValue(link.Settings.LinkIdentifier, out AmqpLink existingLink) && link == existingLink)
+                {
+                    thisPtr.links.Remove(link.Settings.LinkIdentifier);
+                }
+
                 if (link.LocalHandle.HasValue)
                 {
                     thisPtr.linksByLocalHandle.Remove(link.LocalHandle.Value);

@@ -394,6 +394,15 @@ namespace Microsoft.Azure.Amqp {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The link with link name {0} under connection with containerId {1} has been closed due to link stealing. .
+        /// </summary>
+        internal static string AmqpLinkStolen {
+            get {
+                return ResourceManager.GetString("AmqpLinkStolen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A link to connection &apos;{0}&apos; $management node has already been opened..
         /// </summary>
         internal static string AmqpManagementLinkAlreadyOpen {

@@ -944,6 +944,11 @@ namespace Microsoft.Azure.Amqp
             this.inflightDeliveries.DoWork(delivery);
         }
 
+        internal void OnLinkStolen()
+        {
+            this.SafeClose(new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.Name, this.Session.Connection.Settings.ContainerId)));
+        }
+
         void DisposeDeliveryInternal(Delivery delivery, bool settled, DeliveryState state, bool noFlush)
         {
             AmqpTrace.Provider.AmqpDispose(this, delivery.DeliveryId.Value, settled, state);

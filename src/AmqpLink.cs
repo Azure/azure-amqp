@@ -944,9 +944,19 @@ namespace Microsoft.Azure.Amqp
             this.inflightDeliveries.DoWork(delivery);
         }
 
-        internal void OnLinkStolen()
+        internal void OnLinkStolen(bool shouldAbort)
         {
-            this.SafeClose(new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.Name, this.Session.Connection.Settings.ContainerId)));
+            AmqpTrace.Provider.AmqpLogOperationInformational(this, shouldAbort ? TraceOperation.Abort : TraceOperation.Close, "LinkStealing");
+
+            this.TerminalException = new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.Name, this.Session.Connection.Settings.ContainerId));
+            if (shouldAbort)
+            {
+                this.Abort();
+            }
+            else
+            {
+                this.Close();
+            }
         }
 
         void DisposeDeliveryInternal(Delivery delivery, bool settled, DeliveryState state, bool noFlush)

@@ -1159,17 +1159,37 @@ namespace Test.Microsoft.Azure.Amqp
             await LinkStealingTestCase(true, false);
         }
 
-        async Task LinkStealingTestCase(bool sameType, bool closeLink1BeforeOpenLink2)
+        /// <summary>
+        /// Abort the link locally, which does not send a Detach to remote session, so the remote (broker) session will still have record of this link opened.
+        /// Link stealing should happen at remote session, and remote session should discard its existing link record and allow the new link to be attached.
+        /// </summary>
+        [Fact]
+        public async Task LinkStealingFromRemoteTest()
         {
-            string linkName = "LinkStealing-" + Guid.NewGuid().ToString().Substring(0, 6);
+            string linkName = "LinkStealingFromRemoteTest-" + Guid.NewGuid().ToString().Substring(0, 6);
             string queueName = "link-stealing-test-queue";
             AmqpConnection connection = await AmqpConnection.Factory.OpenConnectionAsync(addressUri, TimeSpan.FromSeconds(20));
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
             await session.OpenAsync(TimeSpan.FromSeconds(20));
 
-            SendingAmqpLink link1 = await session.OpenLinkAsync<SendingAmqpLink>(linkName, queueName);
+            ReceivingAmqpLink link1 = await session.OpenLinkAsync<ReceivingAmqpLink>(linkName, queueName);
+            link1.Abort();
 
+            AmqpLink link2 = await session.OpenLinkAsync<ReceivingAmqpLink>(linkName, queueName);
+            Assert.True(link2.State == AmqpObjectState.Opened);
+
+            await connection.CloseAsync();
+        }
+
+        async Task LinkStealingTestCase(bool sameType, bool closeLink1BeforeOpenLink2)
+        {
+            string linkName = "LinkStealing-" + Guid.NewGuid().ToString().Substring(0, 6);
+            string queueName = "link-stealing-test-queue";
+            AmqpConnection connection = await AmqpConnection.Factory.OpenConnectionAsync(addressUri, TimeSpan.FromSeconds(20));
+            AmqpSession session = await connection.OpenSessionAsync();
+
+            ReceivingAmqpLink link1 = await session.OpenLinkAsync<ReceivingAmqpLink>(linkName, queueName);
             if (closeLink1BeforeOpenLink2)
             {
                 await link1.CloseAsync();
@@ -1179,11 +1199,11 @@ namespace Test.Microsoft.Azure.Amqp
             AmqpLink link2;
             if (sameType)
             {
-                link2 = await session.OpenLinkAsync<SendingAmqpLink>(linkName, queueName);
+                link2 = await session.OpenLinkAsync<ReceivingAmqpLink>(linkName, queueName);
             }
             else
             {
-                link2 = await session.OpenLinkAsync<ReceivingAmqpLink>(linkName, queueName);
+                link2 = await session.OpenLinkAsync<SendingAmqpLink>(linkName, queueName);
             }
 
             Assert.True(link2.State == AmqpObjectState.Opened);

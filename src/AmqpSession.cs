@@ -176,16 +176,16 @@ namespace Microsoft.Azure.Amqp
                     throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpIllegalOperationState, "attach", this.State));
                 }
 
-                if (this.links.TryGetValue(link.Settings.LinkIdentifier, out existingLink))
+                if (this.links.TryGetValue(link.LinkIdentifier, out existingLink))
                 {
                     // even though link onclose handler already removes the link from the links collection,
                     // calling Close() is fire and forget, so we will not be waiting for the link onClose handler to trigger
                     // before trying to add the new link to the links collection down below in this method, therefore remove it now.
-                    this.links.Remove(link.Settings.LinkIdentifier);
+                    this.links.Remove(link.LinkIdentifier);
                 }
 
                 link.Closed += onLinkClosed;
-                this.links.Add(link.Settings.LinkIdentifier, link);
+                this.links.Add(link.LinkIdentifier, link);
                 link.LocalHandle = this.linksByLocalHandle.Add(link);
             }
 
@@ -577,16 +577,18 @@ namespace Microsoft.Azure.Amqp
             {
                 Attach attach = (Attach)command;
                 AmqpLinkSettings linkSettings = AmqpLinkSettings.Create(attach);
+                var linkIdentifier = new AmqpLinkIdentifier(linkSettings.LinkName, linkSettings.Role, this.Connection.Settings.ContainerId);
+
                 lock (this.ThisLock)
                 {
-                    this.links.TryGetValue(linkSettings.LinkIdentifier, out link);
+                    this.links.TryGetValue(linkIdentifier, out link);
                     if (link != null && link.State >= AmqpObjectState.OpenReceived)
                     {
                         // If the link state is past OpenReceived, it means that the link has already received an Attach frame from remote, regardless if the link open was initiated by local or remote.
                         // A single link life cycle should not receive Attach more than once, therefore if the existing link has already received an Attach, this current Attach must be for another link.
                         // In that case, remove the existing link due to link stealing and create a new link based on the Attach frame received.
                         stolenLink = link;
-                        this.links.Remove(linkSettings.LinkIdentifier);
+                        this.links.Remove(linkIdentifier);
                     }
                 }
 
@@ -678,9 +680,9 @@ namespace Microsoft.Azure.Amqp
             lock (thisPtr.ThisLock)
             {
                 link.Closed -= onLinkClosed;
-                if (thisPtr.links.TryGetValue(link.Settings.LinkIdentifier, out AmqpLink existingLink) && link == existingLink)
+                if (thisPtr.links.TryGetValue(link.LinkIdentifier, out AmqpLink existingLink) && link == existingLink)
                 {
-                    thisPtr.links.Remove(link.Settings.LinkIdentifier);
+                    thisPtr.links.Remove(link.LinkIdentifier);
                 }
 
                 if (link.LocalHandle.HasValue)

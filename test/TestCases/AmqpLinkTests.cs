@@ -1132,6 +1132,36 @@ namespace Test.Microsoft.Azure.Amqp
             await connection.CloseAsync(TimeSpan.FromSeconds(20));
         }
 
+        [Fact]
+        public void LinkIdentifierTest()
+        {
+            var original = new AmqpLinkIdentifier("Sender", false, "ContainerID");
+            IDictionary<AmqpLinkIdentifier, object> dictionary = new Dictionary<AmqpLinkIdentifier, object>();
+            dictionary.Add(original, new object());
+
+            // link name is case insensitive
+            Assert.True(dictionary.ContainsKey(new AmqpLinkIdentifier("sender", false, "ContainerID")));
+            Assert.Equal(original, new AmqpLinkIdentifier("sender", false, "ContainerID"));
+
+            // containerId is case insensitive
+            Assert.True(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", false, "containerid")));
+            Assert.Equal(original, new AmqpLinkIdentifier("Sender", false, "containerid"));
+
+            // different linkNames
+            Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender1", false, "ContainerID")));
+            Assert.NotEqual(original, new AmqpLinkIdentifier("Sender1", false, "ContainerID"));
+
+            // different roles
+            Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", null, "ContainerID")));
+            Assert.NotEqual(original, new AmqpLinkIdentifier("Sender", null, "ContainerID"));
+            Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", true, "ContainerID")));
+            Assert.NotEqual(original, new AmqpLinkIdentifier("Sender", true, "ContainerID"));
+
+            // different containerId
+            Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", false, "ContainerID1")));
+            Assert.NotEqual(original, new AmqpLinkIdentifier("Sender", false, "ContainerID1"));
+        }
+
         /// <summary>
         /// Test link stealing where two links have the same link name but different link types. They should both be able to open without interfering each other.
         /// </summary>
@@ -1145,7 +1175,7 @@ namespace Test.Microsoft.Azure.Amqp
         /// Test link stealing where two links have the same link name and type, but the link1 is closed before link2 is opened. This should not trigger any link stealing at all.
         /// </summary>
         [Fact]
-        public async Task LinkStealingCloseLink1TypesTest()
+        public async Task LinkStealingCloseLink1FirstTest()
         {
             await LinkStealingTestCase(true, true);
         }

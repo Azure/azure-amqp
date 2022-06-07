@@ -109,11 +109,6 @@ namespace Microsoft.Azure.Amqp
         internal TimeSpan OperationTimeoutInternal => this.operationTimeout;
 
         /// <summary>
-        /// Get the object used to uniquely identify an <see cref="AmqpLink"/>.
-        /// </summary>
-        internal AmqpLinkIdentifier LinkIdentifier => new AmqpLinkIdentifier(this.LinkName, this.Role);
-
-        /// <summary>
         /// Creates a settings object from an attach.
         /// </summary>
         /// <param name="attach">The attach.</param>
@@ -145,22 +140,30 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Determines whether two link settings are equal based on the <see cref="AmqpLinkIdentifier"/>.
+        /// Determines whether two link settings are equal based on <see cref="Attach.LinkName"/>
+        /// and <see cref="Attach.Role"/>. Name comparison is case insensitive.
         /// </summary>
         /// <param name="obj">The object to compare with the current object.</param>
         /// <returns>True if the specified object is equal to the current object; otherwise, false.</returns>
         public override bool Equals(object obj)
         {
             AmqpLinkSettings other = obj as AmqpLinkSettings;
-            return this.LinkIdentifier.Equals(other.LinkIdentifier);
+            if (other == null || other.LinkName == null)
+            {
+                return false;
+            }
+
+            return this.LinkName.Equals(other.LinkName, StringComparison.CurrentCultureIgnoreCase) &&
+                this.Role == other.Role;
         }
 
         /// <summary>
-        /// Get the hashcode of the link settings based on the hashcode of its <see cref="AmqpLinkIdentifier"/>.
+        /// Gets a hash code of the object.
         /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
-            return this.LinkIdentifier.GetHashCode();
+            return (this.LinkName.GetHashCode() * 397) + this.Role.GetHashCode();
         }
     }
 }

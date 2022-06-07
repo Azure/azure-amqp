@@ -203,6 +203,11 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public bool Drain => this.drain;
 
+        /// <summary>
+        /// Return the <see cref="AmqpLinkIdentifier"/> for this link.
+        /// </summary>
+        public AmqpLinkIdentifier LinkIdentifier => new AmqpLinkIdentifier(this.Name, this.settings.Role, this.Session.Connection.Settings.ContainerId);
+
         internal override TimeSpan OperationTimeout
         {
             get

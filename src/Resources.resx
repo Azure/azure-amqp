@@ -291,4 +291,7 @@
   <data name="AmqpTransportUpgradeNotAllowed" xml:space="preserve">
     <value>Cannot upgrade transport from type '{0}' to '{1}'.</value>
   </data>
+  <data name="AmqpLinkStolen" xml:space="preserve">
+    <value>The link with link name {0} under connection with containerId {1} has been closed due to link stealing. </value>
+  </data>
 </root>

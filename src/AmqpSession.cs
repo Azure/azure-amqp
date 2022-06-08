@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Amqp
         readonly AmqpConnection connection;
         readonly AmqpSessionSettings settings;
         readonly ILinkFactory linkFactory;
-        Dictionary<string, AmqpLink> links;
+        Dictionary<AmqpLinkIdentifier, AmqpLink> links;
         HandleTable<AmqpLink> linksByLocalHandle;
         HandleTable<AmqpLink> linksByRemoteHandle;
         OutgoingSessionChannel outgoingChannel;
@@ -51,7 +51,7 @@ namespace Microsoft.Azure.Amqp
             this.settings = settings;
             this.linkFactory = linkFactory;
             this.State = AmqpObjectState.Start;
-            this.links = new Dictionary<string, AmqpLink>();
+            this.links = new Dictionary<AmqpLinkIdentifier, AmqpLink>();
             this.linksByLocalHandle = new HandleTable<AmqpLink>(settings.HandleMax ?? AmqpConstants.DefaultMaxLinkHandles - 1);
             this.linksByRemoteHandle = new HandleTable<AmqpLink>(settings.HandleMax ?? AmqpConstants.DefaultMaxLinkHandles - 1);
             this.outgoingChannel = new OutgoingSessionChannel(this);
@@ -167,6 +167,7 @@ namespace Microsoft.Azure.Amqp
         public void AttachLink(AmqpLink link)
         {
             Fx.Assert(link.Session == this, "The link is not owned by this session.");
+            AmqpLink existingLink;
 
             lock (this.ThisLock)
             {
@@ -175,14 +176,22 @@ namespace Microsoft.Azure.Amqp
                     throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpIllegalOperationState, "attach", this.State));
                 }
 
-                if (this.links.ContainsKey(link.Name))
+                if (this.links.TryGetValue(link.LinkIdentifier, out existingLink))
                 {
-                    throw new AmqpException(AmqpErrorCode.ResourceLocked, AmqpResources.GetString(AmqpResources.AmqpLinkNameInUse, link.Name, this.LocalChannel));
+                    // even though link onclose handler already removes the link from the links collection,
+                    // calling Close() is fire and forget, so we will not be waiting for the link onClose handler to trigger
+                    // before trying to add the new link to the links collection down below in this method, therefore remove it now.
+                    this.links.Remove(link.LinkIdentifier);
                 }
 
                 link.Closed += onLinkClosed;
-                this.links.Add(link.Name, link);
+                this.links.Add(link.LinkIdentifier, link);
                 link.LocalHandle = this.linksByLocalHandle.Add(link);
+            }
+
+            if (existingLink != null)
+            {
+                existingLink.OnLinkStolen(false);
             }
 
             AmqpTrace.Provider.AmqpAttachLink(this.connection, this, link, link.LocalHandle.Value,
@@ -397,16 +406,15 @@ namespace Microsoft.Azure.Amqp
             return transition.To;
         }
 
-        internal bool TryCreateRemoteLink(Attach attach, out AmqpLink link)
+        internal bool TryCreateRemoteLink(AmqpLinkSettings linkSettings, out AmqpLink link)
         {
             link = null;
+            Exception error = null;
+
             if (this.linkFactory == null)
             {
                 return false;
             }
-
-            AmqpLinkSettings linkSettings = AmqpLinkSettings.Create(attach);
-            Exception error = null;
 
             try
             {
@@ -431,8 +439,8 @@ namespace Microsoft.Azure.Amqp
                 error = exception;
             }
 
-            link.RemoteHandle = attach.Handle;
-            this.linksByRemoteHandle.Add(attach.Handle.Value, link);
+            link.RemoteHandle = linkSettings.Handle;
+            this.linksByRemoteHandle.Add(linkSettings.Handle.Value, link);
 
             if (error != null)
             {
@@ -563,24 +571,46 @@ namespace Microsoft.Azure.Amqp
         void OnReceiveLinkFrame(Frame frame)
         {
             AmqpLink link = null;
+            AmqpLink stolenLink = null;
             Performative command = frame.Command;
             if (command.DescriptorCode == Attach.Code)
             {
                 Attach attach = (Attach)command;
+                AmqpLinkSettings linkSettings = AmqpLinkSettings.Create(attach);
+                var linkIdentifier = new AmqpLinkIdentifier(linkSettings.LinkName, linkSettings.Role, this.Connection.Settings.ContainerId);
+
                 lock (this.ThisLock)
                 {
-                    this.links.TryGetValue(attach.LinkName, out link);
+                    this.links.TryGetValue(linkIdentifier, out link);
+                    if (link != null && link.State >= AmqpObjectState.OpenReceived)
+                    {
+                        // If the link state is past OpenReceived, it means that the link has already received an Attach frame from remote, regardless if the link open was initiated by local or remote.
+                        // A single link life cycle should not receive Attach more than once, therefore if the existing link has already received an Attach, this current Attach must be intended for another link.
+                        // In that case, remove the existing link due to link stealing and create a new link based on the Attach frame received.
+                        stolenLink = link;
+                        this.links.Remove(linkIdentifier);
+                    }
+                }
+
+                if (stolenLink != null)
+                {
+                    // Abort the local existing link, which does not send a detach back to remote, who initiated opening a new link and is not expecting the new link to be closed.
+                    stolenLink.OnLinkStolen(true);
+                    link = null;
                 }
 
                 if (link == null)
                 {
-                    if (!this.TryCreateRemoteLink(attach, out link))
+                    if (!this.TryCreateRemoteLink(linkSettings, out link))
                     {
                         return;
                     }
                 }
                 else
                 {
+                    // This scenario indicates that the existing link has already been created locally but no Attach has been received yet.
+                    // This could only mean that the link open was initiated from local, so this Attach frame received is the reply from remote in response to the initial Attach sent by local.
+                    // Therefore, we do not need to open or close anything from local side because we just need to complete the open process locally.
                     lock (this.ThisLock)
                     {
                         link.RemoteHandle = attach.Handle;
@@ -650,7 +680,11 @@ namespace Microsoft.Azure.Amqp
             lock (thisPtr.ThisLock)
             {
                 link.Closed -= onLinkClosed;
-                thisPtr.links.Remove(link.Name);
+                if (thisPtr.links.TryGetValue(link.LinkIdentifier, out AmqpLink existingLink) && link == existingLink)
+                {
+                    thisPtr.links.Remove(link.LinkIdentifier);
+                }
+
                 if (link.LocalHandle.HasValue)
                 {
                     thisPtr.linksByLocalHandle.Remove(link.LocalHandle.Value);

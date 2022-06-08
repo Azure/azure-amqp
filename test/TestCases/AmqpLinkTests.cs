@@ -1132,6 +1132,124 @@ namespace Test.Microsoft.Azure.Amqp
             await connection.CloseAsync(TimeSpan.FromSeconds(20));
         }
 
+        [Fact]
+        public void LinkIdentifierTest()
+        {
+            var original = new AmqpLinkIdentifier("Sender", false, "ContainerID");
+            IDictionary<AmqpLinkIdentifier, object> dictionary = new Dictionary<AmqpLinkIdentifier, object>();
+            dictionary.Add(original, new object());
+
+            // link name is case insensitive
+            Assert.True(dictionary.ContainsKey(new AmqpLinkIdentifier("sender", false, "ContainerID")));
+            Assert.Equal(original, new AmqpLinkIdentifier("sender", false, "ContainerID"));
+
+            // containerId is case insensitive
+            Assert.True(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", false, "containerid")));
+            Assert.Equal(original, new AmqpLinkIdentifier("Sender", false, "containerid"));
+
+            // different linkNames
+            Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender1", false, "ContainerID")));
+            Assert.NotEqual(original, new AmqpLinkIdentifier("Sender1", false, "ContainerID"));
+
+            // different roles
+            Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", null, "ContainerID")));
+            Assert.NotEqual(original, new AmqpLinkIdentifier("Sender", null, "ContainerID"));
+            Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", true, "ContainerID")));
+            Assert.NotEqual(original, new AmqpLinkIdentifier("Sender", true, "ContainerID"));
+
+            // different containerId
+            Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", false, "ContainerID1")));
+            Assert.NotEqual(original, new AmqpLinkIdentifier("Sender", false, "ContainerID1"));
+        }
+
+        /// <summary>
+        /// Test link stealing where two links have the same link name but different link types. They should both be able to open without interfering each other.
+        /// </summary>
+        [Fact]
+        public async Task LinkStealingDifferentLinkTypesTest()
+        {
+            await LinkStealingTestCase(false, false);
+        }
+
+        /// <summary>
+        /// Test link stealing where two links have the same link name and type, but the link1 is closed before link2 is opened. This should not trigger any link stealing at all.
+        /// </summary>
+        [Fact]
+        public async Task LinkStealingCloseLink1FirstTest()
+        {
+            await LinkStealingTestCase(true, true);
+        }
+
+        /// <summary>
+        /// Test link stealing where two links have the same link name and type. This should trigger link stealing and close link1 due to link stealing.
+        /// </summary>
+        [Fact]
+        public async Task LinkStealingTest()
+        {
+            await LinkStealingTestCase(true, false);
+        }
+
+        /// <summary>
+        /// Abort the link locally, which does not send a Detach to remote session, so the remote (broker) session will still have record of this link opened.
+        /// Link stealing should happen at remote session, and remote session should discard its existing link record and allow the new link to be attached.
+        /// </summary>
+        [Fact]
+        public async Task LinkStealingFromRemoteTest()
+        {
+            string linkName = "LinkStealingFromRemoteTest-" + Guid.NewGuid().ToString().Substring(0, 6);
+            string queueName = "link-stealing-test-queue";
+            AmqpConnection connection = await AmqpConnection.Factory.OpenConnectionAsync(addressUri, TimeSpan.FromSeconds(20));
+
+            AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+            await session.OpenAsync(TimeSpan.FromSeconds(20));
+
+            ReceivingAmqpLink link1 = await session.OpenLinkAsync<ReceivingAmqpLink>(linkName, queueName);
+            link1.Abort();
+
+            AmqpLink link2 = await session.OpenLinkAsync<ReceivingAmqpLink>(linkName, queueName);
+            Assert.True(link2.State == AmqpObjectState.Opened);
+
+            await connection.CloseAsync();
+        }
+
+        async Task LinkStealingTestCase(bool sameType, bool closeLink1BeforeOpenLink2)
+        {
+            string linkName = "LinkStealing-" + Guid.NewGuid().ToString().Substring(0, 6);
+            string queueName = "link-stealing-test-queue";
+            AmqpConnection connection = await AmqpConnection.Factory.OpenConnectionAsync(addressUri, TimeSpan.FromSeconds(20));
+            AmqpSession session = await connection.OpenSessionAsync();
+
+            ReceivingAmqpLink link1 = await session.OpenLinkAsync<ReceivingAmqpLink>(linkName, queueName);
+            if (closeLink1BeforeOpenLink2)
+            {
+                await link1.CloseAsync();
+            }
+
+            bool shouldLinkBeStolen = sameType && !closeLink1BeforeOpenLink2;
+            AmqpLink link2;
+            if (sameType)
+            {
+                link2 = await session.OpenLinkAsync<ReceivingAmqpLink>(linkName, queueName);
+            }
+            else
+            {
+                link2 = await session.OpenLinkAsync<SendingAmqpLink>(linkName, queueName);
+            }
+
+            Assert.True(link2.State == AmqpObjectState.Opened);
+            if (shouldLinkBeStolen)
+            {
+                Assert.True(link1.State == AmqpObjectState.End);
+                Assert.Contains("link stealing", link1.TerminalException.Message);
+            }
+            else if (!sameType)
+            {
+                Assert.True(link1.State == AmqpObjectState.Opened);
+            }
+
+            await connection.CloseAsync();
+        }
+
         void SendReceive(
             string queue,
             int messageCount = 1,

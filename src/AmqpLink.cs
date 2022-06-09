@@ -951,16 +951,19 @@ namespace Microsoft.Azure.Amqp
 
         internal void OnLinkStolen(bool shouldAbort)
         {
-            AmqpTrace.Provider.AmqpLogOperationInformational(this, shouldAbort ? TraceOperation.Abort : TraceOperation.Close, "LinkStealing");
+            if (!this.IsClosing())
+            {
+                AmqpTrace.Provider.AmqpLogOperationInformational(this, shouldAbort ? TraceOperation.Abort : TraceOperation.Close, "LinkStealing");
 
-            this.TerminalException = new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.LinkIdentifier));
-            if (shouldAbort)
-            {
-                this.Abort();
-            }
-            else
-            {
-                this.Close();
+                this.TerminalException = new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.LinkIdentifier));
+                if (shouldAbort)
+                {
+                    this.Abort();
+                }
+                else
+                {
+                    this.Close();
+                }
             }
         }
 

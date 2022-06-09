@@ -203,6 +203,11 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public bool Drain => this.drain;
 
+        /// <summary>
+        /// Return the <see cref="AmqpLinkIdentifier"/> for this link.
+        /// </summary>
+        public AmqpLinkIdentifier LinkIdentifier => new AmqpLinkIdentifier(this.Name, this.settings.IsReceiver(), this.Session.Connection.Settings.ContainerId);
+
         internal override TimeSpan OperationTimeout
         {
             get
@@ -942,6 +947,24 @@ namespace Microsoft.Azure.Amqp
 
             delivery.Link = this;
             this.inflightDeliveries.DoWork(delivery);
+        }
+
+        internal void OnLinkStolen(bool shouldAbort)
+        {
+            if (!this.IsClosing())
+            {
+                AmqpTrace.Provider.AmqpLogOperationInformational(this, shouldAbort ? TraceOperation.Abort : TraceOperation.Close, "LinkStealing");
+
+                this.TerminalException = new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.LinkIdentifier));
+                if (shouldAbort)
+                {
+                    this.Abort();
+                }
+                else
+                {
+                    this.Close();
+                }
+            }
         }
 
         void DisposeDeliveryInternal(Delivery delivery, bool settled, DeliveryState state, bool noFlush)

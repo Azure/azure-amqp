@@ -279,9 +279,6 @@
   <data name="AmqpTransportNotSecure" xml:space="preserve">
     <value>The current transport is not secure. Establish a secure transport by setting AmqpTransportSettings.UseSslStreamSecurity to true.</value>
   </data>
-  <data name="AmqpLinkNameInUse" xml:space="preserve">
-    <value>A link with name '{0}' is already attached in session {1}.</value>
-  </data>
   <data name="AmqpEmptyMessageNotAllowed" xml:space="preserve">
     <value>Sending an emtpy message is not allowed. At least one message section must be initialized.</value>
   </data>
@@ -290,5 +287,8 @@
   </data>
   <data name="AmqpTransportUpgradeNotAllowed" xml:space="preserve">
     <value>Cannot upgrade transport from type '{0}' to '{1}'.</value>
+  </data>
+  <data name="AmqpLinkStolen" xml:space="preserve">
+    <value>The link with identifier {0} has been closed due to link stealing. </value>
   </data>
 </root>

@@ -206,7 +206,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Return the <see cref="AmqpLinkIdentifier"/> for this link.
         /// </summary>
-        public AmqpLinkIdentifier LinkIdentifier => new AmqpLinkIdentifier(this.Name, this.settings.Role, this.Session.Connection.Settings.ContainerId);
+        public AmqpLinkIdentifier LinkIdentifier => new AmqpLinkIdentifier(this.Name, this.settings.IsReceiver(), this.Session.Connection.Settings.ContainerId);
 
         internal override TimeSpan OperationTimeout
         {

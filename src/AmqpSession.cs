@@ -577,7 +577,7 @@ namespace Microsoft.Azure.Amqp
             if (command.DescriptorCode == Attach.Code)
             {
                 Attach attach = (Attach)command;
-                var linkIdentifier = new AmqpLinkIdentifier(attach.LinkName, !attach.Role, this.Connection.Settings.ContainerId); // local Role will be opposite of the Role sent from remote for the same link.
+                var linkIdentifier = new AmqpLinkIdentifier(attach.LinkName, !attach.IsReceiver(), this.Connection.Settings.ContainerId); // local Role will be opposite of the Role sent from remote for the same link.
 
                 lock (this.ThisLock)
                 {

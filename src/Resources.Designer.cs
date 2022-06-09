@@ -383,16 +383,7 @@ namespace Microsoft.Azure.Amqp {
                 return ResourceManager.GetString("AmqpInvalidType", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to A link with name &apos;{0}&apos; is already attached in session {1}..
-        /// </summary>
-        internal static string AmqpLinkNameInUse {
-            get {
-                return ResourceManager.GetString("AmqpLinkNameInUse", resourceCulture);
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to The link with link name {0} under connection with containerId {1} has been closed due to link stealing. .
         /// </summary>

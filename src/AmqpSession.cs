@@ -406,15 +406,16 @@ namespace Microsoft.Azure.Amqp
             return transition.To;
         }
 
-        internal bool TryCreateRemoteLink(AmqpLinkSettings linkSettings, out AmqpLink link)
+        internal bool TryCreateRemoteLink(Attach attach, out AmqpLink link)
         {
             link = null;
-            Exception error = null;
-
             if (this.linkFactory == null)
             {
                 return false;
             }
+
+            AmqpLinkSettings linkSettings = AmqpLinkSettings.Create(attach);
+            Exception error = null;
 
             try
             {
@@ -439,8 +440,8 @@ namespace Microsoft.Azure.Amqp
                 error = exception;
             }
 
-            link.RemoteHandle = linkSettings.Handle;
-            this.linksByRemoteHandle.Add(linkSettings.Handle.Value, link);
+            link.RemoteHandle = attach.Handle;
+            this.linksByRemoteHandle.Add(attach.Handle.Value, link);
 
             if (error != null)
             {
@@ -576,8 +577,7 @@ namespace Microsoft.Azure.Amqp
             if (command.DescriptorCode == Attach.Code)
             {
                 Attach attach = (Attach)command;
-                AmqpLinkSettings linkSettings = AmqpLinkSettings.Create(attach);
-                var linkIdentifier = new AmqpLinkIdentifier(linkSettings.LinkName, linkSettings.Role, this.Connection.Settings.ContainerId);
+                var linkIdentifier = new AmqpLinkIdentifier(attach.LinkName, !attach.Role, this.Connection.Settings.ContainerId); // local Role will be opposite of the Role sent from remote for the same link.
 
                 lock (this.ThisLock)
                 {
@@ -601,7 +601,7 @@ namespace Microsoft.Azure.Amqp
 
                 if (link == null)
                 {
-                    if (!this.TryCreateRemoteLink(linkSettings, out link))
+                    if (!this.TryCreateRemoteLink(attach, out link))
                     {
                         return;
                     }

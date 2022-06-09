@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Amqp
     public class AmqpLinkIdentifier
     {
         /// <summary>
-        /// Construct an object used to uniquely identify a link endpoint by using the link name, the link's role (sender/receiver), and the containId.
+        /// Construct an object used to uniquely identify a link endpoint by using the link name, the link's role (sender/receiver), and the containerId.
         /// </summary>
         public AmqpLinkIdentifier(string linkName, bool? role, string containerId)
         {
@@ -71,6 +71,14 @@ namespace Microsoft.Azure.Amqp
         public override int GetHashCode()
         {
             return (this.LinkName.ToLower().GetHashCode() * 397) + this.Role.GetHashCode() + (this.ContainerId.ToLower().GetHashCode() * 397);
+        }
+
+        /// <summary>
+        /// Return the string representation of the link identifier.
+        /// </summary>
+        public override string ToString()
+        {
+            return $"{(this.Role == true ? "Receiver" : "Sender")}|LinkName={this.LinkName}|ContainerId={this.ContainerId}";
         }
     }
 }

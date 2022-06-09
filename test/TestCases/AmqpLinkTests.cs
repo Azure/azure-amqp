@@ -1132,52 +1132,22 @@ namespace Test.Microsoft.Azure.Amqp
             await connection.CloseAsync(TimeSpan.FromSeconds(20));
         }
 
-        [Fact]
-        public void LinkIdentifierTest()
-        {
-            var original = new AmqpLinkIdentifier("Sender", false, "ContainerID");
-            IDictionary<AmqpLinkIdentifier, object> dictionary = new Dictionary<AmqpLinkIdentifier, object>();
-            dictionary.Add(original, new object());
-
-            // link name is case insensitive
-            Assert.True(dictionary.ContainsKey(new AmqpLinkIdentifier("sender", false, "ContainerID")));
-            Assert.Equal(original, new AmqpLinkIdentifier("sender", false, "ContainerID"));
-
-            // containerId is case insensitive
-            Assert.True(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", false, "containerid")));
-            Assert.Equal(original, new AmqpLinkIdentifier("Sender", false, "containerid"));
-
-            // different linkNames
-            Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender1", false, "ContainerID")));
-            Assert.NotEqual(original, new AmqpLinkIdentifier("Sender1", false, "ContainerID"));
-
-            // different roles
-            Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", null, "ContainerID")));
-            Assert.NotEqual(original, new AmqpLinkIdentifier("Sender", null, "ContainerID"));
-            Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", true, "ContainerID")));
-            Assert.NotEqual(original, new AmqpLinkIdentifier("Sender", true, "ContainerID"));
-
-            // different containerId
-            Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", false, "ContainerID1")));
-            Assert.NotEqual(original, new AmqpLinkIdentifier("Sender", false, "ContainerID1"));
-        }
-
         /// <summary>
         /// Test link stealing where two links have the same link name but different link types. They should both be able to open without interfering each other.
         /// </summary>
         [Fact]
         public async Task LinkStealingDifferentLinkTypesTest()
         {
-            await LinkStealingTestCase(false, false);
+            await LinkStealingTestCase(sameType: false, closeLink1BeforeOpenLink2: false);
         }
 
         /// <summary>
         /// Test link stealing where two links have the same link name and type, but the link1 is closed before link2 is opened. This should not trigger any link stealing at all.
         /// </summary>
         [Fact]
-        public async Task LinkStealingCloseLink1FirstTest()
+        public async Task LinkStealingCloseLink1TypesTest()
         {
-            await LinkStealingTestCase(true, true);
+            await LinkStealingTestCase(sameType: true, closeLink1BeforeOpenLink2: true);
         }
 
         /// <summary>
@@ -1186,7 +1156,7 @@ namespace Test.Microsoft.Azure.Amqp
         [Fact]
         public async Task LinkStealingTest()
         {
-            await LinkStealingTestCase(true, false);
+            await LinkStealingTestCase(sameType: true, closeLink1BeforeOpenLink2: false);
         }
 
         /// <summary>
@@ -1212,6 +1182,16 @@ namespace Test.Microsoft.Azure.Amqp
             await connection.CloseAsync();
         }
 
+        /// <summary>
+        /// Test case for link stealing scenarios, where two links will be opened sequentially and the first link will be checked if it was stolen or not by the second one.
+        /// </summary>
+        /// <param name="sameType">
+        /// True if the two links opened will be of the same type. Different link types will avoid link stealing.
+        /// </param>
+        /// <param name="closeLink1BeforeOpenLink2">
+        /// True if the first link should be closed before opening the second link. 
+        /// If the first link is already closed, it should not have any impact on the opening of the second link, and link stealing would not occur.
+        /// </param>
         async Task LinkStealingTestCase(bool sameType, bool closeLink1BeforeOpenLink2)
         {
             string linkName = "LinkStealing-" + Guid.NewGuid().ToString().Substring(0, 6);

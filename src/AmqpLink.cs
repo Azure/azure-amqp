@@ -953,7 +953,7 @@ namespace Microsoft.Azure.Amqp
         {
             AmqpTrace.Provider.AmqpLogOperationInformational(this, shouldAbort ? TraceOperation.Abort : TraceOperation.Close, "LinkStealing");
 
-            this.TerminalException = new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.Name, this.Session.Connection.Settings.ContainerId));
+            this.TerminalException = new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.LinkIdentifier));
             if (shouldAbort)
             {
                 this.Abort();

@@ -231,4 +231,7 @@
   <data name="StringIsNotBase64" xml:space="preserve">
     <value>'{0}' is not a valid Base64 encoded string.</value>
   </data>
+  <data name="InvalidType" xml:space="preserve">
+    <value>The type of {0} must be {1}, but got {2} instead.</value>
+  </data>
 </root>

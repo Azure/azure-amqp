@@ -5,7 +5,10 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
 
@@ -206,7 +209,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Return the <see cref="AmqpLinkIdentifier"/> for this link.
         /// </summary>
-        public AmqpLinkIdentifier LinkIdentifier => new AmqpLinkIdentifier(this.Name, this.settings.Role, this.Session.Connection.Settings.ContainerId);
+        public AmqpLinkIdentifier LinkIdentifier { get; private set; }
 
         internal override TimeSpan OperationTimeout
         {
@@ -218,6 +221,50 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        internal AmqpLinkTerminus Terminus { get; set; }
+
+        internal bool IsRecoverable
+        {
+            get
+            {
+                if (this.Session.Connection.LinkRecoveryEnabled)
+                {
+                    AmqpSymbol expiryPolicy = this.Settings.GetExpiryPolicy();
+                    return expiryPolicy.Equals(TerminusExpiryPolicy.LinkDetach) ||
+                        expiryPolicy.Equals(TerminusExpiryPolicy.SessionEnd) ||
+                        expiryPolicy.Equals(TerminusExpiryPolicy.ConnectionClose) ||
+                        expiryPolicy.Equals(TerminusExpiryPolicy.Never);
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Create either a <see cref="SendingAmqpLink"/> or a <see cref="ReceivingAmqpLink"/> with the provided link settigs, depending on its Role property.
+        /// </summary>
+        /// <param name="linkSettings">The link settings used to create a new link.</param>
+        /// <returns>A new link to be created.</returns>
+        public static AmqpLink Create(AmqpLinkSettings linkSettings)
+        {
+            AmqpLink link;
+            if (linkSettings.Role == null)
+            {
+                throw new ArgumentNullException(nameof(linkSettings.Role));
+            }
+
+            if (!linkSettings.Role.Value)
+            {
+                link = new SendingAmqpLink(linkSettings);
+            }
+            else
+            {
+                link = new ReceivingAmqpLink(linkSettings);
+            }
+
+            return link;
+        }
+
         /// <summary>
         /// Attaches the link to a session.
         /// </summary>
@@ -227,6 +274,7 @@ namespace Microsoft.Azure.Amqp
             Fx.Assert(this.Session == null, "The link is already attached to a session");
             this.MaxFrameSize = session.Connection.Settings.MaxFrameSize();
             this.Session = session;
+            this.LinkIdentifier = new AmqpLinkIdentifier(this.Name, this.settings.IsReceiver(), this.Session.Connection.Settings.ContainerId);
             session.AttachLink(this);
         }
 
@@ -479,6 +527,16 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Decide if the current link should be allowed to be stolen by the given link.
+        /// </summary>
+        /// <param name="newlink">The new link that is trying steal this existing link.</param>
+        /// <returns>True if link stealing by the given new link should be allowed.</returns>
+        public virtual bool AllowLinkStealing(AmqpLink newlink)
+        {
+            return true;
+        }
+
         internal void NotifySessionCredit(int credit)
         {
             if (this.inflightDeliveries != null)
@@ -510,7 +568,7 @@ namespace Microsoft.Azure.Amqp
             if (!this.IsReceiver && 
                 this.settings.SettleType != SettleMode.SettleOnDispose && 
                 !delivery.Settled &&
-                !delivery.Transactional())
+                !delivery.State.Transactional())
             {
                 this.CompleteDelivery(delivery.DeliveryTag);
             }
@@ -799,7 +857,15 @@ namespace Microsoft.Azure.Amqp
                 {
                     lock (this.syncRoot)
                     {
-                        this.unsettledMap.Add(delivery.DeliveryTag, delivery);
+                        if (this.unsettledMap.TryGetValue(delivery.DeliveryTag, out Delivery existing) && Extensions.IsTerminal(existing.State) && Extensions.IsTerminal(delivery.State))
+                        {
+                            // this delivery is reached terminal outcome on both sides, which means it's already been processed.
+                            // No need to process this delivery again anymore, just need to simply settle it with the sender side outcome.
+                        }
+                        else
+                        {
+                            this.unsettledMap.Add(delivery.DeliveryTag, delivery);
+                        }
                     }
                 }
             }
@@ -849,6 +915,8 @@ namespace Microsoft.Azure.Amqp
                 Transfer transfer = new Transfer();
                 transfer.Handle = this.LocalHandle;
                 transfer.More = more;
+                transfer.Aborted = delivery.Aborted;
+                transfer.Resume = delivery.Resume;
                 if (firstTransfer)
                 {
                     transfer.DeliveryId = uint.MaxValue;    // reserve the space first
@@ -934,9 +1002,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        void StartSendDelivery(Delivery delivery)
+        internal void StartSendDelivery(Delivery delivery)
         {
-            delivery.Settled = this.settings.SettleType == SettleMode.SettleOnSend;
+            // The delivery may already be determined to be settled in scenarios such as link recovery.
+            delivery.Settled = delivery.Settled || this.settings.SettleType == SettleMode.SettleOnSend;
             if (!delivery.Settled)
             {
                 lock (this.syncRoot)
@@ -1019,6 +1088,7 @@ namespace Microsoft.Azure.Amqp
 
         AmqpObjectState SendDetach()
         {
+            Fx.Assert(this.LocalHandle != null, "The local handle should not be null when sending detach to remote, because it would mean that the link was not attached in the first place.");
             StateTransition transition = this.TransitState("S:DETACH", StateTransition.SendClose);
 
             Detach detach = new Detach();
@@ -1139,6 +1209,7 @@ namespace Microsoft.Azure.Amqp
                 delivery.Link = this;
                 delivery.DeliveryId = transfer.DeliveryId.Value;
                 delivery.DeliveryTag = transfer.DeliveryTag;
+                delivery.Aborted = transfer.Aborted == true;
                 delivery.Settled = transfer.Settled();
                 delivery.Batchable = transfer.Batchable();
                 delivery.MessageFormat = transfer.MessageFormat;
@@ -1179,12 +1250,34 @@ namespace Microsoft.Azure.Amqp
 
         Error Negotiate(Attach attach)
         {
-            if (attach.MaxMessageSize() != 0)
+            Error error = null;
+            try
             {
-                this.settings.MaxMessageSize = Math.Min(this.settings.MaxMessageSize(), attach.MaxMessageSize());
+                if (this.IsRecoverable)
+                {
+                    IDictionary<ArraySegment<byte>, Delivery> resultantUnsettledDeliveries = Task.Run(() => this.Session.Connection.LinkTerminusManager.ProcessRemoteUnsettledMapAsync(this.LinkIdentifier, attach)).Result;
+                    if (resultantUnsettledDeliveries != null)
+                    {
+                        foreach (var resultantUnsettledDelivery in resultantUnsettledDeliveries)
+                        {
+                            this.UnsettledMap.Add(resultantUnsettledDelivery);
+                        }
+                    }
+                }
+
+                // TODO: need to negotiate the properties in case they are different between local and remote.
+                // Honor the Source for sender and Target for Receiver.
+                if (attach.MaxMessageSize() != 0)
+                {
+                    this.settings.MaxMessageSize = Math.Min(this.settings.MaxMessageSize(), attach.MaxMessageSize());
+                }
+            }
+            catch (Exception e)
+            {
+                error = Error.FromException(e);
             }
 
-            return null;
+            return error;
         }
 
         static void OnProviderLinkOpened(IAsyncResult result)

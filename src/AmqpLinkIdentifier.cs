@@ -12,9 +12,9 @@ namespace Microsoft.Azure.Amqp
     public class AmqpLinkIdentifier
     {
         /// <summary>
-        /// Construct an object used to uniquely identify a link endpoint by using the link name, the link's role (sender/receiver), and the containerId.
+        /// Construct an object used to uniquely identify a link endpoint by using the link name, the link's role (receiver/sender), and the containerId.
         /// </summary>
-        public AmqpLinkIdentifier(string linkName, bool? role, string containerId)
+        public AmqpLinkIdentifier(string linkName, bool isReceiver, string containerId)
         {
             if (linkName == null)
             {
@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Amqp
             }
 
             this.LinkName = linkName;
-            this.Role = role;
+            this.IsReceiver = isReceiver;
             this.ContainerId = containerId;
         }
 
@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Returns the link role. True if this is used for a receiver, false if it's a sender.
         /// </summary>
-        public bool? Role { get; }
+        public bool IsReceiver { get; }
 
         /// <summary>
         /// Returns the containerId for the link endpoint.
@@ -60,9 +60,9 @@ namespace Microsoft.Azure.Amqp
                 return false;
             }
 
-            return this.LinkName.Equals(other.LinkName, StringComparison.CurrentCultureIgnoreCase)
-                && this.Role == other.Role
-                && this.ContainerId.Equals(other.ContainerId, StringComparison.CurrentCultureIgnoreCase);
+            return this.LinkName.Equals(other.LinkName, StringComparison.OrdinalIgnoreCase)
+                && this.IsReceiver == other.IsReceiver
+                && this.ContainerId.Equals(other.ContainerId, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -70,7 +70,11 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public override int GetHashCode()
         {
-            return (this.LinkName.ToLower().GetHashCode() * 397) + this.Role.GetHashCode() + (this.ContainerId.ToLower().GetHashCode() * 397);
+            int hash = 29;
+            hash = hash * 397 + StringComparer.OrdinalIgnoreCase.GetHashCode(this.LinkName);
+            hash = hash * 397 + this.IsReceiver.GetHashCode();
+            hash = hash * 397 + StringComparer.OrdinalIgnoreCase.GetHashCode(this.ContainerId);
+            return hash;
         }
 
         /// <summary>
@@ -78,7 +82,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public override string ToString()
         {
-            return $"{(this.Role == true ? "Receiver" : "Sender")}|LinkName={this.LinkName}|ContainerId={this.ContainerId}";
+            return $"{(this.IsReceiver ? "Receiver" : "Sender")}|LinkName={this.LinkName}|ContainerId={this.ContainerId}";
         }
     }
 }

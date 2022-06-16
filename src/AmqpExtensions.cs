@@ -369,11 +369,11 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets the value that indicates if the delivery is part of a transaction.
         /// </summary>
-        /// <param name="delivery">The <see cref="Delivery"/>.</param>
+        /// <param name="deliveryState">The <see cref="DeliveryState"/>.</param>
         /// <returns>true if the delivery is transactional or false otherwise.</returns>
-        public static bool Transactional(this Delivery delivery)
+        public static bool Transactional(this DeliveryState deliveryState)
         {
-            return delivery.State != null && delivery.State.DescriptorCode == TransactionalState.Code;
+            return deliveryState != null && deliveryState.DescriptorCode == TransactionalState.Code;
         }
 
         /// <summary>
@@ -427,7 +427,132 @@ namespace Microsoft.Azure.Amqp
             return target.Durable == null ? false : (TerminusDurability)target.Durable.Value == TerminusDurability.None;
         }
 
-        // settings
+        /// <summary>
+        /// Gets the <see cref="Framing.Outcome"/> of a <see cref="DeliveryState"/>,
+        /// whether it's a transactional state with an outcome, or itself is an outcome.
+        /// </summary>
+        /// <param name="deliveryState">The <see cref="DeliveryState"/> to get an outcome from.</param>
+        /// <returns>The outcome of the delivery state, or null if it hasn't reached an outcome.</returns>
+        public static Outcome Outcome(this DeliveryState deliveryState)
+        {
+            return deliveryState is TransactionalState transactionalState ? transactionalState.Outcome : deliveryState as Outcome;
+        }
+
+        /// <summary>
+        /// Returns true if the the given delivery state has reached a terminal outcome.
+        /// </summary>
+        /// <param name="deliveryState">The <see cref="DeliveryState"/> to check if it has reached an outcome.</param>
+        public static bool IsTerminal(this DeliveryState deliveryState)
+        {
+            return deliveryState != null &&
+                (deliveryState.DescriptorCode == Accepted.Code ||
+                deliveryState.DescriptorCode == Modified.Code ||
+                deliveryState.DescriptorCode == Rejected.Code ||
+                deliveryState.DescriptorCode == Released.Code);
+        }
+
+        /// <summary>
+        /// Return the ExpiryPolicy from the link settings by checking the Target or Source, depending if the link is a receiver or sender.
+        /// </summary>
+        /// <param name="linkSettings">The link settings to obtain the ExpiryPolicy from.</param>
+        public static AmqpSymbol GetExpiryPolicy(this AmqpLinkSettings linkSettings)
+        {
+            if (linkSettings.IsReceiver() && linkSettings.Target is Target target)
+            {
+                return target.ExpiryPolicy;
+            }
+            else if (!linkSettings.IsReceiver() && linkSettings.Source is Source source)
+            {
+                return source.ExpiryPolicy;
+            }
+
+            return new AmqpSymbol();
+        }
+
+        /// <summary>
+        /// Set the ExpiryPolicy field for the given link settings on the Target or Source, depending if the link is a receiver or sender.
+        /// </summary>
+        /// <param name="linkSettings">The link settings to set the expiry policy on.</param>
+        /// <param name="expiryPolicy">The expiryPolicy to be set.</param>
+        public static void SetExpiryPolicy(this AmqpLinkSettings linkSettings, LinkTerminusExpiryPolicy expiryPolicy)
+        {
+            if (linkSettings.IsReceiver() && linkSettings.Target is Target target)
+            {
+                target.ExpiryPolicy = expiryPolicy.GetExpiryPolicySymbol();
+            }
+            else if (!linkSettings.IsReceiver() && linkSettings.Source is Source source)
+            {
+                source.ExpiryPolicy = expiryPolicy.GetExpiryPolicySymbol();
+            }
+            else
+            {
+                throw new InvalidOperationException($"Cannot set expiration policy because the {(linkSettings.IsReceiver() ? nameof(Target) : nameof(Source))} is null.");
+            }
+        }
+
+        /// <summary>
+        /// Return the terminus expiry timeout from the link settings by checking the Target or Source, depending if the link is a receiver or sender.
+        /// </summary>
+        /// <param name="linkSettings">The link settings to obtain the terminus expiry timeout from.</param>
+        public static TimeSpan GetExpiryTimeout(this AmqpLinkSettings linkSettings)
+        {
+            uint timeoutInSeconds = 0;
+            if (linkSettings != null)
+            {
+                if (linkSettings.IsReceiver() && linkSettings.Target is Target target && target.Timeout.HasValue)
+                {
+                    timeoutInSeconds = target.Timeout.Value;
+                }
+                else if (!linkSettings.IsReceiver() && linkSettings.Source is Source source && source.Timeout.HasValue)
+                {
+                    timeoutInSeconds = source.Timeout.Value;
+                }
+            }
+
+            return TimeSpan.FromSeconds(timeoutInSeconds);
+        }
+
+        /// <summary>
+        /// Set the Timeout field for the given link settings on the Target or Source, depending if the link is a receiver or sender.
+        /// </summary>
+        /// <param name="linkSettings">The link settings to set the expiry timeout on.</param>
+        /// <param name="expirationTimeout">The expiry timeout to be set.</param>
+        public static void SetExpiryTimeout(this AmqpLinkSettings linkSettings, TimeSpan expirationTimeout)
+        {
+            if (linkSettings.IsReceiver() && linkSettings.Target is Target target)
+            {
+                target.Timeout = Convert.ToUInt32(expirationTimeout.TotalSeconds);
+            }
+            else if (!linkSettings.IsReceiver() && linkSettings.Source is Source source)
+            {
+                source.Timeout = Convert.ToUInt32(expirationTimeout.TotalSeconds);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Cannot set expiration timeout because the {(linkSettings.IsReceiver() ? nameof(Target) : nameof(Source))} is null.");
+            }
+        }
+
+        /// <summary>
+        /// Returns the corresponding <see cref="AmqpSymbol"/> for the given link terminus expiry policy.
+        /// </summary>
+        public static AmqpSymbol GetExpiryPolicySymbol(this LinkTerminusExpiryPolicy linkTerminusExpiryPolicy)
+        {
+            switch (linkTerminusExpiryPolicy)
+            {
+                case LinkTerminusExpiryPolicy.LINK_DETACH:
+                    return TerminusExpiryPolicy.LinkDetach;
+                case LinkTerminusExpiryPolicy.SESSION_END:
+                    return TerminusExpiryPolicy.SessionEnd;
+                case LinkTerminusExpiryPolicy.CONNECTION_CLOSE:
+                    return TerminusExpiryPolicy.ConnectionClose;
+                case LinkTerminusExpiryPolicy.NEVER:
+                    return TerminusExpiryPolicy.Never;
+                default:
+                    return new AmqpSymbol(null);
+            }
+        }
+
         /// <summary>
         /// Updates or inserts a value in begin.properties.
         /// </summary>

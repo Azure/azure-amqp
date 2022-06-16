@@ -20,6 +20,8 @@ namespace Test.Microsoft.Azure.Amqp
 
         Queue<AmqpMessage> messages = new Queue<AmqpMessage>();
 
+        public TestRuntimeProvider() { }
+
         public Func<AmqpSession, AmqpLinkSettings, AmqpLink> LinkFactory { get; set; }
 
         public AmqpConnection CreateConnection(TransportBase transport, ProtocolHeader protocolHeader, bool isInitiator, AmqpSettings amqpSettings, AmqpConnectionSettings connectionSettings)

@@ -291,4 +291,10 @@
   <data name="AmqpLinkStolen" xml:space="preserve">
     <value>The link with identifier {0} has been closed due to link stealing. </value>
   </data>
+  <data name="AmqpLinkRecoveryNotEnabled" xml:space="preserve">
+    <value>To enable link recovery, a valid link terminus manager must be provided with the runtime provider.</value>
+  </data>
+  <data name="AmqpLinkOpenInvalidType" xml:space="preserve">
+    <value>Cannot open a {0} when the link settings represent a {1}.</value>
+  </data>
 </root>

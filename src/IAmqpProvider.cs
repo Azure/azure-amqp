@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Concurrent;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transport;
 
@@ -73,6 +74,22 @@ namespace Microsoft.Azure.Amqp
     /// </summary>
     public interface IRuntimeProvider : IConnectionFactory, ISessionFactory, ILinkFactory
     {
+    }
+
+    /// <summary>
+    /// A special <see cref="IRuntimeProvider"/> that is used to support link recovery, where <see cref="AmqpLinkTerminus"/> and unsettled link deliveries are managed and potentially stored.
+    /// </summary>
+    public interface ILinkRecoveryRuntimeProvider : IRuntimeProvider
+    {
+        /// <summary>
+        /// This object is used to manage <see cref="AmqpLinkTerminus"/> objects in order to support link recovery.
+        /// </summary>
+        IAmqpLinkTerminusManager LinkTerminusManager { get; }
+
+        /// <summary>
+        /// This object is used to manage unsettled deliveries in order to support link recovery.
+        /// </summary>
+        IAmqpDeliveryStore UnsettledDeliveryStore { get; }
     }
 
     /// <summary>

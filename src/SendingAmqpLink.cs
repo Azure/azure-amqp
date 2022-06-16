@@ -4,8 +4,10 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
 
@@ -232,6 +234,24 @@ namespace Microsoft.Azure.Amqp
         {
             this.AbortDeliveries();
             base.AbortInternal();
+        }
+
+        /// <summary>
+        /// Opens the link.
+        /// </summary>
+        /// <returns>True if open is completed.</returns>
+        protected override bool OpenInternal()
+        {
+            bool syncComplete = base.OpenInternal();
+            if (this.IsRecoverable && this.State == AmqpObjectState.Opened)
+            {
+                foreach (AmqpMessage m in this.UnsettledMap.Values)
+                {
+                    this.pendingDeliveries.DoWork(m);
+                }
+            }
+
+            return syncComplete;
         }
 
         static ArraySegment<byte> CreateTag()

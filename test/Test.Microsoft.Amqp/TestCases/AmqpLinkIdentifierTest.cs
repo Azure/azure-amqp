@@ -30,8 +30,6 @@ namespace Test.Microsoft.Azure.Amqp
             Assert.NotEqual(original, new AmqpLinkIdentifier("Sender1", false, "ContainerID"));
 
             // different roles
-            Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", null, "ContainerID")));
-            Assert.NotEqual(original, new AmqpLinkIdentifier("Sender", null, "ContainerID"));
             Assert.False(dictionary.ContainsKey(new AmqpLinkIdentifier("Sender", true, "ContainerID")));
             Assert.NotEqual(original, new AmqpLinkIdentifier("Sender", true, "ContainerID"));
 

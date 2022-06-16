@@ -37,6 +37,7 @@ namespace Microsoft.Azure.Amqp
         /// A string constant as the domain name for Apache extensions.
         /// </summary>
         public const string Apache = "apache.org";
+
         /// <summary>A symbol constant for IO event.</summary>
         public static readonly AmqpSymbol IoEvent = "io-event";
         /// <summary>A symbol constant for batched message format.</summary>

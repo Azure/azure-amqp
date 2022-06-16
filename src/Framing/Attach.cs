@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Framing
 {
     using System;
+    using System.Linq;
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
@@ -31,7 +32,7 @@ namespace Microsoft.Azure.Amqp.Framing
         public string LinkName { get; set; }
 
         /// <summary>
-        /// Gets or sets the "role" field.
+        /// Gets or sets the "role" field. True if it's a receiver.
         /// </summary>
         public bool? Role { get; set; }
 
@@ -212,7 +213,11 @@ namespace Microsoft.Azure.Amqp.Framing
 
             if (count-- > 0)
             {
-                this.Unsettled = AmqpCodec.DecodeMap(buffer);
+                AmqpMap mapWithGenericComparer = AmqpCodec.DecodeMap(buffer);
+                if (mapWithGenericComparer != null)
+                {
+                    this.Unsettled = new AmqpMap(mapWithGenericComparer, MapKeyByteArrayComparer.Instance);
+                }
             }
 
             if (count-- > 0)

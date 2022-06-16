@@ -476,36 +476,66 @@ namespace Microsoft.Azure.Amqp
         /// <param name="frame">The transfer frame.</param>
         protected override void OnProcessTransfer(Delivery delivery, Transfer transfer, Frame frame)
         {
-            Fx.Assert(delivery == null || delivery == this.currentMessage, "The delivery must be null or must be the same as the current message.");
-            if (this.Settings.MaxMessageSize.HasValue && this.Settings.MaxMessageSize.Value > 0)
+            bool shouldProcessMessage = !delivery.Aborted;
+            if (AmqpLinkTerminusManager.IsRecoverableLink(this.Settings))
             {
-                ulong size = (ulong)(this.currentMessage.BytesTransfered + frame.Payload.Count);
-                if (size > this.Settings.MaxMessageSize.Value)
+                Delivery existing;
+                lock (this.SyncRoot)
                 {
-                    if (this.IsClosing())
+                    if (this.UnsettledMap.TryGetValue(delivery.DeliveryTag, out existing))
                     {
-                        // The closing sequence has been started, so any
-                        // transfer is meaningless, so we can treat them as no-op
-                        return;
-                    }
+                        shouldProcessMessage = shouldProcessMessage && !delivery.Settled;
 
-                    throw new AmqpException(AmqpErrorCode.MessageSizeExceeded,
-                        AmqpResources.GetString(AmqpResources.AmqpMessageSizeExceeded, this.currentMessage.DeliveryId.Value, size, this.Settings.MaxMessageSize.Value));
+                        if (!shouldProcessMessage)
+                        {
+                            // This is simply the remote sending an updated transfer to settle the delivery.
+                            // The delivery itself should be either already processed locally or unprocessable (aborted), so simply remove it. 
+                            this.UnsettledMap.Remove(delivery.DeliveryTag);
+                        }
+                    }
+                }
+
+                // If both sides have reached terminal states, but the delivery still hasn't been settled (outcomes are different),
+                // the receiver should still send a disposition to acknowledge the sender's delivery state.
+                if (existing?.State.IsTerminal() == true && delivery.State.IsTerminal() && !delivery.Settled)
+                {
+                    this.DisposeDelivery(existing, true, delivery.State, false);
                 }
             }
 
-            Fx.Assert(this.currentMessage != null, "Current message must have been created!");
-            ArraySegment<byte> payload = frame.Payload;
-            frame.RawByteBuffer.AdjustPosition(payload.Offset, payload.Count);
-            frame.RawByteBuffer.AddReference();    // Message also owns the buffer from now on
-            this.currentMessage.AddPayload(frame.RawByteBuffer, !transfer.More());
-            if (!transfer.More())
+            if (shouldProcessMessage)
             {
-                AmqpMessage message = this.currentMessage;
-                this.currentMessage = null;
+                Fx.Assert(delivery == null || delivery == this.currentMessage, "The delivery must be null or must be the same as the current message.");
+                if (this.Settings.MaxMessageSize.HasValue && this.Settings.MaxMessageSize.Value > 0)
+                {
+                    ulong size = (ulong)(this.currentMessage.BytesTransfered + frame.Payload.Count);
+                    if (size > this.Settings.MaxMessageSize.Value)
+                    {
+                        if (this.IsClosing())
+                        {
+                            // The closing sequence has been started, so any
+                            // transfer is meaningless, so we can treat them as no-op
+                            return;
+                        }
 
-                AmqpTrace.Provider.AmqpReceiveMessage(this, message.DeliveryId.Value, message.Segments);
-                this.OnReceiveMessage(message);
+                        throw new AmqpException(AmqpErrorCode.MessageSizeExceeded,
+                            AmqpResources.GetString(AmqpResources.AmqpMessageSizeExceeded, this.currentMessage.DeliveryId.Value, size, this.Settings.MaxMessageSize.Value));
+                    }
+                }
+
+                Fx.Assert(this.currentMessage != null, "Current message must have been created!");
+                ArraySegment<byte> payload = frame.Payload;
+                frame.RawByteBuffer.AdjustPosition(payload.Offset, payload.Count);
+                frame.RawByteBuffer.AddReference();    // Message also owns the buffer from now on
+                this.currentMessage.AddPayload(frame.RawByteBuffer, !transfer.More());
+                if (!transfer.More())
+                {
+                    AmqpMessage message = this.currentMessage;
+                    this.currentMessage = null;
+
+                    AmqpTrace.Provider.AmqpReceiveMessage(this, message.DeliveryId.Value, message.Segments);
+                    this.OnReceiveMessage(message);
+                }
             }
         }
 

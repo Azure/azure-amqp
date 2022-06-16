@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Threading;
@@ -154,6 +155,16 @@ namespace Microsoft.Azure.Amqp
                 }
             }
         }
+
+        /// <summary>
+        /// A <see cref="AmqpLinkTerminusManager"/> which tracks the link terminus instances that may be used for link recovery.
+        /// </summary>
+        internal IAmqpLinkTerminusManager LinkTerminusManager => (this.AmqpSettings.RuntimeProvider as ILinkRecoveryRuntimeProvider)?.LinkTerminusManager;
+
+        /// <summary>
+        /// Upon creation of a new link, decide if could have recoverable link terminus and have the corresponding settings by checking if there is a valid <see cref="AmqpLinkTerminusManager"/>.
+        /// </summary>
+        internal bool LinkRecoveryEnabled => this.AmqpSettings.RuntimeProvider is ILinkRecoveryRuntimeProvider linkRecoveryRuntimeProvider && this.LinkTerminusManager != null && linkRecoveryRuntimeProvider.UnsettledDeliveryStore != null;
 
         /// <summary>
         /// Creates a <see cref="AmqpSession"/> and adds it to the session collection.
@@ -430,7 +441,11 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        void ProcessFrame(Frame frame)
+        /// <summary>
+        /// Process an AMQP frame given to this connection.
+        /// </summary>
+        /// <param name="frame"></param>
+        protected void ProcessFrame(Frame frame)
         {
             Performative command = frame.Command;
             Fx.Assert(command != null, "Must have a valid command");
@@ -467,6 +482,7 @@ namespace Microsoft.Azure.Amqp
             this.SendCommand(this.Settings, 0, (ByteBuffer)null);
 
             return transition.To;
+
         }
 
         AmqpObjectState SendClose()

@@ -477,35 +477,44 @@ namespace Microsoft.Azure.Amqp
         protected override void OnProcessTransfer(Delivery delivery, Transfer transfer, Frame frame)
         {
             bool shouldProcessMessage = !delivery.Aborted;
-            if (AmqpLinkTerminusManager.IsRecoverableLink(this.Settings))
+            if (this.IsRecoverable)
             {
-                Delivery existing;
-                lock (this.SyncRoot)
+                // If the delivery is already settled and the send mode is not SettleOnSend, the remote sender could have only derived
+                // the settled state after being told by the local receiver that it's either settled or arrived at a terminal outcome.
+                // In this case, since the local receiver has already settled it or processed it to a terminal outcome, there is no need to process it again.
+                if (delivery.Settled && this.Settings.SettleType != SettleMode.SettleOnSend)
                 {
-                    if (this.UnsettledMap.TryGetValue(delivery.DeliveryTag, out existing))
-                    {
-                        shouldProcessMessage = shouldProcessMessage && !delivery.Settled;
-
-                        if (!shouldProcessMessage)
-                        {
-                            // This is simply the remote sending an updated transfer to settle the delivery.
-                            // The delivery itself should be either already processed locally or unprocessable (aborted), so simply remove it. 
-                            this.UnsettledMap.Remove(delivery.DeliveryTag);
-                        }
-                    }
+                    shouldProcessMessage = false;
                 }
 
-                // If both sides have reached terminal states, but the delivery still hasn't been settled (outcomes are different),
-                // the receiver should still send a disposition to acknowledge the sender's delivery state.
-                if (existing?.State.IsTerminal() == true && delivery.State.IsTerminal() && !delivery.Settled)
+                // TODO: should the message be reprocesse if it has already reached terminal outcome?
+                //if (delivery.State.IsTerminal() && this.UnsettledMap.TryGetValue(delivery.DeliveryTag, out Delivery localUnsettledDelivery) && localUnsettledDelivery.State.IsTerminal())
+                //{
+                //    // If both sides has reached terminal states (like Oasis AMQP doc section 3.4.6, example delivery tag 12, 13),
+                //    // then we can simply settle it and let the remote sender know, without actually processing it.
+                //    shouldProcessMessage = false;
+                //}
+
+                if (!shouldProcessMessage)
                 {
-                    this.DisposeDelivery(existing, true, delivery.State, false);
+                    // If both sides have reached terminal states, but the delivery still hasn't been settled,
+                    // the receiver should still send a disposition to acknowledge the sender's delivery state and inform the remote sender that the message is settled.
+                    if (!delivery.Settled && !delivery.Aborted)
+                    {
+                        this.DisposeDelivery(delivery, true, delivery.State, false);
+                    }
+                    else
+                    {
+                        this.RemoveUnsettledDelivery(delivery.DeliveryTag);
+                    }
                 }
             }
 
             if (shouldProcessMessage)
             {
                 Fx.Assert(delivery == null || delivery == this.currentMessage, "The delivery must be null or must be the same as the current message.");
+                this.AddOrUpdateUnsettledDelivery(delivery);
+
                 if (this.Settings.MaxMessageSize.HasValue && this.Settings.MaxMessageSize.Value > 0)
                 {
                     ulong size = (ulong)(this.currentMessage.BytesTransfered + frame.Payload.Count);
@@ -600,6 +609,25 @@ namespace Microsoft.Azure.Amqp
             }
 
             return base.CloseInternal();
+        }
+
+        /// <summary>
+        /// Process and consolidate the unsettled deliveries sent with the remote Attach frame, by checking against the unsettled deliveries for this link terminus.
+        /// </summary>
+        /// <param name="remoteAttach">The incoming Attach from remote which contains the remote's unsettled delivery states.</param>
+        protected override void ProcessUnsettledDeliveries(Attach remoteAttach)
+        {
+            if (this.Session.Connection.LinkTerminusManager.TryGetLinkTerminus(this.LinkIdentifier, out AmqpLinkTerminus linkTerminus))
+            {
+                IDictionary<ArraySegment<byte>, Delivery> resultantUnsettledMap = Task.Run(() => linkTerminus.NegotiateUnsettledDeliveriesAsync(remoteAttach)).Result;
+                if (resultantUnsettledMap != null)
+                {
+                    foreach (var resultantUnsettled in resultantUnsettledMap)
+                    {
+                        this.AddOrUpdateUnsettledDelivery(resultantUnsettled.Value);
+                    }
+                }
+            }
         }
 
         IAsyncResult BeginReceiveMessageBatch(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)

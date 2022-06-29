@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.Amqp
 {
+    using Microsoft.Azure.Amqp.Framing;
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
@@ -21,7 +22,7 @@ namespace Microsoft.Azure.Amqp
         Task<Delivery> RetrieveDeliveryAsync(AmqpLinkTerminus linkTerminus, ArraySegment<byte> deliveryTag);
 
         /// <summary>
-        /// Retrieve saved deliveries to the given link terminus.
+        /// Retrieve saved deliveries for the given link terminus.
         /// </summary>
         /// <param name="linkTerminus">The <see cref="AmqpLinkTerminus"/> to retrieve deliveries for.</param>
         /// <returns>A task containing the retreived deliveries.</returns>

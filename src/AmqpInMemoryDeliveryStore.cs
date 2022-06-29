@@ -51,20 +51,20 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A task containing the retreived deliveries.</returns>
         public Task<IDictionary<ArraySegment<byte>, Delivery>> RetrieveDeliveriesAsync(AmqpLinkTerminus linkTerminus)
         {
-            IDictionary<ArraySegment<byte>, Delivery> deliveries = null;
             lock (this.thisLock)
             {
                 if (this.deliveries.TryGetValue(linkTerminus, out IDictionary<ArraySegment<byte>, Delivery> terminusDeliveries))
                 {
-                    deliveries = terminusDeliveries;
+                    return Task.FromResult<IDictionary<ArraySegment<byte>, Delivery>>(new Dictionary<ArraySegment<byte>, Delivery>(terminusDeliveries));
                 }
             }
 
-            return Task.FromResult(deliveries);
+            return Task.FromResult<IDictionary<ArraySegment<byte>, Delivery>>(new Dictionary<ArraySegment<byte>, Delivery>());
         }
 
         /// <summary>
         /// Save a <see cref="Delivery"/> instance under the given link terminus to be retrieved later.
+        /// If there is already an existing Delivery saved under the same link terminus, override it.
         /// </summary>
         /// <param name="linkTerminus">The link terminus that the delivery belongs to.</param>
         /// <param name="delivery">The delivery object to be saved.</param>
@@ -85,7 +85,8 @@ namespace Microsoft.Azure.Amqp
                     this.deliveries.Add(linkTerminus, terminusDeliveries);
                 }
 
-                terminusDeliveries.Add(delivery.DeliveryTag, delivery); // let it throw if the delivery already exists.
+                terminusDeliveries.Remove(delivery.DeliveryTag);
+                terminusDeliveries.Add(delivery.DeliveryTag, delivery);
             }
 
             return Task.CompletedTask;

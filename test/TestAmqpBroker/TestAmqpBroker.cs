@@ -4,10 +4,8 @@
 namespace TestAmqpBroker
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Linq;
     using System.Security.Cryptography.X509Certificates;
     using System.Security.Principal;
     using System.Threading;
@@ -648,7 +646,7 @@ namespace TestAmqpBroker
                         }
                         else
                         {
-                            message.LockedBy = consumer.Link.Terminus ?? consumer as object;
+                            message.LockedBy = consumer.Link.Terminus?? consumer as object;
                         }
                     }
                 }

@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Threading;
@@ -482,7 +481,6 @@ namespace Microsoft.Azure.Amqp
             this.SendCommand(this.Settings, 0, (ByteBuffer)null);
 
             return transition.To;
-
         }
 
         AmqpObjectState SendClose()

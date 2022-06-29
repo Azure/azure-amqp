@@ -452,21 +452,21 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Return the terminus info (source/target) from the given link settings.
+        /// </summary>
+        /// <param name="linkSettings">The link settings to obtain the AmqpLinkTerminusInfo from.</param>
+        public static IAmqpLinkTerminusInfo GetAmqpLinkTerminusInfo(this AmqpLinkSettings linkSettings)
+        {
+            return linkSettings.IsReceiver() ? linkSettings.Target as Target : linkSettings.Source as Source;
+        }
+
+        /// <summary>
         /// Return the ExpiryPolicy from the link settings by checking the Target or Source, depending if the link is a receiver or sender.
         /// </summary>
         /// <param name="linkSettings">The link settings to obtain the ExpiryPolicy from.</param>
         public static AmqpSymbol GetExpiryPolicy(this AmqpLinkSettings linkSettings)
         {
-            if (linkSettings.IsReceiver() && linkSettings.Target is Target target)
-            {
-                return target.ExpiryPolicy;
-            }
-            else if (!linkSettings.IsReceiver() && linkSettings.Source is Source source)
-            {
-                return source.ExpiryPolicy;
-            }
-
-            return new AmqpSymbol();
+            return linkSettings.GetAmqpLinkTerminusInfo()?.ExpiryPolicy ?? new AmqpSymbol();
         }
 
         /// <summary>
@@ -496,19 +496,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="linkSettings">The link settings to obtain the terminus expiry timeout from.</param>
         public static TimeSpan GetExpiryTimeout(this AmqpLinkSettings linkSettings)
         {
-            uint timeoutInSeconds = 0;
-            if (linkSettings != null)
-            {
-                if (linkSettings.IsReceiver() && linkSettings.Target is Target target && target.Timeout.HasValue)
-                {
-                    timeoutInSeconds = target.Timeout.Value;
-                }
-                else if (!linkSettings.IsReceiver() && linkSettings.Source is Source source && source.Timeout.HasValue)
-                {
-                    timeoutInSeconds = source.Timeout.Value;
-                }
-            }
-
+            uint timeoutInSeconds = linkSettings.GetAmqpLinkTerminusInfo().Timeout ?? 0;
             return TimeSpan.FromSeconds(timeoutInSeconds);
         }
 
@@ -551,6 +539,16 @@ namespace Microsoft.Azure.Amqp
                 default:
                     return new AmqpSymbol(null);
             }
+        }
+
+        /// <summary>
+        /// Checks if the given link is closed due to link stealing.
+        /// </summary>
+        /// <param name="link">The link to be checked.</param>
+        /// <returns>True if the link has been clsoed due to link stealing.</returns>
+        public static bool IsStolen(this AmqpLink link)
+        {
+            return link.IsClosing() && link.TerminalException is AmqpException amqpException && AmqpErrorCode.Stolen.Equals(amqpException.Error.Condition);
         }
 
         /// <summary>

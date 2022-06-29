@@ -9,7 +9,6 @@ namespace Test.Microsoft.Azure.Amqp
     using TestAmqpBroker;
     using Xunit;
 
-    [Collection("Sequential")]
     [Trait("Category", TestCategory.Current)]
     public class AmqpSamples : IClassFixture<TestAmqpBrokerFixture>
     {
@@ -71,7 +70,6 @@ namespace Test.Microsoft.Azure.Amqp
                 // Specify the desired link expiry policy (required for link recovery) and link expiry timeout (optional for link recovery) on the link settings for potential recovery of this link in the future.
                 AmqpLinkSettings linkSettings = AmqpLinkSettings.Create<ReceivingAmqpLink>("receiver", queueName);
                 linkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.NEVER);
-                linkSettings.SetExpiryTimeout(TimeSpan.FromMinutes(1));
                 var receiver = await session.OpenLinkAsync<ReceivingAmqpLink>(linkSettings);
 
                 // Send and receive the message as normal.
@@ -93,11 +91,6 @@ namespace Test.Microsoft.Azure.Amqp
                 AmqpSession newSession = await connection.OpenSessionAsync();
                 var recoveredReceiver = await newSession.OpenLinkAsync<ReceivingAmqpLink>(receiver.Settings);
                 recoveredReceiver.AcceptMessage(message);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
             }
             finally
             {

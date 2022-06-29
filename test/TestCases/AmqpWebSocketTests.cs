@@ -9,6 +9,7 @@ namespace Test.Microsoft.Azure.Amqp
     using Xunit;
     using TestAmqpBroker;
 
+    [Collection("AmqpLinkTests")]
     [Trait("Category", TestCategory.Current)]
     public class AmqpWebSocketTests : IClassFixture<TestAmqpBrokerFixture>
     {

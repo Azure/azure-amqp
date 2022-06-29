@@ -5,10 +5,8 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
     /// <summary>
@@ -175,7 +173,7 @@ namespace Microsoft.Azure.Amqp
                     throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpIllegalOperationState, "attach", this.State));
                 }
 
-                if (this.links.TryGetValue(link.LinkIdentifier, out linkToSteal) && linkToSteal.AllowLinkStealing(link))
+                if (this.links.TryGetValue(link.LinkIdentifier, out linkToSteal) && link.AllowLinkStealing(linkToSteal.Settings.GetAmqpLinkTerminusInfo()))
                 {
                     // Even though link onclose handler already removes the link from the links collection,
                     // calling Close() is fire and forget, so we will not be waiting for the link onClose handler to trigger
@@ -197,11 +195,11 @@ namespace Microsoft.Azure.Amqp
                         {
                             // There was a race and some other link has already created a link terminus and attach.
                             // In this case, stop opening of this link and close it due to link stealing.
-                            link.OnLinkStolen(true);
+                            throw new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, link.LinkIdentifier));
                         }
                     }
 
-                    if (!linkTerminus.TryAssociateLink(link))
+                    if (!linkTerminus.TryAssociateLink(link, out linkToSteal))
                     {
                         throw new InvalidOperationException("The link terminus to attach this link to is either disposed or link stealing is not allowed.");
                     }
@@ -214,7 +212,15 @@ namespace Microsoft.Azure.Amqp
 
             if (linkToSteal != null)
             {
-                linkToSteal.OnLinkStolen(false);
+                bool sameConnection = link.Session.Connection.Settings.ContainerId.Equals(linkToSteal.Session.Connection.Settings.ContainerId, StringComparison.OrdinalIgnoreCase);
+                bool sameSession = link.Session.RemoteChannel == linkToSteal.Session.RemoteChannel;
+
+                // In case of half open links (remote has aborted a link, but local still has the link has fully open state),
+                // and the remote link and the local link have the same connection/session handles,
+                // sending a Detach to remote to close the exsting link due to link steal may cause the remote to mistakenly think
+                // that the Detach is for this current link to be opened, instead of the exsting link to be closed for link stealing.
+                // In that case, simply abort the existing link locally without sending any Detach to remote to avoid causing confusion.
+                linkToSteal.OnLinkStolen(sameConnection && sameSession);
             }
 
             AmqpTrace.Provider.AmqpAttachLink(this.connection, this, link, link.LocalHandle.Value,
@@ -595,7 +601,6 @@ namespace Microsoft.Azure.Amqp
         void OnReceiveLinkFrame(Frame frame)
         {
             AmqpLink link = null;
-            AmqpLink stolenLink = null;
             Performative command = frame.Command;
             if (command.DescriptorCode == Attach.Code)
             {
@@ -605,25 +610,13 @@ namespace Microsoft.Azure.Amqp
                 lock (this.ThisLock)
                 {
                     this.links.TryGetValue(linkIdentifier, out link);
-                    if (link != null && link.State >= AmqpObjectState.OpenReceived)
-                    {
-                        // If the link state is past OpenReceived, it means that the link has already received an Attach frame from remote, regardless if the link open was initiated by local or remote.
-                        // A single link life cycle should not receive Attach more than once, therefore if the existing link has already received an Attach, this current Attach must be intended for another link.
-                        // In that case, remove the existing link due to link stealing and create a new link based on the Attach frame received.
-                        stolenLink = link;
-                        this.links.Remove(linkIdentifier);
-                    }
                 }
 
-                if (stolenLink != null)
+                if (link == null || link.State >= AmqpObjectState.OpenReceived)
                 {
-                    // Abort the local existing link, which does not send a detach back to remote, who initiated opening a new link and is not expecting the new link to be closed.
-                    stolenLink.OnLinkStolen(true);
-                    link = null;
-                }
-
-                if (link == null)
-                {
+                    // If the link state is past OpenReceived, it means that the link has already received an Attach frame from remote, regardless if the link open was initiated by local or remote.
+                    // A single link should receive Attach only once, therefore if the existing link has already received an Attach, then the current Attach must be intended for opening another link.
+                    // In that case, we can try to open a new link and potentially do link stealing.
                     if (!this.TryCreateRemoteLink(attach, out link))
                     {
                         return;
@@ -1396,6 +1389,11 @@ namespace Microsoft.Azure.Amqp
             }
 
             protected override void OnDisposeDeliveryInternal(Delivery delivery)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override void ProcessUnsettledDeliveries(Attach remoteAttach)
             {
                 throw new NotImplementedException();
             }

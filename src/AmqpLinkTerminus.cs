@@ -5,20 +5,20 @@ namespace Microsoft.Azure.Amqp
 {
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
+    using Microsoft.Azure.Amqp.Transaction;
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
     using System.Timers;
 
     /// <summary>
-    /// A class which represents a link endpoint, which contains information about the link's settings and unsettled map.
-    /// This class should be treated as a "snapshot" of the link's current state and may be used for link recovery.
+    /// A class which represents a link endpoint, which contains information about the link's identifier and a store of unsettled deliveries.
     /// </summary>
     public class AmqpLinkTerminus : IDisposable
     {
         object thisLock = new object();
         bool disposed;
         AmqpLink link;
-        Timer expireTimer;
 
         /// <summary>
         /// Create a new instance of a link terminus object.
@@ -38,7 +38,7 @@ namespace Microsoft.Azure.Amqp
             }
 
             this.Identifier = identifier;
-            this.DeliveryStore = deliveryStore;
+            this.UnsettledDeliveryStore = deliveryStore;
         }
 
         /// <summary>
@@ -69,12 +69,22 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// The <see cref="IAmqpDeliveryStore"/> which will be responsible for getting and saving unsettled deliveires for this link terminus.
         /// </summary>
-        public IAmqpDeliveryStore DeliveryStore { get; }
+        public IAmqpDeliveryStore UnsettledDeliveryStore { get; }
 
         /// <summary>
         /// Returns the identifier used to uniquely identify this terminus object.
         /// </summary>
         public AmqpLinkIdentifier Identifier { get; }
+
+        /// <summary>
+        /// The timer object that tracks the expiry of the link terminus after its suspension.
+        /// </summary>
+        protected Timer ExpireTimer { get; set; }
+
+        /// <summary>
+        /// The <see cref="IAmqpLinkTerminusInfo"/> that's associated with the link terminus.
+        /// </summary>
+        protected IAmqpLinkTerminusInfo LinkTerminusInfo { get; set; }
 
         IAmqpLinkTerminusManager TerminusManager => this.Link?.Session.Connection.LinkTerminusManager;
 
@@ -121,9 +131,27 @@ namespace Microsoft.Azure.Amqp
                 this.disposed = true;
             }
 
-            this.DeliveryStore.RemoveDeliveriesAsync(this);
+            this.UnsettledDeliveryStore.RemoveDeliveriesAsync(this);
             this.link?.Session.Connection.LinkTerminusManager.TryRemoveLinkTerminus(new KeyValuePair<AmqpLinkIdentifier, AmqpLinkTerminus>(this.Identifier, this));
             this.DisassociateLink();
+        }
+
+        /// <summary>
+        /// Process and consolidate the unsettled deliveries sent with the remote Attach frame, by checking against the unsettled deliveries for this link terminus.
+        /// </summary>
+        /// <param name="remoteAttach">The incoming Attach from remote which contains the remote's unsettled delivery states.</param>
+        /// <returns>A task containing the resultant map of deliveries that would remain unsettled.</returns>
+        internal protected async Task<IDictionary<ArraySegment<byte>, Delivery>> NegotiateUnsettledDeliveriesAsync(Attach remoteAttach)
+        {
+            IDictionary<ArraySegment<byte>, Delivery> localUnsettledDeliveries = await this.UnsettledDeliveryStore.RetrieveDeliveriesAsync(this);
+            if (this.Identifier.IsReceiver)
+            {
+                return localUnsettledDeliveries;
+            }
+            else
+            {
+                return await NegotiateUnsettledDeliveriesFromSender(remoteAttach, localUnsettledDeliveries);
+            }
         }
 
         /// <summary>
@@ -131,10 +159,11 @@ namespace Microsoft.Azure.Amqp
         /// If there is already a link registered with this link terminus, and it's a different link, the existing link would be closed due to link stealing.
         /// </summary>
         /// <param name="link">The new link to be associated with this link terminus.</param>
+        /// <param name="stolenLink">The existing link associated with this link terminus that was disassociated as a result of associating the new link given.</param>
         /// <returns>True if the new link was successfully associated with this link terminus.</returns>
-        internal bool TryAssociateLink(AmqpLink link)
+        internal protected bool TryAssociateLink(AmqpLink link, out AmqpLink stolenLink)
         {
-            AmqpLink stolenLink = null;
+            stolenLink = null;
             lock (this.thisLock)
             {
                 if (disposed)
@@ -142,11 +171,11 @@ namespace Microsoft.Azure.Amqp
                     return false;
                 }
 
-                if (this.Link != null)
+                if (this.link != null)
                 {
-                    if (this.Link.AllowLinkStealing(link))
+                    if (link.AllowLinkStealing(this.LinkTerminusInfo))
                     {
-                        stolenLink = this.Link;
+                        stolenLink = this.link;
                         this.DisassociateLink();
                     }
                     else
@@ -174,11 +203,28 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
+            IDictionary<ArraySegment<byte>, Delivery> retrievedUnsettledDeliveries = this.UnsettledDeliveryStore.RetrieveDeliveriesAsync(this).Result;
+            if (retrievedUnsettledDeliveries != null)
+            {
+                if (link.Settings.Unsettled == null)
+                {
+                    link.Settings.Unsettled = new AmqpMap(new Dictionary<ArraySegment<byte>, Delivery>(), MapKeyByteArrayComparer.Instance);
+                }
+
+                foreach (var kvp in retrievedUnsettledDeliveries)
+                {
+                    link.Settings.Unsettled.Add(new MapKey(kvp.Key), kvp.Value.State);
+                }
+            }
+
             stolenLink?.OnLinkStolen(false);
             return true;
         }
 
-        void DisassociateLink()
+        /// <summary>
+        /// Disassociate the link that's current associated with the link terminus.
+        /// </summary>
+        protected void DisassociateLink()
         {
             lock (this.thisLock)
             {
@@ -203,7 +249,7 @@ namespace Microsoft.Azure.Amqp
                     this.link = null;
                 }
 
-                this.expireTimer?.Dispose();
+                this.ExpireTimer?.Dispose();
             }
         }
 
@@ -213,11 +259,11 @@ namespace Microsoft.Azure.Amqp
             lock (this.thisLock)
             {
                 Fx.Assert(link == this.Link, "The closed link should still be associated with this terminus, or else the event handler should have been removed.");
-                if (!this.disposed)
+                if (!this.disposed && !link.IsStolen())
                 {
                     foreach (var kvp in link.UnsettledMap)
                     {
-                        this.DeliveryStore.SaveDeliveryAsync(this, kvp.Value);
+                        this.UnsettledDeliveryStore.SaveDeliveryAsync(this, kvp.Value);
                     }
                 }
             }
@@ -229,15 +275,15 @@ namespace Microsoft.Azure.Amqp
             this.Suspended?.Invoke(this, EventArgs.Empty);
             lock (this.thisLock)
             {
-                if (this.expireTimer == null)
+                if (this.ExpireTimer == null)
                 {
                     if (this.Link.Settings.GetExpiryTimeout() > TimeSpan.Zero)
                     {
-                        this.expireTimer = new Timer();
-                        this.expireTimer.Elapsed += (s, e) => OnExpireLinkTerminus(s, e, this, this.Link);
-                        this.expireTimer.Interval = this.Link.Settings.GetExpiryTimeout().TotalMilliseconds;
-                        this.expireTimer.AutoReset = false;
-                        this.expireTimer.Enabled = true;
+                        this.ExpireTimer = new Timer();
+                        this.ExpireTimer.Elapsed += (s, e) => OnExpireLinkTerminus(s, e, this, this.Link);
+                        this.ExpireTimer.Interval = this.Link.Settings.GetExpiryTimeout().TotalMilliseconds;
+                        this.ExpireTimer.AutoReset = false;
+                        this.ExpireTimer.Enabled = true;
                     }
                     else
                     {
@@ -251,6 +297,125 @@ namespace Microsoft.Azure.Amqp
         {
             linkTerminusToExpire.Dispose();
             linkTerminusToExpire.Expired?.Invoke(linkTerminusToExpire, EventArgs.Empty);
+        }
+
+        async Task<IDictionary<ArraySegment<byte>, Delivery>> NegotiateUnsettledDeliveriesFromSender(Attach remoteAttach, IDictionary<ArraySegment<byte>, Delivery> localUnsettledDeliveries)
+        {
+            IDictionary<ArraySegment<byte>, Delivery> resultantUnsettledDeliveries = new Dictionary<ArraySegment<byte>, Delivery>();
+            if (localUnsettledDeliveries != null)
+            {
+                foreach (Delivery localSenderDelivery in localUnsettledDeliveries.Values)
+                {
+                    ArraySegment<byte> deliveryTag = localSenderDelivery.DeliveryTag;
+                    DeliveryState localDeliveryState = localSenderDelivery.State;
+                    DeliveryState peerDeliveryState = null;
+                    bool peerHasDelivery = remoteAttach.Unsettled?.TryGetValue(new MapKey(deliveryTag), out peerDeliveryState) == true;
+                    bool remoteReachedTerminal = peerDeliveryState.IsTerminal();
+
+                    if (localDeliveryState == null || localDeliveryState.DescriptorCode == Received.Code)
+                    {
+                        // This section takes care of OASIS AMQP doc section 3.4.6, examples 1 to 8.
+                        // Currently we do not support partial delivery for Received delivery states, so just resend the whole delivery anyways.
+
+                        // Currently we do not support partial delivery for local Received delivery states, such as OASIS AMQP doc section 3.4.6 examples 6, 7, 9.
+                        // In this case, mark the delivery as aborted, then resend the delivery later if possible.
+                        localSenderDelivery.Aborted = peerDeliveryState.Transactional() ||
+                            (localDeliveryState?.DescriptorCode == Received.Code && peerHasDelivery && (peerDeliveryState == null || peerDeliveryState.DescriptorCode == Received.Code));
+
+                        // If the remote has reached terminal outcome and local has not, simply apply the outcome to local and respond with the outcome.
+                        // This would be seen by OASIS AMQP doc section 3.4.6 examples 3, 8.
+                        if (remoteReachedTerminal)
+                        {
+                            localSenderDelivery.State = peerDeliveryState;
+                            localSenderDelivery.Settled = true;
+                        }
+                    }
+                    else if (localDeliveryState.IsTerminal())
+                    {
+                        // This section takes care of OASIS AMQP doc section 3.4.6, examples 10 to 14.
+                        if (!peerHasDelivery)
+                        {
+                            // This is OASIS AMQP doc section 3.4.6 example 10, where the delivery does not need to be resent. Simply settle and remove it locally.
+                            await this.UnsettledDeliveryStore.RemoveDeliveryAsync(this, deliveryTag);
+                            continue;
+                        }
+                        else
+                        {
+                            if (remoteReachedTerminal)
+                            {
+                                // OASIS AMQP doc section 3.4.6, delivery 12, 13.
+                                localSenderDelivery.Settled = peerDeliveryState.DescriptorCode == localDeliveryState.DescriptorCode;
+                            }
+                            else
+                            {
+                                // OASIS AMQP doc section 3.4.6, delivery 11, 14.
+                                localSenderDelivery.Aborted = true;
+                            }
+                        }
+                    }
+                    else if (localDeliveryState.Transactional())
+                    {
+                        Outcome localTransactionalOutcome = ((TransactionalState)localDeliveryState).Outcome;
+
+                        if (peerDeliveryState.Transactional())
+                        {
+                            Outcome remoteTransactionalOutcome = ((TransactionalState)peerDeliveryState).Outcome;
+                            if (!remoteTransactionalOutcome.IsTerminal())
+                            {
+                                // If the remote has not reached terminal outcome, just abort the delivery to avoid any in-doubt states with the transaction,
+                                // since we are not sure what kind of state the remote is currently in (Transactional does convey states like "Received" state).
+                                localSenderDelivery.Aborted = true;
+                            }
+                            else
+                            {
+                                if (!localTransactionalOutcome.IsTerminal())
+                                {
+                                    // If the remote receiver has already reached terminal outcome, just apply that to the local sender as well, similar to OASIS AMQP doc section 3.4.6 examples 3, 8.
+                                    ((TransactionalState)localDeliveryState).Outcome = remoteTransactionalOutcome;
+                                    localSenderDelivery.Settled = true;
+                                }
+                                else
+                                {
+                                    // OASIS AMQP doc section 3.4.6, delivery 12, 13.
+                                    localSenderDelivery.Settled = remoteTransactionalOutcome.DescriptorCode == localTransactionalOutcome.DescriptorCode;
+                                }
+                            }
+                        }
+                        else if (!peerHasDelivery)
+                        {
+                            if (localTransactionalOutcome.IsTerminal())
+                            {
+                                // This is OASIS AMQP doc section 3.4.6 example 10, where the delivery does not need to be resent. Simply settle and remove it locally.
+                                await this.UnsettledDeliveryStore.RemoveDeliveryAsync(this, deliveryTag);
+                                continue;
+                            }
+                            else
+                            {
+                                // Resend the delivery as new, similar to OASIS AMQP doc section 3.4.6 example 1.
+                            }
+                        }
+                        else
+                        {
+                            // This is unexpected scenario, where only local sender delivery is transactional, just abort it to be safe.
+                            localSenderDelivery.Aborted = true;
+                        }
+                    }
+                    else
+                    {
+                        Fx.Assert(false, $"Unexpected deliveriy state. Local sender DeliveryState: {localDeliveryState}, Remote receiver DeliveryState: {peerDeliveryState}");
+                        localSenderDelivery.Aborted = true;
+                    }
+
+                    localSenderDelivery.Resume = peerHasDelivery;
+                    resultantUnsettledDeliveries.Add(localSenderDelivery.DeliveryTag, localSenderDelivery);
+                    if (localSenderDelivery.Settled)
+                    {
+                        await this.UnsettledDeliveryStore.RemoveDeliveryAsync(this, localSenderDelivery.DeliveryTag);
+                    }
+                }
+            }
+
+            return resultantUnsettledDeliveries;
         }
     }
 }

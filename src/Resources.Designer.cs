@@ -529,15 +529,6 @@ namespace Microsoft.Azure.Amqp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A recoverable link with name &apos;{0}&apos; is already attached under connection with containerId {1}..
-        /// </summary>
-        internal static string AmqpRecoverableLinkNameInUse {
-            get {
-                return ResourceManager.GetString("AmqpRecoverableLinkNameInUse", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The required field &apos;{0}&apos; is not set in &apos;{1}&apos;..
         /// </summary>
         internal static string AmqpRequiredFieldNotSet {

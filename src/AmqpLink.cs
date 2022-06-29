@@ -5,9 +5,7 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading;
-    using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
@@ -21,7 +19,6 @@ namespace Microsoft.Azure.Amqp
         readonly object syncRoot;
         readonly AmqpLinkSettings settings;
         readonly Outcome defaultOutcome;
-        readonly Dictionary<ArraySegment<byte>, Delivery> unsettledMap;
         readonly SerializedWorker<Delivery> inflightDeliveries; // has link credit, may need session credit
         Action<uint, bool, ArraySegment<byte>> creditListener;
 
@@ -72,7 +69,7 @@ namespace Microsoft.Azure.Amqp
                 this.defaultOutcome = AmqpConstants.ReleasedOutcome;
             }
 
-            this.unsettledMap = new Dictionary<ArraySegment<byte>, Delivery>(ByteArrayComparer.Instance);
+            this.UnsettledMap = new Dictionary<ArraySegment<byte>, Delivery>(ByteArrayComparer.Instance);
             if (session != null)
             {
                 this.AttachTo(session);
@@ -182,13 +179,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets the map of unsettled deliveries.
         /// </summary>
-        public IDictionary<ArraySegment<byte>, Delivery> UnsettledMap
-        {
-            get
-            {
-                return this.unsettledMap;
-            }
-        }
+        public IDictionary<ArraySegment<byte>, Delivery> UnsettledMap { get; }
 
         /// <summary>
         /// Gets an object that synchronizes access to shared link endpoint state.
@@ -454,7 +445,7 @@ namespace Microsoft.Azure.Amqp
             bool result = false;
             lock (this.syncRoot)
             {
-                result = this.unsettledMap.TryGetValue(deliveryTag, out delivery);
+                result = this.UnsettledMap.TryGetValue(deliveryTag, out delivery);
             }
 
             if (result)
@@ -528,11 +519,11 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Decide if the current link should be allowed to be stolen by the given link.
+        /// Decide if the current link should be allowed to steal a link endpoint with the provided <see cref="IAmqpLinkTerminusInfo"/>.
         /// </summary>
-        /// <param name="newlink">The new link that is trying steal this existing link.</param>
-        /// <returns>True if link stealing by the given new link should be allowed.</returns>
-        public virtual bool AllowLinkStealing(AmqpLink newlink)
+        /// <param name="existingLinkTerminusInfo">The terminus info for the existing link to be stolen.</param>
+        /// <returns>True if link stealing this link should be allowed.</returns>
+        internal protected virtual bool AllowLinkStealing(IAmqpLinkTerminusInfo existingLinkTerminusInfo)
         {
             return true;
         }
@@ -554,11 +545,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (delivery.Settled)
             {
-                lock (this.syncRoot)
-                {
-                    this.unsettledMap.Remove(delivery.DeliveryTag);
-                }
-
+                this.RemoveUnsettledDelivery(delivery.DeliveryTag);
                 this.OnDeliverySettled();
             }
 
@@ -580,7 +567,7 @@ namespace Microsoft.Azure.Amqp
             bool result = false;
             lock (this.syncRoot)
             {
-                result = this.unsettledMap.TryGetValue(deliveryTag, out delivery);
+                result = this.UnsettledMap.TryGetValue(deliveryTag, out delivery);
             }
 
             if (result) 
@@ -852,22 +839,6 @@ namespace Microsoft.Azure.Amqp
                             AmqpResources.GetString(AmqpResources.AmqpTransferLimitExceeded, delivery.DeliveryId.Value));
                     }
                 }
-
-                if (!delivery.Settled)
-                {
-                    lock (this.syncRoot)
-                    {
-                        if (this.unsettledMap.TryGetValue(delivery.DeliveryTag, out Delivery existing) && Extensions.IsTerminal(existing.State) && Extensions.IsTerminal(delivery.State))
-                        {
-                            // this delivery is reached terminal outcome on both sides, which means it's already been processed.
-                            // No need to process this delivery again anymore, just need to simply settle it with the sender side outcome.
-                        }
-                        else
-                        {
-                            this.unsettledMap.Add(delivery.DeliveryTag, delivery);
-                        }
-                    }
-                }
             }
 
             this.OnProcessTransfer(delivery, transfer, rawFrame);
@@ -904,6 +875,12 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="delivery">The delivery whose state is updated.</param>
         protected abstract void OnDisposeDeliveryInternal(Delivery delivery);
+
+        /// <summary>
+        /// Process and consolidate the unsettled deliveries sent with the remote Attach frame, by checking against the unsettled deliveries for this link terminus.
+        /// </summary>
+        /// <param name="remoteAttach">The incoming Attach from remote which contains the remote's unsettled delivery states.</param>
+        protected abstract void ProcessUnsettledDeliveries(Attach remoteAttach);
 
         internal bool SendDelivery(Delivery delivery)
         {
@@ -1008,10 +985,7 @@ namespace Microsoft.Azure.Amqp
             delivery.Settled = delivery.Settled || this.settings.SettleType == SettleMode.SettleOnSend;
             if (!delivery.Settled)
             {
-                lock (this.syncRoot)
-                {
-                    this.unsettledMap.Add(delivery.DeliveryTag, delivery);
-                }
+                this.AddOrUpdateUnsettledDelivery(delivery);
             }
 
             delivery.Link = this;
@@ -1022,14 +996,43 @@ namespace Microsoft.Azure.Amqp
         {
             AmqpTrace.Provider.AmqpLogOperationInformational(this, shouldAbort ? TraceOperation.Abort : TraceOperation.Close, "LinkStealing");
 
-            this.TerminalException = new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.LinkIdentifier));
             if (shouldAbort)
             {
+                this.TerminalException = new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.LinkIdentifier));
                 this.Abort();
             }
             else
             {
-                this.Close();
+                this.SafeClose(new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.LinkIdentifier)));
+            }
+        }
+
+        internal void AddOrUpdateUnsettledDelivery(Delivery delivery)
+        {
+            lock (this.syncRoot)
+            {
+                if (this.UnsettledMap.ContainsKey(delivery.DeliveryTag))
+                {
+                    this.UnsettledMap.Remove(delivery.DeliveryTag);
+                }
+
+                this.UnsettledMap.Add(delivery.DeliveryTag, delivery);
+            }
+        }
+
+        internal void RemoveUnsettledDelivery(ArraySegment<byte> deliveryTag)
+        {
+            lock (this.syncRoot)
+            {
+                this.UnsettledMap.Remove(deliveryTag);
+            }
+
+            if (this.Session.Connection.AmqpSettings.RuntimeProvider is ILinkRecoveryRuntimeProvider linkRecoveryRuntimeProvider)
+            {
+                if (linkRecoveryRuntimeProvider.UnsettledDeliveryStore != null)
+                {
+                    linkRecoveryRuntimeProvider.UnsettledDeliveryStore.RemoveDeliveryAsync(this.Terminus, deliveryTag);
+                }
             }
         }
 
@@ -1038,10 +1041,7 @@ namespace Microsoft.Azure.Amqp
             AmqpTrace.Provider.AmqpDispose(this, delivery.DeliveryId.Value, settled, state);
             if (settled && !delivery.Settled)
             {
-                lock (this.syncRoot)
-                {
-                    this.unsettledMap.Remove(delivery.DeliveryTag);
-                }
+                this.RemoveUnsettledDelivery(delivery.DeliveryTag);
             }
 
             this.Session.DisposeDelivery(this, delivery, settled, state, noFlush);
@@ -1255,14 +1255,7 @@ namespace Microsoft.Azure.Amqp
             {
                 if (this.IsRecoverable)
                 {
-                    IDictionary<ArraySegment<byte>, Delivery> resultantUnsettledDeliveries = Task.Run(() => this.Session.Connection.LinkTerminusManager.ProcessRemoteUnsettledMapAsync(this.LinkIdentifier, attach)).Result;
-                    if (resultantUnsettledDeliveries != null)
-                    {
-                        foreach (var resultantUnsettledDelivery in resultantUnsettledDeliveries)
-                        {
-                            this.UnsettledMap.Add(resultantUnsettledDelivery);
-                        }
-                    }
+                    this.ProcessUnsettledDeliveries(attach);
                 }
 
                 // TODO: need to negotiate the properties in case they are different between local and remote.

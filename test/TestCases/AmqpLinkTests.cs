@@ -677,8 +677,6 @@ namespace Test.Microsoft.Azure.Amqp
         [Fact]
         public void AmqpLinkDrainTest()
         {
-            AmqpTrace.FrameLogger = s => Debug.WriteLine(s);
-
             string entity = "AmqpLinkDrainTest";
             broker.AddQueue(entity);
 

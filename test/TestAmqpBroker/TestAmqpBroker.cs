@@ -516,7 +516,7 @@ namespace TestAmqpBroker
                 }
             }
 
-            void Dequeue(Consumer consumer, int credit)
+            void Dequeue(Consumer consumer, int credit, bool drain)
             {
                 List<BrokerMessage> messageList = new List<BrokerMessage>();
                 lock (this.syncRoot)
@@ -554,7 +554,14 @@ namespace TestAmqpBroker
 
                     if (consumer.Credit > 0)
                     {
-                        this.waiters.Enqueue(consumer);
+                        if (drain)
+                        {
+                            consumer.Credit = 0;
+                        }
+                        else
+                        {
+                            this.waiters.Enqueue(consumer);
+                        }
                     }
                 }
 
@@ -712,7 +719,11 @@ namespace TestAmqpBroker
 
                 void OnCredit(uint credit, bool drain, ArraySegment<byte> txnId)
                 {
-                    this.queue.Dequeue(this, (int)credit);
+                    this.queue.Dequeue(this, (int)credit, drain);
+                    if (drain)
+                    {
+                        this.link.DrainCredits();
+                    }
                 }
 
                 void OnDispose(Delivery delivery)

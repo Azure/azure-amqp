@@ -675,6 +675,49 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [Fact]
+        public void AmqpLinkDrainTest()
+        {
+            AmqpTrace.FrameLogger = s => Debug.WriteLine(s);
+
+            string entity = "AmqpLinkDrainTest";
+            broker.AddQueue(entity);
+
+            AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);
+            connection.Open();
+
+            AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+            session.Open();
+
+            SendingAmqpLink sender = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, entity, SettleMode.SettleOnSend));
+            sender.Open();
+            for (int i = 0; i < 8; i++)
+            {
+                sender.SendMessageNoWait(AmqpMessage.Create(new AmqpValue() { Value = "hello" }), EmptyBinary, NullBinary);
+            }
+
+            ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, entity, SettleMode.SettleOnSend, 0));
+            rLink.Settings.AutoSendFlow = false;
+            rLink.Open();
+
+            for (int i = 0; i < 8; i++)
+            {
+                rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(10), null, null), out AmqpMessage message);
+                rLink.AcceptMessage(message);
+            }
+
+            rLink.IssueCredit(10u, true, AmqpConstants.NullBinary);
+
+            for (int i = 0; i < 50 && rLink.LinkCredit > 0u; i++)
+            {
+                Thread.Sleep(20);
+            }
+
+            Assert.Equal(0u, rLink.LinkCredit);
+
+            connection.Close();
+        }
+
+        [Fact]
         public void AmqpDynamicLinkCreditTest()
         {
             AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);

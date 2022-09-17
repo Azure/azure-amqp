@@ -19,13 +19,13 @@ function Build-Solution
 		[String] $Platform = 'Any CPU'
 	)
 
-	msbuild.exe amqp.sln /t:restore /p:Configuration=$Configuration /p:Platform="$Platform" /verbosity:minimal
+	dotnet.exe restore amqp.sln -v minimal
 	if (-Not $?)
 	{
 		throw "Restore failed."
 	}
 
-	msbuild.exe amqp.sln /p:Configuration=$Configuration /p:Platform="$Platform" /verbosity:minimal
+	dotnet.exe build amqp.sln -c $Configuration --no-restore /p:Platform="$Platform" -v minimal
 	if (-Not $?)
 	{
 		throw "Build failed."

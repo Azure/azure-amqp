@@ -38,7 +38,7 @@ function Run-Tests
 	    [String] $Configuration = 'Debug'
 	)
 
-	dotnet.exe test -c $Configuration --no-build .\test\Test.Microsoft.Amqp\Test.Microsoft.Amqp.csproj
+	dotnet.exe test -c $Configuration --no-build .\test\Test.Microsoft.Amqp\Test.Microsoft.Amqp.csproj --logger "GitHubActions;report-warnings=false"
 	if (-Not $?)
 	{
 		throw "Test failed."

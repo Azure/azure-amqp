@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
             if (this.settings.WebsocketKeepAliveInterval != null)
             {
-                cws.Options.KeepAliveInterval = this.settings.WebsocketKeepAliveInterval;
+                cws.Options.KeepAliveInterval = this.settings.WebsocketKeepAliveInterval.Value;
             }
 
             var task = new TimeoutTaskSource<ClientWebSocket>(

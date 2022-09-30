@@ -54,6 +54,15 @@ namespace Microsoft.Azure.Amqp.Transport
         }
 
         /// <summary>
+        /// The websocket keep alive interval.
+        /// </summary>
+        public TimeSpan WebsocketKeepAliveInterval
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Creates a transport initiator.
         /// </summary>
         /// <returns>The transport initiator.</returns>

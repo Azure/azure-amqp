@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
     using System.Net;
+    using System.Net.WebSockets;
 
     /// <summary>
     /// Defines the web socket transport settings.
@@ -57,6 +58,15 @@ namespace Microsoft.Azure.Amqp.Transport
         /// Gets or sets the websocket keep alive interval.
         /// </summary>
         public TimeSpan? WebsocketKeepAliveInterval
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The ClientWebSocket instance to communicate over.
+        /// </summary>
+        public ClientWebSocket WebSocket
         {
             get;
             set;

@@ -20,7 +20,16 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override bool ConnectAsync(TimeSpan timeout, TransportAsyncCallbackArgs callbackArgs)
         {
-            ClientWebSocket cws = new ClientWebSocket();
+            ClientWebSocket cws;
+            if (this.settings.WebSocket != null)
+            {
+                cws = this.settings.WebSocket;
+            }
+            else
+            { 
+                cws = new ClientWebSocket();
+            }
+
             cws.Options.AddSubProtocol(this.settings.SubProtocol);
             if (this.settings.InternalSendBufferSize > 0 || this.settings.InternalReceiveBufferSize > 0)
             {

@@ -1076,10 +1076,12 @@ namespace Test.Microsoft.Azure.Amqp
             // NOTE: Increment this number to make it more likely to hit race conditions.
             const int NumberOfRuns = 500;
 
+#if NET461
             Process proc = Process.GetCurrentProcess();
             long affinityMask = (long)proc.ProcessorAffinity;
-            var newAffinityMask = affinityMask &= 0x000F; // use only any of the first 4 available processors to make repro similar in most systems
+            var newAffinityMask = affinityMask & 0x000F; // use only any of the first 4 available processors to make repro similar in most systems
             proc.ProcessorAffinity = (IntPtr)newAffinityMask;
+#endif
 
             try
             {
@@ -1140,7 +1142,9 @@ namespace Test.Microsoft.Azure.Amqp
             }
             finally
             {
+#if NET461
                 proc.ProcessorAffinity = (IntPtr)affinityMask;
+#endif
             }
         }
 

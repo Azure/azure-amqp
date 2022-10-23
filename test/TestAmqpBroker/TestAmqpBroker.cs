@@ -59,11 +59,9 @@ namespace TestAmqpBroker
             {
                 this.implicitQueue = true;
             }
-        }
+        }        
 
-        public IAmqpLinkTerminusManager LinkTerminusManager { get; internal set; }
-
-        public IAmqpDeliveryStore UnsettledDeliveryStore { get; internal set; }
+        public IAmqpTerminusStore TerminusStore { get; internal set; }
 
         public void Start()
         {
@@ -391,7 +389,7 @@ namespace TestAmqpBroker
             }
 
             throw new ArgumentException("No certificate can be found using the find value.");
-        }
+        }       
 
         sealed class CompletedAsyncResult : IAsyncResult
         {

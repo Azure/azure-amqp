@@ -173,7 +173,7 @@ namespace Microsoft.Azure.Amqp
                     throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpIllegalOperationState, "attach", this.State));
                 }
 
-                if (this.links.TryGetValue(link.LinkIdentifier, out linkToSteal) && link.AllowLinkStealing(linkToSteal.Settings.GetAmqpLinkTerminusInfo()))
+                if (this.links.TryGetValue(link.LinkIdentifier, out linkToSteal) && link.AllowLinkStealing(linkToSteal.Settings))
                 {
                     // Even though link onclose handler already removes the link from the links collection,
                     // calling Close() is fire and forget, so we will not be waiting for the link onClose handler to trigger
@@ -187,11 +187,12 @@ namespace Microsoft.Azure.Amqp
 
                 if (this.Connection.LinkRecoveryEnabled)
                 {
-                    this.Connection.LinkTerminusManager.TryGetLinkTerminus(link.LinkIdentifier, out AmqpLinkTerminus linkTerminus);
+                    this.Connection.TerminusStore.TryGetLinkTerminusAsync(link.LinkIdentifier, out AmqpLinkTerminus linkTerminus).GetAwaiter().GetResult();
                     if (linkTerminus == null)
                     {
-                        linkTerminus = this.Connection.LinkTerminusManager.CreateLinkTerminus(link.LinkIdentifier, ((ILinkRecoveryRuntimeProvider)this.Connection.AmqpSettings.RuntimeProvider).UnsettledDeliveryStore);
-                        if (!this.Connection.LinkTerminusManager.TryAddLinkTerminus(link.LinkIdentifier, linkTerminus))
+                        var linkRecoveryRuntimeProvider = ((ILinkRecoveryRuntimeProvider)this.Connection.AmqpSettings.RuntimeProvider);
+                        linkTerminus = new AmqpLinkTerminus(link.LinkIdentifier, link.Settings, linkRecoveryRuntimeProvider.TerminusStore);
+                        if (!this.Connection.TerminusStore.TryAddLinkTerminusAsync(link.LinkIdentifier, linkTerminus).GetAwaiter().GetResult())
                         {
                             // There was a race and some other link has already created a link terminus and attach.
                             // In this case, stop opening of this link and close it due to link stealing.

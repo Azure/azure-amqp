@@ -12,11 +12,11 @@ namespace Microsoft.Azure.Amqp
     using System.Timers;
 
     /// <summary>
-    /// A class which represents a link endpoint, which contains information about the link's identifier and a store of unsettled deliveries.
+    /// A class which represents a link endpoint, which contains information about the link's identifier, settings and a store of unsettled deliveries.
     /// </summary>
     public class AmqpLinkTerminus : IDisposable
     {
-        object thisLock = new object();
+        readonly object thisLock;
         bool disposed;
         AmqpLink link;
 
@@ -24,21 +24,14 @@ namespace Microsoft.Azure.Amqp
         /// Create a new instance of a link terminus object.
         /// </summary>
         /// <param name="identifier">The identifier that is used to uniquely identify the link endpoint.</param>
-        /// <param name="deliveryStore">The <see cref="IAmqpDeliveryStore"/> which will be responsible for getting and saving unsettled deliveires for this link terminus.</param>
-        public AmqpLinkTerminus(AmqpLinkIdentifier identifier, IAmqpDeliveryStore deliveryStore)
+        /// <param name="linkSettings">The link settings.</param>
+        /// <param name="terminusStore">The <see cref="IAmqpTerminusStore"/> which will be responsible for saving and retrieving LinkTerminus and its associated deliveries.</param>
+        public AmqpLinkTerminus(AmqpLinkIdentifier identifier, AmqpLinkSettings linkSettings, IAmqpTerminusStore terminusStore)
         {
-            if (identifier == null)
-            {
-                throw new ArgumentNullException(nameof(identifier));
-            }
-
-            if (deliveryStore == null)
-            {
-                throw new ArgumentNullException(nameof(deliveryStore));
-            }
-
-            this.Identifier = identifier;
-            this.UnsettledDeliveryStore = deliveryStore;
+            this.thisLock = new object();
+            this.Identifier = identifier ?? throw new ArgumentNullException(nameof(identifier));
+            this.LinkSettings = linkSettings ?? throw new ArgumentNullException(nameof(linkSettings));
+            this.TerminusStore = terminusStore ?? throw new ArgumentNullException(nameof(terminusStore));
         }
 
         /// <summary>
@@ -67,9 +60,9 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// The <see cref="IAmqpDeliveryStore"/> which will be responsible for getting and saving unsettled deliveires for this link terminus.
+        /// The <see cref="IAmqpTerminusStore"/> which will be responsible for saving and retrieving LinkTerminus and its associated deliveries.
         /// </summary>
-        public IAmqpDeliveryStore UnsettledDeliveryStore { get; }
+        public IAmqpTerminusStore TerminusStore { get; }
 
         /// <summary>
         /// Returns the identifier used to uniquely identify this terminus object.
@@ -77,16 +70,16 @@ namespace Microsoft.Azure.Amqp
         public AmqpLinkIdentifier Identifier { get; }
 
         /// <summary>
+        /// Settings of the link with which the linkTerminus was created
+        /// </summary>
+        public AmqpLinkSettings LinkSettings { get; }
+
+        internal IDictionary<ArraySegment<byte>, Delivery> UnsettledDeliveries { get; set; }
+
+        /// <summary>
         /// The timer object that tracks the expiry of the link terminus after its suspension.
         /// </summary>
         protected Timer ExpireTimer { get; set; }
-
-        /// <summary>
-        /// The <see cref="IAmqpLinkTerminusInfo"/> that's associated with the link terminus.
-        /// </summary>
-        protected IAmqpLinkTerminusInfo LinkTerminusInfo { get; set; }
-
-        IAmqpLinkTerminusManager TerminusManager => this.Link?.Session.Connection.LinkTerminusManager;
 
         /// <summary>
         /// Check if this link terminus object is equal to the other object provided.
@@ -131,8 +124,7 @@ namespace Microsoft.Azure.Amqp
                 this.disposed = true;
             }
 
-            this.UnsettledDeliveryStore.RemoveDeliveriesAsync(this);
-            this.link?.Session.Connection.LinkTerminusManager.TryRemoveLinkTerminus(new KeyValuePair<AmqpLinkIdentifier, AmqpLinkTerminus>(this.Identifier, this));
+            this.link?.Session.Connection.TerminusStore.TryRemoveLinkTerminusAsync(this.Identifier, this).GetAwaiter().GetResult();
             this.DisassociateLink();
         }
 
@@ -143,14 +135,13 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A task containing the resultant map of deliveries that would remain unsettled.</returns>
         internal protected async Task<IDictionary<ArraySegment<byte>, Delivery>> NegotiateUnsettledDeliveriesAsync(Attach remoteAttach)
         {
-            IDictionary<ArraySegment<byte>, Delivery> localUnsettledDeliveries = await this.UnsettledDeliveryStore.RetrieveDeliveriesAsync(this);
             if (this.Identifier.IsReceiver)
             {
-                return localUnsettledDeliveries;
+                return this.UnsettledDeliveries;
             }
             else
             {
-                return await NegotiateUnsettledDeliveriesFromSender(remoteAttach, localUnsettledDeliveries);
+                return await NegotiateUnsettledDeliveriesFromSender(remoteAttach, this.UnsettledDeliveries);
             }
         }
 
@@ -173,7 +164,7 @@ namespace Microsoft.Azure.Amqp
 
                 if (this.link != null)
                 {
-                    if (link.AllowLinkStealing(this.LinkTerminusInfo))
+                    if (link.AllowLinkStealing(this.LinkSettings))
                     {
                         stolenLink = this.link;
                         this.DisassociateLink();
@@ -203,15 +194,14 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            IDictionary<ArraySegment<byte>, Delivery> retrievedUnsettledDeliveries = this.UnsettledDeliveryStore.RetrieveDeliveriesAsync(this).Result;
-            if (retrievedUnsettledDeliveries != null)
+            if (this.UnsettledDeliveries != null)
             {
                 if (link.Settings.Unsettled == null)
                 {
                     link.Settings.Unsettled = new AmqpMap(new Dictionary<ArraySegment<byte>, Delivery>(), MapKeyByteArrayComparer.Instance);
                 }
 
-                foreach (var kvp in retrievedUnsettledDeliveries)
+                foreach (var kvp in UnsettledDeliveries)
                 {
                     link.Settings.Unsettled.Add(new MapKey(kvp.Key), kvp.Value.State);
                 }
@@ -261,10 +251,7 @@ namespace Microsoft.Azure.Amqp
                 Fx.Assert(link == this.Link, "The closed link should still be associated with this terminus, or else the event handler should have been removed.");
                 if (!this.disposed && !link.IsStolen())
                 {
-                    foreach (var kvp in link.UnsettledMap)
-                    {
-                        this.UnsettledDeliveryStore.SaveDeliveryAsync(this, kvp.Value);
-                    }
+                    this.TerminusStore.SaveDeliveriesAsync(this, link.UnsettledMap);
                 }
             }
         }
@@ -336,7 +323,7 @@ namespace Microsoft.Azure.Amqp
                         if (!peerHasDelivery)
                         {
                             // This is OASIS AMQP doc section 3.4.6 example 10, where the delivery does not need to be resent. Simply settle and remove it locally.
-                            await this.UnsettledDeliveryStore.RemoveDeliveryAsync(this, deliveryTag);
+                            await this.TerminusStore.RemoveDeliveryAsync(this, deliveryTag);
                             continue;
                         }
                         else
@@ -386,7 +373,7 @@ namespace Microsoft.Azure.Amqp
                             if (localTransactionalOutcome.IsTerminal())
                             {
                                 // This is OASIS AMQP doc section 3.4.6 example 10, where the delivery does not need to be resent. Simply settle and remove it locally.
-                                await this.UnsettledDeliveryStore.RemoveDeliveryAsync(this, deliveryTag);
+                                await this.TerminusStore.RemoveDeliveryAsync(this, deliveryTag);
                                 continue;
                             }
                             else
@@ -410,7 +397,7 @@ namespace Microsoft.Azure.Amqp
                     resultantUnsettledDeliveries.Add(localSenderDelivery.DeliveryTag, localSenderDelivery);
                     if (localSenderDelivery.Settled)
                     {
-                        await this.UnsettledDeliveryStore.RemoveDeliveryAsync(this, localSenderDelivery.DeliveryTag);
+                        await this.TerminusStore.RemoveDeliveryAsync(this, localSenderDelivery.DeliveryTag);
                     }
                 }
             }

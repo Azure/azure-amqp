@@ -8,6 +8,7 @@ namespace Test.Microsoft.Azure.Amqp
     using global::Microsoft.Azure.Amqp.Transaction;
     using global::Microsoft.Azure.Amqp.Transport;
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using TestAmqpBroker;
@@ -25,15 +26,13 @@ namespace Test.Microsoft.Azure.Amqp
         {
             connectionAddressUri = TestAmqpBrokerFixture.Address;
             broker = testAmqpBrokerFixture.Broker;
-            broker.LinkTerminusManager = new AmqpLinkTerminusManager();
-            broker.UnsettledDeliveryStore = new AmqpInMemoryDeliveryStore();
+            broker.TerminusStore = new AmqpInMemoryTerminusStore();
         }
 
         // This would be run after each test case.
         public void Dispose()
         {
-            broker.LinkTerminusManager = null;
-            broker.UnsettledDeliveryStore = null;
+            broker.TerminusStore = null;
         }
 
         // Test recovering a sender link by using an existing link terminus and link settings, then verify that the link settings are still the same.
@@ -43,8 +42,8 @@ namespace Test.Microsoft.Azure.Amqp
             AmqpConnection connection = null;
             try
             {
-                var linkTerminusManager = new AmqpLinkTerminusManager();
-                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(linkTerminusManager, new AmqpInMemoryDeliveryStore()));
+                var terminusStore = new AmqpInMemoryTerminusStore();
+                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(terminusStore));
                 AmqpSession session = await connection.OpenSessionAsync();
                 SendingAmqpLink originalSender = await session.OpenLinkAsync<SendingAmqpLink>(nameof(SenderRecoveryE2ETest) + "-sender", nameof(SenderRecoveryE2ETest));
                 originalSender.Settings.AddProperty("MyProp", "MyPropValue");
@@ -57,11 +56,11 @@ namespace Test.Microsoft.Azure.Amqp
                 await originalSender.CloseAsync();
 
                 // verrify that the link terminus has been captured upon link close.
-                linkTerminusManager.TryGetLinkTerminus(originalSender.LinkIdentifier, out AmqpLinkTerminus linkTerminus);
+                await terminusStore.TryGetLinkTerminusAsync(originalSender.LinkIdentifier, out AmqpLinkTerminus linkTerminus);
                 Assert.NotNull(linkTerminus);
                 foreach (AmqpMessage m in messages)
                 {
-                    var savedUnsettledDelivery = await linkTerminus.UnsettledDeliveryStore.RetrieveDeliveryAsync(linkTerminus, m.DeliveryTag);
+                    linkTerminus.UnsettledDeliveries.TryGetValue(m.DeliveryTag, out Delivery savedUnsettledDelivery);
                     Assert.NotNull(savedUnsettledDelivery);
                 }
 
@@ -89,8 +88,8 @@ namespace Test.Microsoft.Azure.Amqp
             AmqpConnection connection = null;
             try
             {
-                var linkTerminusManager = new AmqpLinkTerminusManager();
-                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(linkTerminusManager, new AmqpInMemoryDeliveryStore()));
+                var terminusStore = new AmqpInMemoryTerminusStore();
+                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(terminusStore));
                 AmqpSession session = await connection.OpenSessionAsync();
                 ReceivingAmqpLink originalReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(nameof(ReceiverRecoveryE2ETest) + "-receiver", nameof(SenderRecoveryE2ETest));
                 originalReceiver.Settings.AddProperty("MyProp", "MyPropValue");
@@ -103,11 +102,11 @@ namespace Test.Microsoft.Azure.Amqp
                 await originalReceiver.CloseAsync();
 
                 // verrify that the link terminus has been captured upon link close.
-                linkTerminusManager.TryGetLinkTerminus(originalReceiver.LinkIdentifier, out AmqpLinkTerminus linkTerminus);
+                await terminusStore.TryGetLinkTerminusAsync(originalReceiver.LinkIdentifier, out AmqpLinkTerminus linkTerminus);
                 Assert.NotNull(linkTerminus);
                 foreach (AmqpMessage m in messages)
                 {
-                    var savedUnsettledDelivery = await linkTerminus.UnsettledDeliveryStore.RetrieveDeliveryAsync(linkTerminus, m.DeliveryTag);
+                    linkTerminus.UnsettledDeliveries.TryGetValue(m.DeliveryTag, out Delivery savedUnsettledDelivery);
                     Assert.NotNull(savedUnsettledDelivery);
                 }
 
@@ -873,8 +872,7 @@ namespace Test.Microsoft.Azure.Amqp
         public async Task ConsecutiveLinkRecoveryTest()
         {
             string queueName = nameof(ConsecutiveLinkRecoveryTest) + "-queue";
-            AmqpInMemoryDeliveryStore localDeliveryStore = new AmqpInMemoryDeliveryStore();
-            AmqpConnection connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(new AmqpLinkTerminusManager(), localDeliveryStore));
+            AmqpConnection connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(new AmqpInMemoryTerminusStore()));
             AmqpSession session = await connection.OpenSessionAsync();
 
             // Specify the desired link expiry policy (required for link recovery) and link expiry timeout (optional for link recovery) on the link settings for potential recovery of this link in the future.
@@ -927,10 +925,10 @@ namespace Test.Microsoft.Azure.Amqp
 
             foreach (LinkTerminusExpiryPolicy expirationPolicy in testPolicies)
             {
-                AmqpConnection connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(new AmqpLinkTerminusManager(), new AmqpInMemoryDeliveryStore()));
+                AmqpConnection connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(new AmqpInMemoryTerminusStore()));
                 AmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId);
-                IAmqpLinkTerminusManager terminusManager = connection.LinkTerminusManager;
-                IAmqpLinkTerminusManager brokerTerminusManager = brokerConnection.LinkTerminusManager;
+                IAmqpTerminusStore terminusStore = connection.TerminusStore;
+                IAmqpTerminusStore brokerTerminusStore = brokerConnection.TerminusStore;
                 AmqpSession session = await connection.OpenSessionAsync();
 
                 AmqpLinkSettings linkSettings = AmqpLinkSettings.Create<T>(testName, connectionAddressUri.AbsoluteUri);
@@ -945,29 +943,29 @@ namespace Test.Microsoft.Azure.Amqp
                 await link.CloseAsync();
                 if (expiryTimeout > TimeSpan.Zero)
                 {
-                    AssertLinkTermini(shouldExist: expirationPolicy >= LinkTerminusExpiryPolicy.LINK_DETACH, terminusManager, brokerTerminusManager, link.LinkIdentifier, brokerLinkIdentifier);
+                    AssertLinkTermini(shouldExist: expirationPolicy >= LinkTerminusExpiryPolicy.LINK_DETACH, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
                     await Task.Delay(expiryTimeout + timeoutBuffer);
                 }
 
-                AssertLinkTermini(shouldExist: expirationPolicy > LinkTerminusExpiryPolicy.LINK_DETACH, terminusManager, brokerTerminusManager, link.LinkIdentifier, brokerLinkIdentifier);
+                AssertLinkTermini(shouldExist: expirationPolicy > LinkTerminusExpiryPolicy.LINK_DETACH, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
 
                 await session.CloseAsync();
                 if (expiryTimeout > TimeSpan.Zero)
                 {
-                    AssertLinkTermini(shouldExist: expirationPolicy >= LinkTerminusExpiryPolicy.SESSION_END, terminusManager, brokerTerminusManager, link.LinkIdentifier, brokerLinkIdentifier);
+                    AssertLinkTermini(shouldExist: expirationPolicy >= LinkTerminusExpiryPolicy.SESSION_END, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
                     await Task.Delay(expiryTimeout + timeoutBuffer);
                 }
 
-                AssertLinkTermini(shouldExist: expirationPolicy > LinkTerminusExpiryPolicy.SESSION_END, terminusManager, brokerTerminusManager, link.LinkIdentifier, brokerLinkIdentifier);
+                AssertLinkTermini(shouldExist: expirationPolicy > LinkTerminusExpiryPolicy.SESSION_END, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
 
                 await connection.CloseAsync();
                 if (expiryTimeout > TimeSpan.Zero)
                 {
-                    AssertLinkTermini(shouldExist: expirationPolicy >= LinkTerminusExpiryPolicy.CONNECTION_CLOSE, terminusManager, brokerTerminusManager, link.LinkIdentifier, brokerLinkIdentifier);
+                    AssertLinkTermini(shouldExist: expirationPolicy >= LinkTerminusExpiryPolicy.CONNECTION_CLOSE, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
                     await Task.Delay(expiryTimeout + timeoutBuffer);
                 }
 
-                AssertLinkTermini(shouldExist: expirationPolicy > LinkTerminusExpiryPolicy.CONNECTION_CLOSE, terminusManager, brokerTerminusManager, link.LinkIdentifier, brokerLinkIdentifier);
+                AssertLinkTermini(shouldExist: expirationPolicy > LinkTerminusExpiryPolicy.CONNECTION_CLOSE, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
             }
         }
 
@@ -976,13 +974,13 @@ namespace Test.Microsoft.Azure.Amqp
         /// </summary>
         static void AssertLinkTermini(
             bool shouldExist,
-            IAmqpLinkTerminusManager localLinkTerminusManager,
-            IAmqpLinkTerminusManager brokerLinkTerminusManager,
+            IAmqpTerminusStore localLinkTerminusStore,
+            IAmqpTerminusStore brokerLinkTerminusStore,
             AmqpLinkIdentifier localLinkIdentifier,
             AmqpLinkIdentifier brokerLinkIdentifier)
         {
-            Assert.Equal(shouldExist, localLinkTerminusManager.TryGetLinkTerminus(localLinkIdentifier, out _));
-            Assert.Equal(shouldExist, brokerLinkTerminusManager.TryGetLinkTerminus(brokerLinkIdentifier, out _));
+            Assert.Equal(shouldExist, localLinkTerminusStore.TryGetLinkTerminusAsync(localLinkIdentifier, out _).GetAwaiter().GetResult());
+            Assert.Equal(shouldExist, brokerLinkTerminusStore.TryGetLinkTerminusAsync(brokerLinkIdentifier, out _).GetAwaiter().GetResult());
         }
 
         /// <summary>
@@ -1011,15 +1009,18 @@ namespace Test.Microsoft.Azure.Amqp
         {
             bool localRole = typeof(T) == typeof(ReceivingAmqpLink);
             string queueName = testName + "-queue";
-            AmqpInMemoryDeliveryStore localDeliveryStore = new AmqpInMemoryDeliveryStore();
+            AmqpInMemoryTerminusStore localDeliveryStore = new AmqpInMemoryTerminusStore();
 
-            TestAmqpConnection connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(new AmqpLinkTerminusManager(), localDeliveryStore));
+            TestAmqpConnection connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(localDeliveryStore));
             TestAmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId) as TestAmqpConnection;
 
             var localLinkIdentifier = new AmqpLinkIdentifier(testName, localRole, connection.Settings.ContainerId);
-            AmqpLinkTerminus localLinkTerminus = new AmqpLinkTerminus(localLinkIdentifier, localDeliveryStore);
+
+            AmqpLinkSettings linkSettings = AmqpLinkSettings.Create<T>(testName, queueName);
+            AmqpLinkTerminus localLinkTerminus = new AmqpLinkTerminus(localLinkIdentifier, linkSettings, localDeliveryStore);
             var brokerLinkIdentifier = new AmqpLinkIdentifier(testName, !localRole, brokerConnection.Settings.ContainerId);
-            AmqpLinkTerminus brokerLinkTerminus = new AmqpLinkTerminus(brokerLinkIdentifier, broker.UnsettledDeliveryStore);
+            var brokerLinkSettings = AmqpLinkSettings.Create(linkSettings);
+            AmqpLinkTerminus brokerLinkTerminus = new AmqpLinkTerminus(brokerLinkIdentifier, brokerLinkSettings, broker.TerminusStore);
 
             try
             {
@@ -1040,11 +1041,10 @@ namespace Test.Microsoft.Azure.Amqp
 
                 if (hasRemoteDeliveryState)
                 {
-                    await AddUnsettledDeliveryAsync(broker.UnsettledDeliveryStore, brokerLinkTerminus, deliveryTag, remoteDeliveryState, true);
+                    await AddUnsettledDeliveryAsync(broker.TerminusStore, brokerLinkTerminus, deliveryTag, remoteDeliveryState, true);
                 }
 
                 // Open the link and observe the frames exchanged.
-                AmqpLinkSettings linkSettings = AmqpLinkSettings.Create<T>(testName, queueName);
                 linkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.LINK_DETACH);
                 AmqpLink localLink = await session.OpenLinkAsync<T>(linkSettings);
                 await Task.Delay(1000); // wait for the sender to potentially send the initial deliveries
@@ -1114,12 +1114,12 @@ namespace Test.Microsoft.Azure.Amqp
             return connection;
         }
 
-        static async Task<AmqpMessage> AddUnsettledDeliveryAsync(IAmqpDeliveryStore deliveryStore, AmqpLinkTerminus linkTerminus, ArraySegment<byte> deliveryTag, DeliveryState deliveryState, bool isBrokerMessage)
+        static async Task<AmqpMessage> AddUnsettledDeliveryAsync(IAmqpTerminusStore terminusStore, AmqpLinkTerminus linkTerminus, ArraySegment<byte> deliveryTag, DeliveryState deliveryState, bool isBrokerMessage)
         {
             var message = isBrokerMessage ? new BrokerMessage(AmqpMessage.Create("My Message")) : AmqpMessage.Create("My Message");
             message.DeliveryTag = deliveryTag;
             message.State = deliveryState;
-            await deliveryStore.SaveDeliveryAsync(linkTerminus, message);
+            await terminusStore.SaveDeliveriesAsync(linkTerminus, new Dictionary<ArraySegment<byte>, Delivery> { { message.DeliveryTag, message } });
             return message;
         }
 

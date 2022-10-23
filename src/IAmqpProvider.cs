@@ -81,14 +81,9 @@ namespace Microsoft.Azure.Amqp
     public interface ILinkRecoveryRuntimeProvider : IRuntimeProvider
     {
         /// <summary>
-        /// This object is used to manage <see cref="AmqpLinkTerminus"/> objects in order to support link recovery.
+        /// This object is used to manage <see cref="AmqpLinkTerminus"/> objects and unsettled deliveries associated with the terminus in order to support link recovery.
         /// </summary>
-        IAmqpLinkTerminusManager LinkTerminusManager { get; }
-
-        /// <summary>
-        /// This object is used to manage unsettled deliveries in order to support link recovery.
-        /// </summary>
-        IAmqpDeliveryStore UnsettledDeliveryStore { get; }
+        IAmqpTerminusStore TerminusStore { get; }
     }
 
     /// <summary>

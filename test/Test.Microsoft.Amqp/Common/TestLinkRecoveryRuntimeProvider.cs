@@ -7,14 +7,11 @@ namespace Test.Microsoft.Azure.Amqp
 
     class TestLinkRecoveryRuntimeProvider : TestRuntimeProvider, ILinkRecoveryRuntimeProvider
     {
-        internal TestLinkRecoveryRuntimeProvider(IAmqpLinkTerminusManager linkTerminusManager, IAmqpDeliveryStore unsettledDeliveryStore)
+        internal TestLinkRecoveryRuntimeProvider(IAmqpTerminusStore terminusStore)
         {
-            this.LinkTerminusManager = linkTerminusManager;
-            this.UnsettledDeliveryStore = unsettledDeliveryStore;
+            this.TerminusStore = terminusStore;
         }
 
-        public IAmqpLinkTerminusManager LinkTerminusManager { get; }
-
-        public IAmqpDeliveryStore UnsettledDeliveryStore { get; }
+        public IAmqpTerminusStore TerminusStore { get; }        
     }
 }

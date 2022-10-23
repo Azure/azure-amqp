@@ -1015,12 +1015,14 @@ namespace Test.Microsoft.Azure.Amqp
             TestAmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId) as TestAmqpConnection;
 
             var localLinkIdentifier = new AmqpLinkIdentifier(testName, localRole, connection.Settings.ContainerId);
-
             AmqpLinkSettings linkSettings = AmqpLinkSettings.Create<T>(testName, queueName);
             AmqpLinkTerminus localLinkTerminus = new AmqpLinkTerminus(localLinkIdentifier, linkSettings, localDeliveryStore);
+            await localDeliveryStore.TryAddLinkTerminusAsync(localLinkIdentifier, localLinkTerminus);
+
             var brokerLinkIdentifier = new AmqpLinkIdentifier(testName, !localRole, brokerConnection.Settings.ContainerId);
             var brokerLinkSettings = AmqpLinkSettings.Create(linkSettings);
             AmqpLinkTerminus brokerLinkTerminus = new AmqpLinkTerminus(brokerLinkIdentifier, brokerLinkSettings, broker.TerminusStore);
+            await broker.TerminusStore.TryAddLinkTerminusAsync(brokerLinkIdentifier, brokerLinkTerminus);
 
             try
             {

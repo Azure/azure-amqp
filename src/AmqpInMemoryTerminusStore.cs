@@ -99,7 +99,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (this.deliveries.TryGetValue(linkTerminus, out IDictionary<ArraySegment<byte>, Delivery> terminusDeliveries))
                     {
-                        linkTerminus.UnsettledDeliveries = new Dictionary<ArraySegment<byte>, Delivery>(terminusDeliveries); 
+                        linkTerminus.UnsettledDeliveries = new Dictionary<ArraySegment<byte>, Delivery>(terminusDeliveries);
                     }
                 }
 
@@ -136,7 +136,7 @@ namespace Microsoft.Azure.Amqp
                 foreach (var keyValuePair in unsettledDeliveries)
                 {
                     terminusDeliveries.Remove(keyValuePair.Key);
-                    terminusDeliveries.Add(keyValuePair.Key, keyValuePair.Value); 
+                    terminusDeliveries.Add(keyValuePair.Key, keyValuePair.Value);
                 }
             }
 

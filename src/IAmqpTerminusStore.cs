@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Amqp
     using System.Threading.Tasks;
 
     /// <summary>
-    /// This class should be responsible for 
+    /// This class should be responsible for
     /// 1. Storage and retrieval of LinkTerminus (either in-memory or disk).
     /// 2. Storage and retrieval of deliveries associated with the LinkTerminus (either in-memory or disk).
     /// </summary>

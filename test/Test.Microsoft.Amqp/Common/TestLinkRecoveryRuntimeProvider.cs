@@ -12,6 +12,6 @@ namespace Test.Microsoft.Azure.Amqp
             this.TerminusStore = terminusStore;
         }
 
-        public IAmqpTerminusStore TerminusStore { get; }        
+        public IAmqpTerminusStore TerminusStore { get; }
     }
 }

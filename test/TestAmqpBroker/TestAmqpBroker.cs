@@ -59,7 +59,7 @@ namespace TestAmqpBroker
             {
                 this.implicitQueue = true;
             }
-        }        
+        }
 
         public IAmqpTerminusStore TerminusStore { get; internal set; }
 

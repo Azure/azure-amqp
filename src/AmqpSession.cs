@@ -601,6 +601,7 @@ namespace Microsoft.Azure.Amqp
         void OnReceiveLinkFrame(Frame frame)
         {
             AmqpLink link = null;
+            AmqpLink stolenLink = null;
             Performative command = frame.Command;
             if (command.DescriptorCode == Attach.Code)
             {
@@ -610,6 +611,21 @@ namespace Microsoft.Azure.Amqp
                 lock (this.ThisLock)
                 {
                     this.links.TryGetValue(linkIdentifier, out link);
+                    if (link != null && link.State >= AmqpObjectState.OpenReceived)
+                    {
+                        // If the link state is past OpenReceived, it means that the link has already received an Attach frame from remote, regardless if the link open was initiated by local or remote.
+                        // A single link life cycle should not receive Attach more than once, therefore if the existing link has already received an Attach, this current Attach must be intended for another link.
+                        // In that case, remove the existing link due to link stealing and create a new link based on the Attach frame received.
+                        stolenLink = link;
+                        this.links.Remove(linkIdentifier);
+                    }
+                }
+
+                if (stolenLink != null)
+                {
+                    // Abort the local existing link, which does not send a detach back to remote, who initiated opening a new link and is not expecting the new link to be closed.
+                    stolenLink.OnLinkStolen(true);
+                    link = null;
                 }
 
                 if (link == null || link.State >= AmqpObjectState.OpenReceived)

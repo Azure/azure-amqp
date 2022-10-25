@@ -8,9 +8,10 @@ namespace Test.Microsoft.Azure.Amqp
     using System.Threading.Tasks;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Framing;
+    using global::Microsoft.Azure.Amqp.Sasl;
     using global::Microsoft.Azure.Amqp.Transport;
-    using Xunit;
     using TestAmqpBroker;
+    using Xunit;
 
     [Trait("Category", TestCategory.Current)]
     public class CancellationTokenTests
@@ -46,6 +47,7 @@ namespace Test.Microsoft.Azure.Amqp
                 await Assert.ThrowsAsync<TaskCanceledException>(async () =>
                 {
                     AmqpSettings settings = new AmqpSettings();
+                    settings.TransportProviders.Add(new SaslTransportProvider(AmqpVersion.V100));
                     settings.TransportProviders.Add(new AmqpTransportProvider(AmqpVersion.V100));
 
                     AmqpTransportInitiator initiator = new AmqpTransportInitiator(settings, transportSettings);

@@ -32,6 +32,11 @@ namespace Microsoft.Azure.Amqp.Transport
                 cws.Options.Proxy = this.settings.Proxy;
             }
 
+            if (this.settings.WebsocketKeepAliveInterval != null)
+            {
+                cws.Options.KeepAliveInterval = this.settings.WebsocketKeepAliveInterval.Value;
+            }
+
             var task = new TimeoutTaskSource<ClientWebSocket>(
                 cws,
                 s => s.ConnectAsync(this.settings.Uri, CancellationToken.None),

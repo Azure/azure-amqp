@@ -1,6 +1,6 @@
 # Microsoft Azure AMQP for .Net
 
-[![Build status](https://ci.appveyor.com/api/projects/status/the7eqq0ixf0hcx3?svg=true)](https://ci.appveyor.com/project/xinchen10/azure-amqp)    [![NuGet Version and Downloads count](https://buildstats.info/nuget/Microsoft.Azure.Amqp)](https://www.nuget.org/packages/Microsoft.Azure.Amqp/)
+[![Build status](https://github.com/Azure/azure-amqp/actions/workflows/ci.yml/badge.svg)](https://github.com/Azure/azure-amqp/actions/workflows/ci.yml)    [![NuGet Version and Downloads count](https://buildstats.info/nuget/Microsoft.Azure.Amqp)](https://www.nuget.org/packages/Microsoft.Azure.Amqp/)
 
 This repository contains the source code for the Microsoft Azure AMQP for C# implementation.
 

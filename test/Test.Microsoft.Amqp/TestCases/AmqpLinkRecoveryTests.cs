@@ -8,6 +8,7 @@ namespace Test.Microsoft.Azure.Amqp
     using global::Microsoft.Azure.Amqp.Transaction;
     using global::Microsoft.Azure.Amqp.Transport;
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Threading;
     using System.Threading.Tasks;
@@ -875,7 +876,7 @@ namespace Test.Microsoft.Azure.Amqp
             try
             {
                 string queueName = nameof(ConsecutiveLinkRecoveryTest) + "-queue";
-                AmqpConnection connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(new AmqpInMemoryTerminusStore()));
+                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(new AmqpInMemoryTerminusStore()));
                 AmqpSession session = await connection.OpenSessionAsync();
 
                 // Specify the desired link expiry policy (required for link recovery) and link expiry timeout (optional for link recovery) on the link settings for potential recovery of this link in the future.
@@ -985,8 +986,8 @@ namespace Test.Microsoft.Azure.Amqp
                 finally
                 {
                     await connection?.CloseAsync();
-                    broker.LinkTerminusManager = null;
-                    broker.LinkTerminusManager = new AmqpLinkTerminusManager();
+                    broker.TerminusStore = null;
+                    broker.TerminusStore = new AmqpInMemoryTerminusStore();
                 }
             }
         }

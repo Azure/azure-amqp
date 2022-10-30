@@ -299,6 +299,9 @@ namespace Microsoft.Azure.Amqp
                     bool peerHasDelivery = remoteAttach.Unsettled?.TryGetValue(new MapKey(deliveryTag), out peerDeliveryState) == true;
                     bool remoteReachedTerminal = peerDeliveryState.IsTerminal();
 
+                    string details = $"DeliveryTag: {Extensions.GetString(deliveryTag)}, LocalDeliveryState: {localDeliveryState}, PeerDeliveryState: {peerDeliveryState}, PeerHasDelivery: {peerHasDelivery}, RemoteReachedTerminalState: {remoteReachedTerminal}";
+                    AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.LinkRecoveryNegotiate, details);
+
                     if (localDeliveryState == null || localDeliveryState.DescriptorCode == Received.Code)
                     {
                         // This section takes care of OASIS AMQP doc section 3.4.6, examples 1 to 8.
@@ -395,6 +398,7 @@ namespace Microsoft.Azure.Amqp
 
                     localSenderDelivery.Resume = peerHasDelivery;
                     resultantUnsettledDeliveries.Add(localSenderDelivery.DeliveryTag, localSenderDelivery);
+
                     if (localSenderDelivery.Settled)
                     {
                         await this.TerminusStore.RemoveDeliveryAsync(this, localSenderDelivery.DeliveryTag);

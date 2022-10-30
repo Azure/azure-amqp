@@ -171,17 +171,25 @@ namespace TestAmqpBroker
         /// </summary>
         internal AmqpConnection FindConnection(string containerId)
         {
+            Stopwatch connectionTimer = Stopwatch.StartNew();
             lock (this.connections)
             {
-                foreach (AmqpConnection connection in this.connections.Values)
+                while (connectionTimer.Elapsed.TotalSeconds < 60)
                 {
-                    if (connection.Settings.RemoteContainerId.Equals(containerId, StringComparison.OrdinalIgnoreCase))
+                    foreach (AmqpConnection connection in this.connections.Values)
                     {
-                        return connection;
+                        if (connection.Settings.RemoteContainerId.Equals(containerId, StringComparison.OrdinalIgnoreCase))
+                        {
+                            Trace.WriteLine($"Connection found in {connectionTimer.Elapsed.TotalMilliseconds}");
+                            return connection;
+                        }
                     }
+
+                    Task.Delay(TimeSpan.FromMilliseconds(100)).GetAwaiter().GetResult();
                 }
             }
 
+            Trace.WriteLine($"Connection not found in {connectionTimer.Elapsed.TotalMilliseconds}");
             return null;
         }
 

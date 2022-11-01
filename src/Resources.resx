@@ -289,6 +289,9 @@
     <value>Cannot upgrade transport from type '{0}' to '{1}'.</value>
   </data>
   <data name="AmqpLinkStolen" xml:space="preserve">
-    <value>The link with identifier {0} has been closed due to link stealing. </value>
+    <value>The link with identifier {0} has been closed due to link stealing.</value>
+  </data>
+  <data name="AmqpContainerIdRequired" xml:space="preserve">
+    <value>The AMQP connection source container ID is required.</value>
   </data>
 </root>

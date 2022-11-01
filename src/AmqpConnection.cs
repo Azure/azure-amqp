@@ -245,6 +245,11 @@ namespace Microsoft.Azure.Amqp
         protected override bool OpenInternal()
         {
             AmqpTrace.Provider.AmqpOpenConnection(this, this);
+            if (this.Settings.ContainerId == null)
+            {
+                throw new ArgumentNullException("AmqpConnectionSettings.ContainerId", Resources.AmqpContainerIdRequired);
+            }
+
             if (this.isInitiator)
             {
                 this.SendProtocolHeader(this.initialHeader);

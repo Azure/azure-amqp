@@ -6,6 +6,7 @@ namespace Test.Microsoft.Azure.Amqp
     using System;
     using System.Threading.Tasks;
     using global::Microsoft.Azure.Amqp;
+    using global::Microsoft.Azure.Amqp.Transport;
     using TestAmqpBroker;
     using Xunit;
 
@@ -16,10 +17,33 @@ namespace Test.Microsoft.Azure.Amqp
     [Trait("Category", TestCategory.Current)]
     public class AmqpConnectionTests
     {
+        const string address = "amqp://localhost:15672";
+
+        [Fact]
+        public void AmqpConnectionNullContainerIdTest()
+        {
+            var broker = new TestAmqpBroker(new string[] { address }, "guest:guest", null, null);
+            broker.Start();
+
+            try
+            {
+                var uri = new Uri(address);
+                TransportBase transport = AmqpUtils.CreateTransport(uri.Host, uri.Port, null, false, null);
+                AmqpSettings settings = AmqpUtils.GetAmqpSettings(true, null, false);
+                var connectionSettings = new AmqpConnectionSettings();
+                var connection = new AmqpConnection(transport, settings, connectionSettings);
+                Assert.Throws<ArgumentNullException>(() => connection.Open());
+                transport.Close();
+            }
+            finally
+            {
+                broker.Stop();
+            }
+        }
+
         [Fact]
         public void AmqpConcurrentConnectionsTest()
         {
-            const string address = "amqp://localhost:15672";
             var broker = new TestAmqpBroker(new string[] { address }, "guest:guest", null, null);
             broker.Start();
 

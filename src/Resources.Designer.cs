@@ -10,7 +10,7 @@
 
 namespace Microsoft.Azure.Amqp {
     using System;
-    using System.Reflection;
+    
     
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Amqp {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Amqp {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.Azure.Amqp.Resources", typeof(Resources).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.Azure.Amqp.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -113,13 +113,22 @@ namespace Microsoft.Azure.Amqp {
                 return ResourceManager.GetString("AmqpChannelNotFound", resourceCulture);
             }
         }
-
+        
         /// <summary>
-        ///   Looks up a localized string similar to The connection was inactive for more than the allowed {0} milliseconds and is closed by container '{1}'..
+        ///   Looks up a localized string similar to The connection was inactive for more than the allowed {0} milliseconds and is closed by container &apos;{1}&apos;..
         /// </summary>
         internal static string AmqpConnectionInactive {
             get {
                 return ResourceManager.GetString("AmqpConnectionInactive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The AMQP connection source container ID is required..
+        /// </summary>
+        internal static string AmqpContainerIdRequired {
+            get {
+                return ResourceManager.GetString("AmqpContainerIdRequired", resourceCulture);
             }
         }
         
@@ -383,9 +392,9 @@ namespace Microsoft.Azure.Amqp {
                 return ResourceManager.GetString("AmqpInvalidType", resourceCulture);
             }
         }
-
+        
         /// <summary>
-        ///   Looks up a localized string similar to The link with link name {0} under connection with containerId {1} has been closed due to link stealing. .
+        ///   Looks up a localized string similar to The link with identifier {0} has been closed due to link stealing..
         /// </summary>
         internal static string AmqpLinkStolen {
             get {

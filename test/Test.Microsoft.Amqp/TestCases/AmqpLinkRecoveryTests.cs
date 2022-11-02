@@ -1032,11 +1032,11 @@ namespace Test.Microsoft.Azure.Amqp
         {
             bool localRole = typeof(T) == typeof(ReceivingAmqpLink);
             string queueName = testName + "-queue";
-            AmqpInMemoryTerminusStore localDeliveryStore = new AmqpInMemoryTerminusStore();
             
             Trace.WriteLine($"Beginning test: {testName}");
-            TestAmqpConnection connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(localDeliveryStore));
 
+            AmqpInMemoryTerminusStore localDeliveryStore = new AmqpInMemoryTerminusStore();
+            TestAmqpConnection connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(localDeliveryStore));
             TestAmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId) as TestAmqpConnection;
 
             try
@@ -1052,7 +1052,8 @@ namespace Test.Microsoft.Azure.Amqp
                 await broker.TerminusStore.TryAddLinkTerminusAsync(brokerLinkIdentifier, brokerLinkTerminus);
 
                 TestAmqpConnection receiverSideConnection = localRole ? connection : brokerConnection;
-                AmqpSession session = await connection.OpenSessionAsync();
+                AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+                session.Open();
 
                 // If needed, actually declare the transaction so the broker can find this transaction and not throw exceptions.
                 Controller txController = null;

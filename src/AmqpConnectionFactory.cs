@@ -213,7 +213,7 @@ namespace Microsoft.Azure.Amqp
                 connectionSettings.ContainerId = connectionSettings.ContainerId ?? Guid.NewGuid().ToString();
                 connectionSettings.HostName = connectionSettings.HostName ?? addressUri.Host;
 
-                return await this.CreateAndOpenConnectionAsync(transport, settings, connectionSettings, timeout, cancellationToken);
+                return await this.CreateAndOpenConnectionAsync(transport, settings, connectionSettings, timeoutHelper.RemainingTime(), cancellationToken);
             }
             catch
             {

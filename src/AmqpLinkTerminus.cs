@@ -326,7 +326,7 @@ namespace Microsoft.Azure.Amqp
                         if (!peerHasDelivery)
                         {
                             // This is OASIS AMQP doc section 3.4.6 example 10, where the delivery does not need to be resent. Simply settle and remove it locally.
-                            await this.TerminusStore.RemoveDeliveryAsync(this, deliveryTag);
+                            await this.TerminusStore.RemoveDeliveryAsync(this, deliveryTag).ConfigureAwait(false);
                             continue;
                         }
                         else
@@ -376,7 +376,7 @@ namespace Microsoft.Azure.Amqp
                             if (localTransactionalOutcome.IsTerminal())
                             {
                                 // This is OASIS AMQP doc section 3.4.6 example 10, where the delivery does not need to be resent. Simply settle and remove it locally.
-                                await this.TerminusStore.RemoveDeliveryAsync(this, deliveryTag);
+                                await this.TerminusStore.RemoveDeliveryAsync(this, deliveryTag).ConfigureAwait(false);
                                 continue;
                             }
                             else
@@ -401,7 +401,7 @@ namespace Microsoft.Azure.Amqp
 
                     if (localSenderDelivery.Settled)
                     {
-                        await this.TerminusStore.RemoveDeliveryAsync(this, localSenderDelivery.DeliveryTag);
+                        await this.TerminusStore.RemoveDeliveryAsync(this, localSenderDelivery.DeliveryTag).ConfigureAwait(false);
                     }
                 }
             }

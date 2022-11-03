@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Amqp.Framing
     /// <summary>
     /// Defines the source.
     /// </summary>
-    public sealed class Source : DescribedList, IAmqpLinkTerminusInfo
+    public sealed class Source : DescribedList
     {
         /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:source:list";

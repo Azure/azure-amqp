@@ -519,11 +519,11 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Decide if the current link should be allowed to steal a link endpoint with the provided <see cref="IAmqpLinkTerminusInfo"/>.
+        /// Decide if the current link should be allowed to steal a link endpoint with the provided <see cref="AmqpLinkSettings"/>.
         /// </summary>
-        /// <param name="existingLinkTerminusInfo">The terminus info for the existing link to be stolen.</param>
+        /// <param name="amqpLinkSettings">The linkSettings for the existing link that is about to be stolen.</param>
         /// <returns>True if link stealing this link should be allowed.</returns>
-        internal protected virtual bool AllowLinkStealing(IAmqpLinkTerminusInfo existingLinkTerminusInfo)
+        internal protected virtual bool AllowLinkStealing(AmqpLinkSettings amqpLinkSettings)
         {
             return true;
         }
@@ -1029,9 +1029,9 @@ namespace Microsoft.Azure.Amqp
 
             if (this.Session.Connection.AmqpSettings.RuntimeProvider is ILinkRecoveryRuntimeProvider linkRecoveryRuntimeProvider)
             {
-                if (linkRecoveryRuntimeProvider.UnsettledDeliveryStore != null)
+                if (linkRecoveryRuntimeProvider.TerminusStore != null)
                 {
-                    linkRecoveryRuntimeProvider.UnsettledDeliveryStore.RemoveDeliveryAsync(this.Terminus, deliveryTag);
+                    linkRecoveryRuntimeProvider.TerminusStore.TryRemoveDeliveryAsync(this.Terminus, deliveryTag).GetAwaiter().GetResult();
                 }
             }
         }

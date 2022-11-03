@@ -428,17 +428,6 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Gets the <see cref="Framing.Outcome"/> of a <see cref="DeliveryState"/>,
-        /// whether it's a transactional state with an outcome, or itself is an outcome.
-        /// </summary>
-        /// <param name="deliveryState">The <see cref="DeliveryState"/> to get an outcome from.</param>
-        /// <returns>The outcome of the delivery state, or null if it hasn't reached an outcome.</returns>
-        public static Outcome Outcome(this DeliveryState deliveryState)
-        {
-            return deliveryState is TransactionalState transactionalState ? transactionalState.Outcome : deliveryState as Outcome;
-        }
-
-        /// <summary>
         /// Returns true if the the given delivery state has reached a terminal outcome.
         /// </summary>
         /// <param name="deliveryState">The <see cref="DeliveryState"/> to check if it has reached an outcome.</param>
@@ -452,21 +441,24 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Return the terminus info (source/target) from the given link settings.
-        /// </summary>
-        /// <param name="linkSettings">The link settings to obtain the AmqpLinkTerminusInfo from.</param>
-        public static IAmqpLinkTerminusInfo GetAmqpLinkTerminusInfo(this AmqpLinkSettings linkSettings)
-        {
-            return linkSettings.IsReceiver() ? linkSettings.Target as Target : linkSettings.Source as Source;
-        }
-
-        /// <summary>
         /// Return the ExpiryPolicy from the link settings by checking the Target or Source, depending if the link is a receiver or sender.
         /// </summary>
         /// <param name="linkSettings">The link settings to obtain the ExpiryPolicy from.</param>
         public static AmqpSymbol GetExpiryPolicy(this AmqpLinkSettings linkSettings)
         {
-            return linkSettings.GetAmqpLinkTerminusInfo()?.ExpiryPolicy ?? new AmqpSymbol();
+            AmqpSymbol? expiryPolicy;
+            if (linkSettings.IsReceiver())
+            {
+                var target = linkSettings.Target as Target;
+                expiryPolicy = target?.ExpiryPolicy;
+            }
+            else
+            {
+                var source = linkSettings.Source as Source;
+                expiryPolicy = source?.ExpiryPolicy;
+            }
+
+            return expiryPolicy ?? new AmqpSymbol();
         }
 
         /// <summary>
@@ -496,8 +488,23 @@ namespace Microsoft.Azure.Amqp
         /// <param name="linkSettings">The link settings to obtain the terminus expiry timeout from.</param>
         public static TimeSpan GetExpiryTimeout(this AmqpLinkSettings linkSettings)
         {
-            uint timeoutInSeconds = linkSettings.GetAmqpLinkTerminusInfo().Timeout ?? 0;
-            return TimeSpan.FromSeconds(timeoutInSeconds);
+            uint? timeoutInSeconds;
+            if (linkSettings.IsReceiver())
+            {
+                var target = linkSettings.Target as Target;
+                timeoutInSeconds = target?.Timeout;
+            }
+            else
+            {
+                var source = linkSettings.Source as Source;
+                timeoutInSeconds = source?.Timeout;
+            }
+
+            if (timeoutInSeconds == null)
+            {
+                timeoutInSeconds = 0;
+            }
+            return TimeSpan.FromSeconds((uint)timeoutInSeconds);
         }
 
         /// <summary>

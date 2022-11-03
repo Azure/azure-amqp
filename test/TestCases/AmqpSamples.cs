@@ -49,14 +49,11 @@ namespace Test.Microsoft.Azure.Amqp
         {
             string queueName = "LinkRecoverySample";
             broker.AddQueue(queueName);
-            broker.LinkTerminusManager = new AmqpLinkTerminusManager();
-            broker.UnsettledDeliveryStore = new AmqpInMemoryDeliveryStore();
+            broker.TerminusStore = new AmqpInMemoryTerminusStore();
 
             // Need to provide a link terminus manager and unsettled delivery store in order to track the link terminus and unsettled deliveries in order to do link recovery.
             // The link terminus manager and unsettled delivery store should be managed by the client/application that is using this AMQP library.
-            var terminusManager = new AmqpLinkTerminusManager();
-            var unsettledDeliveryStore = new AmqpInMemoryDeliveryStore();
-            var amqpSettings = new AmqpSettings() { RuntimeProvider = new TestLinkRecoveryRuntimeProvider(terminusManager, new AmqpInMemoryDeliveryStore()) };
+            var amqpSettings = new AmqpSettings() { RuntimeProvider = new TestLinkRecoveryRuntimeProvider(new AmqpInMemoryTerminusStore()) };
             var factory = new AmqpConnectionFactory(amqpSettings);
 
             // Need to use the same containId later to identify and recover this link endpoint.

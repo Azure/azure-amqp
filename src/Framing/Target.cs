@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Amqp.Framing
     /// <summary>
     /// Defines the target.
     /// </summary>
-    public sealed class Target : DescribedList, IAmqpLinkTerminusInfo
+    public sealed class Target : DescribedList
     {
         /// <summary>Descriptor name.</summary>
         public static readonly string Name = "amqp:target:list";

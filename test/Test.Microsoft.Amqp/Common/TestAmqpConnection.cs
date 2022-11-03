@@ -81,6 +81,8 @@ namespace Test.Microsoft.Azure.Amqp
             using (Frame frame = new Frame())
             {
                 frame.Decode(buffer);
+                AmqpTrace.OnFrame(this.Identifier.Value, frame.Type, frame.Channel, frame.Command, false, frame.Size);
+
                 if (frame.Command != null)
                 {
                     this.ReceivedPerformatives.AddLast(frame.Command);

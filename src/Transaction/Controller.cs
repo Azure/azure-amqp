@@ -74,7 +74,7 @@ namespace Microsoft.Azure.Amqp.Transaction
                 static r => ((Controller)r.AsyncState).controllerLink.EndSendMessage(r),
                 message,
                 cancellationToken,
-                this);
+                this).ConfigureAwait(false);
 
             this.ThrowIfRejected(deliveryState);
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "EndDeclare");
@@ -118,7 +118,7 @@ namespace Microsoft.Azure.Amqp.Transaction
                 static r => ((Controller)r.AsyncState).controllerLink.EndSendMessage(r),
                 message,
                 cancellationToken,
-                this);
+                this).ConfigureAwait(false);
 
             this.ThrowIfRejected(deliveryState);
             AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "EndDischange");

@@ -617,7 +617,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="remoteAttach">The incoming Attach from remote which contains the remote's unsettled delivery states.</param>
         protected override void ProcessUnsettledDeliveries(Attach remoteAttach)
         {
-            if (this.Session.Connection.LinkTerminusManager.TryGetLinkTerminus(this.LinkIdentifier, out AmqpLinkTerminus linkTerminus))
+            if (this.Session.Connection.TerminusStore.TryGetLinkTerminusAsync(this.LinkIdentifier, out AmqpLinkTerminus linkTerminus).GetAwaiter().GetResult())
             {
                 IDictionary<ArraySegment<byte>, Delivery> resultantUnsettledMap = Task.Run(() => linkTerminus.NegotiateUnsettledDeliveriesAsync(remoteAttach)).Result;
                 if (resultantUnsettledMap != null)

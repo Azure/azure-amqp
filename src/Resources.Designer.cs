@@ -124,6 +124,15 @@ namespace Microsoft.Azure.Amqp {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The AMQP connection source container ID is required..
+        /// </summary>
+        internal static string AmqpContainerIdRequired {
+            get {
+                return ResourceManager.GetString("AmqpContainerIdRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The delivery id is already used (id:{0}, next-id:{1}, ulw:{2}, index:{3})..
         /// </summary>
         internal static string AmqpDeliveryIDInUse {
@@ -383,9 +392,9 @@ namespace Microsoft.Azure.Amqp {
                 return ResourceManager.GetString("AmqpInvalidType", resourceCulture);
             }
         }
-
+        
         /// <summary>
-        ///   Looks up a localized string similar to The link with link name {0} under connection with containerId {1} has been closed due to link stealing..
+        ///   Looks up a localized string similar to The link with identifier {0} has been closed due to link stealing..
         /// </summary>
         internal static string AmqpLinkStolen {
             get {

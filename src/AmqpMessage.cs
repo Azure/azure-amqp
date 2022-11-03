@@ -870,7 +870,7 @@ namespace Microsoft.Azure.Amqp
             protected override void Dispose(bool disposing)
             {
                 this.source?.Dispose();
-                base.Dispose();
+                base.Dispose(disposing);
             }
 
             static void WriteSection(ByteBuffer buffer, AmqpDescribed section, ByteBuffer source)
@@ -963,7 +963,7 @@ namespace Microsoft.Azure.Amqp
 
             protected override void Dispose(bool disposing)
             {
-                base.Dispose();
+                base.Dispose(disposing);
                 if (this.ownStream)
                 {
                     this.bodyStream.Dispose();

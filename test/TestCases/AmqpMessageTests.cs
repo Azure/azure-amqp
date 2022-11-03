@@ -154,6 +154,46 @@
             Assert.Equal(12, message2.BodyStream.Length);
         }
 
+        [Fact]
+        public void AmqpMessageDisposeTest()
+        {
+            var message = AmqpMessage.Create();
+            message.Properties.UserId = new ArraySegment<byte>(Guid.NewGuid().ToByteArray());
+            message.GetBuffer();
+            message.Dispose();
+
+            message = AmqpMessage.Create(new Data { Segment = new ArraySegment<byte>(Guid.NewGuid().ToByteArray()) });
+            message.GetBuffer();
+            message.Dispose();
+
+            message = AmqpMessage.Create("test");
+            message.GetBuffer();
+            message.Dispose();
+
+            message = AmqpMessage.Create(new[] { new AmqpSequence() });
+            message.GetBuffer();
+            message.Dispose();
+
+            message = AmqpMessage.Create(new MemoryStream(Guid.NewGuid().ToByteArray()), true);
+            message.GetBuffer();
+            message.Dispose();
+
+            message = AmqpMessage.Create();
+            message.Properties.UserId = new ArraySegment<byte>(Guid.NewGuid().ToByteArray());
+            var buffer = message.GetBuffer();
+            var message2 = AmqpMessage.CreateBufferMessage(buffer.AddReference());
+            var uid = message2.Properties.UserId;
+            Assert.Equal(16, uid.Count);
+            message2.Dispose();
+            message.Dispose();
+
+            message = AmqpMessage.Create();
+            message.Properties.UserId = new ArraySegment<byte>(Guid.NewGuid().ToByteArray());
+            message2 = message.Clone(true);
+            message2.Dispose();
+            message.Dispose();
+        }
+
         static void AddSection(AmqpMessage message, SectionFlag sections)
         {
             if ((sections & SectionFlag.Header) != 0)

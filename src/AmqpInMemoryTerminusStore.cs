@@ -87,7 +87,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="linkIdentifier">The unique identifier of a link endpoint which will be used to identify the link terminus.</param>
         /// <param name="linkTerminus">The link terminus object associated with the link identifier.</param>
-        /// <returns>True if there is a link terminus object was found associated with the given link identifier.</returns>
+        /// <returns>True, if a link terminus object was found for the given link identifier.</returns>
         public Task<bool> TryGetLinkTerminusAsync(AmqpLinkIdentifier linkIdentifier, out AmqpLinkTerminus linkTerminus)
         {
             lock (this.thisLock)
@@ -116,7 +116,6 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="linkTerminus">The link terminus associated with the deliveries.</param>
         /// <param name="unsettledDeliveries">A dictionary of Key-Value pairs of DeliveryTag and corresponding delivery.</param>
-        /// <returns>True if the deliveries were successfully saved under the link terminus.</returns>
         public Task SaveDeliveriesAsync(AmqpLinkTerminus linkTerminus, IDictionary<ArraySegment<byte>, Delivery> unsettledDeliveries)
         {
             if (unsettledDeliveries == null || unsettledDeliveries.Count == 0)
@@ -149,17 +148,18 @@ namespace Microsoft.Azure.Amqp
         /// <param name="linkTerminus">The link terminus that the removed delivery belongs to.</param>
         /// <param name="deliveryTag">The delivery tag of the delivery to be removed.</param>
         /// <returns>True if the delivery was found and removed, false otherwise.</returns>
-        public Task RemoveDeliveryAsync(AmqpLinkTerminus linkTerminus, ArraySegment<byte> deliveryTag)
+        public Task<bool> TryRemoveDeliveryAsync(AmqpLinkTerminus linkTerminus, ArraySegment<byte> deliveryTag)
         {
+            bool foundDelivery = false;
             lock (this.thisLock)
             {
                 if (this.deliveries.TryGetValue(linkTerminus, out IDictionary<ArraySegment<byte>, Delivery> terminusDeliveries))
                 {
-                    terminusDeliveries.Remove(deliveryTag);
+                    foundDelivery = terminusDeliveries.Remove(deliveryTag);
                 }
             }
 
-            return Task.CompletedTask;
+            return Task.FromResult(foundDelivery);
         }
 
         #endregion

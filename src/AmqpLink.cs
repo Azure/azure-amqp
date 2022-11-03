@@ -1031,7 +1031,7 @@ namespace Microsoft.Azure.Amqp
             {
                 if (linkRecoveryRuntimeProvider.TerminusStore != null)
                 {
-                    linkRecoveryRuntimeProvider.TerminusStore.RemoveDeliveryAsync(this.Terminus, deliveryTag).GetAwaiter().GetResult();
+                    linkRecoveryRuntimeProvider.TerminusStore.TryRemoveDeliveryAsync(this.Terminus, deliveryTag).GetAwaiter().GetResult();
                 }
             }
         }

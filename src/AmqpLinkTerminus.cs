@@ -141,7 +141,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                return await NegotiateUnsettledDeliveriesFromSender(remoteAttach, this.UnsettledDeliveries);
+                return await this.NegotiateUnsettledDeliveriesFromSender(remoteAttach, this.UnsettledDeliveries);
             }
         }
 
@@ -201,7 +201,7 @@ namespace Microsoft.Azure.Amqp
                     link.Settings.Unsettled = new AmqpMap(new Dictionary<ArraySegment<byte>, Delivery>(), MapKeyByteArrayComparer.Instance);
                 }
 
-                foreach (var kvp in UnsettledDeliveries)
+                foreach (var kvp in this.UnsettledDeliveries)
                 {
                     link.Settings.Unsettled.Add(new MapKey(kvp.Key), kvp.Value.State);
                 }
@@ -326,7 +326,7 @@ namespace Microsoft.Azure.Amqp
                         if (!peerHasDelivery)
                         {
                             // This is OASIS AMQP doc section 3.4.6 example 10, where the delivery does not need to be resent. Simply settle and remove it locally.
-                            await this.TerminusStore.RemoveDeliveryAsync(this, deliveryTag).ConfigureAwait(false);
+                            await this.TerminusStore.TryRemoveDeliveryAsync(this, deliveryTag).ConfigureAwait(false);
                             continue;
                         }
                         else
@@ -376,7 +376,7 @@ namespace Microsoft.Azure.Amqp
                             if (localTransactionalOutcome.IsTerminal())
                             {
                                 // This is OASIS AMQP doc section 3.4.6 example 10, where the delivery does not need to be resent. Simply settle and remove it locally.
-                                await this.TerminusStore.RemoveDeliveryAsync(this, deliveryTag).ConfigureAwait(false);
+                                await this.TerminusStore.TryRemoveDeliveryAsync(this, deliveryTag).ConfigureAwait(false);
                                 continue;
                             }
                             else
@@ -401,7 +401,7 @@ namespace Microsoft.Azure.Amqp
 
                     if (localSenderDelivery.Settled)
                     {
-                        await this.TerminusStore.RemoveDeliveryAsync(this, localSenderDelivery.DeliveryTag).ConfigureAwait(false);
+                        await this.TerminusStore.TryRemoveDeliveryAsync(this, localSenderDelivery.DeliveryTag).ConfigureAwait(false);
                     }
                 }
             }

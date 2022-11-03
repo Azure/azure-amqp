@@ -103,7 +103,6 @@ namespace Test.Microsoft.Azure.Amqp
         public async Task RemoteLinkStealingTest()
         {
             await LinkStealingTestCase(sameType: true, closeLink1BeforeOpenLink2: false, linkRecoveryEnabled: false, abortLink1: true);
-            Console.Write("done");
         }
 
         /// <summary>

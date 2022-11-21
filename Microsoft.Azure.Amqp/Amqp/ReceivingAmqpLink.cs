@@ -29,6 +29,7 @@ namespace Microsoft.Azure.Amqp
         WorkCollection<ArraySegment<byte>, DisposeAsyncResult, DeliveryState> pendingDispositions;
         AmqpMessage currentMessage;
         LinkedList<ReceiveAsyncResult> waiterList;
+        HashSet<DrainTaskCompletionSource> drainTasks;
 
         public ReceivingAmqpLink(AmqpLinkSettings settings)
             : this(null, settings)
@@ -270,6 +271,31 @@ namespace Microsoft.Azure.Amqp
             return true;
         }
 
+        public Task DrainAsyc(CancellationToken cancellationToken)
+        {
+            var tcs = new DrainTaskCompletionSource(this);
+            lock (this.SyncRoot)
+            {
+                if (this.drainTasks == null)
+                {
+                    this.drainTasks = new HashSet<DrainTaskCompletionSource>();
+                }
+
+                this.drainTasks.Add(tcs);
+                if (!this.Drain)
+                {
+                    this.SendFlow(false, true, null);
+                }
+
+                if (cancellationToken.CanBeCanceled)
+                {
+                    cancellationToken.Register(s => ((DrainTaskCompletionSource)s).Cancel(), tcs, false);
+                }
+            }
+
+            return tcs.Task;
+        }
+
         public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, Outcome outcome, bool batchable, TimeSpan timeout)
         {
             return this.DisposeMessageAsync(deliveryTag, AmqpConstants.NullBinary, outcome, batchable, timeout);
@@ -481,6 +507,29 @@ namespace Microsoft.Azure.Amqp
             }
 
             return base.CloseInternal();
+        }
+
+        protected override void OnReceiveFlow(Flow flow)
+        {
+            bool draining = this.Drain;
+            base.OnReceiveFlow(flow);
+            if (draining && this.LinkCredit == 0)
+            {
+                HashSet<DrainTaskCompletionSource> pendingTasks = null;
+                lock (this.SyncRoot)
+                {
+                    pendingTasks = this.drainTasks;
+                    this.drainTasks = null;
+                }
+
+                if (pendingTasks != null)
+                {
+                    foreach (var task in pendingTasks)
+                    {
+                        task.TrySetResult(true);
+                    }
+                }
+            }
         }
 
         IAsyncResult BeginDisposeMessage(ArraySegment<byte> deliveryTag, ArraySegment<byte> txnId, Outcome outcome, bool batchable,
@@ -845,6 +894,40 @@ namespace Microsoft.Azure.Amqp
 
                     result.parent.waiterList.Remove(result.node);
                     result.node = null;
+                }
+            }
+        }
+
+        sealed class DrainTaskCompletionSource : TaskCompletionSource<bool>
+        {
+            readonly ReceivingAmqpLink link;
+
+            public DrainTaskCompletionSource(ReceivingAmqpLink link)
+            {
+                this.link = link;
+            }
+
+            public void Cancel()
+            {
+                bool setCancel = false;
+                lock (this.link.SyncRoot)
+                {
+                    if (this.link.drainTasks != null)
+                    {
+                        if (this.link.drainTasks.Remove(this))
+                        {
+                            setCancel = true;
+                            if (this.link.drainTasks.Count == 0)
+                            {
+                                this.link.drainTasks = null;
+                            }
+                        }
+                    }
+                }
+
+                if (setCancel)
+                {
+                    this.TrySetCanceled();
                 }
             }
         }

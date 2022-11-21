@@ -232,6 +232,26 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [Fact]
+        public async Task AmqpLinkDrainTest()
+        {
+            string queue = "AmqpLinkDrainTest";
+            broker.AddQueue(queue);
+
+            var factory = new AmqpConnectionFactory();
+            var connection = await factory.OpenConnectionAsync(TestAmqpBrokerFixture.Address, TimeSpan.FromSeconds(10));
+            AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+            await session.OpenAsync(CancellationToken.None);
+
+            ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnReceive, 100));
+            await rLink.OpenAsync(CancellationToken.None);
+
+            await rLink.DrainAsyc(CancellationToken.None);
+            Assert.Equal(0u, rLink.LinkCredit);
+
+            await connection.CloseAsync(CancellationToken.None);
+        }
+
+        [Fact]
         public void AmqpMessageTest()
         {
             string queue = "AmqpMessageTest";

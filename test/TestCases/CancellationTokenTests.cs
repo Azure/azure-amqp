@@ -15,11 +15,6 @@ namespace Test.Microsoft.Azure.Amqp
     [Trait("Category", TestCategory.Current)]
     public class CancellationTokenTests
     {
-        static CancellationTokenTests()
-        {
-            // AmqpTrace.FrameLogger = s => System.Diagnostics.Trace.WriteLine(s);
-        }
-
         Uri addressUri = new Uri("amqp://localhost:5678");
 
         [Fact]

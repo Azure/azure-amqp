@@ -527,6 +527,15 @@ namespace Microsoft.Azure.Amqp
             return buffer == null ? null : new ArraySegment<byte>[] { buffer.AsSegment() };
         }
 
+        /// <summary>
+        /// Reset the buffers so the message can be resent again in case of linkRecovery.
+        /// </summary>
+        public override void Reset()
+        {
+            this.buffer?.ResetReadPosition();
+            base.Reset();
+        }
+
         /// <inheritdoc />
         protected override void Dispose(bool disposing)
         {
@@ -733,10 +742,6 @@ namespace Microsoft.Azure.Amqp
                 Fx.Assert(this.buffer != null, "buffer not initialized");
                 base.CompletePayload(payloadSize);
                 this.buffer.Complete(payloadSize);
-                if (this.buffer.Length == 0)
-                {
-                    this.ReleaseBuffer();
-                }
             }
 
             protected virtual void EncodeBody(ByteBuffer buffer)

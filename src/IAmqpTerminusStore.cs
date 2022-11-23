@@ -54,6 +54,13 @@ namespace Microsoft.Azure.Amqp
         Task SaveDeliveriesAsync(AmqpLinkTerminus linkTerminus, IDictionary<ArraySegment<byte>, Delivery> unsettledDeliveries);
 
         /// <summary>
+        /// Retrieve saved deliveries for the given link terminus.
+        /// </summary>
+        /// <param name="linkTerminus">The <see cref="AmqpLinkTerminus"/> to retrieve deliveries for.</param>
+        /// <returns>A task containing the retreived deliveries.</returns>
+        Task<IDictionary<ArraySegment<byte>, Delivery>> RetrieveDeliveriesAsync(AmqpLinkTerminus linkTerminus);
+
+        /// <summary>
         /// Try to remove a delivery that's stored under the given link terminus with the given delivery tag, if any.
         /// </summary>
         /// <param name="linkTerminus">The link terminus that the removed delivery belongs to.</param>

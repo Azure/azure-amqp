@@ -10,6 +10,7 @@ namespace Test.Microsoft.Azure.Amqp
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using TestAmqpBroker;
@@ -36,98 +37,38 @@ namespace Test.Microsoft.Azure.Amqp
             broker.TerminusStore = null;
         }
 
-        // Test recovering a sender link by using an existing link terminus and link settings, then verify that the link settings are still the same.
+        // Test recovering a sender link using LinkTerminus and verify that after recovery transfers are resumed with clean close of link.
         [Fact]
-        public async Task SenderRecoveryE2ETest()
+        public async Task SenderRecoveryE2ETest_WithLinkClose()
         {
-            AmqpConnection connection = null;
-            try
-            {
-                var terminusStore = new AmqpInMemoryTerminusStore();
-                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(terminusStore));
-                AmqpSession session = await connection.OpenSessionAsync();
-                SendingAmqpLink originalSender = await session.OpenLinkAsync<SendingAmqpLink>(nameof(SenderRecoveryE2ETest) + "-sender", nameof(SenderRecoveryE2ETest));
-                originalSender.Settings.AddProperty("MyProp", "MyPropValue");
-                AmqpMessage[] messages = CreateMessages();
-                foreach (AmqpMessage m in messages)
-                {
-                    originalSender.UnsettledMap.Add(m.DeliveryTag, m);
-                }
-
-                await originalSender.CloseAsync();
-
-                // verrify that the link terminus has been captured upon link close.
-                await terminusStore.TryGetLinkTerminusAsync(originalSender.LinkIdentifier, out AmqpLinkTerminus linkTerminus);
-                Assert.NotNull(linkTerminus);
-                foreach (AmqpMessage m in messages)
-                {
-                    linkTerminus.UnsettledDeliveries.TryGetValue(m.DeliveryTag, out Delivery savedUnsettledDelivery);
-                    Assert.NotNull(savedUnsettledDelivery);
-                }
-
-                // Reopen the link again and verify that is has the same properties as before.
-                SendingAmqpLink newSender = await session.OpenLinkAsync<SendingAmqpLink>(originalSender.Settings);
-                Assert.Equal(originalSender.Name, newSender.Name);
-                Assert.Equal(originalSender.IsReceiver, newSender.IsReceiver);
-                Assert.Equal("MyPropValue", newSender.Settings.Properties["MyProp"]);
-
-                // verify that sending works with this recovered link
-                ReceivingAmqpLink testReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(nameof(SenderRecoveryE2ETest) + "-test-dummy-receiver", originalSender.Settings.Address().ToString());
-                await newSender.SendMessageAsync(AmqpMessage.Create("Hello World!"));
-                Assert.NotNull(await testReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(5000)));
-            }
-            finally
-            {
-                await connection?.CloseAsync();
-            }
+            await SenderRecoveryE2ETestBase(close: true);
         }
 
-        // Test recovering a receiver link by using an existing link terminus and verify that the link settings are still the same.
+        // Test recovering a sender link using LinkTerminus and verify that after recovery transfers are resumed while aborting the link.
         [Fact]
-        public async Task ReceiverRecoveryE2ETest()
+        public async Task SenderRecoveryE2ETest_WithLinkAbort()
         {
-            AmqpConnection connection = null;
-            try
-            {
-                var terminusStore = new AmqpInMemoryTerminusStore();
-                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(terminusStore));
-                AmqpSession session = await connection.OpenSessionAsync();
-                ReceivingAmqpLink originalReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(nameof(ReceiverRecoveryE2ETest) + "-receiver", nameof(SenderRecoveryE2ETest));
-                originalReceiver.Settings.AddProperty("MyProp", "MyPropValue");
-                AmqpMessage[] messages = CreateMessages();
-                foreach (AmqpMessage m in messages)
-                {
-                    originalReceiver.UnsettledMap.Add(m.DeliveryTag, m);
-                }
+            await SenderRecoveryE2ETestBase(close: false);
+        }
 
-                await originalReceiver.CloseAsync();
+        // Test recovering a receiver link using LinkTerminus and verify that after recovery transfers are resumed with clean close of link.
+        [Fact]
+        public async Task ReceiverRecoveryE2ETest_WithLinkClose()
+        {
+            await ReceiverRecoveryE2ETestBase(close: true);
+        }
 
-                // verrify that the link terminus has been captured upon link close.
-                await terminusStore.TryGetLinkTerminusAsync(originalReceiver.LinkIdentifier, out AmqpLinkTerminus linkTerminus);
-                Assert.NotNull(linkTerminus);
-                foreach (AmqpMessage m in messages)
-                {
-                    linkTerminus.UnsettledDeliveries.TryGetValue(m.DeliveryTag, out Delivery savedUnsettledDelivery);
-                    Assert.NotNull(savedUnsettledDelivery);
-                }
+        // Test recovering a receiver link using LinkTerminus and verify that after recovery transfers are resumed while aborting the link.
+        [Fact]
+        public async Task ReceiverRecoveryE2ETest_WithLinkAbort()
+        {
+            await ReceiverRecoveryE2ETestBase(close: true);
+        }
 
-                // Reopen the link again and verify that is has the same properties as before.
-                ReceivingAmqpLink newReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(originalReceiver.Settings);
-                Assert.Equal(originalReceiver.Name, newReceiver.Name);
-                Assert.Equal(originalReceiver.IsReceiver, newReceiver.IsReceiver);
-                Assert.Equal("MyPropValue", newReceiver.Settings.Properties["MyProp"]);
+        [Fact]
+        public async Task ReeiverRequestsLinkRecovery_SenderDoesNotSupportTest()
+        {
 
-                // verify that receiving and accepting works with this recovered link
-                SendingAmqpLink testSender = await session.OpenLinkAsync<SendingAmqpLink>(nameof(ReceiverRecoveryE2ETest) + "-test-dummy-sender", originalReceiver.Settings.Address().ToString());
-                await testSender.SendMessageAsync(AmqpMessage.Create("Hello World2!"));
-                AmqpMessage received = await newReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(5000));
-                Assert.NotNull(received);
-                newReceiver.AcceptMessage(received);
-            }
-            finally
-            {
-                await connection?.CloseAsync();
-            }
         }
 
         [Fact]
@@ -912,6 +853,197 @@ namespace Test.Microsoft.Azure.Amqp
                 var recoveredReceiver2 = await newSession.OpenLinkAsync<ReceivingAmqpLink>(receiver.Settings);
                 Assert.Null(await recoveredReceiver2.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000))); // The message should remain locked, so nothing should be received here.
                 recoveredReceiver2.AcceptMessage(message);
+            }
+            finally
+            {
+                await connection?.CloseAsync();
+            }
+        }
+
+        async Task SenderRecoveryE2ETestBase(bool close)
+        {
+            const int NumberOfMessages = 10;
+            TestAmqpConnection connection = null;
+            try
+            {
+                var terminusStore = new AmqpInMemoryTerminusStore();
+                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(terminusStore));
+                AmqpSession session = await connection.OpenSessionAsync();
+                string address = nameof(SenderRecoveryE2ETestBase) + ((close == true) ? "_close" : "_abort") + Guid.NewGuid().ToString();
+
+                // Create a SendingAmqpLink with SettleOnDispose just so the messages remain unsettled.
+                AmqpLinkSettings linkSettings = AmqpLinkSettings.Create<SendingAmqpLink>(nameof(SenderRecoveryE2ETestBase) + "-sender", address);
+                linkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.NEVER);
+                linkSettings.SettleType = SettleMode.SettleOnDispose;
+
+                // Open SendingAmqpLink
+                var sender = await session.OpenLinkAsync<SendingAmqpLink>(linkSettings);
+                // Send 10 messages
+                List<AmqpMessage> sentMessages = new List<AmqpMessage>(NumberOfMessages);
+                for (int i = 0; i < 10; i++)
+                {
+                    var amqpMessage = AmqpMessage.Create($"Hello World!: {i}");
+                    await sender.SendMessageAsync(amqpMessage);
+                    sentMessages.Add(amqpMessage);
+                }
+
+                if (close)
+                {
+                    await sender.CloseAsync();
+                }
+                else
+                {
+                    sender.Abort();
+                }
+
+                // Get Terminus from TerminusStore and Verify that Unsettled deliveries contain the 10 messages.
+                await terminusStore.TryGetLinkTerminusAsync(sender.LinkIdentifier, out AmqpLinkTerminus linkTerminus);
+                var localUnsettledDeliveries = await terminusStore.RetrieveDeliveriesAsync(linkTerminus);
+                Assert.NotNull(linkTerminus);
+                foreach (AmqpMessage m in sentMessages)
+                {
+                    localUnsettledDeliveries.TryGetValue(m.DeliveryTag, out Delivery savedUnsettledDelivery);
+                    Assert.NotNull(savedUnsettledDelivery);
+                }
+
+                // Open link with the same linkIdentifier, this time update the linkSettings to SettleOnSend so messages can actually settle this time.
+                linkTerminus.LinkSettings.SettleType = SettleMode.SettleOnSend;
+                var newSender = await session.OpenLinkAsync<SendingAmqpLink>(linkTerminus.LinkSettings);
+
+                await Task.Delay(TimeSpan.FromMilliseconds(1000));
+                // Open receiverSide of the Connection and verify 'NumberOfMessages' were resumed.
+                TestAmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId) as TestAmqpConnection;
+                var resumedTransfers = brokerConnection.ReceivedPerformatives.Skip(brokerConnection.ReceivedPerformatives.Count - NumberOfMessages);
+
+                Assert.NotNull(resumedTransfers);
+                Assert.True(resumedTransfers.Count() == NumberOfMessages);
+                foreach (var item in resumedTransfers)
+                {
+                    Assert.True(item is Transfer);
+                    var transfer = (Transfer)item;
+                    Assert.True(transfer.Resume == true);
+                    Assert.True(transfer.Settled == true);
+                    Assert.True(transfer.More == false);
+                }
+
+                // Create a ReceiverLink and receive messages.
+                ReceivingAmqpLink testReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(nameof(SenderRecoveryE2ETestBase) + "-test-dummy-receiver", sender.Settings.Address().ToString());
+                AmqpMessage receivedMessage;
+                for (int i = 0; i < NumberOfMessages; i++)
+                {
+                    receivedMessage = await testReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(5000));
+                    Assert.NotNull(receivedMessage);
+                    testReceiver.AcceptMessage(receivedMessage);
+                }
+
+                // Send one more new message, should succeed.
+                await newSender.SendMessageAsync(AmqpMessage.Create("Hello World!:"));
+
+                // Receive one more new message, should succeed.
+                receivedMessage = await testReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(5000));
+                Assert.NotNull(receivedMessage);
+                testReceiver.AcceptMessage(receivedMessage);
+            }
+            finally
+            {
+                await connection?.CloseAsync();
+            }
+        }
+
+        async Task ReceiverRecoveryE2ETestBase(bool close)
+        {
+            const int NumberOfMessages = 10;
+            TestAmqpConnection connection = null;
+            try
+            {
+                var terminusStore = new AmqpInMemoryTerminusStore();
+                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(terminusStore));
+                AmqpSession session = await connection.OpenSessionAsync();
+                string address = nameof(ReceiverRecoveryE2ETestBase) + ((close == true) ? "_close" : "_abort") + Guid.NewGuid().ToString();
+
+                #region Send 10 messages
+                AmqpLinkSettings linkSettings = AmqpLinkSettings.Create<SendingAmqpLink>(nameof(ReceiverRecoveryE2ETestBase) + "-sender", address);
+                linkSettings.SettleType = SettleMode.SettleOnSend;
+
+                // Open SendingAmqpLink
+                var sender = await session.OpenLinkAsync<SendingAmqpLink>(linkSettings);
+                // Send 10 messages
+                List<AmqpMessage> sentMessages = new List<AmqpMessage>(NumberOfMessages);
+                for (int i = 0; i < 10; i++)
+                {
+                    var amqpMessage = AmqpMessage.Create($"Hello World!: {i}");
+                    await sender.SendMessageAsync(amqpMessage);
+                    sentMessages.Add(amqpMessage);
+                }
+
+                #endregion
+
+                // Create a ReceiverLink and receive messages. Don't settle it.
+                AmqpLinkSettings receiverLinkSettings = AmqpLinkSettings.Create<ReceivingAmqpLink>(nameof(ReceiverRecoveryE2ETestBase) + "-receiver", sender.Settings.Address().ToString());
+                receiverLinkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.NEVER);
+                receiverLinkSettings.SettleType = SettleMode.SettleOnDispose;
+                ReceivingAmqpLink originalReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(receiverLinkSettings);
+
+                AmqpMessage receivedMessage;
+                for (int i = 0; i < NumberOfMessages; i++)
+                {
+                    receivedMessage = await originalReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000));
+                    Assert.NotNull(receivedMessage);
+                }
+
+                if (close)
+                {
+                    await originalReceiver.CloseAsync();
+                }
+                else
+                {
+                    originalReceiver.Abort();
+                }
+
+                // Verify that the link terminus has been captured upon link close.
+                await terminusStore.TryGetLinkTerminusAsync(originalReceiver.LinkIdentifier, out AmqpLinkTerminus linkTerminus);
+                var localUnsettledDeliveries = await terminusStore.RetrieveDeliveriesAsync(linkTerminus);
+                Assert.NotNull(linkTerminus);
+                Assert.Equal(NumberOfMessages, localUnsettledDeliveries.Count);
+
+                // Reopen the link again and verify that is has the same properties as before.
+                ReceivingAmqpLink newReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(originalReceiver.Settings);
+                Assert.Equal(originalReceiver.Name, newReceiver.Name);
+                Assert.Equal(originalReceiver.IsReceiver, newReceiver.IsReceiver);
+
+                // Wait sometime for resumed transfers to finish.
+                await Task.Delay(TimeSpan.FromMilliseconds(1000));
+
+                // Verify resumed transfers
+                var resumedTransfers = connection.ReceivedPerformatives.Skip(connection.ReceivedPerformatives.Count - NumberOfMessages);
+                Assert.NotNull(resumedTransfers);
+                Assert.True(resumedTransfers.Count() == NumberOfMessages);
+                foreach (var item in resumedTransfers)
+                {
+                    Assert.True(item is Transfer);
+                    var transfer = (Transfer)item;
+                    Assert.True(transfer.Resume == true);
+                    Assert.True(transfer.More == false);
+                }
+
+                // Receive and Complete the 10 messages.
+                for (int i = 0; i < NumberOfMessages; i++)
+                {
+                    receivedMessage = await newReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000));
+                    Assert.NotNull(receivedMessage);
+                    Assert.Equal(sentMessages[i].ValueBody.Value, receivedMessage.ValueBody.Value);
+                    newReceiver.AcceptMessage(receivedMessage);
+                }
+
+                // Send one more message
+                var newMessage = AmqpMessage.Create("Hello World!:");
+                await sender.SendMessageAsync(newMessage);
+
+                // Verify receive works fine.
+                receivedMessage = await newReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000));
+                Assert.NotNull(receivedMessage);
+                Assert.Equal(newMessage.ValueBody.Value, receivedMessage.ValueBody.Value);
+                newReceiver.AcceptMessage(receivedMessage);
             }
             finally
             {

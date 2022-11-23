@@ -92,18 +92,7 @@ namespace Microsoft.Azure.Amqp
         {
             lock (this.thisLock)
             {
-                bool foundTerminus = this.linkTermini.TryGetValue(linkIdentifier, out linkTerminus);
-
-                // If found, also find the associated Unsettled deliveries for the Terminus
-                if (foundTerminus)
-                {
-                    if (this.deliveries.TryGetValue(linkTerminus, out IDictionary<ArraySegment<byte>, Delivery> terminusDeliveries))
-                    {
-                        linkTerminus.UnsettledDeliveries = new Dictionary<ArraySegment<byte>, Delivery>(terminusDeliveries);
-                    }
-                }
-
-                return Task.FromResult(foundTerminus);
+                return Task.FromResult(this.linkTermini.TryGetValue(linkIdentifier, out linkTerminus));
             }
         }
 
@@ -140,6 +129,24 @@ namespace Microsoft.Azure.Amqp
             }
 
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Retrieve saved deliveries for the given link terminus.
+        /// </summary>
+        /// <param name="linkTerminus">The <see cref="AmqpLinkTerminus"/> to retrieve deliveries for.</param>
+        /// <returns>A task containing the retreived deliveries.</returns>
+        public Task<IDictionary<ArraySegment<byte>, Delivery>> RetrieveDeliveriesAsync(AmqpLinkTerminus linkTerminus)
+        {
+            lock (this.thisLock)
+            {
+                if (this.deliveries.TryGetValue(linkTerminus, out IDictionary<ArraySegment<byte>, Delivery> terminusDeliveries))
+                {
+                    return Task.FromResult<IDictionary<ArraySegment<byte>, Delivery>>(new Dictionary<ArraySegment<byte>, Delivery>(terminusDeliveries));
+                }
+            }
+
+            return Task.FromResult<IDictionary<ArraySegment<byte>, Delivery>>(new Dictionary<ArraySegment<byte>, Delivery>());
         }
 
         /// <summary>

@@ -309,6 +309,14 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Resets the read position.
+        /// </summary>
+        public void ResetReadPosition()
+        {
+            this.read = this.start;
+        }
+
+        /// <summary>
         /// Gets a slice of the buffer.
         /// </summary>
         /// <param name="position">The start position.</param>

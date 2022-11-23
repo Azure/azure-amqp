@@ -189,6 +189,9 @@ namespace Microsoft.Azure.Amqp
 
                 this.inflightSends.CompleteWork(delivery.DeliveryTag, false, (Outcome)deliveryState);
             }
+
+            // All work with delivery is finished. Dispose and release buffers associated with the delivery.
+            delivery.Dispose();
         }
 
         /// <summary>

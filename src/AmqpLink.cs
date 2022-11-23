@@ -545,7 +545,12 @@ namespace Microsoft.Azure.Amqp
         {
             if (delivery.Settled)
             {
-                this.RemoveUnsettledDelivery(delivery.DeliveryTag);
+                lock (this.syncRoot)
+                {
+                    this.UnsettledMap.Remove(delivery.DeliveryTag);
+                }
+
+                this.RemoveUnsettledDeliveryFromTerminusStoreIfNeeded(delivery.DeliveryTag);
                 this.OnDeliverySettled();
             }
 
@@ -839,6 +844,14 @@ namespace Microsoft.Azure.Amqp
                             AmqpResources.GetString(AmqpResources.AmqpTransferLimitExceeded, delivery.DeliveryId.Value));
                     }
                 }
+
+                if (!delivery.Settled && !delivery.Aborted)
+                {
+                    lock (this.syncRoot)
+                    {
+                        this.UnsettledMap.Add(delivery.DeliveryTag, delivery);
+                    }
+                }
             }
 
             this.OnProcessTransfer(delivery, transfer, rawFrame);
@@ -912,36 +925,48 @@ namespace Microsoft.Azure.Amqp
                     }
                 }
 
-                uint maxFrameSize = this.MaxFrameSize == uint.MaxValue ? AmqpConstants.DefaultMaxFrameSize : this.MaxFrameSize;
-                int overhead = Frame.HeaderSize + transfer.EncodeSize;
-                if (overhead > maxFrameSize)
+                ByteBuffer payload = null;
+                if (delivery.Resume && delivery.State.IsTerminal())
                 {
-                    throw new AmqpException(AmqpErrorCode.FrameSizeTooSmall, null);
+                    more = false;
+                    transfer.More = false;
                 }
-
-                int payloadSize = (int)maxFrameSize - overhead;
-                ByteBuffer payload = delivery.GetPayload(payloadSize, out more);
-                transfer.More = more;
-
-                if (payload == null)
+                else
                 {
-                    if (firstTransfer)
+                    uint maxFrameSize = this.MaxFrameSize == uint.MaxValue ? AmqpConstants.DefaultMaxFrameSize : this.MaxFrameSize;
+                    int overhead = Frame.HeaderSize + transfer.EncodeSize;
+                    if (overhead > maxFrameSize)
                     {
-                        throw new AmqpException(AmqpErrorCode.NotAllowed, AmqpResources.AmqpEmptyMessageNotAllowed);
+                        throw new AmqpException(AmqpErrorCode.FrameSizeTooSmall, null);
                     }
 
-                    Fx.Assert(!more, "More flag is set but a null payload is returned.");
-                    break;
+                    int payloadSize = (int)maxFrameSize - overhead;
+                    payload = delivery.GetPayload(payloadSize, out more);
+                    transfer.More = more;
+
+                    if (payload == null)
+                    {
+                        if (firstTransfer)
+                        {
+                            throw new AmqpException(AmqpErrorCode.NotAllowed, AmqpResources.AmqpEmptyMessageNotAllowed);
+                        }
+
+                        Fx.Assert(!more, "More flag is set but a null payload is returned.");
+                        break;
+                    }
                 }
 
                 if (!this.Session.TrySendTransfer(firstTransfer ? delivery : null, transfer, payload))
                 {
-                    payload.Dispose();
+                    payload?.Dispose();
                     more = true;
                     break;
                 }
 
-                delivery.CompletePayload(payload.Length);
+                if (payload != null)
+                {
+                    delivery.CompletePayload(payload.Length);
+                }
             }
 
             if (!more)
@@ -1020,19 +1045,11 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal void RemoveUnsettledDelivery(ArraySegment<byte> deliveryTag)
+        internal void RemoveUnsettledDeliveryFromTerminusStoreIfNeeded(ArraySegment<byte> deliveryTag)
         {
-            lock (this.syncRoot)
-            {
-                this.UnsettledMap.Remove(deliveryTag);
-            }
-
             if (this.Session.Connection.AmqpSettings.RuntimeProvider is ILinkRecoveryRuntimeProvider linkRecoveryRuntimeProvider)
             {
-                if (linkRecoveryRuntimeProvider.TerminusStore != null)
-                {
-                    linkRecoveryRuntimeProvider.TerminusStore.TryRemoveDeliveryAsync(this.Terminus, deliveryTag).GetAwaiter().GetResult();
-                }
+                linkRecoveryRuntimeProvider.TerminusStore?.TryRemoveDeliveryAsync(this.Terminus, deliveryTag).GetAwaiter().GetResult();
             }
         }
 
@@ -1041,7 +1058,12 @@ namespace Microsoft.Azure.Amqp
             AmqpTrace.Provider.AmqpDispose(this, delivery.DeliveryId.Value, settled, state);
             if (settled && !delivery.Settled)
             {
-                this.RemoveUnsettledDelivery(delivery.DeliveryTag);
+                lock (this.syncRoot)
+                {
+                    this.UnsettledMap.Remove(delivery.DeliveryTag);
+                }
+
+                this.RemoveUnsettledDeliveryFromTerminusStoreIfNeeded(delivery.DeliveryTag);
             }
 
             this.Session.DisposeDelivery(this, delivery, settled, state, noFlush);
@@ -1209,6 +1231,7 @@ namespace Microsoft.Azure.Amqp
                 delivery.Link = this;
                 delivery.DeliveryId = transfer.DeliveryId.Value;
                 delivery.DeliveryTag = transfer.DeliveryTag;
+                delivery.Resume = transfer.Resume();
                 delivery.Aborted = transfer.Aborted == true;
                 delivery.Settled = transfer.Settled();
                 delivery.Batchable = transfer.Batchable();

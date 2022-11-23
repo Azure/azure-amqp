@@ -476,75 +476,67 @@ namespace Microsoft.Azure.Amqp
         /// <param name="frame">The transfer frame.</param>
         protected override void OnProcessTransfer(Delivery delivery, Transfer transfer, Frame frame)
         {
-            bool shouldProcessMessage = !delivery.Aborted;
-            if (this.IsRecoverable)
+            Fx.Assert(delivery == null || delivery == this.currentMessage, "The delivery must be null or must be the same as the current message.");
+
+            // Whether resumed or not, an aborted delivery is considered implicity settled. Cleanup any pending state and return.
+            if (delivery.Aborted)
             {
-                // If the delivery is already settled and the send mode is not SettleOnSend, the remote sender could have only derived
-                // the settled state after being told by the local receiver that it's either settled or arrived at a terminal outcome.
-                // In this case, since the local receiver has already settled it or processed it to a terminal outcome, there is no need to process it again.
-                if (delivery.Settled && this.Settings.SettleType != SettleMode.SettleOnSend)
-                {
-                    shouldProcessMessage = false;
-                }
+                this.currentMessage = null;
+                this.RemoveUnsettledDeliveryFromTerminusStoreIfNeeded(delivery.DeliveryTag);
+                return;
+            }
 
-                // TODO: should the message be reprocesse if it has already reached terminal outcome?
-                //if (delivery.State.IsTerminal() && this.UnsettledMap.TryGetValue(delivery.DeliveryTag, out Delivery localUnsettledDelivery) && localUnsettledDelivery.State.IsTerminal())
-                //{
-                //    // If both sides has reached terminal states (like Oasis AMQP doc section 3.4.6, example delivery tag 12, 13),
-                //    // then we can simply settle it and let the remote sender know, without actually processing it.
-                //    shouldProcessMessage = false;
-                //}
-
-                if (!shouldProcessMessage)
+            if (this.Settings.MaxMessageSize.HasValue && this.Settings.MaxMessageSize.Value > 0)
+            {
+                ulong size = (ulong)(this.currentMessage.BytesTransfered + frame.Payload.Count);
+                if (size > this.Settings.MaxMessageSize.Value)
                 {
-                    // If both sides have reached terminal states, but the delivery still hasn't been settled,
-                    // the receiver should still send a disposition to acknowledge the sender's delivery state and inform the remote sender that the message is settled.
-                    if (!delivery.Settled && !delivery.Aborted)
+                    if (this.IsClosing())
                     {
-                        this.DisposeDelivery(delivery, true, delivery.State, false);
+                        // The closing sequence has been started, so any
+                        // transfer is meaningless, so we can treat them as no-op
+                        return;
                     }
-                    else
-                    {
-                        this.RemoveUnsettledDelivery(delivery.DeliveryTag);
-                    }
+
+                    throw new AmqpException(AmqpErrorCode.MessageSizeExceeded,
+                        AmqpResources.GetString(AmqpResources.AmqpMessageSizeExceeded, this.currentMessage.DeliveryId.Value, size, this.Settings.MaxMessageSize.Value));
                 }
             }
 
-            if (shouldProcessMessage)
-            {
-                Fx.Assert(delivery == null || delivery == this.currentMessage, "The delivery must be null or must be the same as the current message.");
-                this.AddOrUpdateUnsettledDelivery(delivery);
+            Fx.Assert(this.currentMessage != null, "Current message must have been created!");
+            ArraySegment<byte> payload = frame.Payload;
+            frame.RawByteBuffer.AdjustPosition(payload.Offset, payload.Count);
+            frame.RawByteBuffer.AddReference();    // Message also owns the buffer from now on
+            this.currentMessage.AddPayload(frame.RawByteBuffer, !transfer.More());
 
-                if (this.Settings.MaxMessageSize.HasValue && this.Settings.MaxMessageSize.Value > 0)
+            if (!transfer.More())
+            {
+                AmqpMessage message = this.currentMessage;
+                this.currentMessage = null;
+
+                AmqpTrace.Provider.AmqpReceiveMessage(this, message.DeliveryId.Value, message.Segments);
+
+                if (delivery.Resume && this.IsRecoverable)
                 {
-                    ulong size = (ulong)(this.currentMessage.BytesTransfered + frame.Payload.Count);
-                    if (size > this.Settings.MaxMessageSize.Value)
+                    if (delivery.State.IsTerminal())
                     {
-                        if (this.IsClosing())
+                        // If the sender sends the delivery state is settled and the delivery state is Terminal, it means that the both peers
+                        // concur on the terminal state of the delivery. Hence it should be good to cleanup any pending state for the delivery
+                        // and consider it settled.
+                        if (delivery.Settled)
                         {
-                            // The closing sequence has been started, so any
-                            // transfer is meaningless, so we can treat them as no-op
+                            this.RemoveUnsettledDeliveryFromTerminusStoreIfNeeded(delivery.DeliveryTag);
                             return;
                         }
 
-                        throw new AmqpException(AmqpErrorCode.MessageSizeExceeded,
-                            AmqpResources.GetString(AmqpResources.AmqpMessageSizeExceeded, this.currentMessage.DeliveryId.Value, size, this.Settings.MaxMessageSize.Value));
+                        // If the sender sends the delivery state as not settled but the sender indicates the delivery has reached its terminal state,
+                        // it can only happen because the peers do not agree on the terminal state. But since the sender's view on this is final,
+                        // update any state on our side and send a pendingDisposition with the senders Terminal State and settle the delivery.
+                        this.DisposeDelivery(delivery, settled: true, delivery.State, noFlush: false);
                     }
                 }
 
-                Fx.Assert(this.currentMessage != null, "Current message must have been created!");
-                ArraySegment<byte> payload = frame.Payload;
-                frame.RawByteBuffer.AdjustPosition(payload.Offset, payload.Count);
-                frame.RawByteBuffer.AddReference();    // Message also owns the buffer from now on
-                this.currentMessage.AddPayload(frame.RawByteBuffer, !transfer.More());
-                if (!transfer.More())
-                {
-                    AmqpMessage message = this.currentMessage;
-                    this.currentMessage = null;
-
-                    AmqpTrace.Provider.AmqpReceiveMessage(this, message.DeliveryId.Value, message.Segments);
-                    this.OnReceiveMessage(message);
-                }
+                this.OnReceiveMessage(message);
             }
         }
 
@@ -612,22 +604,11 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Process and consolidate the unsettled deliveries sent with the remote Attach frame, by checking against the unsettled deliveries for this link terminus.
+        /// On ReceivingAmqpLink, nothing additional needs to be done. SendingAmqpLink will drive the process and send settling transfers or resume deliveries.
         /// </summary>
         /// <param name="remoteAttach">The incoming Attach from remote which contains the remote's unsettled delivery states.</param>
         protected override void ProcessUnsettledDeliveries(Attach remoteAttach)
         {
-            if (this.Session.Connection.TerminusStore.TryGetLinkTerminusAsync(this.LinkIdentifier, out AmqpLinkTerminus linkTerminus).GetAwaiter().GetResult())
-            {
-                IDictionary<ArraySegment<byte>, Delivery> resultantUnsettledMap = Task.Run(() => linkTerminus.NegotiateUnsettledDeliveriesAsync(remoteAttach)).Result;
-                if (resultantUnsettledMap != null)
-                {
-                    foreach (var resultantUnsettled in resultantUnsettledMap)
-                    {
-                        this.AddOrUpdateUnsettledDelivery(resultantUnsettled.Value);
-                    }
-                }
-            }
         }
 
         IAsyncResult BeginReceiveMessageBatch(int messageCount, TimeSpan batchWaitTimeout, TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)

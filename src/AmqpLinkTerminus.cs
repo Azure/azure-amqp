@@ -74,8 +74,6 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public AmqpLinkSettings LinkSettings { get; }
 
-        internal IDictionary<ArraySegment<byte>, Delivery> UnsettledDeliveries { get; set; }
-
         /// <summary>
         /// The timer object that tracks the expiry of the link terminus after its suspension.
         /// </summary>
@@ -135,13 +133,14 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A task containing the resultant map of deliveries that would remain unsettled.</returns>
         internal protected async Task<IDictionary<ArraySegment<byte>, Delivery>> NegotiateUnsettledDeliveriesAsync(Attach remoteAttach)
         {
+            IDictionary<ArraySegment<byte>, Delivery> localUnsettledDeliveries = await this.TerminusStore.RetrieveDeliveriesAsync(this);
             if (this.Identifier.IsReceiver)
             {
-                return this.UnsettledDeliveries;
+                return localUnsettledDeliveries;
             }
             else
             {
-                return await this.NegotiateUnsettledDeliveriesFromSender(remoteAttach, this.UnsettledDeliveries);
+                return await this.NegotiateUnsettledDeliveriesFromSender(remoteAttach, localUnsettledDeliveries);
             }
         }
 
@@ -167,6 +166,14 @@ namespace Microsoft.Azure.Amqp
                     if (link.AllowLinkStealing(this.LinkSettings))
                     {
                         stolenLink = this.link;
+                        // Before disassociating the link, save current Unsettledmap of the link.
+                        // On local side, when abort is called, Close handlers are invoked and terminus state is saved.
+                        // Remote side, does not see abort and hence is not closed, so the remote side will have the link
+                        // in Open state. Before allowing the stealing of link, save the current state of the link.
+                        if (this.Link.State != AmqpObjectState.End)
+                        {
+                            this.TerminusStore.SaveDeliveriesAsync(this, this.link.UnsettledMap).GetAwaiter().GetResult();
+                        }
                         this.DisassociateLink();
                     }
                     else
@@ -194,14 +201,15 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            if (this.UnsettledDeliveries != null)
+            IDictionary<ArraySegment<byte>, Delivery> localUnsettledDeliveries = this.TerminusStore.RetrieveDeliveriesAsync(this).Result;
+            if (localUnsettledDeliveries != null)
             {
                 if (link.Settings.Unsettled == null)
                 {
                     link.Settings.Unsettled = new AmqpMap(new Dictionary<ArraySegment<byte>, Delivery>(), MapKeyByteArrayComparer.Instance);
                 }
 
-                foreach (var kvp in this.UnsettledDeliveries)
+                foreach (var kvp in localUnsettledDeliveries)
                 {
                     link.Settings.Unsettled.Add(new MapKey(kvp.Key), kvp.Value.State);
                 }
@@ -397,6 +405,8 @@ namespace Microsoft.Azure.Amqp
                     }
 
                     localSenderDelivery.Resume = peerHasDelivery;
+                    localSenderDelivery.Reset();
+
                     resultantUnsettledDeliveries.Add(localSenderDelivery.DeliveryTag, localSenderDelivery);
 
                     if (localSenderDelivery.Settled)

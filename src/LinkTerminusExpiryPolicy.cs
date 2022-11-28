@@ -11,26 +11,26 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// This would indicate that link recovery should not be applied.
         /// </summary>
-        NONE,
+        None,
 
         /// <summary>
         /// Delete and forget the link terminus when the <see cref="AmqpLink"/> is detached.
         /// </summary>
-        LINK_DETACH,
+        Link_Detach,
 
         /// <summary>
         /// Delete and forget the link terminus when the <see cref="AmqpSession"/> is ended.
         /// </summary>
-        SESSION_END,
+        Session_End,
 
         /// <summary>
         /// Delete and forget the link terminus when the <see cref="AmqpConnection"/> is closed.
         /// </summary>
-        CONNECTION_CLOSE,
+        Connection_Close,
 
         /// <summary>
         /// Keep the link terminus object for as long as possible.
         /// </summary>
-        NEVER
+        Never
     }
 }

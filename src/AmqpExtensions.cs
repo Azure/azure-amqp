@@ -535,13 +535,13 @@ namespace Microsoft.Azure.Amqp
         {
             switch (linkTerminusExpiryPolicy)
             {
-                case LinkTerminusExpiryPolicy.LINK_DETACH:
+                case LinkTerminusExpiryPolicy.Link_Detach:
                     return TerminusExpiryPolicy.LinkDetach;
-                case LinkTerminusExpiryPolicy.SESSION_END:
+                case LinkTerminusExpiryPolicy.Session_End:
                     return TerminusExpiryPolicy.SessionEnd;
-                case LinkTerminusExpiryPolicy.CONNECTION_CLOSE:
+                case LinkTerminusExpiryPolicy.Connection_Close:
                     return TerminusExpiryPolicy.ConnectionClose;
-                case LinkTerminusExpiryPolicy.NEVER:
+                case LinkTerminusExpiryPolicy.Never:
                     return TerminusExpiryPolicy.Never;
                 default:
                     return new AmqpSymbol(null);

@@ -820,7 +820,7 @@ namespace Test.Microsoft.Azure.Amqp
 
                 // Specify the desired link expiry policy (required for link recovery) and link expiry timeout (optional for link recovery) on the link settings for potential recovery of this link in the future.
                 AmqpLinkSettings linkSettings = AmqpLinkSettings.Create<ReceivingAmqpLink>("receiver", queueName);
-                linkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.NEVER);
+                linkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.Never);
                 var receiver = await session.OpenLinkAsync<ReceivingAmqpLink>(linkSettings);
 
                 // Send a message as normal.
@@ -875,7 +875,7 @@ namespace Test.Microsoft.Azure.Amqp
 
                 // Create a SendingAmqpLink with SettleOnDispose just so the messages remain unsettled.
                 AmqpLinkSettings linkSettings = AmqpLinkSettings.Create<SendingAmqpLink>(nameof(SenderRecoveryE2ETestBase) + "-sender", address);
-                linkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.NEVER);
+                linkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.Never);
                 linkSettings.SettleType = SettleMode.SettleOnDispose;
 
                 // Open SendingAmqpLink
@@ -982,7 +982,7 @@ namespace Test.Microsoft.Azure.Amqp
 
                 // Create a ReceiverLink and receive messages. Don't settle it.
                 AmqpLinkSettings receiverLinkSettings = AmqpLinkSettings.Create<ReceivingAmqpLink>(nameof(ReceiverRecoveryE2ETestBase) + "-receiver", sender.Settings.Address().ToString());
-                receiverLinkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.NEVER);
+                receiverLinkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.Never);
                 receiverLinkSettings.SettleType = SettleMode.SettleOnDispose;
                 ReceivingAmqpLink originalReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(receiverLinkSettings);
 
@@ -1060,10 +1060,10 @@ namespace Test.Microsoft.Azure.Amqp
         {
             var testPolicies = new LinkTerminusExpiryPolicy[]
             {
-                LinkTerminusExpiryPolicy.LINK_DETACH,
-                LinkTerminusExpiryPolicy.SESSION_END,
-                LinkTerminusExpiryPolicy.CONNECTION_CLOSE,
-                LinkTerminusExpiryPolicy.NEVER
+                LinkTerminusExpiryPolicy.Link_Detach,
+                LinkTerminusExpiryPolicy.Session_End,
+                LinkTerminusExpiryPolicy.Connection_Close,
+                LinkTerminusExpiryPolicy.Never
             };
 
             foreach (LinkTerminusExpiryPolicy expirationPolicy in testPolicies)
@@ -1090,32 +1090,32 @@ namespace Test.Microsoft.Azure.Amqp
                     await link.CloseAsync();
                     if (expiryTimeout > TimeSpan.Zero)
                     {
-                        AssertLinkTermini(shouldExist: expirationPolicy >= LinkTerminusExpiryPolicy.LINK_DETACH, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
+                        AssertLinkTermini(shouldExist: expirationPolicy >= LinkTerminusExpiryPolicy.Link_Detach, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
                         await Task.Delay(expiryTimeout);
                     }
 
                     await Task.Delay(timeoutBuffer);
-                    AssertLinkTermini(shouldExist: expirationPolicy > LinkTerminusExpiryPolicy.LINK_DETACH, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
+                    AssertLinkTermini(shouldExist: expirationPolicy > LinkTerminusExpiryPolicy.Link_Detach, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
 
                     await session.CloseAsync();
                     if (expiryTimeout > TimeSpan.Zero)
                     {
-                        AssertLinkTermini(shouldExist: expirationPolicy >= LinkTerminusExpiryPolicy.SESSION_END, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
+                        AssertLinkTermini(shouldExist: expirationPolicy >= LinkTerminusExpiryPolicy.Session_End, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
                         await Task.Delay(expiryTimeout);
                     }
 
                     await Task.Delay(timeoutBuffer);
-                    AssertLinkTermini(shouldExist: expirationPolicy > LinkTerminusExpiryPolicy.SESSION_END, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
+                    AssertLinkTermini(shouldExist: expirationPolicy > LinkTerminusExpiryPolicy.Session_End, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
 
                     await connection.CloseAsync();
                     if (expiryTimeout > TimeSpan.Zero)
                     {
-                        AssertLinkTermini(shouldExist: expirationPolicy >= LinkTerminusExpiryPolicy.CONNECTION_CLOSE, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
+                        AssertLinkTermini(shouldExist: expirationPolicy >= LinkTerminusExpiryPolicy.Connection_Close, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);
                         await Task.Delay(expiryTimeout);
                     }
 
                     await Task.Delay(timeoutBuffer);
-                    AssertLinkTermini(shouldExist: expirationPolicy > LinkTerminusExpiryPolicy.CONNECTION_CLOSE, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);                     
+                    AssertLinkTermini(shouldExist: expirationPolicy > LinkTerminusExpiryPolicy.Connection_Close, terminusStore, brokerTerminusStore, link.LinkIdentifier, brokerLinkIdentifier);                     
                 }
                 finally
                 {
@@ -1208,7 +1208,7 @@ namespace Test.Microsoft.Azure.Amqp
                 }
 
                 // Open the link and observe the frames exchanged.
-                linkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.LINK_DETACH);
+                linkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.Link_Detach);
                 AmqpLink localLink = await session.OpenLinkAsync<T>(linkSettings);
                 await Task.Delay(1000); // wait for the sender to potentially send the initial deliveries
 

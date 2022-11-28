@@ -518,7 +518,8 @@ namespace Microsoft.Azure.Amqp
 
                 if (delivery.Resume && this.IsRecoverable)
                 {
-                    if (delivery.State.IsTerminal())
+                    if (delivery.State.IsTerminal() ||
+                        (delivery.State.Transactional() && ((TransactionalState)delivery.State).Outcome.IsTerminal()))
                     {
                         // If the sender sends the delivery state is settled and the delivery state is Terminal, it means that the both peers
                         // concur on the terminal state of the delivery. Hence it should be good to cleanup any pending state for the delivery
@@ -533,6 +534,7 @@ namespace Microsoft.Azure.Amqp
                         // it can only happen because the peers do not agree on the terminal state. But since the sender's view on this is final,
                         // update any state on our side and send a pendingDisposition with the senders Terminal State and settle the delivery.
                         this.DisposeDelivery(delivery, settled: true, delivery.State, noFlush: false);
+                        return;
                     }
                 }
 

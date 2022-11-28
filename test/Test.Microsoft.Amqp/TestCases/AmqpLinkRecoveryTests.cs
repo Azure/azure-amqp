@@ -66,12 +66,6 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [Fact]
-        public async Task ReeiverRequestsLinkRecovery_SenderDoesNotSupportTest()
-        {
-
-        }
-
-        [Fact]
         public async Task SenderLinkExpiryPolicyNoTimeoutTests()
         {
             await LinkExpiryPolicyTest<SendingAmqpLink>(nameof(SenderLinkExpiryPolicyNoTimeoutTests), TimeSpan.Zero);
@@ -449,7 +443,8 @@ namespace Test.Microsoft.Azure.Amqp
                 localDeliveryState: AmqpConstants.AcceptedOutcome,
                 hasRemoteDeliveryState: true,
                 remoteDeliveryState: AmqpConstants.RejectedOutcome,
-                expectSend: true);
+                expectSend: true,
+                shouldExpectProcessableMessage: false);
         }
 
         // Oasis AMQP doc section 3.4.6, example delivery tag 13 with sender/receiver swapped.
@@ -467,7 +462,8 @@ namespace Test.Microsoft.Azure.Amqp
                 localDeliveryState: AmqpConstants.AcceptedOutcome,
                 hasRemoteDeliveryState: true,
                 remoteDeliveryState: AmqpConstants.RejectedOutcome,
-                expectSend: true);
+                expectSend: true,
+                shouldExpectProcessableMessage: false);
         }
 
         // Oasis AMQP doc section 3.4.6, example delivery tag 14.
@@ -644,7 +640,7 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         // Test when local sender and remote receiver are both in the different terminal transactional states.
-        // Expected behavior is that the sender should send a delivery with the sender's delivery states to settle the delivery.
+        // Expected behavior is that the sender should send a delivery with the sender's delivery state to settle the delivery.
         // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 13.
         [Fact]
         public async Task ClientSenderTerminalTransactionalDeliveryStateBrokerDiffTerminalTransactionalDeliveryStateTest()
@@ -655,7 +651,8 @@ namespace Test.Microsoft.Azure.Amqp
                 localDeliveryState: new TransactionalState() { Outcome = AmqpConstants.AcceptedOutcome },
                 hasRemoteDeliveryState: true,
                 remoteDeliveryState: new TransactionalState() { Outcome = AmqpConstants.RejectedOutcome },
-                expectSend: true);
+                expectSend: true,
+                shouldExpectProcessableMessage: false);
         }
 
         // Test when local receiver is in pending transactional delivery state and remote has no record of this delivery.
@@ -796,7 +793,7 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         // Test when local receiver and remote sender are both in the different terminal transactional state.
-        // Expected behavior is that the sender should send a delivery with the sender's delivery states to settle the delivery.
+        // Expected behavior is that the sender should send a delivery with the sender's delivery state to settle the delivery.
         // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 13.
         [Fact]
         public async Task ClientReceiverTerminalTransactionalDeliveryStateBrokerDiffTerminalTransactionalDeliveryStateTest()
@@ -807,7 +804,8 @@ namespace Test.Microsoft.Azure.Amqp
                 localDeliveryState: new TransactionalState() { Outcome = AmqpConstants.AcceptedOutcome },
                 hasRemoteDeliveryState: true,
                 remoteDeliveryState: new TransactionalState() { Outcome = AmqpConstants.RejectedOutcome },
-                expectSend: true);
+                expectSend: true,
+                shouldExpectProcessableMessage: false);
         }
 
         [Fact]
@@ -816,7 +814,7 @@ namespace Test.Microsoft.Azure.Amqp
             AmqpConnection connection = null;
             try
             {
-                string queueName = nameof(ConsecutiveLinkRecoveryTest) + "-queue";
+                string queueName = nameof(ConsecutiveLinkRecoveryTest) + "-queue" + Guid.NewGuid().ToString();
                 connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(new AmqpInMemoryTerminusStore()));
                 AmqpSession session = await connection.OpenSessionAsync();
 
@@ -825,10 +823,13 @@ namespace Test.Microsoft.Azure.Amqp
                 linkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.NEVER);
                 var receiver = await session.OpenLinkAsync<ReceivingAmqpLink>(linkSettings);
 
-                // Send and receive the message as normal.
-                var sender = await session.OpenLinkAsync<SendingAmqpLink>("receiver", queueName);
+                // Send a message as normal.
+                var sender = await session.OpenLinkAsync<SendingAmqpLink>("sender", queueName);
                 await sender.SendMessageAsync(AmqpMessage.Create("Hello World!"));
+
+                // Receive a message.
                 var message = await receiver.ReceiveMessageAsync();
+                Assert.NotNull(message);
 
                 // Restart the broker. All connections should be disconnected from the broker side.
                 broker.Stop();
@@ -840,7 +841,8 @@ namespace Test.Microsoft.Azure.Amqp
                 connection = await AmqpConnection.Factory.OpenConnectionAsync(connectionAddressUri, connectionRecoverySettings, AmqpConstants.DefaultTimeout);
                 AmqpSession newSession = await connection.OpenSessionAsync();
                 var recoveredReceiver = await newSession.OpenLinkAsync<ReceivingAmqpLink>(receiver.Settings);
-                Assert.Null(await recoveredReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000))); // The message should remain locked, so nothing should be received here.
+                var receivedMessage = await recoveredReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000));
+                Assert.NotNull(receivedMessage);
 
                 // Restart the broker again. All connections should be disconnected from the broker side.
                 broker.Stop();
@@ -851,7 +853,7 @@ namespace Test.Microsoft.Azure.Amqp
                 connection = await AmqpConnection.Factory.OpenConnectionAsync(connectionAddressUri, connectionRecoverySettings, AmqpConstants.DefaultTimeout);
                 newSession = await connection.OpenSessionAsync();
                 var recoveredReceiver2 = await newSession.OpenLinkAsync<ReceivingAmqpLink>(receiver.Settings);
-                Assert.Null(await recoveredReceiver2.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000))); // The message should remain locked, so nothing should be received here.
+                Assert.NotNull(await recoveredReceiver2.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000)));
                 recoveredReceiver2.AcceptMessage(message);
             }
             finally
@@ -1160,7 +1162,8 @@ namespace Test.Microsoft.Azure.Amqp
             DeliveryState remoteDeliveryState,
             bool expectSend,
             bool shouldAbortDelivery = false,
-            bool shouldSettleDelivery = false) where T : AmqpLink
+            bool shouldSettleDelivery = false,
+            bool shouldExpectProcessableMessage = true) where T : AmqpLink
         {
             bool localRole = typeof(T) == typeof(ReceivingAmqpLink);
             string queueName = testName + "-queue";
@@ -1227,7 +1230,7 @@ namespace Test.Microsoft.Azure.Amqp
                     }
 
                     AmqpMessage expectedMessage = localUnsettledMessage;
-                    if (transferSettled || shouldAbortDelivery)
+                    if (transferSettled || shouldAbortDelivery || !shouldExpectProcessableMessage)
                     {
                         expectedMessage = null;
                     }
@@ -1304,7 +1307,11 @@ namespace Test.Microsoft.Azure.Amqp
                 else
                 {
                     Assert.NotNull(received);
-                    Assert.Equal(expectedMessage.ValueBody.Value, received.ValueBody.Value.ToString());
+                    // On ResumedTransfers that are already in TerminalState payload may not be re-sent.
+                    if (!received.Resume && !received.State.IsTerminal())
+                    {
+                        Assert.Equal(expectedMessage.ValueBody.Value, received.ValueBody.Value.ToString());
+                    }
                     receiver.AcceptMessage(received);
                 }
             }

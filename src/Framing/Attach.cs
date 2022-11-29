@@ -118,6 +118,7 @@ namespace Microsoft.Azure.Amqp.Framing
             this.AddFieldToString(this.OfferedCapabilities != null, sb, "offered-capabilities", this.OfferedCapabilities, ref count);
             this.AddFieldToString(this.DesiredCapabilities != null, sb, "desired-capabilities", this.DesiredCapabilities, ref count);
             this.AddFieldToString(this.Properties != null, sb, "properties", this.Properties, ref count);
+            this.AddFieldToString(this.Unsettled != null, sb, "unsettledmap", this.Unsettled, ref count);
             sb.Append(')');
             return sb.ToString();
         }

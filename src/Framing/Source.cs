@@ -105,6 +105,7 @@ namespace Microsoft.Azure.Amqp.Framing
             this.AddFieldToString(this.DefaultOutcome != null, sb, "default-outcome", this.DefaultOutcome, ref count);
             this.AddFieldToString(this.Outcomes != null, sb, "outcomes", this.Outcomes, ref count);
             this.AddFieldToString(this.Capabilities != null, sb, "capabilities", this.Capabilities, ref count);
+            this.AddFieldToString(this.Durable != null, sb, "durable", this.Durable, ref count);
             sb.Append(')');
             return sb.ToString();
         }

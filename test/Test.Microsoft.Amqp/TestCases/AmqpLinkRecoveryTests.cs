@@ -1201,7 +1201,7 @@ namespace Test.Microsoft.Azure.Amqp
             bool shouldExpectProcessableMessage = true) where T : AmqpLink
         {
             bool localRole = typeof(T) == typeof(ReceivingAmqpLink);
-            string queueName = testName + "-queue";
+            string queueName = testName + "-queue" + Guid.NewGuid().ToString();
             
             Trace.WriteLine($"Beginning test: {testName}");
 

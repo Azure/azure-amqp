@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp.Transport
     using Microsoft.Azure.Amqp;
 
     /// <summary>
-    /// Defines the base class of transport lieteners.
+    /// Defines the base class of transport listeners.
     /// </summary>
     public abstract class TransportListener : AmqpObject
     {

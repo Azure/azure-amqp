@@ -37,28 +37,32 @@ namespace Test.Microsoft.Azure.Amqp
             broker.TerminusStore = null;
         }
 
-        // Test recovering a sender link using LinkTerminus and verify that after recovery transfers are resumed with clean close of link.
+        // Test recovering a sender link using LinkTerminus and verify that after recovery transfers are resumed
+        // with clean close of link.
         [Fact]
         public async Task SenderRecoveryE2ETest_WithLinkClose()
         {
             await SenderRecoveryE2ETestBase(close: true);
         }
 
-        // Test recovering a sender link using LinkTerminus and verify that after recovery transfers are resumed while aborting the link.
+        // Test recovering a sender link using LinkTerminus and verify that after recovery transfers are resumed
+        // while aborting the link.
         [Fact]
         public async Task SenderRecoveryE2ETest_WithLinkAbort()
         {
             await SenderRecoveryE2ETestBase(close: false);
         }
 
-        // Test recovering a receiver link using LinkTerminus and verify that after recovery transfers are resumed with clean close of link.
+        // Test recovering a receiver link using LinkTerminus and verify that after recovery transfers are resumed
+        // with clean close of link.
         [Fact]
         public async Task ReceiverRecoveryE2ETest_WithLinkClose()
         {
             await ReceiverRecoveryE2ETestBase(close: true);
         }
 
-        // Test recovering a receiver link using LinkTerminus and verify that after recovery transfers are resumed while aborting the link.
+        // Test recovering a receiver link using LinkTerminus and verify that after recovery transfers are resumed
+        // while aborting the link.
         [Fact]
         public async Task ReceiverRecoveryE2ETest_WithLinkAbort()
         {
@@ -91,7 +95,8 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Oasis AMQP doc section 3.4.6, example delivery tag 1.
         // Local sender has DeliveryState = null, remote receiver does not have this unsettled delivery.
-        // Expected behavior is that the sender will immediately resend this delivery with field resume=false if settle mode is not settle-on-send.
+        // Expected behavior is that the sender will immediately resend this delivery with field resume=false
+        // if settle mode is not settle-on-send.
         [Fact]
         public async Task ClientSenderNullDeliveryStateBrokerNoDeliveryStateTest()
         {
@@ -106,7 +111,8 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Oasis AMQP doc section 3.4.6, example delivery tag 1 with sender/receiver swapped.
         // Local receiver has DeliveryState = null, remote sender does not have this unsettled delivery.
-        // Expected behavior is that the sender will not be sending anything, the client side receiver should just remove this unsettled delivery.
+        // Expected behavior is that the sender will not be sending anything, the client side receiver should
+        // just remove this unsettled delivery.
         [Fact]
         public async Task ClientReceiverNullDeliveryStateBrokerNoDeliveryStateTest()
         {
@@ -121,7 +127,8 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Oasis AMQP doc section 3.4.6, example delivery tag 2
         // Local sender has DeliveryState = null, remote receiver has DeliveryState = Received.
-        // Expected behavior is that the sender will immediately resend this delivery from the start with field resume=true.
+        // Expected behavior is that the sender will immediately resend this delivery from the start
+        // with field resume=true.
         [Fact]
         public async Task ClientSenderNullDeliveryStateBrokerReceivedDeliveryStateTest()
         {
@@ -134,9 +141,10 @@ namespace Test.Microsoft.Azure.Amqp
                 expectSend: true);
         }
 
-        // Oasis AMQP doc section 3.4.6, example delivery tag 2 with sender/receiver swapped. This is essentially the same as example delivery tag 9.
-        // Local receiver has DeliveryState = null, remote sender has DeliveryState = Received.
-        // Expected behavior is that the sender will immediately resend this delivery with resume=true and aborted=true.
+        // Oasis AMQP doc section 3.4.6, example delivery tag 2 with sender/receiver swapped. This is essentially
+        // same as example delivery tag 9. Local receiver has DeliveryState = null, remote sender has
+        // DeliveryState = Received. Expected behavior is that the sender will immediately resend this delivery
+        // with resume=true and aborted=true.
         [Fact]
         public async Task ClientReceiverNullDeliveryStateBrokerReceivedDeliveryStateTest()
         {
@@ -166,9 +174,9 @@ namespace Test.Microsoft.Azure.Amqp
                 shouldSettleDelivery: true);
         }
 
-        // Oasis AMQP doc section 3.4.6, example delivery tag 3 with sender/receiver swapped. This is essentially the same as example delivery tag 14.
-        // Local receiver has DeliveryState = null, remote sender has terminal DeliveryState.
-        // Expected behavior is that the sender will resend the delivery with resume=true and aborted=true.
+        // Oasis AMQP doc section 3.4.6, example delivery tag 3 with sender/receiver swapped. This is essentially
+        // the same as example delivery tag 14. Local receiver has DeliveryState = null, remote sender has terminal
+        // DeliveryState. Expected behavior is that the sender will resend the delivery with resume=true and aborted=true.
         [Fact]
         public async Task ClientReceiverNullDeliveryStateBrokerTerminalDeliveryStateTest()
         {
@@ -184,7 +192,8 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Oasis AMQP doc section 3.4.6, example delivery tag 4.
         // Local sender has DeliveryState = null, remote receiver has DeliveryState = null.
-        // Expected behavior is that the sender will immediately resend this delivery with field resume=true if settle mode is not settle-on-send.
+        // Expected behavior is that the sender will immediately resend this delivery
+        // with field resume=true if settle mode is not settle-on-send.
         [Fact]
         public async Task ClientSenderNullDeliveryStateBrokerNullDeliveryStateTest()
         {
@@ -197,9 +206,10 @@ namespace Test.Microsoft.Azure.Amqp
                 expectSend: true);
         }
 
-        // Oasis AMQP doc section 3.4.6, example delivery tag 4 with sender/receiver swapped. This is essentially the same as example delivery tag 14.
-        // Local receiver has DeliveryState = null, remote sender has DeliveryState = null.
-        // Expected behavior is that the sender will immediately resend this delivery with field resume=true if settle mode is not settle-on-send.
+        // Oasis AMQP doc section 3.4.6, example delivery tag 4 with sender/receiver swapped. This is essentially
+        // the same as example delivery tag 14. Local receiver has DeliveryState = null, remote sender has
+        // DeliveryState = null. Expected behavior is that the sender will immediately resend this delivery
+        // with field resume=true if settle mode is not settle-on-send.
         [Fact]
         public async Task ClientReceiverNullDeliveryStateBrokerNullDeliveryStateTest()
         {
@@ -214,7 +224,8 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Oasis AMQP doc section 3.4.6, example delivery tag 5.
         // Local sender has DeliveryState = Received, remote receiver DeliveryState does not exist.
-        // Expected behavior is that the sender will immediately resend this delivery with field resume=false if settle mode is not settle-on-send.
+        // Expected behavior is that the sender will immediately resend this delivery
+        // with field resume=false if settle mode is not settle-on-send.
         [Fact]
         public async Task ClientSenderReceivedDeliveryStateBrokerNoDeliveryStateTest()
         {
@@ -229,7 +240,8 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Oasis AMQP doc section 3.4.6, example delivery tag 5 with sender/receiver swapped.
         // Local receiver has DeliveryState = Received, remote sender DeliveryState does not exist.
-        // Expected behavior is that the sender will not be sending anything, the client side receiver should just remove this unsettled delivery.
+        // Expected behavior is that the sender will not be sending anything, the client side receiver
+        // should just remove this unsettled delivery.
         [Fact]
         public async Task ClientReceiverNoDeliveryStateBrokerReceivedDeliveryStateTest()
         {
@@ -244,7 +256,8 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Oasis AMQP doc section 3.4.6, example delivery tag 6, 7.
         // Local sender has DeliveryState = Received, remote receiver has DeliveryState = Received.
-        // Expected behavior is that the sender will immediately resend this delivery from the start with field resume=true and aborted=true.
+        // Expected behavior is that the sender will immediately resend this delivery from the start
+        // with field resume=true and aborted=true.
         [Fact]
         public async Task ClientSenderReceivedDeliveryStateBrokerReceivedDeliveryStateTest()
         {
@@ -260,7 +273,8 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Oasis AMQP doc section 3.4.6, example delivery tag 6, 7 with sender/receiver swapped.
         // Local receiver has DeliveryState = Received, remote sender has DeliveryState = Received.
-        // Expected behavior is that the sender will immediately resend this delivery from the start with field resume=true and aborted=true.
+        // Expected behavior is that the sender will immediately resend this delivery from the start
+        // with field resume=true and aborted=true.
         [Fact]
         public async Task ClientReceiverReceivedDeliveryStateBrokerReceivedDeliveryStateTest()
         {
@@ -290,9 +304,10 @@ namespace Test.Microsoft.Azure.Amqp
                 shouldSettleDelivery: true);
         }
 
-        // Oasis AMQP doc section 3.4.6, example delivery tag 8 with sender/receiver swapped. This is essentially the same as example delivery tag 11.
-        // Local receiver has DeliveryState = Received, remote sender has reached terminal outcome.
-        // Expected behavior is that the sender will resend the delivery with resume=true and aborted=true.
+        // Oasis AMQP doc section 3.4.6, example delivery tag 8 with sender/receiver swapped. This is essentially
+        // the same as example delivery tag 11. Local receiver has DeliveryState = Received, remote sender has
+        // reached terminal outcome. Expected behavior is that the sender will resend the delivery
+        // with resume=true and aborted=true.
         [Fact]
         public async Task ClientReceiverReceivedDeliveryStateBrokerTerminalDeliveryStateTest()
         {
@@ -322,9 +337,10 @@ namespace Test.Microsoft.Azure.Amqp
                 shouldAbortDelivery: true);
         }
 
-        // Oasis AMQP doc section 3.4.6, example delivery tag 9 with sender/receiver swapped. This is essentially the same as example delivery tag 2.
-        // Local receiver has DeliveryState = Received, remote sender has DeliveryState = null.
-        // Expected behavior is that the sender will immediately resend this delivery with resume=true and aborted=true.
+        // Oasis AMQP doc section 3.4.6, example delivery tag 9 with sender/receiver swapped. This is essentially
+        // the same as example delivery tag 2. Local receiver has DeliveryState = Received, remote sender has
+        // DeliveryState = null. Expected behavior is that the sender will immediately resend this delivery
+        // with resume=true and aborted=true.
         [Fact]
         public async Task ClientReceiverReceivedDeliveryStateBrokerNullDeliveryStateTest()
         {
@@ -383,9 +399,9 @@ namespace Test.Microsoft.Azure.Amqp
                 shouldAbortDelivery: true);
         }
 
-        // Oasis AMQP doc section 3.4.6, example delivery tag 11 with sender/receiver swapped. This is essentially the same as example delivery tag 8.
-        // Local receiver has terminal DeliveryState, remote sender has DeliveryState = Received.
-        // Expected behavior is that the sender will just resend the delivery to settle it.
+        // Oasis AMQP doc section 3.4.6, example delivery tag 11 with sender/receiver swapped. This is essentially
+        // the same as example delivery tag 8. Local receiver has terminal DeliveryState, remote sender
+        // has DeliveryState = Received. Expected behavior is that the sender will just resend the delivery to settle it.
         [Fact]
         public async Task ClientReceiverTerminalDeliveryStateBrokerReceivedDeliveryStateTest()
         {
@@ -433,7 +449,8 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Oasis AMQP doc section 3.4.6, example delivery tag 13
         // Local sender has terminal DeliveryState, remote receiver has the different terminal DeliveryState.
-        // Expected behavior is that the sender will resend the delivery with resume=true and DeliveryState equal to the sender's DeliveryState to settle the delivery.
+        // Expected behavior is that the sender will resend the delivery with resume=true and DeliveryState
+        // equal to the sender's DeliveryState to settle the delivery.
         [Fact]
         public async Task ClientSenderTerminalDeliveryStateBrokerDiffTerminalDeliveryStateTest()
         {
@@ -449,7 +466,8 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Oasis AMQP doc section 3.4.6, example delivery tag 13 with sender/receiver swapped.
         // Local receiver has terminal DeliveryState, remote sender has the different terminal DeliveryState.
-        // Expected behavior is that the sender will resend the delivery with resume=true and DeliveryState equal to the sender's DeliveryState to settle the delivery.
+        // Expected behavior is that the sender will resend the delivery with resume=true and DeliveryState
+        // equal to the sender's DeliveryState to settle the delivery.
         [Fact]
         public async Task ClientReceiverTerminalDeliveryStateBrokerDiffTerminalDeliveryStateTest()
         {
@@ -482,9 +500,10 @@ namespace Test.Microsoft.Azure.Amqp
                 shouldAbortDelivery: true);
         }
 
-        // Oasis AMQP doc section 3.4.6, example delivery tag 14 with sender/receiver swapped. This is essentially the same as example delivery tag 3.
-        // Local receiver has terminal DeliveryState, remote sender has null DeliveryState.
-        // Expected behavior is that the sender will just settle the delivery locally with nothing being sent.
+        // Oasis AMQP doc section 3.4.6, example delivery tag 14 with sender/receiver swapped. This is essentially
+        // the same as example delivery tag 3. Local receiver has terminal DeliveryState, remote sender has null
+        // DeliveryState. Expected behavior is that the sender will just settle the delivery locally with
+        // nothing being sent.
         [Fact]
         public async Task ClientReceiverTerminalDeliveryStateBrokerNullDeliveryStateTest()
         {
@@ -499,7 +518,8 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         // Test when local sender is in pending transactional delivery state and remote has no record of this delivery.
-        // Expected behavior is that the sender should resend the message if settle mode is not settle-on-send, similar to Oasis AMQP doc section 3.4.6, example delivery tag 1.
+        // Expected behavior is that the sender should resend the message if settle mode is not settle-on-send,
+        // similar to Oasis AMQP doc section 3.4.6, example delivery tag 1.
         [Fact]
         public async Task ClientSenderTransactionalDeliveryStateBrokerNoDeliveryStateTest()
         {
@@ -513,8 +533,8 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         // Test when local sender is in pending transactional delivery state and remote has DeliveryState = null.
-        // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's state of delivery.
-        // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 9.
+        // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's
+        // state of delivery. Similar to Oasis AMQP doc section 3.4.6, example delivery tag 9.
         [Fact]
         public async Task ClientSenderTransactionalDeliveryStateBrokerNullDeliveryStateTest()
         {
@@ -528,9 +548,9 @@ namespace Test.Microsoft.Azure.Amqp
                 shouldAbortDelivery: true);
         }
 
-        // Test when local sender is in pending transactional delivery state and remote has DeliveryState = null.
-        // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's state of delivery.
-        // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 9.
+        // Test when local sender is in pending transactional delivery state and remote has DeliveryState = Received.
+        // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's
+        // state of delivery. Similar to Oasis AMQP doc section 3.4.6, example delivery tag 9.
         [Fact]
         public async Task ClientSenderTransactionalDeliveryStateBrokerReceivedDeliveryStateTest()
         {
@@ -544,8 +564,9 @@ namespace Test.Microsoft.Azure.Amqp
                 shouldAbortDelivery: true);
         }
 
-        // Test when local sender is in pending transactional delivery state and remote has reached non-transactional terminal state.
-        // Expected behavior is that the sender should abort the delivery because the receiver should not have been able to become non-transactional.
+        // Test when local sender is in pending transactional delivery state and remote has reached non-transactional
+        // terminal state. Expected behavior is that the sender should abort the delivery because the receiver should
+        // not have been able to become non-transactional.
         [Fact]
         public async Task ClientSenderTransactionalDeliveryStateBrokerTerminalDeliveryStateTest()
         {
@@ -560,8 +581,8 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         // Test when local sender and remote receiver are both in pending transactional delivery state.
-        // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's state of delivery.
-        // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 7.
+        // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's
+        // state of delivery. Similar to Oasis AMQP doc section 3.4.6, example delivery tag 7.
         [Fact]
         public async Task ClientSenderTransactionalDeliveryStateBrokerTransactionalDeliveryStateTest()
         {
@@ -576,9 +597,10 @@ namespace Test.Microsoft.Azure.Amqp
                 shouldAbortDelivery: true);
         }
 
-        // Test when local receiver is in pending transactional delivery state and remote sender is in terminal transactional delivery state.
-        // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's state of delivery.
-        // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 3, 8.
+        // Test when local receiver is in pending transactional delivery state and remote sender is in terminal
+        // transactional delivery state. Expected behavior is that the sender should abort the delivery because
+        // we are unsure of the sender's state of delivery. Similar to Oasis AMQP doc section 3.4.6,
+        // example delivery tag 3, 8.
         [Fact]
         public async Task ClientSenderTransactionalDeliveryStateBrokerTerminalTransactionalDeliveryStateTest()
         {
@@ -592,9 +614,10 @@ namespace Test.Microsoft.Azure.Amqp
                 shouldSettleDelivery: true);
         }
 
-        // Test when local sender is in terminal transactional delivery state and remote receiver does not have this delivery.
-        // Expected behavior is that the sender should not resend any deliveries because the receiver must have already processed and settled this delivery.
-        // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 10.
+        // Test when local sender is in terminal transactional delivery state and remote receiver does not have this
+        // delivery. Expected behavior is that the sender should not resend any deliveries because the receiver must
+        // have already processed and settled this delivery. Similar to Oasis AMQP doc section 3.4.6,
+        // example delivery tag 10.
         [Fact]
         public async Task ClientSenderTerminalTransactionalDeliveryStateBrokerNoDeliveryStateTest()
         {
@@ -607,9 +630,10 @@ namespace Test.Microsoft.Azure.Amqp
                 expectSend: false);
         }
 
-        // Test when local sender is in terminal transactional delivery state and remote receiver is in pending transactional delivery state.
-        // Expected behavior is that the sender should abort the delivery because the sender cannot resume the delivery.
-        // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 11, 14.
+        // Test when local sender is in terminal transactional delivery state and remote receiver is in pending
+        // transactional delivery state. Expected behavior is that the sender should abort the delivery because
+        // the sender cannot resume the delivery. Similar to Oasis AMQP doc section 3.4.6,
+        // example delivery tag 11, 14.
         [Fact]
         public async Task ClientSenderTerminalTransactionalDeliveryStateBrokerTransactionalDeliveryStateTest()
         {
@@ -640,8 +664,8 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         // Test when local sender and remote receiver are both in the different terminal transactional states.
-        // Expected behavior is that the sender should send a delivery with the sender's delivery state to settle the delivery.
-        // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 13.
+        // Expected behavior is that the sender should send a delivery with the sender's delivery state to
+        // settle the delivery. Similar to Oasis AMQP doc section 3.4.6, example delivery tag 13.
         [Fact]
         public async Task ClientSenderTerminalTransactionalDeliveryStateBrokerDiffTerminalTransactionalDeliveryStateTest()
         {
@@ -670,7 +694,8 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         // Test when local receiver is in pending transactional delivery state and remote has DeliveryState = null.
-        // Expected behavior is that the sender should abort the delivery because the local receiver should not have been transactional.
+        // Expected behavior is that the sender should abort the delivery because the local receiver should not have
+        // been transactional.
         [Fact]
         public async Task ClientReceiverTransactionalDeliveryStateBrokerNullDeliveryStateTest()
         {
@@ -685,7 +710,8 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         // Test when local receiver is in pending transactional delivery state and remote has DeliveryState = Received.
-        // Expected behavior is that the sender should abort the delivery because the local receiver should not have been transactional.
+        // Expected behavior is that the sender should abort the delivery because the local receiver should not
+        // have been transactional.
         [Fact]
         public async Task ClientReceiverTransactionalDeliveryStateBrokerReceivedDeliveryStateTest()
         {
@@ -699,8 +725,9 @@ namespace Test.Microsoft.Azure.Amqp
                 shouldAbortDelivery: true);
         }
 
-        // Test when local receiver is in pending transactional delivery state and remote has terminal non-transactional delivery state.
-        // Expected behavior is that the sender should abort the delivery because the local receiver should not have been transactional.
+        // Test when local receiver is in pending transactional delivery state and remote has terminal non-transactional
+        // delivery state.Expected behavior is that the sender should abort the delivery because the local receiver
+        // should not have been transactional.
         [Fact]
         public async Task ClientReceiverTransactionalDeliveryStateBrokerTerminalDeliveryStateTest()
         {
@@ -715,8 +742,8 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         // Test when local sender and remote receiver are both in pending transactional delivery state.
-        // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's state of delivery.
-        // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 7.
+        // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's
+        // state of delivery. Similar to Oasis AMQP doc section 3.4.6, example delivery tag 7.
         [Fact]
         public async Task ClientReceiverTransactionalDeliveryStateBrokerTransactionalDeliveryStateTest()
         {
@@ -730,9 +757,10 @@ namespace Test.Microsoft.Azure.Amqp
                 shouldAbortDelivery: true);
         }
 
-        // Test when local receiver is in pending transactional delivery state and remote sender is in terminal transactional delivery state.
-        // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's state of delivery.
-        // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 11, 14.
+        // Test when local receiver is in pending transactional delivery state and remote sender is in terminal
+        // transactional delivery state. Expected behavior is that the sender should abort the delivery because
+        // we are unsure of the sender's state of delivery. Similar to Oasis AMQP doc section 3.4.6,
+        // example delivery tag 11, 14.
         [Fact]
         public async Task ClientReceiverTransactionalDeliveryStateBrokerTerminalTransactionalDeliveryStateTest()
         {
@@ -746,9 +774,10 @@ namespace Test.Microsoft.Azure.Amqp
                 shouldAbortDelivery: true);
         }
 
-        // Test when local receiver is in terminal transactional delivery state and remote sender is in pending transactional delivery state.
-        // Expected behavior is that the sender should not be sending anything because the receiver has already reached terminal state.
-        // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 3, 8.
+        // Test when local receiver is in terminal transactional delivery state and remote sender is in pending
+        // transactional delivery state. Expected behavior is that the sender should not be sending anything
+        // because the receiver has already reached terminal state. Similar to Oasis AMQP doc section 3.4.6,
+        // example delivery tag 3, 8.
         [Fact]
         public async Task ClientReceiverTerminalTransactionalDeliveryStateBrokerTransactionalDeliveryStateTest()
         {
@@ -1145,14 +1174,20 @@ namespace Test.Microsoft.Azure.Amqp
         /// Please see the OASIS AMQP doc section 3.4.6 for the test scenarios.
         /// </summary>
         /// <typeparam name="T">The type of link that the local side will open towards remote (sending or receiving).</typeparam>
-        /// <param name="testName">The name of the test. This will be used to set the link name as well as the queue name used during this test.</param>
-        /// <param name="hasLocalDeliveryState">True if the local link unsettled map should have record of the unsettled delivery.</param>
+        /// <param name="testName">The name of the test. This will be used to set the link name as well as the
+        /// queue name used during this test.</param>
+        /// <param name="hasLocalDeliveryState">True if the local link unsettled map should have record of the
+        /// unsettled delivery.</param>
         /// <param name="localDeliveryState">The actual value of the local unsettled delivery state.</param>
-        /// <param name="hasRemoteDeliveryState">True if the remote link unsettled map should have record of the unsettled delivery.</param>
+        /// <param name="hasRemoteDeliveryState">True if the remote link unsettled map should have record of the
+        /// unsettled delivery.</param>
         /// <param name="remoteDeliveryState">The actual value of the local unsettled delivery state.</param>
-        /// <param name="expectSend">True if the sender is expected to resend the unsettled delivery after negotiation with the receiver unsettled map.</param>
+        /// <param name="expectSend">True if the sender is expected to resend the unsettled delivery after negotiation
+        /// with the receiver unsettled map.</param>
         /// <param name="shouldAbortDelivery">True if the delivery sent by the sender should have the "Aborted" field set.</param>
         /// <param name="shouldSettleDelivery">True if the delivery sent by the sender should have the "Settled" field set.</param>
+        /// <param name="shouldExpectProcessableMessage">false if a transfer is set to be resumed but the messages itself'
+        /// is not expected to be received at ReceivingLink layer.</param>
         /// <returns></returns>
         static async Task NegotiateUnsettledDeliveryTestAsync<T>(
             string testName,

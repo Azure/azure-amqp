@@ -475,7 +475,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Clones the message for send or other operations.
         /// </summary>
-        /// <param name="deepCopy">True to perform a deep copy of all multable sections.</param>
+        /// <param name="deepCopy">True to perform a deep copy of all mutable sections.</param>
         /// <returns>An AmqpMessage.</returns>
         public AmqpMessage Clone(bool deepCopy)
         {
@@ -819,7 +819,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Allow updates in mutalble sections.
+        /// Allow updates in mutable sections.
         /// Note: currently this is only used by relay.
         /// </summary>
         sealed class AmqpClonedMessage : AmqpSectionMessage

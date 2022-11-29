@@ -53,7 +53,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Determins if the session should ignore an attach
+        /// Determines if the session should ignore an attach
         /// whole handle is unknown.
         /// </summary>
         public bool IgnoreMissingLinks

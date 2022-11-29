@@ -46,7 +46,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="x">The first number.</param>
         /// <param name="y">The second number.</param>
-        /// <returns>A negative integer, 0, or a possitive number if the first is
+        /// <returns>A negative integer, 0, or a positive number if the first is
         /// less than, equal or greater than the second respectively.</returns>
         public static int Compare(int x, int y)
         {
@@ -65,7 +65,7 @@ namespace Microsoft.Azure.Amqp
         /// Compares the current sequence number to another one.
         /// </summary>
         /// <param name="value">The other sequence number.</param>
-        /// <returns>A negative integer, 0, or a possitive number if the current is
+        /// <returns>A negative integer, 0, or a positive number if the current is
         /// less than, equal or greater than the given value respectively.</returns>
         public int CompareTo(SequenceNumber value)
         {

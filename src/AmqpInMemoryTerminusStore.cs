@@ -8,17 +8,17 @@ namespace Microsoft.Azure.Amqp
     using System.Threading.Tasks;
 
     /// <summary>
-    /// This class is the in-memory implemenation of <see cref="IAmqpTerminusStore"/>
-    /// Will be used to store and retrieve both linkTerminus Information and deliveries associated with the termini.
+    /// This class is the in-memory implementation of <see cref="IAmqpTerminusStore"/>
+    /// Will be used to store and retrieve both linkTerminus information and deliveries associated with the termini.
     /// </summary>
-    public class AmqpInMemoryTerminusStore : IAmqpTerminusStore
+    public sealed class AmqpInMemoryTerminusStore : IAmqpTerminusStore
     {
         readonly object thisLock;
         readonly IDictionary<AmqpLinkIdentifier, AmqpLinkTerminus> linkTermini;
         readonly IDictionary<AmqpLinkTerminus, IDictionary<ArraySegment<byte>, Delivery>> deliveries;
 
         /// <summary>
-        /// Create an object that will be used to save and retrieve deliveries in memory.
+        /// Creates an object that will be used to save and retrieve deliveries in memory.
         /// </summary>
         public AmqpInMemoryTerminusStore()
         {
@@ -135,7 +135,7 @@ namespace Microsoft.Azure.Amqp
         /// Retrieve saved deliveries for the given link terminus.
         /// </summary>
         /// <param name="linkTerminus">The <see cref="AmqpLinkTerminus"/> to retrieve deliveries for.</param>
-        /// <returns>A task containing the retreived deliveries.</returns>
+        /// <returns>A task containing the retrieved deliveries.</returns>
         public Task<IDictionary<ArraySegment<byte>, Delivery>> RetrieveDeliveriesAsync(AmqpLinkTerminus linkTerminus)
         {
             lock (this.thisLock)

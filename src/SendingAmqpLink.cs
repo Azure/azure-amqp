@@ -190,7 +190,8 @@ namespace Microsoft.Azure.Amqp
                 this.inflightSends.CompleteWork(delivery.DeliveryTag, false, (Outcome)deliveryState);
             }
 
-            // All work with delivery is finished. Dispose and release buffers associated with the delivery.
+            // Delivery is now settled with its final outcome and will not need to resumed.
+            // Dispose and release buffers associated with the delivery.
             delivery.Dispose();
         }
 
@@ -322,7 +323,7 @@ namespace Microsoft.Azure.Amqp
             DeliveryState deliveryState = message.State;
             if (deliveryState != null && deliveryState.DescriptorCode == Released.Code)
             {
-                // message has been cancelled (e.g. timed out)
+                // message has been canceled (e.g. timed out)
                 return true;
             }
 

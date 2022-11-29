@@ -428,7 +428,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Returns true if the the given delivery state has reached a terminal outcome.
+        /// Returns true if the given delivery state has reached a terminal outcome.
         /// </summary>
         /// <param name="deliveryState">The <see cref="DeliveryState"/> to check if it has reached an outcome.</param>
         public static bool IsTerminal(this DeliveryState deliveryState)
@@ -552,7 +552,7 @@ namespace Microsoft.Azure.Amqp
         /// Checks if the given link is closed due to link stealing.
         /// </summary>
         /// <param name="link">The link to be checked.</param>
-        /// <returns>True if the link has been clsoed due to link stealing.</returns>
+        /// <returns>True if the link has been closed due to link stealing.</returns>
         public static bool IsStolen(this AmqpLink link)
         {
             return link.IsClosing() && link.TerminalException is AmqpException amqpException && AmqpErrorCode.Stolen.Equals(amqpException.Error.Condition);
@@ -676,7 +676,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Trys to get an object from a connection's extension.
+        /// Tries to get an object from a connection's extension.
         /// </summary>
         /// <typeparam name="T">The object type.</typeparam>
         /// <param name="connection">The connection.</param>

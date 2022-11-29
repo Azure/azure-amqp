@@ -3,8 +3,6 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
-    using System;
-    using System.Linq;
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 

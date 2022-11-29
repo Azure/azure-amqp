@@ -232,31 +232,6 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Create either a <see cref="SendingAmqpLink"/> or a <see cref="ReceivingAmqpLink"/> with the provided link settigs, depending on its Role property.
-        /// </summary>
-        /// <param name="linkSettings">The link settings used to create a new link.</param>
-        /// <returns>A new link to be created.</returns>
-        public static AmqpLink Create(AmqpLinkSettings linkSettings)
-        {
-            AmqpLink link;
-            if (linkSettings.Role == null)
-            {
-                throw new ArgumentNullException(nameof(linkSettings.Role));
-            }
-
-            if (!linkSettings.Role.Value)
-            {
-                link = new SendingAmqpLink(linkSettings);
-            }
-            else
-            {
-                link = new ReceivingAmqpLink(linkSettings);
-            }
-
-            return link;
-        }
-
-        /// <summary>
         /// Attaches the link to a session.
         /// </summary>
         /// <param name="session">The session.</param>
@@ -287,7 +262,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Drains the credit to stop remote peer transfering more deliveries.
+        /// Drains the credit to stop remote peer transferring more deliveries.
         /// </summary>
         public void DrainCredits()
         {
@@ -338,6 +313,32 @@ namespace Microsoft.Azure.Amqp
                 AmqpTrace.Provider.AmqpLogError(this, nameof(ProcessFrame), exception);
                 this.SafeClose(exception);
             }
+        }
+
+        /// <summary>
+        /// Create either a <see cref="SendingAmqpLink"/> or a <see cref="ReceivingAmqpLink"/> with the provided link settings,
+        /// depending on its Role property.
+        /// </summary>
+        /// <param name="linkSettings">The link settings used to create a new link.</param>
+        /// <returns>A new link to be created.</returns>
+        internal static AmqpLink Create(AmqpLinkSettings linkSettings)
+        {
+            AmqpLink link;
+            if (linkSettings.Role == null)
+            {
+                throw new ArgumentNullException(nameof(linkSettings.Role));
+            }
+
+            if (!linkSettings.Role.Value)
+            {
+                link = new SendingAmqpLink(linkSettings);
+            }
+            else
+            {
+                link = new ReceivingAmqpLink(linkSettings);
+            }
+
+            return link;
         }
 
         internal void OnFlow(Flow flow)
@@ -585,7 +586,7 @@ namespace Microsoft.Azure.Amqp
         /// Sends a map in a flow command to the remote peer.
         /// </summary>
         /// <param name="properties">A map containing the properties.</param>
-        /// <remarks>Enables applicaiton to build a simple communication channel
+        /// <remarks>Enables application to build a simple communication channel
         /// using the existing link. See <see cref="PropertyReceived"/>.</remarks>
         public void SendProperties(Fields properties)
         {
@@ -781,7 +782,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Aborts the link object. All inflight deliveries are canceled.
+        /// Aborts the link object. All in flight deliveries are canceled.
         /// </summary>
         protected override void AbortInternal()
         {
@@ -1004,7 +1005,7 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal void StartSendDelivery(Delivery delivery)
+        void StartSendDelivery(Delivery delivery)
         {
             // The delivery may already be determined to be settled in scenarios such as link recovery.
             delivery.Settled = delivery.Settled || this.settings.SettleType == SettleMode.SettleOnSend;

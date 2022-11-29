@@ -64,7 +64,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         /// <summary>
         /// Test link stealing where two links have the same link name but different link types with link recovery enabled.
-        /// With link recovery anabled, link stealing would occur at the provider scope instead of the session scope.
+        /// With link recovery enabled, link stealing would occur at the provider scope instead of the session scope.
         /// They should both be able to open without interfering each other.
         /// </summary>
         [Fact]
@@ -75,7 +75,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         /// <summary>
         /// Test link stealing where two links have the same link name and type with link recovery enabled, but link1 is closed before link2 is opened.
-        /// With link recovery anabled, link stealing would occur at the provider scope instead of the session scope. 
+        /// With link recovery enabled, link stealing would occur at the provider scope instead of the session scope.
         /// This should not trigger any link stealing at all.
         /// </summary>
         [Fact]
@@ -86,7 +86,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         /// <summary>
         /// Test link stealing where two links have the same link name and type with link recovery enabled.
-        /// With link recovery anabled, link stealing would occur at the provider scope instead of the session scope.
+        /// With link recovery enabled, link stealing would occur at the provider scope instead of the session scope.
         /// This should trigger link stealing and close link1 due to link stealing.
         /// </summary>
         [Fact]
@@ -125,7 +125,7 @@ namespace Test.Microsoft.Azure.Amqp
         /// </param>
         /// <param name="linkRecoveryEnabled">
         /// True if link recovery is enabled. 
-        /// This will involve uniquess of link terminus objects, therefore link stealing will occur at the provider level, instead of just the session level.
+        /// This will involve uniqueness of link terminus objects, therefore link stealing will occur at the provider level, instead of just the session level.
         /// </param>
         /// <param name="abortLink1">
         /// True if link1 should be aborted before opening link2. Aborting the link will avoid sending a Detach frame to remote.

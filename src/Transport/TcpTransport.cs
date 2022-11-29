@@ -184,7 +184,7 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 args.BytesTransfered = this.sendEventArgs.BytesTransferred;
                 args.Exception = null;
-                Fx.Assert(args.BytesTransfered == args.Count, "Cannot be partialy completed");
+                Fx.Assert(args.BytesTransfered == args.Count, "Cannot be partially completed");
                 if (this.monitor != null)
                 {
                     this.sendEventArgs.ReportWrite(this.monitor);
@@ -447,7 +447,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 // use the segment buffer to avoid heap fragmentation
                 if (args.Count <= SmallBufferPool.SegmentSize)
                 {
-                    Fx.Assert(this.segment.Array != null, "segment buffer already relaimed");
+                    Fx.Assert(this.segment.Array != null, "segment buffer already reclaimed");
                     this.SetBuffer(this.segment.Array, this.segment.Offset, args.Count);
                     this.IsSegment = true;
                 }

@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// Initializes the object with a different mechanism name.
         /// </summary>
-        /// <param name="name">The mechamism.</param>
+        /// <param name="name">The mechanism.</param>
         public SaslAnonymousHandler(string name)
         {
             if (string.IsNullOrEmpty(name))

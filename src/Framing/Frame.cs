@@ -134,7 +134,7 @@ namespace Microsoft.Azure.Amqp.Framing
         }
 
         /// <summary>
-        /// Deserializes the frame.
+        /// De-serializes the frame.
         /// </summary>
         /// <param name="buffer">The frame buffer.</param>
         public void Decode(ByteBuffer buffer)

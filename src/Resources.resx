@@ -280,7 +280,7 @@
     <value>The current transport is not secure. Establish a secure transport by setting AmqpTransportSettings.UseSslStreamSecurity to true.</value>
   </data>
   <data name="AmqpEmptyMessageNotAllowed" xml:space="preserve">
-    <value>Sending an emtpy message is not allowed. At least one message section must be initialized.</value>
+    <value>Sending an empty message is not allowed. At least one message section must be initialized.</value>
   </data>
   <data name="AmqpCannotResendMessage" xml:space="preserve">
     <value>A message cannot be sent because it is either received from a link or is already sent over a link.</value>
@@ -293,11 +293,5 @@
   </data>
   <data name="AmqpContainerIdRequired" xml:space="preserve">
     <value>The AMQP connection source container ID is required.</value>
-  </data>
-  <data name="AmqpLinkRecoveryNotEnabled" xml:space="preserve">
-    <value>To enable link recovery, a valid link terminus manager must be provided with the runtime provider.</value>
-  </data>
-  <data name="AmqpLinkOpenInvalidType" xml:space="preserve">
-    <value>Cannot open a {0} when the link settings represent a {1}.</value>
   </data>
 </root>

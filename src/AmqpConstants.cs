@@ -59,7 +59,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public static readonly ArraySegment<byte> EmptyBinary = new ArraySegment<byte>(new byte[0]);
 
-        /// <summary>The default AMQP verion 1.0.0.</summary>
+        /// <summary>The default AMQP version 1.0.0.</summary>
         public static readonly AmqpVersion DefaultProtocolVersion = new AmqpVersion(1, 0, 0);
         /// <summary>The start of epoch of an AMQP timestamp.</summary>
         public static readonly DateTime StartOfEpoch = DateTime.Parse("1970-01-01T00:00:00.0000000Z", CultureInfo.InvariantCulture).ToUniversalTime();

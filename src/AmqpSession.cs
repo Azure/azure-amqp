@@ -110,8 +110,6 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal override TimeSpan OperationTimeout => this.connection.OperationTimeout;
-
         /// <summary>
         /// Opens an <see cref="AmqpLink"/> to a node at the given address.
         /// </summary>
@@ -187,7 +185,7 @@ namespace Microsoft.Azure.Amqp
 
                 if (this.Connection.LinkRecoveryEnabled)
                 {
-                    this.Connection.TerminusStore.TryGetLinkTerminusAsync(link.LinkIdentifier, out AmqpLinkTerminus linkTerminus).GetAwaiter().GetResult();
+                    bool foundTerminus = this.Connection.TerminusStore.TryGetLinkTerminusAsync(link.LinkIdentifier, out AmqpLinkTerminus linkTerminus).Result;
                     if (linkTerminus == null)
                     {
                         var linkRecoveryRuntimeProvider = ((ILinkRecoveryRuntimeProvider)this.Connection.AmqpSettings.RuntimeProvider);
@@ -218,8 +216,8 @@ namespace Microsoft.Azure.Amqp
 
                 // In case of half open links (remote has aborted a link, but local still has the link has fully open state),
                 // and the remote link and the local link have the same connection/session handles,
-                // sending a Detach to remote to close the exsting link due to link steal may cause the remote to mistakenly think
-                // that the Detach is for this current link to be opened, instead of the exsting link to be closed for link stealing.
+                // sending a Detach to remote to close the existing link due to link steal may cause the remote to mistakenly think
+                // that the Detach is for this current link to be opened, instead of the existing link to be closed for link stealing.
                 // In that case, simply abort the existing link locally without sending any Detach to remote to avoid causing confusion.
                 linkToSteal.OnLinkStolen(sameConnection && sameSession);
             }
@@ -282,6 +280,8 @@ namespace Microsoft.Azure.Amqp
                 }
             }
         }
+
+        internal override TimeSpan OperationTimeout => this.connection.OperationTimeout;
 
         internal void SendCommand(Performative command)
         {

@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp.Framing
     using Microsoft.Azure.Amqp.Encoding;
 
     /// <summary>
-    /// Represends one or multiple object of T.
+    /// Represents one or multiple object of T.
     /// </summary>
     /// <remarks>Multiple is not an AMQP data type. It is an encoding property.
     /// When there is only one T object, it is encoded as a single T object.

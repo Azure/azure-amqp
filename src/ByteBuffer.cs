@@ -204,7 +204,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Gets the remainng bytes for read.
+        /// Gets the remaining bytes for read.
         /// </summary>
         public int Length
         {

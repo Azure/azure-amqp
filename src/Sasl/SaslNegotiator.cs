@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Amqp.Sasl
     using Microsoft.Azure.Amqp.Transport;
 
     /// <summary>
-    /// This class performs the SASL negotiatioin.
+    /// This class performs the SASL negotiation.
     /// </summary>
     public sealed class SaslNegotiator : IIoHandler
     {

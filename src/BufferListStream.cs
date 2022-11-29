@@ -70,7 +70,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Gets the lengh of the stream.
+        /// Gets the length of the stream.
         /// </summary>
         public override long Length
         {

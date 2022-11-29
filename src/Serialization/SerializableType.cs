@@ -290,7 +290,7 @@ namespace Microsoft.Azure.Amqp.Serialization
 
                     if (count > 0)
                     {
-                        // skip unknow members: todo: support IExtensibleDataObject
+                        // skip unknown members: todo: support IExtensibleDataObject
                         buffer.Complete(size - (buffer.Offset - offset) - encodeWidth);
                     }
                 }

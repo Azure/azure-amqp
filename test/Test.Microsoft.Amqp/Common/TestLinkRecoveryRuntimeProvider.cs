@@ -5,7 +5,7 @@ namespace Test.Microsoft.Azure.Amqp
 {
     using global::Microsoft.Azure.Amqp;
 
-    class TestLinkRecoveryRuntimeProvider : TestRuntimeProvider, ILinkRecoveryRuntimeProvider
+    sealed class TestLinkRecoveryRuntimeProvider : TestRuntimeProvider, ILinkRecoveryRuntimeProvider
     {
         internal TestLinkRecoveryRuntimeProvider(IAmqpTerminusStore terminusStore)
         {

@@ -1,16 +1,14 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
-    using System.Text;
     using System.Threading.Tasks;
 
     /// <summary>
-    /// This class should be responsible for
+    /// This interface should be responsible for
     /// 1. Storage and retrieval of LinkTerminus (either in-memory or disk).
     /// 2. Storage and retrieval of deliveries associated with the LinkTerminus (either in-memory or disk).
     /// </summary>
@@ -57,7 +55,7 @@ namespace Microsoft.Azure.Amqp
         /// Retrieve saved deliveries for the given link terminus.
         /// </summary>
         /// <param name="linkTerminus">The <see cref="AmqpLinkTerminus"/> to retrieve deliveries for.</param>
-        /// <returns>A task containing the retreived deliveries.</returns>
+        /// <returns>A task containing the retrieved deliveries.</returns>
         Task<IDictionary<ArraySegment<byte>, Delivery>> RetrieveDeliveriesAsync(AmqpLinkTerminus linkTerminus);
 
         /// <summary>

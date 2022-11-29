@@ -85,7 +85,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Starts the operation to receive a message. The Operation completes when a message is available or the cancellationToken is cancelled.
+        /// Starts the operation to receive a message. The Operation completes when a message is available or the cancellationToken is canceled.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
         /// <returns>A message when the task is completed. Null if there is no message available.</returns>
@@ -122,7 +122,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Starts the operation to receive a batch of messages. The Operation completes when message(s) are available or the cancellationToken is cancelled.
+        /// Starts the operation to receive a batch of messages. The Operation completes when message(s) are available or the cancellationToken is canceled.
         /// </summary>
         /// <param name="messageCount">The desired number of messages.</param>
         /// <param name="batchWaitTimeout">The time to wait for more messages in the batch after the first message is available.</param>
@@ -416,7 +416,7 @@ namespace Microsoft.Azure.Amqp
 
         /// <summary>
         /// Creates a delivery for the received transfer. If the transfer is the first of a message,
-        /// a delivery object must be created. If it is continous, the current delivery must be returned.
+        /// a delivery object must be created. If it is continuous, the current delivery must be returned.
         /// </summary>
         /// <param name="transfer">The received transfer.</param>
         /// <param name="delivery">The returned delivery.</param>
@@ -451,7 +451,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Called when the state of a delivey is updated by the remote peer. Override this method to perform
+        /// Called when the state of a delivery is updated by the remote peer. Override this method to perform
         /// other operations if needed.
         /// </summary>
         /// <param name="delivery"></param>
@@ -478,7 +478,7 @@ namespace Microsoft.Azure.Amqp
         {
             Fx.Assert(delivery == null || delivery == this.currentMessage, "The delivery must be null or must be the same as the current message.");
 
-            // Whether resumed or not, an aborted delivery is considered implicity settled. Cleanup any pending state and return.
+            // Whether resumed or not, an aborted delivery is considered implicitly settled. Cleanup any pending state and return.
             if (delivery.Aborted)
             {
                 this.currentMessage = null;
@@ -521,18 +521,20 @@ namespace Microsoft.Azure.Amqp
                     if (delivery.State.IsTerminal() ||
                         (delivery.State.Transactional() && ((TransactionalState)delivery.State).Outcome.IsTerminal()))
                     {
-                        // If the sender sends the delivery state is settled and the delivery state is Terminal, it means that the both peers
-                        // concur on the terminal state of the delivery. Hence it should be good to cleanup any pending state for the delivery
-                        // and consider it settled.
+                        // If the sender sends the delivery state is settled and the delivery state is Terminal,
+                        // it means that the both peers concur on the terminal state of the delivery. Hence it
+                        // should be good to cleanup any pending state for the delivery and consider it settled.
                         if (delivery.Settled)
                         {
                             this.RemoveUnsettledDeliveryFromTerminusStoreIfNeeded(delivery.DeliveryTag);
                             return;
                         }
 
-                        // If the sender sends the delivery state as not settled but the sender indicates the delivery has reached its terminal state,
-                        // it can only happen because the peers do not agree on the terminal state. But since the sender's view on this is final,
-                        // update any state on our side and send a pendingDisposition with the senders Terminal State and settle the delivery.
+                        // If the sender sends the delivery state as not settled but the sender indicates the
+                        // delivery has reached its terminal state, it can only happen because the peers do not
+                        // agree on the terminal state. But since the sender's view on this is final,update
+                        // any state on our side and send a pendingDisposition with the senders Terminal State
+                        // and settle the delivery.
                         this.DisposeDelivery(delivery, settled: true, delivery.State, noFlush: false);
                         return;
                     }
@@ -606,9 +608,11 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// On ReceivingAmqpLink, nothing additional needs to be done. SendingAmqpLink will drive the process and send settling transfers or resume deliveries.
+        /// On ReceivingAmqpLink, nothing additional needs to be done. SendingAmqpLink will drive the process
+        /// and send settling transfers or resume deliveries.
         /// </summary>
-        /// <param name="remoteAttach">The incoming Attach from remote which contains the remote's unsettled delivery states.</param>
+        /// <param name="remoteAttach">The incoming Attach from remote which contains the remote's
+        /// unsettled delivery states.</param>
         protected override void ProcessUnsettledDeliveries(Attach remoteAttach)
         {
         }

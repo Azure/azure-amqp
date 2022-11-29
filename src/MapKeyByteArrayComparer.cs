@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Amqp
     /// <summary>
     /// Use this as the comparer for an <see cref="AmqpMap"/> to compare the byte array content instead of a generic reference compare.
     /// </summary>
-    class MapKeyByteArrayComparer : IEqualityComparer<MapKey>
+    sealed class MapKeyByteArrayComparer : IEqualityComparer<MapKey>
     {
         MapKeyByteArrayComparer()
         {

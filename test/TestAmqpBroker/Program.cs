@@ -15,7 +15,7 @@ namespace TestAmqpBroker
             Console.WriteLine("  creds=username:password");
             Console.WriteLine("  cert=ssl cert find value (thumbprint or subject), default to url.host");
             Console.WriteLine("  cbs: enables a test CBS node with no token validation");
-            Console.WriteLine("  queues: semicolon seperated queue names. If not specified, the broker implicitly");
+            Console.WriteLine("  queues: semicolon separated queue names. If not specified, the broker implicitly");
             Console.WriteLine("          creates a new node for any non-existing address.");
         }
 

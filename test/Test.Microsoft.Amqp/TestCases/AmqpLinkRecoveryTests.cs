@@ -1245,7 +1245,7 @@ namespace Test.Microsoft.Azure.Amqp
                 // Open the link and observe the frames exchanged.
                 linkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.Link_Detach);
                 AmqpLink localLink = await session.OpenLinkAsync<T>(linkSettings);
-                await Task.Delay(1000); // wait for the sender to potentially send the initial deliveries
+                await Task.Delay(1000); // wait for the sender to potentially send the initial deliveries.
 
                 Transfer expectedTransfer = receiverSideConnection.ReceivedPerformatives.Last.Value as Transfer;
                 bool transferSettled = expectedTransfer?.Settled == true;

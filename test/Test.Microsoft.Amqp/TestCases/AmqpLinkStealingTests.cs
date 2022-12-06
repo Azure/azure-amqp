@@ -25,14 +25,14 @@ namespace Test.Microsoft.Azure.Amqp
             broker = testAmqpBrokerFixture.Broker;
             if (enableLinkRecovery)
             {
-                broker.TerminusStore = new AmqpInMemoryTerminusStore();
+                broker.SetTerminusStore(new AmqpInMemoryTerminusStore());
             }
         }
 
         // This would be run after each test case.
         public void Dispose()
         {
-            broker.TerminusStore = null;
+            broker.SetTerminusStore(null);
         }
 
         /// <summary>
@@ -140,7 +140,8 @@ namespace Test.Microsoft.Azure.Amqp
             if (linkRecoveryEnabled)
             {
                 AmqpSettings settings = AmqpConnection.Factory.GetAmqpSettings(null);
-                settings.RuntimeProvider = new TestLinkRecoveryRuntimeProvider(new AmqpInMemoryTerminusStore());
+                settings.RuntimeProvider = new TestRuntimeProvider();
+                settings.TerminusStore = new AmqpInMemoryTerminusStore();
                 TransportBase transport = await AmqpConnection.Factory.GetTransportAsync(connectionAddressUri, settings, AmqpConstants.DefaultTimeout, CancellationToken.None);
                 connection = new TestAmqpConnection(transport, settings, new AmqpConnectionSettings() { ContainerId = Guid.NewGuid().ToString(), HostName = connectionAddressUri.Host });
                 await connection.OpenAsync();

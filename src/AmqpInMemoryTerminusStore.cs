@@ -117,7 +117,7 @@ namespace Microsoft.Azure.Amqp
                 IDictionary<ArraySegment<byte>, Delivery> terminusDeliveries;
                 if (!this.deliveries.TryGetValue(linkTerminus, out terminusDeliveries))
                 {
-                    terminusDeliveries = new Dictionary<ArraySegment<byte>, Delivery>();
+                    terminusDeliveries = new Dictionary<ArraySegment<byte>, Delivery>(ByteArrayComparer.Instance);
                     this.deliveries.Add(linkTerminus, terminusDeliveries);
                 }
 

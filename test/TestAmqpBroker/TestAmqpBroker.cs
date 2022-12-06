@@ -18,7 +18,7 @@ namespace TestAmqpBroker
     using Test.Microsoft.Azure.Amqp;
     using Address = Microsoft.Azure.Amqp.Framing.Address;
 
-    public sealed class TestAmqpBroker : ILinkRecoveryRuntimeProvider
+    public sealed class TestAmqpBroker : IRuntimeProvider
     {
         const ulong MaxMessageSize = 64 * 1024 * 1024;
         public const uint ConnectionIdleTimeOut = 4 * 60 * 1000;
@@ -62,6 +62,12 @@ namespace TestAmqpBroker
         }
 
         public IAmqpTerminusStore TerminusStore { get; internal set; }
+
+        public void SetTerminusStore(IAmqpTerminusStore amqpTerminusStore)
+        {
+            this.settings.TerminusStore = amqpTerminusStore;
+            this.TerminusStore = amqpTerminusStore;
+        }
 
         public void Start()
         {

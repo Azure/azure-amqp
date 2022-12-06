@@ -155,12 +155,13 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal IAmqpTerminusStore TerminusStore => (this.AmqpSettings.RuntimeProvider as ILinkRecoveryRuntimeProvider)?.TerminusStore;
+        internal IAmqpTerminusStore TerminusStore => this.AmqpSettings.TerminusStore;
 
         /// <summary>
-        /// Upon creation of a new link, decide if could have recoverable link terminus and have the corresponding settings by checking if there is a valid <see cref="TerminusStore"/>.
+        /// Upon creation of a new link, decide if could have recoverable link terminus and have
+        /// corresponding settings by checking if there is a valid <see cref="TerminusStore"/>.
         /// </summary>
-        internal bool LinkRecoveryEnabled => this.AmqpSettings.RuntimeProvider is ILinkRecoveryRuntimeProvider linkRecoveryRuntimeProvider && linkRecoveryRuntimeProvider.TerminusStore != null;
+        internal bool LinkRecoveryEnabled => this.AmqpSettings.TerminusStore != null;
 
         /// <summary>
         /// Creates a <see cref="AmqpSession"/> and adds it to the session collection.

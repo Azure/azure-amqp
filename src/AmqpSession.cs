@@ -188,8 +188,7 @@ namespace Microsoft.Azure.Amqp
                     bool foundTerminus = this.Connection.TerminusStore.TryGetLinkTerminusAsync(link.LinkIdentifier, out AmqpLinkTerminus linkTerminus).Result;
                     if (linkTerminus == null)
                     {
-                        var linkRecoveryRuntimeProvider = ((ILinkRecoveryRuntimeProvider)this.Connection.AmqpSettings.RuntimeProvider);
-                        linkTerminus = new AmqpLinkTerminus(link.LinkIdentifier, link.Settings, linkRecoveryRuntimeProvider.TerminusStore);
+                        linkTerminus = new AmqpLinkTerminus(link.LinkIdentifier, link.Settings, this.Connection.TerminusStore);
                         if (!this.Connection.TerminusStore.TryAddLinkTerminusAsync(link.LinkIdentifier, linkTerminus).GetAwaiter().GetResult())
                         {
                             // There was a race and some other link has already created a link terminus and attach.

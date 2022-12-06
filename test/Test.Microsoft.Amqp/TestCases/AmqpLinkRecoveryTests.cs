@@ -28,13 +28,13 @@ namespace Test.Microsoft.Azure.Amqp
         {
             connectionAddressUri = TestAmqpBrokerFixture.Address;
             broker = testAmqpBrokerFixture.Broker;
-            broker.TerminusStore = new AmqpInMemoryTerminusStore();
+            broker.SetTerminusStore(new AmqpInMemoryTerminusStore());
         }
 
         // This would be run after each test case.
         public void Dispose()
         {
-            broker.TerminusStore = null;
+            broker.SetTerminusStore(null);
         }
 
         // Test recovering a sender link using LinkTerminus and verify that after recovery transfers are resumed
@@ -844,7 +844,9 @@ namespace Test.Microsoft.Azure.Amqp
             try
             {
                 string queueName = nameof(ConsecutiveLinkRecoveryTest) + "-queue" + Guid.NewGuid().ToString();
-                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(new AmqpInMemoryTerminusStore()));
+                var localDeliveryStore = new AmqpInMemoryTerminusStore();
+                var runtimeProvider = new TestRuntimeProvider();
+                connection = await OpenTestConnectionAsync(connectionAddressUri, runtimeProvider, localDeliveryStore);
                 AmqpSession session = await connection.OpenSessionAsync();
 
                 // Specify the desired link expiry policy (required for link recovery) and link expiry timeout (optional for link recovery) on the link settings for potential recovery of this link in the future.
@@ -864,10 +866,18 @@ namespace Test.Microsoft.Azure.Amqp
                 broker.Stop();
                 await Task.Delay(1000);
                 broker.Start();
+                broker.SetTerminusStore(broker.TerminusStore);
 
                 // Need to reconnect with the same containerId and link identifier for link recovery.
                 AmqpConnectionSettings connectionRecoverySettings = new AmqpConnectionSettings() { ContainerId = connection.Settings.ContainerId };
-                connection = await AmqpConnection.Factory.OpenConnectionAsync(connectionAddressUri, connectionRecoverySettings, AmqpConstants.DefaultTimeout);
+                var amqpSettings = new AmqpSettings
+                {
+                    RuntimeProvider = runtimeProvider,
+                    TerminusStore = localDeliveryStore
+                };
+                var factory = new AmqpConnectionFactory(amqpSettings);
+                connection = await factory.OpenConnectionAsync(connectionAddressUri, connectionRecoverySettings, AmqpConstants.DefaultTimeout);
+
                 AmqpSession newSession = await connection.OpenSessionAsync();
                 var recoveredReceiver = await newSession.OpenLinkAsync<ReceivingAmqpLink>(receiver.Settings);
                 var receivedMessage = await recoveredReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000));
@@ -877,10 +887,12 @@ namespace Test.Microsoft.Azure.Amqp
                 broker.Stop();
                 await Task.Delay(1000);
                 broker.Start();
+                broker.SetTerminusStore(broker.TerminusStore);
 
                 // Need to reconnect with the same containerId and link identifier for link recovery.
-                connection = await AmqpConnection.Factory.OpenConnectionAsync(connectionAddressUri, connectionRecoverySettings, AmqpConstants.DefaultTimeout);
+                connection = await factory.OpenConnectionAsync(connectionAddressUri, connectionRecoverySettings, AmqpConstants.DefaultTimeout);
                 newSession = await connection.OpenSessionAsync();
+                receiver.Settings.Unsettled.Clear();
                 var recoveredReceiver2 = await newSession.OpenLinkAsync<ReceivingAmqpLink>(receiver.Settings);
                 Assert.NotNull(await recoveredReceiver2.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000)));
                 recoveredReceiver2.AcceptMessage(message);
@@ -898,7 +910,7 @@ namespace Test.Microsoft.Azure.Amqp
             try
             {
                 var terminusStore = new AmqpInMemoryTerminusStore();
-                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(terminusStore));
+                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestRuntimeProvider(), terminusStore);
                 AmqpSession session = await connection.OpenSessionAsync();
                 string address = nameof(SenderRecoveryE2ETestBase) + ((close == true) ? "_close" : "_abort") + Guid.NewGuid().ToString();
 
@@ -988,7 +1000,7 @@ namespace Test.Microsoft.Azure.Amqp
             try
             {
                 var terminusStore = new AmqpInMemoryTerminusStore();
-                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(terminusStore));
+                connection = await OpenTestConnectionAsync(connectionAddressUri, new TestRuntimeProvider(), terminusStore);
                 AmqpSession session = await connection.OpenSessionAsync();
                 string address = nameof(ReceiverRecoveryE2ETestBase) + ((close == true) ? "_close" : "_abort") + Guid.NewGuid().ToString();
 
@@ -1101,7 +1113,7 @@ namespace Test.Microsoft.Azure.Amqp
                 AmqpConnection connection = null;
                 try
                 {
-                    connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(new AmqpInMemoryTerminusStore()));
+                    connection = await OpenTestConnectionAsync(connectionAddressUri, new TestRuntimeProvider(), new AmqpInMemoryTerminusStore());
                     AmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId);
                     IAmqpTerminusStore terminusStore = connection.TerminusStore;
                     IAmqpTerminusStore brokerTerminusStore = brokerConnection.TerminusStore;
@@ -1149,8 +1161,7 @@ namespace Test.Microsoft.Azure.Amqp
                 finally
                 {
                     await connection?.CloseAsync();
-                    broker.TerminusStore = null;
-                    broker.TerminusStore = new AmqpInMemoryTerminusStore();
+                    broker.SetTerminusStore(new AmqpInMemoryTerminusStore());
                 }
             }
         }
@@ -1206,7 +1217,7 @@ namespace Test.Microsoft.Azure.Amqp
             Trace.WriteLine($"Beginning test: {testName}");
 
             AmqpInMemoryTerminusStore localDeliveryStore = new AmqpInMemoryTerminusStore();
-            TestAmqpConnection connection = await OpenTestConnectionAsync(connectionAddressUri, new TestLinkRecoveryRuntimeProvider(localDeliveryStore));
+            TestAmqpConnection connection = await OpenTestConnectionAsync(connectionAddressUri, new TestRuntimeProvider(), localDeliveryStore);
             TestAmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId) as TestAmqpConnection;
 
             try
@@ -1303,11 +1314,12 @@ namespace Test.Microsoft.Azure.Amqp
             Trace.WriteLine($"End test: {testName}");
         }
 
-        static async Task<TestAmqpConnection> OpenTestConnectionAsync(Uri addressUri, IRuntimeProvider runtimeProvider)
+        static async Task<TestAmqpConnection> OpenTestConnectionAsync(Uri addressUri, IRuntimeProvider runtimeProvider, IAmqpTerminusStore amqpTerminusStore)
         {
             AmqpConnectionFactory factory = new AmqpConnectionFactory();
             AmqpSettings settings = factory.GetAmqpSettings(null);
             settings.RuntimeProvider = runtimeProvider;
+            settings.TerminusStore = amqpTerminusStore;
             TransportBase transport = await factory.GetTransportAsync(addressUri, settings, AmqpConstants.DefaultTimeout, CancellationToken.None);
             var connection = new TestAmqpConnection(transport, settings, new AmqpConnectionSettings() { ContainerId = Guid.NewGuid().ToString(), HostName = addressUri.Host });
             await connection.OpenAsync();

@@ -1048,10 +1048,7 @@ namespace Microsoft.Azure.Amqp
 
         internal void RemoveUnsettledDeliveryFromTerminusStoreIfNeeded(ArraySegment<byte> deliveryTag)
         {
-            if (this.Session.Connection.AmqpSettings.RuntimeProvider is ILinkRecoveryRuntimeProvider linkRecoveryRuntimeProvider)
-            {
-                linkRecoveryRuntimeProvider.TerminusStore?.TryRemoveDeliveryAsync(this.Terminus, deliveryTag).GetAwaiter().GetResult();
-            }
+            this.Session.Connection.AmqpSettings.TerminusStore?.TryRemoveDeliveryAsync(this.Terminus, deliveryTag).GetAwaiter().GetResult();
         }
 
         void DisposeDeliveryInternal(Delivery delivery, bool settled, DeliveryState state, bool noFlush)

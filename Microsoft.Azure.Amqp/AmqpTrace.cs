@@ -288,7 +288,7 @@ namespace Microsoft.Azure.Amqp
         static void AppendCommon(StringBuilder sb, bool send)
         {
             sb.Append('[');
-            sb.AppendFormat("{0:X3}", Diagnostics.CurrentProcess.ID);
+            sb.AppendFormat("{0:X3}", CurrentProcess.ID);
             sb.Append('.');
             sb.AppendFormat("{0:X3}", Environment.CurrentManagedThreadId);
             sb.Append(' ');

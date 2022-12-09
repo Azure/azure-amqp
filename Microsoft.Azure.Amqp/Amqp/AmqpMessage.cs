@@ -1220,7 +1220,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     int count = this.ReadInt(formatCode == FormatCode.Symbol8);
                     ArraySegment<byte> nameBuffer = this.ReadBytes(count);
-                    string descriptorName = Platform.System.Text.Encoding.ASCII.GetString(nameBuffer.Array, nameBuffer.Offset, count);
+                    string descriptorName = SystemEncoding.ASCII.GetString(nameBuffer.Array, nameBuffer.Offset, count);
                     sectionCodeByName.TryGetValue(descriptorName, out descriptorCode);
                 }
 

@@ -176,16 +176,17 @@ namespace System.Threading
 
 
 #if WINDOWS_UWP
-
-class Win32
+namespace Microsoft.Azure.Amqp
 {
-    [DllImport("kernel32.dll")]
-    public static extern int GetCurrentProcessId();
+    class Win32
+    {
+        [DllImport("kernel32.dll")]
+        public static extern int GetCurrentProcessId();
+    }
 }
-
 #endif
 
-namespace Diagnostics
+namespace Microsoft.Azure.Amqp
 {
     static class CurrentProcess
     {
@@ -205,10 +206,10 @@ namespace Diagnostics
     }
 }
 
-namespace Platform.System.Text
+namespace Microsoft.Azure.Amqp
 {
 #if PCL
-    class Encoding
+    class SystemEncoding
     {
         public static global::System.Text.Encoding ASCII
         {
@@ -219,7 +220,7 @@ namespace Platform.System.Text
         }
     }
 #else
-    class Encoding
+    class SystemEncoding
     {
         public static global::System.Text.Encoding ASCII
         {

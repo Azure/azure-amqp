@@ -144,7 +144,7 @@
             Assert.Equal(sn5 + 1, sn6);
             Assert.Equal(1, sn6 - sn5);
             Assert.Equal(new SequenceNumber(1u) + int.MaxValue, sn6);
-            Assert.Equal(sn7 - sn8, -7);
+            Assert.Equal(-7, sn7 - sn8);
             Assert.Equal(sn8 + 1, sn0);
             Assert.Equal(sn8 + 11, sn1);
             Assert.True(sn6 < sn8);

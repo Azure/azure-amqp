@@ -50,9 +50,10 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="timeout">A timeout for the open operation.</param>
         /// <returns>A task for the async operation.</returns>
-        public Task OpenAsync(TimeSpan timeout)
+        public async Task OpenAsync(TimeSpan timeout)
         {
-            return this.OpenAsync(new CancellationTokenSource(timeout).Token);
+            using var cancellationTokenSource = new CancellationTokenSource(timeout);
+            await this.OpenAsync(cancellationTokenSource.Token).ConfigureAwait(false);
         }
 
         /// <summary>

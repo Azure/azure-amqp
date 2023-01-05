@@ -8,6 +8,7 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Transaction;
     using System;
     using System.Collections.Generic;
+    using System.Text;
     using System.Threading.Tasks;
     using System.Timers;
 
@@ -142,15 +143,19 @@ namespace Microsoft.Azure.Amqp
         /// <returns>A task containing the resultant map of deliveries that would remain unsettled.</returns>
         internal protected async Task<IDictionary<ArraySegment<byte>, Delivery>> NegotiateUnsettledDeliveriesAsync(Attach remoteAttach)
         {
+            IDictionary<ArraySegment<byte>, Delivery> negotiatedUnsettledDeliveries;
             IDictionary<ArraySegment<byte>, Delivery> localUnsettledDeliveries = await this.TerminusStore.RetrieveDeliveriesAsync(this);
             if (this.Identifier.IsReceiver)
             {
-                return localUnsettledDeliveries;
+                negotiatedUnsettledDeliveries = localUnsettledDeliveries;
             }
             else
             {
-                return await this.NegotiateUnsettledDeliveriesFromSender(remoteAttach, localUnsettledDeliveries);
+                negotiatedUnsettledDeliveries = await this.NegotiateUnsettledDeliveriesFromSender(remoteAttach, localUnsettledDeliveries);
             }
+
+            AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.LinkRecoveryNegotiateResult, this + "::" + Extensions.GetString(negotiatedUnsettledDeliveries));
+            return negotiatedUnsettledDeliveries;
         }
 
         /// <summary>
@@ -272,6 +277,7 @@ namespace Microsoft.Azure.Amqp
                     "or else the event handler should have been removed.");
                 if (!this.disposed && !link.IsStolen())
                 {
+                    AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.TerminusStateOnClose, this + "::" + Extensions.GetString(link.UnsettledMap));
                     this.TerminusStore.SaveDeliveriesAsync(this, link.UnsettledMap);
                 }
             }

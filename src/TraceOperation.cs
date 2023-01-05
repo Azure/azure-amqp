@@ -92,5 +92,13 @@ namespace Microsoft.Azure.Amqp
         /// Link Recovery Negotiate operation.
         /// </summary>
         LinkRecoveryNegotiate = 20,
+        /// <summary>
+        /// Link Recovery Negotiate Result.
+        /// </summary>
+        LinkRecoveryNegotiateResult = 21,
+        /// <summary>
+        /// Terminus state on close
+        /// </summary>
+        TerminusStateOnClose = 22,
     }
 }

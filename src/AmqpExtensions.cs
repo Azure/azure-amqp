@@ -39,6 +39,20 @@ namespace Microsoft.Azure.Amqp
             return output == null ? sb.ToString() : null;
         }
 
+        internal static string GetString(IDictionary<ArraySegment<byte>, Delivery> deliveries)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var item in deliveries)
+            {
+                sb.Append(Extensions.GetString(item.Key));
+                sb.Append(":");
+                sb.Append(item.Value.State);
+                sb.Append(",");
+            }
+
+            return sb.ToString();
+        }
+
         // open
         /// <summary>
         /// Gets the value of open.max-frame-size or uint.MaxValue if it is not set.

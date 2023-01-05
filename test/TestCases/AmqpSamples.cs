@@ -74,7 +74,7 @@ namespace Test.Microsoft.Azure.Amqp
                 var receiver = await session.OpenLinkAsync<ReceivingAmqpLink>(linkSettings);
 
                 // Send and receive the message as normal.
-                var sender = await session.OpenLinkAsync<SendingAmqpLink>("receiver", queueName);
+                var sender = await session.OpenLinkAsync<SendingAmqpLink>("sender", queueName);
                 await sender.SendMessageAsync(AmqpMessage.Create("Hello World!"));
                 var message = await receiver.ReceiveMessageAsync();
 
@@ -82,6 +82,7 @@ namespace Test.Microsoft.Azure.Amqp
                 broker.Stop();
                 await Task.Delay(1000);
                 broker.Start();
+                broker.SetTerminusStore(broker.TerminusStore);
 
                 // Try to complete the received message now. Should throw exception because the link is closed.
                 Assert.Throws<AmqpException>(() => receiver.AcceptMessage(message));

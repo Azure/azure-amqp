@@ -580,6 +580,85 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [Fact]
+        public Task LinkDrainTest()
+        {
+            return this.RunLinkDrainTest(false);
+        }
+
+        [Fact]
+        public Task LinkDrainCanceledTest()
+        {
+            return this.RunLinkDrainTest(true);
+        }
+
+        [Fact]
+        public Task LinkDrainTimeoutTest()
+        {
+            return this.RunLinkDrainTest(false, 800);
+        }
+
+        async Task RunLinkDrainTest(bool cancelBefore, int timeoutMilliseconds = 0)
+        {
+            var provider = new TestRuntimeProvider()
+            {
+                LinkFactory = (s, t) => { t.SettleType = SettleMode.SettleOnDispose; return new TestLink(s, t, flowHang: true); }
+            };
+            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, provider);
+            listener.Open();
+
+            try
+            {
+                try
+                {
+                    var factory = new AmqpConnectionFactory();
+                    var connection = await factory.OpenConnectionAsync(this.addressUri, AmqpConstants.DefaultTimeout);
+                    var session = connection.CreateSession(new AmqpSessionSettings());
+                    await session.OpenAsync(AmqpConstants.DefaultTimeout);
+
+                    var link = new ReceivingAmqpLink(session, new AmqpLinkSettings() { Role = true, LinkName = "receiver", TotalLinkCredit = 0, Source = new Source(), Target = new Target() });
+                    await link.OpenAsync(AmqpConstants.DefaultTimeout);
+
+                    var cts = new CancellationTokenSource();
+                    if (cancelBefore && timeoutMilliseconds == 0)
+                    {
+                        cts.Cancel();
+                    }
+
+                    if (timeoutMilliseconds > 0)
+                    {
+                        link.Settings.OperationTimeout = TimeSpan.FromMilliseconds(timeoutMilliseconds);
+                    }
+
+                    var task = link.DrainAsyc(cts.Token);
+                    if (!cancelBefore && timeoutMilliseconds == 0)
+                    {
+                        await Task.Yield();
+                        cts.Cancel();
+                    }
+
+                    await task;
+
+                    Assert.True(false, "Exception not thrown");
+                }
+                catch (Exception exception)
+                {
+                    if (timeoutMilliseconds > 0)
+                    {
+                        Assert.Equal(typeof(TimeoutException), exception.GetType());
+                    }
+                    else
+                    {
+                        Assert.Equal(typeof(TaskCanceledException), exception.GetType());
+                    }
+                }
+            }
+            finally
+            {
+                listener.Close();
+            }
+        }
+
+        [Fact]
         public async Task CbsSendTokenNoCancelTest()
         {
             var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, null, null, null);
@@ -714,9 +793,10 @@ namespace Test.Microsoft.Azure.Amqp
             readonly bool sendHang;
             readonly bool receiveHang;
             readonly bool disposeHang;
+            readonly bool flowHang;
 
             public TestLink(AmqpSession session, AmqpLinkSettings settings, bool openHang = false, bool closeHang = false,
-                bool sendHang = false, bool receiveHang = false, bool disposeHang = false)
+                bool sendHang = false, bool receiveHang = false, bool disposeHang = false, bool flowHang = false)
                 : base(session, settings)
             {
                 this.openHang = openHang;
@@ -724,6 +804,7 @@ namespace Test.Microsoft.Azure.Amqp
                 this.sendHang = sendHang;
                 this.receiveHang = receiveHang;
                 this.disposeHang = disposeHang;
+                this.flowHang = flowHang;
             }
 
             public override bool CreateDelivery(Transfer transfer, out Delivery delivery)
@@ -766,6 +847,14 @@ namespace Test.Microsoft.Azure.Amqp
                 if (!this.disposeHang)
                 {
                     this.DisposeDelivery(delivery, true, AmqpConstants.AcceptedOutcome);
+                }
+            }
+
+            protected override void OnReceiveFlow(Flow flow)
+            {
+                if (!this.flowHang)
+                {
+                    base.OnReceiveFlow(flow);
                 }
             }
         }

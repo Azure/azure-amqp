@@ -3,14 +3,13 @@
 
 namespace Microsoft.Azure.Amqp
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using System.Timers;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-    using System.Threading.Tasks;
-    using System.Timers;
 
     /// <summary>
     /// A class which represents a link endpoint, which contains information about the link's identifier,
@@ -163,11 +162,11 @@ namespace Microsoft.Azure.Amqp
         /// If there is already a link registered with this link terminus, and it's a different link, the
         /// existing link would be closed due to link stealing.
         /// </summary>
-        /// <param name="link">The new link to be associated with this link terminus.</param>
+        /// <param name="newLink">The new link to be associated with this link terminus.</param>
         /// <param name="stolenLink">The existing link associated with this link terminus that was
         /// disassociated as a result of associating the new link given.</param>
         /// <returns>True if the new link was successfully associated with this link terminus.</returns>
-        internal protected bool TryAssociateLink(AmqpLink link, out AmqpLink stolenLink)
+        internal protected bool TryAssociateLink(AmqpLink newLink, out AmqpLink stolenLink)
         {
             stolenLink = null;
             lock (this.thisLock)
@@ -179,7 +178,7 @@ namespace Microsoft.Azure.Amqp
 
                 if (this.link != null)
                 {
-                    if (link.AllowLinkStealing(this.LinkSettings))
+                    if (newLink.AllowLinkStealing(this.LinkSettings))
                     {
                         stolenLink = this.link;
                         // Before disassociating the link, save current Unsettledmap of the link.
@@ -199,40 +198,40 @@ namespace Microsoft.Azure.Amqp
                     }
                 }
 
-                this.link = link;
-                link.Terminus = this;
+                this.link = newLink;
+                newLink.Terminus = this;
 
-                link.Closed += this.OnAssociatedLinkClose;
-                AmqpSymbol expiryPolicy = link.Settings.GetExpiryPolicy();
+                newLink.Closed += this.OnAssociatedLinkClose;
+                AmqpSymbol expiryPolicy = newLink.Settings.GetExpiryPolicy();
                 if (expiryPolicy.Equals(TerminusExpiryPolicy.LinkDetach))
                 {
-                    link.Closed += this.OnSuspendLinkTerminus;
+                    newLink.Closed += this.OnSuspendLinkTerminus;
                 }
                 else if (expiryPolicy.Equals(TerminusExpiryPolicy.SessionEnd))
                 {
-                    link.Session.Closed += this.OnSuspendLinkTerminus;
+                    newLink.Session.Closed += this.OnSuspendLinkTerminus;
                 }
                 else if (expiryPolicy.Equals(TerminusExpiryPolicy.ConnectionClose))
                 {
-                    link.Session.Connection.Closed += this.OnSuspendLinkTerminus;
+                    newLink.Session.Connection.Closed += this.OnSuspendLinkTerminus;
                 }
             }
 
             IDictionary<ArraySegment<byte>, Delivery> localUnsettledDeliveries = this.TerminusStore.RetrieveDeliveriesAsync(this).Result;
             if (localUnsettledDeliveries != null)
             {
-                if (link.Settings.Unsettled == null)
+                if (newLink.Settings.Unsettled == null)
                 {
-                    link.Settings.Unsettled = new AmqpMap(new Dictionary<ArraySegment<byte>, Delivery>(), MapKeyByteArrayComparer.Instance);
+                    newLink.Settings.Unsettled = new AmqpMap(MapKeyByteArrayComparer.Instance);
                 }
 
                 foreach (var kvp in localUnsettledDeliveries)
                 {
-                    link.Settings.Unsettled.Add(new MapKey(kvp.Key), kvp.Value.State);
+                    newLink.Settings.Unsettled.Add(new MapKey(kvp.Key), kvp.Value.State);
                 }
             }
 
-            stolenLink?.OnLinkStolen(false);
+            stolenLink?.OnLinkStolen();
             return true;
         }
 
@@ -278,7 +277,7 @@ namespace Microsoft.Azure.Amqp
                 if (!this.disposed && !link.IsStolen())
                 {
                     AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.TerminusStateOnClose, this + "::" + Extensions.GetString(link.UnsettledMap));
-                    this.TerminusStore.SaveDeliveriesAsync(this, link.UnsettledMap);
+                    this.TerminusStore.SaveDeliveriesAsync(this, link.UnsettledMap).GetAwaiter().GetResult();
                 }
             }
         }

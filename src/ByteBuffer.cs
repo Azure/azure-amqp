@@ -309,14 +309,6 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Resets the read position.
-        /// </summary>
-        public void ResetReadPosition()
-        {
-            this.read = this.start;
-        }
-
-        /// <summary>
         /// Gets a slice of the buffer.
         /// </summary>
         /// <param name="position">The start position.</param>
@@ -415,6 +407,14 @@ namespace Microsoft.Azure.Amqp
                     this.bufferManager.ReturnBuffer(bufferToRelease);
                 }
             }
+        }
+
+        /// <summary>
+        /// Resets the read position.
+        /// </summary>
+        internal void ResetReadPosition()
+        {
+            this.read = this.start;
         }
 
         internal ReadOnlySpan<byte> GetReadSpan(int size)

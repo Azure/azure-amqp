@@ -15,7 +15,6 @@ namespace TestAmqpBroker
     using Microsoft.Azure.Amqp.Sasl;
     using Microsoft.Azure.Amqp.Transaction;
     using Microsoft.Azure.Amqp.Transport;
-    using Test.Microsoft.Azure.Amqp;
     using Address = Microsoft.Azure.Amqp.Framing.Address;
 
     public sealed class TestAmqpBroker : IRuntimeProvider
@@ -61,12 +60,11 @@ namespace TestAmqpBroker
             }
         }
 
-        public IAmqpTerminusStore TerminusStore { get; internal set; }
+        public IAmqpTerminusStore TerminusStore => this.settings.TerminusStore;
 
         public void SetTerminusStore(IAmqpTerminusStore amqpTerminusStore)
         {
             this.settings.TerminusStore = amqpTerminusStore;
-            this.TerminusStore = amqpTerminusStore;
         }
 
         public void Start()
@@ -166,7 +164,6 @@ namespace TestAmqpBroker
             }
         }
 
-
         public void AddNode(INode node)
         {
             this.nodes.Add(node.Name, node);
@@ -252,7 +249,7 @@ namespace TestAmqpBroker
         public AmqpConnection CreateConnection(TransportBase transport, ProtocolHeader protocolHeader, 
             bool isInitiator, AmqpSettings amqpSettings, AmqpConnectionSettings connectionSettings)
         {
-            return new TestAmqpConnection(transport, protocolHeader, false, amqpSettings, connectionSettings);
+            return new AmqpConnection(transport, protocolHeader, false, amqpSettings, connectionSettings);
         }
 
         public AmqpSession CreateSession(AmqpConnection connection, AmqpSessionSettings settings)

@@ -481,6 +481,7 @@ namespace Microsoft.Azure.Amqp
             // Whether resumed or not, an aborted delivery is considered implicitly settled. Cleanup any pending state and return.
             if (delivery.Aborted)
             {
+                this.currentMessage?.Dispose();
                 this.currentMessage = null;
                 this.RemoveUnsettledDeliveryFromTerminusStoreIfNeeded(delivery.DeliveryTag);
                 return;

@@ -29,34 +29,16 @@ namespace Microsoft.Azure.Amqp.Encoding
         public AmqpMap(IDictionary value)
             : this()
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException($"The dictionary used to initialize the {nameof(AmqpMap)} should not be null.");
-            }
-
             foreach (DictionaryEntry entry in value)
             {
-                this.Add(entry.Key is MapKey mapKey ? mapKey : new MapKey(entry.Key), entry.Value);
+                this.Add(new MapKey(entry.Key), entry.Value);
             }
         }
 
-        /// <summary>
-        /// Initializes the object from a dictionary and a given comparer.
-        /// </summary>
-        /// <param name="value">The dictionary.</param>
-        /// <param name="comparer">The equality comparer.</param>
-        public AmqpMap(IDictionary value, IEqualityComparer<MapKey> comparer)
+        internal AmqpMap(IEqualityComparer<MapKey> comparer)
             : base(comparer)
         {
-            if (value == null)
-            {
-                throw new ArgumentNullException($"The dictionary used to initialize the {nameof(AmqpMap)} should not be null.");
-            }
 
-            foreach (DictionaryEntry entry in value)
-            {
-                this.Add(entry.Key is MapKey mapKey ? mapKey : new MapKey(entry.Key), entry.Value);
-            }
         }
 
         /// <summary>
@@ -140,7 +122,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                     sb.Append(',');
                 }
 
-                if (pair.Key is MapKey mapKey && mapKey.Key is ArraySegment<byte> keyBytes)
+                if (pair.Key.Key is ArraySegment<byte> keyBytes)
                 {
                     sb.AppendFormat(CultureInfo.InvariantCulture, "{0}:{1}", Extensions.GetString(keyBytes), pair.Value);
                 }

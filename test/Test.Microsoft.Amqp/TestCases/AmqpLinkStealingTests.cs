@@ -3,13 +3,13 @@
 
 namespace Test.Microsoft.Azure.Amqp
 {
-    using global::Microsoft.Azure.Amqp;
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
     using Xunit;
     using TestAmqpBroker;
-    using System.Threading;
     using global::Microsoft.Azure.Amqp.Transport;
+    using global::Microsoft.Azure.Amqp;
 
     [Collection("AmqpLinkTests")]
     [Trait("Category", TestCategory.Current)]
@@ -143,7 +143,7 @@ namespace Test.Microsoft.Azure.Amqp
                 settings.RuntimeProvider = new TestRuntimeProvider();
                 settings.TerminusStore = new AmqpInMemoryTerminusStore();
                 TransportBase transport = await AmqpConnection.Factory.GetTransportAsync(connectionAddressUri, settings, AmqpConstants.DefaultTimeout, CancellationToken.None);
-                connection = new TestAmqpConnection(transport, settings, new AmqpConnectionSettings() { ContainerId = Guid.NewGuid().ToString(), HostName = connectionAddressUri.Host });
+                connection = new AmqpConnection(transport, settings, new AmqpConnectionSettings() { ContainerId = Guid.NewGuid().ToString(), HostName = connectionAddressUri.Host });
                 await connection.OpenAsync();
             }
             else

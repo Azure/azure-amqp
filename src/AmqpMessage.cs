@@ -527,15 +527,6 @@ namespace Microsoft.Azure.Amqp
             return buffer == null ? null : new ArraySegment<byte>[] { buffer.AsSegment() };
         }
 
-        /// <summary>
-        /// Reset the buffers so the message can be resent again in case of linkRecovery.
-        /// </summary>
-        public override void Reset()
-        {
-            this.buffer?.ResetReadPosition();
-            base.Reset();
-        }
-
         /// <inheritdoc />
         protected override void Dispose(bool disposing)
         {
@@ -552,6 +543,15 @@ namespace Microsoft.Azure.Amqp
             {
                 throw new ObjectDisposedException(this.GetType().Name);
             }
+        }
+
+        /// <summary>
+        /// Reset the buffers so the message can be resent again in case of linkRecovery.
+        /// </summary>
+        internal override void Reset()
+        {
+            this.buffer?.ResetReadPosition();
+            base.Reset();
         }
 
         internal static void EncodeSection(ByteBuffer buffer, AmqpDescribed section)

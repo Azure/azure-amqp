@@ -225,14 +225,6 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Resets a delivery and its associated resources so it can be resent in case of linkRecovery.
-        /// </summary>
-        public virtual void Reset()
-        {
-            this.BytesTransfered = 0;
-        }
-
-        /// <summary>
         /// Releases unmanaged resources and optionally releases managed resources.
         /// </summary>
         /// <param name="disposing">
@@ -241,6 +233,14 @@ namespace Microsoft.Azure.Amqp
         /// </param>
         protected virtual void Dispose(bool disposing)
         {
+        }
+
+        /// <summary>
+        /// Resets a delivery and its associated resources so it can be resent in case of linkRecovery.
+        /// </summary>
+        internal virtual void Reset()
+        {
+            this.BytesTransfered = 0;
         }
 
         internal static ByteBuffer GetPayload(ByteBuffer source, int payloadSize, out bool more)

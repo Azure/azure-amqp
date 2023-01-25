@@ -118,7 +118,7 @@ namespace Microsoft.Azure.Amqp.Framing
             this.AddFieldToString(this.OfferedCapabilities != null, sb, "offered-capabilities", this.OfferedCapabilities, ref count);
             this.AddFieldToString(this.DesiredCapabilities != null, sb, "desired-capabilities", this.DesiredCapabilities, ref count);
             this.AddFieldToString(this.Properties != null, sb, "properties", this.Properties, ref count);
-            this.AddFieldToString(this.Unsettled != null, sb, "unsettledmap", this.Unsettled, ref count);
+            this.AddFieldToString(this.Unsettled != null, sb, "unsettled-map", this.Unsettled, ref count);
             sb.Append(')');
             return sb.ToString();
         }
@@ -212,11 +212,7 @@ namespace Microsoft.Azure.Amqp.Framing
 
             if (count-- > 0)
             {
-                AmqpMap mapWithGenericComparer = AmqpCodec.DecodeMap(buffer);
-                if (mapWithGenericComparer != null)
-                {
-                    this.Unsettled = new AmqpMap(mapWithGenericComparer, MapKeyByteArrayComparer.Instance);
-                }
+                this.Unsettled = AmqpCodec.DecodeMap(buffer, MapKeyByteArrayComparer.Instance);
             }
 
             if (count-- > 0)

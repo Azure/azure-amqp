@@ -111,51 +111,6 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Opens an <see cref="AmqpLink"/> to a node at the given address.
-        /// </summary>
-        /// <typeparam name="T">The type of link. Only <see cref="SendingAmqpLink"/> and <see cref="ReceivingAmqpLink"/> are supported.</typeparam>
-        /// <param name="name">The link name.</param>
-        /// <param name="address">The node address.</param>
-        /// <returns>A task that returns a link on completion.</returns>
-        public Task<T> OpenLinkAsync<T>(string name, string address) where T : AmqpLink
-        {
-            AmqpLinkSettings linkSettings = AmqpLinkSettings.Create<T>(name, address);
-            return this.OpenLinkAsync<T>(linkSettings);
-        }
-
-        /// <summary>
-        /// Open or resume a link using the <see cref="AmqpLinkSettings"/> provided.
-        /// </summary>
-        /// <typeparam name="T">The type of link.</typeparam>
-        /// <param name="linkSettings">The link settings to be used for creating the new link.</param>
-        /// <returns>A task that returns a link on completion.</returns>
-        public async Task<T> OpenLinkAsync<T>(AmqpLinkSettings linkSettings) where T : AmqpLink
-        {
-            if (linkSettings == null)
-            {
-                throw new ArgumentNullException(nameof(linkSettings));
-            }
-
-            if (linkSettings.LinkName == null)
-            {
-                throw new ArgumentNullException(nameof(linkSettings.LinkName));
-            }
-
-            AmqpLink link = AmqpLink.Create(linkSettings);
-            try
-            {
-                link.AttachTo(this);
-                await link.OpenAsync().ConfigureAwait(false);
-                return link as T;
-            }
-            catch
-            {
-                link.SafeClose();
-                throw;
-            }
-        }
-
-        /// <summary>
         /// Attaches a link to the session. The link is assigned a local handle on success.
         /// </summary>
         /// <param name="link">The link to attach.</param>
@@ -173,10 +128,19 @@ namespace Microsoft.Azure.Amqp
 
                 if (this.links.TryGetValue(link.LinkIdentifier, out linkToSteal) && link.AllowLinkStealing(linkToSteal.Settings))
                 {
-                    // Even though link onclose handler already removes the link from the links collection,
+                    // Even though link onclose handler already removes the link from the links collections,
                     // calling Close() is fire and forget, so we will not be waiting for the link onClose handler to trigger
-                    // before trying to add the new link to the links collection down below in this method, therefore remove it now.
+                    // before trying to add the new link to the links collections down below in this method, therefore remove it now.
                     this.links.Remove(link.LinkIdentifier);
+                    if (linkToSteal.LocalHandle.HasValue)
+                    {
+                        this.linksByLocalHandle.Remove(linkToSteal.LocalHandle.Value);
+                    }
+
+                    if (linkToSteal.RemoteHandle.HasValue)
+                    {
+                        this.linksByRemoteHandle.Remove(linkToSteal.RemoteHandle.Value);
+                    }
                 }
                 else
                 {
@@ -208,18 +172,7 @@ namespace Microsoft.Azure.Amqp
                 link.LocalHandle = this.linksByLocalHandle.Add(link);
             }
 
-            if (linkToSteal != null)
-            {
-                bool sameConnection = link.Session.Connection.Settings.ContainerId.Equals(linkToSteal.Session.Connection.Settings.ContainerId, StringComparison.OrdinalIgnoreCase);
-                bool sameSession = link.Session.RemoteChannel == linkToSteal.Session.RemoteChannel;
-
-                // In case of half open links (remote has aborted a link, but local still has the link has fully open state),
-                // and the remote link and the local link have the same connection/session handles,
-                // sending a Detach to remote to close the existing link due to link steal may cause the remote to mistakenly think
-                // that the Detach is for this current link to be opened, instead of the existing link to be closed for link stealing.
-                // In that case, simply abort the existing link locally without sending any Detach to remote to avoid causing confusion.
-                linkToSteal.OnLinkStolen(sameConnection && sameSession);
-            }
+            linkToSteal?.OnLinkStolen();
 
             AmqpTrace.Provider.AmqpAttachLink(this.connection, this, link, link.LocalHandle.Value,
                 link.RemoteHandle ?? 0u, link.Name, link.IsReceiver ? "receiver" : "sender", link.Settings.Source, link.Settings.Target);
@@ -277,6 +230,51 @@ namespace Microsoft.Azure.Amqp
                 {
                     this.outgoingChannel.SendFlow(flow);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Opens an <see cref="AmqpLink"/> to a node at the given address.
+        /// </summary>
+        /// <typeparam name="T">The type of link.</typeparam>
+        /// <param name="name">The link name.</param>
+        /// <param name="address">The node address.</param>
+        /// <returns>A task that returns a link on completion.</returns>
+        internal Task<T> OpenLinkAsync<T>(string name, string address) where T : AmqpLink
+        {
+            AmqpLinkSettings linkSettings = AmqpLinkSettings.Create(role: typeof(T) == typeof(ReceivingAmqpLink), name, address);
+            return this.OpenLinkAsync<T>(linkSettings);
+        }
+
+        /// <summary>
+        /// Open or resume a link using the <see cref="AmqpLinkSettings"/> provided.
+        /// </summary>
+        /// <typeparam name="T">The type of link.</typeparam>
+        /// <param name="linkSettings">The link settings to be used for creating the new link.</param>
+        /// <returns>A task that returns a link on completion.</returns>
+        internal async Task<T> OpenLinkAsync<T>(AmqpLinkSettings linkSettings) where T: AmqpLink
+        {
+            if (linkSettings == null)
+            {
+                throw new ArgumentNullException(nameof(linkSettings));
+            }
+
+            if (linkSettings.LinkName == null)
+            {
+                throw new ArgumentNullException(nameof(linkSettings.LinkName));
+            }
+
+            AmqpLink link = AmqpLink.Create(linkSettings);
+            try
+            {
+                link.AttachTo(this);
+                await link.OpenAsync().ConfigureAwait(false);
+                return link as T;
+            }
+            catch
+            {
+                link.SafeClose();
+                throw;
             }
         }
 

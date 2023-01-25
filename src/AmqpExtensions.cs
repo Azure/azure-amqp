@@ -442,137 +442,6 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Returns true if the given delivery state has reached a terminal outcome.
-        /// </summary>
-        /// <param name="deliveryState">The <see cref="DeliveryState"/> to check if it has reached an outcome.</param>
-        public static bool IsTerminal(this DeliveryState deliveryState)
-        {
-            return deliveryState != null &&
-                (deliveryState.DescriptorCode == Accepted.Code ||
-                deliveryState.DescriptorCode == Modified.Code ||
-                deliveryState.DescriptorCode == Rejected.Code ||
-                deliveryState.DescriptorCode == Released.Code);
-        }
-
-        /// <summary>
-        /// Return the ExpiryPolicy from the link settings by checking the Target or Source, depending if the link is a receiver or sender.
-        /// </summary>
-        /// <param name="linkSettings">The link settings to obtain the ExpiryPolicy from.</param>
-        public static AmqpSymbol GetExpiryPolicy(this AmqpLinkSettings linkSettings)
-        {
-            AmqpSymbol? expiryPolicy;
-            if (linkSettings.IsReceiver())
-            {
-                var target = linkSettings.Target as Target;
-                expiryPolicy = target?.ExpiryPolicy;
-            }
-            else
-            {
-                var source = linkSettings.Source as Source;
-                expiryPolicy = source?.ExpiryPolicy;
-            }
-
-            return expiryPolicy ?? new AmqpSymbol();
-        }
-
-        /// <summary>
-        /// Set the ExpiryPolicy field for the given link settings on the Target or Source, depending if the link is a receiver or sender.
-        /// </summary>
-        /// <param name="linkSettings">The link settings to set the expiry policy on.</param>
-        /// <param name="expiryPolicy">The expiryPolicy to be set.</param>
-        public static void SetExpiryPolicy(this AmqpLinkSettings linkSettings, LinkTerminusExpiryPolicy expiryPolicy)
-        {
-            if (linkSettings.IsReceiver() && linkSettings.Target is Target target)
-            {
-                target.ExpiryPolicy = expiryPolicy.GetExpiryPolicySymbol();
-            }
-            else if (!linkSettings.IsReceiver() && linkSettings.Source is Source source)
-            {
-                source.ExpiryPolicy = expiryPolicy.GetExpiryPolicySymbol();
-            }
-            else
-            {
-                throw new InvalidOperationException($"Cannot set expiration policy because the {(linkSettings.IsReceiver() ? nameof(Target) : nameof(Source))} is null.");
-            }
-        }
-
-        /// <summary>
-        /// Return the terminus expiry timeout from the link settings by checking the Target or Source, depending if the link is a receiver or sender.
-        /// </summary>
-        /// <param name="linkSettings">The link settings to obtain the terminus expiry timeout from.</param>
-        public static TimeSpan GetExpiryTimeout(this AmqpLinkSettings linkSettings)
-        {
-            uint? timeoutInSeconds;
-            if (linkSettings.IsReceiver())
-            {
-                var target = linkSettings.Target as Target;
-                timeoutInSeconds = target?.Timeout;
-            }
-            else
-            {
-                var source = linkSettings.Source as Source;
-                timeoutInSeconds = source?.Timeout;
-            }
-
-            if (timeoutInSeconds == null)
-            {
-                timeoutInSeconds = 0;
-            }
-            return TimeSpan.FromSeconds((uint)timeoutInSeconds);
-        }
-
-        /// <summary>
-        /// Set the Timeout field for the given link settings on the Target or Source, depending if the link is a receiver or sender.
-        /// </summary>
-        /// <param name="linkSettings">The link settings to set the expiry timeout on.</param>
-        /// <param name="expirationTimeout">The expiry timeout to be set.</param>
-        public static void SetExpiryTimeout(this AmqpLinkSettings linkSettings, TimeSpan expirationTimeout)
-        {
-            if (linkSettings.IsReceiver() && linkSettings.Target is Target target)
-            {
-                target.Timeout = Convert.ToUInt32(expirationTimeout.TotalSeconds);
-            }
-            else if (!linkSettings.IsReceiver() && linkSettings.Source is Source source)
-            {
-                source.Timeout = Convert.ToUInt32(expirationTimeout.TotalSeconds);
-            }
-            else
-            {
-                throw new InvalidOperationException($"Cannot set expiration timeout because the {(linkSettings.IsReceiver() ? nameof(Target) : nameof(Source))} is null.");
-            }
-        }
-
-        /// <summary>
-        /// Returns the corresponding <see cref="AmqpSymbol"/> for the given link terminus expiry policy.
-        /// </summary>
-        public static AmqpSymbol GetExpiryPolicySymbol(this LinkTerminusExpiryPolicy linkTerminusExpiryPolicy)
-        {
-            switch (linkTerminusExpiryPolicy)
-            {
-                case LinkTerminusExpiryPolicy.Link_Detach:
-                    return TerminusExpiryPolicy.LinkDetach;
-                case LinkTerminusExpiryPolicy.Session_End:
-                    return TerminusExpiryPolicy.SessionEnd;
-                case LinkTerminusExpiryPolicy.Connection_Close:
-                    return TerminusExpiryPolicy.ConnectionClose;
-                case LinkTerminusExpiryPolicy.Never:
-                    return TerminusExpiryPolicy.Never;
-                default:
-                    return new AmqpSymbol(null);
-            }
-        }
-
-        /// <summary>
-        /// Checks if the given link is closed due to link stealing.
-        /// </summary>
-        /// <param name="link">The link to be checked.</param>
-        /// <returns>True if the link has been closed due to link stealing.</returns>
-        public static bool IsStolen(this AmqpLink link)
-        {
-            return link.IsClosing() && link.TerminalException is AmqpException amqpException && AmqpErrorCode.Stolen.Equals(amqpException.Error.Condition);
-        }
-
-        /// <summary>
         /// Updates or inserts a value in begin.properties.
         /// </summary>
         /// <param name="begin">The <see cref="Begin"/> performative.</param>
@@ -738,6 +607,137 @@ namespace Microsoft.Azure.Amqp
             }
 
             return default;
+        }
+
+        /// <summary>
+        /// Returns true if the given delivery state has reached a terminal outcome.
+        /// </summary>
+        /// <param name="deliveryState">The <see cref="DeliveryState"/> to check if it has reached an outcome.</param>
+        internal static bool IsTerminal(this DeliveryState deliveryState)
+        {
+            return deliveryState != null &&
+                (deliveryState.DescriptorCode == Accepted.Code ||
+                deliveryState.DescriptorCode == Modified.Code ||
+                deliveryState.DescriptorCode == Rejected.Code ||
+                deliveryState.DescriptorCode == Released.Code);
+        }
+
+        /// <summary>
+        /// Return the ExpiryPolicy from the link settings by checking the Target or Source, depending if the link is a receiver or sender.
+        /// </summary>
+        /// <param name="linkSettings">The link settings to obtain the ExpiryPolicy from.</param>
+        internal static AmqpSymbol GetExpiryPolicy(this AmqpLinkSettings linkSettings)
+        {
+            AmqpSymbol? expiryPolicy;
+            if (linkSettings.IsReceiver())
+            {
+                var target = linkSettings.Target as Target;
+                expiryPolicy = target?.ExpiryPolicy;
+            }
+            else
+            {
+                var source = linkSettings.Source as Source;
+                expiryPolicy = source?.ExpiryPolicy;
+            }
+
+            return expiryPolicy ?? new AmqpSymbol();
+        }
+
+        /// <summary>
+        /// Set the ExpiryPolicy field for the given link settings on the Target or Source, depending if the link is a receiver or sender.
+        /// </summary>
+        /// <param name="linkSettings">The link settings to set the expiry policy on.</param>
+        /// <param name="expiryPolicy">The expiryPolicy to be set.</param>
+        internal static void SetExpiryPolicy(this AmqpLinkSettings linkSettings, LinkTerminusExpiryPolicy expiryPolicy)
+        {
+            if (linkSettings.IsReceiver() && linkSettings.Target is Target target)
+            {
+                target.ExpiryPolicy = expiryPolicy.GetExpiryPolicySymbol();
+            }
+            else if (!linkSettings.IsReceiver() && linkSettings.Source is Source source)
+            {
+                source.ExpiryPolicy = expiryPolicy.GetExpiryPolicySymbol();
+            }
+            else
+            {
+                throw new InvalidOperationException($"Cannot set expiration policy because the {(linkSettings.IsReceiver() ? nameof(Target) : nameof(Source))} is null.");
+            }
+        }
+
+        /// <summary>
+        /// Return the terminus expiry timeout from the link settings by checking the Target or Source, depending if the link is a receiver or sender.
+        /// </summary>
+        /// <param name="linkSettings">The link settings to obtain the terminus expiry timeout from.</param>
+        internal static TimeSpan GetExpiryTimeout(this AmqpLinkSettings linkSettings)
+        {
+            uint? timeoutInSeconds;
+            if (linkSettings.IsReceiver())
+            {
+                var target = linkSettings.Target as Target;
+                timeoutInSeconds = target?.Timeout;
+            }
+            else
+            {
+                var source = linkSettings.Source as Source;
+                timeoutInSeconds = source?.Timeout;
+            }
+
+            if (timeoutInSeconds == null)
+            {
+                timeoutInSeconds = 0;
+            }
+            return TimeSpan.FromSeconds((uint)timeoutInSeconds);
+        }
+
+        /// <summary>
+        /// Set the Timeout field for the given link settings on the Target or Source, depending if the link is a receiver or sender.
+        /// </summary>
+        /// <param name="linkSettings">The link settings to set the expiry timeout on.</param>
+        /// <param name="expirationTimeout">The expiry timeout to be set.</param>
+        internal static void SetExpiryTimeout(this AmqpLinkSettings linkSettings, TimeSpan expirationTimeout)
+        {
+            if (linkSettings.IsReceiver() && linkSettings.Target is Target target)
+            {
+                target.Timeout = Convert.ToUInt32(expirationTimeout.TotalSeconds);
+            }
+            else if (!linkSettings.IsReceiver() && linkSettings.Source is Source source)
+            {
+                source.Timeout = Convert.ToUInt32(expirationTimeout.TotalSeconds);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Cannot set expiration timeout because the {(linkSettings.IsReceiver() ? nameof(Target) : nameof(Source))} is null.");
+            }
+        }
+
+        /// <summary>
+        /// Returns the corresponding <see cref="AmqpSymbol"/> for the given link terminus expiry policy.
+        /// </summary>
+        internal static AmqpSymbol GetExpiryPolicySymbol(this LinkTerminusExpiryPolicy linkTerminusExpiryPolicy)
+        {
+            switch (linkTerminusExpiryPolicy)
+            {
+                case LinkTerminusExpiryPolicy.LinkDetach:
+                    return TerminusExpiryPolicy.LinkDetach;
+                case LinkTerminusExpiryPolicy.SessionEnd:
+                    return TerminusExpiryPolicy.SessionEnd;
+                case LinkTerminusExpiryPolicy.ConnectionClose:
+                    return TerminusExpiryPolicy.ConnectionClose;
+                case LinkTerminusExpiryPolicy.Never:
+                    return TerminusExpiryPolicy.Never;
+                default:
+                    return new AmqpSymbol(null);
+            }
+        }
+
+        /// <summary>
+        /// Checks if the given link is closed due to link stealing.
+        /// </summary>
+        /// <param name="link">The link to be checked.</param>
+        /// <returns>True if the link has been closed due to link stealing.</returns>
+        internal static bool IsStolen(this AmqpLink link)
+        {
+            return link.IsClosing() && link.TerminalException is AmqpException amqpException && AmqpErrorCode.Stolen.Equals(amqpException.Error.Condition);
         }
 
         internal static IAsyncResult ToAsyncResult<T>(this Task<T> task, AsyncCallback callback, object state)

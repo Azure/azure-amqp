@@ -668,6 +668,11 @@ namespace Microsoft.Azure.Amqp
         }
 #pragma warning restore 1591
 
+        /// <summary>
+        /// A callback that is invoked when a Frame is received on a Connection.
+        /// </summary>
+        internal static Action<uint, Performative> ReceivedFrames;
+
         internal static void OnProtocolHeader(ProtocolHeader header, bool send)
         {
             if (FrameLogger != null)
@@ -681,6 +686,11 @@ namespace Microsoft.Azure.Amqp
             if (FrameLogger != null)
             {
                 LogFrame(id, type, channel, command, send, frameSize);
+            }
+
+            if (!send)
+            {
+                ReceivedFrames?.Invoke(id, command);
             }
         }
 

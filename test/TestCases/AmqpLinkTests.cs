@@ -1265,7 +1265,7 @@ namespace Test.Microsoft.Azure.Amqp
             Assert.True(link2.State == AmqpObjectState.Opened);
             if (shouldLinkBeStolen)
             {
-                Assert.True(link1.State == AmqpObjectState.End);
+                Assert.True(link1.State == AmqpObjectState.CloseSent);
                 Assert.Contains("link stealing", link1.TerminalException.Message);
             }
             else if (!sameType)

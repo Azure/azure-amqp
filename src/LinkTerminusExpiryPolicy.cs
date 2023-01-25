@@ -16,17 +16,17 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Delete and forget the link terminus when the <see cref="AmqpLink"/> is detached.
         /// </summary>
-        Link_Detach,
+        LinkDetach,
 
         /// <summary>
         /// Delete and forget the link terminus when the <see cref="AmqpSession"/> is ended.
         /// </summary>
-        Session_End,
+        SessionEnd,
 
         /// <summary>
         /// Delete and forget the link terminus when the <see cref="AmqpConnection"/> is closed.
         /// </summary>
-        Connection_Close,
+        ConnectionClose,
 
         /// <summary>
         /// Keep the link terminus object for as long as possible.

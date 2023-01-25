@@ -57,10 +57,10 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
         }
 
-        public static AmqpMap Decode(ByteBuffer buffer, FormatCode formatCode)
+        public static AmqpMap Decode(ByteBuffer buffer, FormatCode formatCode, IEqualityComparer<MapKey> comparer = null)
         {
             AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.Map8, FormatCode.Map32, out int size, out int count);
-            AmqpMap map = new AmqpMap();
+            AmqpMap map = comparer != null ? new AmqpMap(comparer) : new AmqpMap();
             ReadMapValue(buffer, map, size, count);
             return map;
         }

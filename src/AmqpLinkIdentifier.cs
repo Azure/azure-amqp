@@ -3,8 +3,8 @@
 
 namespace Microsoft.Azure.Amqp
 {
-    using Microsoft.Azure.Amqp.Framing;
     using System;
+    using Microsoft.Azure.Amqp.Framing;
 
     /// <summary>
     /// An object used to uniquely identify a link endpoint.

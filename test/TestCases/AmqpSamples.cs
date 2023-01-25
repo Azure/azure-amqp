@@ -69,7 +69,7 @@ namespace Test.Microsoft.Azure.Amqp
                 AmqpSession session = await connection.OpenSessionAsync();
 
                 // Specify the desired link expiry policy (required for link recovery) and link expiry timeout (optional for link recovery) on the link settings for potential recovery of this link in the future.
-                AmqpLinkSettings linkSettings = AmqpLinkSettings.Create<ReceivingAmqpLink>("receiver", queueName);
+                AmqpLinkSettings linkSettings = AmqpLinkSettings.Create(role: true, "receiver", queueName);
                 linkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.Never);
                 var receiver = await session.OpenLinkAsync<ReceivingAmqpLink>(linkSettings);
 

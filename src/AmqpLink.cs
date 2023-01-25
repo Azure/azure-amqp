@@ -1018,31 +1018,17 @@ namespace Microsoft.Azure.Amqp
             this.inflightDeliveries.DoWork(delivery);
         }
 
-        internal void OnLinkStolen(bool shouldAbort)
+        internal void OnLinkStolen()
         {
-            AmqpTrace.Provider.AmqpLogOperationInformational(this, shouldAbort ? TraceOperation.Abort : TraceOperation.Close, "LinkStealing");
-
-            if (shouldAbort)
-            {
-                this.TerminalException = new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.LinkIdentifier));
-                this.Abort();
-            }
-            else
-            {
-                this.SafeClose(new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.LinkIdentifier)));
-            }
+            AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Close, "LinkStealing");
+            this.SafeClose(new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.LinkIdentifier)));
         }
 
         internal void AddOrUpdateUnsettledDelivery(Delivery delivery)
         {
             lock (this.syncRoot)
             {
-                if (this.UnsettledMap.ContainsKey(delivery.DeliveryTag))
-                {
-                    this.UnsettledMap.Remove(delivery.DeliveryTag);
-                }
-
-                this.UnsettledMap.Add(delivery.DeliveryTag, delivery);
+                this.UnsettledMap[delivery.DeliveryTag] = delivery;
             }
         }
 

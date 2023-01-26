@@ -25,7 +25,7 @@ namespace Microsoft.Azure.Amqp
         protected abstract T Target { get; }
 
         /// <summary>
-        /// Called when the cancellation token is cancelled.
+        /// Called when the cancellation token is canceled.
         /// </summary>
         public abstract void Cancel(bool isSynchronous);
 

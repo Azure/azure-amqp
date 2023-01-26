@@ -81,6 +81,7 @@ namespace Microsoft.Azure.Amqp.Framing
             this.AddFieldToString(this.Dynamic != null, sb, "dynamic", this.Dynamic, ref count);
             this.AddFieldToString(this.DynamicNodeProperties != null, sb, "dynamic-node-properties", this.DynamicNodeProperties, ref count);
             this.AddFieldToString(this.Capabilities != null, sb, "capabilities", this.Capabilities, ref count);
+            this.AddFieldToString(this.Durable != null, sb, "durable", this.Durable, ref count);
             sb.Append(')');
             return sb.ToString();
         }

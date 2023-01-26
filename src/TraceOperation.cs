@@ -88,5 +88,17 @@ namespace Microsoft.Azure.Amqp
         /// Refresh active link operation.
         /// </summary>
         ActiveLinkRefreshed = 19,
+        /// <summary>
+        /// Link Recovery Negotiate operation.
+        /// </summary>
+        LinkRecoveryNegotiate = 20,
+        /// <summary>
+        /// Link Recovery Negotiate Result.
+        /// </summary>
+        LinkRecoveryNegotiateResult = 21,
+        /// <summary>
+        /// Terminus state on close
+        /// </summary>
+        TerminusStateOnClose = 22,
     }
 }

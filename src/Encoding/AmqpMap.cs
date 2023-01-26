@@ -3,9 +3,11 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
+    using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.Linq;
     using System.Text;
 
     /// <summary>
@@ -31,6 +33,12 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 this.Add(new MapKey(entry.Key), entry.Value);
             }
+        }
+
+        internal AmqpMap(IEqualityComparer<MapKey> comparer)
+            : base(comparer)
+        {
+
         }
 
         /// <summary>
@@ -114,7 +122,14 @@ namespace Microsoft.Azure.Amqp.Encoding
                     sb.Append(',');
                 }
 
-                sb.AppendFormat(CultureInfo.InvariantCulture, "{0}:{1}", pair.Key, pair.Value);
+                if (pair.Key.Key is ArraySegment<byte> keyBytes)
+                {
+                    sb.AppendFormat(CultureInfo.InvariantCulture, "{0}:{1}", Extensions.GetString(keyBytes), pair.Value);
+                }
+                else
+                {
+                    sb.AppendFormat(CultureInfo.InvariantCulture, "{0}:{1}", pair.Key, pair.Value);
+                }
             }
 
             sb.Append(']');

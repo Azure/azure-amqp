@@ -110,56 +110,6 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal override TimeSpan OperationTimeout => this.connection.OperationTimeout;
-
-        /// <summary>
-        /// Opens an <see cref="AmqpLink"/> to a node at the given address.
-        /// </summary>
-        /// <typeparam name="T">The type of link. Only <see cref="SendingAmqpLink"/> and <see cref="ReceivingAmqpLink"/> are supported.</typeparam>
-        /// <param name="name">The link name.</param>
-        /// <param name="address">The node address.</param>
-        /// <returns>A task that returns a link on completion.</returns>
-        public async Task<T> OpenLinkAsync<T>(string name, string address) where T : AmqpLink
-        {
-            AmqpLink link;
-            Type linkType = typeof(T);
-            AmqpLinkSettings linkSettings = new AmqpLinkSettings();
-            linkSettings.LinkName = name;
-            if (linkType == typeof(SendingAmqpLink))
-            {
-                linkSettings.Role = false;
-                linkSettings.Source = new Source();
-                linkSettings.Target = new Target() { Address = address };
-                link = new SendingAmqpLink(linkSettings);
-            }
-            else if (linkType == typeof(ReceivingAmqpLink))
-            {
-                linkSettings.Role = true;
-                linkSettings.Source = new Source() { Address = address };
-                linkSettings.TotalLinkCredit = AmqpConstants.DefaultLinkCredit;
-                linkSettings.AutoSendFlow = true;
-                linkSettings.Target = new Target();
-                link = new ReceivingAmqpLink(linkSettings);
-            }
-            else
-            {
-                throw new NotSupportedException(linkType.Name);
-            }
-
-            try
-            {
-                link.AttachTo(this);
-                await link.OpenAsync().ConfigureAwait(false);
-
-                return link as T;
-            }
-            catch
-            {
-                link.SafeClose();
-                throw;
-            }
-        }
-
         /// <summary>
         /// Attaches a link to the session. The link is assigned a local handle on success.
         /// </summary>
@@ -167,7 +117,7 @@ namespace Microsoft.Azure.Amqp
         public void AttachLink(AmqpLink link)
         {
             Fx.Assert(link.Session == this, "The link is not owned by this session.");
-            AmqpLink existingLink;
+            AmqpLink linkToSteal;
 
             lock (this.ThisLock)
             {
@@ -176,12 +126,45 @@ namespace Microsoft.Azure.Amqp
                     throw new InvalidOperationException(AmqpResources.GetString(AmqpResources.AmqpIllegalOperationState, "attach", this.State));
                 }
 
-                if (this.links.TryGetValue(link.LinkIdentifier, out existingLink))
+                if (this.links.TryGetValue(link.LinkIdentifier, out linkToSteal) && link.AllowLinkStealing(linkToSteal.Settings))
                 {
-                    // even though link onclose handler already removes the link from the links collection,
+                    // Even though link onclose handler already removes the link from the links collections,
                     // calling Close() is fire and forget, so we will not be waiting for the link onClose handler to trigger
-                    // before trying to add the new link to the links collection down below in this method, therefore remove it now.
+                    // before trying to add the new link to the links collections down below in this method, therefore remove it now.
                     this.links.Remove(link.LinkIdentifier);
+                    if (linkToSteal.LocalHandle.HasValue)
+                    {
+                        this.linksByLocalHandle.Remove(linkToSteal.LocalHandle.Value);
+                    }
+
+                    if (linkToSteal.RemoteHandle.HasValue)
+                    {
+                        this.linksByRemoteHandle.Remove(linkToSteal.RemoteHandle.Value);
+                    }
+                }
+                else
+                {
+                    linkToSteal = null;
+                }
+
+                if (this.Connection.LinkRecoveryEnabled)
+                {
+                    bool foundTerminus = this.Connection.TerminusStore.TryGetLinkTerminusAsync(link.LinkIdentifier, out AmqpLinkTerminus linkTerminus).Result;
+                    if (linkTerminus == null)
+                    {
+                        linkTerminus = new AmqpLinkTerminus(link.LinkIdentifier, link.Settings, this.Connection.TerminusStore);
+                        if (!this.Connection.TerminusStore.TryAddLinkTerminusAsync(link.LinkIdentifier, linkTerminus).GetAwaiter().GetResult())
+                        {
+                            // There was a race and some other link has already created a link terminus and attach.
+                            // In this case, stop opening of this link and close it due to link stealing.
+                            throw new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, link.LinkIdentifier));
+                        }
+                    }
+
+                    if (!linkTerminus.TryAssociateLink(link, out linkToSteal))
+                    {
+                        throw new InvalidOperationException("The link terminus to attach this link to is either disposed or link stealing is not allowed.");
+                    }
                 }
 
                 link.Closed += onLinkClosed;
@@ -189,10 +172,7 @@ namespace Microsoft.Azure.Amqp
                 link.LocalHandle = this.linksByLocalHandle.Add(link);
             }
 
-            if (existingLink != null)
-            {
-                existingLink.OnLinkStolen(false);
-            }
+            linkToSteal?.OnLinkStolen();
 
             AmqpTrace.Provider.AmqpAttachLink(this.connection, this, link, link.LocalHandle.Value,
                 link.RemoteHandle ?? 0u, link.Name, link.IsReceiver ? "receiver" : "sender", link.Settings.Source, link.Settings.Target);
@@ -252,6 +232,53 @@ namespace Microsoft.Azure.Amqp
                 }
             }
         }
+
+        /// <summary>
+        /// Opens an <see cref="AmqpLink"/> to a node at the given address.
+        /// </summary>
+        /// <typeparam name="T">The type of link.</typeparam>
+        /// <param name="name">The link name.</param>
+        /// <param name="address">The node address.</param>
+        /// <returns>A task that returns a link on completion.</returns>
+        internal Task<T> OpenLinkAsync<T>(string name, string address) where T : AmqpLink
+        {
+            AmqpLinkSettings linkSettings = AmqpLinkSettings.Create(role: typeof(T) == typeof(ReceivingAmqpLink), name, address);
+            return this.OpenLinkAsync<T>(linkSettings);
+        }
+
+        /// <summary>
+        /// Open or resume a link using the <see cref="AmqpLinkSettings"/> provided.
+        /// </summary>
+        /// <typeparam name="T">The type of link.</typeparam>
+        /// <param name="linkSettings">The link settings to be used for creating the new link.</param>
+        /// <returns>A task that returns a link on completion.</returns>
+        internal async Task<T> OpenLinkAsync<T>(AmqpLinkSettings linkSettings) where T: AmqpLink
+        {
+            if (linkSettings == null)
+            {
+                throw new ArgumentNullException(nameof(linkSettings));
+            }
+
+            if (linkSettings.LinkName == null)
+            {
+                throw new ArgumentNullException(nameof(linkSettings.LinkName));
+            }
+
+            AmqpLink link = AmqpLink.Create(linkSettings);
+            try
+            {
+                link.AttachTo(this);
+                await link.OpenAsync().ConfigureAwait(false);
+                return link as T;
+            }
+            catch
+            {
+                link.SafeClose();
+                throw;
+            }
+        }
+
+        internal override TimeSpan OperationTimeout => this.connection.OperationTimeout;
 
         internal void SendCommand(Performative command)
         {
@@ -572,7 +599,6 @@ namespace Microsoft.Azure.Amqp
         void OnReceiveLinkFrame(Frame frame)
         {
             AmqpLink link = null;
-            AmqpLink stolenLink = null;
             Performative command = frame.Command;
             if (command.DescriptorCode == Attach.Code)
             {
@@ -582,25 +608,13 @@ namespace Microsoft.Azure.Amqp
                 lock (this.ThisLock)
                 {
                     this.links.TryGetValue(linkIdentifier, out link);
-                    if (link != null && link.State >= AmqpObjectState.OpenReceived)
-                    {
-                        // If the link state is past OpenReceived, it means that the link has already received an Attach frame from remote, regardless if the link open was initiated by local or remote.
-                        // A single link life cycle should not receive Attach more than once, therefore if the existing link has already received an Attach, this current Attach must be intended for another link.
-                        // In that case, remove the existing link due to link stealing and create a new link based on the Attach frame received.
-                        stolenLink = link;
-                        this.links.Remove(linkIdentifier);
-                    }
                 }
 
-                if (stolenLink != null)
+                if (link == null || link.State >= AmqpObjectState.OpenReceived)
                 {
-                    // Abort the local existing link, which does not send a detach back to remote, who initiated opening a new link and is not expecting the new link to be closed.
-                    stolenLink.OnLinkStolen(true);
-                    link = null;
-                }
-
-                if (link == null)
-                {
+                    // If the link state is past OpenReceived, it means that the link has already received an Attach frame from remote, regardless if the link open was initiated by local or remote.
+                    // A single link should receive Attach only once, therefore if the existing link has already received an Attach, then the current Attach must be intended for opening another link.
+                    // In that case, we can try to open a new link and potentially do link stealing.
                     if (!this.TryCreateRemoteLink(attach, out link))
                     {
                         return;
@@ -698,7 +712,6 @@ namespace Microsoft.Azure.Amqp
 
             thisPtr.incomingChannel.OnLinkClosed(link);
             thisPtr.outgoingChannel.OnLinkClosed(link);
-
             AmqpTrace.Provider.AmqpRemoveLink(thisPtr, link, link.LocalHandle ?? 0u, link.RemoteHandle ?? 0u, link.Name);
         }
 
@@ -1374,6 +1387,11 @@ namespace Microsoft.Azure.Amqp
             }
 
             protected override void OnDisposeDeliveryInternal(Delivery delivery)
+            {
+                throw new NotImplementedException();
+            }
+
+            protected override void ProcessUnsettledDeliveries(Attach remoteAttach)
             {
                 throw new NotImplementedException();
             }

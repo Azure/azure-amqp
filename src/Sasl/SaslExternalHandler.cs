@@ -74,7 +74,7 @@ namespace Microsoft.Azure.Amqp.Sasl
             else
             {
                 // at this point we should check if the client id is established
-                // by other means (e.g. cert) and set a Pricipal, but we have
+                // by other means (e.g. cert) and set a Principal, but we have
                 // been using EXTERNAL to do CBS which is anonymous so we cannot
                 // do the check here without breaking old clients
                 this.Negotiator.CompleteNegotiation(SaslCode.Ok, null);

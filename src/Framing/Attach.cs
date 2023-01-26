@@ -3,7 +3,6 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
-    using System;
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
@@ -31,7 +30,7 @@ namespace Microsoft.Azure.Amqp.Framing
         public string LinkName { get; set; }
 
         /// <summary>
-        /// Gets or sets the "role" field.
+        /// Gets or sets the "role" field. True if it's a receiver.
         /// </summary>
         public bool? Role { get; set; }
 
@@ -119,6 +118,7 @@ namespace Microsoft.Azure.Amqp.Framing
             this.AddFieldToString(this.OfferedCapabilities != null, sb, "offered-capabilities", this.OfferedCapabilities, ref count);
             this.AddFieldToString(this.DesiredCapabilities != null, sb, "desired-capabilities", this.DesiredCapabilities, ref count);
             this.AddFieldToString(this.Properties != null, sb, "properties", this.Properties, ref count);
+            this.AddFieldToString(this.Unsettled != null, sb, "unsettled-map", this.Unsettled, ref count);
             sb.Append(')');
             return sb.ToString();
         }
@@ -212,7 +212,7 @@ namespace Microsoft.Azure.Amqp.Framing
 
             if (count-- > 0)
             {
-                this.Unsettled = AmqpCodec.DecodeMap(buffer);
+                this.Unsettled = AmqpCodec.DecodeMap(buffer, MapKeyByteArrayComparer.Instance);
             }
 
             if (count-- > 0)

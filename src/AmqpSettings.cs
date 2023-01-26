@@ -103,6 +103,17 @@ namespace Microsoft.Azure.Amqp
             set;
         }
 
+        /// <summary>
+        /// Gets or sets the terminus store implementation that is responsible for
+        /// storing and retrieving Terminus details as well as the deliveries associated
+        /// with the terminus.
+        /// </summary>
+        public IAmqpTerminusStore TerminusStore
+        {
+            get;
+            set;
+        }
+
         internal T GetTransportProvider<T>() where T : TransportProvider
         {
             if (this.transportProviders != null)
@@ -178,6 +189,7 @@ namespace Microsoft.Azure.Amqp
             settings.RuntimeProvider = this.RuntimeProvider;
             settings.RequireSecureTransport = this.RequireSecureTransport;
             settings.AllowAnonymousConnection = this.AllowAnonymousConnection;
+            settings.TerminusStore = this.TerminusStore;
             return settings;
         }
 

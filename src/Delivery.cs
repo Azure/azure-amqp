@@ -40,6 +40,15 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Gets or set the resume field.
+        /// </summary>
+        public bool Resume
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets the settled field.
         /// </summary>
         public bool Settled
@@ -90,7 +99,7 @@ namespace Microsoft.Azure.Amqp
         public long BytesTransfered
         {
             get;
-            protected set;
+            internal set;
         }
 
         /// <summary>
@@ -115,6 +124,15 @@ namespace Microsoft.Azure.Amqp
         /// Gets or sets the next delivery for creating a linked list of deliveries.
         /// </summary>
         internal Delivery Next
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Used to indicate if the transfer frame should set the "aborted" field when sending this delivery.
+        /// </summary>
+        internal bool Aborted
         {
             get;
             set;
@@ -215,6 +233,14 @@ namespace Microsoft.Azure.Amqp
         /// </param>
         protected virtual void Dispose(bool disposing)
         {
+        }
+
+        /// <summary>
+        /// Resets a delivery and its associated resources so it can be resent in case of linkRecovery.
+        /// </summary>
+        internal virtual void Reset()
+        {
+            this.BytesTransfered = 0;
         }
 
         internal static ByteBuffer GetPayload(ByteBuffer source, int payloadSize, out bool more)

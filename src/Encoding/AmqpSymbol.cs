@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         /// <summary>
         /// Determines whether two symbols are equal.
         /// </summary>
-        /// <param name="other">The symbom to compare.</param>
+        /// <param name="other">The symbol to compare.</param>
         /// <returns>True if they are equal; false otherwise.</returns>
         public bool Equals(AmqpSymbol other)
         {

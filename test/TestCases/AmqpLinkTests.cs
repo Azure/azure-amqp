@@ -18,6 +18,7 @@ namespace Test.Microsoft.Azure.Amqp
     using TestAmqpBroker;
     using Xunit;
 
+    [Collection("AmqpLinkTests")]
     [Trait("Category", TestCategory.Current)]
     public class AmqpLinkTests : IClassFixture<TestAmqpBrokerFixture>
     {
@@ -421,7 +422,7 @@ namespace Test.Microsoft.Azure.Amqp
 
                     if (sentCount < messageCount)
                     {
-                        throw new Exception("sent count is less than the totoal count");
+                        throw new Exception("sent count is less than the total count");
                     }
 
                     sLink.Close();
@@ -779,7 +780,7 @@ namespace Test.Microsoft.Azure.Amqp
             Assert.Equal(10u, link.LinkCredit);
             Assert.Equal(0u, bufferedCredit.GetValue(link));
 
-            // delayed udpate
+            // delayed update
             link.SetTotalLinkCredit(0, false);
             Assert.Equal(10u, link.LinkCredit);
             Assert.Equal(0u, bufferedCredit.GetValue(link));
@@ -1264,7 +1265,7 @@ namespace Test.Microsoft.Azure.Amqp
             Assert.True(link2.State == AmqpObjectState.Opened);
             if (shouldLinkBeStolen)
             {
-                Assert.True(link1.State == AmqpObjectState.End);
+                Assert.True(link1.State == AmqpObjectState.CloseSent);
                 Assert.Contains("link stealing", link1.TerminalException.Message);
             }
             else if (!sameType)
@@ -1358,7 +1359,7 @@ namespace Test.Microsoft.Azure.Amqp
                 if (sendAsync)
                 {
                     Assert.True(sendDone.WaitOne(10 * 1000), "Send did not complete in time.");
-                    Assert.True(sendCompleted >= messageCount, "Sent count is less than the totoal count.");
+                    Assert.True(sendCompleted >= messageCount, "Sent count is less than the total count.");
                 }
 
                 sLink.Close();

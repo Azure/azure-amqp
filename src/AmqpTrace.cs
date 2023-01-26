@@ -79,7 +79,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <param name="session">The session.</param>
-        /// <param name="link">The lin.</param>
+        /// <param name="link">The link.</param>
         /// <param name="localHandle">Local handle of the link.</param>
         /// <param name="remoteHandle">Remote handle of the link.</param>
         /// <param name="linkName">Name of the link.</param>
@@ -160,7 +160,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="link">The link.</param>
         /// <param name="name">Name of the link.</param>
         /// <param name="handle">Local handle of the link.</param>
-        /// <param name="action">The action causing the deatch.</param>
+        /// <param name="action">The action causing the detach.</param>
         /// <param name="error">Error message associated with the detach.</param>
         public virtual void AmqpLinkDetach(AmqpLink link, string name, uint handle, string action, string error)
         {
@@ -185,7 +185,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Called when an error occurrs while executing an operation.
+        /// Called when an error occurs while executing an operation.
         /// </summary>
         /// <param name="source">The object where the error comes from.</param>
         /// <param name="operation">The operation.</param>
@@ -329,7 +329,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Called when a session window is 0 when a tranfer is sent or received.
+        /// Called when a session window is 0 when a transfer is sent or received.
         /// </summary>
         /// <param name="session">The session.</param>
         /// <param name="nextId">Next transfer id.</param>
@@ -400,7 +400,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Called when an IoEvent occurrs.
+        /// Called when an IoEvent occurs.
         /// </summary>
         /// <param name="source">The object that sends the event.</param>
         /// <param name="ioEvent">The event.</param>
@@ -668,6 +668,11 @@ namespace Microsoft.Azure.Amqp
         }
 #pragma warning restore 1591
 
+        /// <summary>
+        /// A callback that is invoked when a Frame is received on a Connection.
+        /// </summary>
+        internal static Action<uint, Performative> ReceivedFrames;
+
         internal static void OnProtocolHeader(ProtocolHeader header, bool send)
         {
             if (FrameLogger != null)
@@ -681,6 +686,11 @@ namespace Microsoft.Azure.Amqp
             if (FrameLogger != null)
             {
                 LogFrame(id, type, channel, command, send, frameSize);
+            }
+
+            if (!send)
+            {
+                ReceivedFrames?.Invoke(id, command);
             }
         }
 

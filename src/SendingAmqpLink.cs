@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
@@ -19,6 +20,7 @@ namespace Microsoft.Azure.Amqp
         readonly WorkCollection<ArraySegment<byte>, SendAsyncResult, Outcome> inflightSends;
         Action<Delivery> dispositionListener;
         DateTime lastFlowRequestTime;
+        ICollection<Delivery> deliveriesToBeResentUponRecovery;
 
         /// <summary>
         /// Initializes the object.
@@ -187,6 +189,10 @@ namespace Microsoft.Azure.Amqp
 
                 this.inflightSends.CompleteWork(delivery.DeliveryTag, false, (Outcome)deliveryState);
             }
+
+            // Delivery is now settled with its final outcome and will not need to resumed.
+            // Dispose and release buffers associated with the delivery.
+            delivery.Dispose();
         }
 
         /// <summary>
@@ -232,6 +238,19 @@ namespace Microsoft.Azure.Amqp
         {
             this.AbortDeliveries();
             base.AbortInternal();
+        }
+
+        /// <summary>
+        /// Process and consolidate the unsettled deliveries sent with the remote Attach frame, by checking against the unsettled deliveries for this link terminus.
+        /// </summary>
+        /// <param name="remoteAttach">The incoming Attach from remote which contains the remote's unsettled delivery states.</param>
+        protected override void ProcessUnsettledDeliveries(Attach remoteAttach)
+        {
+            if (this.Session.Connection.TerminusStore.TryGetLinkTerminusAsync(this.LinkIdentifier, out AmqpLinkTerminus linkTerminus).Result)
+            {
+                this.deliveriesToBeResentUponRecovery = Task.Run(() => linkTerminus.NegotiateUnsettledDeliveriesAsync(remoteAttach)).Result.Values;
+                this.Opened += ResendDeliveriesOnOpen;
+            }
         }
 
         static ArraySegment<byte> CreateTag()
@@ -304,7 +323,7 @@ namespace Microsoft.Azure.Amqp
             DeliveryState deliveryState = message.State;
             if (deliveryState != null && deliveryState.DescriptorCode == Released.Code)
             {
-                // message has been cancelled (e.g. timed out)
+                // message has been canceled (e.g. timed out)
                 return true;
             }
 
@@ -319,6 +338,18 @@ namespace Microsoft.Azure.Amqp
             }
 
             return success;
+        }
+
+        static void ResendDeliveriesOnOpen(object sender, EventArgs eventArgs)
+        {
+            var thisPtr = (SendingAmqpLink)sender;
+            thisPtr.Opened -= ResendDeliveriesOnOpen;
+            foreach (Delivery delivery in thisPtr.deliveriesToBeResentUponRecovery)
+            {
+                thisPtr.ForceSendDelivery(delivery);
+            }
+
+            thisPtr.deliveriesToBeResentUponRecovery = null;
         }
 
         readonly struct SendMessageParam

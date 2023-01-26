@@ -204,7 +204,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Gets the remainng bytes for read.
+        /// Gets the remaining bytes for read.
         /// </summary>
         public int Length
         {
@@ -407,6 +407,14 @@ namespace Microsoft.Azure.Amqp
                     this.bufferManager.ReturnBuffer(bufferToRelease);
                 }
             }
+        }
+
+        /// <summary>
+        /// Resets the read position.
+        /// </summary>
+        internal void ResetReadPosition()
+        {
+            this.read = this.start;
         }
 
         internal ReadOnlySpan<byte> GetReadSpan(int size)

@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Amqp
     // immediately throw away the entire per-thread pool when it is unable to promote a 
     // thread.  Instead, it uses counters (based on the number of calls to the pool) 
     // and a threshold to figure out when to do these operations.  In the case where the
-    // pool to misconfigured to have too few items for the workload, this avoids constant 
+    // pool to mis-configured to have too few items for the workload, this avoids constant
     // promoting and rebuilding of the per thread entries.
     //
     // You may also notice that we do not use interlocked methods when adjusting statistics.

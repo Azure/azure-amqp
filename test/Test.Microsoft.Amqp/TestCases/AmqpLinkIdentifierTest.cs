@@ -4,8 +4,8 @@
 namespace Test.Microsoft.Azure.Amqp
 {
     using System.Collections.Generic;
-    using global::Microsoft.Azure.Amqp;
     using Xunit;
+    using global::Microsoft.Azure.Amqp;
 
     [Trait("Category", TestCategory.Current)]
     public class AmqpLinkIdentifierTest

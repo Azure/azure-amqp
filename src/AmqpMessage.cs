@@ -475,7 +475,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Clones the message for send or other operations.
         /// </summary>
-        /// <param name="deepCopy">True to perform a deep copy of all multable sections.</param>
+        /// <param name="deepCopy">True to perform a deep copy of all mutable sections.</param>
         /// <returns>An AmqpMessage.</returns>
         public AmqpMessage Clone(bool deepCopy)
         {
@@ -543,6 +543,15 @@ namespace Microsoft.Azure.Amqp
             {
                 throw new ObjectDisposedException(this.GetType().Name);
             }
+        }
+
+        /// <summary>
+        /// Reset the buffers so the message can be resent again in case of linkRecovery.
+        /// </summary>
+        internal override void Reset()
+        {
+            this.buffer?.ResetReadPosition();
+            base.Reset();
         }
 
         internal static void EncodeSection(ByteBuffer buffer, AmqpDescribed section)
@@ -733,10 +742,6 @@ namespace Microsoft.Azure.Amqp
                 Fx.Assert(this.buffer != null, "buffer not initialized");
                 base.CompletePayload(payloadSize);
                 this.buffer.Complete(payloadSize);
-                if (this.buffer.Length == 0)
-                {
-                    this.ReleaseBuffer();
-                }
             }
 
             protected virtual void EncodeBody(ByteBuffer buffer)
@@ -814,7 +819,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Allow updates in mutalble sections.
+        /// Allow updates in mutable sections.
         /// Note: currently this is only used by relay.
         /// </summary>
         sealed class AmqpClonedMessage : AmqpSectionMessage

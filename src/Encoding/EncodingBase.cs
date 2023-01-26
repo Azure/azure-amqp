@@ -50,7 +50,7 @@ namespace Microsoft.Azure.Amqp.Encoding
     abstract class EncodingBase<T> : IEncoding
     {
         readonly FormatCode formatCode;
-        readonly int width; // -1 for varible and compact-enalbed types
+        readonly int width; // -1 for variable and compact-enabled types
 
         protected EncodingBase(FormatCode formatCode, int width = -1)
         {

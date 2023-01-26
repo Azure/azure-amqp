@@ -15,6 +15,10 @@ using System.Runtime.InteropServices;
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
 
+// Make this internal visible for testing
+[assembly: InternalsVisibleTo("Test.Microsoft.Amqp")]
+[assembly: InternalsVisibleTo("TestAmqpBroker")]
+
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("A0D1C509-8C92-4AA1-983C-00E5254F8AE0")]
 

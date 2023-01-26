@@ -155,6 +155,14 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        internal IAmqpTerminusStore TerminusStore => this.AmqpSettings.TerminusStore;
+
+        /// <summary>
+        /// Upon creation of a new link, decide if could have recoverable link terminus and have
+        /// corresponding settings by checking if there is a valid <see cref="TerminusStore"/>.
+        /// </summary>
+        internal bool LinkRecoveryEnabled => this.AmqpSettings.TerminusStore != null;
+
         /// <summary>
         /// Creates a <see cref="AmqpSession"/> and adds it to the session collection.
         /// </summary>
@@ -435,7 +443,11 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        void ProcessFrame(Frame frame)
+        /// <summary>
+        /// Process an AMQP frame given to this connection.
+        /// </summary>
+        /// <param name="frame"></param>
+        protected void ProcessFrame(Frame frame)
         {
             Performative command = frame.Command;
             Fx.Assert(command != null, "Must have a valid command");

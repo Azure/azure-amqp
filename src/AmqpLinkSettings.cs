@@ -109,10 +109,10 @@ namespace Microsoft.Azure.Amqp
         internal TimeSpan OperationTimeoutInternal => this.operationTimeout;
 
         /// <summary>
-        /// Creates a settings object from an attach.
+        /// Creates a settings object from an <see cref="Attach"/> received from remote.
         /// </summary>
-        /// <param name="attach">The attach.</param>
-        /// <returns>A AmqpLinkSettings object.</returns>
+        /// <param name="attach">The attach received from remote.</param>
+        /// <returns>An AmqpLinkSettings object.</returns>
         public static AmqpLinkSettings Create(Attach attach)
         {
             AmqpLinkSettings settings = new AmqpLinkSettings();
@@ -160,10 +160,38 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets a hash code of the object.
         /// </summary>
-        /// <returns></returns>
         public override int GetHashCode()
         {
             return (this.LinkName.GetHashCode() * 397) + this.Role.GetHashCode();
+        }
+
+        /// <summary>
+        /// Create default link settings for the given role, link name, and address.
+        /// </summary>
+        /// <param name="role">The link type to create this settings for.</param>
+        /// <param name="name">The link name to create this settings for.</param>
+        /// <param name="address">The link address to create this settings for.</param>
+        /// <returns>A default AmqpLinkSettings object.</returns>
+        internal static AmqpLinkSettings Create(bool role, string name, string address)
+        {
+            AmqpLinkSettings linkSettings = new AmqpLinkSettings();
+            linkSettings.LinkName = name;
+            if (!role)
+            {
+                linkSettings.Role = false;
+                linkSettings.Source = new Source();
+                linkSettings.Target = new Target() { Address = address };
+            }
+            else
+            {
+                linkSettings.Role = true;
+                linkSettings.Source = new Source() { Address = address };
+                linkSettings.TotalLinkCredit = AmqpConstants.DefaultLinkCredit;
+                linkSettings.AutoSendFlow = true;
+                linkSettings.Target = new Target();
+            }
+
+            return linkSettings;
         }
     }
 }

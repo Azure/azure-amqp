@@ -111,7 +111,7 @@
         {
             const int port = 30888;
             IPAddress address = IPAddress.Loopback;
-            // Creat a listener socket but do not listen on it
+            // Create a listener socket but do not listen on it
             var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
             socket.Bind(new IPEndPoint(address, port));
 

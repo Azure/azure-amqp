@@ -33,3 +33,4 @@ jobs:
       - name: Tests
         shell: pwsh
         run: . .\build.ps1; Run-Tests -Configuration Release
+        timeout-minutes: 20

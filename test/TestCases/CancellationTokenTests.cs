@@ -21,7 +21,7 @@ namespace Test.Microsoft.Azure.Amqp
             // AmqpTrace.FrameLogger = s => System.Diagnostics.Trace.WriteLine(s);
         }
 
-        Uri addressUri = new Uri("amqp://localhost:5678");
+        Uri addressUri = new Uri("amqp://guest:guest@localhost:5678");
 
         [Fact]
         public Task TransportTest()
@@ -87,8 +87,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunConnectionFactoryTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener();
 
             try
             {
@@ -131,8 +130,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunConnectionOpenTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener();
 
             try
             {
@@ -182,8 +180,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunConnectionCloseTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener();
 
             try
             {
@@ -234,8 +231,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunSessionOpenTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener();
 
             try
             {
@@ -281,8 +277,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunSessionCloseTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener();
 
             try
             {
@@ -329,8 +324,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunLinkOpenTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener();
 
             try
             {
@@ -378,8 +372,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunLinkCloseTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener();
 
             try
             {
@@ -433,8 +426,8 @@ namespace Test.Microsoft.Azure.Amqp
             {
                 LinkFactory = (s, t) => { t.TotalLinkCredit = 10; return new TestLink(s, t, sendHang: true); }
             };
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, provider);
-            listener.Open();
+
+            AmqpConnectionListener listener = OpenListener(provider);
 
             try
             {
@@ -488,8 +481,8 @@ namespace Test.Microsoft.Azure.Amqp
             {
                 LinkFactory = (s, t) => new TestLink(s, t, receiveHang: true)
             };
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, provider);
-            listener.Open();
+
+            AmqpConnectionListener listener = OpenListener(provider);
 
             try
             {
@@ -540,8 +533,8 @@ namespace Test.Microsoft.Azure.Amqp
             {
                 LinkFactory = (s, t) => { t.SettleType = SettleMode.SettleOnDispose; return new TestLink(s, t, disposeHang: true); }
             };
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, provider);
-            listener.Open();
+
+            AmqpConnectionListener listener = OpenListener(provider);
 
             try
             {
@@ -650,6 +643,17 @@ namespace Test.Microsoft.Azure.Amqp
             {
                 broker.Stop();
             }
+        }
+
+        AmqpConnectionListener OpenListener(TestRuntimeProvider runtimeProvider = null)
+        {
+            AmqpSettings settings = new AmqpSettings { RuntimeProvider = runtimeProvider ?? new TestRuntimeProvider() };
+            var saslProvider = new SaslTransportProvider(AmqpVersion.V100);
+            saslProvider.AddHandler(new SaslPlainHandler(new TestSaslPlainAuthenticator()));
+            settings.TransportProviders.Add(saslProvider);
+            var listener = new AmqpConnectionListener(new[] { addressUri.AbsoluteUri }, settings, new AmqpConnectionSettings());
+            listener.Open();
+            return listener;
         }
 
         class TestTokenProvider : ICbsTokenProvider

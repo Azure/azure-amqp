@@ -576,7 +576,7 @@ namespace Test.Microsoft.Azure.Amqp
         [Fact]
         public async Task CbsSendTokenNoCancelTest()
         {
-            var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, null, null, null);
+            var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, addressUri.UserInfo, null, null);
             broker.AddNode(new CbsNode());
             broker.Start();
 
@@ -609,7 +609,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunCbsSendTokenTest(bool cancelBefore)
         {
-            var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, null, null, null);
+            var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, addressUri.UserInfo, null, null);
             broker.AddNode(new CbsNode() { ProcessingTime = TimeSpan.FromSeconds(10) });
             broker.Start();
 

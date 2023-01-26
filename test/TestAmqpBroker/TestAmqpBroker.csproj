@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Azure.Amqp.csproj" />
-    <ProjectReference Include="..\Test.Microsoft.Amqp\Test.Microsoft.Amqp.csproj" />
   </ItemGroup>
 
 </Project>

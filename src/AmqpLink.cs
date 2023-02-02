@@ -262,22 +262,6 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Drains the credit to stop remote peer transferring more deliveries.
-        /// </summary>
-        public void DrainCredits()
-        {
-            lock (this.syncRoot)
-            {
-                this.deliveryCount += (int)this.linkCredit;
-                this.linkCredit = 0;
-                if (!this.IsReceiver)
-                {
-                    this.SendFlow(false, true, null);
-                }
-            }
-        }
-
-        /// <summary>
         /// For internal implementation.
         /// </summary>
         /// <param name="frame">The received frame.</param>
@@ -612,21 +596,23 @@ namespace Microsoft.Azure.Amqp
             }
 
             uint flowLinkCredit = flow.LinkCredit();
+            bool flowDrain = flow.Drain ?? false;
             lock (this.syncRoot)
             {
-                this.drain = flow.Drain ?? false;
                 if (this.IsReceiver)
                 {
                     this.available = flow.Available ?? uint.MaxValue;
-                    if (this.drain)
-                    {
-                        this.DrainCredits();
-                    }
-
                     this.ApplyTempTotalLinkCredit();
+                    if (this.drain && flowLinkCredit == 0)
+                    {
+                        this.linkCredit = 0;
+                        this.deliveryCount = flow.DeliveryCount.Value;
+                        this.drain = false;
+                    }
                 }
                 else
                 {
+                    this.drain = flowDrain;
                     if (flowLinkCredit != uint.MaxValue)
                     {
                         if (this.linkCredit == uint.MaxValue)
@@ -659,17 +645,26 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            if (moreCredit > 0 || this.drain)
+            bool sendFlow = flow.Echo();
+            if (moreCredit > 0 || flowDrain)
             {
                 ArraySegment<byte> txnId = this.GetTxnIdFromFlow(flow);
-                this.OnCreditAvailable(0, moreCredit, this.drain, txnId);
-                if (this.linkCredit > 0 || this.drain)
+                this.OnCreditAvailable(0, moreCredit, flowDrain, txnId);
+                if (this.linkCredit > 0 || flowDrain)
                 {
                     this.creditListener?.Invoke(moreCredit, this.drain, txnId);
                 }
+
+                if (flowDrain && !this.IsReceiver)
+                {
+                    this.deliveryCount += (int)this.linkCredit;
+                    this.linkCredit = 0;
+                    this.drain = false;
+                    sendFlow = true;
+                }
             }
 
-            if (flow.Echo())
+            if (sendFlow)
             {
                 this.SendFlow(false, false, properties: null);
             }
@@ -1372,7 +1367,7 @@ namespace Microsoft.Azure.Amqp
             return true;
         }
 
-        void SendFlow(bool echo, bool drain, ArraySegment<byte> txnId)
+        internal void SendFlow(bool echo, bool drain, ArraySegment<byte> txnId)
         {
             Fields properties = null;
             if (txnId.Array != null)
@@ -1384,7 +1379,7 @@ namespace Microsoft.Azure.Amqp
             this.SendFlow(echo, drain, properties);
         }
 
-        void SendFlow(bool echo, bool drain, Fields properties)
+        internal void SendFlow(bool echo, bool drain, Fields properties)
         {
             this.DoActionIfNotClosed(
                 (thisPtr, paramEcho, paramDrain, paramProperties, p5) =>

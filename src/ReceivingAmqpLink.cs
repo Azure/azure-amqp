@@ -25,6 +25,7 @@ namespace Microsoft.Azure.Amqp
         Action<AmqpMessage> messageListener;
         AmqpMessage currentMessage;
         int checkWaiterCount;
+        HashSet<DrainAsyncResult> drainTasks;
 
         /// <summary>
         /// Initializes the receiver link without attaching to any session.
@@ -221,6 +222,20 @@ namespace Microsoft.Azure.Amqp
             bool completed = ReceiveAsyncResult.End(result, out List<AmqpMessage> list);
             messages = list;
             return completed;
+        }
+
+        /// <summary>
+        /// Drains the credits on the link.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        public Task DrainAsyc(CancellationToken cancellationToken)
+        {
+            return Task.Factory.FromAsync(
+                (thisPtr, k, c, s) => new DrainAsyncResult(thisPtr, thisPtr.OperationTimeout, k, c, s),
+                r => DrainAsyncResult.End(r),
+                this,
+                cancellationToken,
+                this);
         }
 
         /// <summary>
@@ -554,6 +569,33 @@ namespace Microsoft.Azure.Amqp
         /// <param name="txnId"></param>
         protected override void OnCreditAvailable(int session, uint link, bool drain, ArraySegment<byte> txnId)
         {
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="flow"><inheritdoc/></param>
+        protected override void OnReceiveFlow(Flow flow)
+        {
+            bool draining = this.Drain;
+            base.OnReceiveFlow(flow);
+            if (draining && this.LinkCredit == 0)
+            {
+                HashSet<DrainAsyncResult> pendingTasks = null;
+                lock (this.SyncRoot)
+                {
+                    pendingTasks = this.drainTasks;
+                    this.drainTasks = null;
+                }
+
+                if (pendingTasks != null)
+                {
+                    foreach (var task in pendingTasks)
+                    {
+                        task.Signal(false);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -1119,6 +1161,90 @@ namespace Microsoft.Azure.Amqp
                     this.Clear();
                     return list;
                 }
+            }
+        }
+
+        sealed class DrainAsyncResult : TimeoutAsyncResult<string>
+        {
+            readonly ReceivingAmqpLink link;
+
+            public DrainAsyncResult(ReceivingAmqpLink link,
+                TimeSpan timeout,
+                CancellationToken cancellationToken,
+                AsyncCallback callback,
+                object state)
+                : base(timeout, cancellationToken, callback, state)
+            {
+                this.link = link;
+                this.Start();
+            }
+
+            public static void End(IAsyncResult result)
+            {
+                AsyncResult.End<DrainAsyncResult>(result);
+            }
+
+            public void Signal(bool isSynchronous)
+            {
+                this.CompleteSelf(isSynchronous);
+            }
+
+            public override void Cancel(bool isSynchronous)
+            {
+                if (this.Remove())
+                {
+                    this.CompleteSelf(isSynchronous, new TaskCanceledException());
+                }
+            }
+
+            protected override string Target
+            {
+                get { return "drain"; }
+            }
+
+            protected override void CompleteOnTimer()
+            {
+                if (this.Remove())
+                {
+                    base.CompleteOnTimer();
+                }
+            }
+
+            void Start()
+            {
+                lock (this.link.SyncRoot)
+                {
+                    if (this.link.drainTasks == null)
+                    {
+                        this.link.drainTasks = new HashSet<DrainAsyncResult>();
+                    }
+
+                    this.link.drainTasks.Add(this);
+                    if (!this.link.Drain)
+                    {
+                        this.link.SendFlow(false, true, null);
+                    }
+                }
+
+                this.StartTracking();
+            }
+
+            bool Remove()
+            {
+                lock (this.link.SyncRoot)
+                {
+                    if (this.link.drainTasks == null || !this.link.drainTasks.Remove(this))
+                    {
+                        return false;
+                    }
+
+                    if (this.link.drainTasks.Count == 0)
+                    {
+                        this.link.drainTasks = null;
+                    }
+                }
+
+                return true;
             }
         }
 

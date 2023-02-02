@@ -782,10 +782,6 @@ namespace TestAmqpBroker
                 void OnCredit(uint credit, bool drain, ArraySegment<byte> txnId)
                 {
                     this.queue.Dequeue(this, (int)credit, drain);
-                    if (drain)
-                    {
-                        this.link.DrainCredits();
-                    }
                 }
 
                 void OnDispose(Delivery delivery)

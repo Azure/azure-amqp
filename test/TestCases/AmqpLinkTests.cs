@@ -704,13 +704,7 @@ namespace Test.Microsoft.Azure.Amqp
                 rLink.AcceptMessage(message);
             }
 
-            rLink.IssueCredit(10u, true, AmqpConstants.NullBinary);
-
-            for (int i = 0; i < 50 && rLink.LinkCredit > 0u; i++)
-            {
-                Thread.Sleep(20);
-            }
-
+            rLink.DrainAsyc(CancellationToken.None).GetAwaiter().GetResult();
             Assert.Equal(0u, rLink.LinkCredit);
 
             connection.Close();

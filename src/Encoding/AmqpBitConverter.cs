@@ -178,25 +178,20 @@ namespace Microsoft.Azure.Amqp.Encoding
         /// <returns>A uuid.</returns>
         public static unsafe Guid ReadUuid(ByteBuffer buffer)
         {
-            buffer.ValidateRead(FixedWidth.Uuid);
-            Guid data;
-            fixed (byte* p = &buffer.Buffer[buffer.Offset])
-            {
-                byte* d = (byte*)&data;
-                d[0] = p[3];
-                d[1] = p[2];
-                d[2] = p[1];
-                d[3] = p[0];
-
-                d[4] = p[5];
-                d[5] = p[4];
-
-                d[6] = p[7];
-                d[7] = p[6];
-
-                *((ulong*)&d[8]) = *((ulong*)&p[8]);
-            }
-
+            ReadOnlySpan<byte> span = buffer.GetReadSpan(FixedWidth.Uuid);
+            int a = BinaryPrimitives.ReadInt32BigEndian(span);
+            short b = BinaryPrimitives.ReadInt16BigEndian(span.Slice(4, 2));
+            short c = BinaryPrimitives.ReadInt16BigEndian(span.Slice(6, 2));
+            int pos = buffer.Offset + 8;
+            byte d = buffer.Buffer[pos++];
+            byte e = buffer.Buffer[pos++];
+            byte f = buffer.Buffer[pos++];
+            byte g = buffer.Buffer[pos++];
+            byte h = buffer.Buffer[pos++];
+            byte i = buffer.Buffer[pos++];
+            byte j = buffer.Buffer[pos++];
+            byte k = buffer.Buffer[pos++];
+            Guid data = new Guid(a, b, c, d, e, f, g, h, i, j, k);
             buffer.Complete(FixedWidth.Uuid);
             return data;
         }
@@ -373,24 +368,15 @@ namespace Microsoft.Azure.Amqp.Encoding
         /// <param name="data">The uuid.</param>
         public static unsafe void WriteUuid(ByteBuffer buffer, Guid data)
         {
-            buffer.ValidateWrite(FixedWidth.Uuid);
-            fixed (byte* d = &buffer.Buffer[buffer.WritePos])
+            Span<byte> span = buffer.GetWriteSpan(FixedWidth.Uuid);
+            byte* p = (byte*)&data;
+            BinaryPrimitives.WriteInt32BigEndian(span, *((int*)p));
+            BinaryPrimitives.WriteInt16BigEndian(span.Slice(4, 2), *((short*)(p + 4)));
+            BinaryPrimitives.WriteInt16BigEndian(span.Slice(6, 2), *((short*)(p + 6)));
+            for (int i = 8; i < FixedWidth.Uuid; i++)
             {
-                byte* p = (byte*)&data;
-                d[0] = p[3];
-                d[1] = p[2];
-                d[2] = p[1];
-                d[3] = p[0];
-
-                d[4] = p[5];
-                d[5] = p[4];
-
-                d[6] = p[7];
-                d[7] = p[6];
-
-                *((ulong*)&d[8]) = *((ulong*)&p[8]);
+                buffer.Buffer[buffer.WritePos + i] = *(p + i);
             }
-
             buffer.Append(FixedWidth.Uuid);
         }
 

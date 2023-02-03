@@ -24,6 +24,8 @@ namespace Test.Microsoft.Azure.Amqp
         static Uri connectionAddressUri;
         static TestAmqpBroker broker;
         Dictionary<UInt32, LinkedList<Performative>> ReceivedPerformativesByConnection;
+        int expectedResumedTransfers;
+        ManualResetEvent receivedAllTransfers;
 
         public AmqpLinkRecoveryTests(TestAmqpBrokerFixture testAmqpBrokerFixture)
         {
@@ -31,6 +33,8 @@ namespace Test.Microsoft.Azure.Amqp
             broker = testAmqpBrokerFixture.Broker;
             broker.SetTerminusStore(new AmqpInMemoryTerminusStore());
 
+            expectedResumedTransfers = -1;
+            receivedAllTransfers = new ManualResetEvent(false);
             AmqpTrace.ReceivedFrames = (id, command) =>
             {
                 if (ReceivedPerformativesByConnection == null)
@@ -48,6 +52,10 @@ namespace Test.Microsoft.Azure.Amqp
                 }
 
                 commandsList.AddLast(command);
+                if (command.DescriptorCode == Transfer.Code && expectedResumedTransfers > 0 && --expectedResumedTransfers == 0)
+                {
+                    receivedAllTransfers.Set();
+                }
             };
         }
 
@@ -56,6 +64,9 @@ namespace Test.Microsoft.Azure.Amqp
         {
             broker.SetTerminusStore(null);
             this.ReceivedPerformativesByConnection?.Clear();
+            expectedResumedTransfers = -1;
+            receivedAllTransfers.Dispose();
+            receivedAllTransfers = null;
             AmqpTrace.ReceivedFrames = null;
         }
 
@@ -974,17 +985,20 @@ namespace Test.Microsoft.Azure.Amqp
                 }
 
                 // Open link with the same linkIdentifier, this time update the linkSettings to SettleOnSend so messages can actually settle this time.
+                expectedResumedTransfers = NumberOfMessages;
                 linkTerminus.LinkSettings.SettleType = SettleMode.SettleOnSend;
                 var newSender = await session.OpenLinkAsync<SendingAmqpLink>(linkTerminus.LinkSettings);
 
-                await Task.Delay(TimeSpan.FromMilliseconds(1000));
+                await Task.Yield();
+                bool signaled = receivedAllTransfers.WaitOne(4000);
+                Assert.True(signaled, "Transfers not received in time");
+
                 // Open receiverSide of the Connection and verify 'NumberOfMessages' were resumed.
                 AmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId);
                 this.ReceivedPerformativesByConnection.TryGetValue(brokerConnection.Identifier.Value, out LinkedList<Performative> receivedPerformatives);
-                var resumedTransfers = receivedPerformatives.Skip(receivedPerformatives.Count - NumberOfMessages);
+                var resumedTransfers = receivedPerformatives.Where(p => p is Transfer t && t.Settled()).ToArray();
 
-                Assert.NotNull(resumedTransfers);
-                Assert.True(resumedTransfers.Count() == NumberOfMessages);
+                Assert.Equal(NumberOfMessages, resumedTransfers.Length);
                 foreach (var item in resumedTransfers)
                 {
                     Assert.True(item is Transfer);
@@ -1075,25 +1089,19 @@ namespace Test.Microsoft.Azure.Amqp
                 Assert.Equal(NumberOfMessages, localUnsettledDeliveries.Count);
 
                 // Reopen the link again and verify that is has the same properties as before.
+                expectedResumedTransfers = NumberOfMessages;
                 ReceivingAmqpLink newReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(originalReceiver.Settings);
                 Assert.Equal(originalReceiver.Name, newReceiver.Name);
                 Assert.Equal(originalReceiver.IsReceiver, newReceiver.IsReceiver);
 
-                // Wait sometime for resumed transfers to finish.
-                await Task.Delay(TimeSpan.FromMilliseconds(1000));
+                await Task.Yield();
+                bool signaled = receivedAllTransfers.WaitOne(4000);
+                Assert.True(signaled, "Transfers not received in time");
 
                 // Verify resumed transfers
                 this.ReceivedPerformativesByConnection.TryGetValue(connection.Identifier.Value, out LinkedList<Performative> receivedPerformatives);
-                var resumedTransfers = receivedPerformatives.Skip(receivedPerformatives.Count - NumberOfMessages);
-                Assert.NotNull(resumedTransfers);
-                Assert.True(resumedTransfers.Count() == NumberOfMessages);
-                foreach (var item in resumedTransfers)
-                {
-                    Assert.True(item is Transfer);
-                    var transfer = (Transfer)item;
-                    Assert.True(transfer.Resume == true);
-                    Assert.True(transfer.More == false);
-                }
+                var resumedTransfers = receivedPerformatives.Where(p => p is Transfer t && t.Resume()).ToArray();
+                Assert.Equal(NumberOfMessages, resumedTransfers.Length);
 
                 // Receive and Complete the 10 messages.
                 for (int i = 0; i < NumberOfMessages; i++)
@@ -1140,9 +1148,6 @@ namespace Test.Microsoft.Azure.Amqp
                 try
                 {
                     connection = await OpenConnectionAsync(connectionAddressUri, new TestRuntimeProvider(), new AmqpInMemoryTerminusStore());
-                    AmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId);
-                    IAmqpTerminusStore terminusStore = connection.TerminusStore;
-                    IAmqpTerminusStore brokerTerminusStore = brokerConnection.TerminusStore;
                     AmqpSession session = await connection.OpenSessionAsync();
                     bool localRole = typeof(T) == typeof(ReceivingAmqpLink);
 
@@ -1151,6 +1156,10 @@ namespace Test.Microsoft.Azure.Amqp
                     linkSettings.SetExpiryPolicy(expirationPolicy);
                     linkSettings.SetExpiryTimeout(expiryTimeout);
                     AmqpLink link = await session.OpenLinkAsync<T>(linkSettings);
+
+                    AmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId);
+                    IAmqpTerminusStore terminusStore = connection.TerminusStore;
+                    IAmqpTerminusStore brokerTerminusStore = brokerConnection.TerminusStore;
 
                     AmqpLinkIdentifier brokerLinkIdentifier = new AmqpLinkIdentifier(link.Name, !link.Settings.Role.Value, brokerConnection.Settings.ContainerId);
                     TimeSpan timeoutBuffer = TimeSpan.FromMilliseconds(100);
@@ -1240,12 +1249,11 @@ namespace Test.Microsoft.Azure.Amqp
         {
             bool localRole = typeof(T) == typeof(ReceivingAmqpLink);
             string queueName = testName + "-queue" + Guid.NewGuid().ToString();
-            
+
             Trace.WriteLine($"Beginning test: {testName}");
 
             AmqpInMemoryTerminusStore localDeliveryStore = new AmqpInMemoryTerminusStore();
             AmqpConnection connection = await OpenConnectionAsync(connectionAddressUri, new TestRuntimeProvider(), localDeliveryStore);
-            AmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId);
 
             try
             {
@@ -1254,21 +1262,22 @@ namespace Test.Microsoft.Azure.Amqp
                 AmqpLinkTerminus localLinkTerminus = new AmqpLinkTerminus(localLinkIdentifier, linkSettings, localDeliveryStore);
                 await localDeliveryStore.TryAddLinkTerminusAsync(localLinkIdentifier, localLinkTerminus);
 
-                var brokerLinkIdentifier = new AmqpLinkIdentifier(testName, !localRole, brokerConnection.Settings.ContainerId);
+                var brokerLinkIdentifier = new AmqpLinkIdentifier(testName, !localRole, connection.Settings.RemoteContainerId);
                 var brokerLinkSettings = AmqpLinkSettings.Create(linkSettings);
                 AmqpLinkTerminus brokerLinkTerminus = new AmqpLinkTerminus(brokerLinkIdentifier, brokerLinkSettings, broker.TerminusStore);
                 await broker.TerminusStore.TryAddLinkTerminusAsync(brokerLinkIdentifier, brokerLinkTerminus);
 
-                AmqpConnection receiverSideConnection = localRole ? connection : brokerConnection;
                 AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
-                session.Open();
+                await session.OpenAsync();
 
                 // If needed, actually declare the transaction so the broker can find this transaction and not throw exceptions.
                 Controller txController = null;
                 ArraySegment<byte> txnId = default;
                 if (localDeliveryState is TransactionalState || remoteDeliveryState is TransactionalState)
                 {
-                    DeclareTransaction(session, localDeliveryState, remoteDeliveryState, out txController, out txnId);
+                    var tuple = await DeclareTransactionAsync(session, localDeliveryState, remoteDeliveryState);
+                    txController = tuple.Item1;
+                    txnId = tuple.Item2;
                 }
 
                 // Set up the link terminus and unsettled delivery from local side.
@@ -1281,17 +1290,24 @@ namespace Test.Microsoft.Azure.Amqp
                 }
 
                 // Open the link and observe the frames exchanged.
+                expectedResumedTransfers = 1;
                 linkSettings.SetExpiryPolicy(LinkTerminusExpiryPolicy.LinkDetach);
                 AmqpLink localLink = await session.OpenLinkAsync<T>(linkSettings);
-                await Task.Delay(1000); // wait for the sender to potentially send the initial deliveries.
 
+                AmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId);
+                AmqpConnection receiverSideConnection = localRole ? connection : brokerConnection;
                 this.ReceivedPerformativesByConnection.TryGetValue(receiverSideConnection.Identifier.Value, out LinkedList<Performative> receivedPerformatives);
-                Transfer expectedTransfer = receivedPerformatives.Last.Value as Transfer;
-                bool transferSettled = expectedTransfer?.Settled == true;
-                bool shouldSetResumeFlag = typeof(T) == typeof(SendingAmqpLink) ? hasRemoteDeliveryState : hasLocalDeliveryState;
 
                 if (expectSend)
                 {
+                    await Task.Yield();
+                    bool signaled = receivedAllTransfers.WaitOne(4000);
+                    Assert.True(signaled, "Transfers not received in time");
+
+                    Transfer expectedTransfer = receivedPerformatives.Last.Value as Transfer;
+                    bool transferSettled = expectedTransfer?.Settled == true;
+                    bool shouldSetResumeFlag = typeof(T) == typeof(SendingAmqpLink) ? hasRemoteDeliveryState : hasLocalDeliveryState;
+
                     // We are expecting some messages to be transferred as a result of consolidating unsettled deliveries from both sides.
                     Assert.NotNull(expectedTransfer);
                     Assert.Equal(expectedTransfer.Resume, shouldSetResumeFlag);
@@ -1336,7 +1352,7 @@ namespace Test.Microsoft.Azure.Amqp
             }
             finally
             {
-                await connection?.CloseAsync();
+                await connection.CloseAsync();
             }
 
             Trace.WriteLine($"End test: {testName}");
@@ -1351,7 +1367,7 @@ namespace Test.Microsoft.Azure.Amqp
             TransportBase transport = await factory.GetTransportAsync(addressUri, settings, AmqpConstants.DefaultTimeout, CancellationToken.None);
             var connection = new AmqpConnection(transport, settings, new AmqpConnectionSettings() { ContainerId = Guid.NewGuid().ToString(), HostName = addressUri.Host });
             await connection.OpenAsync();
-            await Task.Delay(TimeSpan.FromMilliseconds(500));
+            // await Task.Delay(TimeSpan.FromMilliseconds(500));
             return connection;
         }
 
@@ -1374,7 +1390,8 @@ namespace Test.Microsoft.Azure.Amqp
         {
             try
             {
-                AmqpMessage received = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(2));
+                int waitTimeMs = expectedMessage == null ? 100 : 5000;
+                AmqpMessage received = await receiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(waitTimeMs));
                 if (expectedMessage == null)
                 {
                     Assert.Null(received);
@@ -1424,12 +1441,12 @@ namespace Test.Microsoft.Azure.Amqp
             return messages;
         }
 
-        static void DeclareTransaction(AmqpSession session, DeliveryState localDeliveryState, DeliveryState remoteDeliveryState, out Controller txController, out ArraySegment<byte> txnId)
+        static async Task<(Controller, ArraySegment<byte>)> DeclareTransactionAsync(AmqpSession session, DeliveryState localDeliveryState, DeliveryState remoteDeliveryState)
         {
             Fx.Assert(localDeliveryState is TransactionalState || remoteDeliveryState is TransactionalState, "at least one delivery state needs to be transactional to declare a trnasaction for a test.");
-            txController = new Controller(session, TimeSpan.FromSeconds(10));
-            txController.Open();
-            txnId = txController.DeclareAsync().Result;
+            var txController = new Controller(session, TimeSpan.FromSeconds(10));
+            await txController.OpenAsync();
+            var txnId = await txController.DeclareAsync();
             var localTransactionalState = localDeliveryState as TransactionalState;
             var remoteTransactionalState = remoteDeliveryState as TransactionalState;
 
@@ -1442,6 +1459,8 @@ namespace Test.Microsoft.Azure.Amqp
             {
                 remoteTransactionalState.TxnId = txnId;
             }
+
+            return (txController, txnId);
         }
     }
 }

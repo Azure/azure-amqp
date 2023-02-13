@@ -9,23 +9,14 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Released : Outcome
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:released:list";
+        public const string Name = "amqp:released:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000026;
-        const int Fields = 0;
+        public const ulong Code = 0x0000000000000026;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Released() : base(Name, Code) { }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
+        public Released() : base(Name, Code, 0) { }
 
         /// <summary>
         /// Returns a string that represents the object.

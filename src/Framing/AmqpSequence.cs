@@ -15,11 +15,11 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// The descriptor name.
         /// </summary>
-        public static readonly string Name = "amqp:amqp-sequence:list";
+        public const string Name = "amqp:amqp-sequence:list";
         /// <summary>
         /// The descriptor code.
         /// </summary>
-        public static readonly ulong Code = 0x0000000000000076;
+        public const ulong Code = 0x0000000000000076;
 
         IList innerList;
 
@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// </summary>
         /// <param name="innerList">The list containing objects in the sequence.</param>
         public AmqpSequence(IList innerList)
-            : base(Name, Code)
+            : base(Name, Code, innerList.Count)
         {
             this.innerList = innerList;
         }
@@ -47,14 +47,6 @@ namespace Microsoft.Azure.Amqp.Framing
         public IList List
         {
             get { return this.innerList; }
-        }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return this.innerList.Count; }
         }
 
         /// <summary>

@@ -12,15 +12,14 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Disposition : Performative
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:disposition:list";
+        public const string Name = "amqp:disposition:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000015;
-        const int Fields = 6;
+        public const ulong Code = 0x0000000000000015;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Disposition() : base(Name, Code)
+        public Disposition() : base(Name, Code, 6)
         {
         }
 
@@ -53,14 +52,6 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the "batchable" field.
         /// </summary>
         public bool? Batchable { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

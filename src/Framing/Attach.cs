@@ -12,15 +12,14 @@ namespace Microsoft.Azure.Amqp.Framing
     public class Attach : LinkPerformative
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:attach:list";
+        public const string Name = "amqp:attach:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000012;
-        const int Fields = 14;
+        public const ulong Code = 0x0000000000000012;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Attach() : base(Name, Code)
+        public Attach() : base(Name, Code, 14)
         {
         }
 
@@ -88,14 +87,6 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the "properties" field.
         /// </summary>
         public Fields Properties { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

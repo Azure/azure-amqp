@@ -12,15 +12,14 @@ namespace Microsoft.Azure.Amqp.Transaction
     public sealed class Declare : Performative
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:declare:list";
+        public const string Name = "amqp:declare:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000031;
-        const int Fields = 1;
+        public const ulong Code = 0x0000000000000031;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Declare() : base(Name, Code)
+        public Declare() : base(Name, Code, 1)
         {
         }
 
@@ -28,14 +27,6 @@ namespace Microsoft.Azure.Amqp.Transaction
         /// Gets or sets the global-id field.
         /// </summary>
         public object GlobalId { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

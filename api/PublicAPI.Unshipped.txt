@@ -11,7 +11,6 @@ abstract Microsoft.Azure.Amqp.AmqpObject.CloseInternal() -> bool
 abstract Microsoft.Azure.Amqp.AmqpObject.OpenInternal() -> bool
 abstract Microsoft.Azure.Amqp.Delivery.AddPayload(Microsoft.Azure.Amqp.ByteBuffer payload, bool isLast) -> void
 abstract Microsoft.Azure.Amqp.Delivery.GetPayload(int payloadSize, out bool more) -> Microsoft.Azure.Amqp.ByteBuffer
-abstract Microsoft.Azure.Amqp.Framing.DescribedList.FieldCount.get -> int
 abstract Microsoft.Azure.Amqp.Framing.DescribedList.OnDecode(Microsoft.Azure.Amqp.ByteBuffer buffer, int count) -> void
 abstract Microsoft.Azure.Amqp.Framing.DescribedList.OnEncode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
 abstract Microsoft.Azure.Amqp.Framing.DescribedList.OnValueSize() -> int
@@ -44,19 +43,89 @@ const Microsoft.Azure.Amqp.AmqpConstants.SchemeAmqp = "amqp" -> string
 const Microsoft.Azure.Amqp.AmqpConstants.SchemeAmqps = "amqps" -> string
 const Microsoft.Azure.Amqp.AmqpConstants.TransportBufferSize = 8192 -> int
 const Microsoft.Azure.Amqp.AmqpConstants.Vendor = "com.microsoft" -> string
-const Microsoft.Azure.Amqp.Framing.Properties.AbsoluteExpiryTimeName = "absolute-expiry-time" -> string
-const Microsoft.Azure.Amqp.Framing.Properties.ContentEncodingName = "content-encoding" -> string
-const Microsoft.Azure.Amqp.Framing.Properties.ContentTypeName = "content-type" -> string
-const Microsoft.Azure.Amqp.Framing.Properties.CorrelationIdName = "correlation-id" -> string
-const Microsoft.Azure.Amqp.Framing.Properties.CreationTimeName = "creation-time" -> string
-const Microsoft.Azure.Amqp.Framing.Properties.GroupIdName = "group-id" -> string
-const Microsoft.Azure.Amqp.Framing.Properties.GroupSequenceName = "group-sequence" -> string
-const Microsoft.Azure.Amqp.Framing.Properties.MessageIdName = "message-id" -> string
-const Microsoft.Azure.Amqp.Framing.Properties.ReplyToGroupIdName = "reply-to-group-id" -> string
-const Microsoft.Azure.Amqp.Framing.Properties.ReplyToName = "reply-to" -> string
-const Microsoft.Azure.Amqp.Framing.Properties.SubjectName = "subject" -> string
-const Microsoft.Azure.Amqp.Framing.Properties.ToName = "to" -> string
-const Microsoft.Azure.Amqp.Framing.Properties.UserIdName = "user-id" -> string
+const Microsoft.Azure.Amqp.Framing.Accepted.Code = 36 -> ulong
+const Microsoft.Azure.Amqp.Framing.Accepted.Name = "amqp:accepted:list" -> string
+const Microsoft.Azure.Amqp.Framing.AmqpSequence.Code = 118 -> ulong
+const Microsoft.Azure.Amqp.Framing.AmqpSequence.Name = "amqp:amqp-sequence:list" -> string
+const Microsoft.Azure.Amqp.Framing.AmqpValue.Code = 119 -> ulong
+const Microsoft.Azure.Amqp.Framing.AmqpValue.Name = "amqp:amqp-value:*" -> string
+const Microsoft.Azure.Amqp.Framing.ApplicationProperties.Code = 116 -> ulong
+const Microsoft.Azure.Amqp.Framing.ApplicationProperties.Name = "amqp:application-properties:map" -> string
+const Microsoft.Azure.Amqp.Framing.Attach.Code = 18 -> ulong
+const Microsoft.Azure.Amqp.Framing.Attach.Name = "amqp:attach:list" -> string
+const Microsoft.Azure.Amqp.Framing.Begin.Code = 17 -> ulong
+const Microsoft.Azure.Amqp.Framing.Begin.Name = "amqp:begin:list" -> string
+const Microsoft.Azure.Amqp.Framing.Close.Code = 24 -> ulong
+const Microsoft.Azure.Amqp.Framing.Close.Name = "amqp:close:list" -> string
+const Microsoft.Azure.Amqp.Framing.Data.Code = 117 -> ulong
+const Microsoft.Azure.Amqp.Framing.Data.Name = "amqp:data:binary" -> string
+const Microsoft.Azure.Amqp.Framing.DeleteOnClose.Code = 43 -> ulong
+const Microsoft.Azure.Amqp.Framing.DeleteOnClose.Name = "amqp:delete-on-close:list" -> string
+const Microsoft.Azure.Amqp.Framing.DeleteOnNoLinks.Code = 44 -> ulong
+const Microsoft.Azure.Amqp.Framing.DeleteOnNoLinks.Name = "amqp:delete-on-no-links:list" -> string
+const Microsoft.Azure.Amqp.Framing.DeleteOnNoLinksOrMessages.Code = 46 -> ulong
+const Microsoft.Azure.Amqp.Framing.DeleteOnNoLinksOrMessages.Name = "amqp:delete-on-no-links-or-messages:list" -> string
+const Microsoft.Azure.Amqp.Framing.DeleteOnNoMessages.Code = 45 -> ulong
+const Microsoft.Azure.Amqp.Framing.DeleteOnNoMessages.Name = "amqp:delete-on-no-messages:list" -> string
+const Microsoft.Azure.Amqp.Framing.DeliveryAnnotations.Code = 113 -> ulong
+const Microsoft.Azure.Amqp.Framing.DeliveryAnnotations.Name = "amqp:delivery-annotations:map" -> string
+const Microsoft.Azure.Amqp.Framing.Detach.Code = 22 -> ulong
+const Microsoft.Azure.Amqp.Framing.Detach.Name = "amqp:detach:list" -> string
+const Microsoft.Azure.Amqp.Framing.Disposition.Code = 21 -> ulong
+const Microsoft.Azure.Amqp.Framing.Disposition.Name = "amqp:disposition:list" -> string
+const Microsoft.Azure.Amqp.Framing.End.Code = 23 -> ulong
+const Microsoft.Azure.Amqp.Framing.End.Name = "amqp:end:list" -> string
+const Microsoft.Azure.Amqp.Framing.Error.Code = 29 -> ulong
+const Microsoft.Azure.Amqp.Framing.Error.Name = "amqp:error:list" -> string
+const Microsoft.Azure.Amqp.Framing.Flow.Code = 19 -> ulong
+const Microsoft.Azure.Amqp.Framing.Flow.Name = "amqp:flow:list" -> string
+const Microsoft.Azure.Amqp.Framing.Footer.Code = 120 -> ulong
+const Microsoft.Azure.Amqp.Framing.Footer.Name = "amqp:footer:map" -> string
+const Microsoft.Azure.Amqp.Framing.Header.Code = 112 -> ulong
+const Microsoft.Azure.Amqp.Framing.Header.Name = "amqp:header:list" -> string
+const Microsoft.Azure.Amqp.Framing.MessageAnnotations.Code = 114 -> ulong
+const Microsoft.Azure.Amqp.Framing.MessageAnnotations.Name = "amqp:message-annotations:map" -> string
+const Microsoft.Azure.Amqp.Framing.Modified.Code = 39 -> ulong
+const Microsoft.Azure.Amqp.Framing.Modified.Name = "amqp:modified:list" -> string
+const Microsoft.Azure.Amqp.Framing.Open.Code = 16 -> ulong
+const Microsoft.Azure.Amqp.Framing.Open.Name = "amqp:open:list" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.Code = 115 -> ulong
+const Microsoft.Azure.Amqp.Framing.Properties.Name = "amqp:properties:list" -> string
+const Microsoft.Azure.Amqp.Framing.Received.Code = 35 -> ulong
+const Microsoft.Azure.Amqp.Framing.Received.Name = "amqp:received:list" -> string
+const Microsoft.Azure.Amqp.Framing.Rejected.Code = 37 -> ulong
+const Microsoft.Azure.Amqp.Framing.Rejected.Name = "amqp:rejected:list" -> string
+const Microsoft.Azure.Amqp.Framing.Released.Code = 38 -> ulong
+const Microsoft.Azure.Amqp.Framing.Released.Name = "amqp:released:list" -> string
+const Microsoft.Azure.Amqp.Framing.Source.Code = 40 -> ulong
+const Microsoft.Azure.Amqp.Framing.Source.Name = "amqp:source:list" -> string
+const Microsoft.Azure.Amqp.Framing.Target.Code = 41 -> ulong
+const Microsoft.Azure.Amqp.Framing.Target.Name = "amqp:target:list" -> string
+const Microsoft.Azure.Amqp.Framing.Transfer.Code = 20 -> ulong
+const Microsoft.Azure.Amqp.Framing.Transfer.Name = "amqp:transfer:list" -> string
+const Microsoft.Azure.Amqp.Sasl.SaslAnonymousHandler.Name = "ANONYMOUS" -> string
+const Microsoft.Azure.Amqp.Sasl.SaslChallenge.Code = 66 -> ulong
+const Microsoft.Azure.Amqp.Sasl.SaslChallenge.Name = "amqp:sasl-challenge:list" -> string
+const Microsoft.Azure.Amqp.Sasl.SaslExternalHandler.Name = "EXTERNAL" -> string
+const Microsoft.Azure.Amqp.Sasl.SaslInit.Code = 65 -> ulong
+const Microsoft.Azure.Amqp.Sasl.SaslInit.Name = "amqp:sasl-init:list" -> string
+const Microsoft.Azure.Amqp.Sasl.SaslMechanisms.Code = 64 -> ulong
+const Microsoft.Azure.Amqp.Sasl.SaslMechanisms.Name = "amqp:sasl-mechanisms:list" -> string
+const Microsoft.Azure.Amqp.Sasl.SaslOutcome.Code = 68 -> ulong
+const Microsoft.Azure.Amqp.Sasl.SaslOutcome.Name = "amqp:sasl-outcome:list" -> string
+const Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.Name = "PLAIN" -> string
+const Microsoft.Azure.Amqp.Sasl.SaslResponse.Code = 67 -> ulong
+const Microsoft.Azure.Amqp.Sasl.SaslResponse.Name = "amqp:sasl-response:list" -> string
+const Microsoft.Azure.Amqp.Transaction.Coordinator.Code = 48 -> ulong
+const Microsoft.Azure.Amqp.Transaction.Coordinator.Name = "amqp:coordinator:list" -> string
+const Microsoft.Azure.Amqp.Transaction.Declare.Code = 49 -> ulong
+const Microsoft.Azure.Amqp.Transaction.Declare.Name = "amqp:declare:list" -> string
+const Microsoft.Azure.Amqp.Transaction.Declared.Code = 51 -> ulong
+const Microsoft.Azure.Amqp.Transaction.Declared.Name = "amqp:declared:list" -> string
+const Microsoft.Azure.Amqp.Transaction.Discharge.Code = 50 -> ulong
+const Microsoft.Azure.Amqp.Transaction.Discharge.Name = "amqp:discharge:list" -> string
+const Microsoft.Azure.Amqp.Transaction.TransactionalState.Code = 52 -> ulong
+const Microsoft.Azure.Amqp.Transaction.TransactionalState.Name = "amqp:transactional-state:list" -> string
 Microsoft.Azure.Amqp.AmqpCbsLink
 Microsoft.Azure.Amqp.AmqpCbsLink.AmqpCbsLink(Microsoft.Azure.Amqp.AmqpConnection connection) -> void
 Microsoft.Azure.Amqp.AmqpCbsLink.BeginSendToken(Microsoft.Azure.Amqp.ICbsTokenProvider tokenProvider, System.Uri namespaceAddress, string audience, string resource, string[] requiredClaims, System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
@@ -574,12 +643,13 @@ Microsoft.Azure.Amqp.Framing.DeleteOnNoMessages.DeleteOnNoMessages() -> void
 Microsoft.Azure.Amqp.Framing.DeliveryAnnotations
 Microsoft.Azure.Amqp.Framing.DeliveryAnnotations.DeliveryAnnotations() -> void
 Microsoft.Azure.Amqp.Framing.DeliveryState
-Microsoft.Azure.Amqp.Framing.DeliveryState.DeliveryState(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.DeliveryState.DeliveryState(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code, int fieldCount) -> void
 Microsoft.Azure.Amqp.Framing.DescribedAnnotations
 Microsoft.Azure.Amqp.Framing.DescribedAnnotations.DescribedAnnotations(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
 Microsoft.Azure.Amqp.Framing.DescribedAnnotations.Map.get -> Microsoft.Azure.Amqp.Framing.Annotations
 Microsoft.Azure.Amqp.Framing.DescribedList
-Microsoft.Azure.Amqp.Framing.DescribedList.DescribedList(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.DescribedList.DescribedList(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code, int fieldCount) -> void
+Microsoft.Azure.Amqp.Framing.DescribedList.FieldCount.get -> int
 Microsoft.Azure.Amqp.Framing.DescribedMap
 Microsoft.Azure.Amqp.Framing.DescribedMap.DescribedMap(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
 Microsoft.Azure.Amqp.Framing.DescribedMap.InnerMap.get -> Microsoft.Azure.Amqp.Encoding.AmqpMap
@@ -679,7 +749,7 @@ Microsoft.Azure.Amqp.Framing.LifeTimePolicy.LifeTimePolicy(Microsoft.Azure.Amqp.
 Microsoft.Azure.Amqp.Framing.LinkPerformative
 Microsoft.Azure.Amqp.Framing.LinkPerformative.Handle.get -> uint?
 Microsoft.Azure.Amqp.Framing.LinkPerformative.Handle.set -> void
-Microsoft.Azure.Amqp.Framing.LinkPerformative.LinkPerformative(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.LinkPerformative.LinkPerformative(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code, int fieldCount) -> void
 Microsoft.Azure.Amqp.Framing.MessageAnnotations
 Microsoft.Azure.Amqp.Framing.MessageAnnotations.MessageAnnotations() -> void
 Microsoft.Azure.Amqp.Framing.MessageId
@@ -718,9 +788,9 @@ Microsoft.Azure.Amqp.Framing.Open.OutgoingLocales.set -> void
 Microsoft.Azure.Amqp.Framing.Open.Properties.get -> Microsoft.Azure.Amqp.Framing.Fields
 Microsoft.Azure.Amqp.Framing.Open.Properties.set -> void
 Microsoft.Azure.Amqp.Framing.Outcome
-Microsoft.Azure.Amqp.Framing.Outcome.Outcome(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.Outcome.Outcome(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code, int fieldCount) -> void
 Microsoft.Azure.Amqp.Framing.Performative
-Microsoft.Azure.Amqp.Framing.Performative.Performative(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.Performative.Performative(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code, int fieldCount) -> void
 Microsoft.Azure.Amqp.Framing.Properties
 Microsoft.Azure.Amqp.Framing.Properties.AbsoluteExpiryTime.get -> System.DateTime?
 Microsoft.Azure.Amqp.Framing.Properties.AbsoluteExpiryTime.set -> void
@@ -1352,12 +1422,10 @@ override Microsoft.Azure.Amqp.Framing.Accepted.ToString() -> string
 override Microsoft.Azure.Amqp.Framing.AmqpDescribed.ToString() -> string
 override Microsoft.Azure.Amqp.Framing.AmqpSequence.ToString() -> string
 override Microsoft.Azure.Amqp.Framing.AmqpValue.ToString() -> string
-override Microsoft.Azure.Amqp.Framing.Attach.FieldCount.get -> int
 override Microsoft.Azure.Amqp.Framing.Attach.OnDecode(Microsoft.Azure.Amqp.ByteBuffer buffer, int count) -> void
 override Microsoft.Azure.Amqp.Framing.Attach.OnEncode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
 override Microsoft.Azure.Amqp.Framing.Attach.OnValueSize() -> int
 override Microsoft.Azure.Amqp.Framing.Attach.ToString() -> string
-override Microsoft.Azure.Amqp.Framing.Begin.FieldCount.get -> int
 override Microsoft.Azure.Amqp.Framing.Begin.OnDecode(Microsoft.Azure.Amqp.ByteBuffer buffer, int count) -> void
 override Microsoft.Azure.Amqp.Framing.Begin.OnEncode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
 override Microsoft.Azure.Amqp.Framing.Begin.OnValueSize() -> int
@@ -1376,13 +1444,11 @@ override Microsoft.Azure.Amqp.Framing.Flow.ToString() -> string
 override Microsoft.Azure.Amqp.Framing.Footer.ToString() -> string
 override Microsoft.Azure.Amqp.Framing.Frame.ToString() -> string
 override Microsoft.Azure.Amqp.Framing.Header.ToString() -> string
-override Microsoft.Azure.Amqp.Framing.LifeTimePolicy.FieldCount.get -> int
 override Microsoft.Azure.Amqp.Framing.LifeTimePolicy.OnDecode(Microsoft.Azure.Amqp.ByteBuffer buffer, int count) -> void
 override Microsoft.Azure.Amqp.Framing.LifeTimePolicy.OnEncode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
 override Microsoft.Azure.Amqp.Framing.LifeTimePolicy.OnValueSize() -> int
 override Microsoft.Azure.Amqp.Framing.Modified.ToString() -> string
 override Microsoft.Azure.Amqp.Framing.Multiple<T>.ToString() -> string
-override Microsoft.Azure.Amqp.Framing.Open.FieldCount.get -> int
 override Microsoft.Azure.Amqp.Framing.Open.OnDecode(Microsoft.Azure.Amqp.ByteBuffer buffer, int count) -> void
 override Microsoft.Azure.Amqp.Framing.Open.OnEncode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
 override Microsoft.Azure.Amqp.Framing.Open.OnValueSize() -> int
@@ -1721,93 +1787,10 @@ static readonly Microsoft.Azure.Amqp.AmqpConstants.RejectedNotFoundOutcome -> Mi
 static readonly Microsoft.Azure.Amqp.AmqpConstants.RejectedOutcome -> Microsoft.Azure.Amqp.Framing.Rejected
 static readonly Microsoft.Azure.Amqp.AmqpConstants.ReleasedOutcome -> Microsoft.Azure.Amqp.Framing.Released
 static readonly Microsoft.Azure.Amqp.AmqpConstants.StartOfEpoch -> System.DateTime
-static readonly Microsoft.Azure.Amqp.Framing.Accepted.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Accepted.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.AmqpSequence.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.AmqpSequence.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.AmqpValue.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.AmqpValue.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.ApplicationProperties.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.ApplicationProperties.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Attach.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Attach.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Begin.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Begin.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Close.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Close.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Data.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Data.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.DeleteOnClose.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.DeleteOnClose.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.DeleteOnNoLinks.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.DeleteOnNoLinks.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.DeleteOnNoLinksOrMessages.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.DeleteOnNoLinksOrMessages.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.DeleteOnNoMessages.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.DeleteOnNoMessages.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.DeliveryAnnotations.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.DeliveryAnnotations.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Detach.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Detach.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Disposition.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Disposition.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.End.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.End.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Error.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Error.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Flow.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Flow.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Footer.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Footer.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Header.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Header.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.MessageAnnotations.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.MessageAnnotations.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Modified.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Modified.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Open.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Open.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Properties.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Properties.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Received.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Received.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Rejected.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Rejected.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Released.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Released.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Source.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Source.Name -> string
-static readonly Microsoft.Azure.Amqp.Framing.Target.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Target.Name -> string
 static readonly Microsoft.Azure.Amqp.Framing.TerminusExpiryPolicy.ConnectionClose -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
 static readonly Microsoft.Azure.Amqp.Framing.TerminusExpiryPolicy.LinkDetach -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
 static readonly Microsoft.Azure.Amqp.Framing.TerminusExpiryPolicy.Never -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
 static readonly Microsoft.Azure.Amqp.Framing.TerminusExpiryPolicy.SessionEnd -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
-static readonly Microsoft.Azure.Amqp.Framing.Transfer.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Framing.Transfer.Name -> string
-static readonly Microsoft.Azure.Amqp.Sasl.SaslAnonymousHandler.Name -> string
-static readonly Microsoft.Azure.Amqp.Sasl.SaslChallenge.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Sasl.SaslChallenge.Name -> string
-static readonly Microsoft.Azure.Amqp.Sasl.SaslExternalHandler.Name -> string
-static readonly Microsoft.Azure.Amqp.Sasl.SaslInit.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Sasl.SaslInit.Name -> string
-static readonly Microsoft.Azure.Amqp.Sasl.SaslMechanisms.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Sasl.SaslMechanisms.Name -> string
-static readonly Microsoft.Azure.Amqp.Sasl.SaslOutcome.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Sasl.SaslOutcome.Name -> string
-static readonly Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.Name -> string
-static readonly Microsoft.Azure.Amqp.Sasl.SaslResponse.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Sasl.SaslResponse.Name -> string
-static readonly Microsoft.Azure.Amqp.Transaction.Coordinator.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Transaction.Coordinator.Name -> string
-static readonly Microsoft.Azure.Amqp.Transaction.Declare.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Transaction.Declare.Name -> string
-static readonly Microsoft.Azure.Amqp.Transaction.Declared.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Transaction.Declared.Name -> string
-static readonly Microsoft.Azure.Amqp.Transaction.Discharge.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Transaction.Discharge.Name -> string
-static readonly Microsoft.Azure.Amqp.Transaction.TransactionalState.Code -> ulong
-static readonly Microsoft.Azure.Amqp.Transaction.TransactionalState.Name -> string
 static readonly Microsoft.Azure.Amqp.Transaction.TxnCapabilities.DistributedTxn -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
 static readonly Microsoft.Azure.Amqp.Transaction.TxnCapabilities.LocalTransactions -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
 static readonly Microsoft.Azure.Amqp.Transaction.TxnCapabilities.MultiSsnsPerTxn -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
@@ -1832,57 +1815,32 @@ virtual Microsoft.Azure.Amqp.AmqpObject.OnClose(System.TimeSpan timeout) -> void
 virtual Microsoft.Azure.Amqp.AmqpObject.OnOpen(System.TimeSpan timeout) -> void
 virtual Microsoft.Azure.Amqp.AmqpSession.OnReceiveFlow(Microsoft.Azure.Amqp.Framing.Flow flow) -> void
 virtual Microsoft.Azure.Amqp.AmqpSession.ProcessFrame(Microsoft.Azure.Amqp.Framing.Frame frame) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpAbortThrowingException(string exception) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpAbortThrowingException(System.Exception exception) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpAddSession(Microsoft.Azure.Amqp.AmqpConnection connection, Microsoft.Azure.Amqp.AmqpSession session, ushort localChannel, ushort remoteChannel) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpAddSession(object source, object session, ushort localChannel, ushort remoteChannel) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpAttachLink(Microsoft.Azure.Amqp.AmqpConnection connection, Microsoft.Azure.Amqp.AmqpSession session, Microsoft.Azure.Amqp.AmqpLink link, uint localHandle, uint remoteHandle, string linkName, string role, object source, object target) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpAttachLink(object connection, object session, object link, uint localHandle, uint remoteHandle, string linkName, string role, object source, object target) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpCacheMessage(Microsoft.Azure.Amqp.AmqpLink link, uint deliveryId, int transfers, uint totalLinkCredit, uint linkCredit) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpCacheMessage(object source, uint deliveryId, int count, bool isPrefecthingBySize, long totalCacheSizeInBytes, uint totalLinkCredit, uint linkCredit) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpCloseConnection(object source, Microsoft.Azure.Amqp.AmqpConnection connection, bool abort) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpCloseConnection(object source, object connection, bool abort) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpDeliveryNotFound(Microsoft.Azure.Amqp.AmqpLink link, string deliveryTag) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpDeliveryNotFound(object source, string deliveryTag) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpDispose(Microsoft.Azure.Amqp.AmqpLink link, uint deliveryId, bool settled, object state) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpDispose(object source, uint deliveryId, bool settled, object state) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpDynamicBufferSizeChange(Microsoft.Azure.Amqp.Transport.TransportBase transport, string type, int oldSize, int newSize) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpDynamicBufferSizeChange(object source, string type, int oldSize, int newSize) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpHandleException(System.Exception exception, string traceInfo) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpInsecureTransport(Microsoft.Azure.Amqp.Transport.AmqpTransportListener listener, Microsoft.Azure.Amqp.Transport.TransportBase transport, bool isSecure, bool isAuthenticated) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpInsecureTransport(object source, object transport, bool isSecure, bool isAuthenticated) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpIoEvent(Microsoft.Azure.Amqp.AmqpObject source, Microsoft.Azure.Amqp.IoEvent ioEvent, long queueSize) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpIoEvent(object source, int ioEvent, long queueSize) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpLinkDetach(Microsoft.Azure.Amqp.AmqpLink link, string name, uint handle, string action, string error) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpLinkDetach(object source, string name, uint handle, string action, string error) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpListenSocketAcceptError(Microsoft.Azure.Amqp.Transport.TransportListener listener, bool willRetry, string error) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpListenSocketAcceptError(object source, bool willRetry, string error) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpLogError(object source, string operation, string message) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpLogError(object source, string operation, System.Exception exception) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpLogOperationInformational(object source, Microsoft.Azure.Amqp.TraceOperation operation, object detail) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpLogOperationVerbose(object source, Microsoft.Azure.Amqp.TraceOperation operation, object detail) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpMissingHandle(Microsoft.Azure.Amqp.AmqpObject container, string type, uint handle) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpMissingHandle(object source, string type, uint handle) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpOpenConnection(object source, Microsoft.Azure.Amqp.AmqpConnection connection) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpOpenConnection(object source, object connection) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpOpenEntityFailed(object source, object obj, string name, string entityName, string error) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpOpenEntityFailed(object source, string name, string entityName, System.Exception error) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpOpenEntitySucceeded(object source, object obj, string name, string entityName) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpOpenEntitySucceeded(object source, string name, string entityName) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpReceiveMessage(Microsoft.Azure.Amqp.AmqpLink link, uint deliveryId, int transferCount) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpReceiveMessage(object source, uint deliveryId, int transferCount) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpRemoveLink(Microsoft.Azure.Amqp.AmqpSession session, object link, uint localHandle, uint remoteHandle, string linkName) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpRemoveLink(object connection, object session, object link, uint localHandle, uint remoteHandle, string linkName) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpRemoveSession(Microsoft.Azure.Amqp.AmqpConnection connection, Microsoft.Azure.Amqp.AmqpSession session, ushort localChannel, ushort remoteChannel) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpRemoveSession(object source, object session, ushort localChannel, ushort remoteChannel) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpSentMessage(Microsoft.Azure.Amqp.AmqpLink link, uint deliveryId, long bytes) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpSentMessage(object source, uint deliveryId, long bytes) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpSessionWindowClosed(Microsoft.Azure.Amqp.AmqpSession session, int nextId) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpSessionWindowClosed(object source, int nextId) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpStateTransition(Microsoft.Azure.Amqp.AmqpObject source, string operation, Microsoft.Azure.Amqp.AmqpObjectState fromState, Microsoft.Azure.Amqp.AmqpObjectState toState) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpStateTransition(object source, string operation, object fromState, object toState) -> void
 virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpUpgradeTransport(object source, Microsoft.Azure.Amqp.Transport.TransportBase from, Microsoft.Azure.Amqp.Transport.TransportBase to) -> void
-virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpUpgradeTransport(object source, object from, object to) -> void
 virtual Microsoft.Azure.Amqp.Delivery.CompletePayload(int payloadSize) -> void
 virtual Microsoft.Azure.Amqp.Delivery.Dispose(bool disposing) -> void
 virtual Microsoft.Azure.Amqp.Singleton<TValue>.Dispose(bool disposing) -> void

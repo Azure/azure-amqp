@@ -11,15 +11,14 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Received : DeliveryState
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:received:list";
+        public const string Name = "amqp:received:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000023;
-        const int Fields = 2;
+        public const ulong Code = 0x0000000000000023;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Received() : base(Name, Code) { }
+        public Received() : base(Name, Code, 2) { }
 
         /// <summary>
         /// Gets or sets the "section-number" field.
@@ -30,14 +29,6 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the "section-offset" field.
         /// </summary>
         public ulong? SectionOffset { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

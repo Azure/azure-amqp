@@ -13,15 +13,14 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Detach : LinkPerformative
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:detach:list";
+        public const string Name = "amqp:detach:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000016;
-        const int Fields = 3;
+        public const ulong Code = 0x0000000000000016;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Detach() : base(Name, Code)
+        public Detach() : base(Name, Code, 3)
         {
         }
 
@@ -34,14 +33,6 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the "error" field.
         /// </summary>
         public Error Error { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

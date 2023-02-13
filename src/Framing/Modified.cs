@@ -11,15 +11,14 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Modified : Outcome
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:modified:list";
+        public const string Name = "amqp:modified:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000027;
-        const int Fields = 3;
+        public const ulong Code = 0x0000000000000027;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Modified() : base(Name, Code)
+        public Modified() : base(Name, Code, 3)
         {
         }
 
@@ -37,14 +36,6 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the "message-annotations" field.
         /// </summary>
         public Fields MessageAnnotations { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

@@ -68,7 +68,6 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets the remote endpoint.
         /// </summary>
-        [Obsolete]
         public EndPoint RemoteEndpoint
         {
             get { return this.asyncIO.Transport.RemoteEndPoint; }

@@ -3,7 +3,6 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
-    using System;
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
@@ -13,15 +12,14 @@ namespace Microsoft.Azure.Amqp.Framing
     public class Begin : Performative
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:begin:list";
+        public const string Name = "amqp:begin:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000011;
-        const int Fields = 8;
+        public const ulong Code = 0x0000000000000011;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Begin() : base(Name, Code)
+        public Begin() : base(Name, Code, 8)
         {
         }
 
@@ -64,14 +62,6 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the "properties" field.
         /// </summary>
         public Fields Properties { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

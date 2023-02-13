@@ -15,20 +15,19 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Error : DescribedList, ISerializable
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:error:list";
+        public const string Name = "amqp:error:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x000000000000001d;
-        const int Fields = 3;
+        public const ulong Code = 0x000000000000001d;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Error() : base(Name, Code)
+        public Error() : base(Name, Code, 3)
         {
         }
 
         Error(SerializationInfo info, StreamingContext context)
-            : base(Name, Code)
+            : this()
         {
             this.Condition = (string)info.GetValue("Condition", typeof(string));
             this.Description = (string)info.GetValue("Description", typeof(string));
@@ -48,14 +47,6 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the "info" field.
         /// </summary>
         public Fields Info { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         internal static Error FromException(Exception exception, bool includeErrorDetails = false)
         {

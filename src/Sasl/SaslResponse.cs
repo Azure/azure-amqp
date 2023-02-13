@@ -15,25 +15,16 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// The descriptor name.
         /// </summary>
-        public static readonly string Name = "amqp:sasl-response:list";
+        public const string Name = "amqp:sasl-response:list";
         /// <summary>
         /// The descriptor code.
         /// </summary>
-        public static readonly ulong Code = 0x0000000000000043;
-        const int Fields = 1;
+        public const ulong Code = 0x0000000000000043;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public SaslResponse() : base(Name, Code) { }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
+        public SaslResponse() : base(Name, Code, 1) { }
 
         /// <summary>
         /// Gets or sets the security response data.

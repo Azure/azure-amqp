@@ -16,25 +16,16 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// The descriptor name.
         /// </summary>
-        public static readonly string Name = "amqp:sasl-outcome:list";
+        public const string Name = "amqp:sasl-outcome:list";
         /// <summary>
         /// The descriptor code.
         /// </summary>
-        public static readonly ulong Code = 0x0000000000000044;
-        const int Fields = 2;
+        public const ulong Code = 0x0000000000000044;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public SaslOutcome() : base(Name, Code) { }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
+        public SaslOutcome() : base(Name, Code, 2) { }
 
         /// <summary>
         /// Gets or sets the code that indicates the outcome of the sasl dialog.

@@ -12,10 +12,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public class Open : Performative
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:open:list";
+        public const string Name = "amqp:open:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000010;
-        const int Fields = 10;
+        public const ulong Code = 0x0000000000000010;
 
         // AMQP spec: To avoid spurious timeouts, the value in idle-time-out
         // SHOULD be half the peer’s actual timeout threshold.
@@ -29,7 +28,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Open() : base(Name, Code)
+        public Open() : base(Name, Code, 10)
         {
         }
 
@@ -86,14 +85,6 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the "properties" field.
         /// </summary>
         public Fields Properties { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         uint? ProtocolIdleTimeout
         {

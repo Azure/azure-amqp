@@ -11,26 +11,17 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// The descriptor name.
         /// </summary>
-        public static readonly string Name = "amqp:accepted:list";
+        public const string Name = "amqp:accepted:list";
         /// <summary>
         /// The descriptor code.
         /// </summary>
-        public static readonly ulong Code = 0x0000000000000024;
-        const int Fields = 0;
+        public const ulong Code = 0x0000000000000024;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Accepted() : base(Name, Code)
+        public Accepted() : base(Name, Code, 0)
         {
-        }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
         }
 
         /// <summary>

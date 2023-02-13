@@ -3,9 +3,7 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
-    using System;
     using System.Text;
-    using Microsoft.Azure.Amqp.Encoding;
 
     /// <summary>
     /// Defines the flow performative.
@@ -13,15 +11,14 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Flow : LinkPerformative
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:flow:list";
+        public const string Name = "amqp:flow:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000013;
-        const int Fields = 11;
+        public const ulong Code = 0x0000000000000013;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Flow() : base(Name, Code)
+        public Flow() : base(Name, Code, 11)
         {
         }
 
@@ -74,14 +71,6 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the "properties" field.
         /// </summary>
         public Fields Properties { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

@@ -3,7 +3,6 @@
 
 namespace Microsoft.Azure.Amqp.Transaction
 {
-    using System.ComponentModel;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
@@ -13,15 +12,14 @@ namespace Microsoft.Azure.Amqp.Transaction
     public sealed class Coordinator : DescribedList
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:coordinator:list";
+        public const string Name = "amqp:coordinator:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000030;
-        const int Fields = 1;
+        public const ulong Code = 0x0000000000000030;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Coordinator() : base(Name, Code)
+        public Coordinator() : base(Name, Code, 1)
         {
         }
 
@@ -29,14 +27,6 @@ namespace Microsoft.Azure.Amqp.Transaction
         /// Gets or sets the capabilities field.
         /// </summary>
         public Multiple<AmqpSymbol> Capabilities { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         internal override void EnsureRequired()
         {

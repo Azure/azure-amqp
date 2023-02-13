@@ -13,11 +13,11 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// The descriptor name.
         /// </summary>
-        public static readonly string Name = "amqp:amqp-value:*";
+        public const string Name = "amqp:amqp-value:*";
         /// <summary>
         /// The descriptor code.
         /// </summary>
-        public static readonly ulong Code = 0x0000000000000077;
+        public const ulong Code = 0x0000000000000077;
 
         /// <summary>
         /// Initializes the object.

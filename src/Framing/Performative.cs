@@ -15,8 +15,9 @@ namespace Microsoft.Azure.Amqp.Framing
         /// </summary>
         /// <param name="name">The descriptor name.</param>
         /// <param name="code">The descriptor code.</param>
-        protected Performative(AmqpSymbol name, ulong code)
-            : base(name, code)
+        /// <param name="fieldCount">The number of fields of the performative.</param>
+        protected Performative(AmqpSymbol name, ulong code, int fieldCount)
+            : base(name, code, fieldCount)
         {
         }
     }

@@ -15,25 +15,16 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// The descriptor name.
         /// </summary>
-        public static readonly string Name = "amqp:sasl-challenge:list";
+        public const string Name = "amqp:sasl-challenge:list";
         /// <summary>
         /// The descriptor code.
         /// </summary>
-        public static readonly ulong Code = 0x0000000000000042;
-        const int Fields = 1;
+        public const ulong Code = 0x0000000000000042;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public SaslChallenge() : base(Name, Code) { }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
+        public SaslChallenge() : base(Name, Code, 1) { }
 
         /// <summary>
         /// Gets or sets the security challenge data.

@@ -11,15 +11,14 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class End : Performative
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:end:list";
+        public const string Name = "amqp:end:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000017;
-        const int Fields = 1;
+        public const ulong Code = 0x0000000000000017;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public End() : base(Name, Code)
+        public End() : base(Name, Code, 1)
         {
         }
 
@@ -27,14 +26,6 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the "error" field.
         /// </summary>
         public Error Error { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

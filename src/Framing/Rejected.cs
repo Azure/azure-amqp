@@ -11,28 +11,19 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Rejected : Outcome
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:rejected:list";
+        public const string Name = "amqp:rejected:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000025;
-        const int Fields = 1;
+        public const ulong Code = 0x0000000000000025;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Rejected() : base(Name, Code) { }
+        public Rejected() : base(Name, Code, 1) { }
 
         /// <summary>
         /// Gets or sets the "error" field.
         /// </summary>
         public Error Error { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

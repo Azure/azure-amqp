@@ -3,15 +3,9 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
-    using Microsoft.Azure.Amqp.Encoding;
-
-    class DistributionMode
+    static class DistributionMode
     {
-        public static readonly AmqpSymbol Move = "move";
-        public static readonly AmqpSymbol Copy = "copy";
-
-        DistributionMode()
-        {
-        }
+        public const string Move = "move";
+        public const string Copy = "copy";
     }
 }

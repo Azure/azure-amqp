@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// The name of the PLAIN mechanism.
         /// </summary>
-        public static readonly string Name = "PLAIN";
+        public const string Name = "PLAIN";
         const string InvalidCredential = "Invalid user name or password.";
         ISaslPlainAuthenticator authenticator;
 

@@ -10,23 +10,24 @@ namespace Microsoft.Azure.Amqp.Framing
     /// </summary>
     public abstract class DescribedList : AmqpDescribed
     {
+        readonly int fieldCount;
+
         /// <summary>
         /// Initializes the object.
         /// </summary>
         /// <param name="name">The descriptor name.</param>
         /// <param name="code">The descriptor code.</param>
-        public DescribedList(AmqpSymbol name, ulong code)
+        /// <param name="fieldCount">The number of fields of the list.</param>
+        protected DescribedList(AmqpSymbol name, ulong code, int fieldCount)
             : base(name, code)
         {
+            this.fieldCount = fieldCount;
         }
 
         /// <summary>
         /// Gets the number of fields of the list.
         /// </summary>
-        protected abstract int FieldCount
-        {
-            get;
-        }
+        public int FieldCount { get { return this.fieldCount; } }
 
         internal override int GetValueEncodeSize()
         {

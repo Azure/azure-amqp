@@ -15,25 +15,16 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// The descriptor name.
         /// </summary>
-        public static readonly string Name = "amqp:sasl-mechanisms:list";
+        public const string Name = "amqp:sasl-mechanisms:list";
         /// <summary>
         /// The descriptor code.
         /// </summary>
-        public static readonly ulong Code = 0x0000000000000040;
-        const int Fields = 1;
+        public const ulong Code = 0x0000000000000040;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public SaslMechanisms() : base(Name, Code) { }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
+        public SaslMechanisms() : base(Name, Code, 1) { }
 
         /// <summary>
         /// Gets or sets the supported sasl mechanisms.

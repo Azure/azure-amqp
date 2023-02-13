@@ -11,15 +11,14 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Header : DescribedList
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:header:list";
+        public const string Name = "amqp:header:list";
         /// <summary>Descriptor name.</summary>
-        public static readonly ulong Code = 0x0000000000000070;
-        const int Fields = 5;
+        public const ulong Code = 0x0000000000000070;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Header() : base(Name, Code)
+        public Header() : base(Name, Code, 5)
         {
         }
 
@@ -47,14 +46,6 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the "delivery-count" field.
         /// </summary>
         public uint? DeliveryCount { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

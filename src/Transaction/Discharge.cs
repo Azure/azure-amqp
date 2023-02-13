@@ -13,15 +13,14 @@ namespace Microsoft.Azure.Amqp.Transaction
     public sealed class Discharge : Performative
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:discharge:list";
+        public const string Name = "amqp:discharge:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000032;
-        const int Fields = 2;
+        public const ulong Code = 0x0000000000000032;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Discharge() : base(Name, Code)
+        public Discharge() : base(Name, Code, 2)
         {
         }
 
@@ -34,14 +33,6 @@ namespace Microsoft.Azure.Amqp.Transaction
         /// Gets or sets the fail field.
         /// </summary>
         public bool? Fail { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

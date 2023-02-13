@@ -9,9 +9,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class DeleteOnClose : LifeTimePolicy
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:delete-on-close:list";
+        public const string Name = "amqp:delete-on-close:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x000000000000002b;
+        public const ulong Code = 0x000000000000002b;
 
         /// <summary>
         /// Initializes the object.

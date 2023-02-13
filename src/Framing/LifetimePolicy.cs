@@ -10,24 +10,14 @@ namespace Microsoft.Azure.Amqp.Framing
     /// </summary>
     public abstract class LifeTimePolicy : DescribedList
     {
-        const int Fields = 0;
-
         /// <summary>
         /// Initializes the object.
         /// </summary>
         /// <param name="name">The descriptor name.</param>
         /// <param name="code">The descriptor code.</param>
         protected LifeTimePolicy(AmqpSymbol name, ulong code)
-            : base(name, code)
+            : base(name, code, 0)
         {
-        }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
         }
 
         /// <summary>

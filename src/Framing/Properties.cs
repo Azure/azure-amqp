@@ -13,33 +13,14 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Properties : DescribedList
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:properties:list";
+        public const string Name = "amqp:properties:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000073;
-
-        const int Fields = 13;
-
-#pragma warning disable 1591
-        // These constants should not be used. They may be removed in later releases.
-        public const string MessageIdName = "message-id";
-        public const string UserIdName = "user-id";
-        public const string ToName = "to";
-        public const string SubjectName = "subject";
-        public const string ReplyToName = "reply-to";
-        public const string CorrelationIdName = "correlation-id";
-        public const string ContentTypeName = "content-type";
-        public const string ContentEncodingName = "content-encoding";
-        public const string AbsoluteExpiryTimeName = "absolute-expiry-time";
-        public const string CreationTimeName = "creation-time";
-        public const string GroupIdName = "group-id";
-        public const string GroupSequenceName = "group-sequence";
-        public const string ReplyToGroupIdName = "reply-to-group-id";
-#pragma warning restore 1591
+        public const ulong Code = 0x0000000000000073;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Properties() : base(Name, Code) { }
+        public Properties() : base(Name, Code, 13) { }
 
         /// <summary>
         /// Gets or sets the "message-id" field..
@@ -105,14 +86,6 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the "reply-to-group-id" field.
         /// </summary>
         public string ReplyToGroupId { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

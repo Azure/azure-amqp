@@ -23,7 +23,7 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// The name of the EXTERNAL mechanism.
         /// </summary>
-        public static readonly string Name = "EXTERNAL";
+        public const string Name = "EXTERNAL";
 
         /// <summary>
         /// Initializes the object.

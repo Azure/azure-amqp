@@ -9,9 +9,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Footer : DescribedAnnotations
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:footer:map";
+        public const string Name = "amqp:footer:map";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000078;
+        public const ulong Code = 0x0000000000000078;
 
         /// <summary>
         /// Initializes the object.

@@ -13,15 +13,14 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Transfer : LinkPerformative
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:transfer:list";
+        public const string Name = "amqp:transfer:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000014;
-        const int Fields = 11;
+        public const ulong Code = 0x0000000000000014;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Transfer() : base(Name, Code) { }
+        public Transfer() : base(Name, Code, 11) { }
 
         /// <summary>
         /// Gets or sets the "delivery-id" field.
@@ -72,14 +71,6 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the "batchable" field.
         /// </summary>
         public bool? Batchable { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

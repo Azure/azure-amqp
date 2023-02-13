@@ -13,15 +13,14 @@ namespace Microsoft.Azure.Amqp.Transaction
     public sealed class TransactionalState : DeliveryState
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:transactional-state:list";
+        public const string Name = "amqp:transactional-state:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000034;
-        const int Fields = 2;
+        public const ulong Code = 0x0000000000000034;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public TransactionalState() : base(Name, Code) { }
+        public TransactionalState() : base(Name, Code, 2) { }
 
         /// <summary>
         /// Gets or sets the txn-id field.
@@ -32,14 +31,6 @@ namespace Microsoft.Azure.Amqp.Transaction
         /// Gets or sets the outcome field.
         /// </summary>
         public Outcome Outcome { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

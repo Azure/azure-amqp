@@ -13,15 +13,14 @@ namespace Microsoft.Azure.Amqp.Transaction
     public sealed class Declared : Outcome
     {
         /// <summary>Descriptor name.</summary>
-        public static readonly string Name = "amqp:declared:list";
+        public const string Name = "amqp:declared:list";
         /// <summary>Descriptor code.</summary>
-        public static readonly ulong Code = 0x0000000000000033;
-        const int Fields = 1;
+        public const ulong Code = 0x0000000000000033;
 
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Declared() : base(Name, Code)
+        public Declared() : base(Name, Code, 1)
         {
         }
 
@@ -29,14 +28,6 @@ namespace Microsoft.Azure.Amqp.Transaction
         /// Gets or sets the txn-id field.
         /// </summary>
         public ArraySegment<byte> TxnId { get; set; }
-
-        /// <summary>
-        /// Gets the number of fields in the list.
-        /// </summary>
-        protected override int FieldCount
-        {
-            get { return Fields; }
-        }
 
         /// <summary>
         /// Returns a string that represents the object.

@@ -50,18 +50,6 @@
     <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <RunApiCompat Condition="!Exists('..\apicompat\$(AssemblyName).dll')">false</RunApiCompat>
-    <ApiCompatExcludeAttributeList>..\apicompat\attr-exclude.txt</ApiCompatExcludeAttributeList>
-    <ApiCompatBaseline>..\apicompat\baseline.txt</ApiCompatBaseline>
-    <BaselineAllAPICompatError>true</BaselineAllAPICompatError>
-  </PropertyGroup>
-  <ItemGroup>
-    <ResolvedMatchingContract Include="..\apicompat\$(AssemblyName).dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.ApiCompat" Version="5.0.0-beta.19557.20" PrivateAssets="All" />
-  </ItemGroup>
   <ItemGroup>
     <Compile Update="Resources.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -85,12 +73,21 @@
     </EmbeddedResource>
   </ItemGroup>
   
+  <ItemGroup>
+    <AdditionalFiles Include="..\api\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="..\api\PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+  
   <!--
     Build time packages
     All should have PrivateAssets="All" set so they don't become package dependencies
   -->
   <ItemGroup>
     <PackageReference Update="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>

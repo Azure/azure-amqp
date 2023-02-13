@@ -1,0 +1,1896 @@
+﻿abstract Microsoft.Azure.Amqp.AmqpConnectionBase.OnFrameBuffer(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+abstract Microsoft.Azure.Amqp.AmqpConnectionBase.OnProtocolHeader(Microsoft.Azure.Amqp.Framing.ProtocolHeader header) -> void
+abstract Microsoft.Azure.Amqp.AmqpLink.CreateDelivery(Microsoft.Azure.Amqp.Framing.Transfer transfer, out Microsoft.Azure.Amqp.Delivery delivery) -> bool
+abstract Microsoft.Azure.Amqp.AmqpLink.OnCreditAvailable(int session, uint link, bool drain, System.ArraySegment<byte> txnId) -> void
+abstract Microsoft.Azure.Amqp.AmqpLink.OnDisposeDeliveryInternal(Microsoft.Azure.Amqp.Delivery delivery) -> void
+abstract Microsoft.Azure.Amqp.AmqpLink.OnProcessTransfer(Microsoft.Azure.Amqp.Delivery delivery, Microsoft.Azure.Amqp.Framing.Transfer transfer, Microsoft.Azure.Amqp.Framing.Frame rawFrame) -> void
+abstract Microsoft.Azure.Amqp.AmqpLink.ProcessUnsettledDeliveries(Microsoft.Azure.Amqp.Framing.Attach remoteAttach) -> void
+abstract Microsoft.Azure.Amqp.AmqpMessage.Initialize(Microsoft.Azure.Amqp.SectionFlag desiredSections, bool force = false) -> void
+abstract Microsoft.Azure.Amqp.AmqpObject.AbortInternal() -> void
+abstract Microsoft.Azure.Amqp.AmqpObject.CloseInternal() -> bool
+abstract Microsoft.Azure.Amqp.AmqpObject.OpenInternal() -> bool
+abstract Microsoft.Azure.Amqp.Delivery.AddPayload(Microsoft.Azure.Amqp.ByteBuffer payload, bool isLast) -> void
+abstract Microsoft.Azure.Amqp.Delivery.GetPayload(int payloadSize, out bool more) -> Microsoft.Azure.Amqp.ByteBuffer
+abstract Microsoft.Azure.Amqp.Framing.DescribedList.FieldCount.get -> int
+abstract Microsoft.Azure.Amqp.Framing.DescribedList.OnDecode(Microsoft.Azure.Amqp.ByteBuffer buffer, int count) -> void
+abstract Microsoft.Azure.Amqp.Framing.DescribedList.OnEncode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+abstract Microsoft.Azure.Amqp.Framing.DescribedList.OnValueSize() -> int
+abstract Microsoft.Azure.Amqp.Sasl.SaslHandler.Clone() -> Microsoft.Azure.Amqp.Sasl.SaslHandler
+abstract Microsoft.Azure.Amqp.Sasl.SaslHandler.OnChallenge(Microsoft.Azure.Amqp.Sasl.SaslChallenge challenge) -> void
+abstract Microsoft.Azure.Amqp.Sasl.SaslHandler.OnResponse(Microsoft.Azure.Amqp.Sasl.SaslResponse response) -> void
+abstract Microsoft.Azure.Amqp.Sasl.SaslHandler.OnStart(Microsoft.Azure.Amqp.Sasl.SaslInit init, bool isClient) -> void
+abstract Microsoft.Azure.Amqp.Serialization.SerializableType.ReadObject(Microsoft.Azure.Amqp.ByteBuffer buffer) -> object
+abstract Microsoft.Azure.Amqp.Serialization.SerializableType.WriteObject(Microsoft.Azure.Amqp.ByteBuffer buffer, object graph) -> void
+abstract Microsoft.Azure.Amqp.Singleton<TValue>.OnSafeClose(TValue value) -> void
+abstract Microsoft.Azure.Amqp.Transport.TransportBase.LocalEndPoint.get -> System.Net.EndPoint
+abstract Microsoft.Azure.Amqp.Transport.TransportBase.ReadAsync(Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs args) -> bool
+abstract Microsoft.Azure.Amqp.Transport.TransportBase.RemoteEndPoint.get -> System.Net.EndPoint
+abstract Microsoft.Azure.Amqp.Transport.TransportBase.SetMonitor(Microsoft.Azure.Amqp.ITransportMonitor usageMeter) -> void
+abstract Microsoft.Azure.Amqp.Transport.TransportBase.WriteAsync(Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs args) -> bool
+abstract Microsoft.Azure.Amqp.Transport.TransportInitiator.ConnectAsync(System.TimeSpan timeout, Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs callbackArgs) -> bool
+abstract Microsoft.Azure.Amqp.Transport.TransportListener.OnListen() -> void
+abstract Microsoft.Azure.Amqp.Transport.TransportProvider.OnCreateTransport(Microsoft.Azure.Amqp.Transport.TransportBase innerTransport, bool isInitiator) -> Microsoft.Azure.Amqp.Transport.TransportBase
+abstract Microsoft.Azure.Amqp.Transport.TransportSettings.CreateInitiator() -> Microsoft.Azure.Amqp.Transport.TransportInitiator
+abstract Microsoft.Azure.Amqp.Transport.TransportSettings.CreateListener() -> Microsoft.Azure.Amqp.Transport.TransportListener
+const Microsoft.Azure.Amqp.AmqpConstants.AmqpBatchedMessageFormat = 2147563264 -> uint
+const Microsoft.Azure.Amqp.AmqpConstants.AmqpMessageFormat = 0 -> uint
+const Microsoft.Azure.Amqp.AmqpConstants.Apache = "apache.org" -> string
+const Microsoft.Azure.Amqp.AmqpConstants.DefaultMaxFrameSize = 65536 -> uint
+const Microsoft.Azure.Amqp.AmqpConstants.DefaultPort = 5672 -> int
+const Microsoft.Azure.Amqp.AmqpConstants.DefaultSecurePort = 5671 -> int
+const Microsoft.Azure.Amqp.AmqpConstants.MinMaxFrameSize = 512 -> int
+const Microsoft.Azure.Amqp.AmqpConstants.ProtocolHeaderSize = 8 -> int
+const Microsoft.Azure.Amqp.AmqpConstants.SchemeAmqp = "amqp" -> string
+const Microsoft.Azure.Amqp.AmqpConstants.SchemeAmqps = "amqps" -> string
+const Microsoft.Azure.Amqp.AmqpConstants.TransportBufferSize = 8192 -> int
+const Microsoft.Azure.Amqp.AmqpConstants.Vendor = "com.microsoft" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.AbsoluteExpiryTimeName = "absolute-expiry-time" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.ContentEncodingName = "content-encoding" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.ContentTypeName = "content-type" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.CorrelationIdName = "correlation-id" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.CreationTimeName = "creation-time" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.GroupIdName = "group-id" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.GroupSequenceName = "group-sequence" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.MessageIdName = "message-id" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.ReplyToGroupIdName = "reply-to-group-id" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.ReplyToName = "reply-to" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.SubjectName = "subject" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.ToName = "to" -> string
+const Microsoft.Azure.Amqp.Framing.Properties.UserIdName = "user-id" -> string
+Microsoft.Azure.Amqp.AmqpCbsLink
+Microsoft.Azure.Amqp.AmqpCbsLink.AmqpCbsLink(Microsoft.Azure.Amqp.AmqpConnection connection) -> void
+Microsoft.Azure.Amqp.AmqpCbsLink.BeginSendToken(Microsoft.Azure.Amqp.ICbsTokenProvider tokenProvider, System.Uri namespaceAddress, string audience, string resource, string[] requiredClaims, System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
+Microsoft.Azure.Amqp.AmqpCbsLink.Close() -> void
+Microsoft.Azure.Amqp.AmqpCbsLink.EndSendToken(System.IAsyncResult result) -> System.DateTime
+Microsoft.Azure.Amqp.AmqpCbsLink.SendTokenAsync(Microsoft.Azure.Amqp.ICbsTokenProvider tokenProvider, System.Uri namespaceAddress, string audience, string resource, string[] requiredClaims, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.DateTime>
+Microsoft.Azure.Amqp.AmqpCbsLink.SendTokenAsync(Microsoft.Azure.Amqp.ICbsTokenProvider tokenProvider, System.Uri namespaceAddress, string audience, string resource, string[] requiredClaims, System.TimeSpan timeout) -> System.Threading.Tasks.Task<System.DateTime>
+Microsoft.Azure.Amqp.AmqpCodec
+Microsoft.Azure.Amqp.AmqpConnection
+Microsoft.Azure.Amqp.AmqpConnection.AddSession(Microsoft.Azure.Amqp.AmqpSession session, ushort? channel) -> void
+Microsoft.Azure.Amqp.AmqpConnection.AmqpConnection(Microsoft.Azure.Amqp.Transport.TransportBase transport, Microsoft.Azure.Amqp.AmqpSettings amqpSettings, Microsoft.Azure.Amqp.AmqpConnectionSettings connectionSettings) -> void
+Microsoft.Azure.Amqp.AmqpConnection.AmqpConnection(Microsoft.Azure.Amqp.Transport.TransportBase transport, Microsoft.Azure.Amqp.Framing.ProtocolHeader protocolHeader, bool isInitiator, Microsoft.Azure.Amqp.AmqpSettings amqpSettings, Microsoft.Azure.Amqp.AmqpConnectionSettings connectionSettings) -> void
+Microsoft.Azure.Amqp.AmqpConnection.AmqpConnection(Microsoft.Azure.Amqp.Transport.TransportBase transport, Microsoft.Azure.Amqp.Framing.ProtocolHeader protocolHeader, Microsoft.Azure.Amqp.AmqpSettings amqpSettings, Microsoft.Azure.Amqp.AmqpConnectionSettings connectionSettings) -> void
+Microsoft.Azure.Amqp.AmqpConnection.AmqpConnection(string type, Microsoft.Azure.Amqp.Transport.TransportBase transport, Microsoft.Azure.Amqp.Framing.ProtocolHeader protocolHeader, bool isInitiator, Microsoft.Azure.Amqp.AmqpSettings amqpSettings, Microsoft.Azure.Amqp.AmqpConnectionSettings connectionSettings) -> void
+Microsoft.Azure.Amqp.AmqpConnection.AmqpSettings.get -> Microsoft.Azure.Amqp.AmqpSettings
+Microsoft.Azure.Amqp.AmqpConnection.CreateSession(Microsoft.Azure.Amqp.AmqpSessionSettings sessionSettings) -> Microsoft.Azure.Amqp.AmqpSession
+Microsoft.Azure.Amqp.AmqpConnection.Extensions.get -> System.Collections.Generic.KeyedByTypeCollection<object>
+Microsoft.Azure.Amqp.AmqpConnection.IsInitiator.get -> bool
+Microsoft.Azure.Amqp.AmqpConnection.OpenSessionAsync() -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpSession>
+Microsoft.Azure.Amqp.AmqpConnection.OpenSessionAsync(Microsoft.Azure.Amqp.AmqpSessionSettings sessionSettings) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpSession>
+Microsoft.Azure.Amqp.AmqpConnection.ProcessFrame(Microsoft.Azure.Amqp.Framing.Frame frame) -> void
+Microsoft.Azure.Amqp.AmqpConnection.SendCommand(Microsoft.Azure.Amqp.Framing.Performative command, ushort channel, Microsoft.Azure.Amqp.ByteBuffer payload) -> void
+Microsoft.Azure.Amqp.AmqpConnection.SendCommand(Microsoft.Azure.Amqp.Framing.Performative command, ushort channel, System.ArraySegment<byte>[] payload) -> void
+Microsoft.Azure.Amqp.AmqpConnection.SessionFactory.get -> Microsoft.Azure.Amqp.ISessionFactory
+Microsoft.Azure.Amqp.AmqpConnection.SessionFactory.set -> void
+Microsoft.Azure.Amqp.AmqpConnection.Sessions.get -> System.Collections.Generic.IEnumerable<Microsoft.Azure.Amqp.AmqpSession>
+Microsoft.Azure.Amqp.AmqpConnectionBase
+Microsoft.Azure.Amqp.AmqpConnectionBase.AmqpConnectionBase(string type, Microsoft.Azure.Amqp.Transport.TransportBase transport, Microsoft.Azure.Amqp.AmqpConnectionSettings settings, bool isInitiator) -> void
+Microsoft.Azure.Amqp.AmqpConnectionBase.AsyncIO.get -> Microsoft.Azure.Amqp.AsyncIO
+Microsoft.Azure.Amqp.AmqpConnectionBase.LocalEndpoint.get -> System.Net.EndPoint
+Microsoft.Azure.Amqp.AmqpConnectionBase.Principal.get -> System.Security.Principal.IPrincipal
+Microsoft.Azure.Amqp.AmqpConnectionBase.RemoteEndpoint.get -> System.Net.EndPoint
+Microsoft.Azure.Amqp.AmqpConnectionBase.SendBuffer(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+Microsoft.Azure.Amqp.AmqpConnectionBase.SendBuffer(Microsoft.Azure.Amqp.ByteBuffer cmdBuffer, Microsoft.Azure.Amqp.ByteBuffer payload) -> void
+Microsoft.Azure.Amqp.AmqpConnectionBase.SendBuffers(Microsoft.Azure.Amqp.ByteBuffer[] buffers) -> void
+Microsoft.Azure.Amqp.AmqpConnectionBase.SendDatablock(Microsoft.Azure.Amqp.Encoding.IAmqpSerializable dataBlock) -> void
+Microsoft.Azure.Amqp.AmqpConnectionBase.Settings.get -> Microsoft.Azure.Amqp.AmqpConnectionSettings
+Microsoft.Azure.Amqp.AmqpConnectionBase.UsageMeter.get -> Microsoft.Azure.Amqp.IAmqpUsageMeter
+Microsoft.Azure.Amqp.AmqpConnectionBase.UsageMeter.set -> void
+Microsoft.Azure.Amqp.AmqpConnectionFactory
+Microsoft.Azure.Amqp.AmqpConnectionFactory.AmqpConnectionFactory() -> void
+Microsoft.Azure.Amqp.AmqpConnectionFactory.AmqpConnectionFactory(Microsoft.Azure.Amqp.AmqpSettings settings) -> void
+Microsoft.Azure.Amqp.AmqpConnectionFactory.OpenConnectionAsync(string address) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpConnection>
+Microsoft.Azure.Amqp.AmqpConnectionFactory.OpenConnectionAsync(string address, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpConnection>
+Microsoft.Azure.Amqp.AmqpConnectionFactory.OpenConnectionAsync(string address, System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpConnection>
+Microsoft.Azure.Amqp.AmqpConnectionFactory.OpenConnectionAsync(System.Uri addressUri) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpConnection>
+Microsoft.Azure.Amqp.AmqpConnectionFactory.OpenConnectionAsync(System.Uri addressUri, Microsoft.Azure.Amqp.AmqpConnectionSettings connectionSettings, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpConnection>
+Microsoft.Azure.Amqp.AmqpConnectionFactory.OpenConnectionAsync(System.Uri addressUri, Microsoft.Azure.Amqp.AmqpConnectionSettings connectionSettings, System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpConnection>
+Microsoft.Azure.Amqp.AmqpConnectionFactory.OpenConnectionAsync(System.Uri addressUri, Microsoft.Azure.Amqp.Sasl.SaslHandler saslHandler, Microsoft.Azure.Amqp.AmqpConnectionSettings connectionSettings, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpConnection>
+Microsoft.Azure.Amqp.AmqpConnectionFactory.OpenConnectionAsync(System.Uri addressUri, Microsoft.Azure.Amqp.Sasl.SaslHandler saslHandler, Microsoft.Azure.Amqp.AmqpConnectionSettings connectionSettings, System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpConnection>
+Microsoft.Azure.Amqp.AmqpConnectionFactory.OpenConnectionAsync(System.Uri addressUri, Microsoft.Azure.Amqp.Sasl.SaslHandler saslHandler, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpConnection>
+Microsoft.Azure.Amqp.AmqpConnectionFactory.OpenConnectionAsync(System.Uri addressUri, Microsoft.Azure.Amqp.Sasl.SaslHandler saslHandler, System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpConnection>
+Microsoft.Azure.Amqp.AmqpConnectionFactory.OpenConnectionAsync(System.Uri addressUri, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpConnection>
+Microsoft.Azure.Amqp.AmqpConnectionFactory.OpenConnectionAsync(System.Uri addressUri, System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpConnection>
+Microsoft.Azure.Amqp.AmqpConnectionFactory.Settings.get -> Microsoft.Azure.Amqp.AmqpSettings
+Microsoft.Azure.Amqp.AmqpConnectionFactory.TlsSettings.get -> Microsoft.Azure.Amqp.Transport.TlsTransportSettings
+Microsoft.Azure.Amqp.AmqpConnectionListener
+Microsoft.Azure.Amqp.AmqpConnectionListener.AmqpConnectionListener(string address, Microsoft.Azure.Amqp.IRuntimeProvider runtime) -> void
+Microsoft.Azure.Amqp.AmqpConnectionListener.AmqpConnectionListener(System.Collections.Generic.IEnumerable<string> addresses, Microsoft.Azure.Amqp.AmqpSettings settings, Microsoft.Azure.Amqp.AmqpConnectionSettings connectionSettings) -> void
+Microsoft.Azure.Amqp.AmqpConnectionListener.Close() -> void
+Microsoft.Azure.Amqp.AmqpConnectionListener.Open() -> void
+Microsoft.Azure.Amqp.AmqpConnectionSettings
+Microsoft.Azure.Amqp.AmqpConnectionSettings.AmqpConnectionSettings() -> void
+Microsoft.Azure.Amqp.AmqpConnectionSettings.Clone() -> Microsoft.Azure.Amqp.AmqpConnectionSettings
+Microsoft.Azure.Amqp.AmqpConnectionSettings.IgnoreMissingSessions.get -> bool
+Microsoft.Azure.Amqp.AmqpConnectionSettings.IgnoreMissingSessions.set -> void
+Microsoft.Azure.Amqp.AmqpConnectionSettings.MinIdleTimeout.get -> uint
+Microsoft.Azure.Amqp.AmqpConnectionSettings.MinIdleTimeout.set -> void
+Microsoft.Azure.Amqp.AmqpConnectionSettings.OperationTimeout.get -> System.TimeSpan
+Microsoft.Azure.Amqp.AmqpConnectionSettings.OperationTimeout.set -> void
+Microsoft.Azure.Amqp.AmqpConnectionSettings.ReceiveBufferSize.get -> int
+Microsoft.Azure.Amqp.AmqpConnectionSettings.ReceiveBufferSize.set -> void
+Microsoft.Azure.Amqp.AmqpConnectionSettings.RemoteContainerId.get -> string
+Microsoft.Azure.Amqp.AmqpConnectionSettings.RemoteContainerId.set -> void
+Microsoft.Azure.Amqp.AmqpConnectionSettings.RemoteHostName.get -> string
+Microsoft.Azure.Amqp.AmqpConnectionSettings.RemoteHostName.set -> void
+Microsoft.Azure.Amqp.AmqpConnectionSettings.SendBufferSize.get -> int
+Microsoft.Azure.Amqp.AmqpConnectionSettings.SendBufferSize.set -> void
+Microsoft.Azure.Amqp.AmqpConnectionSettings.WriteBufferEmptyLimit.get -> int
+Microsoft.Azure.Amqp.AmqpConnectionSettings.WriteBufferEmptyLimit.set -> void
+Microsoft.Azure.Amqp.AmqpConnectionSettings.WriteBufferFullLimit.get -> int
+Microsoft.Azure.Amqp.AmqpConnectionSettings.WriteBufferFullLimit.set -> void
+Microsoft.Azure.Amqp.AmqpConstants
+Microsoft.Azure.Amqp.AmqpErrorCode
+Microsoft.Azure.Amqp.AmqpException
+Microsoft.Azure.Amqp.AmqpException.AmqpException(Microsoft.Azure.Amqp.Encoding.AmqpSymbol condition, string description) -> void
+Microsoft.Azure.Amqp.AmqpException.AmqpException(Microsoft.Azure.Amqp.Framing.Error error) -> void
+Microsoft.Azure.Amqp.AmqpException.Error.get -> Microsoft.Azure.Amqp.Framing.Error
+Microsoft.Azure.Amqp.AmqpInMemoryTerminusStore
+Microsoft.Azure.Amqp.AmqpInMemoryTerminusStore.AmqpInMemoryTerminusStore() -> void
+Microsoft.Azure.Amqp.AmqpInMemoryTerminusStore.RetrieveDeliveriesAsync(Microsoft.Azure.Amqp.AmqpLinkTerminus linkTerminus) -> System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<System.ArraySegment<byte>, Microsoft.Azure.Amqp.Delivery>>
+Microsoft.Azure.Amqp.AmqpInMemoryTerminusStore.SaveDeliveriesAsync(Microsoft.Azure.Amqp.AmqpLinkTerminus linkTerminus, System.Collections.Generic.IDictionary<System.ArraySegment<byte>, Microsoft.Azure.Amqp.Delivery> unsettledDeliveries) -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.AmqpInMemoryTerminusStore.TryAddLinkTerminusAsync(Microsoft.Azure.Amqp.AmqpLinkIdentifier linkIdentifier, Microsoft.Azure.Amqp.AmqpLinkTerminus linkTerminus) -> System.Threading.Tasks.Task<bool>
+Microsoft.Azure.Amqp.AmqpInMemoryTerminusStore.TryGetLinkTerminusAsync(Microsoft.Azure.Amqp.AmqpLinkIdentifier linkIdentifier, out Microsoft.Azure.Amqp.AmqpLinkTerminus linkTerminus) -> System.Threading.Tasks.Task<bool>
+Microsoft.Azure.Amqp.AmqpInMemoryTerminusStore.TryRemoveDeliveryAsync(Microsoft.Azure.Amqp.AmqpLinkTerminus linkTerminus, System.ArraySegment<byte> deliveryTag) -> System.Threading.Tasks.Task<bool>
+Microsoft.Azure.Amqp.AmqpInMemoryTerminusStore.TryRemoveLinkTerminusAsync(Microsoft.Azure.Amqp.AmqpLinkIdentifier linkIdentifier, Microsoft.Azure.Amqp.AmqpLinkTerminus linkTerminus) -> System.Threading.Tasks.Task<bool>
+Microsoft.Azure.Amqp.AmqpLink
+Microsoft.Azure.Amqp.AmqpLink.AmqpLink(Microsoft.Azure.Amqp.AmqpSession session, Microsoft.Azure.Amqp.AmqpLinkSettings linkSettings) -> void
+Microsoft.Azure.Amqp.AmqpLink.AmqpLink(string type, Microsoft.Azure.Amqp.AmqpSession session, Microsoft.Azure.Amqp.AmqpLinkSettings linkSettings) -> void
+Microsoft.Azure.Amqp.AmqpLink.AttachTo(Microsoft.Azure.Amqp.AmqpSession session) -> void
+Microsoft.Azure.Amqp.AmqpLink.DisposeDelivery(Microsoft.Azure.Amqp.Delivery delivery, bool settled, Microsoft.Azure.Amqp.Framing.DeliveryState state) -> void
+Microsoft.Azure.Amqp.AmqpLink.DisposeDelivery(Microsoft.Azure.Amqp.Delivery delivery, bool settled, Microsoft.Azure.Amqp.Framing.DeliveryState state, bool noFlush) -> void
+Microsoft.Azure.Amqp.AmqpLink.DisposeDelivery(System.ArraySegment<byte> deliveryTag, bool settled, Microsoft.Azure.Amqp.Framing.DeliveryState state, bool batchable) -> bool
+Microsoft.Azure.Amqp.AmqpLink.Drain.get -> bool
+Microsoft.Azure.Amqp.AmqpLink.ForceSendDelivery(Microsoft.Azure.Amqp.Delivery delivery) -> void
+Microsoft.Azure.Amqp.AmqpLink.IsReceiver.get -> bool
+Microsoft.Azure.Amqp.AmqpLink.IssueCredit(uint credit, bool drain, System.ArraySegment<byte> txnId) -> void
+Microsoft.Azure.Amqp.AmqpLink.LinkCredit.get -> uint
+Microsoft.Azure.Amqp.AmqpLink.LinkCredit.set -> void
+Microsoft.Azure.Amqp.AmqpLink.LinkIdentifier.get -> Microsoft.Azure.Amqp.AmqpLinkIdentifier
+Microsoft.Azure.Amqp.AmqpLink.LocalHandle.get -> uint?
+Microsoft.Azure.Amqp.AmqpLink.LocalHandle.set -> void
+Microsoft.Azure.Amqp.AmqpLink.MaxFrameSize.get -> uint
+Microsoft.Azure.Amqp.AmqpLink.MaxFrameSize.set -> void
+Microsoft.Azure.Amqp.AmqpLink.Name.get -> string
+Microsoft.Azure.Amqp.AmqpLink.ProcessFlow(Microsoft.Azure.Amqp.Framing.Flow flow) -> uint
+Microsoft.Azure.Amqp.AmqpLink.ProcessFrame(Microsoft.Azure.Amqp.Framing.Frame frame) -> void
+Microsoft.Azure.Amqp.AmqpLink.PropertyReceived -> System.EventHandler
+Microsoft.Azure.Amqp.AmqpLink.RegisterCreditListener(System.Action<uint, bool, System.ArraySegment<byte>> creditListener) -> void
+Microsoft.Azure.Amqp.AmqpLink.RemoteHandle.get -> uint?
+Microsoft.Azure.Amqp.AmqpLink.RemoteHandle.set -> void
+Microsoft.Azure.Amqp.AmqpLink.SendFlow(bool echo) -> void
+Microsoft.Azure.Amqp.AmqpLink.SendProperties(Microsoft.Azure.Amqp.Framing.Fields properties) -> void
+Microsoft.Azure.Amqp.AmqpLink.Session.get -> Microsoft.Azure.Amqp.AmqpSession
+Microsoft.Azure.Amqp.AmqpLink.Settings.get -> Microsoft.Azure.Amqp.AmqpLinkSettings
+Microsoft.Azure.Amqp.AmqpLink.SetTotalLinkCredit(uint totalCredit, bool applyNow, bool updateAutoFlow = false) -> void
+Microsoft.Azure.Amqp.AmqpLink.SyncRoot.get -> object
+Microsoft.Azure.Amqp.AmqpLink.TrySendDelivery(Microsoft.Azure.Amqp.Delivery delivery) -> bool
+Microsoft.Azure.Amqp.AmqpLink.UnsettledMap.get -> System.Collections.Generic.IDictionary<System.ArraySegment<byte>, Microsoft.Azure.Amqp.Delivery>
+Microsoft.Azure.Amqp.AmqpLinkIdentifier
+Microsoft.Azure.Amqp.AmqpLinkIdentifier.AmqpLinkIdentifier(string linkName, bool isReceiver, string containerId) -> void
+Microsoft.Azure.Amqp.AmqpLinkIdentifier.ContainerId.get -> string
+Microsoft.Azure.Amqp.AmqpLinkIdentifier.IsReceiver.get -> bool
+Microsoft.Azure.Amqp.AmqpLinkIdentifier.LinkName.get -> string
+Microsoft.Azure.Amqp.AmqpLinkSettings
+Microsoft.Azure.Amqp.AmqpLinkSettings.AmqpLinkSettings() -> void
+Microsoft.Azure.Amqp.AmqpLinkSettings.AutoSendFlow.get -> bool
+Microsoft.Azure.Amqp.AmqpLinkSettings.AutoSendFlow.set -> void
+Microsoft.Azure.Amqp.AmqpLinkSettings.FlowThreshold.get -> int
+Microsoft.Azure.Amqp.AmqpLinkSettings.FlowThreshold.set -> void
+Microsoft.Azure.Amqp.AmqpLinkSettings.OperationTimeout.get -> System.TimeSpan
+Microsoft.Azure.Amqp.AmqpLinkSettings.OperationTimeout.set -> void
+Microsoft.Azure.Amqp.AmqpLinkSettings.SettleType.get -> Microsoft.Azure.Amqp.SettleMode
+Microsoft.Azure.Amqp.AmqpLinkSettings.SettleType.set -> void
+Microsoft.Azure.Amqp.AmqpLinkSettings.TotalCacheSizeInBytes.get -> long?
+Microsoft.Azure.Amqp.AmqpLinkSettings.TotalCacheSizeInBytes.set -> void
+Microsoft.Azure.Amqp.AmqpLinkSettings.TotalLinkCredit.get -> uint
+Microsoft.Azure.Amqp.AmqpLinkSettings.TotalLinkCredit.set -> void
+Microsoft.Azure.Amqp.AmqpLinkTerminus
+Microsoft.Azure.Amqp.AmqpLinkTerminus.AmqpLinkTerminus(Microsoft.Azure.Amqp.AmqpLinkIdentifier identifier, Microsoft.Azure.Amqp.AmqpLinkSettings linkSettings, Microsoft.Azure.Amqp.IAmqpTerminusStore terminusStore) -> void
+Microsoft.Azure.Amqp.AmqpLinkTerminus.DisassociateLink() -> void
+Microsoft.Azure.Amqp.AmqpLinkTerminus.Dispose() -> void
+Microsoft.Azure.Amqp.AmqpLinkTerminus.Expired -> System.EventHandler
+Microsoft.Azure.Amqp.AmqpLinkTerminus.ExpireTimer.get -> System.Timers.Timer
+Microsoft.Azure.Amqp.AmqpLinkTerminus.ExpireTimer.set -> void
+Microsoft.Azure.Amqp.AmqpLinkTerminus.Identifier.get -> Microsoft.Azure.Amqp.AmqpLinkIdentifier
+Microsoft.Azure.Amqp.AmqpLinkTerminus.Link.get -> Microsoft.Azure.Amqp.AmqpLink
+Microsoft.Azure.Amqp.AmqpLinkTerminus.LinkSettings.get -> Microsoft.Azure.Amqp.AmqpLinkSettings
+Microsoft.Azure.Amqp.AmqpLinkTerminus.NegotiateUnsettledDeliveriesAsync(Microsoft.Azure.Amqp.Framing.Attach remoteAttach) -> System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<System.ArraySegment<byte>, Microsoft.Azure.Amqp.Delivery>>
+Microsoft.Azure.Amqp.AmqpLinkTerminus.Suspended -> System.EventHandler
+Microsoft.Azure.Amqp.AmqpLinkTerminus.TerminusStore.get -> Microsoft.Azure.Amqp.IAmqpTerminusStore
+Microsoft.Azure.Amqp.AmqpLinkTerminus.TryAssociateLink(Microsoft.Azure.Amqp.AmqpLink newLink, out Microsoft.Azure.Amqp.AmqpLink stolenLink) -> bool
+Microsoft.Azure.Amqp.AmqpMessage
+Microsoft.Azure.Amqp.AmqpMessage.AmqpMessage() -> void
+Microsoft.Azure.Amqp.AmqpMessage.ApplicationProperties.get -> Microsoft.Azure.Amqp.Framing.ApplicationProperties
+Microsoft.Azure.Amqp.AmqpMessage.ApplicationProperties.set -> void
+Microsoft.Azure.Amqp.AmqpMessage.BodyType.get -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.AmqpMessage.Buffer.get -> Microsoft.Azure.Amqp.ByteBuffer
+Microsoft.Azure.Amqp.AmqpMessage.Buffer.set -> void
+Microsoft.Azure.Amqp.AmqpMessage.Clone() -> Microsoft.Azure.Amqp.AmqpMessage
+Microsoft.Azure.Amqp.AmqpMessage.Clone(bool deepCopy) -> Microsoft.Azure.Amqp.AmqpMessage
+Microsoft.Azure.Amqp.AmqpMessage.DeliveryAnnotations.get -> Microsoft.Azure.Amqp.Framing.DeliveryAnnotations
+Microsoft.Azure.Amqp.AmqpMessage.DeliveryAnnotations.set -> void
+Microsoft.Azure.Amqp.AmqpMessage.Footer.get -> Microsoft.Azure.Amqp.Framing.Footer
+Microsoft.Azure.Amqp.AmqpMessage.Footer.set -> void
+Microsoft.Azure.Amqp.AmqpMessage.GetPayload() -> System.ArraySegment<byte>[]
+Microsoft.Azure.Amqp.AmqpMessage.Header.get -> Microsoft.Azure.Amqp.Framing.Header
+Microsoft.Azure.Amqp.AmqpMessage.Header.set -> void
+Microsoft.Azure.Amqp.AmqpMessage.MessageAnnotations.get -> Microsoft.Azure.Amqp.Framing.MessageAnnotations
+Microsoft.Azure.Amqp.AmqpMessage.MessageAnnotations.set -> void
+Microsoft.Azure.Amqp.AmqpMessage.Properties.get -> Microsoft.Azure.Amqp.Framing.Properties
+Microsoft.Azure.Amqp.AmqpMessage.Properties.set -> void
+Microsoft.Azure.Amqp.AmqpMessage.Sections.get -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.AmqpMessage.Serialize(bool force) -> long
+Microsoft.Azure.Amqp.AmqpMessage.ThrowIfDisposed() -> void
+Microsoft.Azure.Amqp.AmqpObject
+Microsoft.Azure.Amqp.AmqpObject.Abort() -> void
+Microsoft.Azure.Amqp.AmqpObject.AmqpObject(string type) -> void
+Microsoft.Azure.Amqp.AmqpObject.AmqpObject(string type, Microsoft.Azure.Amqp.SequenceNumber identifier) -> void
+Microsoft.Azure.Amqp.AmqpObject.BeginClose(System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
+Microsoft.Azure.Amqp.AmqpObject.BeginOpen(System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
+Microsoft.Azure.Amqp.AmqpObject.Close() -> void
+Microsoft.Azure.Amqp.AmqpObject.Close(System.TimeSpan timeout) -> void
+Microsoft.Azure.Amqp.AmqpObject.CloseAsync() -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.AmqpObject.CloseAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.AmqpObject.CloseAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.AmqpObject.Closed -> System.EventHandler
+Microsoft.Azure.Amqp.AmqpObject.EndClose(System.IAsyncResult result) -> void
+Microsoft.Azure.Amqp.AmqpObject.EndOpen(System.IAsyncResult result) -> void
+Microsoft.Azure.Amqp.AmqpObject.Identifier.get -> Microsoft.Azure.Amqp.SequenceNumber
+Microsoft.Azure.Amqp.AmqpObject.IsClosing() -> bool
+Microsoft.Azure.Amqp.AmqpObject.Open() -> void
+Microsoft.Azure.Amqp.AmqpObject.Open(System.TimeSpan timeout) -> void
+Microsoft.Azure.Amqp.AmqpObject.OpenAsync() -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.AmqpObject.OpenAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.AmqpObject.OpenAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.AmqpObject.Opened -> System.EventHandler
+Microsoft.Azure.Amqp.AmqpObject.Opening -> System.EventHandler<Microsoft.Azure.Amqp.OpenEventArgs>
+Microsoft.Azure.Amqp.AmqpObject.SafeAddClosed(System.EventHandler handler) -> void
+Microsoft.Azure.Amqp.AmqpObject.SafeClose() -> void
+Microsoft.Azure.Amqp.AmqpObject.SafeClose(System.Exception exception) -> void
+Microsoft.Azure.Amqp.AmqpObject.State.get -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObject.State.set -> void
+Microsoft.Azure.Amqp.AmqpObject.TerminalException.get -> System.Exception
+Microsoft.Azure.Amqp.AmqpObject.TerminalException.set -> void
+Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObjectState.ClosePipe = 8 -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObjectState.CloseReceived = 11 -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObjectState.CloseSent = 10 -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObjectState.End = 12 -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObjectState.HeaderExchanged = 5 -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObjectState.HeaderReceived = 4 -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObjectState.HeaderSent = 1 -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObjectState.OpenClosePipe = 3 -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObjectState.Opened = 9 -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObjectState.OpenPipe = 2 -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObjectState.OpenReceived = 7 -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObjectState.OpenSent = 6 -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpObjectState.Start = 0 -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.Accepted = 202 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.Ambiguous = 300 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.BadGateway = 502 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.BadRequest = 400 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.Conflict = 409 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.Continue = 100 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.Created = 201 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.ExpectationFailed = 417 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.Forbidden = 403 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.Found = 302 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.GatewayTimeout = 504 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.Gone = 410 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.HttpVersionNotSupported = 505 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.InternalServerError = 500 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.LengthRequired = 411 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.MethodNotAllowed = 405 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.Moved = 301 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.MovedPermanently = 301 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.MultipleChoices = 300 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.NoContent = 204 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.NonAuthoritativeInformation = 203 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.NotAcceptable = 406 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.NotFound = 404 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.NotImplemented = 501 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.NotModified = 304 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.OK = 200 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.PartialContent = 206 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.PaymentRequired = 402 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.PreconditionFailed = 412 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.ProxyAuthenticationRequired = 407 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.Redirect = 302 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.RedirectKeepVerb = 307 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.RedirectMethod = 303 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.RequestedRangeNotSatisfiable = 416 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.RequestEntityTooLarge = 413 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.RequestTimeout = 408 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.RequestUriTooLong = 414 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.ResetContent = 205 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.SeeOther = 303 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.ServiceUnavailable = 503 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.SwitchingProtocols = 101 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.TemporaryRedirect = 307 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.Unauthorized = 401 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.UnsupportedMediaType = 415 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.Unused = 306 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.UpgradeRequired = 426 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpResponseStatusCode.UseProxy = 305 -> Microsoft.Azure.Amqp.AmqpResponseStatusCode
+Microsoft.Azure.Amqp.AmqpSession
+Microsoft.Azure.Amqp.AmqpSession.AmqpSession(Microsoft.Azure.Amqp.AmqpConnection connection, Microsoft.Azure.Amqp.AmqpSessionSettings settings, Microsoft.Azure.Amqp.ILinkFactory linkFactory) -> void
+Microsoft.Azure.Amqp.AmqpSession.AmqpSession(string type, Microsoft.Azure.Amqp.AmqpConnection connection, Microsoft.Azure.Amqp.AmqpSessionSettings settings, Microsoft.Azure.Amqp.ILinkFactory linkFactory) -> void
+Microsoft.Azure.Amqp.AmqpSession.AttachLink(Microsoft.Azure.Amqp.AmqpLink link) -> void
+Microsoft.Azure.Amqp.AmqpSession.Connection.get -> Microsoft.Azure.Amqp.AmqpConnection
+Microsoft.Azure.Amqp.AmqpSession.DisposeDelivery(Microsoft.Azure.Amqp.AmqpLink link, Microsoft.Azure.Amqp.Delivery delivery, bool settled, Microsoft.Azure.Amqp.Framing.DeliveryState state, bool noFlush) -> void
+Microsoft.Azure.Amqp.AmqpSession.Flush() -> void
+Microsoft.Azure.Amqp.AmqpSession.LinkFactory.get -> Microsoft.Azure.Amqp.ILinkFactory
+Microsoft.Azure.Amqp.AmqpSession.LocalChannel.get -> ushort
+Microsoft.Azure.Amqp.AmqpSession.LocalChannel.set -> void
+Microsoft.Azure.Amqp.AmqpSession.RemoteChannel.get -> ushort?
+Microsoft.Azure.Amqp.AmqpSession.RemoteChannel.set -> void
+Microsoft.Azure.Amqp.AmqpSession.SendBegin() -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpSession.SendEnd() -> Microsoft.Azure.Amqp.AmqpObjectState
+Microsoft.Azure.Amqp.AmqpSession.SendFlow(Microsoft.Azure.Amqp.Framing.Flow flow) -> void
+Microsoft.Azure.Amqp.AmqpSession.Settings.get -> Microsoft.Azure.Amqp.AmqpSessionSettings
+Microsoft.Azure.Amqp.AmqpSession.TrySendTransfer(Microsoft.Azure.Amqp.Delivery delivery, Microsoft.Azure.Amqp.Framing.Transfer transfer, Microsoft.Azure.Amqp.ByteBuffer payload) -> bool
+Microsoft.Azure.Amqp.AmqpSessionSettings
+Microsoft.Azure.Amqp.AmqpSessionSettings.AmqpSessionSettings() -> void
+Microsoft.Azure.Amqp.AmqpSessionSettings.Clone() -> Microsoft.Azure.Amqp.AmqpSessionSettings
+Microsoft.Azure.Amqp.AmqpSessionSettings.DispositionInterval.get -> System.TimeSpan
+Microsoft.Azure.Amqp.AmqpSessionSettings.DispositionInterval.set -> void
+Microsoft.Azure.Amqp.AmqpSessionSettings.DispositionThreshold.get -> int
+Microsoft.Azure.Amqp.AmqpSessionSettings.DispositionThreshold.set -> void
+Microsoft.Azure.Amqp.AmqpSessionSettings.IgnoreMissingLinks.get -> bool
+Microsoft.Azure.Amqp.AmqpSessionSettings.IgnoreMissingLinks.set -> void
+Microsoft.Azure.Amqp.AmqpSessionSettings.InitialDeliveryId.get -> Microsoft.Azure.Amqp.SequenceNumber
+Microsoft.Azure.Amqp.AmqpSessionSettings.InitialDeliveryId.set -> void
+Microsoft.Azure.Amqp.AmqpSettings
+Microsoft.Azure.Amqp.AmqpSettings.AllowAnonymousConnection.get -> bool
+Microsoft.Azure.Amqp.AmqpSettings.AllowAnonymousConnection.set -> void
+Microsoft.Azure.Amqp.AmqpSettings.AmqpSettings() -> void
+Microsoft.Azure.Amqp.AmqpSettings.Clone() -> Microsoft.Azure.Amqp.AmqpSettings
+Microsoft.Azure.Amqp.AmqpSettings.DefaultLinkCredit.get -> uint
+Microsoft.Azure.Amqp.AmqpSettings.DefaultLinkCredit.set -> void
+Microsoft.Azure.Amqp.AmqpSettings.MaxConcurrentConnections.get -> int
+Microsoft.Azure.Amqp.AmqpSettings.MaxConcurrentConnections.set -> void
+Microsoft.Azure.Amqp.AmqpSettings.MaxLinksPerSession.get -> int
+Microsoft.Azure.Amqp.AmqpSettings.MaxLinksPerSession.set -> void
+Microsoft.Azure.Amqp.AmqpSettings.RequireSecureTransport.get -> bool
+Microsoft.Azure.Amqp.AmqpSettings.RequireSecureTransport.set -> void
+Microsoft.Azure.Amqp.AmqpSettings.RuntimeProvider.get -> Microsoft.Azure.Amqp.IRuntimeProvider
+Microsoft.Azure.Amqp.AmqpSettings.RuntimeProvider.set -> void
+Microsoft.Azure.Amqp.AmqpSettings.TerminusStore.get -> Microsoft.Azure.Amqp.IAmqpTerminusStore
+Microsoft.Azure.Amqp.AmqpSettings.TerminusStore.set -> void
+Microsoft.Azure.Amqp.AmqpSettings.TransportProviders.get -> System.Collections.Generic.IList<Microsoft.Azure.Amqp.Transport.TransportProvider>
+Microsoft.Azure.Amqp.AmqpTrace
+Microsoft.Azure.Amqp.AmqpTrace.AmqpTrace() -> void
+Microsoft.Azure.Amqp.AmqpVersion
+Microsoft.Azure.Amqp.AmqpVersion.AmqpVersion() -> void
+Microsoft.Azure.Amqp.AmqpVersion.AmqpVersion(byte major, byte minor, byte revision) -> void
+Microsoft.Azure.Amqp.AmqpVersion.AmqpVersion(System.Version version) -> void
+Microsoft.Azure.Amqp.AmqpVersion.Equals(Microsoft.Azure.Amqp.AmqpVersion other) -> bool
+Microsoft.Azure.Amqp.AmqpVersion.Major.get -> byte
+Microsoft.Azure.Amqp.AmqpVersion.Minor.get -> byte
+Microsoft.Azure.Amqp.AmqpVersion.Revision.get -> byte
+Microsoft.Azure.Amqp.AsyncIO
+Microsoft.Azure.Amqp.BufferListStream
+Microsoft.Azure.Amqp.BufferListStream.BufferListStream(System.Collections.Generic.IList<System.ArraySegment<byte>> arraySegments) -> void
+Microsoft.Azure.Amqp.BufferListStream.Clone() -> object
+Microsoft.Azure.Amqp.BufferListStream.ReadBuffers(int count, bool advance, out bool more) -> System.ArraySegment<byte>[]
+Microsoft.Azure.Amqp.BufferListStream.ReadBytes(int count) -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.ByteBuffer
+Microsoft.Azure.Amqp.ByteBuffer.AddReference() -> Microsoft.Azure.Amqp.ByteBuffer
+Microsoft.Azure.Amqp.ByteBuffer.AdjustPosition(int offset, int length) -> void
+Microsoft.Azure.Amqp.ByteBuffer.Append(int size) -> void
+Microsoft.Azure.Amqp.ByteBuffer.Buffer.get -> byte[]
+Microsoft.Azure.Amqp.ByteBuffer.ByteBuffer(byte[] buffer) -> void
+Microsoft.Azure.Amqp.ByteBuffer.ByteBuffer(byte[] buffer, bool autoGrow) -> void
+Microsoft.Azure.Amqp.ByteBuffer.ByteBuffer(byte[] buffer, int offset, int count) -> void
+Microsoft.Azure.Amqp.ByteBuffer.ByteBuffer(int size, bool autoGrow) -> void
+Microsoft.Azure.Amqp.ByteBuffer.ByteBuffer(int size, bool autoGrow, bool isTransportBuffer) -> void
+Microsoft.Azure.Amqp.ByteBuffer.ByteBuffer(System.ArraySegment<byte> array) -> void
+Microsoft.Azure.Amqp.ByteBuffer.Capacity.get -> int
+Microsoft.Azure.Amqp.ByteBuffer.Complete(int size) -> void
+Microsoft.Azure.Amqp.ByteBuffer.Dispose() -> void
+Microsoft.Azure.Amqp.ByteBuffer.GetSlice(int position, int length) -> Microsoft.Azure.Amqp.ByteBuffer
+Microsoft.Azure.Amqp.ByteBuffer.Length.get -> int
+Microsoft.Azure.Amqp.ByteBuffer.Offset.get -> int
+Microsoft.Azure.Amqp.ByteBuffer.RemoveReference() -> void
+Microsoft.Azure.Amqp.ByteBuffer.Reset() -> void
+Microsoft.Azure.Amqp.ByteBuffer.Seek(int seekPosition) -> void
+Microsoft.Azure.Amqp.ByteBuffer.Size.get -> int
+Microsoft.Azure.Amqp.ByteBuffer.TryAddReference() -> bool
+Microsoft.Azure.Amqp.ByteBuffer.Validate(bool write, int dataSize) -> void
+Microsoft.Azure.Amqp.ByteBuffer.ValidateRead(int dataSize) -> void
+Microsoft.Azure.Amqp.ByteBuffer.ValidateWrite(int dataSize) -> void
+Microsoft.Azure.Amqp.ByteBuffer.WritePos.get -> int
+Microsoft.Azure.Amqp.CbsToken
+Microsoft.Azure.Amqp.CbsToken.CbsToken(object tokenValue, string tokenType, System.DateTime expiresAtUtc) -> void
+Microsoft.Azure.Amqp.CbsToken.ExpiresAtUtc.get -> System.DateTime
+Microsoft.Azure.Amqp.CbsToken.TokenType.get -> string
+Microsoft.Azure.Amqp.CbsToken.TokenValue.get -> object
+Microsoft.Azure.Amqp.Delivery
+Microsoft.Azure.Amqp.Delivery.Batchable.get -> bool
+Microsoft.Azure.Amqp.Delivery.Batchable.set -> void
+Microsoft.Azure.Amqp.Delivery.BytesTransfered.get -> long
+Microsoft.Azure.Amqp.Delivery.Delivery() -> void
+Microsoft.Azure.Amqp.Delivery.DeliveryId.get -> Microsoft.Azure.Amqp.SequenceNumber
+Microsoft.Azure.Amqp.Delivery.DeliveryId.set -> void
+Microsoft.Azure.Amqp.Delivery.DeliveryTag.get -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.Delivery.DeliveryTag.set -> void
+Microsoft.Azure.Amqp.Delivery.Dispose() -> void
+Microsoft.Azure.Amqp.Delivery.Link.get -> Microsoft.Azure.Amqp.AmqpLink
+Microsoft.Azure.Amqp.Delivery.Link.set -> void
+Microsoft.Azure.Amqp.Delivery.MessageFormat.get -> uint?
+Microsoft.Azure.Amqp.Delivery.MessageFormat.set -> void
+Microsoft.Azure.Amqp.Delivery.Resume.get -> bool
+Microsoft.Azure.Amqp.Delivery.Resume.set -> void
+Microsoft.Azure.Amqp.Delivery.Segments.get -> int
+Microsoft.Azure.Amqp.Delivery.Segments.set -> void
+Microsoft.Azure.Amqp.Delivery.Settled.get -> bool
+Microsoft.Azure.Amqp.Delivery.Settled.set -> void
+Microsoft.Azure.Amqp.Delivery.State.get -> Microsoft.Azure.Amqp.Framing.DeliveryState
+Microsoft.Azure.Amqp.Delivery.State.set -> void
+Microsoft.Azure.Amqp.Delivery.StateChanged.get -> bool
+Microsoft.Azure.Amqp.Delivery.StateChanged.set -> void
+Microsoft.Azure.Amqp.Delivery.TxnId.get -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.Delivery.TxnId.set -> void
+Microsoft.Azure.Amqp.Encoding.AmqpBitConverter
+Microsoft.Azure.Amqp.Encoding.AmqpEncoding
+Microsoft.Azure.Amqp.Encoding.AmqpMap
+Microsoft.Azure.Amqp.Encoding.AmqpMap.AmqpMap() -> void
+Microsoft.Azure.Amqp.Encoding.AmqpMap.AmqpMap(System.Collections.IDictionary value) -> void
+Microsoft.Azure.Amqp.Encoding.AmqpMap.this[Microsoft.Azure.Amqp.Encoding.MapKey key].get -> object
+Microsoft.Azure.Amqp.Encoding.AmqpMap.this[Microsoft.Azure.Amqp.Encoding.MapKey key].set -> void
+Microsoft.Azure.Amqp.Encoding.AmqpMap.TryGetValue<TValue>(Microsoft.Azure.Amqp.Encoding.MapKey key, out TValue value) -> bool
+Microsoft.Azure.Amqp.Encoding.AmqpMap.TryRemoveValue<TValue>(Microsoft.Azure.Amqp.Encoding.MapKey key, out TValue value) -> bool
+Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+Microsoft.Azure.Amqp.Encoding.AmqpSymbol.AmqpSymbol() -> void
+Microsoft.Azure.Amqp.Encoding.AmqpSymbol.AmqpSymbol(string value) -> void
+Microsoft.Azure.Amqp.Encoding.AmqpSymbol.Equals(Microsoft.Azure.Amqp.Encoding.AmqpSymbol other) -> bool
+Microsoft.Azure.Amqp.Encoding.AmqpSymbol.Value.get -> string
+Microsoft.Azure.Amqp.Encoding.DescribedType
+Microsoft.Azure.Amqp.Encoding.DescribedType.DescribedType(object descriptor, object value) -> void
+Microsoft.Azure.Amqp.Encoding.DescribedType.Descriptor.get -> object
+Microsoft.Azure.Amqp.Encoding.DescribedType.Value.get -> object
+Microsoft.Azure.Amqp.Encoding.DescribedType.Value.set -> void
+Microsoft.Azure.Amqp.Encoding.IAmqpSerializable
+Microsoft.Azure.Amqp.Encoding.IAmqpSerializable.Decode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+Microsoft.Azure.Amqp.Encoding.IAmqpSerializable.Encode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+Microsoft.Azure.Amqp.Encoding.IAmqpSerializable.EncodeSize.get -> int
+Microsoft.Azure.Amqp.Encoding.MapKey
+Microsoft.Azure.Amqp.Encoding.MapKey.Equals(Microsoft.Azure.Amqp.Encoding.MapKey other) -> bool
+Microsoft.Azure.Amqp.Encoding.MapKey.Key.get -> object
+Microsoft.Azure.Amqp.Encoding.MapKey.MapKey() -> void
+Microsoft.Azure.Amqp.Encoding.MapKey.MapKey(object key) -> void
+Microsoft.Azure.Amqp.Extensions
+Microsoft.Azure.Amqp.FaultTolerantAmqpObject<T>
+Microsoft.Azure.Amqp.FaultTolerantAmqpObject<T>.FaultTolerantAmqpObject(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<T>> createObjectAsync, System.Action<T> closeObject) -> void
+Microsoft.Azure.Amqp.FaultTolerantAmqpObject<T>.FaultTolerantAmqpObject(System.Func<System.TimeSpan, System.Threading.Tasks.Task<T>> createObjectAsync, System.Action<T> closeObject) -> void
+Microsoft.Azure.Amqp.FaultTolerantAmqpObject<T>.TryGetOpenedObject(out T openedAmqpObject) -> bool
+Microsoft.Azure.Amqp.Framing.Accepted
+Microsoft.Azure.Amqp.Framing.Accepted.Accepted() -> void
+Microsoft.Azure.Amqp.Framing.Address
+Microsoft.Azure.Amqp.Framing.Address.Address() -> void
+Microsoft.Azure.Amqp.Framing.AmqpDescribed
+Microsoft.Azure.Amqp.Framing.AmqpDescribed.AddFieldToString(bool condition, System.Text.StringBuilder sb, string fieldName, object value, ref int count) -> void
+Microsoft.Azure.Amqp.Framing.AmqpDescribed.AmqpDescribed(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.AmqpDescribed.Decode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+Microsoft.Azure.Amqp.Framing.AmqpDescribed.DescriptorCode.get -> ulong
+Microsoft.Azure.Amqp.Framing.AmqpDescribed.DescriptorName.get -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+Microsoft.Azure.Amqp.Framing.AmqpDescribed.Encode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+Microsoft.Azure.Amqp.Framing.AmqpDescribed.EncodeSize.get -> int
+Microsoft.Azure.Amqp.Framing.AmqpSequence
+Microsoft.Azure.Amqp.Framing.AmqpSequence.AmqpSequence() -> void
+Microsoft.Azure.Amqp.Framing.AmqpSequence.AmqpSequence(System.Collections.IList innerList) -> void
+Microsoft.Azure.Amqp.Framing.AmqpSequence.List.get -> System.Collections.IList
+Microsoft.Azure.Amqp.Framing.AmqpValue
+Microsoft.Azure.Amqp.Framing.AmqpValue.AmqpValue() -> void
+Microsoft.Azure.Amqp.Framing.Annotations
+Microsoft.Azure.Amqp.Framing.Annotations.Annotations() -> void
+Microsoft.Azure.Amqp.Framing.ApplicationProperties
+Microsoft.Azure.Amqp.Framing.ApplicationProperties.ApplicationProperties() -> void
+Microsoft.Azure.Amqp.Framing.ApplicationProperties.Map.get -> Microsoft.Azure.Amqp.Framing.PropertiesMap
+Microsoft.Azure.Amqp.Framing.Attach
+Microsoft.Azure.Amqp.Framing.Attach.Attach() -> void
+Microsoft.Azure.Amqp.Framing.Attach.DesiredCapabilities.get -> Microsoft.Azure.Amqp.Framing.Multiple<Microsoft.Azure.Amqp.Encoding.AmqpSymbol>
+Microsoft.Azure.Amqp.Framing.Attach.DesiredCapabilities.set -> void
+Microsoft.Azure.Amqp.Framing.Attach.IncompleteUnsettled.get -> bool?
+Microsoft.Azure.Amqp.Framing.Attach.IncompleteUnsettled.set -> void
+Microsoft.Azure.Amqp.Framing.Attach.InitialDeliveryCount.get -> uint?
+Microsoft.Azure.Amqp.Framing.Attach.InitialDeliveryCount.set -> void
+Microsoft.Azure.Amqp.Framing.Attach.LinkName.get -> string
+Microsoft.Azure.Amqp.Framing.Attach.LinkName.set -> void
+Microsoft.Azure.Amqp.Framing.Attach.MaxMessageSize.get -> ulong?
+Microsoft.Azure.Amqp.Framing.Attach.MaxMessageSize.set -> void
+Microsoft.Azure.Amqp.Framing.Attach.OfferedCapabilities.get -> Microsoft.Azure.Amqp.Framing.Multiple<Microsoft.Azure.Amqp.Encoding.AmqpSymbol>
+Microsoft.Azure.Amqp.Framing.Attach.OfferedCapabilities.set -> void
+Microsoft.Azure.Amqp.Framing.Attach.Properties.get -> Microsoft.Azure.Amqp.Framing.Fields
+Microsoft.Azure.Amqp.Framing.Attach.Properties.set -> void
+Microsoft.Azure.Amqp.Framing.Attach.RcvSettleMode.get -> byte?
+Microsoft.Azure.Amqp.Framing.Attach.RcvSettleMode.set -> void
+Microsoft.Azure.Amqp.Framing.Attach.Role.get -> bool?
+Microsoft.Azure.Amqp.Framing.Attach.Role.set -> void
+Microsoft.Azure.Amqp.Framing.Attach.SndSettleMode.get -> byte?
+Microsoft.Azure.Amqp.Framing.Attach.SndSettleMode.set -> void
+Microsoft.Azure.Amqp.Framing.Attach.Source.get -> object
+Microsoft.Azure.Amqp.Framing.Attach.Source.set -> void
+Microsoft.Azure.Amqp.Framing.Attach.Target.get -> object
+Microsoft.Azure.Amqp.Framing.Attach.Target.set -> void
+Microsoft.Azure.Amqp.Framing.Attach.Unsettled.get -> Microsoft.Azure.Amqp.Encoding.AmqpMap
+Microsoft.Azure.Amqp.Framing.Attach.Unsettled.set -> void
+Microsoft.Azure.Amqp.Framing.Begin
+Microsoft.Azure.Amqp.Framing.Begin.Begin() -> void
+Microsoft.Azure.Amqp.Framing.Begin.DesiredCapabilities.get -> Microsoft.Azure.Amqp.Framing.Multiple<Microsoft.Azure.Amqp.Encoding.AmqpSymbol>
+Microsoft.Azure.Amqp.Framing.Begin.DesiredCapabilities.set -> void
+Microsoft.Azure.Amqp.Framing.Begin.HandleMax.get -> uint?
+Microsoft.Azure.Amqp.Framing.Begin.HandleMax.set -> void
+Microsoft.Azure.Amqp.Framing.Begin.IncomingWindow.get -> uint?
+Microsoft.Azure.Amqp.Framing.Begin.IncomingWindow.set -> void
+Microsoft.Azure.Amqp.Framing.Begin.NextOutgoingId.get -> uint?
+Microsoft.Azure.Amqp.Framing.Begin.NextOutgoingId.set -> void
+Microsoft.Azure.Amqp.Framing.Begin.OfferedCapabilities.get -> Microsoft.Azure.Amqp.Framing.Multiple<Microsoft.Azure.Amqp.Encoding.AmqpSymbol>
+Microsoft.Azure.Amqp.Framing.Begin.OfferedCapabilities.set -> void
+Microsoft.Azure.Amqp.Framing.Begin.OutgoingWindow.get -> uint?
+Microsoft.Azure.Amqp.Framing.Begin.OutgoingWindow.set -> void
+Microsoft.Azure.Amqp.Framing.Begin.Properties.get -> Microsoft.Azure.Amqp.Framing.Fields
+Microsoft.Azure.Amqp.Framing.Begin.Properties.set -> void
+Microsoft.Azure.Amqp.Framing.Begin.RemoteChannel.get -> ushort?
+Microsoft.Azure.Amqp.Framing.Begin.RemoteChannel.set -> void
+Microsoft.Azure.Amqp.Framing.Close
+Microsoft.Azure.Amqp.Framing.Close.Close() -> void
+Microsoft.Azure.Amqp.Framing.Close.Error.get -> Microsoft.Azure.Amqp.Framing.Error
+Microsoft.Azure.Amqp.Framing.Close.Error.set -> void
+Microsoft.Azure.Amqp.Framing.Data
+Microsoft.Azure.Amqp.Framing.Data.Data() -> void
+Microsoft.Azure.Amqp.Framing.Data.Segment.get -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.Framing.Data.Segment.set -> void
+Microsoft.Azure.Amqp.Framing.DeleteOnClose
+Microsoft.Azure.Amqp.Framing.DeleteOnClose.DeleteOnClose() -> void
+Microsoft.Azure.Amqp.Framing.DeleteOnNoLinks
+Microsoft.Azure.Amqp.Framing.DeleteOnNoLinks.DeleteOnNoLinks() -> void
+Microsoft.Azure.Amqp.Framing.DeleteOnNoLinksOrMessages
+Microsoft.Azure.Amqp.Framing.DeleteOnNoLinksOrMessages.DeleteOnNoLinksOrMessages() -> void
+Microsoft.Azure.Amqp.Framing.DeleteOnNoMessages
+Microsoft.Azure.Amqp.Framing.DeleteOnNoMessages.DeleteOnNoMessages() -> void
+Microsoft.Azure.Amqp.Framing.DeliveryAnnotations
+Microsoft.Azure.Amqp.Framing.DeliveryAnnotations.DeliveryAnnotations() -> void
+Microsoft.Azure.Amqp.Framing.DeliveryState
+Microsoft.Azure.Amqp.Framing.DeliveryState.DeliveryState(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.DescribedAnnotations
+Microsoft.Azure.Amqp.Framing.DescribedAnnotations.DescribedAnnotations(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.DescribedAnnotations.Map.get -> Microsoft.Azure.Amqp.Framing.Annotations
+Microsoft.Azure.Amqp.Framing.DescribedList
+Microsoft.Azure.Amqp.Framing.DescribedList.DescribedList(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.DescribedMap
+Microsoft.Azure.Amqp.Framing.DescribedMap.DescribedMap(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.DescribedMap.InnerMap.get -> Microsoft.Azure.Amqp.Encoding.AmqpMap
+Microsoft.Azure.Amqp.Framing.Detach
+Microsoft.Azure.Amqp.Framing.Detach.Closed.get -> bool?
+Microsoft.Azure.Amqp.Framing.Detach.Closed.set -> void
+Microsoft.Azure.Amqp.Framing.Detach.Detach() -> void
+Microsoft.Azure.Amqp.Framing.Detach.Error.get -> Microsoft.Azure.Amqp.Framing.Error
+Microsoft.Azure.Amqp.Framing.Detach.Error.set -> void
+Microsoft.Azure.Amqp.Framing.Disposition
+Microsoft.Azure.Amqp.Framing.Disposition.Batchable.get -> bool?
+Microsoft.Azure.Amqp.Framing.Disposition.Batchable.set -> void
+Microsoft.Azure.Amqp.Framing.Disposition.Disposition() -> void
+Microsoft.Azure.Amqp.Framing.Disposition.First.get -> uint?
+Microsoft.Azure.Amqp.Framing.Disposition.First.set -> void
+Microsoft.Azure.Amqp.Framing.Disposition.Last.get -> uint?
+Microsoft.Azure.Amqp.Framing.Disposition.Last.set -> void
+Microsoft.Azure.Amqp.Framing.Disposition.Role.get -> bool?
+Microsoft.Azure.Amqp.Framing.Disposition.Role.set -> void
+Microsoft.Azure.Amqp.Framing.Disposition.Settled.get -> bool?
+Microsoft.Azure.Amqp.Framing.Disposition.Settled.set -> void
+Microsoft.Azure.Amqp.Framing.Disposition.State.get -> Microsoft.Azure.Amqp.Framing.DeliveryState
+Microsoft.Azure.Amqp.Framing.Disposition.State.set -> void
+Microsoft.Azure.Amqp.Framing.End
+Microsoft.Azure.Amqp.Framing.End.End() -> void
+Microsoft.Azure.Amqp.Framing.End.Error.get -> Microsoft.Azure.Amqp.Framing.Error
+Microsoft.Azure.Amqp.Framing.End.Error.set -> void
+Microsoft.Azure.Amqp.Framing.Error
+Microsoft.Azure.Amqp.Framing.Error.Condition.get -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+Microsoft.Azure.Amqp.Framing.Error.Condition.set -> void
+Microsoft.Azure.Amqp.Framing.Error.Description.get -> string
+Microsoft.Azure.Amqp.Framing.Error.Description.set -> void
+Microsoft.Azure.Amqp.Framing.Error.Error() -> void
+Microsoft.Azure.Amqp.Framing.Error.Info.get -> Microsoft.Azure.Amqp.Framing.Fields
+Microsoft.Azure.Amqp.Framing.Error.Info.set -> void
+Microsoft.Azure.Amqp.Framing.Fields
+Microsoft.Azure.Amqp.Framing.Fields.Fields() -> void
+Microsoft.Azure.Amqp.Framing.FilterSet
+Microsoft.Azure.Amqp.Framing.FilterSet.FilterSet() -> void
+Microsoft.Azure.Amqp.Framing.Flow
+Microsoft.Azure.Amqp.Framing.Flow.Available.get -> uint?
+Microsoft.Azure.Amqp.Framing.Flow.Available.set -> void
+Microsoft.Azure.Amqp.Framing.Flow.DeliveryCount.get -> uint?
+Microsoft.Azure.Amqp.Framing.Flow.DeliveryCount.set -> void
+Microsoft.Azure.Amqp.Framing.Flow.Drain.get -> bool?
+Microsoft.Azure.Amqp.Framing.Flow.Drain.set -> void
+Microsoft.Azure.Amqp.Framing.Flow.Echo.get -> bool?
+Microsoft.Azure.Amqp.Framing.Flow.Echo.set -> void
+Microsoft.Azure.Amqp.Framing.Flow.Flow() -> void
+Microsoft.Azure.Amqp.Framing.Flow.IncomingWindow.get -> uint?
+Microsoft.Azure.Amqp.Framing.Flow.IncomingWindow.set -> void
+Microsoft.Azure.Amqp.Framing.Flow.LinkCredit.get -> uint?
+Microsoft.Azure.Amqp.Framing.Flow.LinkCredit.set -> void
+Microsoft.Azure.Amqp.Framing.Flow.NextIncomingId.get -> uint?
+Microsoft.Azure.Amqp.Framing.Flow.NextIncomingId.set -> void
+Microsoft.Azure.Amqp.Framing.Flow.NextOutgoingId.get -> uint?
+Microsoft.Azure.Amqp.Framing.Flow.NextOutgoingId.set -> void
+Microsoft.Azure.Amqp.Framing.Flow.OutgoingWindow.get -> uint?
+Microsoft.Azure.Amqp.Framing.Flow.OutgoingWindow.set -> void
+Microsoft.Azure.Amqp.Framing.Flow.Properties.get -> Microsoft.Azure.Amqp.Framing.Fields
+Microsoft.Azure.Amqp.Framing.Flow.Properties.set -> void
+Microsoft.Azure.Amqp.Framing.Footer
+Microsoft.Azure.Amqp.Framing.Footer.Footer() -> void
+Microsoft.Azure.Amqp.Framing.Frame
+Microsoft.Azure.Amqp.Framing.Frame.Channel.get -> ushort
+Microsoft.Azure.Amqp.Framing.Frame.Channel.set -> void
+Microsoft.Azure.Amqp.Framing.Frame.Command.get -> Microsoft.Azure.Amqp.Framing.Performative
+Microsoft.Azure.Amqp.Framing.Frame.Command.set -> void
+Microsoft.Azure.Amqp.Framing.Frame.DataOffset.get -> byte
+Microsoft.Azure.Amqp.Framing.Frame.Decode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+Microsoft.Azure.Amqp.Framing.Frame.Dispose() -> void
+Microsoft.Azure.Amqp.Framing.Frame.Encode() -> void
+Microsoft.Azure.Amqp.Framing.Frame.Frame() -> void
+Microsoft.Azure.Amqp.Framing.Frame.Frame(Microsoft.Azure.Amqp.Framing.FrameType type) -> void
+Microsoft.Azure.Amqp.Framing.Frame.Payload.get -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.Framing.Frame.Payload.set -> void
+Microsoft.Azure.Amqp.Framing.Frame.RawByteBuffer.get -> Microsoft.Azure.Amqp.ByteBuffer
+Microsoft.Azure.Amqp.Framing.Frame.Size.get -> int
+Microsoft.Azure.Amqp.Framing.Frame.Type.get -> Microsoft.Azure.Amqp.Framing.FrameType
+Microsoft.Azure.Amqp.Framing.FrameType
+Microsoft.Azure.Amqp.Framing.FrameType.Amqp = 0 -> Microsoft.Azure.Amqp.Framing.FrameType
+Microsoft.Azure.Amqp.Framing.FrameType.Sasl = 1 -> Microsoft.Azure.Amqp.Framing.FrameType
+Microsoft.Azure.Amqp.Framing.Header
+Microsoft.Azure.Amqp.Framing.Header.DeliveryCount.get -> uint?
+Microsoft.Azure.Amqp.Framing.Header.DeliveryCount.set -> void
+Microsoft.Azure.Amqp.Framing.Header.Durable.get -> bool?
+Microsoft.Azure.Amqp.Framing.Header.Durable.set -> void
+Microsoft.Azure.Amqp.Framing.Header.FirstAcquirer.get -> bool?
+Microsoft.Azure.Amqp.Framing.Header.FirstAcquirer.set -> void
+Microsoft.Azure.Amqp.Framing.Header.Header() -> void
+Microsoft.Azure.Amqp.Framing.Header.Priority.get -> byte?
+Microsoft.Azure.Amqp.Framing.Header.Priority.set -> void
+Microsoft.Azure.Amqp.Framing.Header.Ttl.get -> uint?
+Microsoft.Azure.Amqp.Framing.Header.Ttl.set -> void
+Microsoft.Azure.Amqp.Framing.LifeTimePolicy
+Microsoft.Azure.Amqp.Framing.LifeTimePolicy.LifeTimePolicy(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.LinkPerformative
+Microsoft.Azure.Amqp.Framing.LinkPerformative.Handle.get -> uint?
+Microsoft.Azure.Amqp.Framing.LinkPerformative.Handle.set -> void
+Microsoft.Azure.Amqp.Framing.LinkPerformative.LinkPerformative(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.MessageAnnotations
+Microsoft.Azure.Amqp.Framing.MessageAnnotations.MessageAnnotations() -> void
+Microsoft.Azure.Amqp.Framing.MessageId
+Microsoft.Azure.Amqp.Framing.MessageId.MessageId() -> void
+Microsoft.Azure.Amqp.Framing.Modified
+Microsoft.Azure.Amqp.Framing.Modified.DeliveryFailed.get -> bool?
+Microsoft.Azure.Amqp.Framing.Modified.DeliveryFailed.set -> void
+Microsoft.Azure.Amqp.Framing.Modified.MessageAnnotations.get -> Microsoft.Azure.Amqp.Framing.Fields
+Microsoft.Azure.Amqp.Framing.Modified.MessageAnnotations.set -> void
+Microsoft.Azure.Amqp.Framing.Modified.Modified() -> void
+Microsoft.Azure.Amqp.Framing.Modified.UndeliverableHere.get -> bool?
+Microsoft.Azure.Amqp.Framing.Modified.UndeliverableHere.set -> void
+Microsoft.Azure.Amqp.Framing.Multiple<T>
+Microsoft.Azure.Amqp.Framing.Multiple<T>.Multiple() -> void
+Microsoft.Azure.Amqp.Framing.Multiple<T>.Multiple(System.Collections.Generic.IList<T> value) -> void
+Microsoft.Azure.Amqp.Framing.Open
+Microsoft.Azure.Amqp.Framing.Open.ChannelMax.get -> ushort?
+Microsoft.Azure.Amqp.Framing.Open.ChannelMax.set -> void
+Microsoft.Azure.Amqp.Framing.Open.ContainerId.get -> string
+Microsoft.Azure.Amqp.Framing.Open.ContainerId.set -> void
+Microsoft.Azure.Amqp.Framing.Open.DesiredCapabilities.get -> Microsoft.Azure.Amqp.Framing.Multiple<Microsoft.Azure.Amqp.Encoding.AmqpSymbol>
+Microsoft.Azure.Amqp.Framing.Open.DesiredCapabilities.set -> void
+Microsoft.Azure.Amqp.Framing.Open.HostName.get -> string
+Microsoft.Azure.Amqp.Framing.Open.HostName.set -> void
+Microsoft.Azure.Amqp.Framing.Open.IdleTimeOut.get -> uint?
+Microsoft.Azure.Amqp.Framing.Open.IdleTimeOut.set -> void
+Microsoft.Azure.Amqp.Framing.Open.IncomingLocales.get -> Microsoft.Azure.Amqp.Framing.Multiple<Microsoft.Azure.Amqp.Encoding.AmqpSymbol>
+Microsoft.Azure.Amqp.Framing.Open.IncomingLocales.set -> void
+Microsoft.Azure.Amqp.Framing.Open.MaxFrameSize.get -> uint?
+Microsoft.Azure.Amqp.Framing.Open.MaxFrameSize.set -> void
+Microsoft.Azure.Amqp.Framing.Open.OfferedCapabilities.get -> Microsoft.Azure.Amqp.Framing.Multiple<Microsoft.Azure.Amqp.Encoding.AmqpSymbol>
+Microsoft.Azure.Amqp.Framing.Open.OfferedCapabilities.set -> void
+Microsoft.Azure.Amqp.Framing.Open.Open() -> void
+Microsoft.Azure.Amqp.Framing.Open.OutgoingLocales.get -> Microsoft.Azure.Amqp.Framing.Multiple<Microsoft.Azure.Amqp.Encoding.AmqpSymbol>
+Microsoft.Azure.Amqp.Framing.Open.OutgoingLocales.set -> void
+Microsoft.Azure.Amqp.Framing.Open.Properties.get -> Microsoft.Azure.Amqp.Framing.Fields
+Microsoft.Azure.Amqp.Framing.Open.Properties.set -> void
+Microsoft.Azure.Amqp.Framing.Outcome
+Microsoft.Azure.Amqp.Framing.Outcome.Outcome(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.Performative
+Microsoft.Azure.Amqp.Framing.Performative.Performative(Microsoft.Azure.Amqp.Encoding.AmqpSymbol name, ulong code) -> void
+Microsoft.Azure.Amqp.Framing.Properties
+Microsoft.Azure.Amqp.Framing.Properties.AbsoluteExpiryTime.get -> System.DateTime?
+Microsoft.Azure.Amqp.Framing.Properties.AbsoluteExpiryTime.set -> void
+Microsoft.Azure.Amqp.Framing.Properties.ContentEncoding.get -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+Microsoft.Azure.Amqp.Framing.Properties.ContentEncoding.set -> void
+Microsoft.Azure.Amqp.Framing.Properties.ContentType.get -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+Microsoft.Azure.Amqp.Framing.Properties.ContentType.set -> void
+Microsoft.Azure.Amqp.Framing.Properties.CorrelationId.get -> Microsoft.Azure.Amqp.Framing.MessageId
+Microsoft.Azure.Amqp.Framing.Properties.CorrelationId.set -> void
+Microsoft.Azure.Amqp.Framing.Properties.CreationTime.get -> System.DateTime?
+Microsoft.Azure.Amqp.Framing.Properties.CreationTime.set -> void
+Microsoft.Azure.Amqp.Framing.Properties.GroupId.get -> string
+Microsoft.Azure.Amqp.Framing.Properties.GroupId.set -> void
+Microsoft.Azure.Amqp.Framing.Properties.GroupSequence.get -> uint?
+Microsoft.Azure.Amqp.Framing.Properties.GroupSequence.set -> void
+Microsoft.Azure.Amqp.Framing.Properties.MessageId.get -> Microsoft.Azure.Amqp.Framing.MessageId
+Microsoft.Azure.Amqp.Framing.Properties.MessageId.set -> void
+Microsoft.Azure.Amqp.Framing.Properties.Properties() -> void
+Microsoft.Azure.Amqp.Framing.Properties.ReplyTo.get -> Microsoft.Azure.Amqp.Framing.Address
+Microsoft.Azure.Amqp.Framing.Properties.ReplyTo.set -> void
+Microsoft.Azure.Amqp.Framing.Properties.ReplyToGroupId.get -> string
+Microsoft.Azure.Amqp.Framing.Properties.ReplyToGroupId.set -> void
+Microsoft.Azure.Amqp.Framing.Properties.Subject.get -> string
+Microsoft.Azure.Amqp.Framing.Properties.Subject.set -> void
+Microsoft.Azure.Amqp.Framing.Properties.To.get -> Microsoft.Azure.Amqp.Framing.Address
+Microsoft.Azure.Amqp.Framing.Properties.To.set -> void
+Microsoft.Azure.Amqp.Framing.Properties.UserId.get -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.Framing.Properties.UserId.set -> void
+Microsoft.Azure.Amqp.Framing.PropertiesMap
+Microsoft.Azure.Amqp.Framing.PropertiesMap.PropertiesMap() -> void
+Microsoft.Azure.Amqp.Framing.ProtocolHeader
+Microsoft.Azure.Amqp.Framing.ProtocolHeader.Decode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+Microsoft.Azure.Amqp.Framing.ProtocolHeader.Encode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+Microsoft.Azure.Amqp.Framing.ProtocolHeader.EncodeSize.get -> int
+Microsoft.Azure.Amqp.Framing.ProtocolHeader.ProtocolHeader() -> void
+Microsoft.Azure.Amqp.Framing.ProtocolHeader.ProtocolHeader(Microsoft.Azure.Amqp.ProtocolId id, Microsoft.Azure.Amqp.AmqpVersion version) -> void
+Microsoft.Azure.Amqp.Framing.ProtocolHeader.ProtocolId.get -> Microsoft.Azure.Amqp.ProtocolId
+Microsoft.Azure.Amqp.Framing.ProtocolHeader.Version.get -> Microsoft.Azure.Amqp.AmqpVersion
+Microsoft.Azure.Amqp.Framing.Received
+Microsoft.Azure.Amqp.Framing.Received.Received() -> void
+Microsoft.Azure.Amqp.Framing.Received.SectionNumber.get -> uint?
+Microsoft.Azure.Amqp.Framing.Received.SectionNumber.set -> void
+Microsoft.Azure.Amqp.Framing.Received.SectionOffset.get -> ulong?
+Microsoft.Azure.Amqp.Framing.Received.SectionOffset.set -> void
+Microsoft.Azure.Amqp.Framing.ReceiverSettleMode
+Microsoft.Azure.Amqp.Framing.ReceiverSettleMode.First = 0 -> Microsoft.Azure.Amqp.Framing.ReceiverSettleMode
+Microsoft.Azure.Amqp.Framing.ReceiverSettleMode.Second = 1 -> Microsoft.Azure.Amqp.Framing.ReceiverSettleMode
+Microsoft.Azure.Amqp.Framing.Rejected
+Microsoft.Azure.Amqp.Framing.Rejected.Error.get -> Microsoft.Azure.Amqp.Framing.Error
+Microsoft.Azure.Amqp.Framing.Rejected.Error.set -> void
+Microsoft.Azure.Amqp.Framing.Rejected.Rejected() -> void
+Microsoft.Azure.Amqp.Framing.Released
+Microsoft.Azure.Amqp.Framing.Released.Released() -> void
+Microsoft.Azure.Amqp.Framing.RestrictedMap
+Microsoft.Azure.Amqp.Framing.RestrictedMap.GetEnumerator() -> System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<Microsoft.Azure.Amqp.Encoding.MapKey, object>>
+Microsoft.Azure.Amqp.Framing.RestrictedMap.RestrictedMap() -> void
+Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>
+Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.Add(Microsoft.Azure.Amqp.Encoding.MapKey key, object value) -> void
+Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.Add(TKey key, object value) -> void
+Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.Merge(Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey> map) -> void
+Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.RestrictedMap() -> void
+Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.this[Microsoft.Azure.Amqp.Encoding.MapKey key].get -> object
+Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.this[Microsoft.Azure.Amqp.Encoding.MapKey key].set -> void
+Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.this[TKey key].get -> object
+Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.this[TKey key].set -> void
+Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.TryGetValue<TValue>(Microsoft.Azure.Amqp.Encoding.MapKey key, out TValue value) -> bool
+Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.TryGetValue<TValue>(TKey key, out TValue value) -> bool
+Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.TryRemoveValue<TValue>(TKey key, out TValue value) -> bool
+Microsoft.Azure.Amqp.Framing.SenderSettleMode
+Microsoft.Azure.Amqp.Framing.SenderSettleMode.Mixed = 2 -> Microsoft.Azure.Amqp.Framing.SenderSettleMode
+Microsoft.Azure.Amqp.Framing.SenderSettleMode.Settled = 1 -> Microsoft.Azure.Amqp.Framing.SenderSettleMode
+Microsoft.Azure.Amqp.Framing.SenderSettleMode.Unsettled = 0 -> Microsoft.Azure.Amqp.Framing.SenderSettleMode
+Microsoft.Azure.Amqp.Framing.Source
+Microsoft.Azure.Amqp.Framing.Source.Address.get -> Microsoft.Azure.Amqp.Framing.Address
+Microsoft.Azure.Amqp.Framing.Source.Address.set -> void
+Microsoft.Azure.Amqp.Framing.Source.Capabilities.get -> Microsoft.Azure.Amqp.Framing.Multiple<Microsoft.Azure.Amqp.Encoding.AmqpSymbol>
+Microsoft.Azure.Amqp.Framing.Source.Capabilities.set -> void
+Microsoft.Azure.Amqp.Framing.Source.DefaultOutcome.get -> Microsoft.Azure.Amqp.Framing.Outcome
+Microsoft.Azure.Amqp.Framing.Source.DefaultOutcome.set -> void
+Microsoft.Azure.Amqp.Framing.Source.DistributionMode.get -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+Microsoft.Azure.Amqp.Framing.Source.DistributionMode.set -> void
+Microsoft.Azure.Amqp.Framing.Source.Durable.get -> uint?
+Microsoft.Azure.Amqp.Framing.Source.Durable.set -> void
+Microsoft.Azure.Amqp.Framing.Source.Dynamic.get -> bool?
+Microsoft.Azure.Amqp.Framing.Source.Dynamic.set -> void
+Microsoft.Azure.Amqp.Framing.Source.DynamicNodeProperties.get -> Microsoft.Azure.Amqp.Framing.Fields
+Microsoft.Azure.Amqp.Framing.Source.DynamicNodeProperties.set -> void
+Microsoft.Azure.Amqp.Framing.Source.ExpiryPolicy.get -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+Microsoft.Azure.Amqp.Framing.Source.ExpiryPolicy.set -> void
+Microsoft.Azure.Amqp.Framing.Source.FilterSet.get -> Microsoft.Azure.Amqp.Framing.FilterSet
+Microsoft.Azure.Amqp.Framing.Source.FilterSet.set -> void
+Microsoft.Azure.Amqp.Framing.Source.Outcomes.get -> Microsoft.Azure.Amqp.Framing.Multiple<Microsoft.Azure.Amqp.Encoding.AmqpSymbol>
+Microsoft.Azure.Amqp.Framing.Source.Outcomes.set -> void
+Microsoft.Azure.Amqp.Framing.Source.Source() -> void
+Microsoft.Azure.Amqp.Framing.Source.Timeout.get -> uint?
+Microsoft.Azure.Amqp.Framing.Source.Timeout.set -> void
+Microsoft.Azure.Amqp.Framing.Target
+Microsoft.Azure.Amqp.Framing.Target.Address.get -> Microsoft.Azure.Amqp.Framing.Address
+Microsoft.Azure.Amqp.Framing.Target.Address.set -> void
+Microsoft.Azure.Amqp.Framing.Target.Capabilities.get -> Microsoft.Azure.Amqp.Framing.Multiple<Microsoft.Azure.Amqp.Encoding.AmqpSymbol>
+Microsoft.Azure.Amqp.Framing.Target.Capabilities.set -> void
+Microsoft.Azure.Amqp.Framing.Target.Durable.get -> uint?
+Microsoft.Azure.Amqp.Framing.Target.Durable.set -> void
+Microsoft.Azure.Amqp.Framing.Target.Dynamic.get -> bool?
+Microsoft.Azure.Amqp.Framing.Target.Dynamic.set -> void
+Microsoft.Azure.Amqp.Framing.Target.DynamicNodeProperties.get -> Microsoft.Azure.Amqp.Framing.Fields
+Microsoft.Azure.Amqp.Framing.Target.DynamicNodeProperties.set -> void
+Microsoft.Azure.Amqp.Framing.Target.ExpiryPolicy.get -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+Microsoft.Azure.Amqp.Framing.Target.ExpiryPolicy.set -> void
+Microsoft.Azure.Amqp.Framing.Target.Target() -> void
+Microsoft.Azure.Amqp.Framing.Target.Timeout.get -> uint?
+Microsoft.Azure.Amqp.Framing.Target.Timeout.set -> void
+Microsoft.Azure.Amqp.Framing.TerminusDurability
+Microsoft.Azure.Amqp.Framing.TerminusDurability.Configuration = 1 -> Microsoft.Azure.Amqp.Framing.TerminusDurability
+Microsoft.Azure.Amqp.Framing.TerminusDurability.None = 0 -> Microsoft.Azure.Amqp.Framing.TerminusDurability
+Microsoft.Azure.Amqp.Framing.TerminusDurability.UnsettledState = 2 -> Microsoft.Azure.Amqp.Framing.TerminusDurability
+Microsoft.Azure.Amqp.Framing.TerminusExpiryPolicy
+Microsoft.Azure.Amqp.Framing.TerminusExpiryPolicy.TerminusExpiryPolicy() -> void
+Microsoft.Azure.Amqp.Framing.Transfer
+Microsoft.Azure.Amqp.Framing.Transfer.Aborted.get -> bool?
+Microsoft.Azure.Amqp.Framing.Transfer.Aborted.set -> void
+Microsoft.Azure.Amqp.Framing.Transfer.Batchable.get -> bool?
+Microsoft.Azure.Amqp.Framing.Transfer.Batchable.set -> void
+Microsoft.Azure.Amqp.Framing.Transfer.DeliveryId.get -> uint?
+Microsoft.Azure.Amqp.Framing.Transfer.DeliveryId.set -> void
+Microsoft.Azure.Amqp.Framing.Transfer.DeliveryTag.get -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.Framing.Transfer.DeliveryTag.set -> void
+Microsoft.Azure.Amqp.Framing.Transfer.MessageFormat.get -> uint?
+Microsoft.Azure.Amqp.Framing.Transfer.MessageFormat.set -> void
+Microsoft.Azure.Amqp.Framing.Transfer.More.get -> bool?
+Microsoft.Azure.Amqp.Framing.Transfer.More.set -> void
+Microsoft.Azure.Amqp.Framing.Transfer.RcvSettleMode.get -> byte?
+Microsoft.Azure.Amqp.Framing.Transfer.RcvSettleMode.set -> void
+Microsoft.Azure.Amqp.Framing.Transfer.Resume.get -> bool?
+Microsoft.Azure.Amqp.Framing.Transfer.Resume.set -> void
+Microsoft.Azure.Amqp.Framing.Transfer.Settled.get -> bool?
+Microsoft.Azure.Amqp.Framing.Transfer.Settled.set -> void
+Microsoft.Azure.Amqp.Framing.Transfer.State.get -> Microsoft.Azure.Amqp.Framing.DeliveryState
+Microsoft.Azure.Amqp.Framing.Transfer.State.set -> void
+Microsoft.Azure.Amqp.Framing.Transfer.Transfer() -> void
+Microsoft.Azure.Amqp.IAmqpTerminusStore
+Microsoft.Azure.Amqp.IAmqpTerminusStore.RetrieveDeliveriesAsync(Microsoft.Azure.Amqp.AmqpLinkTerminus linkTerminus) -> System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<System.ArraySegment<byte>, Microsoft.Azure.Amqp.Delivery>>
+Microsoft.Azure.Amqp.IAmqpTerminusStore.SaveDeliveriesAsync(Microsoft.Azure.Amqp.AmqpLinkTerminus linkTerminus, System.Collections.Generic.IDictionary<System.ArraySegment<byte>, Microsoft.Azure.Amqp.Delivery> unsettledDeliveries) -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.IAmqpTerminusStore.TryAddLinkTerminusAsync(Microsoft.Azure.Amqp.AmqpLinkIdentifier linkIdentifier, Microsoft.Azure.Amqp.AmqpLinkTerminus linkTerminus) -> System.Threading.Tasks.Task<bool>
+Microsoft.Azure.Amqp.IAmqpTerminusStore.TryGetLinkTerminusAsync(Microsoft.Azure.Amqp.AmqpLinkIdentifier linkIdentifier, out Microsoft.Azure.Amqp.AmqpLinkTerminus linkTerminus) -> System.Threading.Tasks.Task<bool>
+Microsoft.Azure.Amqp.IAmqpTerminusStore.TryRemoveDeliveryAsync(Microsoft.Azure.Amqp.AmqpLinkTerminus linkTerminus, System.ArraySegment<byte> deliveryTag) -> System.Threading.Tasks.Task<bool>
+Microsoft.Azure.Amqp.IAmqpTerminusStore.TryRemoveLinkTerminusAsync(Microsoft.Azure.Amqp.AmqpLinkIdentifier linkIdentifier, Microsoft.Azure.Amqp.AmqpLinkTerminus linkTerminus) -> System.Threading.Tasks.Task<bool>
+Microsoft.Azure.Amqp.IAmqpUsageMeter
+Microsoft.Azure.Amqp.IAmqpUsageMeter.OnRead(Microsoft.Azure.Amqp.AmqpConnection connection, ulong frameCode, int numberOfBytes) -> void
+Microsoft.Azure.Amqp.IAmqpUsageMeter.OnWrite(Microsoft.Azure.Amqp.AmqpConnection connection, ulong frameCode, int numberOfBytes) -> void
+Microsoft.Azure.Amqp.ICbsTokenProvider
+Microsoft.Azure.Amqp.ICbsTokenProvider.GetTokenAsync(System.Uri namespaceAddress, string appliesTo, string[] requiredClaims) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.CbsToken>
+Microsoft.Azure.Amqp.IConnectionFactory
+Microsoft.Azure.Amqp.IConnectionFactory.CreateConnection(Microsoft.Azure.Amqp.Transport.TransportBase transport, Microsoft.Azure.Amqp.Framing.ProtocolHeader protocolHeader, bool isInitiator, Microsoft.Azure.Amqp.AmqpSettings amqpSettings, Microsoft.Azure.Amqp.AmqpConnectionSettings connectionSettings) -> Microsoft.Azure.Amqp.AmqpConnection
+Microsoft.Azure.Amqp.IIoHandler
+Microsoft.Azure.Amqp.IIoHandler.CreateBuffer(int frameSize) -> Microsoft.Azure.Amqp.ByteBuffer
+Microsoft.Azure.Amqp.IIoHandler.OnIoEvent(Microsoft.Azure.Amqp.IoEvent ioEvent, long queueSize) -> void
+Microsoft.Azure.Amqp.IIoHandler.OnIoFault(System.Exception exception) -> void
+Microsoft.Azure.Amqp.IIoHandler.OnReceiveBuffer(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+Microsoft.Azure.Amqp.ILinkFactory
+Microsoft.Azure.Amqp.ILinkFactory.BeginOpenLink(Microsoft.Azure.Amqp.AmqpLink link, System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
+Microsoft.Azure.Amqp.ILinkFactory.CreateLink(Microsoft.Azure.Amqp.AmqpSession session, Microsoft.Azure.Amqp.AmqpLinkSettings settings) -> Microsoft.Azure.Amqp.AmqpLink
+Microsoft.Azure.Amqp.ILinkFactory.EndOpenLink(System.IAsyncResult result) -> void
+Microsoft.Azure.Amqp.IoEvent
+Microsoft.Azure.Amqp.IoEvent.WriteBufferQueueEmpty = 1 -> Microsoft.Azure.Amqp.IoEvent
+Microsoft.Azure.Amqp.IoEvent.WriteBufferQueueFull = 0 -> Microsoft.Azure.Amqp.IoEvent
+Microsoft.Azure.Amqp.IRuntimeProvider
+Microsoft.Azure.Amqp.ISessionFactory
+Microsoft.Azure.Amqp.ISessionFactory.CreateSession(Microsoft.Azure.Amqp.AmqpConnection connection, Microsoft.Azure.Amqp.AmqpSessionSettings settings) -> Microsoft.Azure.Amqp.AmqpSession
+Microsoft.Azure.Amqp.ITransportMonitor
+Microsoft.Azure.Amqp.ITransportMonitor.OnTransportRead(int bufferSize, int readSize, int cacheHits, long latencyTicks) -> void
+Microsoft.Azure.Amqp.ITransportMonitor.OnTransportWrite(int bufferSize, int writeSize, long queueSize, long latencyTicks) -> void
+Microsoft.Azure.Amqp.IWorkDelegate<T>
+Microsoft.Azure.Amqp.IWorkDelegate<T>.Invoke(T work) -> bool
+Microsoft.Azure.Amqp.LinkTerminusExpiryPolicy
+Microsoft.Azure.Amqp.LinkTerminusExpiryPolicy.ConnectionClose = 3 -> Microsoft.Azure.Amqp.LinkTerminusExpiryPolicy
+Microsoft.Azure.Amqp.LinkTerminusExpiryPolicy.LinkDetach = 1 -> Microsoft.Azure.Amqp.LinkTerminusExpiryPolicy
+Microsoft.Azure.Amqp.LinkTerminusExpiryPolicy.Never = 4 -> Microsoft.Azure.Amqp.LinkTerminusExpiryPolicy
+Microsoft.Azure.Amqp.LinkTerminusExpiryPolicy.None = 0 -> Microsoft.Azure.Amqp.LinkTerminusExpiryPolicy
+Microsoft.Azure.Amqp.LinkTerminusExpiryPolicy.SessionEnd = 2 -> Microsoft.Azure.Amqp.LinkTerminusExpiryPolicy
+Microsoft.Azure.Amqp.OpenEventArgs
+Microsoft.Azure.Amqp.OpenEventArgs.Command.get -> Microsoft.Azure.Amqp.Framing.Performative
+Microsoft.Azure.Amqp.OpenEventArgs.OpenEventArgs(Microsoft.Azure.Amqp.Framing.Performative command) -> void
+Microsoft.Azure.Amqp.ProtocolId
+Microsoft.Azure.Amqp.ProtocolId.Amqp = 0 -> Microsoft.Azure.Amqp.ProtocolId
+Microsoft.Azure.Amqp.ProtocolId.AmqpSasl = 3 -> Microsoft.Azure.Amqp.ProtocolId
+Microsoft.Azure.Amqp.ProtocolId.AmqpTls = 2 -> Microsoft.Azure.Amqp.ProtocolId
+Microsoft.Azure.Amqp.ReceivingAmqpLink
+Microsoft.Azure.Amqp.ReceivingAmqpLink.AcceptMessage(Microsoft.Azure.Amqp.AmqpMessage message) -> void
+Microsoft.Azure.Amqp.ReceivingAmqpLink.AcceptMessage(Microsoft.Azure.Amqp.AmqpMessage message, bool settled, bool batchable) -> void
+Microsoft.Azure.Amqp.ReceivingAmqpLink.BeginDisposeMessage(System.ArraySegment<byte> deliveryTag, Microsoft.Azure.Amqp.Framing.Outcome outcome, bool batchable, System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
+Microsoft.Azure.Amqp.ReceivingAmqpLink.BeginDisposeMessage(System.ArraySegment<byte> deliveryTag, System.ArraySegment<byte> txnId, Microsoft.Azure.Amqp.Framing.Outcome outcome, bool batchable, System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
+Microsoft.Azure.Amqp.ReceivingAmqpLink.BeginReceiveMessage(System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
+Microsoft.Azure.Amqp.ReceivingAmqpLink.BeginReceiveMessages(int messageCount, System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
+Microsoft.Azure.Amqp.ReceivingAmqpLink.BeginReceiveRemoteMessages(int messageCount, System.TimeSpan batchWaitTimeout, System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
+Microsoft.Azure.Amqp.ReceivingAmqpLink.DisposeMessage(Microsoft.Azure.Amqp.AmqpMessage message, Microsoft.Azure.Amqp.Framing.DeliveryState state, bool settled, bool batchable) -> void
+Microsoft.Azure.Amqp.ReceivingAmqpLink.DisposeMessageAsync(System.ArraySegment<byte> deliveryTag, Microsoft.Azure.Amqp.Framing.Outcome outcome) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Framing.Outcome>
+Microsoft.Azure.Amqp.ReceivingAmqpLink.DisposeMessageAsync(System.ArraySegment<byte> deliveryTag, Microsoft.Azure.Amqp.Framing.Outcome outcome, bool batchable, System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Framing.Outcome>
+Microsoft.Azure.Amqp.ReceivingAmqpLink.DisposeMessageAsync(System.ArraySegment<byte> deliveryTag, Microsoft.Azure.Amqp.Framing.Outcome outcome, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Framing.Outcome>
+Microsoft.Azure.Amqp.ReceivingAmqpLink.DisposeMessageAsync(System.ArraySegment<byte> deliveryTag, System.ArraySegment<byte> txnId, Microsoft.Azure.Amqp.Framing.Outcome outcome, bool batchable, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Framing.Outcome>
+Microsoft.Azure.Amqp.ReceivingAmqpLink.DisposeMessageAsync(System.ArraySegment<byte> deliveryTag, System.ArraySegment<byte> txnId, Microsoft.Azure.Amqp.Framing.Outcome outcome, bool batchable, System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Framing.Outcome>
+Microsoft.Azure.Amqp.ReceivingAmqpLink.DrainAsyc(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.ReceivingAmqpLink.EndDisposeMessage(System.IAsyncResult result) -> Microsoft.Azure.Amqp.Framing.Outcome
+Microsoft.Azure.Amqp.ReceivingAmqpLink.EndReceiveMessage(System.IAsyncResult result, out Microsoft.Azure.Amqp.AmqpMessage message) -> bool
+Microsoft.Azure.Amqp.ReceivingAmqpLink.EndReceiveMessages(System.IAsyncResult result, out System.Collections.Generic.IEnumerable<Microsoft.Azure.Amqp.AmqpMessage> messages) -> bool
+Microsoft.Azure.Amqp.ReceivingAmqpLink.ModifyMessage(Microsoft.Azure.Amqp.AmqpMessage message, bool deliveryFailed, bool deliverElseWhere, Microsoft.Azure.Amqp.Framing.Fields messageAttributes) -> void
+Microsoft.Azure.Amqp.ReceivingAmqpLink.ReceiveMessageAsync() -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpMessage>
+Microsoft.Azure.Amqp.ReceivingAmqpLink.ReceiveMessageAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpMessage>
+Microsoft.Azure.Amqp.ReceivingAmqpLink.ReceiveMessageAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpMessage>
+Microsoft.Azure.Amqp.ReceivingAmqpLink.ReceiveMessageAsync(System.TimeSpan timeout, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpMessage>
+Microsoft.Azure.Amqp.ReceivingAmqpLink.ReceiveMessagesAsync(int messageCount, System.TimeSpan batchWaitTimeout) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.Azure.Amqp.AmqpMessage>>
+Microsoft.Azure.Amqp.ReceivingAmqpLink.ReceiveMessagesAsync(int messageCount, System.TimeSpan batchWaitTimeout, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.Azure.Amqp.AmqpMessage>>
+Microsoft.Azure.Amqp.ReceivingAmqpLink.ReceiveMessagesAsync(int messageCount, System.TimeSpan batchWaitTimeout, System.TimeSpan timeout, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Microsoft.Azure.Amqp.AmqpMessage>>
+Microsoft.Azure.Amqp.ReceivingAmqpLink.ReceivingAmqpLink(Microsoft.Azure.Amqp.AmqpLinkSettings settings) -> void
+Microsoft.Azure.Amqp.ReceivingAmqpLink.ReceivingAmqpLink(Microsoft.Azure.Amqp.AmqpSession session, Microsoft.Azure.Amqp.AmqpLinkSettings settings) -> void
+Microsoft.Azure.Amqp.ReceivingAmqpLink.RegisterMessageListener(System.Action<Microsoft.Azure.Amqp.AmqpMessage> messageListener) -> void
+Microsoft.Azure.Amqp.ReceivingAmqpLink.RejectMessage(Microsoft.Azure.Amqp.AmqpMessage message, System.Exception exception) -> void
+Microsoft.Azure.Amqp.ReceivingAmqpLink.ReleaseMessage(Microsoft.Azure.Amqp.AmqpMessage message) -> void
+Microsoft.Azure.Amqp.RequestResponseAmqpLink
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.BeginRequest(Microsoft.Azure.Amqp.AmqpMessage request, System.ArraySegment<byte> txnId, System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.BeginRequest(Microsoft.Azure.Amqp.AmqpMessage request, System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.EndRequest(System.IAsyncResult result) -> Microsoft.Azure.Amqp.AmqpMessage
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.Name.get -> string
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.RequestAsync(Microsoft.Azure.Amqp.AmqpMessage request, System.ArraySegment<byte> txnId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpMessage>
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.RequestAsync(Microsoft.Azure.Amqp.AmqpMessage request, System.ArraySegment<byte> txnId, System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpMessage>
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.RequestAsync(Microsoft.Azure.Amqp.AmqpMessage request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpMessage>
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.RequestAsync(Microsoft.Azure.Amqp.AmqpMessage request, System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpMessage>
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.RequestProperties.get -> System.Collections.Generic.Dictionary<string, object>
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.RequestResponseAmqpLink(string type, Microsoft.Azure.Amqp.AmqpSession session, string address, Microsoft.Azure.Amqp.Framing.Fields properties) -> void
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.RequestResponseAmqpLink(string type, string name, Microsoft.Azure.Amqp.AmqpSession session, string address) -> void
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.RequestResponseAmqpLink(string type, string name, Microsoft.Azure.Amqp.AmqpSession session, string address, Microsoft.Azure.Amqp.Framing.Fields properties) -> void
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.SendProperties(Microsoft.Azure.Amqp.Framing.Fields fields) -> void
+Microsoft.Azure.Amqp.RequestResponseAmqpLink.Session.get -> Microsoft.Azure.Amqp.AmqpSession
+Microsoft.Azure.Amqp.Sasl.ISaslPlainAuthenticator
+Microsoft.Azure.Amqp.Sasl.ISaslPlainAuthenticator.AuthenticateAsync(string identity, string password) -> System.Threading.Tasks.Task<System.Security.Principal.IPrincipal>
+Microsoft.Azure.Amqp.Sasl.SaslAnonymousHandler
+Microsoft.Azure.Amqp.Sasl.SaslAnonymousHandler.Identity.get -> string
+Microsoft.Azure.Amqp.Sasl.SaslAnonymousHandler.Identity.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslAnonymousHandler.SaslAnonymousHandler() -> void
+Microsoft.Azure.Amqp.Sasl.SaslAnonymousHandler.SaslAnonymousHandler(string name) -> void
+Microsoft.Azure.Amqp.Sasl.SaslChallenge
+Microsoft.Azure.Amqp.Sasl.SaslChallenge.Challenge.get -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.Sasl.SaslChallenge.Challenge.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslChallenge.SaslChallenge() -> void
+Microsoft.Azure.Amqp.Sasl.SaslCode
+Microsoft.Azure.Amqp.Sasl.SaslCode.Auth = 1 -> Microsoft.Azure.Amqp.Sasl.SaslCode
+Microsoft.Azure.Amqp.Sasl.SaslCode.Ok = 0 -> Microsoft.Azure.Amqp.Sasl.SaslCode
+Microsoft.Azure.Amqp.Sasl.SaslCode.Sys = 2 -> Microsoft.Azure.Amqp.Sasl.SaslCode
+Microsoft.Azure.Amqp.Sasl.SaslCode.SysPerm = 3 -> Microsoft.Azure.Amqp.Sasl.SaslCode
+Microsoft.Azure.Amqp.Sasl.SaslCode.SysTemp = 4 -> Microsoft.Azure.Amqp.Sasl.SaslCode
+Microsoft.Azure.Amqp.Sasl.SaslExternalHandler
+Microsoft.Azure.Amqp.Sasl.SaslExternalHandler.SaslExternalHandler() -> void
+Microsoft.Azure.Amqp.Sasl.SaslHandler
+Microsoft.Azure.Amqp.Sasl.SaslHandler.Mechanism.get -> string
+Microsoft.Azure.Amqp.Sasl.SaslHandler.Mechanism.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslHandler.Negotiator.get -> Microsoft.Azure.Amqp.Sasl.SaslNegotiator
+Microsoft.Azure.Amqp.Sasl.SaslHandler.Principal.get -> System.Security.Principal.IPrincipal
+Microsoft.Azure.Amqp.Sasl.SaslHandler.Principal.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslHandler.SaslHandler() -> void
+Microsoft.Azure.Amqp.Sasl.SaslHandler.Start(Microsoft.Azure.Amqp.Sasl.SaslNegotiator saslNegotiator, Microsoft.Azure.Amqp.Sasl.SaslInit init, bool isClient) -> void
+Microsoft.Azure.Amqp.Sasl.SaslInit
+Microsoft.Azure.Amqp.Sasl.SaslInit.HostName.get -> string
+Microsoft.Azure.Amqp.Sasl.SaslInit.HostName.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslInit.InitialResponse.get -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.Sasl.SaslInit.InitialResponse.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslInit.Mechanism.get -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+Microsoft.Azure.Amqp.Sasl.SaslInit.Mechanism.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslInit.SaslInit() -> void
+Microsoft.Azure.Amqp.Sasl.SaslMechanisms
+Microsoft.Azure.Amqp.Sasl.SaslMechanisms.SaslMechanisms() -> void
+Microsoft.Azure.Amqp.Sasl.SaslMechanisms.SaslServerMechanisms.get -> Microsoft.Azure.Amqp.Framing.Multiple<Microsoft.Azure.Amqp.Encoding.AmqpSymbol>
+Microsoft.Azure.Amqp.Sasl.SaslMechanisms.SaslServerMechanisms.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslNegotiator
+Microsoft.Azure.Amqp.Sasl.SaslNegotiator.CompleteNegotiation(Microsoft.Azure.Amqp.Sasl.SaslCode code, System.Exception exception) -> void
+Microsoft.Azure.Amqp.Sasl.SaslNegotiator.ReadFrame() -> void
+Microsoft.Azure.Amqp.Sasl.SaslNegotiator.SaslNegotiator(Microsoft.Azure.Amqp.Sasl.SaslTransport transport, Microsoft.Azure.Amqp.Sasl.SaslTransportProvider provider, bool isInitiator) -> void
+Microsoft.Azure.Amqp.Sasl.SaslNegotiator.Start() -> bool
+Microsoft.Azure.Amqp.Sasl.SaslNegotiator.WriteFrame(Microsoft.Azure.Amqp.Framing.Performative command, bool needReply) -> void
+Microsoft.Azure.Amqp.Sasl.SaslOutcome
+Microsoft.Azure.Amqp.Sasl.SaslOutcome.AdditionalData.get -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.Sasl.SaslOutcome.AdditionalData.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslOutcome.OutcomeCode.get -> Microsoft.Azure.Amqp.Sasl.SaslCode?
+Microsoft.Azure.Amqp.Sasl.SaslOutcome.OutcomeCode.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslOutcome.SaslOutcome() -> void
+Microsoft.Azure.Amqp.Sasl.SaslPlainHandler
+Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.AuthenticationIdentity.get -> string
+Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.AuthenticationIdentity.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.AuthorizationIdentity.get -> string
+Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.AuthorizationIdentity.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.Password.get -> string
+Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.Password.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.SaslPlainHandler() -> void
+Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.SaslPlainHandler(Microsoft.Azure.Amqp.Sasl.ISaslPlainAuthenticator authenticator) -> void
+Microsoft.Azure.Amqp.Sasl.SaslResponse
+Microsoft.Azure.Amqp.Sasl.SaslResponse.Response.get -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.Sasl.SaslResponse.Response.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslResponse.SaslResponse() -> void
+Microsoft.Azure.Amqp.Sasl.SaslTransport
+Microsoft.Azure.Amqp.Sasl.SaslTransport.SaslTransport(Microsoft.Azure.Amqp.Transport.TransportBase transport, Microsoft.Azure.Amqp.Sasl.SaslTransportProvider provider, bool isInitiator) -> void
+Microsoft.Azure.Amqp.Sasl.SaslTransportProvider
+Microsoft.Azure.Amqp.Sasl.SaslTransportProvider.AddHandler(Microsoft.Azure.Amqp.Sasl.SaslHandler handler) -> void
+Microsoft.Azure.Amqp.Sasl.SaslTransportProvider.GetHandler(string mechanism, bool clone) -> Microsoft.Azure.Amqp.Sasl.SaslHandler
+Microsoft.Azure.Amqp.Sasl.SaslTransportProvider.MaxFrameSize.get -> int
+Microsoft.Azure.Amqp.Sasl.SaslTransportProvider.MaxFrameSize.set -> void
+Microsoft.Azure.Amqp.Sasl.SaslTransportProvider.Mechanisms.get -> System.Collections.Generic.IEnumerable<string>
+Microsoft.Azure.Amqp.Sasl.SaslTransportProvider.SaslTransportProvider() -> void
+Microsoft.Azure.Amqp.Sasl.SaslTransportProvider.SaslTransportProvider(Microsoft.Azure.Amqp.AmqpVersion version) -> void
+Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.All = Microsoft.Azure.Amqp.SectionFlag.Body | Microsoft.Azure.Amqp.SectionFlag.NonBody -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.AmqpSequence = 64 -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.AmqpValue = 128 -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.ApplicationProperties = 16 -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.Body = Microsoft.Azure.Amqp.SectionFlag.Data | Microsoft.Azure.Amqp.SectionFlag.AmqpSequence | Microsoft.Azure.Amqp.SectionFlag.AmqpValue -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.Data = 32 -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.DeliveryAnnotations = 2 -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.Footer = 256 -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.Header = 1 -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.Immutable = Microsoft.Azure.Amqp.SectionFlag.Properties | Microsoft.Azure.Amqp.SectionFlag.ApplicationProperties | Microsoft.Azure.Amqp.SectionFlag.Body -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.MessageAnnotations = 4 -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.Mutable = Microsoft.Azure.Amqp.SectionFlag.Header | Microsoft.Azure.Amqp.SectionFlag.DeliveryAnnotations | Microsoft.Azure.Amqp.SectionFlag.MessageAnnotations | Microsoft.Azure.Amqp.SectionFlag.Footer -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.NonBody = Microsoft.Azure.Amqp.SectionFlag.Properties | Microsoft.Azure.Amqp.SectionFlag.ApplicationProperties | Microsoft.Azure.Amqp.SectionFlag.Mutable -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SectionFlag.Properties = 8 -> Microsoft.Azure.Amqp.SectionFlag
+Microsoft.Azure.Amqp.SendingAmqpLink
+Microsoft.Azure.Amqp.SendingAmqpLink.BeginSendMessage(Microsoft.Azure.Amqp.AmqpMessage message, System.ArraySegment<byte> deliveryTag, System.ArraySegment<byte> txnId, System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
+Microsoft.Azure.Amqp.SendingAmqpLink.EndSendMessage(System.IAsyncResult result) -> Microsoft.Azure.Amqp.Framing.Outcome
+Microsoft.Azure.Amqp.SendingAmqpLink.RegisterDispositionListener(System.Action<Microsoft.Azure.Amqp.Delivery> dispositionListener) -> void
+Microsoft.Azure.Amqp.SendingAmqpLink.SendingAmqpLink(Microsoft.Azure.Amqp.AmqpLinkSettings settings) -> void
+Microsoft.Azure.Amqp.SendingAmqpLink.SendingAmqpLink(Microsoft.Azure.Amqp.AmqpSession session, Microsoft.Azure.Amqp.AmqpLinkSettings settings) -> void
+Microsoft.Azure.Amqp.SendingAmqpLink.SendMessageAsync(Microsoft.Azure.Amqp.AmqpMessage message) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Framing.Outcome>
+Microsoft.Azure.Amqp.SendingAmqpLink.SendMessageAsync(Microsoft.Azure.Amqp.AmqpMessage message, System.ArraySegment<byte> deliveryTag, System.ArraySegment<byte> txnId, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Framing.Outcome>
+Microsoft.Azure.Amqp.SendingAmqpLink.SendMessageAsync(Microsoft.Azure.Amqp.AmqpMessage message, System.ArraySegment<byte> deliveryTag, System.ArraySegment<byte> txnId, System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Framing.Outcome>
+Microsoft.Azure.Amqp.SendingAmqpLink.SendMessageNoWait(Microsoft.Azure.Amqp.AmqpMessage message, System.ArraySegment<byte> deliveryTag, System.ArraySegment<byte> txnId) -> void
+Microsoft.Azure.Amqp.SequenceNumber
+Microsoft.Azure.Amqp.SequenceNumber.CompareTo(Microsoft.Azure.Amqp.SequenceNumber value) -> int
+Microsoft.Azure.Amqp.SequenceNumber.Equals(Microsoft.Azure.Amqp.SequenceNumber obj) -> bool
+Microsoft.Azure.Amqp.SequenceNumber.Increment() -> uint
+Microsoft.Azure.Amqp.SequenceNumber.SequenceNumber() -> void
+Microsoft.Azure.Amqp.SequenceNumber.SequenceNumber(uint value) -> void
+Microsoft.Azure.Amqp.SequenceNumber.Value.get -> uint
+Microsoft.Azure.Amqp.Serialization.AmqpContractAttribute
+Microsoft.Azure.Amqp.Serialization.AmqpContractAttribute.AmqpContractAttribute() -> void
+Microsoft.Azure.Amqp.Serialization.AmqpContractAttribute.Code.get -> long
+Microsoft.Azure.Amqp.Serialization.AmqpContractAttribute.Code.set -> void
+Microsoft.Azure.Amqp.Serialization.AmqpContractAttribute.Encoding.get -> Microsoft.Azure.Amqp.Serialization.EncodingType
+Microsoft.Azure.Amqp.Serialization.AmqpContractAttribute.Encoding.set -> void
+Microsoft.Azure.Amqp.Serialization.AmqpContractAttribute.Name.get -> string
+Microsoft.Azure.Amqp.Serialization.AmqpContractAttribute.Name.set -> void
+Microsoft.Azure.Amqp.Serialization.AmqpContractSerializer
+Microsoft.Azure.Amqp.Serialization.AmqpContractSerializer.AmqpContractSerializer() -> void
+Microsoft.Azure.Amqp.Serialization.AmqpContractSerializer.AmqpContractSerializer(System.Func<System.Type, Microsoft.Azure.Amqp.Serialization.SerializableType> compiler) -> void
+Microsoft.Azure.Amqp.Serialization.AmqpContractSerializer.ReadObjectFromBuffer<T, TAs>(Microsoft.Azure.Amqp.ByteBuffer buffer) -> TAs
+Microsoft.Azure.Amqp.Serialization.AmqpContractSerializer.ReadObjectFromBuffer<T>(Microsoft.Azure.Amqp.ByteBuffer buffer) -> T
+Microsoft.Azure.Amqp.Serialization.AmqpContractSerializer.WriteObjectToBuffer(Microsoft.Azure.Amqp.ByteBuffer buffer, object graph) -> void
+Microsoft.Azure.Amqp.Serialization.AmqpMemberAttribute
+Microsoft.Azure.Amqp.Serialization.AmqpMemberAttribute.AmqpMemberAttribute() -> void
+Microsoft.Azure.Amqp.Serialization.AmqpMemberAttribute.Mandatory.get -> bool
+Microsoft.Azure.Amqp.Serialization.AmqpMemberAttribute.Mandatory.set -> void
+Microsoft.Azure.Amqp.Serialization.AmqpMemberAttribute.Name.get -> string
+Microsoft.Azure.Amqp.Serialization.AmqpMemberAttribute.Name.set -> void
+Microsoft.Azure.Amqp.Serialization.AmqpMemberAttribute.Order.get -> int
+Microsoft.Azure.Amqp.Serialization.AmqpMemberAttribute.Order.set -> void
+Microsoft.Azure.Amqp.Serialization.EncodingType
+Microsoft.Azure.Amqp.Serialization.EncodingType.List = 0 -> Microsoft.Azure.Amqp.Serialization.EncodingType
+Microsoft.Azure.Amqp.Serialization.EncodingType.Map = 1 -> Microsoft.Azure.Amqp.Serialization.EncodingType
+Microsoft.Azure.Amqp.Serialization.SerializableType
+Microsoft.Azure.Amqp.Serialization.SerializableType.SerializableType(Microsoft.Azure.Amqp.Serialization.AmqpContractSerializer serializer, System.Type type) -> void
+Microsoft.Azure.Amqp.Serialization.SerializableType.UnderlyingType.get -> System.Type
+Microsoft.Azure.Amqp.SerializedWorker<T>
+Microsoft.Azure.Amqp.SerializedWorker<T>.Abort() -> void
+Microsoft.Azure.Amqp.SerializedWorker<T>.ContinueWork() -> void
+Microsoft.Azure.Amqp.SerializedWorker<T>.Count.get -> int
+Microsoft.Azure.Amqp.SerializedWorker<T>.DoWork(T work) -> void
+Microsoft.Azure.Amqp.SerializedWorker<T>.SerializedWorker(Microsoft.Azure.Amqp.IWorkDelegate<T> workProcessor) -> void
+Microsoft.Azure.Amqp.SettleMode
+Microsoft.Azure.Amqp.SettleMode.SettleOnDispose = 2 -> Microsoft.Azure.Amqp.SettleMode
+Microsoft.Azure.Amqp.SettleMode.SettleOnReceive = 1 -> Microsoft.Azure.Amqp.SettleMode
+Microsoft.Azure.Amqp.SettleMode.SettleOnSend = 0 -> Microsoft.Azure.Amqp.SettleMode
+Microsoft.Azure.Amqp.Singleton<TValue>
+Microsoft.Azure.Amqp.Singleton<TValue>.Close() -> void
+Microsoft.Azure.Amqp.Singleton<TValue>.CloseAsync() -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.Singleton<TValue>.CloseAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.Singleton<TValue>.Dispose() -> void
+Microsoft.Azure.Amqp.Singleton<TValue>.GetOrCreateAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TValue>
+Microsoft.Azure.Amqp.Singleton<TValue>.GetOrCreateAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<TValue>
+Microsoft.Azure.Amqp.Singleton<TValue>.GetOrCreateAsync(System.TimeSpan timeout, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TValue>
+Microsoft.Azure.Amqp.Singleton<TValue>.Invalidate(TValue instance) -> void
+Microsoft.Azure.Amqp.Singleton<TValue>.OpenAsync() -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.Singleton<TValue>.OpenAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.Singleton<TValue>.OpenAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.Singleton<TValue>.Singleton() -> void
+Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Abort = 14 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Accept = 10 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.ActiveLinkExpired = 18 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.ActiveLinkRefreshed = 19 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.ActiveLinkRegistered = 16 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.ActiveLinkUpdated = 17 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Add = 3 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Attach = 13 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Bind = 12 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Close = 6 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Connect = 9 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Create = 1 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Delete = 2 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Execute = 11 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Flow = 15 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Initialize = 0 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.LinkRecoveryNegotiate = 20 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.LinkRecoveryNegotiateResult = 21 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Open = 5 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Receive = 8 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Remove = 4 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.Send = 7 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.TraceOperation.TerminusStateOnClose = 22 -> Microsoft.Azure.Amqp.TraceOperation
+Microsoft.Azure.Amqp.Transaction.Controller
+Microsoft.Azure.Amqp.Transaction.Controller.Controller(Microsoft.Azure.Amqp.AmqpSession amqpSession, System.TimeSpan operationTimeout) -> void
+Microsoft.Azure.Amqp.Transaction.Controller.DeclareAsync() -> System.Threading.Tasks.Task<System.ArraySegment<byte>>
+Microsoft.Azure.Amqp.Transaction.Controller.DeclareAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.ArraySegment<byte>>
+Microsoft.Azure.Amqp.Transaction.Controller.DischargeAsync(System.ArraySegment<byte> txnId, bool fail) -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.Transaction.Controller.DischargeAsync(System.ArraySegment<byte> txnId, bool fail, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.Transaction.Coordinator
+Microsoft.Azure.Amqp.Transaction.Coordinator.Capabilities.get -> Microsoft.Azure.Amqp.Framing.Multiple<Microsoft.Azure.Amqp.Encoding.AmqpSymbol>
+Microsoft.Azure.Amqp.Transaction.Coordinator.Capabilities.set -> void
+Microsoft.Azure.Amqp.Transaction.Coordinator.Coordinator() -> void
+Microsoft.Azure.Amqp.Transaction.Declare
+Microsoft.Azure.Amqp.Transaction.Declare.Declare() -> void
+Microsoft.Azure.Amqp.Transaction.Declare.GlobalId.get -> object
+Microsoft.Azure.Amqp.Transaction.Declare.GlobalId.set -> void
+Microsoft.Azure.Amqp.Transaction.Declared
+Microsoft.Azure.Amqp.Transaction.Declared.Declared() -> void
+Microsoft.Azure.Amqp.Transaction.Declared.TxnId.get -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.Transaction.Declared.TxnId.set -> void
+Microsoft.Azure.Amqp.Transaction.Discharge
+Microsoft.Azure.Amqp.Transaction.Discharge.Discharge() -> void
+Microsoft.Azure.Amqp.Transaction.Discharge.Fail.get -> bool?
+Microsoft.Azure.Amqp.Transaction.Discharge.Fail.set -> void
+Microsoft.Azure.Amqp.Transaction.Discharge.TxnId.get -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.Transaction.Discharge.TxnId.set -> void
+Microsoft.Azure.Amqp.Transaction.TransactionalState
+Microsoft.Azure.Amqp.Transaction.TransactionalState.Outcome.get -> Microsoft.Azure.Amqp.Framing.Outcome
+Microsoft.Azure.Amqp.Transaction.TransactionalState.Outcome.set -> void
+Microsoft.Azure.Amqp.Transaction.TransactionalState.TransactionalState() -> void
+Microsoft.Azure.Amqp.Transaction.TransactionalState.TxnId.get -> System.ArraySegment<byte>
+Microsoft.Azure.Amqp.Transaction.TransactionalState.TxnId.set -> void
+Microsoft.Azure.Amqp.Transaction.TxnCapabilities
+Microsoft.Azure.Amqp.Transport.AmqpTransportInitiator
+Microsoft.Azure.Amqp.Transport.AmqpTransportInitiator.AmqpTransportInitiator(Microsoft.Azure.Amqp.AmqpSettings settings, Microsoft.Azure.Amqp.Transport.TransportSettings transportSettings) -> void
+Microsoft.Azure.Amqp.Transport.AmqpTransportInitiator.BeginConnect(System.TimeSpan timeout, System.AsyncCallback callback, object state) -> System.IAsyncResult
+Microsoft.Azure.Amqp.Transport.AmqpTransportInitiator.ConnectAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Transport.TransportBase>
+Microsoft.Azure.Amqp.Transport.AmqpTransportInitiator.ConnectAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Transport.TransportBase>
+Microsoft.Azure.Amqp.Transport.AmqpTransportInitiator.ConnectTaskAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Transport.TransportBase>
+Microsoft.Azure.Amqp.Transport.AmqpTransportInitiator.EndConnect(System.IAsyncResult result) -> Microsoft.Azure.Amqp.Transport.TransportBase
+Microsoft.Azure.Amqp.Transport.AmqpTransportListener
+Microsoft.Azure.Amqp.Transport.AmqpTransportListener.AmqpSettings.get -> Microsoft.Azure.Amqp.AmqpSettings
+Microsoft.Azure.Amqp.Transport.AmqpTransportListener.AmqpTransportListener(System.Collections.Generic.IEnumerable<Microsoft.Azure.Amqp.Transport.TransportListener> listeners, Microsoft.Azure.Amqp.AmqpSettings settings) -> void
+Microsoft.Azure.Amqp.Transport.AmqpTransportListener.Find<T>() -> T
+Microsoft.Azure.Amqp.Transport.AmqpTransportProvider
+Microsoft.Azure.Amqp.Transport.AmqpTransportProvider.AmqpTransportProvider() -> void
+Microsoft.Azure.Amqp.Transport.AmqpTransportProvider.AmqpTransportProvider(Microsoft.Azure.Amqp.AmqpVersion version) -> void
+Microsoft.Azure.Amqp.Transport.CustomSslStream
+Microsoft.Azure.Amqp.Transport.CustomSslStream.CustomSslStream(System.IO.Stream innerStream, bool leaveInnerStreamOpen, bool isClient) -> void
+Microsoft.Azure.Amqp.Transport.CustomSslStream.CustomSslStream(System.IO.Stream innerStream, bool leaveInnerStreamOpen, System.Net.Security.RemoteCertificateValidationCallback userCertificateValidationCallback, bool isClient) -> void
+Microsoft.Azure.Amqp.Transport.CustomSslStream.IsClient.get -> bool
+Microsoft.Azure.Amqp.Transport.CustomSslStream.IsRemoteCertificateValid.get -> bool
+Microsoft.Azure.Amqp.Transport.CustomSslStream.RequireMutualAuthentication.get -> bool
+Microsoft.Azure.Amqp.Transport.TcpTransportListener
+Microsoft.Azure.Amqp.Transport.TcpTransportListener.TcpTransportListener(Microsoft.Azure.Amqp.Transport.TcpTransportSettings transportSettings) -> void
+Microsoft.Azure.Amqp.Transport.TcpTransportSettings
+Microsoft.Azure.Amqp.Transport.TcpTransportSettings.Host.get -> string
+Microsoft.Azure.Amqp.Transport.TcpTransportSettings.Host.set -> void
+Microsoft.Azure.Amqp.Transport.TcpTransportSettings.Port.get -> int
+Microsoft.Azure.Amqp.Transport.TcpTransportSettings.Port.set -> void
+Microsoft.Azure.Amqp.Transport.TcpTransportSettings.TcpBacklog.get -> int
+Microsoft.Azure.Amqp.Transport.TcpTransportSettings.TcpBacklog.set -> void
+Microsoft.Azure.Amqp.Transport.TcpTransportSettings.TcpTransportSettings() -> void
+Microsoft.Azure.Amqp.Transport.TlsTransport
+Microsoft.Azure.Amqp.Transport.TlsTransport.Dispose() -> void
+Microsoft.Azure.Amqp.Transport.TlsTransport.SslStream.get -> Microsoft.Azure.Amqp.Transport.CustomSslStream
+Microsoft.Azure.Amqp.Transport.TlsTransport.TlsSettings.get -> Microsoft.Azure.Amqp.Transport.TlsTransportSettings
+Microsoft.Azure.Amqp.Transport.TlsTransport.TlsTransport(Microsoft.Azure.Amqp.Transport.TransportBase innerTransport, Microsoft.Azure.Amqp.Transport.TlsTransportSettings tlsSettings) -> void
+Microsoft.Azure.Amqp.Transport.TlsTransportInitiator
+Microsoft.Azure.Amqp.Transport.TlsTransportInitiator.TlsTransportInitiator(Microsoft.Azure.Amqp.Transport.TlsTransportSettings transportSettings) -> void
+Microsoft.Azure.Amqp.Transport.TlsTransportListener
+Microsoft.Azure.Amqp.Transport.TlsTransportListener.TlsTransportListener(Microsoft.Azure.Amqp.Transport.TlsTransportSettings transportSettings) -> void
+Microsoft.Azure.Amqp.Transport.TlsTransportProvider
+Microsoft.Azure.Amqp.Transport.TlsTransportProvider.Settings.get -> Microsoft.Azure.Amqp.Transport.TlsTransportSettings
+Microsoft.Azure.Amqp.Transport.TlsTransportProvider.TlsTransportProvider(Microsoft.Azure.Amqp.Transport.TlsTransportSettings tlsSettings) -> void
+Microsoft.Azure.Amqp.Transport.TlsTransportProvider.TlsTransportProvider(Microsoft.Azure.Amqp.Transport.TlsTransportSettings tlsSettings, Microsoft.Azure.Amqp.AmqpVersion version) -> void
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.Certificate.get -> System.Security.Cryptography.X509Certificates.X509Certificate2
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.Certificate.set -> void
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.CertificateValidationCallback.get -> System.Net.Security.RemoteCertificateValidationCallback
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.CertificateValidationCallback.set -> void
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.CheckCertificateRevocation.get -> bool
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.CheckCertificateRevocation.set -> void
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.InnerTransportSettings.get -> Microsoft.Azure.Amqp.Transport.TransportSettings
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.IsInitiator.get -> bool
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.IsInitiator.set -> void
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.Protocols.get -> System.Security.Authentication.SslProtocols
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.Protocols.set -> void
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.TargetHost.get -> string
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.TargetHost.set -> void
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.TlsTransportSettings() -> void
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.TlsTransportSettings(Microsoft.Azure.Amqp.Transport.TransportSettings innerSettings) -> void
+Microsoft.Azure.Amqp.Transport.TlsTransportSettings.TlsTransportSettings(Microsoft.Azure.Amqp.Transport.TransportSettings innerSettings, bool isInitiator) -> void
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.Buffer.get -> byte[]
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.ByteBuffer.get -> Microsoft.Azure.Amqp.ByteBuffer
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.ByteBufferList.get -> System.Collections.Generic.IList<Microsoft.Azure.Amqp.ByteBuffer>
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.BytesTransfered.get -> int
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.BytesTransfered.set -> void
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.CompletedCallback.get -> System.Action<Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs>
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.CompletedCallback.set -> void
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.CompletedSynchronously.get -> bool
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.CompletedSynchronously.set -> void
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.Count.get -> int
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.Exception.get -> System.Exception
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.Exception.set -> void
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.Offset.get -> int
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.Reset() -> void
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.SetBuffer(byte[] buffer, int offset, int count) -> void
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.SetBuffer(System.Collections.Generic.IList<Microsoft.Azure.Amqp.ByteBuffer> byteBufferList) -> void
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.SetReadBuffer(Microsoft.Azure.Amqp.ByteBuffer byteBuffer) -> void
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.SetWriteBuffer(Microsoft.Azure.Amqp.ByteBuffer byteBuffer) -> void
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.Transport.get -> Microsoft.Azure.Amqp.Transport.TransportBase
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.Transport.set -> void
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.TransportAsyncCallbackArgs() -> void
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.UserToken.get -> object
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.UserToken.set -> void
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.UserToken2.get -> object
+Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs.UserToken2.set -> void
+Microsoft.Azure.Amqp.Transport.TransportBase
+Microsoft.Azure.Amqp.Transport.TransportBase.IsAuthenticated.get -> bool
+Microsoft.Azure.Amqp.Transport.TransportBase.Principal.get -> System.Security.Principal.IPrincipal
+Microsoft.Azure.Amqp.Transport.TransportBase.Principal.set -> void
+Microsoft.Azure.Amqp.Transport.TransportBase.TransportBase(string type) -> void
+Microsoft.Azure.Amqp.Transport.TransportBase.TransportBase(string type, Microsoft.Azure.Amqp.SequenceNumber identifier) -> void
+Microsoft.Azure.Amqp.Transport.TransportInitiator
+Microsoft.Azure.Amqp.Transport.TransportInitiator.TransportInitiator() -> void
+Microsoft.Azure.Amqp.Transport.TransportListener
+Microsoft.Azure.Amqp.Transport.TransportListener.Listen(System.Action<Microsoft.Azure.Amqp.Transport.TransportListener, Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs> callback) -> void
+Microsoft.Azure.Amqp.Transport.TransportListener.OnTransportAccepted(Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs args) -> void
+Microsoft.Azure.Amqp.Transport.TransportListener.TransportListener(string type) -> void
+Microsoft.Azure.Amqp.Transport.TransportProvider
+Microsoft.Azure.Amqp.Transport.TransportProvider.CreateTransport(Microsoft.Azure.Amqp.Transport.TransportBase innerTransport, bool isInitiator) -> Microsoft.Azure.Amqp.Transport.TransportBase
+Microsoft.Azure.Amqp.Transport.TransportProvider.DefaultVersion.get -> Microsoft.Azure.Amqp.AmqpVersion
+Microsoft.Azure.Amqp.Transport.TransportProvider.ProtocolId.get -> Microsoft.Azure.Amqp.ProtocolId
+Microsoft.Azure.Amqp.Transport.TransportProvider.ProtocolId.set -> void
+Microsoft.Azure.Amqp.Transport.TransportProvider.TransportProvider() -> void
+Microsoft.Azure.Amqp.Transport.TransportProvider.TryGetVersion(Microsoft.Azure.Amqp.AmqpVersion requestedVersion, out Microsoft.Azure.Amqp.AmqpVersion supportedVersion) -> bool
+Microsoft.Azure.Amqp.Transport.TransportProvider.Versions.get -> System.Collections.Generic.IList<Microsoft.Azure.Amqp.AmqpVersion>
+Microsoft.Azure.Amqp.Transport.TransportSettings
+Microsoft.Azure.Amqp.Transport.TransportSettings.ListenerAcceptorCount.get -> int
+Microsoft.Azure.Amqp.Transport.TransportSettings.ListenerAcceptorCount.set -> void
+Microsoft.Azure.Amqp.Transport.TransportSettings.ReceiveBufferSize.get -> int
+Microsoft.Azure.Amqp.Transport.TransportSettings.ReceiveBufferSize.set -> void
+Microsoft.Azure.Amqp.Transport.TransportSettings.SendBufferSize.get -> int
+Microsoft.Azure.Amqp.Transport.TransportSettings.SendBufferSize.set -> void
+Microsoft.Azure.Amqp.Transport.TransportSettings.TransportSettings() -> void
+Microsoft.Azure.Amqp.Transport.WebSocketTransport
+Microsoft.Azure.Amqp.Transport.WebSocketTransportSettings
+Microsoft.Azure.Amqp.Transport.WebSocketTransportSettings.Proxy.get -> System.Net.IWebProxy
+Microsoft.Azure.Amqp.Transport.WebSocketTransportSettings.Proxy.set -> void
+Microsoft.Azure.Amqp.Transport.WebSocketTransportSettings.SubProtocol.get -> string
+Microsoft.Azure.Amqp.Transport.WebSocketTransportSettings.SubProtocol.set -> void
+Microsoft.Azure.Amqp.Transport.WebSocketTransportSettings.Uri.get -> System.Uri
+Microsoft.Azure.Amqp.Transport.WebSocketTransportSettings.Uri.set -> void
+Microsoft.Azure.Amqp.Transport.WebSocketTransportSettings.WebsocketKeepAliveInterval.get -> System.TimeSpan?
+Microsoft.Azure.Amqp.Transport.WebSocketTransportSettings.WebsocketKeepAliveInterval.set -> void
+Microsoft.Azure.Amqp.Transport.WebSocketTransportSettings.WebSocketTransportSettings() -> void
+Microsoft.Azure.Amqp.X509.X509CertificateIdentity
+Microsoft.Azure.Amqp.X509.X509CertificateIdentity.AuthenticationType.get -> string
+Microsoft.Azure.Amqp.X509.X509CertificateIdentity.Certificate.get -> System.Security.Cryptography.X509Certificates.X509Certificate2
+Microsoft.Azure.Amqp.X509.X509CertificateIdentity.IsAuthenticated.get -> bool
+Microsoft.Azure.Amqp.X509.X509CertificateIdentity.Name.get -> string
+Microsoft.Azure.Amqp.X509.X509CertificateIdentity.X509CertificateIdentity(System.Security.Cryptography.X509Certificates.X509Certificate2 certificate, bool isAuthenticated) -> void
+Microsoft.Azure.Amqp.X509.X509Principal
+Microsoft.Azure.Amqp.X509.X509Principal.CertificateIdentity.get -> Microsoft.Azure.Amqp.X509.X509CertificateIdentity
+Microsoft.Azure.Amqp.X509.X509Principal.Identity.get -> System.Security.Principal.IIdentity
+Microsoft.Azure.Amqp.X509.X509Principal.IsInRole(string role) -> bool
+Microsoft.Azure.Amqp.X509.X509Principal.X509Principal(Microsoft.Azure.Amqp.X509.X509CertificateIdentity identity) -> void
+override Microsoft.Azure.Amqp.AmqpConnection.AbortInternal() -> void
+override Microsoft.Azure.Amqp.AmqpConnection.CloseInternal() -> bool
+override Microsoft.Azure.Amqp.AmqpConnection.HandleIoEvent(Microsoft.Azure.Amqp.IoEvent ioEvent) -> void
+override Microsoft.Azure.Amqp.AmqpConnection.OnFrameBuffer(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+override Microsoft.Azure.Amqp.AmqpConnection.OnProtocolHeader(Microsoft.Azure.Amqp.Framing.ProtocolHeader header) -> void
+override Microsoft.Azure.Amqp.AmqpConnection.OpenInternal() -> bool
+override Microsoft.Azure.Amqp.AmqpException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+override Microsoft.Azure.Amqp.AmqpLink.AbortInternal() -> void
+override Microsoft.Azure.Amqp.AmqpLink.CloseInternal() -> bool
+override Microsoft.Azure.Amqp.AmqpLink.OpenInternal() -> bool
+override Microsoft.Azure.Amqp.AmqpLinkIdentifier.Equals(object obj) -> bool
+override Microsoft.Azure.Amqp.AmqpLinkIdentifier.GetHashCode() -> int
+override Microsoft.Azure.Amqp.AmqpLinkIdentifier.ToString() -> string
+override Microsoft.Azure.Amqp.AmqpLinkSettings.Equals(object obj) -> bool
+override Microsoft.Azure.Amqp.AmqpLinkSettings.GetHashCode() -> int
+override Microsoft.Azure.Amqp.AmqpLinkTerminus.Equals(object other) -> bool
+override Microsoft.Azure.Amqp.AmqpLinkTerminus.GetHashCode() -> int
+override Microsoft.Azure.Amqp.AmqpLinkTerminus.ToString() -> string
+override Microsoft.Azure.Amqp.AmqpMessage.AddPayload(Microsoft.Azure.Amqp.ByteBuffer payload, bool isLast) -> void
+override Microsoft.Azure.Amqp.AmqpMessage.Dispose(bool disposing) -> void
+override Microsoft.Azure.Amqp.AmqpMessage.GetPayload(int payloadSize, out bool more) -> Microsoft.Azure.Amqp.ByteBuffer
+override Microsoft.Azure.Amqp.AmqpObject.ToString() -> string
+override Microsoft.Azure.Amqp.AmqpSession.AbortInternal() -> void
+override Microsoft.Azure.Amqp.AmqpSession.CloseInternal() -> bool
+override Microsoft.Azure.Amqp.AmqpSession.OpenInternal() -> bool
+override Microsoft.Azure.Amqp.AmqpVersion.ToString() -> string
+override Microsoft.Azure.Amqp.BufferListStream.CanRead.get -> bool
+override Microsoft.Azure.Amqp.BufferListStream.CanSeek.get -> bool
+override Microsoft.Azure.Amqp.BufferListStream.CanWrite.get -> bool
+override Microsoft.Azure.Amqp.BufferListStream.Flush() -> void
+override Microsoft.Azure.Amqp.BufferListStream.Length.get -> long
+override Microsoft.Azure.Amqp.BufferListStream.Position.get -> long
+override Microsoft.Azure.Amqp.BufferListStream.Position.set -> void
+override Microsoft.Azure.Amqp.BufferListStream.Read(byte[] buffer, int offset, int count) -> int
+override Microsoft.Azure.Amqp.BufferListStream.ReadByte() -> int
+override Microsoft.Azure.Amqp.BufferListStream.Seek(long offset, System.IO.SeekOrigin origin) -> long
+override Microsoft.Azure.Amqp.BufferListStream.SetLength(long value) -> void
+override Microsoft.Azure.Amqp.BufferListStream.Write(byte[] buffer, int offset, int count) -> void
+override Microsoft.Azure.Amqp.Encoding.AmqpMap.ToString() -> string
+override Microsoft.Azure.Amqp.Encoding.AmqpSymbol.Equals(object obj) -> bool
+override Microsoft.Azure.Amqp.Encoding.AmqpSymbol.GetHashCode() -> int
+override Microsoft.Azure.Amqp.Encoding.AmqpSymbol.ToString() -> string
+override Microsoft.Azure.Amqp.Encoding.DescribedType.ToString() -> string
+override Microsoft.Azure.Amqp.Encoding.MapKey.Equals(object obj) -> bool
+override Microsoft.Azure.Amqp.Encoding.MapKey.GetHashCode() -> int
+override Microsoft.Azure.Amqp.Encoding.MapKey.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Accepted.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.AmqpDescribed.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.AmqpSequence.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.AmqpValue.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Attach.FieldCount.get -> int
+override Microsoft.Azure.Amqp.Framing.Attach.OnDecode(Microsoft.Azure.Amqp.ByteBuffer buffer, int count) -> void
+override Microsoft.Azure.Amqp.Framing.Attach.OnEncode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+override Microsoft.Azure.Amqp.Framing.Attach.OnValueSize() -> int
+override Microsoft.Azure.Amqp.Framing.Attach.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Begin.FieldCount.get -> int
+override Microsoft.Azure.Amqp.Framing.Begin.OnDecode(Microsoft.Azure.Amqp.ByteBuffer buffer, int count) -> void
+override Microsoft.Azure.Amqp.Framing.Begin.OnEncode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+override Microsoft.Azure.Amqp.Framing.Begin.OnValueSize() -> int
+override Microsoft.Azure.Amqp.Framing.Begin.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Close.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Data.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.DeleteOnClose.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.DeleteOnNoLinks.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.DeleteOnNoLinksOrMessages.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.DeleteOnNoMessages.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Detach.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Disposition.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.End.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Error.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Flow.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Footer.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Frame.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Header.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.LifeTimePolicy.FieldCount.get -> int
+override Microsoft.Azure.Amqp.Framing.LifeTimePolicy.OnDecode(Microsoft.Azure.Amqp.ByteBuffer buffer, int count) -> void
+override Microsoft.Azure.Amqp.Framing.LifeTimePolicy.OnEncode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+override Microsoft.Azure.Amqp.Framing.LifeTimePolicy.OnValueSize() -> int
+override Microsoft.Azure.Amqp.Framing.Modified.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Multiple<T>.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Open.FieldCount.get -> int
+override Microsoft.Azure.Amqp.Framing.Open.OnDecode(Microsoft.Azure.Amqp.ByteBuffer buffer, int count) -> void
+override Microsoft.Azure.Amqp.Framing.Open.OnEncode(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+override Microsoft.Azure.Amqp.Framing.Open.OnValueSize() -> int
+override Microsoft.Azure.Amqp.Framing.Open.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Properties.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.ProtocolHeader.Equals(object obj) -> bool
+override Microsoft.Azure.Amqp.Framing.ProtocolHeader.GetHashCode() -> int
+override Microsoft.Azure.Amqp.Framing.ProtocolHeader.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Received.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Rejected.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Released.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.RestrictedMap.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Source.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Target.ToString() -> string
+override Microsoft.Azure.Amqp.Framing.Transfer.ToString() -> string
+override Microsoft.Azure.Amqp.RequestResponseAmqpLink.AbortInternal() -> void
+override Microsoft.Azure.Amqp.RequestResponseAmqpLink.CloseInternal() -> bool
+override Microsoft.Azure.Amqp.RequestResponseAmqpLink.OpenInternal() -> bool
+override Microsoft.Azure.Amqp.Sasl.SaslAnonymousHandler.Clone() -> Microsoft.Azure.Amqp.Sasl.SaslHandler
+override Microsoft.Azure.Amqp.Sasl.SaslAnonymousHandler.OnChallenge(Microsoft.Azure.Amqp.Sasl.SaslChallenge challenge) -> void
+override Microsoft.Azure.Amqp.Sasl.SaslAnonymousHandler.OnResponse(Microsoft.Azure.Amqp.Sasl.SaslResponse response) -> void
+override Microsoft.Azure.Amqp.Sasl.SaslChallenge.ToString() -> string
+override Microsoft.Azure.Amqp.Sasl.SaslExternalHandler.Clone() -> Microsoft.Azure.Amqp.Sasl.SaslHandler
+override Microsoft.Azure.Amqp.Sasl.SaslExternalHandler.OnChallenge(Microsoft.Azure.Amqp.Sasl.SaslChallenge challenge) -> void
+override Microsoft.Azure.Amqp.Sasl.SaslExternalHandler.OnResponse(Microsoft.Azure.Amqp.Sasl.SaslResponse response) -> void
+override Microsoft.Azure.Amqp.Sasl.SaslExternalHandler.OnStart(Microsoft.Azure.Amqp.Sasl.SaslInit init, bool isClient) -> void
+override Microsoft.Azure.Amqp.Sasl.SaslHandler.ToString() -> string
+override Microsoft.Azure.Amqp.Sasl.SaslInit.ToString() -> string
+override Microsoft.Azure.Amqp.Sasl.SaslMechanisms.ToString() -> string
+override Microsoft.Azure.Amqp.Sasl.SaslNegotiator.ToString() -> string
+override Microsoft.Azure.Amqp.Sasl.SaslOutcome.ToString() -> string
+override Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.Clone() -> Microsoft.Azure.Amqp.Sasl.SaslHandler
+override Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.OnChallenge(Microsoft.Azure.Amqp.Sasl.SaslChallenge challenge) -> void
+override Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.OnResponse(Microsoft.Azure.Amqp.Sasl.SaslResponse response) -> void
+override Microsoft.Azure.Amqp.Sasl.SaslResponse.ToString() -> string
+override Microsoft.Azure.Amqp.Sasl.SaslTransport.AbortInternal() -> void
+override Microsoft.Azure.Amqp.Sasl.SaslTransport.CloseInternal() -> bool
+override Microsoft.Azure.Amqp.Sasl.SaslTransport.IsSecure.get -> bool
+override Microsoft.Azure.Amqp.Sasl.SaslTransport.LocalEndPoint.get -> System.Net.EndPoint
+override Microsoft.Azure.Amqp.Sasl.SaslTransport.OpenInternal() -> bool
+override Microsoft.Azure.Amqp.Sasl.SaslTransport.ReadAsync(Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs args) -> bool
+override Microsoft.Azure.Amqp.Sasl.SaslTransport.RemoteEndPoint.get -> System.Net.EndPoint
+override Microsoft.Azure.Amqp.Sasl.SaslTransport.SetMonitor(Microsoft.Azure.Amqp.ITransportMonitor usageMeter) -> void
+override Microsoft.Azure.Amqp.Sasl.SaslTransport.WriteAsync(Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs args) -> bool
+override Microsoft.Azure.Amqp.Sasl.SaslTransportProvider.OnCreateTransport(Microsoft.Azure.Amqp.Transport.TransportBase innerTransport, bool isInitiator) -> Microsoft.Azure.Amqp.Transport.TransportBase
+override Microsoft.Azure.Amqp.Sasl.SaslTransportProvider.ToString() -> string
+override Microsoft.Azure.Amqp.SendingAmqpLink.Available.get -> uint
+override Microsoft.Azure.Amqp.SequenceNumber.Equals(object obj) -> bool
+override Microsoft.Azure.Amqp.SequenceNumber.GetHashCode() -> int
+override Microsoft.Azure.Amqp.SequenceNumber.ToString() -> string
+override Microsoft.Azure.Amqp.Transaction.Controller.ToString() -> string
+override Microsoft.Azure.Amqp.Transaction.Declare.ToString() -> string
+override Microsoft.Azure.Amqp.Transaction.Declared.ToString() -> string
+override Microsoft.Azure.Amqp.Transaction.Discharge.ToString() -> string
+override Microsoft.Azure.Amqp.Transaction.TransactionalState.ToString() -> string
+override Microsoft.Azure.Amqp.Transport.AmqpTransportInitiator.ConnectAsync(System.TimeSpan timeout, Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs callbackArgs) -> bool
+override Microsoft.Azure.Amqp.Transport.AmqpTransportInitiator.ToString() -> string
+override Microsoft.Azure.Amqp.Transport.TcpTransportSettings.CreateInitiator() -> Microsoft.Azure.Amqp.Transport.TransportInitiator
+override Microsoft.Azure.Amqp.Transport.TcpTransportSettings.CreateListener() -> Microsoft.Azure.Amqp.Transport.TransportListener
+override Microsoft.Azure.Amqp.Transport.TcpTransportSettings.ToString() -> string
+override Microsoft.Azure.Amqp.Transport.TlsTransport.AbortInternal() -> void
+override Microsoft.Azure.Amqp.Transport.TlsTransport.CloseInternal() -> bool
+override Microsoft.Azure.Amqp.Transport.TlsTransport.IsSecure.get -> bool
+override Microsoft.Azure.Amqp.Transport.TlsTransport.LocalEndPoint.get -> System.Net.EndPoint
+override Microsoft.Azure.Amqp.Transport.TlsTransport.OpenInternal() -> bool
+override Microsoft.Azure.Amqp.Transport.TlsTransport.ReadAsync(Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs args) -> bool
+override Microsoft.Azure.Amqp.Transport.TlsTransport.RemoteEndPoint.get -> System.Net.EndPoint
+override Microsoft.Azure.Amqp.Transport.TlsTransport.SetMonitor(Microsoft.Azure.Amqp.ITransportMonitor usageMeter) -> void
+override Microsoft.Azure.Amqp.Transport.TlsTransport.WriteAsync(Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs args) -> bool
+override Microsoft.Azure.Amqp.Transport.TlsTransportInitiator.ConnectAsync(System.TimeSpan timeout, Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs callbackArgs) -> bool
+override Microsoft.Azure.Amqp.Transport.TlsTransportInitiator.ToString() -> string
+override Microsoft.Azure.Amqp.Transport.TlsTransportListener.AbortInternal() -> void
+override Microsoft.Azure.Amqp.Transport.TlsTransportListener.CloseInternal() -> bool
+override Microsoft.Azure.Amqp.Transport.TlsTransportListener.OnListen() -> void
+override Microsoft.Azure.Amqp.Transport.TlsTransportProvider.OnCreateTransport(Microsoft.Azure.Amqp.Transport.TransportBase innerTransport, bool isInitiator) -> Microsoft.Azure.Amqp.Transport.TransportBase
+override Microsoft.Azure.Amqp.Transport.TlsTransportProvider.ToString() -> string
+override Microsoft.Azure.Amqp.Transport.TlsTransportSettings.CreateInitiator() -> Microsoft.Azure.Amqp.Transport.TransportInitiator
+override Microsoft.Azure.Amqp.Transport.TlsTransportSettings.CreateListener() -> Microsoft.Azure.Amqp.Transport.TransportListener
+override Microsoft.Azure.Amqp.Transport.TlsTransportSettings.ToString() -> string
+override Microsoft.Azure.Amqp.Transport.TransportBase.OnClose(System.TimeSpan timeout) -> void
+override Microsoft.Azure.Amqp.Transport.TransportBase.OnOpen(System.TimeSpan timeout) -> void
+override Microsoft.Azure.Amqp.Transport.TransportBase.OpenInternal() -> bool
+override Microsoft.Azure.Amqp.Transport.TransportListener.AbortInternal() -> void
+override Microsoft.Azure.Amqp.Transport.TransportListener.CloseInternal() -> bool
+override Microsoft.Azure.Amqp.Transport.TransportListener.OnClose(System.TimeSpan timeout) -> void
+override Microsoft.Azure.Amqp.Transport.TransportListener.OnOpen(System.TimeSpan timeout) -> void
+override Microsoft.Azure.Amqp.Transport.TransportListener.OpenInternal() -> bool
+override Microsoft.Azure.Amqp.Transport.WebSocketTransport.LocalEndPoint.get -> System.Net.EndPoint
+override Microsoft.Azure.Amqp.Transport.WebSocketTransport.RemoteEndPoint.get -> System.Net.EndPoint
+override Microsoft.Azure.Amqp.Transport.WebSocketTransport.SetMonitor(Microsoft.Azure.Amqp.ITransportMonitor usageMeter) -> void
+override Microsoft.Azure.Amqp.Transport.WebSocketTransportSettings.CreateInitiator() -> Microsoft.Azure.Amqp.Transport.TransportInitiator
+override Microsoft.Azure.Amqp.Transport.WebSocketTransportSettings.CreateListener() -> Microsoft.Azure.Amqp.Transport.TransportListener
+override sealed Microsoft.Azure.Amqp.Transport.WebSocketTransport.ReadAsync(Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs args) -> bool
+override sealed Microsoft.Azure.Amqp.Transport.WebSocketTransport.WriteAsync(Microsoft.Azure.Amqp.Transport.TransportAsyncCallbackArgs args) -> bool
+static Microsoft.Azure.Amqp.AmqpCodec.CreateAmqpDescribed(Microsoft.Azure.Amqp.ByteBuffer buffer) -> Microsoft.Azure.Amqp.Framing.AmqpDescribed
+static Microsoft.Azure.Amqp.AmqpCodec.CreateAmqpDescribed(Microsoft.Azure.Amqp.ByteBuffer buffer, System.Collections.Generic.Dictionary<string, System.Func<Microsoft.Azure.Amqp.Framing.AmqpDescribed>> byName, System.Collections.Generic.Dictionary<ulong, System.Func<Microsoft.Azure.Amqp.Framing.AmqpDescribed>> byCode) -> Microsoft.Azure.Amqp.Framing.AmqpDescribed
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeAmqpDescribed(Microsoft.Azure.Amqp.ByteBuffer buffer) -> Microsoft.Azure.Amqp.Framing.AmqpDescribed
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeAmqpDescribed(Microsoft.Azure.Amqp.ByteBuffer buffer, System.Collections.Generic.Dictionary<string, System.Func<Microsoft.Azure.Amqp.Framing.AmqpDescribed>> byName, System.Collections.Generic.Dictionary<ulong, System.Func<Microsoft.Azure.Amqp.Framing.AmqpDescribed>> byCode) -> Microsoft.Azure.Amqp.Framing.AmqpDescribed
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeArray<T>(Microsoft.Azure.Amqp.ByteBuffer buffer) -> T[]
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeBinary(Microsoft.Azure.Amqp.ByteBuffer buffer) -> System.ArraySegment<byte>
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeBoolean(Microsoft.Azure.Amqp.ByteBuffer buffer) -> bool?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeByte(Microsoft.Azure.Amqp.ByteBuffer buffer) -> sbyte?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeChar(Microsoft.Azure.Amqp.ByteBuffer buffer) -> char?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeDecimal(Microsoft.Azure.Amqp.ByteBuffer buffer) -> decimal?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeDouble(Microsoft.Azure.Amqp.ByteBuffer buffer) -> double?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeFloat(Microsoft.Azure.Amqp.ByteBuffer buffer) -> float?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeInt(Microsoft.Azure.Amqp.ByteBuffer buffer) -> int?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeKnownType<T>(Microsoft.Azure.Amqp.ByteBuffer buffer) -> T
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeList(Microsoft.Azure.Amqp.ByteBuffer buffer) -> System.Collections.IList
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeLong(Microsoft.Azure.Amqp.ByteBuffer buffer) -> long?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeMap(Microsoft.Azure.Amqp.ByteBuffer buffer, System.Collections.Generic.IEqualityComparer<Microsoft.Azure.Amqp.Encoding.MapKey> comparer = null) -> Microsoft.Azure.Amqp.Encoding.AmqpMap
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeMap<T>(Microsoft.Azure.Amqp.ByteBuffer buffer) -> T
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeMultiple<T>(Microsoft.Azure.Amqp.ByteBuffer buffer) -> Microsoft.Azure.Amqp.Framing.Multiple<T>
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeObject(Microsoft.Azure.Amqp.ByteBuffer buffer) -> object
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeShort(Microsoft.Azure.Amqp.ByteBuffer buffer) -> short?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeString(Microsoft.Azure.Amqp.ByteBuffer buffer) -> string
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeSymbol(Microsoft.Azure.Amqp.ByteBuffer buffer) -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeTimeStamp(Microsoft.Azure.Amqp.ByteBuffer buffer) -> System.DateTime?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeUByte(Microsoft.Azure.Amqp.ByteBuffer buffer) -> byte?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeUInt(Microsoft.Azure.Amqp.ByteBuffer buffer) -> uint?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeULong(Microsoft.Azure.Amqp.ByteBuffer buffer) -> ulong?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeUShort(Microsoft.Azure.Amqp.ByteBuffer buffer) -> ushort?
+static Microsoft.Azure.Amqp.AmqpCodec.DecodeUuid(Microsoft.Azure.Amqp.ByteBuffer buffer) -> System.Guid?
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeArray<T>(T[] data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeBinary(System.ArraySegment<byte> data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeBoolean(bool? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeByte(sbyte? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeChar(char? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeDecimal(decimal? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeDouble(double? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeFloat(float? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeInt(int? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeList(System.Collections.IList data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeLong(long? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeMap(Microsoft.Azure.Amqp.Encoding.AmqpMap data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeMultiple<T>(Microsoft.Azure.Amqp.Framing.Multiple<T> data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeObject(object data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeSerializable(Microsoft.Azure.Amqp.Encoding.IAmqpSerializable data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeShort(short? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeString(string data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeSymbol(Microsoft.Azure.Amqp.Encoding.AmqpSymbol data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeTimeStamp(System.DateTime? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeUByte(byte? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeUInt(uint? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeULong(ulong? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeUShort(ushort? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.EncodeUuid(System.Guid? data, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.AmqpCodec.GetArrayEncodeSize<T>(T[] value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetBinaryEncodeSize(System.ArraySegment<byte> value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetBooleanEncodeSize(bool? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetByteEncodeSize(sbyte? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetCharEncodeSize(char? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetDoubleEncodeSize(double? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetFloatEncodeSize(float? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetFrameSize(Microsoft.Azure.Amqp.ByteBuffer buffer) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetIntEncodeSize(int? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetListEncodeSize(System.Collections.IList value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetLongEncodeSize(long? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetMapEncodeSize(Microsoft.Azure.Amqp.Encoding.AmqpMap value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetMultipleEncodeSize<T>(Microsoft.Azure.Amqp.Framing.Multiple<T> value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetObjectEncodeSize(object value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetSerializableEncodeSize(Microsoft.Azure.Amqp.Encoding.IAmqpSerializable value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetShortEncodeSize(short? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetStringEncodeSize(string value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetSymbolEncodeSize(Microsoft.Azure.Amqp.Encoding.AmqpSymbol value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetTimeStampEncodeSize(System.DateTime? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetUByteEncodeSize(byte? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetUIntEncodeSize(uint? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetULongEncodeSize(ulong? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetUShortEncodeSize(ushort? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.GetUuidEncodeSize(System.Guid? value) -> int
+static Microsoft.Azure.Amqp.AmqpCodec.MinimumFrameDecodeSize.get -> int
+static Microsoft.Azure.Amqp.AmqpCodec.RegisterKnownTypes(string name, ulong code, System.Func<Microsoft.Azure.Amqp.Framing.AmqpDescribed> ctor) -> void
+static Microsoft.Azure.Amqp.AmqpConnection.Factory.get -> Microsoft.Azure.Amqp.AmqpConnectionFactory
+static Microsoft.Azure.Amqp.AmqpConstants.DefaultTimeout -> System.TimeSpan
+static Microsoft.Azure.Amqp.AmqpErrorCode.ConnectionForced -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.ConnectionRedirect -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.DecodeError -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.DetachForced -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.ErrantLink -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.FrameSizeTooSmall -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.FramingError -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.HandleInUse -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.IllegalState -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.InternalError -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.InvalidField -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.LinkRedirect -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.MessageSizeExceeded -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.NotAllowed -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.NotFound -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.NotImplemented -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.PreconditionFailed -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.ResourceDeleted -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.ResourceLimitExceeded -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.ResourceLocked -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.Stolen -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.TransactionRollback -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.TransactionTimeout -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.TransactionUnknownId -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.TransferLimitExceeded -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.UnattachedHandle -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.UnauthorizedAccess -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpErrorCode.WindowViolation -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.AmqpException.FromError(Microsoft.Azure.Amqp.Framing.Error error) -> Microsoft.Azure.Amqp.AmqpException
+static Microsoft.Azure.Amqp.AmqpLinkSettings.Create(Microsoft.Azure.Amqp.Framing.Attach attach) -> Microsoft.Azure.Amqp.AmqpLinkSettings
+static Microsoft.Azure.Amqp.AmqpMessage.Create() -> Microsoft.Azure.Amqp.AmqpMessage
+static Microsoft.Azure.Amqp.AmqpMessage.Create(Microsoft.Azure.Amqp.Framing.AmqpValue value) -> Microsoft.Azure.Amqp.AmqpMessage
+static Microsoft.Azure.Amqp.AmqpMessage.Create(Microsoft.Azure.Amqp.Framing.Data data) -> Microsoft.Azure.Amqp.AmqpMessage
+static Microsoft.Azure.Amqp.AmqpMessage.Create(object value) -> Microsoft.Azure.Amqp.AmqpMessage
+static Microsoft.Azure.Amqp.AmqpMessage.Create(System.Collections.Generic.IEnumerable<Microsoft.Azure.Amqp.Framing.AmqpSequence> amqpSequence) -> Microsoft.Azure.Amqp.AmqpMessage
+static Microsoft.Azure.Amqp.AmqpMessage.Create(System.Collections.Generic.IEnumerable<Microsoft.Azure.Amqp.Framing.Data> dataList) -> Microsoft.Azure.Amqp.AmqpMessage
+static Microsoft.Azure.Amqp.AmqpMessage.Create(System.IO.Stream stream, bool ownStream) -> Microsoft.Azure.Amqp.AmqpMessage
+static Microsoft.Azure.Amqp.AmqpMessage.CreateAmqpStreamMessage(Microsoft.Azure.Amqp.BufferListStream messageStream, bool ownStream = true) -> Microsoft.Azure.Amqp.AmqpMessage
+static Microsoft.Azure.Amqp.AmqpMessage.CreateBufferMessage(Microsoft.Azure.Amqp.ByteBuffer buffer) -> Microsoft.Azure.Amqp.AmqpMessage
+static Microsoft.Azure.Amqp.AmqpMessage.CreateReceivedMessage() -> Microsoft.Azure.Amqp.AmqpMessage
+static Microsoft.Azure.Amqp.AmqpTrace.FrameLogger -> System.Action<string>
+static Microsoft.Azure.Amqp.AmqpTrace.Provider -> Microsoft.Azure.Amqp.AmqpTrace
+static Microsoft.Azure.Amqp.AmqpVersion.V100 -> Microsoft.Azure.Amqp.AmqpVersion
+static Microsoft.Azure.Amqp.BufferListStream.Create(System.IO.Stream stream, int segmentSize) -> Microsoft.Azure.Amqp.BufferListStream
+static Microsoft.Azure.Amqp.BufferListStream.Create(System.IO.Stream stream, int segmentSize, bool forceCopyStream) -> Microsoft.Azure.Amqp.BufferListStream
+static Microsoft.Azure.Amqp.BufferListStream.ReadStream(System.IO.Stream stream, int segmentSize, out int length) -> System.ArraySegment<byte>[]
+static Microsoft.Azure.Amqp.ByteBuffer.InitTransportBufferManager(int bufferSize, int maxCount) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadByte(Microsoft.Azure.Amqp.ByteBuffer buffer) -> sbyte
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadBytes(Microsoft.Azure.Amqp.ByteBuffer buffer, byte[] data, int offset, int count) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadDouble(Microsoft.Azure.Amqp.ByteBuffer buffer) -> double
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadFloat(Microsoft.Azure.Amqp.ByteBuffer buffer) -> float
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadInt(Microsoft.Azure.Amqp.ByteBuffer buffer) -> int
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadLong(Microsoft.Azure.Amqp.ByteBuffer buffer) -> long
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadShort(Microsoft.Azure.Amqp.ByteBuffer buffer) -> short
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadUByte(Microsoft.Azure.Amqp.ByteBuffer buffer) -> byte
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadUInt(byte[] buffer, int offset, int count) -> uint
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadUInt(Microsoft.Azure.Amqp.ByteBuffer buffer) -> uint
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadULong(byte[] buffer, int offset, int count) -> ulong
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadULong(Microsoft.Azure.Amqp.ByteBuffer buffer) -> ulong
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadUShort(Microsoft.Azure.Amqp.ByteBuffer buffer) -> ushort
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.ReadUuid(Microsoft.Azure.Amqp.ByteBuffer buffer) -> System.Guid
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteByte(Microsoft.Azure.Amqp.ByteBuffer buffer, sbyte data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteBytes(Microsoft.Azure.Amqp.ByteBuffer buffer, byte[] data, int offset, int count) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteDouble(Microsoft.Azure.Amqp.ByteBuffer buffer, double data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteFloat(Microsoft.Azure.Amqp.ByteBuffer buffer, float data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteInt(Microsoft.Azure.Amqp.ByteBuffer buffer, int data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteLong(Microsoft.Azure.Amqp.ByteBuffer buffer, long data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteShort(Microsoft.Azure.Amqp.ByteBuffer buffer, short data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteUByte(Microsoft.Azure.Amqp.ByteBuffer buffer, byte data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteUInt(byte[] buffer, int offset, uint data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteUInt(Microsoft.Azure.Amqp.ByteBuffer buffer, uint data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteULong(byte[] buffer, int offset, ulong data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteULong(Microsoft.Azure.Amqp.ByteBuffer buffer, ulong data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteUShort(byte[] buffer, int offset, ushort data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteUShort(Microsoft.Azure.Amqp.ByteBuffer buffer, ushort data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpBitConverter.WriteUuid(Microsoft.Azure.Amqp.ByteBuffer buffer, System.Guid data) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpEncoding.DecodeObject(Microsoft.Azure.Amqp.ByteBuffer buffer) -> object
+static Microsoft.Azure.Amqp.Encoding.AmqpEncoding.EncodeObject(object value, Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+static Microsoft.Azure.Amqp.Encoding.AmqpEncoding.GetObjectEncodeSize(object value) -> int
+static Microsoft.Azure.Amqp.Encoding.AmqpSymbol.implicit operator Microsoft.Azure.Amqp.Encoding.AmqpSymbol(string value) -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static Microsoft.Azure.Amqp.Extensions.Aborted(this Microsoft.Azure.Amqp.Framing.Transfer transfer) -> bool
+static Microsoft.Azure.Amqp.Extensions.AbsoluteExpiryTime(this Microsoft.Azure.Amqp.Framing.Properties properties) -> System.DateTime
+static Microsoft.Azure.Amqp.Extensions.AddExtension(this Microsoft.Azure.Amqp.AmqpConnection connection, object extension) -> void
+static Microsoft.Azure.Amqp.Extensions.AddProperty(this Microsoft.Azure.Amqp.Framing.Attach attach, Microsoft.Azure.Amqp.Encoding.AmqpSymbol symbol, object value) -> void
+static Microsoft.Azure.Amqp.Extensions.AddProperty(this Microsoft.Azure.Amqp.Framing.Open open, Microsoft.Azure.Amqp.Encoding.AmqpSymbol symbol, object value) -> void
+static Microsoft.Azure.Amqp.Extensions.Address(this Microsoft.Azure.Amqp.Framing.Attach attach) -> Microsoft.Azure.Amqp.Framing.Address
+static Microsoft.Azure.Amqp.Extensions.Address(this Microsoft.Azure.Amqp.Framing.Attach attach, bool role) -> Microsoft.Azure.Amqp.Framing.Address
+static Microsoft.Azure.Amqp.Extensions.AsSegment(this Microsoft.Azure.Amqp.ByteBuffer buffer) -> System.ArraySegment<byte>
+static Microsoft.Azure.Amqp.Extensions.Batchable(this Microsoft.Azure.Amqp.Framing.Disposition disposition) -> bool
+static Microsoft.Azure.Amqp.Extensions.Batchable(this Microsoft.Azure.Amqp.Framing.Transfer transfer) -> bool
+static Microsoft.Azure.Amqp.Extensions.ChannelMax(this Microsoft.Azure.Amqp.Framing.Open open) -> ushort
+static Microsoft.Azure.Amqp.Extensions.Closed(this Microsoft.Azure.Amqp.Framing.Detach detach) -> bool
+static Microsoft.Azure.Amqp.Extensions.CreationTime(this Microsoft.Azure.Amqp.Framing.Properties properties) -> System.DateTime
+static Microsoft.Azure.Amqp.Extensions.DeliveryCount(this Microsoft.Azure.Amqp.Framing.Header header) -> uint
+static Microsoft.Azure.Amqp.Extensions.Durable(this Microsoft.Azure.Amqp.Framing.Header header) -> bool
+static Microsoft.Azure.Amqp.Extensions.Durable(this Microsoft.Azure.Amqp.Framing.Source source) -> bool
+static Microsoft.Azure.Amqp.Extensions.Durable(this Microsoft.Azure.Amqp.Framing.Target target) -> bool
+static Microsoft.Azure.Amqp.Extensions.Dynamic(this Microsoft.Azure.Amqp.Framing.Source source) -> bool
+static Microsoft.Azure.Amqp.Extensions.Dynamic(this Microsoft.Azure.Amqp.Framing.Target target) -> bool
+static Microsoft.Azure.Amqp.Extensions.Echo(this Microsoft.Azure.Amqp.Framing.Flow flow) -> bool
+static Microsoft.Azure.Amqp.Extensions.ExtractSettingPropertyValueOrDefault<TValue>(this Microsoft.Azure.Amqp.AmqpLink thisPtr, Microsoft.Azure.Amqp.Encoding.AmqpSymbol key, TValue defaultValue) -> TValue
+static Microsoft.Azure.Amqp.Extensions.Find<T>(this System.Collections.Generic.IDictionary<System.Type, object> extensions) -> T
+static Microsoft.Azure.Amqp.Extensions.FirstAcquirer(this Microsoft.Azure.Amqp.Framing.Header header) -> bool
+static Microsoft.Azure.Amqp.Extensions.GetSettingPropertyOrDefault<TValue>(this Microsoft.Azure.Amqp.AmqpLink thisPtr, Microsoft.Azure.Amqp.Encoding.AmqpSymbol key, TValue defaultValue) -> TValue
+static Microsoft.Azure.Amqp.Extensions.GroupSequence(this Microsoft.Azure.Amqp.Framing.Properties properties) -> Microsoft.Azure.Amqp.SequenceNumber
+static Microsoft.Azure.Amqp.Extensions.HandleMax(this Microsoft.Azure.Amqp.Framing.Begin begin) -> uint
+static Microsoft.Azure.Amqp.Extensions.IdleTimeOut(this Microsoft.Azure.Amqp.Framing.Open open) -> uint
+static Microsoft.Azure.Amqp.Extensions.IncomingWindow(this Microsoft.Azure.Amqp.Framing.Begin begin) -> uint
+static Microsoft.Azure.Amqp.Extensions.IsReceivedDeliveryState(this Microsoft.Azure.Amqp.Delivery delivery) -> bool
+static Microsoft.Azure.Amqp.Extensions.IsReceiver(this Microsoft.Azure.Amqp.Framing.Attach attach) -> bool
+static Microsoft.Azure.Amqp.Extensions.LinkCredit(this Microsoft.Azure.Amqp.Framing.Flow flow) -> uint
+static Microsoft.Azure.Amqp.Extensions.MaxFrameSize(this Microsoft.Azure.Amqp.Framing.Open open) -> uint
+static Microsoft.Azure.Amqp.Extensions.MaxMessageSize(this Microsoft.Azure.Amqp.Framing.Attach attach) -> ulong
+static Microsoft.Azure.Amqp.Extensions.More(this Microsoft.Azure.Amqp.Framing.Transfer transfer) -> bool
+static Microsoft.Azure.Amqp.Extensions.OutgoingWindow(this Microsoft.Azure.Amqp.Framing.Begin begin) -> uint
+static Microsoft.Azure.Amqp.Extensions.Priority(this Microsoft.Azure.Amqp.Framing.Header header) -> byte
+static Microsoft.Azure.Amqp.Extensions.Resume(this Microsoft.Azure.Amqp.Framing.Transfer transfer) -> bool
+static Microsoft.Azure.Amqp.Extensions.Settled(this Microsoft.Azure.Amqp.Framing.Disposition disposition) -> bool
+static Microsoft.Azure.Amqp.Extensions.Settled(this Microsoft.Azure.Amqp.Framing.Transfer transfer) -> bool
+static Microsoft.Azure.Amqp.Extensions.SettleType(this Microsoft.Azure.Amqp.Framing.Attach attach) -> Microsoft.Azure.Amqp.SettleMode
+static Microsoft.Azure.Amqp.Extensions.Transactional(this Microsoft.Azure.Amqp.Framing.DeliveryState deliveryState) -> bool
+static Microsoft.Azure.Amqp.Extensions.TryGetExtension<T>(this Microsoft.Azure.Amqp.AmqpConnection connection, out T extension) -> bool
+static Microsoft.Azure.Amqp.Extensions.Ttl(this Microsoft.Azure.Amqp.Framing.Header header) -> uint
+static Microsoft.Azure.Amqp.Extensions.UpsertProperty(this Microsoft.Azure.Amqp.Framing.Attach attach, Microsoft.Azure.Amqp.Encoding.AmqpSymbol symbol, object value) -> void
+static Microsoft.Azure.Amqp.Extensions.UpsertProperty(this Microsoft.Azure.Amqp.Framing.Begin begin, Microsoft.Azure.Amqp.Encoding.AmqpSymbol symbol, object value) -> void
+static Microsoft.Azure.Amqp.Framing.Address.implicit operator Microsoft.Azure.Amqp.Framing.Address(string value) -> Microsoft.Azure.Amqp.Framing.Address
+static Microsoft.Azure.Amqp.Framing.MessageId.implicit operator Microsoft.Azure.Amqp.Framing.MessageId(string value) -> Microsoft.Azure.Amqp.Framing.MessageId
+static Microsoft.Azure.Amqp.Framing.MessageId.implicit operator Microsoft.Azure.Amqp.Framing.MessageId(System.ArraySegment<byte> value) -> Microsoft.Azure.Amqp.Framing.MessageId
+static Microsoft.Azure.Amqp.Framing.MessageId.implicit operator Microsoft.Azure.Amqp.Framing.MessageId(System.Guid value) -> Microsoft.Azure.Amqp.Framing.MessageId
+static Microsoft.Azure.Amqp.Framing.MessageId.implicit operator Microsoft.Azure.Amqp.Framing.MessageId(ulong value) -> Microsoft.Azure.Amqp.Framing.MessageId
+static Microsoft.Azure.Amqp.Framing.Multiple<T>.Intersect(Microsoft.Azure.Amqp.Framing.Multiple<T> multiple1, Microsoft.Azure.Amqp.Framing.Multiple<T> multiple2) -> System.Collections.Generic.IList<T>
+static Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.implicit operator Microsoft.Azure.Amqp.Encoding.AmqpMap(Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey> restrictedMap) -> Microsoft.Azure.Amqp.Encoding.AmqpMap
+static Microsoft.Azure.Amqp.SequenceNumber.Compare(int x, int y) -> int
+static Microsoft.Azure.Amqp.SequenceNumber.implicit operator Microsoft.Azure.Amqp.SequenceNumber(uint value) -> Microsoft.Azure.Amqp.SequenceNumber
+static Microsoft.Azure.Amqp.SequenceNumber.Increment(ref int sn) -> Microsoft.Azure.Amqp.SequenceNumber
+static Microsoft.Azure.Amqp.SequenceNumber.operator !=(Microsoft.Azure.Amqp.SequenceNumber value1, Microsoft.Azure.Amqp.SequenceNumber value2) -> bool
+static Microsoft.Azure.Amqp.SequenceNumber.operator +(Microsoft.Azure.Amqp.SequenceNumber value1, int delta) -> Microsoft.Azure.Amqp.SequenceNumber
+static Microsoft.Azure.Amqp.SequenceNumber.operator -(Microsoft.Azure.Amqp.SequenceNumber value1, int delta) -> Microsoft.Azure.Amqp.SequenceNumber
+static Microsoft.Azure.Amqp.SequenceNumber.operator -(Microsoft.Azure.Amqp.SequenceNumber value1, Microsoft.Azure.Amqp.SequenceNumber value2) -> int
+static Microsoft.Azure.Amqp.SequenceNumber.operator <(Microsoft.Azure.Amqp.SequenceNumber value1, Microsoft.Azure.Amqp.SequenceNumber value2) -> bool
+static Microsoft.Azure.Amqp.SequenceNumber.operator <=(Microsoft.Azure.Amqp.SequenceNumber value1, Microsoft.Azure.Amqp.SequenceNumber value2) -> bool
+static Microsoft.Azure.Amqp.SequenceNumber.operator ==(Microsoft.Azure.Amqp.SequenceNumber value1, Microsoft.Azure.Amqp.SequenceNumber value2) -> bool
+static Microsoft.Azure.Amqp.SequenceNumber.operator >(Microsoft.Azure.Amqp.SequenceNumber value1, Microsoft.Azure.Amqp.SequenceNumber value2) -> bool
+static Microsoft.Azure.Amqp.SequenceNumber.operator >=(Microsoft.Azure.Amqp.SequenceNumber value1, Microsoft.Azure.Amqp.SequenceNumber value2) -> bool
+static Microsoft.Azure.Amqp.Serialization.AmqpContractSerializer.ReadObject<T, TAs>(System.IO.Stream stream) -> TAs
+static Microsoft.Azure.Amqp.Serialization.AmqpContractSerializer.ReadObject<T>(System.IO.Stream stream) -> T
+static Microsoft.Azure.Amqp.Serialization.AmqpContractSerializer.WriteObject(System.IO.Stream stream, object graph) -> void
+static readonly Microsoft.Azure.Amqp.AmqpConstants.AcceptedOutcome -> Microsoft.Azure.Amqp.Framing.Accepted
+static readonly Microsoft.Azure.Amqp.AmqpConstants.Address -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.AmqpConstants.BatchedMessageFormat -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.AmqpConstants.DefaultProtocolVersion -> Microsoft.Azure.Amqp.AmqpVersion
+static readonly Microsoft.Azure.Amqp.AmqpConstants.EmptyBinary -> System.ArraySegment<byte>
+static readonly Microsoft.Azure.Amqp.AmqpConstants.HostName -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.AmqpConstants.IoEvent -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.AmqpConstants.MaxAbsoluteExpiryTime -> System.DateTime
+static readonly Microsoft.Azure.Amqp.AmqpConstants.NetworkHost -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.AmqpConstants.NullBinary -> System.ArraySegment<byte>
+static readonly Microsoft.Azure.Amqp.AmqpConstants.Port -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.AmqpConstants.ReceivedOutcome -> Microsoft.Azure.Amqp.Framing.Received
+static readonly Microsoft.Azure.Amqp.AmqpConstants.RejectedNotFoundOutcome -> Microsoft.Azure.Amqp.Framing.Rejected
+static readonly Microsoft.Azure.Amqp.AmqpConstants.RejectedOutcome -> Microsoft.Azure.Amqp.Framing.Rejected
+static readonly Microsoft.Azure.Amqp.AmqpConstants.ReleasedOutcome -> Microsoft.Azure.Amqp.Framing.Released
+static readonly Microsoft.Azure.Amqp.AmqpConstants.StartOfEpoch -> System.DateTime
+static readonly Microsoft.Azure.Amqp.Framing.Accepted.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Accepted.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.AmqpSequence.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.AmqpSequence.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.AmqpValue.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.AmqpValue.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.ApplicationProperties.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.ApplicationProperties.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Attach.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Attach.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Begin.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Begin.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Close.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Close.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Data.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Data.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.DeleteOnClose.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.DeleteOnClose.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.DeleteOnNoLinks.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.DeleteOnNoLinks.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.DeleteOnNoLinksOrMessages.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.DeleteOnNoLinksOrMessages.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.DeleteOnNoMessages.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.DeleteOnNoMessages.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.DeliveryAnnotations.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.DeliveryAnnotations.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Detach.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Detach.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Disposition.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Disposition.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.End.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.End.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Error.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Error.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Flow.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Flow.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Footer.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Footer.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Header.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Header.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.MessageAnnotations.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.MessageAnnotations.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Modified.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Modified.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Open.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Open.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Properties.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Properties.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Received.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Received.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Rejected.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Rejected.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Released.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Released.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Source.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Source.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.Target.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Target.Name -> string
+static readonly Microsoft.Azure.Amqp.Framing.TerminusExpiryPolicy.ConnectionClose -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.Framing.TerminusExpiryPolicy.LinkDetach -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.Framing.TerminusExpiryPolicy.Never -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.Framing.TerminusExpiryPolicy.SessionEnd -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.Framing.Transfer.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Framing.Transfer.Name -> string
+static readonly Microsoft.Azure.Amqp.Sasl.SaslAnonymousHandler.Name -> string
+static readonly Microsoft.Azure.Amqp.Sasl.SaslChallenge.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Sasl.SaslChallenge.Name -> string
+static readonly Microsoft.Azure.Amqp.Sasl.SaslExternalHandler.Name -> string
+static readonly Microsoft.Azure.Amqp.Sasl.SaslInit.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Sasl.SaslInit.Name -> string
+static readonly Microsoft.Azure.Amqp.Sasl.SaslMechanisms.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Sasl.SaslMechanisms.Name -> string
+static readonly Microsoft.Azure.Amqp.Sasl.SaslOutcome.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Sasl.SaslOutcome.Name -> string
+static readonly Microsoft.Azure.Amqp.Sasl.SaslPlainHandler.Name -> string
+static readonly Microsoft.Azure.Amqp.Sasl.SaslResponse.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Sasl.SaslResponse.Name -> string
+static readonly Microsoft.Azure.Amqp.Transaction.Coordinator.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Transaction.Coordinator.Name -> string
+static readonly Microsoft.Azure.Amqp.Transaction.Declare.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Transaction.Declare.Name -> string
+static readonly Microsoft.Azure.Amqp.Transaction.Declared.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Transaction.Declared.Name -> string
+static readonly Microsoft.Azure.Amqp.Transaction.Discharge.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Transaction.Discharge.Name -> string
+static readonly Microsoft.Azure.Amqp.Transaction.TransactionalState.Code -> ulong
+static readonly Microsoft.Azure.Amqp.Transaction.TransactionalState.Name -> string
+static readonly Microsoft.Azure.Amqp.Transaction.TxnCapabilities.DistributedTxn -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.Transaction.TxnCapabilities.LocalTransactions -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.Transaction.TxnCapabilities.MultiSsnsPerTxn -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.Transaction.TxnCapabilities.MultiTxnsPerSsn -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+static readonly Microsoft.Azure.Amqp.Transaction.TxnCapabilities.PromotableTransactions -> Microsoft.Azure.Amqp.Encoding.AmqpSymbol
+System.Collections.Generic.KeyedByTypeCollection<TItem>
+System.Collections.Generic.KeyedByTypeCollection<TItem>.Find<T>() -> T
+System.Collections.Generic.KeyedByTypeCollection<TItem>.KeyedByTypeCollection() -> void
+virtual Microsoft.Azure.Amqp.AmqpConnectionBase.HandleIoEvent(Microsoft.Azure.Amqp.IoEvent ioEvent) -> void
+virtual Microsoft.Azure.Amqp.AmqpConnectionFactory.CreateAndOpenConnectionAsync(Microsoft.Azure.Amqp.Transport.TransportBase transport, Microsoft.Azure.Amqp.AmqpSettings settings, Microsoft.Azure.Amqp.AmqpConnectionSettings connectionSettings, System.TimeSpan timeout, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpConnection>
+virtual Microsoft.Azure.Amqp.AmqpLink.AllowLinkStealing(Microsoft.Azure.Amqp.AmqpLinkSettings amqpLinkSettings) -> bool
+virtual Microsoft.Azure.Amqp.AmqpLink.Available.get -> uint
+virtual Microsoft.Azure.Amqp.AmqpLink.OnReceiveFlow(Microsoft.Azure.Amqp.Framing.Flow flow) -> void
+virtual Microsoft.Azure.Amqp.AmqpMessage.BodyStream.get -> System.IO.Stream
+virtual Microsoft.Azure.Amqp.AmqpMessage.DataBody.get -> System.Collections.Generic.IEnumerable<Microsoft.Azure.Amqp.Framing.Data>
+virtual Microsoft.Azure.Amqp.AmqpMessage.SequenceBody.get -> System.Collections.Generic.IEnumerable<Microsoft.Azure.Amqp.Framing.AmqpSequence>
+virtual Microsoft.Azure.Amqp.AmqpMessage.SerializedMessageSize.get -> long
+virtual Microsoft.Azure.Amqp.AmqpMessage.ToStream() -> System.IO.Stream
+virtual Microsoft.Azure.Amqp.AmqpMessage.ValueBody.get -> Microsoft.Azure.Amqp.Framing.AmqpValue
+virtual Microsoft.Azure.Amqp.AmqpObject.HandleCloseCommand() -> void
+virtual Microsoft.Azure.Amqp.AmqpObject.OnClose(System.TimeSpan timeout) -> void
+virtual Microsoft.Azure.Amqp.AmqpObject.OnOpen(System.TimeSpan timeout) -> void
+virtual Microsoft.Azure.Amqp.AmqpSession.OnReceiveFlow(Microsoft.Azure.Amqp.Framing.Flow flow) -> void
+virtual Microsoft.Azure.Amqp.AmqpSession.ProcessFrame(Microsoft.Azure.Amqp.Framing.Frame frame) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpAbortThrowingException(string exception) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpAbortThrowingException(System.Exception exception) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpAddSession(Microsoft.Azure.Amqp.AmqpConnection connection, Microsoft.Azure.Amqp.AmqpSession session, ushort localChannel, ushort remoteChannel) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpAddSession(object source, object session, ushort localChannel, ushort remoteChannel) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpAttachLink(Microsoft.Azure.Amqp.AmqpConnection connection, Microsoft.Azure.Amqp.AmqpSession session, Microsoft.Azure.Amqp.AmqpLink link, uint localHandle, uint remoteHandle, string linkName, string role, object source, object target) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpAttachLink(object connection, object session, object link, uint localHandle, uint remoteHandle, string linkName, string role, object source, object target) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpCacheMessage(Microsoft.Azure.Amqp.AmqpLink link, uint deliveryId, int transfers, uint totalLinkCredit, uint linkCredit) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpCacheMessage(object source, uint deliveryId, int count, bool isPrefecthingBySize, long totalCacheSizeInBytes, uint totalLinkCredit, uint linkCredit) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpCloseConnection(object source, Microsoft.Azure.Amqp.AmqpConnection connection, bool abort) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpCloseConnection(object source, object connection, bool abort) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpDeliveryNotFound(Microsoft.Azure.Amqp.AmqpLink link, string deliveryTag) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpDeliveryNotFound(object source, string deliveryTag) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpDispose(Microsoft.Azure.Amqp.AmqpLink link, uint deliveryId, bool settled, object state) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpDispose(object source, uint deliveryId, bool settled, object state) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpDynamicBufferSizeChange(Microsoft.Azure.Amqp.Transport.TransportBase transport, string type, int oldSize, int newSize) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpDynamicBufferSizeChange(object source, string type, int oldSize, int newSize) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpHandleException(System.Exception exception, string traceInfo) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpInsecureTransport(Microsoft.Azure.Amqp.Transport.AmqpTransportListener listener, Microsoft.Azure.Amqp.Transport.TransportBase transport, bool isSecure, bool isAuthenticated) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpInsecureTransport(object source, object transport, bool isSecure, bool isAuthenticated) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpIoEvent(Microsoft.Azure.Amqp.AmqpObject source, Microsoft.Azure.Amqp.IoEvent ioEvent, long queueSize) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpIoEvent(object source, int ioEvent, long queueSize) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpLinkDetach(Microsoft.Azure.Amqp.AmqpLink link, string name, uint handle, string action, string error) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpLinkDetach(object source, string name, uint handle, string action, string error) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpListenSocketAcceptError(Microsoft.Azure.Amqp.Transport.TransportListener listener, bool willRetry, string error) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpListenSocketAcceptError(object source, bool willRetry, string error) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpLogError(object source, string operation, string message) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpLogError(object source, string operation, System.Exception exception) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpLogOperationInformational(object source, Microsoft.Azure.Amqp.TraceOperation operation, object detail) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpLogOperationVerbose(object source, Microsoft.Azure.Amqp.TraceOperation operation, object detail) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpMissingHandle(Microsoft.Azure.Amqp.AmqpObject container, string type, uint handle) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpMissingHandle(object source, string type, uint handle) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpOpenConnection(object source, Microsoft.Azure.Amqp.AmqpConnection connection) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpOpenConnection(object source, object connection) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpOpenEntityFailed(object source, object obj, string name, string entityName, string error) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpOpenEntityFailed(object source, string name, string entityName, System.Exception error) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpOpenEntitySucceeded(object source, object obj, string name, string entityName) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpOpenEntitySucceeded(object source, string name, string entityName) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpReceiveMessage(Microsoft.Azure.Amqp.AmqpLink link, uint deliveryId, int transferCount) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpReceiveMessage(object source, uint deliveryId, int transferCount) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpRemoveLink(Microsoft.Azure.Amqp.AmqpSession session, object link, uint localHandle, uint remoteHandle, string linkName) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpRemoveLink(object connection, object session, object link, uint localHandle, uint remoteHandle, string linkName) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpRemoveSession(Microsoft.Azure.Amqp.AmqpConnection connection, Microsoft.Azure.Amqp.AmqpSession session, ushort localChannel, ushort remoteChannel) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpRemoveSession(object source, object session, ushort localChannel, ushort remoteChannel) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpSentMessage(Microsoft.Azure.Amqp.AmqpLink link, uint deliveryId, long bytes) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpSentMessage(object source, uint deliveryId, long bytes) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpSessionWindowClosed(Microsoft.Azure.Amqp.AmqpSession session, int nextId) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpSessionWindowClosed(object source, int nextId) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpStateTransition(Microsoft.Azure.Amqp.AmqpObject source, string operation, Microsoft.Azure.Amqp.AmqpObjectState fromState, Microsoft.Azure.Amqp.AmqpObjectState toState) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpStateTransition(object source, string operation, object fromState, object toState) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpUpgradeTransport(object source, Microsoft.Azure.Amqp.Transport.TransportBase from, Microsoft.Azure.Amqp.Transport.TransportBase to) -> void
+virtual Microsoft.Azure.Amqp.AmqpTrace.AmqpUpgradeTransport(object source, object from, object to) -> void
+virtual Microsoft.Azure.Amqp.Delivery.CompletePayload(int payloadSize) -> void
+virtual Microsoft.Azure.Amqp.Delivery.Dispose(bool disposing) -> void
+virtual Microsoft.Azure.Amqp.Singleton<TValue>.Dispose(bool disposing) -> void
+virtual Microsoft.Azure.Amqp.Singleton<TValue>.IsValid(TValue value) -> bool
+virtual Microsoft.Azure.Amqp.Singleton<TValue>.OnCreateAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<TValue>
+virtual Microsoft.Azure.Amqp.Singleton<TValue>.OnCreateAsync(System.TimeSpan timeout, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TValue>
+virtual Microsoft.Azure.Amqp.Transport.TlsTransport.CreateX509Principal(System.Security.Cryptography.X509Certificates.X509Certificate2 certificate) -> Microsoft.Azure.Amqp.X509.X509Principal
+virtual Microsoft.Azure.Amqp.Transport.TlsTransport.ValidateRemoteCertificate(object sender, System.Security.Cryptography.X509Certificates.X509Certificate certificate, System.Security.Cryptography.X509Certificates.X509Chain chain, System.Net.Security.SslPolicyErrors sslPolicyErrors) -> bool
+virtual Microsoft.Azure.Amqp.Transport.TlsTransportInitiator.OnCreateTransport(Microsoft.Azure.Amqp.Transport.TransportBase innerTransport, Microsoft.Azure.Amqp.Transport.TlsTransportSettings tlsTransportSettings) -> Microsoft.Azure.Amqp.Transport.TlsTransport
+virtual Microsoft.Azure.Amqp.Transport.TlsTransportListener.OnCreateTransport(Microsoft.Azure.Amqp.Transport.TransportBase innerTransport, Microsoft.Azure.Amqp.Transport.TlsTransportSettings tlsTransportSettings) -> Microsoft.Azure.Amqp.Transport.TlsTransport
+virtual Microsoft.Azure.Amqp.Transport.TransportBase.IsSecure.get -> bool

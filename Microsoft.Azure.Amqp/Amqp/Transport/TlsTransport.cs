@@ -90,7 +90,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
             catch (InvalidOperationException ioe)
             {
-                throw new IOException($"Transport '{this}' is valid for write operations.", ioe);
+                throw new IOException($"Transport '{this}' is in an invalid state for write operations.", ioe);
             }
 
             bool completedSynchronously = result.CompletedSynchronously;
@@ -119,7 +119,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
             catch (InvalidOperationException ioe)
             {
-                throw new IOException($"Transport '{this}' is valid for read operations.", ioe);
+                throw new IOException($"Transport '{this}' is in an invalid state for read operations.", ioe);
             }
 
             bool completedSynchronously = result.CompletedSynchronously;

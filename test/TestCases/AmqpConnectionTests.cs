@@ -17,6 +17,24 @@ namespace Test.Microsoft.Azure.Amqp
     public class AmqpConnectionTests
     {
         [Fact]
+        public async Task AmqpsConnectionLoopTest()
+        {
+            const string address = "amqps://[::1]:15672";
+            var broker = new TestAmqpBroker(new string[] { address }, null, "localhost", null);
+            broker.Start();
+
+            for (int i = 0; i < 500; ++i)
+            {
+                AmqpConnectionFactory factory = new AmqpConnectionFactory();
+                factory.TlsSettings.CertificateValidationCallback = (a, b, c, d) => true;
+                var connection = await factory.OpenConnectionAsync(new Uri(address), TimeSpan.FromSeconds(30));
+                await connection.CloseAsync(TimeSpan.FromSeconds(30));
+            }
+
+            broker.Stop();
+        }
+
+        [Fact]
         public void AmqpConcurrentConnectionsTest()
         {
             const string address = "amqp://localhost:15672";

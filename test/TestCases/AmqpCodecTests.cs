@@ -853,7 +853,7 @@
             EnsureEqual((IList)list.List, (IList)result.List);
         }
 
-#if !NETSTANDARD
+#if !NETSTANDARD && !NET6_0
         [Fact]
         public void AmqpExceptionSerializeTest()
         {

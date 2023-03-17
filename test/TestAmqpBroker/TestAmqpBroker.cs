@@ -286,7 +286,7 @@ namespace TestAmqpBroker
 
         static X509Certificate2 GetCertificate(string certFindValue)
         {
-            StoreLocation[] locations = new StoreLocation[] { StoreLocation.LocalMachine, StoreLocation.CurrentUser };
+            StoreLocation[] locations = new StoreLocation[] { StoreLocation.CurrentUser, StoreLocation.LocalMachine };
             foreach (StoreLocation location in locations)
             {
                 X509Store store = new X509Store(StoreName.My, location);

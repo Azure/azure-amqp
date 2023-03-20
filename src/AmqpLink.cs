@@ -659,14 +659,13 @@ namespace Microsoft.Azure.Amqp
                 {
                     this.deliveryCount += (int)this.linkCredit;
                     this.linkCredit = 0;
-                    this.drain = false;
                     sendFlow = true;
                 }
             }
 
             if (sendFlow)
             {
-                this.SendFlow(false, false, properties: null);
+                this.SendFlow(false, this.drain, properties: null);
             }
 
             return moreCredit;

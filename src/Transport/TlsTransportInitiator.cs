@@ -119,6 +119,10 @@ namespace Microsoft.Azure.Amqp.Transport
                         this.HandleTransportOpened(result);
                         this.Complete();
                     }
+                    else
+                    {
+                        this.callbackArgs.CompletedSynchronously = false;
+                    }
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
@@ -131,10 +135,6 @@ namespace Microsoft.Azure.Amqp.Transport
         void HandleTransportOpened(IAsyncResult result)
         {
             this.callbackArgs.Transport.EndOpen(result);
-            if (this.callbackArgs.CompletedSynchronously)
-            {
-                this.callbackArgs.CompletedSynchronously = result.CompletedSynchronously;
-            }
         }
 
         void Complete()

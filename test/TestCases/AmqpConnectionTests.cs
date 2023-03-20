@@ -17,11 +17,28 @@ namespace Test.Microsoft.Azure.Amqp
     [Trait("Category", TestCategory.Current)]
     public class AmqpConnectionTests
     {
-        const string address = "amqp://localhost:15672";
+        [Fact]
+        public async Task AmqpsConnectionLoopTest()
+        {
+            const string address = "amqps://[::1]:15672";
+            var broker = new TestAmqpBroker(new string[] { address }, null, "localhost", null);
+            broker.Start();
+
+            for (int i = 0; i < 500; ++i)
+            {
+                AmqpConnectionFactory factory = new AmqpConnectionFactory();
+                factory.TlsSettings.CertificateValidationCallback = (a, b, c, d) => true;
+                var connection = await factory.OpenConnectionAsync(new Uri(address), TimeSpan.FromSeconds(30));
+                await connection.CloseAsync(TimeSpan.FromSeconds(30));
+            }
+
+            broker.Stop();
+        }
 
         [Fact]
         public void AmqpConnectionNullContainerIdTest()
         {
+            const string address = "amqp://localhost:15672";
             var broker = new TestAmqpBroker(new string[] { address }, "guest:guest", null, null);
             broker.Start();
 
@@ -44,6 +61,7 @@ namespace Test.Microsoft.Azure.Amqp
         [Fact]
         public void AmqpConcurrentConnectionsTest()
         {
+            const string address = "amqp://localhost:15672";
             var broker = new TestAmqpBroker(new string[] { address }, "guest:guest", null, null);
             broker.Start();
 

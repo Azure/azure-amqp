@@ -105,6 +105,9 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static Guid ReadUuid(ByteBuffer buffer)
         {
+#if PCL
+            throw new NotImplementedException();
+#else
             uint a = ReadUInt(buffer);
             ushort b = ReadUShort(buffer);
             ushort c = ReadUShort(buffer);
@@ -119,6 +122,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             byte k = buffer.Buffer[buffer.Offset + 7];
             buffer.Complete(FixedWidth.ULong);
             return new Guid(a, b, c, d, e, f, g, h, i, j, k);
+#endif
         }
 
         public static void ReadBytes(ByteBuffer buffer, byte[] data, int offset, int count)

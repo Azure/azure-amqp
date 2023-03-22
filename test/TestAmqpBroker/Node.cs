@@ -68,8 +68,8 @@ namespace TestAmqpBroker
             {
                 try
                 {
-                    Address reployTo = message.Properties?.ReplyTo;
-                    if (reployTo == null || !this.senders.TryGetValue(reployTo, out SendingAmqpLink sender))
+                    Address replyTo = message.Properties?.ReplyTo;
+                    if (replyTo == null || !this.senders.TryGetValue(replyTo, out SendingAmqpLink sender))
                     {
                         return;
                     }

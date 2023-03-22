@@ -8,7 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Microsoft.Azure.Amqp")]
 [assembly: AssemblyDescription("AMQP 1.0 .Net Library")]
 [assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("Microsoft")]
 [assembly: AssemblyProduct("AMQP 1.0 .Net Library")]
+[assembly: AssemblyCopyright("© Microsoft Corporation. All rights reserved.")]
 [assembly: DefaultDllImportSearchPathsAttribute(DllImportSearchPath.SafeDirectories)] 
 
 // Setting ComVisible to false makes the types in this assembly not visible 

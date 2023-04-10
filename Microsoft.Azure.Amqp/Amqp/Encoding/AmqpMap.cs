@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
     public sealed class AmqpMap : IEnumerable<KeyValuePair<MapKey, object>>
     {
-        IDictionary<MapKey, object> value;
+        Dictionary<MapKey, object> value;
 
         public AmqpMap()
         {
@@ -19,7 +19,14 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public AmqpMap(IDictionary<MapKey, object> value)
         {
-            this.value = value;
+            if (value is Dictionary<MapKey, object> dictionaryValue)
+            {
+                this.value = dictionaryValue;
+            }
+            else
+            {
+                this.value = new Dictionary<MapKey, object>(value);
+            }
         }
 
         public AmqpMap(IDictionary value)
@@ -123,6 +130,8 @@ namespace Microsoft.Azure.Amqp.Encoding
             sb.Append(']');
             return sb.ToString();
         }
+
+        public Dictionary<MapKey, object>.Enumerator GetEnumerator() => this.value.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator()
         {

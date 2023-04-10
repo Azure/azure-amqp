@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -142,7 +143,7 @@ namespace Microsoft.Azure.Amqp
             get { throw new InvalidOperationException(); }
             set { throw new InvalidOperationException(); }
         }
-        
+
         public Footer Footer
         {
             get
@@ -300,7 +301,7 @@ namespace Microsoft.Azure.Amqp
         public void Modify(Modified modified)
         {
             // TODO: handle delivery failed and undeliverable here
-            foreach(KeyValuePair<MapKey, object> pair in modified.MessageAnnotations)
+            foreach (KeyValuePair<MapKey, object> pair in modified.MessageAnnotations)
             {
                 this.MessageAnnotations.Map[pair.Key] = pair.Value;
             }
@@ -503,7 +504,7 @@ namespace Microsoft.Azure.Amqp
                     }
                 }
 
-                return new BufferListStream(segmentList.ToArray());
+                return new BufferListStream(segmentList);
             }
         }
 
@@ -562,7 +563,7 @@ namespace Microsoft.Azure.Amqp
 
             public override Stream BodyStream
             {
-                get { return new BufferListStream(this.dataList.Select(d => (ArraySegment<byte>) d.Value).ToArray()); }
+                get { return new BufferListStream(this.dataList.Select(d => (ArraySegment<byte>)d.Value).ToArray()); }
             }
 
             protected override int GetBodySize()
@@ -576,6 +577,15 @@ namespace Microsoft.Azure.Amqp
 
             protected override void AddCustomSegments(List<ArraySegment<byte>> segmentList)
             {
+                if (this.dataList is ICollection<Data> collection)
+                {
+                    segmentList.Capacity += (collection.Count * 2);
+                }
+                else if (this.dataList is ICollection collection2)
+                {
+                    segmentList.Capacity += (collection2.Count * 2);
+                }
+
                 foreach (Data data in this.dataList)
                 {
                     ArraySegment<byte> value = (ArraySegment<byte>)data.Value;
@@ -976,7 +986,7 @@ namespace Microsoft.Azure.Amqp
 
             public void ReadMessage(AmqpMessage message, SectionFlag sections)
             {
-                while (this.ReadSection(message, sections));
+                while (this.ReadSection(message, sections)) ;
 
                 if ((sections & SectionFlag.Body) != 0)
                 {
@@ -1236,7 +1246,7 @@ namespace Microsoft.Azure.Amqp
                 else
                 {
                     ArraySegment<byte> buffer = this.ReadBytes(FixedWidth.UInt);
-                    return(int)AmqpBitConverter.ReadUInt(buffer.Array, buffer.Offset, FixedWidth.UInt);
+                    return (int)AmqpBitConverter.ReadUInt(buffer.Array, buffer.Offset, FixedWidth.UInt);
                 }
             }
 

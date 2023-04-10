@@ -579,11 +579,11 @@ namespace Microsoft.Azure.Amqp
             {
                 if (this.dataList is ICollection<Data> collection)
                 {
-                    segmentList.Capacity += segmentList.Capacity + (collection.Count * 2);
+                    segmentList.Capacity += (collection.Count * 2);
                 }
                 else if (this.dataList is ICollection collection2)
                 {
-                    segmentList.Capacity += segmentList.Capacity + (collection2.Count * 2);
+                    segmentList.Capacity += (collection2.Count * 2);
                 }
 
                 foreach (Data data in this.dataList)

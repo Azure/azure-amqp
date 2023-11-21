@@ -23,7 +23,7 @@ namespace Test.Microsoft.Azure.Amqp
 #if !WINDOWS_UWP
             if (Process.GetProcessesByName("TestAmqpBroker").Length == 0)
             {
-#if NETSTANDARD || NET6_0
+#if NETSTANDARD || NET5_0
                 return;
 #else
             broker = new TestAmqpBroker(new string[] { address }, null, null, null);

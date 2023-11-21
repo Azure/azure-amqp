@@ -18,6 +18,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Configurations>Debug;Release;Signed</Configurations>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">

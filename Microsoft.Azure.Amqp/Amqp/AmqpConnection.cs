@@ -24,7 +24,6 @@ namespace Microsoft.Azure.Amqp
         readonly HandleTable<AmqpSession> sessionsByLocalHandle;
         readonly HandleTable<AmqpSession> sessionsByRemoteHandle;
         HeartBeat heartBeat;
-        KeyedByTypeCollection<object> extensions;
 
         public static AmqpConnectionFactory Factory
         {
@@ -82,6 +81,9 @@ namespace Microsoft.Azure.Amqp
             set;
         }
 
+#pragma warning disable CS0436 // Type conflicts with imported type
+        KeyedByTypeCollection<object> extensions;
+
         public KeyedByTypeCollection<object> Extensions
         {
             get
@@ -94,6 +96,7 @@ namespace Microsoft.Azure.Amqp
                 return this.extensions;
             }
         }
+#pragma warning restore CS0436 // Type conflicts with imported type
 
         public bool IsInitiator
         {

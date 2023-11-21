@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net45;netcoreapp1.1</TargetFrameworks>
+    <TargetFrameworks>net45;net5</TargetFrameworks>
   </PropertyGroup>
   
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">

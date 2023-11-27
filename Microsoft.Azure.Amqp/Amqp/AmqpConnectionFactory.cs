@@ -97,7 +97,7 @@ namespace Microsoft.Azure.Amqp
                     tls.CertificateValidationCallback = this.tlsSettings.CertificateValidationCallback;
                     tls.CheckCertificateRevocation = this.tlsSettings.CheckCertificateRevocation;
                     tls.Certificate = this.tlsSettings.Certificate;
-                    tls.Protocols = this.tlsSettings.Protocols;
+                    tls.UserProtocols = this.tlsSettings.UserProtocols;
 #endif
                 }
 

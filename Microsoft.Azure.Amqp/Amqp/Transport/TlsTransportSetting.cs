@@ -12,6 +12,17 @@ namespace Microsoft.Azure.Amqp.Transport
 
     public class TlsTransportSettings : TransportSettings
     {
+#if !PCL
+        // SslProtocols.None to use system default is only supported on net47+, netstandard2.0+, and net5+.
+        // When the app (not the lib) targets lower versions, using SslProtocols.None results in an argument error.
+        // The lib cannot control the app's target framework, so we handle the argument error on lower platforms
+        // and revert back to the legacy default SslProtocols to maintain backward comptability.
+        // Tls13 is supported on net48+, netcoreapp30+ (OpenSSL only?), and net5+.
+        // https://learn.microsoft.com/en-us/dotnet/framework/network-programming/tls
+        const SslProtocols LegacyDefaultSslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
+        static SslProtocols? systemSslProtocols;
+        SslProtocols? userSslProtocols;
+#endif
         protected readonly TransportSettings innerSettings;
 
         public TlsTransportSettings()
@@ -49,8 +60,8 @@ namespace Microsoft.Azure.Amqp.Transport
 #if !PCL
         public SslProtocols Protocols
         {
-            get;
-            set;
+            get { return this.userSslProtocols ?? SslProtocols.None; }
+            set { this.userSslProtocols = value; }
         }
 
         public X509Certificate2 Certificate
@@ -63,6 +74,27 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             get;
             set;
+        }
+
+        internal SslProtocols? UserProtocols
+        {
+            get { return this.userSslProtocols; }
+            set { this.userSslProtocols = value; }
+        }
+
+        internal SslProtocols InternalProtocols
+        {
+            get { return this.userSslProtocols ?? systemSslProtocols ?? SslProtocols.None; }
+        }
+
+        internal SslProtocols RefreshProtocolsOnArgumentError()
+        {
+            if (this.userSslProtocols == null && systemSslProtocols == null)
+            {
+                systemSslProtocols = LegacyDefaultSslProtocols;
+            }
+
+            return this.InternalProtocols;
         }
 #endif
 

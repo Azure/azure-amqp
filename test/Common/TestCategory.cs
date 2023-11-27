@@ -5,8 +5,8 @@ namespace Test.Microsoft.Azure.Amqp
 {
     static class TestCategory
     {
-#if NETSTANDARD
-        public const string Current = ".Net Core";
+#if NETCOREAPP
+        public const string Current = ".NetCore App";
 #elif WINDOWS_UWP
         public const string Current = "Windows UWP";
 #else

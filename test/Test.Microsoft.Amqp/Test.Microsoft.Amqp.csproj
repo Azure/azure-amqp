@@ -1,10 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;net5</TargetFrameworks>
+    <TargetFrameworks>net452;net462;net472;net48;netcoreapp2.1;netcoreapp3.1;net5</TargetFrameworks>
     <AssemblyName>Test.Microsoft.Amqp</AssemblyName>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
   </PropertyGroup>
-
+ 
   <ItemGroup>
     <Compile Include="..\Common\AmqpUtils.cs" Link="Common\AmqpUtils.cs" />
     <Compile Include="..\Common\Person.cs" Link="Common\Person.cs" />

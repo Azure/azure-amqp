@@ -1,10 +1,13 @@
 ﻿namespace Test.Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Net;
     using System.Net.Sockets;
     using System.Reflection;
+    using System.Runtime.ExceptionServices;
+    using System.Security.Authentication;
     using System.Threading;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Transport;
@@ -109,6 +112,52 @@
         }
 
         [Fact]
+        public void TlsProtocolsTest()
+        {
+            var protocols = new List<SslProtocols?> { null, SslProtocols.Tls, SslProtocols.Tls11, SslProtocols.Tls12 };
+#if NET471_OR_GREATER || NETCOREAPP
+            protocols.Add(SslProtocols.None);
+#endif
+#if NET48_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP3_0_OR_GREATER
+            protocols.Add(SslProtocols.Tls13);
+#endif
+
+            foreach (var protocol in protocols)
+            {
+                Debug.WriteLine($"Tls Test: protocol={protocol}");
+                this.RunTlsTransportTest(protocol, protocol);
+            }
+        }
+
+#if NET452 || NET462
+        [Fact]
+        public void TlsProtocolsNoFallbackForUserProtocolClientTest()
+        {
+            try
+            {
+                this.RunTlsTransportTest(null, SslProtocols.None);
+            }
+            catch (ArgumentException ae)
+            {
+                Assert.Equal("sslProtocolType", ae.ParamName);
+            }
+        }
+
+        [Fact]
+        public void TlsProtocolsNoFallbackForUserProtocolListenerTest()
+        {
+            try
+            {
+                this.RunTlsTransportTest(SslProtocols.None, null);
+            }
+            catch (SocketException se)
+            {
+                Assert.Equal(SocketError.ConnectionReset, se.SocketErrorCode);
+            }
+        }
+#endif
+
+        [Fact]
         public void ConnectTimeoutTest()
         {
             const int port = 30888;
@@ -138,7 +187,7 @@
             }
             finally
             {
-                socket.Close();
+                socket.Dispose();
             }
         }
 
@@ -165,6 +214,53 @@
 
             Debug.WriteLine($"Test '{test}' end.");
             Assert.True(context.Success, context.Exception?.ToString());
+        }
+
+        void RunTlsTransportTest(SslProtocols? listenerProtocols, SslProtocols? clientProtocols)
+        {
+            const string localHost = "localhost";
+            const int port = 15671;
+            var listenerSettings = new TlsTransportSettings(new TcpTransportSettings { Host = localHost, Port = port }, false);
+            listenerSettings.Certificate = AmqpUtils.GetCertificate(localHost);
+            if (listenerProtocols != null)
+            {
+                listenerSettings.Protocols = listenerProtocols.Value;
+            }
+            var listener = listenerSettings.CreateListener();
+            listener.Open();
+
+            listener.Listen((t, a) => a.Transport.Close());
+
+            try
+            {
+                var clientSettings = new TlsTransportSettings(new TcpTransportSettings { Host = localHost, Port = port }, true);
+                clientSettings.TargetHost = localHost;
+                if (clientProtocols != null)
+                {
+                    clientSettings.Protocols = clientProtocols.Value;
+                }
+                var client = clientSettings.CreateInitiator();
+                var connected = new ManualResetEvent(false);
+                var args = new TransportAsyncCallbackArgs { CompletedCallback = a => connected.Set() };
+                bool pending = client.ConnectAsync(TimeSpan.FromSeconds(30), args);
+                if (!pending)
+                {
+                    connected.Set();
+                }
+
+                Assert.True(connected.WaitOne(5000), "Client transport not done in time");
+                if (args.Exception != null)
+                {
+                    ExceptionDispatchInfo.Capture(args.Exception).Throw();
+                }
+                Assert.True(args.Transport != null, "Client transport null");
+
+                args.Transport.Close();
+            }
+            finally
+            {
+                listener.Close();
+            }
         }
 
         static TransportBase AcceptServerTransport(TransportTestContext testContext)

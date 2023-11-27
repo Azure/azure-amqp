@@ -99,7 +99,7 @@ namespace TestAmqpBroker
                     TcpTransportSettings tcpSettings = new TcpTransportSettings() { Host = addressUri.Host, Port = addressUri.Port };
                     listeners[i] = tcpSettings.CreateListener();
                 }
-#if !NETSTANDARD
+#if !NETCOREAPP
                 else if (addressUri.Scheme.Equals("ws", StringComparison.OrdinalIgnoreCase) ||
                     addressUri.Scheme.Equals("wss", StringComparison.OrdinalIgnoreCase))
                 {

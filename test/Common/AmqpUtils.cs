@@ -236,9 +236,9 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        static X509Certificate2 GetCertificate(string certFindValue)
+        public static X509Certificate2 GetCertificate(string certFindValue)
         {
-            StoreLocation[] locations = new StoreLocation[] { StoreLocation.LocalMachine, StoreLocation.CurrentUser };
+            StoreLocation[] locations = new StoreLocation[] { StoreLocation.CurrentUser, StoreLocation.LocalMachine };
             foreach (StoreLocation location in locations)
             {
                 X509Store store = new X509Store(StoreName.My, location);
@@ -257,7 +257,7 @@ namespace Test.Microsoft.Azure.Amqp
                         false);
                 }
 
-#if NETSTANDARD || WINDOWS_UWP
+#if NETCOREAPP || WINDOWS_UWP
                 store.Dispose();
 #else
                 store.Close();

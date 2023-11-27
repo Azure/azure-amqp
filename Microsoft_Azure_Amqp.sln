@@ -30,8 +30,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Microsoft.Amqp", "test
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestAmqpClient", "test\TestAmqpClient\TestAmqpClient.csproj", "{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Microsoft.Amqp.Core", "test\Test.Microsoft.Amqp.Core\Test.Microsoft.Amqp.Core.csproj", "{EE065F14-D61A-4FF4-ACB3-362CC36B7449}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Microsoft.Amqp.Uwp", "test\Test.Microsoft.Amqp.Uwp\Test.Microsoft.Amqp.Uwp.csproj", "{9E598F78-9B56-40B2-A810-EA7F6F96DB3B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Microsoft.Amqp.Android", "test\Test.Microsoft.Amqp.Android\Test.Microsoft.Amqp.Android.csproj", "{1E57D852-93CF-464F-B3A4-B660C8B23FA3}"
@@ -261,36 +259,6 @@ Global
 		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|x64.Build.0 = Debug|Any CPU
 		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|x86.ActiveCfg = Debug|Any CPU
 		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87}.Signed|x86.Build.0 = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Debug|ARM.Build.0 = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Debug|x64.Build.0 = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Debug|x86.Build.0 = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Release|ARM.ActiveCfg = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Release|ARM.Build.0 = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Release|ARM64.Build.0 = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Release|x64.ActiveCfg = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Release|x64.Build.0 = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Release|x86.ActiveCfg = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Release|x86.Build.0 = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|Any CPU.ActiveCfg = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|Any CPU.Build.0 = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|ARM.ActiveCfg = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|ARM.Build.0 = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|ARM64.ActiveCfg = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|ARM64.Build.0 = Release|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|x64.ActiveCfg = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|x64.Build.0 = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|x86.ActiveCfg = Debug|Any CPU
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449}.Signed|x86.Build.0 = Debug|Any CPU
 		{9E598F78-9B56-40B2-A810-EA7F6F96DB3B}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{9E598F78-9B56-40B2-A810-EA7F6F96DB3B}.Debug|ARM.ActiveCfg = Debug|ARM
 		{9E598F78-9B56-40B2-A810-EA7F6F96DB3B}.Debug|ARM.Build.0 = Debug|ARM
@@ -385,13 +353,12 @@ Global
 		{124A25C1-CFE3-47E5-8B0A-564FBCD6C319} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
 		{683D2AD2-E000-4DE1-AC8E-44A64E420F5B} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
 		{A08B02A1-4BCE-4DF5-A1E9-1809E9515D87} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
-		{EE065F14-D61A-4FF4-ACB3-362CC36B7449} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
 		{9E598F78-9B56-40B2-A810-EA7F6F96DB3B} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
 		{1E57D852-93CF-464F-B3A4-B660C8B23FA3} = {07A72A72-7CE5-46AE-B383-F4EA6408AE3C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {5982C678-B29E-487B-9B3E-7F547EC1222D}
-		EnterpriseLibraryConfigurationToolBinariesPath = packages\TransientFaultHandling.Core.5.1.1209.1\lib\NET4
 		EnterpriseLibraryConfigurationToolBinariesPathV6 = packages\EnterpriseLibrary.TransientFaultHandling.6.0.1304.0\lib\portable-net45+win+wp8;packages\EnterpriseLibrary.TransientFaultHandling.WindowsAzure.Storage.6.0.1304.1\lib\NET45;packages\EnterpriseLibrary.TransientFaultHandling.Data.6.0.1304.1\lib\NET45
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\TransientFaultHandling.Core.5.1.1209.1\lib\NET4
+		SolutionGuid = {5982C678-B29E-487B-9B3E-7F547EC1222D}
 	EndGlobalSection
 EndGlobal

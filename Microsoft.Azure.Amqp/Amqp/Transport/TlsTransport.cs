@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp.Transport
     using System;
     using System.IO;
     using System.Net.Security;
+    using System.Security.Authentication;
     using System.Security.Cryptography.X509Certificates;
     using Microsoft.Azure.Amqp.X509;
 
@@ -149,14 +150,16 @@ namespace Microsoft.Azure.Amqp.Transport
                     checkRevocation = true;
                 }
 
-                result = this.sslStream.BeginAuthenticateAsClient(this.tlsSettings.TargetHost,
-                    certCollection, this.tlsSettings.Protocols, checkRevocation, onOpenComplete, this);
+                result = this.BeginAuthenticateWithRetry(
+                    this.tlsSettings.InternalProtocols, certCollection, checkRevocation,
+                    (thisPtr, p, c, r) => thisPtr.sslStream.BeginAuthenticateAsClient(thisPtr.tlsSettings.TargetHost, c, p, r, onOpenComplete, thisPtr));
             }
             else
             {
                 bool clientCert = this.tlsSettings.CertificateValidationCallback != null;
-                result = this.sslStream.BeginAuthenticateAsServer(this.tlsSettings.Certificate,
-                    clientCert, this.tlsSettings.Protocols, clientCert, onOpenComplete, this);
+                result = this.BeginAuthenticateWithRetry(
+                    this.tlsSettings.InternalProtocols, clientCert, clientCert,
+                    (thisPtr, p, c, r) => thisPtr.sslStream.BeginAuthenticateAsServer(thisPtr.tlsSettings.Certificate, c, p, r, onOpenComplete, thisPtr));
             }
 
             bool completedSynchronously = result.CompletedSynchronously;
@@ -187,6 +190,24 @@ namespace Microsoft.Azure.Amqp.Transport
         protected virtual bool ValidateRemoteCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
             return this.tlsSettings.CertificateValidationCallback(sender, certificate, chain, sslPolicyErrors);
+        }
+
+        IAsyncResult BeginAuthenticateWithRetry<T1, T2>(SslProtocols sslProtocols, T1 t1, T2 t2, Func<TlsTransport, SslProtocols, T1, T2, IAsyncResult> func)
+        {
+            try
+            {
+                return func(this, sslProtocols, t1, t2);
+            }
+            catch (ArgumentException ae) when (string.Equals("sslProtocolType", ae.ParamName, StringComparison.Ordinal))
+            {
+                SslProtocols sslProtocols2 = this.tlsSettings.RefreshProtocolsOnArgumentError();
+                if (sslProtocols2 == sslProtocols)
+                {
+                    throw;
+                }
+
+                return func(this, sslProtocols2, t1, t2);
+            }
         }
 
         static void OnOpenComplete(IAsyncResult result)

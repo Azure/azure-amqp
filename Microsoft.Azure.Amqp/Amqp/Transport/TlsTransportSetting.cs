@@ -42,7 +42,6 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             this.innerSettings = innerSettings;
             this.IsInitiator = isInitiator;
-            this.CheckCertificateRevocation = true;
         }
 
         public bool IsInitiator

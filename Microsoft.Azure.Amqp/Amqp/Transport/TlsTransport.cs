@@ -142,23 +142,21 @@ namespace Microsoft.Azure.Amqp.Transport
             IAsyncResult result;
             if (this.tlsSettings.IsInitiator)
             {
-                bool checkRevocation = false;
                 X509CertificateCollection certCollection = new X509CertificateCollection();
                 if (this.tlsSettings.Certificate != null)
                 {
                     certCollection.Add(this.tlsSettings.Certificate);
-                    checkRevocation = true;
                 }
 
                 result = this.BeginAuthenticateWithRetry(
-                    this.tlsSettings.InternalProtocols, certCollection, checkRevocation,
+                    this.tlsSettings.InternalProtocols, certCollection, this.tlsSettings.CheckCertificateRevocation,
                     (thisPtr, p, c, r) => thisPtr.sslStream.BeginAuthenticateAsClient(thisPtr.tlsSettings.TargetHost, c, p, r, onOpenComplete, thisPtr));
             }
             else
             {
-                bool clientCert = this.tlsSettings.CertificateValidationCallback != null;
+                bool clientCertRequired = this.tlsSettings.CertificateValidationCallback != null;
                 result = this.BeginAuthenticateWithRetry(
-                    this.tlsSettings.InternalProtocols, clientCert, clientCert,
+                    this.tlsSettings.InternalProtocols, clientCertRequired, this.tlsSettings.CheckCertificateRevocation,
                     (thisPtr, p, c, r) => thisPtr.sslStream.BeginAuthenticateAsServer(thisPtr.tlsSettings.Certificate, c, p, r, onOpenComplete, thisPtr));
             }
 

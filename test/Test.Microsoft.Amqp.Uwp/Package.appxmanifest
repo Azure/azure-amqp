@@ -4,7 +4,7 @@
   <mp:PhoneIdentity PhoneProductId="8d4953e8-6eeb-4b8a-a317-46a893f4bb20" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
     <DisplayName>Test.Microsoft.Amqp.Uwp</DisplayName>
-    <PublisherDisplayName>mqt</PublisherDisplayName>
+    <PublisherDisplayName>azure-amqp-test</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   <Dependencies>

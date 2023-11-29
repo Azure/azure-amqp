@@ -16,6 +16,25 @@ namespace Test.Microsoft.Azure.Amqp
     [Trait("Category", TestCategory.Current)]
     public class AmqpConnectionTests
     {
+#if NET48_OR_GREATER || NET5_0_OR_GREATER
+        [Fact]
+        public async Task AmqpsConnectionWithTls13Test()
+        {
+            const string address = "amqps://localhost:15672";
+            var broker = new TestAmqpBroker(new string[] { address }, null, "localhost", null);
+            broker.EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls13;
+            broker.Start();
+
+            AmqpConnectionFactory factory = new AmqpConnectionFactory();
+            factory.TlsSettings.CertificateValidationCallback = (a, b, c, d) => true;
+            factory.TlsSettings.Protocols = System.Security.Authentication.SslProtocols.Tls13;
+            var connection = await factory.OpenConnectionAsync(new Uri(address), TimeSpan.FromSeconds(30));
+            await connection.CloseAsync(TimeSpan.FromSeconds(30));
+
+            broker.Stop();
+        }
+#endif
+
         [Fact]
         public async Task AmqpsConnectionLoopTest()
         {

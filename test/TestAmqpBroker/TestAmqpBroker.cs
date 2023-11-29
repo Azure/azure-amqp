@@ -6,6 +6,7 @@ namespace TestAmqpBroker
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Security.Authentication;
     using System.Security.Cryptography.X509Certificates;
     using System.Security.Principal;
     using System.Threading;
@@ -19,19 +20,24 @@ namespace TestAmqpBroker
     public sealed class TestAmqpBroker : IRuntimeProvider
     {
         public const uint ConnectionIdleTimeOut = 4 * 60 * 1000;
+        readonly IList<string> endpoints;
+        readonly string sslValue;
         readonly Dictionary<string, TestQueue> queues;  // not thread safe
         readonly Dictionary<SequenceNumber, AmqpConnection> connections;
         readonly Dictionary<string, INode> nodes;       // not thread safe
         readonly TxnManager txnManager;
         readonly AmqpSettings settings;
-        readonly TransportListener transportListener;
         readonly string containerId;
         readonly uint maxFrameSize;
+        SslProtocols enabledSslProtocols;
+        TransportListener transportListener;
         bool implicitQueue;
         int dynamicId;
 
         public TestAmqpBroker(IList<string> endpoints, string userInfo, string sslValue, string[] queues)
         {
+            this.endpoints = endpoints;
+            this.sslValue = sslValue;
             this.containerId = "TestAmqpBroker-P" + Process.GetCurrentProcess().Id;
             this.maxFrameSize = 64 * 1024;
             this.txnManager = new TxnManager();
@@ -52,16 +58,15 @@ namespace TestAmqpBroker
 
             // create and initialize AmqpSettings
             AmqpSettings settings = new AmqpSettings();
-            X509Certificate2 certificate = sslValue == null ? null : GetCertificate(sslValue);
             settings.RuntimeProvider = this;
 
             SaslHandler saslHandler;
             if (userInfo != null)
             {
                 string[] creds = userInfo.Split(':');
-                string usernanme = Uri.UnescapeDataString(creds[0]);
+                string userNanme = Uri.UnescapeDataString(creds[0]);
                 string password = creds.Length == 1 ? string.Empty : Uri.UnescapeDataString(creds[1]);
-                saslHandler = new SaslPlainHandler(new TestPlainAuthenticator(userInfo, password));
+                saslHandler = new SaslPlainHandler(new TestPlainAuthenticator(userNanme, password));
             }
             else
             {
@@ -77,6 +82,25 @@ namespace TestAmqpBroker
             amqpProvider.Versions.Add(new AmqpVersion(1, 0, 0));
             settings.TransportProviders.Add(amqpProvider);
 
+            this.settings = settings;
+        }
+
+        public SslProtocols EnabledSslProtocols
+        {
+            get { return this.enabledSslProtocols; }
+            set
+            {
+                if (this.transportListener != null)
+                {
+                    throw new InvalidOperationException("Ssl protocols cannot be changed after broker is started.");
+                }
+
+                this.enabledSslProtocols = value;
+            }
+        }
+
+        public void Start()
+        {
             // create and initialize transport listeners
             TransportListener[] listeners = new TransportListener[endpoints.Count];
             for (int i = 0; i < endpoints.Count; i++)
@@ -85,13 +109,19 @@ namespace TestAmqpBroker
 
                 if (addressUri.Scheme.Equals(AmqpConstants.SchemeAmqps, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (certificate == null)
+                    if (this.sslValue == null)
                     {
                         throw new InvalidOperationException("/cert option was not set when amqps address is specified.");
                     }
 
+                    X509Certificate2 certificate = GetCertificate(this.sslValue);
                     TcpTransportSettings tcpSettings = new TcpTransportSettings() { Host = addressUri.Host, Port = addressUri.Port };
                     TlsTransportSettings tlsSettings = new TlsTransportSettings(tcpSettings) { Certificate = certificate, IsInitiator = false };
+                    if (this.EnabledSslProtocols != SslProtocols.None)
+                    {
+                        tlsSettings.Protocols = this.EnabledSslProtocols;
+                    }
+
                     listeners[i] = tlsSettings.CreateListener();
                 }
                 else if (addressUri.Scheme.Equals(AmqpConstants.SchemeAmqp, StringComparison.OrdinalIgnoreCase))
@@ -114,11 +144,7 @@ namespace TestAmqpBroker
             }
 
             this.transportListener = new AmqpTransportListener(listeners, settings);
-            this.settings = settings;
-        }
 
-        public void Start()
-        {
             this.transportListener.Listen(this.OnAcceptTransport);
         }
 

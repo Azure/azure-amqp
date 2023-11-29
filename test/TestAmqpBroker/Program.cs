@@ -5,18 +5,20 @@ namespace TestAmqpBroker
 {
     using System;
     using System.Collections.Generic;
+    using System.Security.Authentication;
 
     class Program
     {
         static void Usage()
         {
-            Console.WriteLine("AmqpTestBroker url [url] [/creds:user:pwd] [/cert:ssl_cert] [/cbs] [/queues:q1;q2;...]");
-            Console.WriteLine("  url=amqp|amqps://host[:port] (can be multiple)");
-            Console.WriteLine("  creds=username:password");
-            Console.WriteLine("  cert=ssl cert find value (thumbprint or subject), default to url.host");
-            Console.WriteLine("  cbs: enables a test CBS node with no token validation");
-            Console.WriteLine("  queues: semicolon seperated queue names. If not specified, the broker implicitly");
-            Console.WriteLine("          creates a new node for any non-existing address.");
+            Console.WriteLine("AmqpTestBroker url [url] [ssl:protocols] [/creds:user:pwd] [/cert:ssl_cert] [/cbs] [/queues:q1;q2;...]");
+            Console.WriteLine("  url    amqp|amqps://host[:port] (can be multiple)");
+            Console.WriteLine("  ssl    ssl protocols, e.g. tls,tls11,tls12,tls13");
+            Console.WriteLine("  creds  username:password");
+            Console.WriteLine("  cert   ssl cert find value (thumbprint or subject), default to url.host");
+            Console.WriteLine("  cbs    enables a test CBS node with no token validation");
+            Console.WriteLine("  queues semicolon seperated queue names. If not specified, the broker implicitly");
+            Console.WriteLine("         creates a new node for any non-existing address.");
         }
 
         static void Main(string[] args)
@@ -42,6 +44,7 @@ namespace TestAmqpBroker
         {
             List<string> endpoints = new List<string>();
             string creds = null;
+            string sslProtocols = null;
             string sslValue = null;
             string[] queues = null;
             bool parseEndpoint = true;
@@ -60,7 +63,11 @@ namespace TestAmqpBroker
                     {
                         creds = args[i].Substring(7);
                     }
-                    if (args[i].Equals("/cbs", StringComparison.OrdinalIgnoreCase))
+                    else if (args[i].StartsWith("/ssl:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        sslProtocols = args[i].Substring(5);
+                    }
+                    else if (args[i].Equals("/cbs", StringComparison.OrdinalIgnoreCase))
                     {
                         enableCbs = true;
                     }
@@ -82,6 +89,25 @@ namespace TestAmqpBroker
             }
 
             var broker = new TestAmqpBroker(endpoints, creds, sslValue, queues);
+            if (sslProtocols != null)
+            {
+                string[] parts = sslProtocols.Split(',');
+                SslProtocols protocols = SslProtocols.None;
+                foreach (var p in parts)
+                {
+                    if (Enum.TryParse<SslProtocols>(p, ignoreCase: true, out SslProtocols value))
+                    {
+                        protocols |= value;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Ignore unknown SSL protocol: {0}", p);
+                    }
+                }
+
+                broker.EnabledSslProtocols = protocols;
+            }
+
             if (enableCbs)
             {
                 broker.AddNode(new CbsNode());

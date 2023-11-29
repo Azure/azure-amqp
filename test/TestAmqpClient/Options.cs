@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Security.Authentication;
 using Microsoft.Azure.Amqp.Sasl;
 
 namespace TestAmqpClient
@@ -33,6 +34,13 @@ namespace TestAmqpClient
 
         [Option(Name = "address", Description = "address URL of the remote peer")]
         public string Address
+        {
+            get;
+            private set;
+        }
+
+        [Option(Name = "ssl", Description = "enabled Ssl protocols")]
+        public SslProtocols EnabledSslProtocols
         {
             get;
             private set;
@@ -129,6 +137,16 @@ namespace TestAmqpClient
             else if (type == typeof(long))
             {
                 return long.Parse(str);
+            }
+            else if (type == typeof(SslProtocols))
+            {
+                string[] parts = str.Split(',');
+                SslProtocols protocols = SslProtocols.None;
+                foreach (var p in parts)
+                {
+                    protocols |= (SslProtocols)Enum.Parse(typeof(SslProtocols), p, ignoreCase: true);
+                }
+                return protocols;
             }
             else if (type == typeof(SaslHandler))
             {

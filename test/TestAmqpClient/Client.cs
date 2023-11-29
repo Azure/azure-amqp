@@ -51,7 +51,7 @@ namespace TestAmqpClient
             AmqpConnectionFactory factory = new AmqpConnectionFactory();
             factory.TlsSettings.CertificateValidationCallback = (a, b, c, d) => true;
             factory.TlsSettings.CheckCertificateRevocation = false;
-            factory.TlsSettings.Protocols = System.Security.Authentication.SslProtocols.Tls12;
+            factory.TlsSettings.Protocols = this.options.EnabledSslProtocols;
             this.connection = await factory.OpenConnectionAsync(new Uri(this.options.Address), this.options.Sasl, TimeSpan.FromSeconds(30));
             this.session = this.connection.CreateSession(new AmqpSessionSettings());
             this.link = this.CreateLink();

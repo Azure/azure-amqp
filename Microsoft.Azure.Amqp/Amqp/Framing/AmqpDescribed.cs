@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Amqp.Framing
         ulong code;
 
         public AmqpDescribed(AmqpSymbol name, ulong code)
-            : base(name.Value == null ? (object)code : (object)name, null)
+            : base(EncodingCache.Box(code), null)
         {
             this.name = name;
             this.code = code;

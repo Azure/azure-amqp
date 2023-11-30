@@ -303,6 +303,9 @@
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\EncodingBase.cs">
       <Link>Amqp\Encoding\EncodingBase.cs</Link>
     </Compile>
+    <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\EncodingCache.cs">
+      <Link>Amqp\Encoding\EncodingCache.cs</Link>
+    </Compile>
     <Compile Include="..\Microsoft.Azure.Amqp\Amqp\Encoding\FixedWidth.cs">
       <Link>Amqp\Encoding\FixedWidth.cs</Link>
     </Compile>

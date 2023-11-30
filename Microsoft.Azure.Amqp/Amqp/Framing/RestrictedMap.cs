@@ -55,8 +55,8 @@ namespace Microsoft.Azure.Amqp.Framing
 
         public object this[TKey key]
         {
-            get { return this.InnerMap[new MapKey(key)]; }
-            set { this.InnerMap[new MapKey(key)] = value; }
+            get { return this.InnerMap[this.GetKey(key)]; }
+            set { this.InnerMap[this.GetKey(key)] = value; }
         }
 
         public object this[MapKey key]
@@ -67,7 +67,7 @@ namespace Microsoft.Azure.Amqp.Framing
 
         public bool TryGetValue<TValue>(TKey key, out TValue value)
         {
-            return this.InnerMap.TryGetValue(new MapKey(key), out value);
+            return this.InnerMap.TryGetValue(this.GetKey(key), out value);
         }
 
         public bool TryGetValue<TValue>(MapKey key, out TValue value)
@@ -77,12 +77,12 @@ namespace Microsoft.Azure.Amqp.Framing
 
         public bool TryRemoveValue<TValue>(TKey key, out TValue value)
         {
-            return this.InnerMap.TryRemoveValue(new MapKey(key), out value);
+            return this.InnerMap.TryRemoveValue(this.GetKey(key), out value);
         }
 
         public void Add(TKey key, object value)
         {
-            this.InnerMap.Add(new MapKey(key), value);
+            this.InnerMap.Add(this.GetKey(key), value);
         }
 
         public void Add(MapKey key, object value)
@@ -97,14 +97,27 @@ namespace Microsoft.Azure.Amqp.Framing
                 this[kvp.Key] = kvp.Value;
             }
         }
+
+        protected virtual MapKey GetKey(TKey key)
+        {
+            return new MapKey(key);
+        }
     }
 
     public sealed class Fields : RestrictedMap<AmqpSymbol>
     {
+        protected override MapKey GetKey(AmqpSymbol key)
+        {
+            return new MapKey(EncodingCache.Box(key));
+        }
     }
 
     public sealed class FilterSet : RestrictedMap<AmqpSymbol>
     {
+        protected override MapKey GetKey(AmqpSymbol key)
+        {
+            return new MapKey(EncodingCache.Box(key));
+        }
     }
 
     public sealed class PropertiesMap : RestrictedMap<string>
@@ -113,5 +126,9 @@ namespace Microsoft.Azure.Amqp.Framing
 
     public sealed class Annotations : RestrictedMap<AmqpSymbol>
     {
+        protected override MapKey GetKey(AmqpSymbol key)
+        {
+            return new MapKey(EncodingCache.Box(key));
+        }
     }
 }

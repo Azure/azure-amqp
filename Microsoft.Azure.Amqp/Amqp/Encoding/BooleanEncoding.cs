@@ -71,7 +71,13 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
-            return BooleanEncoding.Decode(buffer, formatCode);
+            bool? value = BooleanEncoding.Decode(buffer, formatCode);
+            if (value == null)
+            {
+                return null;
+            }
+
+            return EncodingCache.Box(value.Value);
         }
     }
 }

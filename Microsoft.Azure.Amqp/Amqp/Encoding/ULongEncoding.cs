@@ -100,7 +100,13 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
-            return ULongEncoding.Decode(buffer, formatCode);
+            ulong? value = ULongEncoding.Decode(buffer, formatCode);
+            if (value == null)
+            {
+                return null;
+            }
+
+            return EncodingCache.Box(value.Value);
         }
     }
 }

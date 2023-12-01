@@ -98,7 +98,8 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
-            return SymbolEncoding.Decode(buffer, formatCode);
+            AmqpSymbol symbol = SymbolEncoding.Decode(buffer, formatCode);
+            return EncodingCache.Box(symbol);
         }
     }
 }

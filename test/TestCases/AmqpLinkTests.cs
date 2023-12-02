@@ -704,7 +704,7 @@ namespace Test.Microsoft.Azure.Amqp
                 rLink.AcceptMessage(message);
             }
 
-            rLink.DrainAsyc(CancellationToken.None).GetAwaiter().GetResult();
+            rLink.DrainAsync(CancellationToken.None).GetAwaiter().GetResult();
             Assert.Equal(0u, rLink.LinkCredit);
             Assert.False(rLink.Drain);
 

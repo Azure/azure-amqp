@@ -228,7 +228,7 @@ namespace Microsoft.Azure.Amqp
         /// Drains the credits on the link.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
-        public Task DrainAsyc(CancellationToken cancellationToken)
+        public Task DrainAsync(CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
                 static (thisPtr, k, c, s) => new DrainAsyncResult(thisPtr, thisPtr.OperationTimeout, k, c, s),

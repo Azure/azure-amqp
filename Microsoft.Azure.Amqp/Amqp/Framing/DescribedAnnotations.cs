@@ -21,11 +21,13 @@ namespace Microsoft.Azure.Amqp.Framing
                 if (this.annotations == null)
                 {
                     this.annotations = new Annotations();
-                    this.annotations.SetMap(this.InnerMap);
+                    this.Value = this.annotations;
                 }
 
                 return this.annotations; 
             }
         }
+
+        internal override AmqpMap InnerMap => this.Map;
     }
 }

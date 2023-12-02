@@ -7,37 +7,36 @@ namespace Microsoft.Azure.Amqp.Framing
 
     public abstract class DescribedMap : AmqpDescribed
     {
-        AmqpMap innerMap;
-
         public DescribedMap(AmqpSymbol name, ulong code)
             : base(name, code)
         {
-            this.innerMap = new AmqpMap();
         }
 
-        protected AmqpMap InnerMap
-        {
-            get { return this.innerMap; }
-        }
+        internal abstract AmqpMap InnerMap { get; }
 
         public override int GetValueEncodeSize()
         {
-            return MapEncoding.GetEncodeSize(this.innerMap);
+            return MapEncoding.GetEncodeSize(this.InnerMap);
         }
 
         public override void EncodeValue(ByteBuffer buffer)
         {
-            MapEncoding.Encode(this.innerMap, buffer);
+            MapEncoding.Encode(this.InnerMap, buffer);
         }
 
         public override void DecodeValue(ByteBuffer buffer)
         {
-            this.innerMap = MapEncoding.Decode(buffer, 0);
+            var formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode != FormatCode.Null)
+            {
+                AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.Map8, FormatCode.Map32, out int size, out int count);
+                MapEncoding.ReadMapValue(buffer, this.InnerMap, size, count);
+            }
         }
 
         public void DecodeValue(ByteBuffer buffer, int size, int count)
         {
-            MapEncoding.ReadMapValue(buffer, this.innerMap, size, count);
+            MapEncoding.ReadMapValue(buffer, this.InnerMap, size, count);
         }
     }
 }

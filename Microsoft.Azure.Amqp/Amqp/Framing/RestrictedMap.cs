@@ -3,91 +3,46 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
-    using System.Collections;
-    using System.Collections.Generic;
+    using System;
     using Microsoft.Azure.Amqp.Encoding;
 
-    public abstract class RestrictedMap : IEnumerable<KeyValuePair<MapKey, object>>
+    public abstract class RestrictedMap : AmqpMap
     {
-        AmqpMap innerMap;
+        [Obsolete]
+        protected AmqpMap InnerMap => this;
 
-        protected AmqpMap InnerMap
-        {
-            get 
-            {
-                if (this.innerMap == null)
-                {
-                    this.innerMap = new AmqpMap();
-                }
-
-                return this.innerMap; 
-            }
-        }
-
+        [Obsolete]
         public void SetMap(AmqpMap map)
         {
-            this.innerMap = map;
         }
 
         public override string ToString()
         {
-            return this.InnerMap.ToString();
-        }
-
-        public IEnumerator<KeyValuePair<MapKey, object>> GetEnumerator()
-        {
-            IEnumerable<KeyValuePair<MapKey, object>> map = this.InnerMap;
-            return map.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
+            return this.ToString();
         }
     }
 
     public abstract class RestrictedMap<TKey> : RestrictedMap
     {
-        public static implicit operator AmqpMap(RestrictedMap<TKey> restrictedMap)
-        {
-            return restrictedMap == null ? null : restrictedMap.InnerMap;
-        }
-
         public object this[TKey key]
         {
-            get { return this.InnerMap[this.GetKey(key)]; }
-            set { this.InnerMap[this.GetKey(key)] = value; }
-        }
-
-        public object this[MapKey key]
-        {
-            get { return this.InnerMap[key]; }
-            set { this.InnerMap[key] = value; }
+            get { return this[this.GetKey(key)]; }
+            set { this[this.GetKey(key)] = value; }
         }
 
         public bool TryGetValue<TValue>(TKey key, out TValue value)
         {
-            return this.InnerMap.TryGetValue(this.GetKey(key), out value);
-        }
-
-        public bool TryGetValue<TValue>(MapKey key, out TValue value)
-        {
-            return this.InnerMap.TryGetValue(key, out value);
+            return this.TryGetValue(this.GetKey(key), out value);
         }
 
         public bool TryRemoveValue<TValue>(TKey key, out TValue value)
         {
-            return this.InnerMap.TryRemoveValue(this.GetKey(key), out value);
+            return this.TryRemoveValue(this.GetKey(key), out value);
         }
 
         public void Add(TKey key, object value)
         {
-            this.InnerMap.Add(this.GetKey(key), value);
-        }
-
-        public void Add(MapKey key, object value)
-        {
-            this.InnerMap.Add(key, value);
+            this.Add(this.GetKey(key), value);
         }
 
         public void Merge(RestrictedMap<TKey> map)

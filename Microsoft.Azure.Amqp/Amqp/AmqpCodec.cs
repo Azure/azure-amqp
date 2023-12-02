@@ -486,14 +486,15 @@ namespace Microsoft.Azure.Amqp
 
         public static T DecodeMap<T>(ByteBuffer buffer) where T : RestrictedMap, new()
         {
-            AmqpMap map = MapEncoding.Decode(buffer, 0);
-            T restrictedMap = null;
-            if (map != null)
+            var formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode == FormatCode.Null)
             {
-                restrictedMap = new T();
-                restrictedMap.SetMap(map);
+                return null;
             }
 
+            AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.Map8, FormatCode.Map32, out int size, out int count);
+            T restrictedMap = new T();
+            MapEncoding.ReadMapValue(buffer, restrictedMap, size, count);
             return restrictedMap;
         }
 

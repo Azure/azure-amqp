@@ -24,11 +24,13 @@ namespace Microsoft.Azure.Amqp.Framing
                 if (this.propMap == null)
                 {
                     this.propMap = new PropertiesMap();
-                    this.propMap.SetMap(this.InnerMap);
+                    this.Value = this.propMap;
                 }
 
                 return this.propMap; 
             }
         }
+
+        internal override AmqpMap InnerMap => this.Map;
     }
 }

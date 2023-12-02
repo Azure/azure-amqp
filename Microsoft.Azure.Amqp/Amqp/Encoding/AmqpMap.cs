@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp.Encoding
     using System.Globalization;
     using System.Text;
 
-    public sealed class AmqpMap : IEnumerable<KeyValuePair<MapKey, object>>
+    public class AmqpMap : IEnumerable<KeyValuePair<MapKey, object>>
     {
         Dictionary<MapKey, object> value;
 

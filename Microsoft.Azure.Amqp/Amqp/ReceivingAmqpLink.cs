@@ -420,7 +420,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (this.IsClosing())
                     {
-                        // The closing sequence has been started, so any 
+                        // The closing sequence has been started, so any
                         // transfer is meaningless, so we can treat them as no-op
                         return;
                     }
@@ -787,7 +787,7 @@ namespace Microsoft.Azure.Amqp
             public static bool End(IAsyncResult result, out IEnumerable<AmqpMessage> messages)
             {
                 ReceiveAsyncResult thisPtr = AsyncResult.End<ReceiveAsyncResult>(result);
-                messages = thisPtr.messages;
+                messages = thisPtr.messages != null ? thisPtr.messages : AmqpConstants.EmptyMessages;
                 return thisPtr.completed == 1;
             }
 
@@ -1077,7 +1077,7 @@ namespace Microsoft.Azure.Amqp
 
         /// <summary>
         /// The different this class from the normal Queue is that
-        /// if we specify a size then we will perform Amqp Flow based on 
+        /// if we specify a size then we will perform Amqp Flow based on
         /// the size, where:
         /// - When en-queuing (cache message from service) we will keep sending credit flow as long as size is not over the cache limit.
         /// - When de-queuing (return message to user) we will issue flow as soon as the size is below the threshold (70%).

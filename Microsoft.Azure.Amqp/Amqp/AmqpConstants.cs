@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using Microsoft.Azure.Amqp.Encoding;
@@ -81,5 +82,7 @@ namespace Microsoft.Azure.Amqp
 
         public const int SegmentSize = 512;
         public const byte AmqpFormat = 1;
+
+        internal static readonly List<AmqpMessage> EmptyMessages = new List<AmqpMessage>(0);
     }
 }

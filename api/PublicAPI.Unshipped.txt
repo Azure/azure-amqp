@@ -992,7 +992,7 @@ Microsoft.Azure.Amqp.ReceivingAmqpLink.DisposeMessageAsync(System.ArraySegment<b
 Microsoft.Azure.Amqp.ReceivingAmqpLink.DisposeMessageAsync(System.ArraySegment<byte> deliveryTag, Microsoft.Azure.Amqp.Framing.Outcome outcome, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Framing.Outcome>
 Microsoft.Azure.Amqp.ReceivingAmqpLink.DisposeMessageAsync(System.ArraySegment<byte> deliveryTag, System.ArraySegment<byte> txnId, Microsoft.Azure.Amqp.Framing.Outcome outcome, bool batchable, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Framing.Outcome>
 Microsoft.Azure.Amqp.ReceivingAmqpLink.DisposeMessageAsync(System.ArraySegment<byte> deliveryTag, System.ArraySegment<byte> txnId, Microsoft.Azure.Amqp.Framing.Outcome outcome, bool batchable, System.TimeSpan timeout) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Framing.Outcome>
-Microsoft.Azure.Amqp.ReceivingAmqpLink.DrainAsyc(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.ReceivingAmqpLink.DrainAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task
 Microsoft.Azure.Amqp.ReceivingAmqpLink.EndDisposeMessage(System.IAsyncResult result) -> Microsoft.Azure.Amqp.Framing.Outcome
 Microsoft.Azure.Amqp.ReceivingAmqpLink.EndReceiveMessage(System.IAsyncResult result, out Microsoft.Azure.Amqp.AmqpMessage message) -> bool
 Microsoft.Azure.Amqp.ReceivingAmqpLink.EndReceiveMessages(System.IAsyncResult result, out System.Collections.Generic.IEnumerable<Microsoft.Azure.Amqp.AmqpMessage> messages) -> bool

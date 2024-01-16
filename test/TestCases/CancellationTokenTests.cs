@@ -623,7 +623,7 @@ namespace Test.Microsoft.Azure.Amqp
                         link.Settings.OperationTimeout = TimeSpan.FromMilliseconds(timeoutMilliseconds);
                     }
 
-                    var task = link.DrainAsyc(cts.Token);
+                    var task = link.DrainAsync(cts.Token);
                     if (!cancelBefore && timeoutMilliseconds == 0)
                     {
                         await Task.Yield();

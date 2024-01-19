@@ -87,7 +87,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunConnectionFactoryTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = OpenListener();
+            AmqpConnectionListener listener = OpenListener(saslDelayMs: 200);
 
             try
             {
@@ -130,7 +130,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunConnectionOpenTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = OpenListener();
+            AmqpConnectionListener listener = OpenListener(saslDelayMs: 200);
 
             try
             {
@@ -724,11 +724,11 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        AmqpConnectionListener OpenListener(TestRuntimeProvider runtimeProvider = null)
+        AmqpConnectionListener OpenListener(TestRuntimeProvider runtimeProvider = null, int saslDelayMs = 0)
         {
             AmqpSettings settings = new AmqpSettings { RuntimeProvider = runtimeProvider ?? new TestRuntimeProvider() };
             var saslProvider = new SaslTransportProvider(AmqpVersion.V100);
-            saslProvider.AddHandler(new SaslPlainHandler(new TestSaslPlainAuthenticator()));
+            saslProvider.AddHandler(new SaslPlainHandler(new TestSaslPlainAuthenticator() { DelayInMilliseconds = saslDelayMs }));
             settings.TransportProviders.Add(saslProvider);
             var listener = new AmqpConnectionListener(new[] { addressUri.AbsoluteUri }, settings, new AmqpConnectionSettings());
             listener.Open();

@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Amqp.Framing
 
         public override string ToString()
         {
-            return this.ToString();
+            return base.ToString();
         }
     }
 

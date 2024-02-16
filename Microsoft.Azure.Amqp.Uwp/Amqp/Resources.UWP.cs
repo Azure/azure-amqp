@@ -619,6 +619,16 @@ namespace Microsoft.Azure.Amqp.Amqp
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The AMQP transport failed to open because the inner transport {0} is closed..
+        /// </summary>
+        internal static string AmqpTransportClosed
+        {
+            get
+            {
+                return ResourceManager.GetString("AmqpTransportClosed", resourceCulture);
+            }
+        }
+        /// <summary>
         ///   Looks up a localized string similar to The current transport is not secure. Establish a secure transport by setting AmqpTransportSettings.UseSslStreamSecurity to true..
         /// </summary>
         internal static string AmqpTransportNotSecure

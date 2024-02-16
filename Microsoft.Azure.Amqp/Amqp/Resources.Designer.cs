@@ -11,7 +11,7 @@
 namespace Microsoft.Azure.Amqp.Amqp {
     using System;
     using System.Reflection;
-    
+
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Amqp.Amqp {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -534,6 +534,15 @@ namespace Microsoft.Azure.Amqp.Amqp {
         internal static string AmqpTransferLimitExceeded {
             get {
                 return ResourceManager.GetString("AmqpTransferLimitExceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The AMQP transport failed to open because the inner transport {0} is closed..
+        /// </summary>
+        internal static string AmqpTransportClosed {
+            get {
+                return ResourceManager.GetString("AmqpTransportClosed", resourceCulture);
             }
         }
         

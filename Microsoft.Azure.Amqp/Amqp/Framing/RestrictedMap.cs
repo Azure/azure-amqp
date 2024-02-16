@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Framing
 {
     using System;
+    using System.Collections.Generic;
     using Microsoft.Azure.Amqp.Encoding;
 
     public abstract class RestrictedMap : AmqpMap
@@ -14,6 +15,11 @@ namespace Microsoft.Azure.Amqp.Framing
         [Obsolete]
         public void SetMap(AmqpMap map)
         {
+        }
+
+        public new IEnumerator<KeyValuePair<MapKey, object>> GetEnumerator()
+        {
+            return base.GetEnumerator();
         }
 
         public override string ToString()

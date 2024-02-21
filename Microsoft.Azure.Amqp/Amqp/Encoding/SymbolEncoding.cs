@@ -3,6 +3,8 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
+    using System;
+
     sealed class SymbolEncoding : EncodingBase
     {
         public SymbolEncoding()
@@ -59,10 +61,11 @@ namespace Microsoft.Azure.Amqp.Encoding
 
             int count;
             AmqpEncoding.ReadCount(buffer, formatCode, FormatCode.Symbol8, FormatCode.Symbol32, out count);
-            string value = SystemEncoding.ASCII.GetString(buffer.Buffer, buffer.Offset, count);
+            var segment = new ArraySegment<byte>(buffer.Buffer, buffer.Offset, count);
+            var symbol = EncodingCache.GetSymbol(segment);
             buffer.Complete(count);
 
-            return new AmqpSymbol(value);
+            return symbol;
         }
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)

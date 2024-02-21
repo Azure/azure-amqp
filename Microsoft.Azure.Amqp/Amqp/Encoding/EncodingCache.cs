@@ -21,7 +21,7 @@ namespace Microsoft.Azure.Amqp
             capacity: 43,
             comparer: ByteArrayComparer.Instance,
             keyFunc: a => Copy(a),
-            valueFunc: a => System.Text.Encoding.ASCII.GetString(a.Array, a.Offset, a.Count));
+            valueFunc: a => SystemEncoding.ASCII.GetString(a.Array, a.Offset, a.Count));
 
         static readonly UlongCache performativeCodes = new UlongCache(0x10ul, 0x19ul);
         static readonly UlongCache outcomeCodes = new UlongCache(0x23ul, 0x29ul);

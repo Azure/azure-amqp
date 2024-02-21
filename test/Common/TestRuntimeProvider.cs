@@ -85,15 +85,21 @@ namespace Test.Microsoft.Azure.Amqp
 
     class TestSaslPlainAuthenticator : ISaslPlainAuthenticator
     {
-        public Task<IPrincipal> AuthenticateAsync(string identity, string password)
+        public int DelayInMilliseconds { get; set; }
+
+        public async Task<IPrincipal> AuthenticateAsync(string identity, string password)
         {
+            if (this.DelayInMilliseconds > 0)
+            {
+                await Task.Delay(this.DelayInMilliseconds);
+            }
+
             if (identity != password)
             {
                 throw new UnauthorizedAccessException();
             }
 
-            IPrincipal principal = new GenericPrincipal(new GenericIdentity(identity), new string[] { "SEND", "RECV" });
-            return Task.FromResult(principal);
+            return new GenericPrincipal(new GenericIdentity(identity), new string[] { "SEND", "RECV" });
         }
     }
 

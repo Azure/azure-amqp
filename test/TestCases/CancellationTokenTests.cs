@@ -8,14 +8,15 @@ namespace Test.Microsoft.Azure.Amqp
     using System.Threading.Tasks;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Framing;
+    using global::Microsoft.Azure.Amqp.Sasl;
     using global::Microsoft.Azure.Amqp.Transport;
-    using Xunit;
     using TestAmqpBroker;
+    using Xunit;
 
     [Trait("Category", TestCategory.Current)]
     public class CancellationTokenTests
     {
-        Uri addressUri = new Uri("amqp://localhost:5678");
+        Uri addressUri = new Uri("amqp://guest:guest@localhost:5678");
 
         [Fact]
         public Task TransportTest()
@@ -41,6 +42,9 @@ namespace Test.Microsoft.Azure.Amqp
                 await Assert.ThrowsAsync<TaskCanceledException>(async () =>
                 {
                     AmqpSettings settings = new AmqpSettings();
+                    var sasl = new SaslTransportProvider();
+                    sasl.Versions.Add(new AmqpVersion(1, 0, 0));
+                    settings.TransportProviders.Add(sasl);
                     var provider = new AmqpTransportProvider();
                     provider.Versions.Add(new AmqpVersion(1, 0, 0));
                     settings.TransportProviders.Add(provider);
@@ -82,8 +86,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunConnectionFactoryTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener(saslDelayMs: 200);
 
             try
             {
@@ -126,8 +129,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunConnectionOpenTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener(saslDelayMs: 200);
 
             try
             {
@@ -179,8 +181,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunConnectionCloseTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener();
 
             try
             {
@@ -233,8 +234,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunSessionOpenTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener();
 
             try
             {
@@ -280,8 +280,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunSessionCloseTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener();
 
             try
             {
@@ -328,8 +327,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunLinkOpenTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener();
 
             try
             {
@@ -377,8 +375,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunLinkCloseTest(bool cancelBefore)
         {
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, new TestRuntimeProvider());
-            listener.Open();
+            AmqpConnectionListener listener = OpenListener();
 
             try
             {
@@ -432,8 +429,8 @@ namespace Test.Microsoft.Azure.Amqp
             {
                 LinkFactory = (s, t) => { t.TotalLinkCredit = 10; return new TestLink(s, t, sendHang: true); }
             };
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, provider);
-            listener.Open();
+
+            AmqpConnectionListener listener = OpenListener(provider);
 
             try
             {
@@ -487,8 +484,8 @@ namespace Test.Microsoft.Azure.Amqp
             {
                 LinkFactory = (s, t) => new TestLink(s, t, receiveHang: true)
             };
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, provider);
-            listener.Open();
+
+            AmqpConnectionListener listener = OpenListener(provider);
 
             try
             {
@@ -539,8 +536,8 @@ namespace Test.Microsoft.Azure.Amqp
             {
                 LinkFactory = (s, t) => { t.SettleType = SettleMode.SettleOnDispose; return new TestLink(s, t, disposeHang: true); }
             };
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, provider);
-            listener.Open();
+
+            AmqpConnectionListener listener = OpenListener(provider);
 
             try
             {
@@ -603,8 +600,8 @@ namespace Test.Microsoft.Azure.Amqp
             {
                 LinkFactory = (s, t) => { t.SettleType = SettleMode.SettleOnDispose; return new TestLink(s, t, flowHang: true); }
             };
-            AmqpConnectionListener listener = new AmqpConnectionListener(addressUri.AbsoluteUri, provider);
-            listener.Open();
+
+            AmqpConnectionListener listener = OpenListener(provider);
 
             try
             {
@@ -661,7 +658,7 @@ namespace Test.Microsoft.Azure.Amqp
         [Fact]
         public async Task CbsSendTokenNoCancelTest()
         {
-            var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, null, null, null);
+            var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, addressUri.UserInfo, null, null);
             broker.AddNode(new CbsNode());
             broker.Start();
 
@@ -694,7 +691,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         async Task RunCbsSendTokenTest(bool cancelBefore)
         {
-            var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, null, null, null);
+            var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, addressUri.UserInfo, null, null);
             broker.AddNode(new CbsNode() { ProcessingTime = TimeSpan.FromSeconds(10) });
             broker.Start();
 
@@ -728,6 +725,18 @@ namespace Test.Microsoft.Azure.Amqp
             {
                 broker.Stop();
             }
+        }
+
+        AmqpConnectionListener OpenListener(TestRuntimeProvider runtimeProvider = null, int saslDelayMs = 0)
+        {
+            AmqpSettings settings = new AmqpSettings { RuntimeProvider = runtimeProvider ?? new TestRuntimeProvider() };
+            var saslProvider = new SaslTransportProvider();
+            saslProvider.Versions.Add(new AmqpVersion(1, 0, 0));
+            saslProvider.AddHandler(new SaslPlainHandler(new TestSaslPlainAuthenticator() { DelayInMilliseconds = saslDelayMs }));
+            settings.TransportProviders.Add(saslProvider);
+            var listener = new AmqpConnectionListener(new[] { addressUri.AbsoluteUri }, settings, new AmqpConnectionSettings());
+            listener.Open();
+            return listener;
         }
 
         class TestTokenProvider : ICbsTokenProvider

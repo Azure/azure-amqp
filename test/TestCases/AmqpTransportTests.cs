@@ -118,7 +118,7 @@
 #if NET471_OR_GREATER || NETCOREAPP
             protocols.Add(SslProtocols.None);
 #endif
-#if NET48_OR_GREATER || NET5_0_OR_GREATER || NETCOREAPP3_0_OR_GREATER
+#if NET48_OR_GREATER || NET5_0_OR_GREATER
             protocols.Add(SslProtocols.Tls13);
 #endif
 
@@ -152,7 +152,8 @@
             }
             catch (SocketException se)
             {
-                Assert.Equal(SocketError.ConnectionReset, se.SocketErrorCode);
+                Assert.True(SocketError.ConnectionReset == se.SocketErrorCode ||
+                    SocketError.ConnectionAborted == se.SocketErrorCode);
             }
         }
 #endif

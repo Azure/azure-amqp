@@ -12,6 +12,7 @@ namespace Microsoft.Azure.Amqp
         readonly CancellationToken cancellationToken;
         CancellationTokenRegistration cancellationTokenRegistration;
         Timer timer;
+        int state;  // 0: created, 1: starting, 2: active, 3: completed
 
         protected TimeoutAsyncResult(TimeSpan timeout, CancellationToken cancellationToken, AsyncCallback callback, object state)
             : base(callback, state)
@@ -28,7 +29,7 @@ namespace Microsoft.Azure.Amqp
 
         protected void StartTracking()
         {
-            if (!this.IsCompleted)
+            if (Interlocked.CompareExchange(ref this.state, 1, 0) == 0)
             {
                 if (this.timeout != Timeout.InfiniteTimeSpan && this.timeout != TimeSpan.MaxValue)
                 {
@@ -44,6 +45,11 @@ namespace Microsoft.Azure.Amqp
                             thisPtr.Cancel(isSynchronous);
                         },
                         this);
+                }
+
+                if (Interlocked.CompareExchange(ref this.state, 2, 1) == 3)
+                {
+                    this.Dispose();
                 }
             }
         }
@@ -83,13 +89,18 @@ namespace Microsoft.Azure.Amqp
 
         bool CompleteInternal(bool syncComplete, Exception exception)
         {
-            if (this.timer != null)
+            if (Interlocked.Exchange(ref this.state, 3) == 2)
             {
-                this.timer.Dispose();
+                this.Dispose();
             }
 
-            this.cancellationTokenRegistration.Dispose();
             return this.TryComplete(syncComplete, exception);
+        }
+
+        void Dispose()
+        {
+            this.timer?.Dispose();
+            this.cancellationTokenRegistration.Dispose();
         }
     }
 }

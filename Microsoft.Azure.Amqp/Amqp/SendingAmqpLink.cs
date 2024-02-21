@@ -347,7 +347,7 @@ namespace Microsoft.Azure.Amqp
 
             bool CancelInflight()
             {
-                if (this.link.inflightSends.TryRemoveWork(this.deliveryTag, out _))
+                if (this.link.inflightSends.RemoveWork(this.deliveryTag, this))
                 {
                     // try to remove this delivery on the other side, note that the message may
                     // still be sent and accepted by the broker already. This race is by design.

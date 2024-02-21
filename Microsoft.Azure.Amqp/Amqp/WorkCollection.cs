@@ -42,12 +42,13 @@ namespace Microsoft.Azure.Amqp
         {
             if (!this.pendingWork.TryAdd(key, work))
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("A pending operation with the same identifier already exists.");
             }
 
-            if (this.closed && this.pendingWork.TryRemove(key, out work))
+            if (this.closed)
             {
-                work.Cancel(true, new OperationCanceledException());
+                this.RemoveWork(key, work);
+                work.Cancel(true, new OperationCanceledException("The operation is canceled because the owner is already closed."));
                 return;
             }
 
@@ -57,10 +58,8 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                if (this.pendingWork.TryRemove(key, out work))
-                {
-                    work.Cancel(true, exception);
-                }
+                this.RemoveWork(key, work);
+                work.Cancel(true, exception);
             }
         }
 
@@ -83,9 +82,22 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        public bool TryRemoveWork(TKey key, out TWork work)
+        // Returns true if the key is found and removed.
+        public bool RemoveWork(TKey key, TWork work)
         {
-            return this.pendingWork.TryRemove(key, out work);
+            if (this.pendingWork.TryRemove(key, out TWork temp))
+            {
+                if (!object.ReferenceEquals(work, temp))
+                {
+                    // The same key is used for a different work.
+                    // Have to fail the victim to avoid a stuck operation.
+                    work.Cancel(false, new OperationCanceledException("The operation is canceled because another one started with the same identifier."));
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         public void Abort()
@@ -100,7 +112,7 @@ namespace Microsoft.Azure.Amqp
                         TWork work;
                         if (thisPtr.pendingWork.TryRemove(key, out work))
                         {
-                            work.Cancel(false, new OperationCanceledException());
+                            work.Cancel(false, new OperationCanceledException("The operation is canceled because the owner is being closed."));
                         }
                     }
                 },

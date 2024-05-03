@@ -237,12 +237,12 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             if (args.Exception != null && args.Transport != null)
             {
-                args.Transport.SafeClose(args.Exception);
-                args.Transport = null;
                 if (args.Exception is ObjectDisposedException)
                 {
                     args.Exception = new IOException(AmqpResources.GetString(AmqpResources.AmqpTransportClosed, args.Transport.ToString()));
                 }
+                args.Transport.SafeClose(args.Exception);
+                args.Transport = null;
             }
 
             TransportAsyncCallbackArgs innerArgs = (TransportAsyncCallbackArgs)args.UserToken;

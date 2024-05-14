@@ -1050,6 +1050,11 @@ namespace Microsoft.Azure.Amqp
             static void ReadDataSection(AmqpMessageReader reader, AmqpMessage message, long startPosition)
             {
                 FormatCode formatCode = reader.ReadFormatCode();
+                if (formatCode == FormatCode.Null)
+                {
+                    return;
+                }
+
                 Fx.Assert(formatCode == FormatCode.Binary8 || formatCode == FormatCode.Binary32, "Invalid binary format code");
                 bool smallEncoding = formatCode == FormatCode.Binary8;
                 int count = reader.ReadInt(smallEncoding);

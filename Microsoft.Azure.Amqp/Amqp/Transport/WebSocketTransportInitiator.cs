@@ -29,7 +29,7 @@ namespace Microsoft.Azure.Amqp.Transport
             cws.Options.SetBuffer(this.settings.ReceiveBufferSize, this.settings.SendBufferSize);
 #endif
 
-            Task task = cws.ConnectAsync(this.settings.Uri, CancellationToken.None).WithTimeout(timeout, () => "timeout");
+            Task task = cws.ConnectAsync(this.settings.Uri, CancellationToken.None).WithTimeout(timeout, () => "Client WebSocket connect timed out");
             if (task.IsCompleted)
             {
                 callbackArgs.Transport = new WebSocketTransport(cws, this.settings.Uri);
@@ -40,10 +40,12 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 if (t.IsFaulted)
                 {
+                    cws.Abort();
                     callbackArgs.Exception = t.Exception.InnerException;
                 }
                 else if (t.IsCanceled)
                 {
+                    cws.Abort();
                     callbackArgs.Exception = new OperationCanceledException();
                 }
                 else

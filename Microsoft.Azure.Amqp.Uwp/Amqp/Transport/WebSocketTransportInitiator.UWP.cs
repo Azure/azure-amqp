@@ -4,6 +4,8 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Windows.Networking.Sockets;
 
     sealed class WebSocketTransportInitiator : TransportInitiator
@@ -20,31 +22,39 @@ namespace Microsoft.Azure.Amqp.Transport
             StreamWebSocket sws = new StreamWebSocket();
             sws.Control.SupportedProtocols.Add(this.settings.SubProtocol);
 
-            var task = sws.ConnectAsync(this.settings.Uri).AsTask().WithTimeout(timeout, () => "timeout");
+            var cts = new CancellationTokenSource(timeout);
+            var task = sws.ConnectAsync(this.settings.Uri).AsTask(cts.Token);
             if (task.IsCompleted)
             {
-                callbackArgs.Transport = new WebSocketTransport(sws, this.settings.Uri);
+                this.OnConnect(callbackArgs, task, sws, cts);
                 return false;
             }
 
             task.ContinueWith(t =>
             {
-                if (t.IsFaulted)
-                {
-                    callbackArgs.Exception = t.Exception.InnerException;
-                }
-                else if (t.IsCanceled)
-                {
-                    callbackArgs.Exception = new OperationCanceledException();
-                }
-                else
-                {
-                    callbackArgs.Transport = new WebSocketTransport(sws, this.settings.Uri);
-                }
-
+                this.OnConnect(callbackArgs, t, sws, cts);
                 callbackArgs.CompletedCallback(callbackArgs);
             });
             return true;
+        }
+
+        void OnConnect(TransportAsyncCallbackArgs callbackArgs, Task t, StreamWebSocket sws, CancellationTokenSource cts)
+        {
+            cts.Dispose();
+            if (t.IsFaulted)
+            {
+                sws.Dispose();
+                callbackArgs.Exception = t.Exception.InnerException;
+            }
+            else if (t.IsCanceled)
+            {
+                sws.Dispose();
+                callbackArgs.Exception = new OperationCanceledException();
+            }
+            else
+            {
+                callbackArgs.Transport = new WebSocketTransport(sws, this.settings.Uri);
+            }
         }
     }
 }

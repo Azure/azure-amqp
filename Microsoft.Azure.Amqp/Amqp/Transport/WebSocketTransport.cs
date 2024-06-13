@@ -72,25 +72,13 @@ namespace Microsoft.Azure.Amqp.Transport
             Task task = this.webSocket.SendAsync(buffer, WebSocketMessageType.Binary, true, CancellationToken.None);
             if (task.IsCompleted)
             {
-                this.OnWriteComplete(args, buffer, mergedBuffer, startTime);
+                this.OnWriteComplete(args, task, buffer, mergedBuffer, startTime);
                 return false;
             }
 
             task.ContinueWith(t =>
             {
-                if (t.IsFaulted)
-                {
-                    args.Exception = t.Exception.InnerException;
-                }
-                else if (t.IsCanceled)
-                {
-                    args.Exception = new OperationCanceledException();
-                }
-                else
-                {
-                    this.OnWriteComplete(args, buffer, mergedBuffer, startTime);
-                }
-
+                this.OnWriteComplete(args, t, buffer, mergedBuffer, startTime);
                 args.CompletedCallback(args);
             });
             return true;
@@ -103,25 +91,13 @@ namespace Microsoft.Azure.Amqp.Transport
             Task<WebSocketReceiveResult> task = this.webSocket.ReceiveAsync(buffer, CancellationToken.None);
             if (task.IsCompleted)
             {
-                this.OnReadComplete(args, task.Result.Count, startTime);
+                this.OnReadComplete(args, task, startTime);
                 return false;
             }
 
             task.ContinueWith(t =>
             {
-                if (t.IsFaulted)
-                {
-                    args.Exception = t.Exception.InnerException;
-                }
-                else if (t.IsCanceled)
-                {
-                    args.Exception = new OperationCanceledException();
-                }
-                else
-                {
-                    this.OnReadComplete(args, t.Result.Count, startTime);
-                }
-
+                this.OnReadComplete(args, t, startTime);
                 args.CompletedCallback(args);
             });
             return true;
@@ -137,6 +113,15 @@ namespace Microsoft.Azure.Amqp.Transport
             Task task = webSocket.CloseAsync(WebSocketCloseStatus.Empty, string.Empty, CancellationToken.None);
             if (task.IsCompleted)
             {
+                if (task.IsFaulted)
+                {
+                    ExceptionDispatcher.Throw(task.Exception.InnerException);
+                }
+                else if (task.IsCanceled)
+                {
+                    throw new OperationCanceledException();
+                }
+
                 return true;
             }
 
@@ -165,26 +150,48 @@ namespace Microsoft.Azure.Amqp.Transport
                 string.Equals(scheme, WebSocketTransportSettings.SecureWebSockets, StringComparison.OrdinalIgnoreCase);
         }
 
-        void OnWriteComplete(TransportAsyncCallbackArgs args, ArraySegment<byte> buffer, ByteBuffer byteBuffer, DateTime startTime)
+        void OnWriteComplete(TransportAsyncCallbackArgs args, Task t, ArraySegment<byte> buffer, ByteBuffer byteBuffer, DateTime startTime)
         {
-            args.BytesTransfered = buffer.Count;
+            if (t.IsFaulted)
+            {
+                args.Exception = t.Exception.InnerException;
+            }
+            else if (t.IsCanceled)
+            {
+                args.Exception = new OperationCanceledException();
+            }
+            else
+            {
+                args.BytesTransfered = buffer.Count;
+                if (this.usageMeter != null)
+                {
+                    this.usageMeter.OnTransportWrite(0, buffer.Count, 0, DateTime.UtcNow.Subtract(startTime).Ticks);
+                }
+            }
+
             if (byteBuffer != null)
             {
                 byteBuffer.Dispose();
             }
-
-            if (this.usageMeter != null)
-            {
-                this.usageMeter.OnTransportWrite(0, buffer.Count, 0, DateTime.UtcNow.Subtract(startTime).Ticks);
-            }
         }
 
-        void OnReadComplete(TransportAsyncCallbackArgs args, int count, DateTime startTime)
+        void OnReadComplete(TransportAsyncCallbackArgs args, Task<WebSocketReceiveResult> t, DateTime startTime)
         {
-            args.BytesTransfered = count;
-            if (this.usageMeter != null)
+            if (t.IsFaulted)
             {
-                this.usageMeter.OnTransportRead(0, count, 0, DateTime.UtcNow.Subtract(startTime).Ticks);
+                args.Exception = t.Exception.InnerException;
+            }
+            else if (t.IsCanceled)
+            {
+                args.Exception = new OperationCanceledException();
+            }
+            else
+            {
+                args.BytesTransfered = t.Result.Count;
+                if (this.usageMeter != null)
+                {
+                    this.usageMeter.OnTransportRead(0, args.BytesTransfered, 0, DateTime.UtcNow.Subtract(startTime).Ticks);
+                }
             }
         }
     }

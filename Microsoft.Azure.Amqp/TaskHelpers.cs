@@ -5,7 +5,6 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Runtime.InteropServices;
-    using System.Threading;
     using System.Threading.Tasks;
 
     static class TaskHelpers
@@ -56,17 +55,6 @@ namespace Microsoft.Azure.Amqp
             }
 
             return retval;
-        }
-
-        public static void Fork(this Task thisTask)
-        {
-            Fork(thisTask, "TaskExtensions.Fork");
-        }
-
-        public static void Fork(this Task thisTask, string tracingInfo)
-        {
-            Fx.Assert(thisTask != null, "task is required!");
-            thisTask.ContinueWith(t => AmqpTrace.Provider.AmqpHandleException(t.Exception, tracingInfo), TaskContinuationOptions.OnlyOnFaulted);
         }
 
         public static IAsyncResult ToAsyncResult(this Task task, AsyncCallback callback, object state)
@@ -165,54 +153,6 @@ namespace Microsoft.Azure.Amqp
             }
 
             return task.GetAwaiter().GetResult();
-        }
-
-        public static Task WithTimeout(this Task task, TimeSpan timeout, Func<string> errorMessage)
-        {
-            return WithTimeout(task, timeout, errorMessage, CancellationToken.None);
-        }
-
-        public static async Task WithTimeout(this Task task, TimeSpan timeout, Func<string> errorMessage, CancellationToken token)
-        {
-            if (timeout == TimeSpan.MaxValue)
-            {
-                timeout = Timeout.InfiniteTimeSpan;
-            }
-            else if (timeout.TotalMilliseconds > Int32.MaxValue)
-            {
-                timeout = TimeSpan.FromMilliseconds(Int32.MaxValue);
-            }
-
-            if (task.IsCompleted || (timeout == Timeout.InfiniteTimeSpan && token == CancellationToken.None))
-            {
-                await task.ConfigureAwait(false);
-                return;
-            }
-
-            using (var cts = CancellationTokenSource.CreateLinkedTokenSource(token))
-            {
-                if (task == await Task.WhenAny(task, CreateDelayTask(timeout, cts.Token)).ConfigureAwait(false))
-                {
-                    cts.Cancel();
-                    await task.ConfigureAwait(false);
-                    return;
-                }
-            }
-
-            throw new TimeoutException(errorMessage());
-        }
-
-        static async Task CreateDelayTask(TimeSpan timeout, CancellationToken token)
-        {
-            try
-            {
-                await Task.Delay(timeout, token).ConfigureAwait(false);
-            }
-            catch (TaskCanceledException)
-            {
-                // No need to throw. Caller is responsible for detecting
-                // which task completed and throwing appropriate Timeout Exception
-            }
         }
 
         [StructLayout(LayoutKind.Sequential, Size = 1)]

@@ -7,6 +7,7 @@ namespace Microsoft.Azure.Amqp.Serialization
     using System.Collections;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -18,6 +19,9 @@ namespace Microsoft.Azure.Amqp.Serialization
     /// </summary>
     public sealed class AmqpContractSerializer
     {
+        internal const string TrimWarning = "AmqpContractSerializer relies on reflection-based serialization. Required types may be removed when trimming.";
+        internal const string AotWarning = "AmqpContractSerializer relies on dynamically creating types that may not be available with Ahead of Time compilation.";
+
         static readonly Dictionary<Type, SerializableType> builtInTypes = new Dictionary<Type, SerializableType>()
         {
             { typeof(bool),     SerializableType.CreatePrimitiveType(typeof(bool)) },
@@ -91,6 +95,8 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// </summary>
         /// <param name="stream">The destination stream.</param>
         /// <param name="graph">The object to serialize.</param>
+        [RequiresUnreferencedCode(TrimWarning)]
+        [RequiresDynamicCode(AotWarning)]
         public static void WriteObject(Stream stream, object graph)
         {
             if (graph == null)
@@ -114,6 +120,8 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// <typeparam name="T">The expected type.</typeparam>
         /// <param name="stream">The source stream.</param>
         /// <returns>An object of T.</returns>
+        [RequiresUnreferencedCode(TrimWarning)]
+        [RequiresDynamicCode(AotWarning)]
         public static T ReadObject<T>(Stream stream)
         {
             return ReadObject<T, T>(stream);
@@ -128,6 +136,8 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// <returns>An object of TAs.</returns>
         /// <remarks>The serializer uses T to resolve decoding
         /// types and returns the decoded object as TAs.</remarks>
+        [RequiresUnreferencedCode(TrimWarning)]
+        [RequiresDynamicCode(AotWarning)]
         public static TAs ReadObject<T, TAs>(Stream stream)
         {
             if (!stream.CanSeek)
@@ -168,6 +178,8 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="graph"></param>
+        [RequiresUnreferencedCode(TrimWarning)]
+        [RequiresDynamicCode(AotWarning)]
         public void WriteObjectToBuffer(ByteBuffer buffer, object graph)
         {
             if (graph == null)
@@ -187,6 +199,8 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// <typeparam name="T">The expected type.</typeparam>
         /// <param name="buffer">The source buffer.</param>
         /// <returns>An object of T.</returns>
+        [RequiresUnreferencedCode(TrimWarning)]
+        [RequiresDynamicCode(AotWarning)]
         public T ReadObjectFromBuffer<T>(ByteBuffer buffer)
         {
             return this.ReadObjectFromBuffer<T, T>(buffer);
@@ -201,12 +215,16 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// <returns>An object of TAs.</returns>
         /// <remarks>The serializer uses T to resolve decoding
         /// types and returns the decoded object as TAs.</remarks>
+        [RequiresUnreferencedCode(TrimWarning)]
+        [RequiresDynamicCode(AotWarning)]
         public TAs ReadObjectFromBuffer<T, TAs>(ByteBuffer buffer)
         {
             SerializableType type = this.GetType(typeof(T));
             return (TAs)type.ReadObject(buffer);
         }
 
+        [RequiresUnreferencedCode(TrimWarning)]
+        [RequiresDynamicCode(AotWarning)]
         internal SerializableType GetType(Type type)
         {
             return this.GetOrCompileType(type, false);
@@ -227,6 +245,8 @@ namespace Microsoft.Azure.Amqp.Serialization
             return false;
         }
 
+        [RequiresUnreferencedCode(TrimWarning)]
+        [RequiresDynamicCode(AotWarning)]
         SerializableType GetOrCompileType(Type type, bool describedOnly)
         {
             SerializableType serialiableType = null;
@@ -247,6 +267,8 @@ namespace Microsoft.Azure.Amqp.Serialization
             return serialiableType;
         }
 
+        [RequiresUnreferencedCode(TrimWarning)]
+        [RequiresDynamicCode(AotWarning)]
         SerializableType CompileType(Type type, bool describedOnly)
         {
             if (this.externalCompilers != null)
@@ -395,6 +417,8 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+        [RequiresUnreferencedCode(TrimWarning)]
+        [RequiresDynamicCode(AotWarning)]
         SerializableType CompileNonContractTypes(Type type)
         {
             if (type.GetTypeInfo().IsGenericType &&

@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Serialization
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
 
     delegate object MethodDelegate(object container, object[] parameters);
@@ -13,6 +14,7 @@ namespace Microsoft.Azure.Amqp.Serialization
         bool isStatic;
         MethodDelegate methodDelegate;
 
+        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
         public static MethodAccessor Create(MethodInfo methodInfo)
         {
             return new TypeMethodAccessor(methodInfo);
@@ -54,6 +56,7 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         sealed class TypeMethodAccessor : MethodAccessor
         {
+            [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
             public TypeMethodAccessor(MethodInfo methodInfo)
             {
                 this.isStatic = methodInfo.IsStatic;

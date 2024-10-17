@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Serialization
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
     using System.Runtime.Serialization;
 
@@ -25,6 +26,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             return (obj, val) => fieldInfo.SetValue(obj, val);
         }
 
+        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
         public static Func<object, object> CreateGetter(this PropertyInfo propertyInfo)
         {
             MethodInfo getMethod = propertyInfo.GetGetMethod(true);
@@ -33,6 +35,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             return (Func<object, object>)m2.Invoke(null, new object[] { getMethod });
         }
 
+        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
         public static Action<object, object> CreateSetter(this PropertyInfo propertyInfo, bool requiresSetter)
         {
             if (requiresSetter && propertyInfo.DeclaringType.IsValueType)
@@ -63,6 +66,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             throw new NotImplementedException();
         }
 
+        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
         public static MethodDelegate CreateMethod(this MethodInfo methodInfo, bool isStatic)
         {
             var parameters = methodInfo.GetParameters();

@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp.Serialization
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
     using System.Runtime.Serialization;
     using Microsoft.Azure.Amqp.Encoding;
@@ -299,6 +300,8 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+        [RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
         internal sealed class List : Collection
         {
             readonly SerializableType itemType;
@@ -376,6 +379,8 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+        [RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
         internal sealed class Map : Collection
         {
             readonly SerializableType keyType;
@@ -451,6 +456,8 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+        [RequiresUnreferencedCode(AmqpContractSerializer.AotWarning)]
+        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
         internal abstract class Composite : Collection
         {
             readonly Composite baseType;
@@ -625,6 +632,8 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+        [RequiresUnreferencedCode(AmqpContractSerializer.AotWarning)]
+        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
         internal sealed class CompositeList : Composite
         {
             public CompositeList(
@@ -682,6 +691,8 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+        [RequiresUnreferencedCode(AmqpContractSerializer.AotWarning)]
+        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
         internal sealed class CompositeMap : Composite
         {
             public CompositeMap(

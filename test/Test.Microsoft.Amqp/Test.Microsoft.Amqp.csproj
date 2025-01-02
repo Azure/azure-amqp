@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net462;net6.0</TargetFrameworks>
     <AssemblyName>Test.Microsoft.Amqp</AssemblyName>
+    <TestTfmsInParallel>false</TestTfmsInParallel>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

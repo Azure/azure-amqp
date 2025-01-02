@@ -6,7 +6,7 @@ namespace Test.Microsoft.Azure.Amqp
     public class TestAmqpBrokerFixture : IDisposable
     {
         const string address = "amqp://localhost:15672";
-        const string wsAddress = "ws://localhost:28088";
+        const string wsAddress = "ws://localhost:15678";
         readonly static object syncRoot = new object();
         static TestAmqpBroker broker;
         static int refs;

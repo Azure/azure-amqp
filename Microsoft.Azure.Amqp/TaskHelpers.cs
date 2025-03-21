@@ -11,52 +11,6 @@ namespace Microsoft.Azure.Amqp
     {
         public static readonly Task CompletedTask = Task.FromResult(default(VoidTaskResult));
 
-        /// <summary>
-        /// Create a Task based on Begin/End IAsyncResult pattern.
-        /// </summary>
-        /// <param name="begin"></param>
-        /// <param name="end"></param>
-        /// <param name="state"> 
-        /// This parameter helps reduce allocations by passing state to the Funcs. e.g.:
-        ///  await TaskHelpers.CreateTask(
-        ///      (c, s) => ((Transaction)s).BeginCommit(c, s),
-        ///      (a) => ((Transaction)a.AsyncState).EndCommit(a),
-        ///      transaction);
-        /// </param>
-        public static Task CreateTask(Func<AsyncCallback, object, IAsyncResult> begin, Action<IAsyncResult> end, object state = null)
-        {
-            Task retval;
-            try
-            {
-                retval = Task.Factory.FromAsync(begin, end, state);
-            }
-            catch (Exception ex) when (!Fx.IsFatal(ex))
-            {
-                var completionSource = new TaskCompletionSource<object>(state);
-                completionSource.SetException(ex);
-                retval = completionSource.Task;
-            }
-
-            return retval;
-        }
-
-        public static Task<T> CreateTask<T>(Func<AsyncCallback, object, IAsyncResult> begin, Func<IAsyncResult, T> end, object state = null)
-        {
-            Task<T> retval;
-            try
-            {
-                retval = Task<T>.Factory.FromAsync(begin, end, state);
-            }
-            catch (Exception ex) when (!Fx.IsFatal(ex))
-            {
-                var completionSource = new TaskCompletionSource<T>(state);
-                completionSource.SetException(ex);
-                retval = completionSource.Task;
-            }
-
-            return retval;
-        }
-
         public static IAsyncResult ToAsyncResult(this Task task, AsyncCallback callback, object state)
         {
             if (task.AsyncState == state)

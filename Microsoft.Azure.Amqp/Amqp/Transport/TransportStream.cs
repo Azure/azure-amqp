@@ -91,9 +91,11 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            return TaskHelpers.CreateTask(
-                (c, s) => this.BeginWrite(buffer, offset, count, c, s),
-                (a) => this.EndWrite(a),
+            return Task.Factory.FromAsync(
+                (thisPtr, a, c, s) => thisPtr.BeginWrite(a.Array, a.Offset, a.Count, c, s),
+                (a) => ((TransportStream)a.AsyncState).EndWrite(a),
+                this,
+                new ArraySegment<byte>(buffer, offset, count),
                 this);
         }
 
@@ -131,9 +133,11 @@ namespace Microsoft.Azure.Amqp.Transport
 
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            return TaskHelpers.CreateTask(
-                (c, s) => this.BeginRead(buffer, offset, count, c, s),
-                (a) => this.EndRead(a),
+            return Task.Factory.FromAsync(
+                (thisPtr, a, c, s) => ((TransportStream)s).BeginRead(a.Array, a.Offset, a.Count, c, s),
+                (a) => ((TransportStream)a.AsyncState).EndRead(a),
+                this,
+                new ArraySegment<byte>(buffer, offset, count),
                 this);
         }
 

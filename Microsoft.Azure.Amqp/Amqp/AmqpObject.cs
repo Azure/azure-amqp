@@ -483,9 +483,10 @@ namespace Microsoft.Azure.Amqp
 
         protected void ThrowIfClosed()
         {
-            if (this.closeCalled)
+            if (this.closeCalled || this.abortCalled)
             {
-                throw new AmqpException(AmqpErrorCode.IllegalState, $"'{this.name}' is closed");
+                string reason = this.closeCalled ? "closed" : "aborted";
+                throw new AmqpException(AmqpErrorCode.IllegalState, $"Object '{this.name}' is {reason}.");
             }
         }
 

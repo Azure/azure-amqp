@@ -4,17 +4,15 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
-    using System.IO;
     using System.Net.Security;
     using System.Security.Authentication;
     using System.Security.Cryptography.X509Certificates;
+    using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.X509;
 
     public class TlsTransport : TransportBase, IDisposable
     {
         static readonly AsyncCallback onOpenComplete = OnOpenComplete;
-        static readonly AsyncCallback onWriteComplete = OnWriteComplete;
-        static readonly AsyncCallback onReadComplete = OnReadComplete;
         readonly TransportBase innerTransport;
         protected readonly CustomSslStream sslStream;
         TlsTransportSettings tlsSettings;
@@ -38,6 +36,12 @@ namespace Microsoft.Azure.Amqp.Transport
         public override string RemoteEndPoint => this.innerTransport.RemoteEndPoint;
 
         public override bool IsSecure => true;
+
+        protected TlsTransportSettings TlsSettings
+        {
+            get { return this.tlsSettings; }
+        }
+
 
         public override void SetMonitor(ITransportMonitor usageMeter)
         {
@@ -80,27 +84,37 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
             }
 
-            IAsyncResult result;
-            try
+            var task = this.sslStream.WriteAsync(buffer.Array, buffer.Offset, buffer.Count);
+            if (task.IsCompleted)
             {
-                result = this.sslStream.BeginWrite(buffer.Array, buffer.Offset, buffer.Count, onWriteComplete, this);
-            }
-            catch (ObjectDisposedException ode)
-            {
-                throw new IOException($"Transport '{this}' is closed", ode);
-            }
-            catch (InvalidOperationException ioe)
-            {
-                throw new IOException($"Transport '{this}' is in an invalid state for write operations.", ioe);
+                this.writeState.Reset();
+                task.GetAwaiter().GetResult();
+                args.CompletedSynchronously = true;
+                args.BytesTransfered = buffer.Count;
+                return false;
             }
 
-            bool completedSynchronously = result.CompletedSynchronously;
-            if (completedSynchronously)
+            _ = task.ContinueWith((_t, _s) =>
             {
-                this.HandleOperationComplete(result, true, true);
-            }
-
-            return !completedSynchronously;
+                var _this = (TlsTransport)_s;
+                TransportAsyncCallbackArgs _args = _this.writeState.Args;
+                _this.writeState.Reset();
+                _args.CompletedSynchronously = false;
+                if (_t.IsFaulted)
+                {
+                    _args.Exception = _t.Exception.InnerException;
+                }
+                else if (_t.IsCanceled)
+                {
+                    _args.Exception = new TaskCanceledException();
+                }
+                else
+                {
+                    _args.BytesTransfered = _args.Count;
+                }
+                _args.CompletedCallback.Invoke(_args);
+            }, this);
+            return true;
         }
 
         public override bool ReadAsync(TransportAsyncCallbackArgs args)
@@ -108,33 +122,39 @@ namespace Microsoft.Azure.Amqp.Transport
             // Read with buffer list not supported
             Fx.Assert(args.Buffer != null, "must have buffer to read");
             Fx.Assert(this.readState.Args == null, "Cannot read when a read is still in progress");
+
             this.readState.Args = args;
-            IAsyncResult result;
-            try
+            var task = this.sslStream.ReadAsync(args.Buffer, args.Offset, args.Count);
+            if (task.IsCompleted)
             {
-                result = this.sslStream.BeginRead(args.Buffer, args.Offset, args.Count, onReadComplete, this);
-            }
-            catch (ObjectDisposedException ode)
-            {
-                throw new IOException($"Transport '{this}' is closed", ode);
-            }
-            catch (InvalidOperationException ioe)
-            {
-                throw new IOException($"Transport '{this}' is in an invalid state for read operations.", ioe);
+                this.readState.Reset();
+                args.CompletedSynchronously = true;
+                args.BytesTransfered = task.GetAwaiter().GetResult();
+                return false;
             }
 
-            bool completedSynchronously = result.CompletedSynchronously;
-            if (completedSynchronously)
+            _ = task.ContinueWith((_t, _s) =>
             {
-                this.HandleOperationComplete(result, false, true);
-            }
+                var _this = (TlsTransport)_s;
+                var _args = _this.readState.Args;
+                _this.readState.Reset();
+                _args.CompletedSynchronously = false;
+                if (_t.IsFaulted)
+                {
+                    _args.Exception = _t.Exception.InnerException;
+                }
+                else if (_t.IsCanceled)
+                {
+                    _args.Exception = new TaskCanceledException();
+                }
+                else
+                {
+                    _args.BytesTransfered = _t.Result;
+                }
+                _args.CompletedCallback.Invoke(_args);
 
-            return !completedSynchronously;
-        }
-
-        protected TlsTransportSettings TlsSettings
-        {
-            get { return this.tlsSettings; }
+            }, this);
+            return true;
         }
 
         protected override bool OpenInternal()
@@ -217,24 +237,6 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
-        static void OnReadComplete(IAsyncResult result)
-        {
-            if (!result.CompletedSynchronously)
-            {
-                var thisPtr = (TlsTransport)result.AsyncState;
-                thisPtr.HandleOperationComplete(result, false, false);
-            }
-        }
-
-        static void OnWriteComplete(IAsyncResult result)
-        {
-            if (!result.CompletedSynchronously)
-            {
-                var thisPtr = (TlsTransport)result.AsyncState;
-                thisPtr.HandleOperationComplete(result, true, false);
-            }
-        }
-
         void HandleOpenComplete(IAsyncResult result, bool syncComplete)
         {
             Exception exception = null;
@@ -258,63 +260,19 @@ namespace Microsoft.Azure.Amqp.Transport
                     }
                 }
             }
-            catch (Exception exp) when (!Fx.IsFatal(exp) && !syncComplete)
+            catch (Exception exp) when (!Fx.IsFatal(exp))
             {
+                if (syncComplete)
+                {
+                    throw;
+                }
+
                 exception = exp;
             }
 
             if (!syncComplete)
             {
                 this.CompleteOpen(false, exception);
-            }
-        }
-
-        void HandleOperationComplete(IAsyncResult result, bool write, bool syncComplete)
-        {
-            TransportAsyncCallbackArgs args = null;
-            try
-            {
-                if (write)
-                {
-                    args = this.writeState.Args;
-                    ByteBuffer buffer = this.writeState.Buffer;
-                    this.writeState.Reset();
-
-                    if (buffer != null)
-                    {
-                        buffer.Dispose();
-                    }
-
-                    this.sslStream.EndWrite(result);
-                    args.BytesTransfered = args.Count;
-                }
-                else
-                {
-                    args = this.readState.Args;
-                    this.readState.Reset();
-
-                    args.BytesTransfered = this.sslStream.EndRead(result);
-                }
-            }
-            catch (Exception exception) when (!Fx.IsFatal(exception))
-            {
-                if (exception is InvalidOperationException)
-                {
-                    exception = new IOException($"Transport '{this}' is valid for IO operations.", exception);
-                }
-
-                args.Exception = exception;
-            }
-
-            args.CompletedSynchronously = syncComplete;
-
-            if (!syncComplete)
-            {
-                Action<TransportAsyncCallbackArgs> callback = args.CompletedCallback;
-                if (callback != null)
-                {
-                    args.CompletedCallback(args);
-                }
             }
         }
 
@@ -332,6 +290,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
             public void Reset()
             {
+                this.Buffer?.Dispose();
                 this.Args = null;
                 this.Buffer = null;
             }

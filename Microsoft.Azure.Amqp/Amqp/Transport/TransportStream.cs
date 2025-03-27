@@ -127,12 +127,17 @@ namespace Microsoft.Azure.Amqp.Transport
             var args = (TransportAsyncCallbackArgs)asyncResult;
             if (args.Exception != null)
             {
-                throw args.Exception;
+                args.Exception.Rethrow();
             }
         }
 
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
+            if (count == 0)
+            {
+                return Task.FromResult(0);
+            }
+
             return Task.Factory.FromAsync(
                 (thisPtr, a, c, s) => ((TransportStream)s).BeginRead(a.Array, a.Offset, a.Count, c, s),
                 (a) => ((TransportStream)a.AsyncState).EndRead(a),
@@ -170,7 +175,7 @@ namespace Microsoft.Azure.Amqp.Transport
             var args = (TransportAsyncCallbackArgs)asyncResult;
             if (args.Exception != null)
             {
-                throw args.Exception;
+                args.Exception.Rethrow();
             }
 
             return args.BytesTransfered;

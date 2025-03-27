@@ -73,7 +73,7 @@ namespace Microsoft.Azure.Amqp.Sasl
             AmqpTrace.Provider.AmqpLogError(this, "OnNegotiationFail", exception.Message);
             this.negotiator = null;
             this.innerTransport.SafeClose(exception);
-            this.CompleteOpen(false, exception);
+            this.CompleteOpen(false, exception.ToIOException());
         }
 
         protected override bool OpenInternal()

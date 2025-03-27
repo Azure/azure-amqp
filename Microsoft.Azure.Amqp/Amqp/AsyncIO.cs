@@ -183,7 +183,7 @@ namespace Microsoft.Azure.Amqp
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    thisPtr.asyncIo.ioHandler.OnIoFault(exception);
+                    thisPtr.asyncIo.ioHandler.OnIoFault(exception.ToIOException());
                     thisPtr.Cleanup();
                     shouldContine = false;
                 }
@@ -227,7 +227,7 @@ namespace Microsoft.Azure.Amqp
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    this.asyncIo.ioHandler.OnIoFault(exception);
+                    this.asyncIo.ioHandler.OnIoFault(exception.ToIOException());
                     this.Cleanup();
                 }
             }
@@ -237,7 +237,7 @@ namespace Microsoft.Azure.Amqp
                 bool shouldContinue;
                 if (args.Exception != null)
                 {
-                    this.asyncIo.ioHandler.OnIoFault(args.Exception);
+                    this.asyncIo.ioHandler.OnIoFault(args.Exception.ToIOException());
                     shouldContinue = false;
                 }
                 else if (args.BytesTransfered == 0)
@@ -501,7 +501,7 @@ namespace Microsoft.Azure.Amqp
                         }
                         else
                         {
-                            this.parent.OnIoFault(exception);
+                            this.parent.OnIoFault(exception.ToIOException());
                         }
                     }
                     else
@@ -734,7 +734,7 @@ namespace Microsoft.Azure.Amqp
                 if (args.Exception != null)
                 {
                     shouldContinue = false;
-                    this.parent.OnIoFault(args.Exception);
+                    this.parent.OnIoFault(args.Exception.ToIOException());
                 }
                 else
                 {

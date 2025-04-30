@@ -6,37 +6,23 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Collections.Concurrent;
+    using System.Threading;
 
     sealed class HandleTable<T> where T : class
     {
         const int InitialCapacity = 4;
-        const int ResetThreshold = 4 * 1024;
+        ConcurrentDictionary<uint, T> handleDictionary;
         uint maxHandle;
-        T[] handleArray;
-        int count;
+        int nextAvailableHandle;
 
         public HandleTable(uint maxHandle)
         {
             this.maxHandle = maxHandle;
-            this.handleArray = new T[InitialCapacity];
+            this.handleDictionary = new ConcurrentDictionary<uint, T>(Environment.ProcessorCount, InitialCapacity);
         }
 
-        public IEnumerable<T> Values
-        {
-            get
-            {
-                var values = new List<T>(this.count);
-                foreach (T t in this.handleArray)
-                {
-                    if (t != null)
-                    {
-                        values.Add(t);
-                    }
-                }
-
-                return values;
-            }
-        }
+        public ICollection<T> Values => this.handleDictionary.Values;
 
         public void SetMaxHandle(uint maxHandle)
         {
@@ -45,50 +31,40 @@ namespace Microsoft.Azure.Amqp
 
         public IEnumerator<T> GetSafeEnumerator()
         {
-            return new SafeEnumerator(this);
+            return new SafeEnumerator(this.handleDictionary.GetEnumerator());
         }
 
         public bool TryGetObject(uint handle, out T value)
         {
-            value = null;
-            if (handle < this.handleArray.Length)
-            {
-                value = this.handleArray[(int)handle];
-            }
-
-            return value != null;
+            return this.handleDictionary.TryGetValue(handle, out value);
         }
 
         public uint Add(T value)
         {
-            if (this.count > this.maxHandle)
+            if (this.handleDictionary.Count >= this.maxHandle + 1)
             {
                 throw new AmqpException(AmqpErrorCode.ResourceLimitExceeded, AmqpResources.GetString(AmqpResources.AmqpHandleExceeded, this.maxHandle));
             }
-            else if (this.count >= this.handleArray.Length)
-            {
-                this.GrowHandleArray(this.handleArray.Length * 2);
 
-                int index = this.count;
-                this.handleArray[index] = value;
-                this.count++;
-                return (uint)index;
-            }
-            else
+            var startingHandle = (uint)Volatile.Read(ref nextAvailableHandle);
+            var handle = startingHandle;
+            var added = false;
+        
+            for (uint i = 0; i <= this.maxHandle && !added; i++)
             {
-                for (int i = 0; i < this.handleArray.Length; i++)
+                added = this.handleDictionary.TryAdd(handle, value);
+            
+                if (added)
                 {
-                    if (this.handleArray[i] == null)
-                    {
-                        this.handleArray[i] = value;
-                        this.count++;
-                        return (uint)i;
-                    }
+                    Volatile.Write(ref nextAvailableHandle, (int)(handle >= maxHandle ? 0 : handle + 1));
+                    return handle;
                 }
-
-                // count and actual handles go out of sync. there must be a bug
-                throw new AmqpException(AmqpErrorCode.InternalError, null);
+            
+                handle = handle >= maxHandle ? 0 : handle + 1;
             }
+
+            // This should never happen if count < maxHandle+1
+            throw new AmqpException(AmqpErrorCode.InternalError, "No handles available despite count check");
         }
 
         public void Add(uint handle, T value)
@@ -98,121 +74,56 @@ namespace Microsoft.Azure.Amqp
                 throw new AmqpException(AmqpErrorCode.ResourceLimitExceeded, AmqpResources.GetString(AmqpResources.AmqpHandleExceeded, this.maxHandle));
             }
 
-            int index = (int)handle;
-            if (index >= this.handleArray.Length)
+            var added = this.handleDictionary.GetOrAdd(handle, value);
+            if (!ReferenceEquals(added, value))
             {
-                int capacity = UpperPowerOfTwo(this.handleArray.Length, index);
-                this.GrowHandleArray(capacity);
+                throw new AmqpException(AmqpErrorCode.HandleInUse, AmqpResources.GetString(AmqpResources.AmqpHandleInUse, handle, added));
             }
-            else if (this.handleArray[index] != null)
-            {
-                throw new AmqpException(AmqpErrorCode.HandleInUse, AmqpResources.GetString(AmqpResources.AmqpHandleInUse, handle, this.handleArray[index]));
-            }
-
-            this.handleArray[(int)handle] = value;
-            this.count++;
         }
 
         public void Remove(uint handle)
         {
-            int index = (int)handle;
-            if (index < this.handleArray.Length && this.handleArray[index] != null)
+            if (this.handleDictionary.TryRemove(handle, out _))
             {
-                this.handleArray[index] = null;
-                this.count--;
-
-                // trim if necessary
-                if (this.count == 0 && this.handleArray.Length >= ResetThreshold)
+                var current = Volatile.Read(ref nextAvailableHandle);
+                var intHandle = (int)handle;
+                while (intHandle < current)
                 {
-                    this.handleArray = new T[InitialCapacity];
+                    var exchangeResult = Interlocked.CompareExchange(ref nextAvailableHandle, intHandle, current);
+                    if (exchangeResult == current)
+                    {
+                        break;
+                    }
+                    current = exchangeResult;
                 }
             }
         }
 
         public void Clear()
         {
-            this.count = 0;
-            for (int i = 0; i < this.handleArray.Length; i++)
-            {
-                this.handleArray[i] = null;
-            }
+            handleDictionary.Clear();
+            nextAvailableHandle = 0;
         }
 
-        void GrowHandleArray(int capacity)
-        {
-            Fx.Assert(capacity > this.handleArray.Length, "cannot grow with smaller capacity");
-            T[] expanded = new T[capacity];
-            Array.Copy(this.handleArray, expanded, this.handleArray.Length);
-            this.handleArray = expanded;
-        }
-
-        static int UpperPowerOfTwo(int from, int num)
-        {
-            // assuming from is already power of 2
-            while (from <= num)
-            {
-                from *= 2;
-            }
-
-            return from;
-        }
-
-        /// <summary>
-        /// Use this only if the enumeration is best effort only
-        /// </summary>
+        // SafeEnumerator implementation
         sealed class SafeEnumerator : IEnumerator<T>
         {
-            readonly HandleTable<T> table;
-            int index;
-            T current;
+            readonly IEnumerator<KeyValuePair<uint, T>> enumerator;
 
-            public SafeEnumerator(HandleTable<T> table)
+            public SafeEnumerator(IEnumerator<KeyValuePair<uint, T>> enumerator)
             {
-                this.table = table;
-                this.index = -1;
+                this.enumerator = enumerator;
             }
 
-            T IEnumerator<T>.Current
-            {
-                get { return this.current; }
-            }
+            T IEnumerator<T>.Current => this.enumerator.Current.Value;
 
-            object IEnumerator.Current
-            {
-                get { return this.current; }
-            }
+            object IEnumerator.Current => this.enumerator.Current.Value;
 
-            bool IEnumerator.MoveNext()
-            {
-                try
-                {
-                    for (this.index++; this.index < this.table.handleArray.Length; this.index++)
-                    {
-                        this.current = this.table.handleArray[this.index];
-                        if (this.current != null)
-                        {
-                            return true;
-                        }
-                    }
-                }
-                catch (IndexOutOfRangeException)
-                {
-                    // the array might be shrinked in rare cases
-                }
+            bool IEnumerator.MoveNext() => this.enumerator.MoveNext();
 
-                this.current = null;
-                return false;
-            }
+            void IEnumerator.Reset() => this.enumerator.Reset();
 
-            void IEnumerator.Reset()
-            {
-                this.index = -1;
-                this.current = null;
-            }
-
-            void IDisposable.Dispose()
-            {
-            }
+            void IDisposable.Dispose() => this.enumerator.Dispose();
         }
     }
 }

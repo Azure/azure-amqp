@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp.Encoding
     using System;
     using System.Buffers.Binary;
     using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
 
     /// <summary>
     /// Encodes and decodes AMQP primitive types. The input/output buffer
@@ -176,22 +177,24 @@ namespace Microsoft.Azure.Amqp.Encoding
         /// </summary>
         /// <param name="buffer">The input buffer.</param>
         /// <returns>A uuid.</returns>
-        public static unsafe Guid ReadUuid(ByteBuffer buffer)
+        public static Guid ReadUuid(ByteBuffer buffer)
         {
             ReadOnlySpan<byte> span = buffer.GetReadSpan(FixedWidth.Uuid);
-            int a = BinaryPrimitives.ReadInt32BigEndian(span);
-            short b = BinaryPrimitives.ReadInt16BigEndian(span.Slice(4, 2));
-            short c = BinaryPrimitives.ReadInt16BigEndian(span.Slice(6, 2));
-            int pos = buffer.Offset + 8;
-            byte d = buffer.Buffer[pos++];
-            byte e = buffer.Buffer[pos++];
-            byte f = buffer.Buffer[pos++];
-            byte g = buffer.Buffer[pos++];
-            byte h = buffer.Buffer[pos++];
-            byte i = buffer.Buffer[pos++];
-            byte j = buffer.Buffer[pos++];
-            byte k = buffer.Buffer[pos++];
-            Guid data = new Guid(a, b, c, d, e, f, g, h, i, j, k);
+            Span<byte> guidBytes = stackalloc byte[16];
+
+            if (BitConverter.IsLittleEndian)
+            {
+                BinaryPrimitives.WriteInt32LittleEndian(guidBytes.Slice(0, 4), BinaryPrimitives.ReadInt32BigEndian(span.Slice(0, 4)));
+                BinaryPrimitives.WriteInt16LittleEndian(guidBytes.Slice(4, 2), BinaryPrimitives.ReadInt16BigEndian(span.Slice(4, 2)));
+                BinaryPrimitives.WriteInt16LittleEndian(guidBytes.Slice(6, 2), BinaryPrimitives.ReadInt16BigEndian(span.Slice(6, 2)));
+                span.Slice(8, 8).CopyTo(guidBytes.Slice(8, 8));
+            }
+            else
+            {
+                span.CopyTo(guidBytes);
+            }
+
+            var data = MemoryMarshal.Read<Guid>(guidBytes);
             buffer.Complete(FixedWidth.Uuid);
             return data;
         }
@@ -366,17 +369,25 @@ namespace Microsoft.Azure.Amqp.Encoding
         /// </summary>
         /// <param name="buffer">The buffer to write.</param>
         /// <param name="data">The uuid.</param>
-        public static unsafe void WriteUuid(ByteBuffer buffer, Guid data)
+        public static void WriteUuid(ByteBuffer buffer, Guid data)
         {
             Span<byte> span = buffer.GetWriteSpan(FixedWidth.Uuid);
-            byte* p = (byte*)&data;
-            BinaryPrimitives.WriteInt32BigEndian(span, *((int*)p));
-            BinaryPrimitives.WriteInt16BigEndian(span.Slice(4, 2), *((short*)(p + 4)));
-            BinaryPrimitives.WriteInt16BigEndian(span.Slice(6, 2), *((short*)(p + 6)));
-            for (int i = 8; i < FixedWidth.Uuid; i++)
+            Span<byte> guidBytes = stackalloc byte[16];
+
+            MemoryMarshal.Write(guidBytes, ref data);
+
+            if (BitConverter.IsLittleEndian)
             {
-                buffer.Buffer[buffer.WritePos + i] = *(p + i);
+                BinaryPrimitives.WriteInt32BigEndian(span.Slice(0, 4), BinaryPrimitives.ReadInt32LittleEndian(guidBytes.Slice(0, 4)));
+                BinaryPrimitives.WriteInt16BigEndian(span.Slice(4, 2), BinaryPrimitives.ReadInt16LittleEndian(guidBytes.Slice(4, 2)));
+                BinaryPrimitives.WriteInt16BigEndian(span.Slice(6, 2), BinaryPrimitives.ReadInt16LittleEndian(guidBytes.Slice(6, 2)));
+                guidBytes.Slice(8, 8).CopyTo(span.Slice(8, 8));
             }
+            else
+            {
+                guidBytes.CopyTo(span);
+            }
+
             buffer.Append(FixedWidth.Uuid);
         }
 

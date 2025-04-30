@@ -148,10 +148,7 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                lock (this.ThisLock)
-                {
-                    return this.sessionsByLocalHandle.Values;
-                }
+                return this.sessionsByLocalHandle.Values;
             }
         }
 
@@ -419,15 +416,11 @@ namespace Microsoft.Azure.Amqp
 
         void CloseSessions(bool abort)
         {
-            IEnumerable<AmqpSession> sessionSnapshot = null;
-            lock (this.ThisLock)
+            var sessionSnapshot = this.sessionsByLocalHandle.Values;
+            if (abort)
             {
-                sessionSnapshot = this.sessionsByLocalHandle.Values;
-                if (abort)
-                {
-                    this.sessionsByLocalHandle.Clear();
-                    this.sessionsByRemoteHandle.Clear();
-                }
+                this.sessionsByLocalHandle.Clear();
+                this.sessionsByRemoteHandle.Clear();
             }
 
             foreach (AmqpSession session in sessionSnapshot)
@@ -562,16 +555,13 @@ namespace Microsoft.Azure.Amqp
                 if (begin.RemoteChannel.HasValue)
                 {
                     // reply to begin
-                    lock (this.ThisLock)
+                    if (!this.sessionsByLocalHandle.TryGetObject(begin.RemoteChannel.Value, out session))
                     {
-                        if (!this.sessionsByLocalHandle.TryGetObject(begin.RemoteChannel.Value, out session))
-                        {
-                            throw new AmqpException(AmqpErrorCode.NotFound, AmqpResources.GetString(AmqpResources.AmqpChannelNotFound, begin.RemoteChannel.Value, this));
-                        }
-
-                        session.RemoteChannel = channel;
-                        this.sessionsByRemoteHandle.Add(channel, session);
+                        throw new AmqpException(AmqpErrorCode.NotFound, AmqpResources.GetString(AmqpResources.AmqpChannelNotFound, begin.RemoteChannel.Value, this));
                     }
+
+                    session.RemoteChannel = channel;
+                    this.sessionsByRemoteHandle.Add(channel, session);
                 }
                 else
                 {
@@ -632,19 +622,16 @@ namespace Microsoft.Azure.Amqp
         /// <param name="channel">The remote channel of the session. It is set when the session is created on the listener side.</param>
         public void AddSession(AmqpSession session, ushort? channel)
         {
-            lock (this.ThisLock)
+            if (this.IsClosing())
             {
-                if (this.IsClosing())
-                {
-                    throw new InvalidOperationException(CommonResources.CreateSessionOnClosingConnection);
-                }
+                throw new InvalidOperationException(CommonResources.CreateSessionOnClosingConnection);
+            }
 
-                session.Closed += onSessionClosed;
-                session.LocalChannel = (ushort)this.sessionsByLocalHandle.Add(session);
-                if (channel != null)
-                {
-                    this.sessionsByRemoteHandle.Add(channel.Value, session);
-                }
+            session.Closed += onSessionClosed;
+            session.LocalChannel = (ushort)this.sessionsByLocalHandle.Add(session);
+            if (channel != null)
+            {
+                this.sessionsByRemoteHandle.Add(channel.Value, session);
             }
 
             AmqpTrace.Provider.AmqpAddSession(this, session, session.LocalChannel, channel ?? 0);
@@ -656,14 +643,11 @@ namespace Microsoft.Azure.Amqp
             AmqpConnection thisPtr = session.Connection;
             if (thisPtr != null)
             {
-                lock (thisPtr.ThisLock)
+                session.Closed -= onSessionClosed;
+                thisPtr.sessionsByLocalHandle.Remove(session.LocalChannel);
+                if (session.RemoteChannel.HasValue)
                 {
-                    session.Closed -= onSessionClosed;
-                    thisPtr.sessionsByLocalHandle.Remove(session.LocalChannel);
-                    if (session.RemoteChannel.HasValue)
-                    {
-                        thisPtr.sessionsByRemoteHandle.Remove(session.RemoteChannel.Value);
-                    }
+                    thisPtr.sessionsByRemoteHandle.Remove(session.RemoteChannel.Value);
                 }
 
                 AmqpTrace.Provider.AmqpRemoveSession(thisPtr, session, session.LocalChannel, session.RemoteChannel ?? 0);

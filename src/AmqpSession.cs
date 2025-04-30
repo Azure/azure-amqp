@@ -132,15 +132,6 @@ namespace Microsoft.Azure.Amqp
                     // calling Close() is fire and forget, so we will not be waiting for the link onClose handler to trigger
                     // before trying to add the new link to the links collections down below in this method, therefore remove it now.
                     this.links.Remove(link.LinkIdentifier);
-                    if (linkToSteal.LocalHandle.HasValue)
-                    {
-                        this.linksByLocalHandle.Remove(linkToSteal.LocalHandle.Value);
-                    }
-
-                    if (linkToSteal.RemoteHandle.HasValue)
-                    {
-                        this.linksByRemoteHandle.Remove(linkToSteal.RemoteHandle.Value);
-                    }
                 }
                 else
                 {
@@ -169,10 +160,24 @@ namespace Microsoft.Azure.Amqp
 
                 link.Closed += onLinkClosed;
                 this.links.Add(link.LinkIdentifier, link);
-                link.LocalHandle = this.linksByLocalHandle.Add(link);
             }
 
-            linkToSteal?.OnLinkStolen();
+            if (linkToSteal != null)
+            {
+                if (linkToSteal.LocalHandle.HasValue)
+                {
+                    this.linksByLocalHandle.Remove(linkToSteal.LocalHandle.Value);
+                }
+
+                if (linkToSteal.RemoteHandle.HasValue)
+                {
+                    this.linksByRemoteHandle.Remove(linkToSteal.RemoteHandle.Value);
+                }
+
+                linkToSteal.OnLinkStolen();
+            }
+
+            link.LocalHandle = this.linksByLocalHandle.Add(link);
 
             AmqpTrace.Provider.AmqpAttachLink(this.connection, this, link, link.LocalHandle.Value,
                 link.RemoteHandle ?? 0u, link.Name, link.IsReceiver ? "receiver" : "sender", link.Settings.Source, link.Settings.Target);
@@ -481,15 +486,11 @@ namespace Microsoft.Azure.Amqp
 
         void CloseLinks(bool abort)
         {
-            IEnumerable<AmqpLink> linksSnapshot = null;
-            lock (this.ThisLock)
+            IEnumerable<AmqpLink> linksSnapshot = this.linksByLocalHandle.Values;
+            if (abort)
             {
-                linksSnapshot = this.linksByLocalHandle.Values;
-                if (abort)
-                {
-                    this.linksByLocalHandle.Clear();
-                    this.linksByRemoteHandle.Clear();
-                }
+                this.linksByLocalHandle.Clear();
+                this.linksByRemoteHandle.Clear();
             }
 
             foreach (AmqpLink link in linksSnapshot)
@@ -625,11 +626,8 @@ namespace Microsoft.Azure.Amqp
                     // This scenario indicates that the existing link has already been created locally but no Attach has been received yet.
                     // This could only mean that the link open was initiated from local, so this Attach frame received is the reply from remote in response to the initial Attach sent by local.
                     // Therefore, we do not need to open or close anything from local side because we just need to complete the open process locally.
-                    lock (this.ThisLock)
-                    {
-                        link.RemoteHandle = attach.Handle;
-                        this.linksByRemoteHandle.Add(attach.Handle.Value, link);
-                    }
+                    link.RemoteHandle = attach.Handle;
+                    this.linksByRemoteHandle.Add(attach.Handle.Value, link);
                 }
             }
             else
@@ -671,14 +669,10 @@ namespace Microsoft.Azure.Amqp
 
         void NotifyCreditAvailable(int credit)
         {
-            IEnumerable<AmqpLink> links = null;
-            lock (this.ThisLock)
-            {
-                links = this.linksByLocalHandle.Values;
-            }
+            IEnumerable<AmqpLink> linksSnapshot = this.linksByLocalHandle.Values;
 
             // Make it more fair to all links
-            foreach (AmqpLink link in links)
+            foreach (var link in linksSnapshot)
             {
                 if (!link.IsReceiver)
                 {
@@ -698,16 +692,16 @@ namespace Microsoft.Azure.Amqp
                 {
                     thisPtr.links.Remove(link.LinkIdentifier);
                 }
+            }
 
-                if (link.LocalHandle.HasValue)
-                {
-                    thisPtr.linksByLocalHandle.Remove(link.LocalHandle.Value);
-                }
+            if (link.LocalHandle.HasValue)
+            {
+                thisPtr.linksByLocalHandle.Remove(link.LocalHandle.Value);
+            }
 
-                if (link.RemoteHandle.HasValue)
-                {
-                    thisPtr.linksByRemoteHandle.Remove(link.RemoteHandle.Value);
-                }
+            if (link.RemoteHandle.HasValue)
+            {
+                thisPtr.linksByRemoteHandle.Remove(link.RemoteHandle.Value);
             }
 
             thisPtr.incomingChannel.OnLinkClosed(link);

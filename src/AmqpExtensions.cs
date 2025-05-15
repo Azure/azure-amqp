@@ -61,7 +61,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>The value of max-frame-size.</returns>
         public static uint MaxFrameSize(this Open open)
         {
-            return open.MaxFrameSize == null ? uint.MaxValue : open.MaxFrameSize.Value;
+            return open.MaxFrameSize.GetValueOrDefault(uint.MaxValue);
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>The value of channel-max.</returns>
         public static ushort ChannelMax(this Open open)
         {
-            return open.ChannelMax == null ? ushort.MaxValue : open.ChannelMax.Value;
+            return open.ChannelMax.GetValueOrDefault(ushort.MaxValue);
         }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>The value of idle-time-out.</returns>
         public static uint IdleTimeOut(this Open open)
         {
-            return open.IdleTimeOut == null || open.IdleTimeOut.Value == 0 ? uint.MaxValue : open.IdleTimeOut.Value;
+            return open.IdleTimeOut is null or 0 ? uint.MaxValue : open.IdleTimeOut.Value;
         }
 
         // begin
@@ -92,7 +92,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>The value of handle-max.</returns>
         public static uint HandleMax(this Begin begin)
         {
-            return begin.HandleMax == null ? uint.MaxValue : begin.HandleMax.Value;
+            return begin.HandleMax.GetValueOrDefault(uint.MaxValue);
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>The value of outgoing-window.</returns>
         public static uint OutgoingWindow(this Begin begin)
         {
-            return begin.OutgoingWindow == null ? uint.MaxValue : begin.OutgoingWindow.Value;
+            return begin.OutgoingWindow.GetValueOrDefault(uint.MaxValue);
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>The value of max-message-size.</returns>
         public static ulong MaxMessageSize(this Attach attach)
         {
-            return attach.MaxMessageSize == null || attach.MaxMessageSize.Value == 0 ? ulong.MaxValue : attach.MaxMessageSize.Value;
+            return attach.MaxMessageSize is null or 0 ? ulong.MaxValue : attach.MaxMessageSize.Value;
         }
 
         /// <summary>
@@ -201,7 +201,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if transfer is settled or false otherwise.</returns>
         public static bool Settled(this Transfer transfer)
         {
-            return transfer.Settled == null ? false : transfer.Settled.Value;
+            return transfer.Settled.GetValueOrDefault(false);
         }
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if transfer not the last or false otherwise.</returns>
         public static bool More(this Transfer transfer)
         {
-            return transfer.More == null ? false : transfer.More.Value;
+            return transfer.More.GetValueOrDefault(false);
         }
 
         /// <summary>
@@ -221,7 +221,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if transfer is resuming or false otherwise.</returns>
         public static bool Resume(this Transfer transfer)
         {
-            return transfer.Resume == null ? false : transfer.Resume.Value;
+            return transfer.Resume.GetValueOrDefault(false);
         }
 
         /// <summary>
@@ -231,7 +231,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if transfer is aborted or false otherwise.</returns>
         public static bool Aborted(this Transfer transfer)
         {
-            return transfer.Aborted == null ? false : transfer.Aborted.Value;
+            return transfer.Aborted.GetValueOrDefault(false);
         }
 
         /// <summary>
@@ -241,7 +241,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if transfer is batchable or false otherwise.</returns>
         public static bool Batchable(this Transfer transfer)
         {
-            return transfer.Batchable == null ? false : transfer.Batchable.Value;
+            return transfer.Batchable.GetValueOrDefault(false);
         }
 
         // disposition
@@ -252,7 +252,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if disposition is settled or false otherwise.</returns>
         public static bool Settled(this Disposition disposition)
         {
-            return disposition.Settled == null ? false : disposition.Settled.Value;
+            return disposition.Settled.GetValueOrDefault(false);
         }
 
         /// <summary>
@@ -262,7 +262,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if disposition is batchable or false otherwise.</returns>
         public static bool Batchable(this Disposition disposition)
         {
-            return disposition.Batchable == null ? false : disposition.Batchable.Value;
+            return disposition.Batchable.GetValueOrDefault(false);
         }
 
         // flow
@@ -273,7 +273,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>The link-credit of the flow.</returns>
         public static uint LinkCredit(this Flow flow)
         {
-            return flow.LinkCredit.HasValue ? flow.LinkCredit.Value : uint.MaxValue;
+            return flow.LinkCredit.GetValueOrDefault(uint.MaxValue);
         }
 
         /// <summary>
@@ -283,7 +283,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>The echo of the flow.</returns>
         public static bool Echo(this Flow flow)
         {
-            return flow.Echo == null ? false : flow.Echo.Value;
+            return flow.Echo.GetValueOrDefault(false);
         }
 
         // detach
@@ -294,7 +294,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if link is closed or false otherwise.</returns>
         public static bool Closed(this Detach detach)
         {
-            return detach.Closed == null ? false : detach.Closed.Value;
+            return detach.Closed.GetValueOrDefault(false);
         }
 
         // message header
@@ -315,7 +315,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>priority of the message.</returns>
         public static byte Priority(this Header header)
         {
-            return header.Priority == null ? (byte)0 : header.Priority.Value;
+            return header.Priority.GetValueOrDefault(0);
         }
 
         /// <summary>
@@ -325,7 +325,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>ttl of the message.</returns>
         public static uint Ttl(this Header header)
         {
-            return header.Ttl == null ? (uint)0 : header.Ttl.Value;
+            return header.Ttl.GetValueOrDefault(0);
         }
 
         /// <summary>
@@ -335,7 +335,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>first-acquirer of the message.</returns>
         public static bool FirstAcquirer(this Header header)
         {
-            return header.FirstAcquirer == null ? false : header.FirstAcquirer.Value;
+            return header.FirstAcquirer.GetValueOrDefault(false);
         }
 
         /// <summary>
@@ -345,7 +345,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>delivery-count of the message.</returns>
         public static uint DeliveryCount(this Header header)
         {
-            return header.DeliveryCount == null ? (uint)0 : header.DeliveryCount.Value;
+            return header.DeliveryCount.GetValueOrDefault(0);
         }
 
         // message property
@@ -356,7 +356,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>absolute-expiry-time of the message.</returns>
         public static DateTime AbsoluteExpiryTime(this Properties properties)
         {
-            return properties.AbsoluteExpiryTime == null ? default(DateTime) : properties.AbsoluteExpiryTime.Value;
+            return properties.AbsoluteExpiryTime.GetValueOrDefault(default(DateTime));
         }
 
         /// <summary>
@@ -366,7 +366,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>creation-time of the message.</returns>
         public static DateTime CreationTime(this Properties properties)
         {
-            return properties.CreationTime == null ? default(DateTime) : properties.CreationTime.Value;
+            return properties.CreationTime.GetValueOrDefault(default(DateTime));
         }
 
         /// <summary>
@@ -376,7 +376,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>group-sequence of the message.</returns>
         public static SequenceNumber GroupSequence(this Properties properties)
         {
-            return properties.GroupSequence == null ? 0 : properties.GroupSequence.Value;
+            return properties.GroupSequence.GetValueOrDefault(0);
         }
 
         // delivery
@@ -387,7 +387,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if the delivery is transactional or false otherwise.</returns>
         public static bool Transactional(this DeliveryState deliveryState)
         {
-            return deliveryState != null && deliveryState.DescriptorCode == TransactionalState.Code;
+            return deliveryState is { DescriptorCode: TransactionalState.Code };
         }
 
         /// <summary>
@@ -397,7 +397,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if state is <see cref="Received"/> or false otherwise.</returns>
         public static bool IsReceivedDeliveryState(this Delivery delivery)
         {
-            return delivery.State != null && delivery.State.DescriptorCode == Received.Code;
+            return delivery.State is { DescriptorCode: Received.Code };
         }
 
         // Source and Target
@@ -408,7 +408,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if source is dynamic or false otherwise.</returns>
         public static bool Dynamic(this Source source)
         {
-            return source.Dynamic == null ? false : source.Dynamic.Value;
+            return source.Dynamic.GetValueOrDefault(false);
         }
 
         /// <summary>
@@ -418,7 +418,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if target is dynamic or false otherwise.</returns>
         public static bool Dynamic(this Target target)
         {
-            return target.Dynamic == null ? false : target.Dynamic.Value;
+            return target.Dynamic.GetValueOrDefault(false);
         }
 
         /// <summary>
@@ -428,7 +428,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if source is durable or false otherwise.</returns>
         public static bool Durable(this Source source)
         {
-            return source.Durable == null ? false : (TerminusDurability)source.Durable.Value == TerminusDurability.None;
+            return source.Durable != null && (TerminusDurability)source.Durable.Value == TerminusDurability.None;
         }
 
         /// <summary>
@@ -438,7 +438,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true if target is durable or false otherwise.</returns>
         public static bool Durable(this Target target)
         {
-            return target.Durable == null ? false : (TerminusDurability)target.Durable.Value == TerminusDurability.None;
+            return target.Durable != null && (TerminusDurability)target.Durable.Value == TerminusDurability.None;
         }
 
         /// <summary>
@@ -516,8 +516,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>The property value or the default.</returns>
         public static TValue GetSettingPropertyOrDefault<TValue>(this AmqpLink thisPtr, AmqpSymbol key, TValue defaultValue)
         {
-            TValue value;
-            if (thisPtr != null && thisPtr.Settings != null && thisPtr.Settings.Properties != null && thisPtr.Settings.Properties.TryGetValue<TValue>(key, out value))
+            if (thisPtr is { Settings.Properties: { } properties } && properties.TryGetValue<TValue>(key, out var value))
             {
                 return value;
             }
@@ -537,8 +536,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>The property value or the default.</returns>
         public static TValue ExtractSettingPropertyValueOrDefault<TValue>(this AmqpLink thisPtr, AmqpSymbol key, TValue defaultValue)
         {
-            TValue value;
-            if (thisPtr != null && thisPtr.Settings != null && thisPtr.Settings.Properties != null && thisPtr.Settings.Properties.TryRemoveValue<TValue>(key, out value))
+            if (thisPtr is { Settings.Properties: { } properties } && properties.TryRemoveValue<TValue>(key, out var value))
             {
                 return value;
             }
@@ -615,11 +613,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="deliveryState">The <see cref="DeliveryState"/> to check if it has reached an outcome.</param>
         internal static bool IsTerminal(this DeliveryState deliveryState)
         {
-            return deliveryState != null &&
-                (deliveryState.DescriptorCode == Accepted.Code ||
-                deliveryState.DescriptorCode == Modified.Code ||
-                deliveryState.DescriptorCode == Rejected.Code ||
-                deliveryState.DescriptorCode == Released.Code);
+            return deliveryState is { DescriptorCode: Accepted.Code or Modified.Code or Rejected.Code or Released.Code };
         }
 
         /// <summary>

@@ -52,20 +52,7 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                if (this.manualResetEvent != null)
-                {
-                    return this.manualResetEvent.WaitHandle;
-                }
-
-                lock (this.ThisLock)
-                {
-                    if (this.manualResetEvent == null)
-                    {
-                        this.manualResetEvent = new ManualResetEventSlim(IsCompleted);
-                    }
-                }
-
-                return this.manualResetEvent.WaitHandle;
+                return SyncEvent.WaitHandle;
             }
         }
 
@@ -93,16 +80,37 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        // used in conjunction with PrepareAsyncCompletion to allow for finally blocks
-        protected Action<AsyncResult, Exception> OnCompleting { get; set; }
-
-        protected object ThisLock
+        protected ManualResetEventSlim SyncEvent
         {
             get
             {
-                return this.thisLock;
+                // fast‐path: already created?
+                var resetEvent = Volatile.Read(ref this.manualResetEvent);
+                if (resetEvent != null)
+                {
+                    return resetEvent;
+                }
+
+                // otherwise build one with initial signaled = IsCompleted
+                var newResetEvent = new ManualResetEventSlim(this.IsCompleted);
+                var original = Interlocked.CompareExchange(ref this.manualResetEvent, newResetEvent, null);
+                if (original != null)
+                {
+                    // someone else installed theirs first
+                    newResetEvent.Dispose();
+                    resetEvent = original;
+                }
+                else
+                {
+                    resetEvent = newResetEvent;
+                }
+
+                return resetEvent;
             }
         }
+
+        // used in conjunction with PrepareAsyncCompletion to allow for finally blocks
+        protected Action<AsyncResult, Exception> OnCompleting { get; set; }
 
         // subclasses like TraceAsyncResult can use this to wrap the callback functionality in a scope
         protected Action<AsyncCallback, IAsyncResult> VirtualCallback
@@ -147,13 +155,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                lock (this.ThisLock)
-                {
-                    if (this.manualResetEvent != null)
-                    {
-                        this.manualResetEvent.Set();
-                    }
-                }
+                Volatile.Read(ref this.manualResetEvent)?.Set();
             }
 
             if (this.callback != null)
@@ -342,19 +344,9 @@ namespace Microsoft.Azure.Amqp
 
             if (!asyncResult.IsCompleted)
             {
-                lock (asyncResult.ThisLock)
-                {
-                    if (!asyncResult.IsCompleted && asyncResult.manualResetEvent == null)
-                    {
-                        asyncResult.manualResetEvent = new ManualResetEventSlim(asyncResult.IsCompleted);
-                    }
-                }
-            }
-
-            if (asyncResult.manualResetEvent != null)
-            {
-                asyncResult.manualResetEvent.Wait();
-                asyncResult.manualResetEvent.Dispose();
+                var syncEvent = asyncResult.SyncEvent;
+                syncEvent.Wait();
+                syncEvent.Dispose();
             }
 
             if (asyncResult.exception != null)

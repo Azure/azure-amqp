@@ -719,19 +719,19 @@ namespace Microsoft.Azure.Amqp
         {
             readonly AmqpSession session;
             readonly object syncRoot;
+            readonly ConcurrentDoubleLinkedList<Delivery> unsettledDeliveries;
             Timer dispositionTimer;
             SequenceNumber nextDeliveryId;
             int needDispositionCount;
             bool sendingDisposition;
             bool timerScheduled;
-            Delivery firstUnsettled;
-            Delivery lastUnsettled;
 
             public SessionChannel(AmqpSession session)
             {
                 this.session = session;
                 this.nextDeliveryId = session.settings.InitialDeliveryId;
                 this.syncRoot = new object();
+                this.unsettledDeliveries = new ConcurrentDoubleLinkedList<Delivery>();
             }
 
             protected AmqpSession Session
@@ -753,19 +753,13 @@ namespace Microsoft.Azure.Amqp
             public void OnLinkClosed(AmqpLink link)
             {
                 int settledCount = 0;
-                lock (this.syncRoot)
-                {
-                    Delivery current = this.firstUnsettled;
-                    while (current != null)
-                    {
-                        Delivery delivery = current;
-                        current = current.Next;
 
-                        if (delivery.Link == link)
-                        {
-                            Delivery.Remove(ref this.firstUnsettled, ref this.lastUnsettled, delivery);
-                            settledCount++;
-                        }
+                foreach (var delivery in unsettledDeliveries)
+                {
+                    if (delivery.Link == link)
+                    {
+                        this.unsettledDeliveries.Remove(delivery);
+                        settledCount++;
                     }
                 }
 
@@ -785,8 +779,6 @@ namespace Microsoft.Azure.Amqp
                     return;
                 }
 
-                List<Delivery> disposedDeliveries = new List<Delivery>();
-                int settledCount = 0;
                 lock (this.syncRoot)
                 {
                     if (first >= this.nextDeliveryId)
@@ -798,36 +790,33 @@ namespace Microsoft.Azure.Amqp
                     {
                         last = this.nextDeliveryId;
                     }
+                }
 
-                    bool settled = disposition.Settled();
-                    Delivery current = this.firstUnsettled;
-                    while (current != null)
+                List<Delivery> disposedDeliveries = new List<Delivery>();
+                int settledCount = 0;
+                bool settled = disposition.Settled();
+                foreach (Delivery delivery in this.unsettledDeliveries)
+                {
+                    SequenceNumber sn = delivery.DeliveryId.Value;
+                    if (sn < first)
                     {
-                        SequenceNumber sn = current.DeliveryId.Value;
-                        if (sn < first)
-                        {
-                            current = current.Next;
-                        }
-                        else if (sn > last)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            Delivery delivery = current;
-                            current = current.Next;
-
-                            delivery.Settled = settled;
-                            delivery.State = disposition.State;
-                            if (settled)
-                            {
-                                ++settledCount;
-                                Delivery.Remove(ref this.firstUnsettled, ref this.lastUnsettled, delivery);
-                            }
-
-                            disposedDeliveries.Add(delivery);
-                        }
+                        continue;
                     }
+
+                    if (sn > last)
+                    {
+                        break;
+                    }
+
+                    delivery.Settled = settled;
+                    delivery.State = disposition.State;
+                    if (settled)
+                    {
+                        ++settledCount;
+                        this.unsettledDeliveries.Remove(delivery);
+                    }
+
+                    disposedDeliveries.Add(delivery);
                 }
 
                 if (disposedDeliveries.Count > 0)
@@ -862,35 +851,39 @@ namespace Microsoft.Azure.Amqp
                 bool scheduleTimer = false;
                 Delivery toDispose = null;
 
-                lock (this.syncRoot)
-                {
-                    delivery.StateChanged = true;
-                    delivery.Settled = settled;
-                    delivery.State = state;
+                delivery.StateChanged = true;
+                delivery.Settled = settled;
+                delivery.State = state;
 
-                    if (!delivery.Batchable)
+                if (!delivery.Batchable)
+                {
+                    delivery.StateChanged = false;
+                    toDispose = delivery;
+                    if (delivery.Settled)
                     {
-                        delivery.StateChanged = false;
-                        toDispose = delivery;
-                        if (delivery.Settled)
+                        unsettledDeliveries.Remove(delivery);
+                    }
+                }
+                else
+                {
+                    lock (this.syncRoot)
+                    {
+                        if (this.sendingDisposition || noFlush)
                         {
-                            Delivery.Remove(ref this.firstUnsettled, ref this.lastUnsettled, delivery);
+                            return;
                         }
-                    }
-                    else if (this.sendingDisposition || noFlush)
-                    {
-                        return;
-                    }
-                    else if (this.session.settings.DispositionInterval == TimeSpan.Zero ||
-                        ++this.needDispositionCount >= this.session.settings.DispositionThreshold)
-                    {
-                        this.sendingDisposition = true;
-                        this.needDispositionCount = 0;
-                    }
-                    else if (!this.timerScheduled)
-                    {
-                        this.timerScheduled = true;
-                        scheduleTimer = true;
+
+                        if (this.session.settings.DispositionInterval == TimeSpan.Zero ||
+                            ++this.needDispositionCount >= this.session.settings.DispositionThreshold)
+                        {
+                            this.sendingDisposition = true;
+                            this.needDispositionCount = 0;
+                        }
+                        else if (!this.timerScheduled)
+                        {
+                            this.timerScheduled = true;
+                            scheduleTimer = true;
+                        }
                     }
                 }
 
@@ -930,7 +923,7 @@ namespace Microsoft.Azure.Amqp
                 this.nextDeliveryId.Increment();
                 if (!delivery.Settled)
                 {
-                    Delivery.Add(ref this.firstUnsettled, ref this.lastUnsettled, delivery);
+                    this.unsettledDeliveries.AddLast(delivery);
                 }
             }
 
@@ -940,7 +933,7 @@ namespace Microsoft.Azure.Amqp
                 this.nextDeliveryId = delivery.DeliveryId + 1;
                 if (!delivery.Settled)
                 {
-                    Delivery.Add(ref this.firstUnsettled, ref this.lastUnsettled, delivery);
+                    this.unsettledDeliveries.AddLast(delivery);
                 }
             }
 
@@ -1014,58 +1007,49 @@ namespace Microsoft.Azure.Amqp
                 List<DispositionInfo> disposedDeliveries = new List<DispositionInfo>();
                 int settledCount = 0;
 
-                lock (this.syncRoot)
+                Delivery firstChanged = null;
+                uint? lastId = null;
+                foreach (Delivery delivery in this.unsettledDeliveries)
                 {
-                    Delivery current = this.firstUnsettled;
-                    Delivery firstChanged = null;
-                    uint? lastId = null;
-                    while (current != null)
+                    if (delivery.StateChanged)
                     {
-                        if (current.StateChanged)
+                        if (firstChanged == null)
                         {
-                            if (firstChanged == null)
-                            {
-                                firstChanged = current;
-                            }
-                            else
-                            {
-                                if (current.Settled == firstChanged.Settled &&
-                                    CanBatch(current.State as Outcome, firstChanged.State as Outcome))
-                                {
-                                    lastId = current.DeliveryId.Value;
-                                }
-                                else
-                                {
-                                    disposedDeliveries.Add(new DispositionInfo(firstChanged, lastId));
-                                    firstChanged = current;
-                                    lastId = null;
-                                }
-                            }
-
-                            // Move next and remove if settled
-                            if (current.Settled)
-                            {
-                                Delivery temp = current;
-                                current = current.Next;
-                                ++settledCount;
-                                Delivery.Remove(ref this.firstUnsettled, ref this.lastUnsettled, temp);
-                            }
-                            else
-                            {
-                                current.StateChanged = false;
-                                current = current.Next;
-                            }
+                            firstChanged = delivery;
                         }
                         else
                         {
-                            if (firstChanged != null)
+                            if (delivery.Settled == firstChanged.Settled &&
+                                CanBatch(delivery.State as Outcome, firstChanged.State as Outcome))
+                            {
+                                lastId = delivery.DeliveryId.Value;
+                            }
+                            else
                             {
                                 disposedDeliveries.Add(new DispositionInfo(firstChanged, lastId));
-                                firstChanged = null;
+                                firstChanged = delivery;
                                 lastId = null;
                             }
+                        }
 
-                            current = current.Next;
+                        // Move next and remove if settled
+                        if (delivery.Settled)
+                        {
+                            ++settledCount;
+                            unsettledDeliveries.Remove(delivery);
+                        }
+                        else
+                        {
+                            delivery.StateChanged = false;
+                        }
+                    }
+                    else
+                    {
+                        if (firstChanged != null)
+                        {
+                            disposedDeliveries.Add(new DispositionInfo(firstChanged, lastId));
+                            firstChanged = null;
+                            lastId = null;
                         }
                     }
 
@@ -1073,7 +1057,10 @@ namespace Microsoft.Azure.Amqp
                     {
                         disposedDeliveries.Add(new DispositionInfo(firstChanged, lastId));
                     }
+                }
 
+                lock (this.syncRoot)
+                {
                     this.sendingDisposition = false;
                 }
 
@@ -1093,12 +1080,14 @@ namespace Microsoft.Azure.Amqp
 
             void SendDisposition(DispositionInfo info)
             {
-                Disposition disposition = new Disposition();
-                disposition.First = info.First.DeliveryId.Value;
-                disposition.Last = info.Last;
-                disposition.Settled = info.First.Settled;
-                disposition.State = info.First.State;
-                disposition.Role = this.IsReceiver;
+                Disposition disposition = new Disposition
+                {
+                    First = info.First.DeliveryId.Value,
+                    Last = info.Last,
+                    Settled = info.First.Settled,
+                    State = info.First.State,
+                    Role = this.IsReceiver
+                };
 
                 lock (this.session.ThisLock)
                 {

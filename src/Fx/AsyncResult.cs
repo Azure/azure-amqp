@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Amqp
         bool completedSynchronously;
         bool endCalled;
         Exception exception;
-        bool isCompleted;
+        int isCompleted; // 0 false, 1 true
         AsyncCompletion nextAsyncCompletion;
         IAsyncResult deferredTransactionalResult;
         object state;
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (this.manualResetEvent == null)
                     {
-                        this.manualResetEvent = new ManualResetEvent(isCompleted);
+                        this.manualResetEvent = new ManualResetEvent(IsCompleted);
                     }
                 }
 
@@ -89,7 +89,7 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                return this.isCompleted;
+                return Volatile.Read(ref this.isCompleted) == 1;
             }
         }
 
@@ -113,16 +113,12 @@ namespace Microsoft.Azure.Amqp
 
         protected bool TryComplete(bool didCompleteSynchronously, Exception exception)
         {
-            lock (this.ThisLock)
+            if (Interlocked.CompareExchange(ref this.isCompleted, 1, 0) == 1)
             {
-                if (this.isCompleted)
-                {
-                    return false;
-                }
-
-                this.exception = exception;
-                this.isCompleted = true;
+                return false;
             }
+
+            this.exception = exception;
 
 #if DEBUG
             this.marker.AsyncResult = null;
@@ -344,13 +340,13 @@ namespace Microsoft.Azure.Amqp
 
             asyncResult.endCalled = true;
 
-            if (!asyncResult.isCompleted)
+            if (!asyncResult.IsCompleted)
             {
                 lock (asyncResult.ThisLock)
                 {
-                    if (!asyncResult.isCompleted && asyncResult.manualResetEvent == null)
+                    if (!asyncResult.IsCompleted && asyncResult.manualResetEvent == null)
                     {
-                        asyncResult.manualResetEvent = new ManualResetEvent(asyncResult.isCompleted);
+                        asyncResult.manualResetEvent = new ManualResetEvent(asyncResult.IsCompleted);
                     }
                 }
             }

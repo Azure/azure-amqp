@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Amqp
         AsyncCompletion nextAsyncCompletion;
         IAsyncResult deferredTransactionalResult;
         object state;
-        ManualResetEvent manualResetEvent;
+        ManualResetEventSlim manualResetEvent;
         object thisLock;
 
 #if DEBUG
@@ -54,18 +54,18 @@ namespace Microsoft.Azure.Amqp
             {
                 if (this.manualResetEvent != null)
                 {
-                    return this.manualResetEvent;
+                    return this.manualResetEvent.WaitHandle;
                 }
 
                 lock (this.ThisLock)
                 {
                     if (this.manualResetEvent == null)
                     {
-                        this.manualResetEvent = new ManualResetEvent(IsCompleted);
+                        this.manualResetEvent = new ManualResetEventSlim(IsCompleted);
                     }
                 }
 
-                return this.manualResetEvent;
+                return this.manualResetEvent.WaitHandle;
             }
         }
 
@@ -346,14 +346,14 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (!asyncResult.IsCompleted && asyncResult.manualResetEvent == null)
                     {
-                        asyncResult.manualResetEvent = new ManualResetEvent(asyncResult.IsCompleted);
+                        asyncResult.manualResetEvent = new ManualResetEventSlim(asyncResult.IsCompleted);
                     }
                 }
             }
 
             if (asyncResult.manualResetEvent != null)
             {
-                asyncResult.manualResetEvent.WaitOne();
+                asyncResult.manualResetEvent.Wait();
                 asyncResult.manualResetEvent.Dispose();
             }
 

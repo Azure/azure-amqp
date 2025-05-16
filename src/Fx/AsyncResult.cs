@@ -23,7 +23,6 @@ namespace Microsoft.Azure.Amqp
         IAsyncResult deferredTransactionalResult;
         object state;
         ManualResetEventSlim manualResetEvent;
-        object thisLock;
 
 #if DEBUG
         UncompletedAsyncResultMarker marker;
@@ -33,7 +32,6 @@ namespace Microsoft.Azure.Amqp
         {
             this.callback = callback;
             this.state = state;
-            this.thisLock = new object();
 
 #if DEBUG
             this.marker = new UncompletedAsyncResultMarker(this);

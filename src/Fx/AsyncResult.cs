@@ -360,14 +360,6 @@ namespace Microsoft.Azure.Amqp
             return asyncResult;
         }
 
-        enum TransactionSignalState
-        {
-            Ready = 0,
-            Prepared,
-            Completed,
-            Abandoned,
-        }
-
         // can be utilized by subclasses to write core completion code for both the sync and async paths
         // in one location, signalling chainable synchronous completion with the boolean result,
         // and leveraging PrepareAsyncCompletion for conversion to an AsyncCallback.

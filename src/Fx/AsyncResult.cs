@@ -340,11 +340,16 @@ namespace Microsoft.Azure.Amqp
 
             asyncResult.endCalled = true;
 
-            if (!asyncResult.IsCompleted)
+            var resetEvent = Volatile.Read(ref asyncResult.manualResetEvent);
+            if (resetEvent == null && !asyncResult.IsCompleted)
             {
-                var syncEvent = asyncResult.SyncEvent;
-                syncEvent.Wait();
-                syncEvent.Dispose();
+                resetEvent = asyncResult.SyncEvent;
+            }
+
+            if (resetEvent != null)
+            {
+                resetEvent.Wait();
+                resetEvent.Dispose();
             }
 
             if (asyncResult.exception != null)

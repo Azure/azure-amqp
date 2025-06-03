@@ -18,12 +18,11 @@ namespace Microsoft.Azure.Amqp
         bool completedSynchronously;
         bool endCalled;
         Exception exception;
-        bool isCompleted;
+        int isCompleted; // 0 false, 1 true
         AsyncCompletion nextAsyncCompletion;
         IAsyncResult deferredTransactionalResult;
         object state;
-        ManualResetEvent manualResetEvent;
-        object thisLock;
+        ManualResetEventSlim manualResetEvent;
 
 #if DEBUG
         UncompletedAsyncResultMarker marker;
@@ -33,7 +32,6 @@ namespace Microsoft.Azure.Amqp
         {
             this.callback = callback;
             this.state = state;
-            this.thisLock = new object();
 
 #if DEBUG
             this.marker = new UncompletedAsyncResultMarker(this);
@@ -52,20 +50,7 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                if (this.manualResetEvent != null)
-                {
-                    return this.manualResetEvent;
-                }
-
-                lock (this.ThisLock)
-                {
-                    if (this.manualResetEvent == null)
-                    {
-                        this.manualResetEvent = new ManualResetEvent(isCompleted);
-                    }
-                }
-
-                return this.manualResetEvent;
+                return SyncEvent.WaitHandle;
             }
         }
 
@@ -89,20 +74,41 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                return this.isCompleted;
+                return Volatile.Read(ref this.isCompleted) == 1;
+            }
+        }
+
+        protected ManualResetEventSlim SyncEvent
+        {
+            get
+            {
+                // fast‐path: already created?
+                var resetEvent = Volatile.Read(ref this.manualResetEvent);
+                if (resetEvent != null)
+                {
+                    return resetEvent;
+                }
+
+                // otherwise build one with initial signaled = IsCompleted
+                var newResetEvent = new ManualResetEventSlim(this.IsCompleted);
+                var original = Interlocked.CompareExchange(ref this.manualResetEvent, newResetEvent, null);
+                if (original != null)
+                {
+                    // someone else installed theirs first
+                    newResetEvent.Dispose();
+                    resetEvent = original;
+                }
+                else
+                {
+                    resetEvent = newResetEvent;
+                }
+
+                return resetEvent;
             }
         }
 
         // used in conjunction with PrepareAsyncCompletion to allow for finally blocks
         protected Action<AsyncResult, Exception> OnCompleting { get; set; }
-
-        protected object ThisLock
-        {
-            get
-            {
-                return this.thisLock;
-            }
-        }
 
         // subclasses like TraceAsyncResult can use this to wrap the callback functionality in a scope
         protected Action<AsyncCallback, IAsyncResult> VirtualCallback
@@ -113,16 +119,12 @@ namespace Microsoft.Azure.Amqp
 
         protected bool TryComplete(bool didCompleteSynchronously, Exception exception)
         {
-            lock (this.ThisLock)
+            if (Interlocked.CompareExchange(ref this.isCompleted, 1, 0) == 1)
             {
-                if (this.isCompleted)
-                {
-                    return false;
-                }
-
-                this.exception = exception;
-                this.isCompleted = true;
+                return false;
             }
+
+            this.exception = exception;
 
 #if DEBUG
             this.marker.AsyncResult = null;
@@ -151,13 +153,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                lock (this.ThisLock)
-                {
-                    if (this.manualResetEvent != null)
-                    {
-                        this.manualResetEvent.Set();
-                    }
-                }
+                Volatile.Read(ref this.manualResetEvent)?.Set();
             }
 
             if (this.callback != null)
@@ -344,21 +340,16 @@ namespace Microsoft.Azure.Amqp
 
             asyncResult.endCalled = true;
 
-            if (!asyncResult.isCompleted)
+            var resetEvent = Volatile.Read(ref asyncResult.manualResetEvent);
+            if (resetEvent == null && !asyncResult.IsCompleted)
             {
-                lock (asyncResult.ThisLock)
-                {
-                    if (!asyncResult.isCompleted && asyncResult.manualResetEvent == null)
-                    {
-                        asyncResult.manualResetEvent = new ManualResetEvent(asyncResult.isCompleted);
-                    }
-                }
+                resetEvent = asyncResult.SyncEvent;
             }
 
-            if (asyncResult.manualResetEvent != null)
+            if (resetEvent != null)
             {
-                asyncResult.manualResetEvent.WaitOne();
-                asyncResult.manualResetEvent.Dispose();
+                resetEvent.Wait();
+                resetEvent.Dispose();
             }
 
             if (asyncResult.exception != null)
@@ -367,14 +358,6 @@ namespace Microsoft.Azure.Amqp
             }
 
             return asyncResult;
-        }
-
-        enum TransactionSignalState
-        {
-            Ready = 0,
-            Prepared,
-            Completed,
-            Abandoned,
         }
 
         // can be utilized by subclasses to write core completion code for both the sync and async paths

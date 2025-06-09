@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Diagnostics.Tracing;
 
     [EventSource(Name = "Microsoft-Azure-Amqp")]
@@ -15,6 +16,7 @@ namespace Microsoft.Azure.Amqp
         // 3. When changing the event definition, update callers in AmqpTrace
         //    if needed.
 
+        private const string EventSourceSuppressMessage = "Parameters to this method are primitive and are trimmer safe.";
         public static readonly AmqpEventSource Log;
 
         static AmqpEventSource()
@@ -23,6 +25,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         [Event(1, Level = EventLevel.Informational, Message = "{0}: open connection {1}.")]
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = EventSourceSuppressMessage)]
         public unsafe void AmqpOpenConnection(string source, string connection)
         {
             fixed (char* ptrSource = source)
@@ -447,6 +450,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         [NonEvent]
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = EventSourceSuppressMessage)]
         unsafe void WriteEvent(int eventId, IntPtr a1, int size1, IntPtr a2, int size2)
         {
             EventSource.EventData* descrs = stackalloc EventSource.EventData[2];
@@ -458,6 +462,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         [NonEvent]
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = EventSourceSuppressMessage)]
         unsafe void WriteEvent(int eventId, IntPtr a1, int size1, IntPtr a2, int size2, IntPtr a3, int size3)
         {
             EventSource.EventData* descrs = stackalloc EventSource.EventData[3];
@@ -471,6 +476,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         [NonEvent]
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = EventSourceSuppressMessage)]
         unsafe void WriteEvent(int eventId, IntPtr a1, int size1, IntPtr a2, int size2,
             IntPtr a3, int size3, IntPtr a4, int size4)
         {
@@ -487,6 +493,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         [NonEvent]
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = EventSourceSuppressMessage)]
         unsafe void WriteEvent(int eventId, IntPtr a1, int size1, IntPtr a2, int size2,
             IntPtr a3, int size3, IntPtr a4, int size4, IntPtr a5, int size5)
         {
@@ -505,6 +512,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         [NonEvent]
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = EventSourceSuppressMessage)]
         unsafe void WriteEvent(int eventId, IntPtr a1, int size1, IntPtr a2, int size2,
             IntPtr a3, int size3, IntPtr a4, int size4, IntPtr a5, int size5, IntPtr a6, int size6)
         {
@@ -525,6 +533,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         [NonEvent]
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = EventSourceSuppressMessage)]
         unsafe void WriteEvent(int eventId, IntPtr a1, int size1, IntPtr a2, int size2,
             IntPtr a3, int size3, IntPtr a4, int size4, IntPtr a5, int size5, IntPtr a6, int size6,
             IntPtr a7, int size7)
@@ -548,6 +557,7 @@ namespace Microsoft.Azure.Amqp
         }
 
         [NonEvent]
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = EventSourceSuppressMessage)]
         unsafe void WriteEvent(int eventId, IntPtr a1, int size1, IntPtr a2, int size2,
             IntPtr a3, int size3, IntPtr a4, int size4, IntPtr a5, int size5, IntPtr a6, int size6,
             IntPtr a7, int size7, IntPtr a8, int size8)

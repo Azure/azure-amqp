@@ -61,7 +61,7 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         public object CreateInstance()
         {
-#if NETSTANDARD
+#if NETSTANDARD || NET6_0_OR_GREATER
             return Activator.CreateInstance(this.type);
 #else
             return this.hasDefaultCtor ?

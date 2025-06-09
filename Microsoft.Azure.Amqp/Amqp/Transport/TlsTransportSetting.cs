@@ -19,7 +19,9 @@ namespace Microsoft.Azure.Amqp.Transport
         // and revert back to the legacy default SslProtocols to maintain backward comptability.
         // Tls13 is supported on net48+, netcoreapp30+ (OpenSSL only?), and net5+.
         // https://learn.microsoft.com/en-us/dotnet/framework/network-programming/tls
+#pragma warning disable SYSLIB0039
         const SslProtocols LegacyDefaultSslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
+#pragma warning restore SYSLIB0039
         static SslProtocols? systemSslProtocols;
         SslProtocols? userSslProtocols;
 #endif
@@ -122,7 +124,7 @@ namespace Microsoft.Azure.Amqp.Transport
 #endif
         }
 
-#if NET45 || NETSTANDARD || MONOANDROID
+#if NET45 || NETSTANDARD || MONOANDROID || NET6_0_OR_GREATER
         public override TransportListener CreateListener()
         {
             if (this.Certificate == null)

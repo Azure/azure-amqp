@@ -216,7 +216,7 @@ namespace Microsoft.Azure.Amqp.Serialization
         }
     }
 #endif
-#if NETSTANDARD2_0
+#if NETSTANDARD2_0 || NET6_0_OR_GREATER
     using System;
     using System.Reflection;
     using System.Runtime.Serialization;

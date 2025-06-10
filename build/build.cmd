@@ -104,6 +104,8 @@ set dest-path=%1
 rd /s /q "%dest-path%"
 mkdir "%dest-path%"
 xcopy "%build-root%\icon.png" "%dest-path%\images\" /F
+xcopy "%build-root%\Microsoft.Azure.Amqp\bin\%build-config%\net8.0\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\net8.0\" /F
+xcopy "%build-root%\Microsoft.Azure.Amqp\bin\%build-config%\net8.0\Microsoft.Azure.Amqp.xml" "%dest-path%\lib\net8.0\" /F
 xcopy "%build-root%\Microsoft.Azure.Amqp\bin\%build-config%\net45\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\net45\" /F
 xcopy "%build-root%\Microsoft.Azure.Amqp\bin\%build-config%\net45\Microsoft.Azure.Amqp.xml" "%dest-path%\lib\net45\" /F
 xcopy "%build-root%\Microsoft.Azure.Amqp\bin\%build-config%\netstandard1.3\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\netstandard1.3\" /F

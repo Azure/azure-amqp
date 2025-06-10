@@ -145,7 +145,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             readonly Func<object, Type, object> getTarget;
             readonly Func<object, Type, object> getSource;
 
-            public Converted(AmqpType amqpType, Type source, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]  Type target,
+            public Converted(AmqpType amqpType, Type source, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type target,
                 Func<object, Type, object> getTarget, Func<object, Type, object> getSource)
                 : base(null, target)
             {
@@ -216,7 +216,7 @@ namespace Microsoft.Azure.Amqp.Serialization
         [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
         public abstract class Collection : SerializableType
         {
-            protected Collection(AmqpContractSerializer serializer, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type type)
+            protected Collection(AmqpContractSerializer serializer, Type type)
                 : base(serializer, type)
             {
             }
@@ -290,7 +290,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             readonly SerializableType itemType;
             readonly MethodAccessor addMethodAccessor;
 
-            public List(AmqpContractSerializer serializer, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type type, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type itemType, MethodAccessor addAccessor)
+            public List(AmqpContractSerializer serializer, Type type, Type itemType, MethodAccessor addAccessor)
                 : base(serializer, type)
             {
                 this.AmqpType = AmqpType.List;
@@ -377,7 +377,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             readonly MemberAccessor valueAccessor;
             readonly MethodAccessor addMethodAccessor;
 
-            public Map(AmqpContractSerializer serializer, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type type, MemberAccessor keyAccessor,
+            public Map(AmqpContractSerializer serializer, Type type, MemberAccessor keyAccessor,
                 MemberAccessor valueAccessor, MethodAccessor addAccessor)
                 : base(serializer, type)
             {

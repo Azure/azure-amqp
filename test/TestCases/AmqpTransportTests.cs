@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Diagnostics;
     using System.Net;
     using System.Net.Sockets;
@@ -125,7 +126,24 @@
             foreach (var protocol in protocols)
             {
                 Debug.WriteLine($"Tls Test: protocol={protocol}");
-                this.RunTlsTransportTest(protocol, protocol);
+                try
+                {
+                    this.RunTlsTransportTest(protocol, protocol);
+                }
+                catch (Exception ex)
+                {
+                    if (protocol == SslProtocols.Tls || protocol == SslProtocols.Tls11)
+                    {
+                        var win32Exp = ex as Win32Exception ?? ex.InnerException as Win32Exception;
+                        if (win32Exp != null && win32Exp.Message.Contains("do not possess a common algorithm"))
+                        {
+                            // Old protocol could be disabled system wide.
+                            return;
+                        }
+                    }
+
+                    throw;
+                }
             }
         }
 
@@ -236,6 +254,7 @@
             {
                 var clientSettings = new TlsTransportSettings(new TcpTransportSettings { Host = localHost, Port = port }, true);
                 clientSettings.TargetHost = localHost;
+                clientSettings.CertificateValidationCallback = (a, b, c, d) => true;
                 if (clientProtocols != null)
                 {
                     clientSettings.Protocols = clientProtocols.Value;

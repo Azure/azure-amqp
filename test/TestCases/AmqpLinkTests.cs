@@ -1043,74 +1043,59 @@ namespace Test.Microsoft.Azure.Amqp
             // NOTE: Increment this number to make it more likely to hit race conditions.
             const int NumberOfRuns = 500;
 
-#if !WINDOWS_UWP && !NET5_0
-            Process proc = Process.GetCurrentProcess();
-            long affinityMask = (long)proc.ProcessorAffinity;
-            var newAffinityMask = affinityMask &= 0x000F; // use only any of the first 4 available processors to make repro similar in most systems
-            proc.ProcessorAffinity = (IntPtr)newAffinityMask;
-#endif
-            try
-            {
-                string queue = "OpenSequentialConnectionsToFindRaceConditions";
-                broker.AddQueue(queue);
+            string queue = "OpenSequentialConnectionsToFindRaceConditions";
+            broker.AddQueue(queue);
 
-                var timeout = TimeSpan.FromSeconds(10);
-                for (int i = 0; i < NumberOfRuns; i++)
+            var timeout = TimeSpan.FromSeconds(10);
+            for (int i = 0; i < NumberOfRuns; i++)
+            {
+                Debug.WriteLine("Iteration " + i);
+                AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 1024);
+                await connection.OpenAsync(timeout);
+
+                var sessionSettings = new AmqpSessionSettings() { DispositionInterval = TimeSpan.FromMilliseconds(20) };
+                AmqpSession session = connection.CreateSession(sessionSettings);
+                await session.OpenAsync(timeout);
+                var senderSettings = new AmqpLinkSettings
                 {
-                    Debug.WriteLine("Iteration " + i);
-                    AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 1024);
-                    await connection.OpenAsync(timeout);
+                    LinkName = "sender",
+                    Role = false,
+                    Source = new Source(),
+                    Target = new Target { Address = queue }
+                };
 
-                    var sessionSettings = new AmqpSessionSettings() { DispositionInterval = TimeSpan.FromMilliseconds(20) };
-                    AmqpSession session = connection.CreateSession(sessionSettings);
-                    await session.OpenAsync(timeout);
-                    var senderSettings = new AmqpLinkSettings
-                    {
-                        LinkName = "sender",
-                        Role = false,
-                        Source = new Source(),
-                        Target = new Target { Address = queue }
-                    };
+                SendingAmqpLink sender = new SendingAmqpLink(session, senderSettings);
+                await sender.OpenAsync(timeout);
 
-                    SendingAmqpLink sender = new SendingAmqpLink(session, senderSettings);
-                    await sender.OpenAsync(timeout);
+                var message = AmqpMessage.Create(new AmqpValue { Value = "Hello, AMQP!" });
+                Outcome outcome = await sender.SendMessageAsync(message, new ArraySegment<byte>(Guid.NewGuid().ToByteArray()), AmqpConstants.NullBinary, timeout);
+                message.Dispose();
 
-                    var message = AmqpMessage.Create(new AmqpValue { Value = "Hello, AMQP!" });
-                    Outcome outcome = await sender.SendMessageAsync(message, new ArraySegment<byte>(Guid.NewGuid().ToByteArray()), AmqpConstants.NullBinary, timeout);
-                    message.Dispose();
+                var receiverSettings = new AmqpLinkSettings
+                {
+                    LinkName = "receiver",
+                    Role = true,
+                    Source = new Source { Address = queue },
+                    Target = new Target(),
+                    AutoSendFlow = true,
+                    TotalLinkCredit = 10  // this setting seems to have a big impact on this test's failure rate.
+                };
 
-                    var receiverSettings = new AmqpLinkSettings
-                    {
-                        LinkName = "receiver",
-                        Role = true,
-                        Source = new Source { Address = queue },
-                        Target = new Target(),
-                        AutoSendFlow = true,
-                        TotalLinkCredit = 10  // this setting seems to have a big impact on this test's failure rate.
-                    };
+                var receiver = new ReceivingAmqpLink(session, receiverSettings);
+                await receiver.OpenAsync(timeout);
+                await Task.Yield();
 
-                    var receiver = new ReceivingAmqpLink(session, receiverSettings);
-                    await receiver.OpenAsync(timeout);
-                    await Task.Yield();
+                var message2 = await receiver.ReceiveMessageAsync(timeout);
+                await Task.Yield();
+                Assert.NotNull(message2);
 
-                    var message2 = await receiver.ReceiveMessageAsync(timeout);
-                    await Task.Yield();
-                    Assert.NotNull(message2);
+                receiver.AcceptMessage(message2, false);
+                message2.Dispose();
 
-                    receiver.AcceptMessage(message2, false);
-                    message2.Dispose();
-
-                    await sender.CloseAsync(timeout);
-                    await receiver.CloseAsync(timeout);
-                    await session.CloseAsync(timeout);
-                    await connection.CloseAsync(timeout);
-                }
-            }
-            finally
-            {
-#if !WINDOWS_UWP && !NET5_0
-                proc.ProcessorAffinity = (IntPtr)affinityMask;
-#endif
+                await sender.CloseAsync(timeout);
+                await receiver.CloseAsync(timeout);
+                await session.CloseAsync(timeout);
+                await connection.CloseAsync(timeout);
             }
         }
 

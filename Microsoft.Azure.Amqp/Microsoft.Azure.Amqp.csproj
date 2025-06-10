@@ -19,6 +19,8 @@
     <Configurations>Debug;Release;Signed</Configurations>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <DebugType>portable</DebugType>
+    <CheckNotRecommendedTargetFramework>false</CheckNotRecommendedTargetFramework>
+    <EnableTrimAnalyzer Condition=" '$(TargetFramework)' == 'net8.0' ">true</EnableTrimAnalyzer>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">

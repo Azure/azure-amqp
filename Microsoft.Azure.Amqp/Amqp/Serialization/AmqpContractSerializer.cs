@@ -7,7 +7,6 @@ namespace Microsoft.Azure.Amqp.Serialization
     using System.Collections;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -80,29 +79,37 @@ namespace Microsoft.Azure.Amqp.Serialization
             this.externalCompilers = new List<Func<Type, SerializableType>>() { compiler };
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         public static void WriteObject(Stream stream, object graph)
         {
             Instance.WriteObjectInternal(stream, graph);
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         public static T ReadObject<T>(Stream stream)
         {
             return Instance.ReadObjectInternal<T, T>(stream);
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         public static TAs ReadObject<T, TAs>(Stream stream)
         {
             return Instance.ReadObjectInternal<T, TAs>(stream);
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         internal void WriteObjectInternal(Stream stream, object graph)
         {
             if (graph == null)
@@ -120,8 +127,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         public void WriteObjectInternal(ByteBuffer buffer, object graph)
         {
             if (graph == null)
@@ -135,15 +144,19 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         internal T ReadObjectInternal<T>(Stream stream)
         {
             return this.ReadObjectInternal<T, T>(stream);
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         internal TAs ReadObjectInternal<T, TAs>(Stream stream)
         {
             if (!stream.CanSeek)
@@ -179,31 +192,39 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         public T ReadObjectInternal<T>(ByteBuffer buffer)
         {
             SerializableType type = this.GetType(typeof(T));
             return (T)type.ReadObject(buffer);
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         public TAs ReadObjectInternal<T, TAs>(ByteBuffer buffer)
         {
             SerializableType type = this.GetType(typeof(T));
             return (TAs)type.ReadObject(buffer);
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         public SerializableType GetType(Type type)
         {
             return this.GetOrCompileType(type, false);
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         bool TryGetSerializableType(Type type, out SerializableType serializableType)
         {
             serializableType = null;
@@ -219,8 +240,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             return false;
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         SerializableType GetOrCompileType(Type type, bool describedOnly)
         {
             SerializableType serialiableType = null;
@@ -241,8 +264,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             return serialiableType;
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         SerializableType CompileType(Type type, bool describedOnly)
         {
             if (this.externalCompilers != null)
@@ -391,8 +416,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        [RequiresUnreferencedCode(TrimWarning)]
-        [RequiresDynamicCode(AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AotWarning)]
+#endif
         SerializableType CompileNonContractTypes(Type type)
         {
             if (type.GetTypeInfo().IsGenericType &&

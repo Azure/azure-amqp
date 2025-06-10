@@ -216,7 +216,7 @@ namespace Microsoft.Azure.Amqp.Serialization
         }
     }
 #endif
-#if NETSTANDARD2_0 || NET6_0_OR_GREATER
+#if NETSTANDARD2_0 || NET8_0_OR_GREATER
     using System;
     using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
@@ -240,7 +240,9 @@ namespace Microsoft.Azure.Amqp.Serialization
             return (obj, val) => fieldInfo.SetValue(obj, val);
         }
 
-        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#endif
         public static Func<object, object> CreateGetter(this PropertyInfo propertyInfo)
         {
             MethodInfo getMethod = propertyInfo.GetGetMethod(true);
@@ -249,7 +251,9 @@ namespace Microsoft.Azure.Amqp.Serialization
             return (Func<object, object>)m2.Invoke(null, new object[] { getMethod });
         }
 
-        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#endif
         public static Action<object, object> CreateSetter(this PropertyInfo propertyInfo, bool requiresSetter)
         {
             if (requiresSetter && propertyInfo.DeclaringType.IsValueType)
@@ -280,7 +284,9 @@ namespace Microsoft.Azure.Amqp.Serialization
             throw new NotImplementedException();
         }
 
-        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#endif
         public static MethodDelegate CreateMethod(this MethodInfo methodInfo, bool isStatic)
         {
             var parameters = methodInfo.GetParameters();

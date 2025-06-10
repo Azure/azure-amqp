@@ -4,7 +4,6 @@
 namespace Microsoft.Azure.Amqp.Serialization
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
 
     public abstract class MemberAccessor
@@ -22,9 +21,11 @@ namespace Microsoft.Azure.Amqp.Serialization
         {
             get { return this.type; }
         }
-        
-        [RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
-        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#endif
         public static MemberAccessor Create(MemberInfo memberInfo, bool requiresSetter)
         {
             FieldInfo fieldInfo;
@@ -51,7 +52,9 @@ namespace Microsoft.Azure.Amqp.Serialization
             this.setter(container, value);
         }
 
-        [RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+#endif
         sealed class FieldMemberAccessor : MemberAccessor
         {
             public FieldMemberAccessor(FieldInfo fieldInfo)
@@ -62,8 +65,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        [RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
-        [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#endif
         sealed class PropertyMemberAccessor : MemberAccessor
         {
             public PropertyMemberAccessor(PropertyInfo propertyInfo, bool requiresSetter)

@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net452;net462;net472;net48;netcoreapp2.1;netcoreapp3.1;net5</TargetFrameworks>
+    <TargetFrameworks>net452;net462;net472;net48;netcoreapp3.1;net8</TargetFrameworks>
     <AssemblyName>Test.Microsoft.Amqp</AssemblyName>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <NoWarn>SYSLIB0039</NoWarn>
   </PropertyGroup>
  
   <ItemGroup>

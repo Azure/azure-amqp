@@ -191,7 +191,7 @@ namespace Microsoft.Azure.Amqp
 
                     this.Invalidate(current);
                 }
-#if NETSTANDARD || MONOANDROID || WINDOWS_UWP
+#if NETSTANDARD || MONOANDROID || WINDOWS_UWP || NET6_0_OR_GREATER
                 tcs = new TaskCompletionSource<TValue>(TaskCreationOptions.RunContinuationsAsynchronously);
 #else
                 tcs = new TaskCompletionSource<TValue>();

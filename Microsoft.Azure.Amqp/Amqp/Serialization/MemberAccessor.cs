@@ -22,6 +22,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             get { return this.type; }
         }
 
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#endif
         public static MemberAccessor Create(MemberInfo memberInfo, bool requiresSetter)
         {
             FieldInfo fieldInfo;
@@ -48,6 +52,9 @@ namespace Microsoft.Azure.Amqp.Serialization
             this.setter(container, value);
         }
 
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+#endif
         sealed class FieldMemberAccessor : MemberAccessor
         {
             public FieldMemberAccessor(FieldInfo fieldInfo)
@@ -58,6 +65,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#endif
         sealed class PropertyMemberAccessor : MemberAccessor
         {
             public PropertyMemberAccessor(PropertyInfo propertyInfo, bool requiresSetter)

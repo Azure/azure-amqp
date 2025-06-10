@@ -13,6 +13,7 @@
         <icon>images\icon.png</icon>
         <language>en-US</language>
         <dependencies>
+          <group targetFramework="net8.0" />
           <group targetFramework="net45" />
           <group targetFramework="netstandard1.3">
             <dependency id="System.Runtime.Serialization.Primitives" version="4.1.1" />

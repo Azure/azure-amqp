@@ -46,7 +46,7 @@ namespace Microsoft.Azure.Amqp.Transport
 #endif
         }
 
-#if NET45 || NETSTANDARD || MONOANDROID
+#if NET45 || NETSTANDARD || MONOANDROID || NET6_0_OR_GREATER
         public override TransportListener CreateListener()
         {
             return new TcpTransportListener(this);

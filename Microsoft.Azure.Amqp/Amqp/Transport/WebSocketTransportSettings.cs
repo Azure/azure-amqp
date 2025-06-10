@@ -50,7 +50,7 @@ namespace Microsoft.Azure.Amqp.Transport
             return new WebSocketTransportListener(this.Uri.AbsoluteUri);
         }
 #endif
-#if NETSTANDARD
+#if NETSTANDARD || NET6_0_OR_GREATER
         public override TransportListener CreateListener()
         {
             throw new NotSupportedException();

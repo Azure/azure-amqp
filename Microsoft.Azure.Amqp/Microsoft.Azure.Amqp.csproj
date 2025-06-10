@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Description>Microsoft.Azure.Amqp Class Library</Description>
     <Authors>microsoft</Authors>
-    <TargetFrameworks>net45;netstandard1.3;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard1.3;netstandard2.0;net8.0</TargetFrameworks>
     <NoWarn>CS1734,CS1591</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -19,6 +19,8 @@
     <Configurations>Debug;Release;Signed</Configurations>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <DebugType>portable</DebugType>
+    <CheckNotRecommendedTargetFramework>false</CheckNotRecommendedTargetFramework>
+    <EnableTrimAnalyzer Condition=" '$(TargetFramework)' == 'net8.0' ">true</EnableTrimAnalyzer>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">

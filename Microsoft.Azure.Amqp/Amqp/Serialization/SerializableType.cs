@@ -25,10 +25,17 @@ namespace Microsoft.Azure.Amqp.Serialization
     public abstract class SerializableType
     {
         readonly AmqpContractSerializer serializer;
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
         readonly Type type;
         readonly bool hasDefaultCtor;
 
-        protected SerializableType(AmqpContractSerializer serializer, Type type)
+        protected SerializableType(AmqpContractSerializer serializer,
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
+            Type type)
         {
             this.serializer = serializer;
             this.type = type;
@@ -52,7 +59,11 @@ namespace Microsoft.Azure.Amqp.Serialization
             set;
         }
 
-        public static SerializableType CreatePrimitiveType(Type type)
+        public static SerializableType CreatePrimitiveType(
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
+            Type type)
         {
             // encoder is pre-determined
             EncodingBase encoder = AmqpEncoding.GetEncoding(type);
@@ -61,7 +72,7 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         public object CreateInstance()
         {
-#if NETSTANDARD
+#if NETSTANDARD || NET8_0_OR_GREATER
             return Activator.CreateInstance(this.type);
 #else
             return this.hasDefaultCtor ?
@@ -78,7 +89,12 @@ namespace Microsoft.Azure.Amqp.Serialization
         {
             readonly EncodingBase encoder;
 
-            public Primitive(Type type, EncodingBase encoder)
+            public Primitive(
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
+                Type type,
+                EncodingBase encoder)
                 : base(null, type)
             {
                 this.AmqpType = AmqpType.Primitive;
@@ -98,7 +114,11 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         public sealed class Serializable : SerializableType
         {
-            public Serializable(AmqpContractSerializer serializer, Type type)
+            public Serializable(AmqpContractSerializer serializer,
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
+                Type type)
                 : base(serializer, type)
             {
                 this.AmqpType = AmqpType.Serializable;
@@ -142,7 +162,12 @@ namespace Microsoft.Azure.Amqp.Serialization
             readonly Func<object, Type, object> getTarget;
             readonly Func<object, Type, object> getSource;
 
-            public Converted(AmqpType amqpType, Type source, Type target,
+            public Converted(AmqpType amqpType,
+                Type source,
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
+                Type target,
                 Func<object, Type, object> getTarget, Func<object, Type, object> getSource)
                 : base(null, target)
             {
@@ -192,7 +217,11 @@ namespace Microsoft.Azure.Amqp.Serialization
 
         public sealed class Object : SerializableType
         {
-            public Object(Type type)
+            public Object(
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
+                Type type)
                 : base(null, type)
             {
                 this.AmqpType = AmqpType.Primitive;
@@ -209,9 +238,17 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#endif
         public abstract class Collection : SerializableType
         {
-            protected Collection(AmqpContractSerializer serializer, Type type)
+            protected Collection(AmqpContractSerializer serializer,
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
+                Type type)
                 : base(serializer, type)
             {
             }
@@ -278,12 +315,25 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#endif
         public sealed class List : Collection
         {
             readonly SerializableType itemType;
             readonly MethodAccessor addMethodAccessor;
 
-            public List(AmqpContractSerializer serializer, Type type, Type itemType, MethodAccessor addAccessor)
+            public List(AmqpContractSerializer serializer,
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
+                Type type,
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+#endif
+                Type itemType,
+                MethodAccessor addAccessor)
                 : base(serializer, type)
             {
                 this.AmqpType = AmqpType.List;
@@ -360,6 +410,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#endif
         public sealed class Map : Collection
         {
             readonly SerializableType keyType;
@@ -440,6 +494,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#endif
         public abstract class Composite : Collection
         {
             readonly Composite baseType;
@@ -614,6 +672,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#endif
         public sealed class CompositeList : Composite
         {
             public CompositeList(
@@ -671,6 +733,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+#if NET8_0_OR_GREATER
+        [System.Diagnostics.CodeAnalysis.RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
+        [System.Diagnostics.CodeAnalysis.RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
+#endif
         public sealed class CompositeMap : Composite
         {
             public CompositeMap(

@@ -31,6 +31,23 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [Fact]
+        public void AmqpLinkSenderInitialDeliveryCountTest()
+        {
+            var settings = new AmqpLinkSettings()
+            {
+                Role = false,
+                LinkName = "test",
+                Target = new Target() { Address = "test" },
+                Source = new Source(),
+            };
+
+            Assert.True(settings.InitialDeliveryCount == null);
+
+            var link = new SendingAmqpLink(null, settings);
+            Assert.True(link.Settings.InitialDeliveryCount == 0);
+        }
+        
+        [Fact]
         public void AmqpLinkSyncSendReceiveTest()
         {
             const int messageCount = 10;
@@ -39,7 +56,7 @@ namespace Test.Microsoft.Azure.Amqp
             
             this.SendReceive(queue, messageCount, true, true, false);
         }
-        
+
         [Fact]
         public void AmqpLinkAsyncSendReceiveTest()
         {

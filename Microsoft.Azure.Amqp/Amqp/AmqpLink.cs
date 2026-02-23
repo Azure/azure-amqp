@@ -71,6 +71,11 @@ namespace Microsoft.Azure.Amqp
             if (!linkSettings.IsReceiver())
             {
                 this.inflightDeliveries = new SerializedWorker<Delivery>(this);
+                if (this.settings.InitialDeliveryCount == null)
+                {
+                    // Mandatory for sender. Set it to 0 if not set by user.
+                    this.settings.InitialDeliveryCount = 0;
+                }
             }
         }
 

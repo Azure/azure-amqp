@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Amqp
         /// Gets or sets the default timeout used for all APIs that have an overload
         /// with a timeout parameter. Default is 60 seconds.
         /// </summary>
-        public static TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
+        public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(60);
 
         /// <summary>
         /// A string constant as the domain name for Microsoft extensions.
@@ -49,6 +49,10 @@ namespace Microsoft.Azure.Amqp
         public static readonly AmqpSymbol Port = "port";
         /// <summary>A symbol constant for 'address'</summary>
         public static readonly AmqpSymbol Address = "address";
+        /// <summary>A symbol constant for publisher id.</summary>
+        public static readonly AmqpSymbol PublisherId = "publisher-id";
+        /// <summary>A symbol constant for simple web token property.</summary>
+        public static readonly AmqpSymbol SimpleWebTokenPropertyName = Vendor + ":swt";
 
         /// <summary>
         /// Null binary.
@@ -119,18 +123,48 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public const uint DefaultMaxFrameSize = 64 * 1024;
 
-        internal const string TimeSpanName = Vendor + ":timespan";
-        internal const string UriName = Vendor + ":uri";
-        internal const string DateTimeOffsetName = Vendor + ":datetime-offset";
-        internal const string OpenErrorName = Vendor + ":open-error";
-        internal const ushort DefaultMaxConcurrentChannels = 8 * 1024;
-        internal const uint DefaultMaxLinkHandles = 256 * 1024;
-        internal const uint DefaultHeartBeatInterval = 90000;
-        internal const uint MinimumHeartBeatIntervalMs = 5 * 1000;
-        internal const uint DefaultWindowSize = 5000;
-        internal const uint DefaultLinkCredit = 1000;
-        internal const uint DefaultNextTransferId = 1;
-        internal const int SegmentSize = 512;
+        /// <summary>The AMQP format code.</summary>
+        public const byte AmqpFormat = 1;
+        /// <summary>Operation name for adding a rule.</summary>
+        public const string AddRule = "AddRule";
+        /// <summary>Operation name for bad command.</summary>
+        public const string BadCommand = "BadCommand";
+        /// <summary>Operation name for consume.</summary>
+        public const string Consume = "Consume";
+        /// <summary>Operation name for deleting a rule.</summary>
+        public const string DeleteRule = "DeleteRule";
+        /// <summary>Operation name for dispose.</summary>
+        public const string Dispose = "Dispose";
+        /// <summary>Operation name for getting message sessions.</summary>
+        public const string GetMessageSessions = "GetMessageSessions";
+        /// <summary>Operation name for publish.</summary>
+        public const string Publish = "Publish";
+
+        /// <summary>The name for TimeSpan type.</summary>
+        public const string TimeSpanName = Vendor + ":timespan";
+        /// <summary>The name for Uri type.</summary>
+        public const string UriName = Vendor + ":uri";
+        /// <summary>The name for DateTimeOffset type.</summary>
+        public const string DateTimeOffsetName = Vendor + ":datetime-offset";
+        /// <summary>The name for open error.</summary>
+        public const string OpenErrorName = Vendor + ":open-error";
+        /// <summary>The default maximum number of concurrent channels.</summary>
+        public const ushort DefaultMaxConcurrentChannels = 8 * 1024;
+        /// <summary>The default maximum number of link handles.</summary>
+        public const uint DefaultMaxLinkHandles = 256 * 1024;
+        /// <summary>The default heartbeat interval in milliseconds.</summary>
+        public const uint DefaultHeartBeatInterval = 90000;
+        /// <summary>The minimum heartbeat interval in milliseconds.</summary>
+        public const uint MinimumHeartBeatIntervalMs = 5 * 1000;
+        /// <summary>The default window size.</summary>
+        public const uint DefaultWindowSize = 5000;
+        /// <summary>The default link credit.</summary>
+        public const uint DefaultLinkCredit = 1000;
+        /// <summary>The default next transfer id.</summary>
+        public const uint DefaultNextTransferId = 1;
+        /// <summary>The segment size in bytes.</summary>
+        public const int SegmentSize = 512;
+
         internal static readonly List<AmqpMessage> EmptyMessages = new List<AmqpMessage>(0);
     }
 }

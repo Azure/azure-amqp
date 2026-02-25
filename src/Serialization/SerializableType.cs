@@ -12,7 +12,10 @@ namespace Microsoft.Azure.Amqp.Serialization
     using Microsoft.Azure.Amqp.Encoding;
     using AmqpDescribedType = Microsoft.Azure.Amqp.Encoding.DescribedType;
 
-    enum AmqpType
+    /// <summary>
+    /// Defines the type of AMQP serialization.
+    /// </summary>
+    public enum AmqpType
     {
         Primitive,
         Described,
@@ -44,10 +47,11 @@ namespace Microsoft.Azure.Amqp.Serialization
             this.hasDefaultCtor = type.GetConstructor(Type.EmptyTypes) != null;
         }
 
-        internal AmqpType AmqpType
+        /// <summary>Gets or sets the AMQP type.</summary>
+        public AmqpType AmqpType
         {
             get;
-            set;
+            protected set;
         }
 
         /// <summary>
@@ -64,14 +68,16 @@ namespace Microsoft.Azure.Amqp.Serialization
             set;
         }
 
-        internal static SerializableType CreatePrimitiveType(Type type)
+        /// <summary>Creates a primitive serializable type.</summary>
+        public static SerializableType CreatePrimitiveType(Type type)
         {
             // encoder is pre-determined
-            IEncoding encoder = AmqpEncoding.GetEncoding(type);
+            EncodingBase encoder = (EncodingBase)AmqpEncoding.GetEncoding(type);
             return new Primitive(type, encoder);
         }
 
-        internal object CreateInstance()
+        /// <summary>Creates an instance of the underlying type.</summary>
+        public object CreateInstance()
         {
             return this.hasDefaultCtor ?
                 Activator.CreateInstance(this.type) :
@@ -92,11 +98,13 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// <returns>An object.</returns>
         public abstract object ReadObject(ByteBuffer buffer);
 
-        internal sealed class Primitive : SerializableType
+        /// <summary>A primitive serializable type.</summary>
+        public sealed class Primitive : SerializableType
         {
-            readonly IEncoding encoder;
+            readonly EncodingBase encoder;
 
-            public Primitive(Type type, IEncoding encoder)
+            /// <summary>Initializes a new instance.</summary>
+            public Primitive(Type type, EncodingBase encoder)
                 : base(null, type)
             {
                 this.AmqpType = AmqpType.Primitive;
@@ -105,7 +113,7 @@ namespace Microsoft.Azure.Amqp.Serialization
 
             public override void WriteObject(ByteBuffer buffer, object value)
             {
-                this.encoder.Write(value, buffer, -1);
+                this.encoder.EncodeObject(value, false, buffer);
             }
 
             public override object ReadObject(ByteBuffer buffer)
@@ -116,11 +124,12 @@ namespace Microsoft.Azure.Amqp.Serialization
                     return null;
                 }
 
-                return this.encoder.Read(buffer, formatCode);
+                return this.encoder.DecodeObject(buffer, formatCode);
             }
         }
 
-        internal sealed class Serializable : SerializableType
+        /// <summary>A serializable type that implements IAmqpSerializable.</summary>
+        public sealed class Serializable : SerializableType
         {
             public Serializable(AmqpContractSerializer serializer, Type type)
                 : base(serializer, type)
@@ -156,7 +165,8 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        internal sealed class Converted : SerializableType
+        /// <summary>A converted serializable type.</summary>
+        public sealed class Converted : SerializableType
         {
             readonly IEncoding encoder;
             readonly Type source;
@@ -212,7 +222,8 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        internal sealed class Object : SerializableType
+        /// <summary>A serializable type for generic objects.</summary>
+        public sealed class Object : SerializableType
         {
             public Object(Type type)
                 : base(null, type)
@@ -231,7 +242,8 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        internal abstract class Collection : SerializableType
+        /// <summary>A collection serializable type.</summary>
+        public abstract class Collection : SerializableType
         {
             protected Collection(AmqpContractSerializer serializer, Type type)
                 : base(serializer, type)
@@ -300,9 +312,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+        /// <summary>A list collection serializable type.</summary>
         [RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
         [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
-        internal sealed class List : Collection
+        public sealed class List : Collection
         {
             readonly SerializableType itemType;
             readonly MethodAccessor addMethodAccessor;
@@ -379,9 +392,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+        /// <summary>A map collection serializable type.</summary>
         [RequiresUnreferencedCode(AmqpContractSerializer.TrimWarning)]
         [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
-        internal sealed class Map : Collection
+        public sealed class Map : Collection
         {
             readonly SerializableType keyType;
             readonly SerializableType valueType;
@@ -456,9 +470,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+        /// <summary>A composite serializable type.</summary>
         [RequiresUnreferencedCode(AmqpContractSerializer.AotWarning)]
         [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
-        internal abstract class Composite : Collection
+        public abstract class Composite : Collection
         {
             readonly Composite baseType;
             readonly AmqpSymbol descriptorName;
@@ -632,9 +647,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+        /// <summary>A composite list serializable type.</summary>
         [RequiresUnreferencedCode(AmqpContractSerializer.AotWarning)]
         [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
-        internal sealed class CompositeList : Composite
+        public sealed class CompositeList : Composite
         {
             public CompositeList(
                 AmqpContractSerializer serializer,
@@ -691,9 +707,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
+        /// <summary>A composite map serializable type.</summary>
         [RequiresUnreferencedCode(AmqpContractSerializer.AotWarning)]
         [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
-        internal sealed class CompositeMap : Composite
+        public sealed class CompositeMap : Composite
         {
             public CompositeMap(
                 AmqpContractSerializer serializer,

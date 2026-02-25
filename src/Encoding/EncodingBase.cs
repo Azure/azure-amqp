@@ -29,38 +29,103 @@ namespace Microsoft.Azure.Amqp.Encoding
     ///   than the actual size and be as close as possible.
     ///   
 
+    /// <summary>
+    /// Interface for AMQP type encoding.
+    /// </summary>
     interface IEncoding
     {
+        /// <summary>Gets the format code.</summary>
         FormatCode FormatCode { get; }
 
         // if arrayIndex >= 0, it is encoding an item in the array
+        /// <summary>Gets the encoded size of an object.</summary>
         int GetSize(object obj, int arrayIndex = -1);
+        /// <summary>Writes an object to the buffer.</summary>
         void Write(object obj, ByteBuffer buffer, int arrayIndex = -1);
+        /// <summary>Reads an object from the buffer.</summary>
         object Read(ByteBuffer buffer, FormatCode formatCode);
 
+        /// <summary>Gets the encoded size of an array.</summary>
         int GetArraySize(Array array);
+        /// <summary>Writes an array to the buffer.</summary>
         void WriteArray(Array array, ByteBuffer buffer);
+        /// <summary>Reads an array from the buffer.</summary>
         Array ReadArray(ByteBuffer buffer, FormatCode formatCode, int count);
+    }
+
+    /// <summary>
+    /// Base class for AMQP type encoding.
+    /// </summary>
+    public abstract class EncodingBase
+    {
+        readonly FormatCode formatCode;
+
+        /// <summary>Initializes a new instance.</summary>
+        protected EncodingBase(FormatCode formatCode)
+        {
+            this.formatCode = formatCode;
+        }
+
+        /// <summary>Gets the format code.</summary>
+        public FormatCode FormatCode
+        {
+            get { return this.formatCode; }
+        }
+
+        /// <summary>Gets the encoded size of an object.</summary>
+        public abstract int GetObjectEncodeSize(object value, bool arrayEncoding);
+
+        /// <summary>Encodes an object to the buffer.</summary>
+        public abstract void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer);
+
+        /// <summary>Decodes an object from the buffer.</summary>
+        public abstract object DecodeObject(ByteBuffer buffer, FormatCode formatCode);
+
+        /// <summary>Verifies the format code matches the expected value.</summary>
+        public static void VerifyFormatCode(FormatCode formatCode, int offset, FormatCode expected)
+        {
+            if (formatCode != expected)
+            {
+                ThrowInvalidFormatCodeException(formatCode, offset);
+            }
+        }
+
+        /// <summary>Verifies the format code matches one of two expected values.</summary>
+        public static void VerifyFormatCode(FormatCode formatCode, int offset, FormatCode expected1, FormatCode expected2)
+        {
+            if (formatCode != expected1 && formatCode != expected2)
+            {
+                ThrowInvalidFormatCodeException(formatCode, offset);
+            }
+        }
+
+        /// <summary>Verifies the format code matches one of three expected values.</summary>
+        public static void VerifyFormatCode(FormatCode formatCode, int offset, FormatCode expected1, FormatCode expected2, FormatCode expected3)
+        {
+            if (formatCode != expected1 && formatCode != expected2 && formatCode != expected3)
+            {
+                ThrowInvalidFormatCodeException(formatCode, offset);
+            }
+        }
+
+        static void ThrowInvalidFormatCodeException(FormatCode formatCode, int offset)
+        {
+            throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, offset));
+        }
     }
 
     /// <summary>
     /// Encodes and decodes amqp types.
     /// </summary>
     /// <remarks>This should be used by AmqpCodec only, where null values are handled.</remarks>
-    abstract class EncodingBase<T> : IEncoding
+    abstract class EncodingBase<T> : EncodingBase, IEncoding
     {
-        readonly FormatCode formatCode;
         readonly int width; // -1 for variable and compact-enabled types
 
         protected EncodingBase(FormatCode formatCode, int width = -1)
+            : base(formatCode)
         {
-            this.formatCode = formatCode;
             this.width = width;
-        }
-
-        public FormatCode FormatCode 
-        {
-            get { return this.formatCode; }
         }
 
         public int GetSize(T value, int arrayIndex = -1)
@@ -119,6 +184,29 @@ namespace Microsoft.Azure.Amqp.Encoding
         protected abstract void OnWrite(T value, ByteBuffer buffer, int arrayIndex);
 
         protected abstract T OnRead(ByteBuffer buffer, FormatCode formatCode);
+
+        /// <inheritdoc/>
+        public override int GetObjectEncodeSize(object value, bool arrayEncoding)
+        {
+            return this.GetSize((T)value, arrayEncoding ? 0 : -1);
+        }
+
+        /// <inheritdoc/>
+        public override void EncodeObject(object value, bool arrayEncoding, ByteBuffer buffer)
+        {
+            this.Write((T)value, buffer, arrayEncoding ? 0 : -1);
+        }
+
+        /// <inheritdoc/>
+        public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
+        {
+            if (formatCode == Encoding.FormatCode.Null)
+            {
+                return null;
+            }
+
+            return this.Read(buffer, formatCode);
+        }
 
         int IEncoding.GetSize(object obj, int arrayIndex)
         {

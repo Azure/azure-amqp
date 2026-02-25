@@ -9,7 +9,10 @@ namespace Microsoft.Azure.Amqp.Serialization
 
     delegate object MethodDelegate(object container, object[] parameters);
 
-    abstract class MethodAccessor
+    /// <summary>
+    /// Provides access to a method of a type.
+    /// </summary>
+    public abstract class MethodAccessor
     {
         bool isStatic;
         MethodDelegate methodDelegate;

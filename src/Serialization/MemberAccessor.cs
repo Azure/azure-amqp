@@ -7,7 +7,10 @@ namespace Microsoft.Azure.Amqp.Serialization
     using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
 
-    abstract class MemberAccessor
+    /// <summary>
+    /// Provides access to a member of a type.
+    /// </summary>
+    public abstract class MemberAccessor
     {
         readonly Type type;
         Func<object, object> getter;

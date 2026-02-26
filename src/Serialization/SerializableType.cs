@@ -168,7 +168,7 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// <summary>A converted serializable type.</summary>
         public sealed class Converted : SerializableType
         {
-            readonly IEncoding encoder;
+            readonly EncodingBase encoder;
             readonly Type source;
             readonly Type target;
             readonly Func<object, Type, object> getTarget;
@@ -204,7 +204,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 }
                 else
                 {
-                    this.encoder.Write(this.getTarget(value, this.target), buffer, -1);
+                    this.encoder.EncodeObject(this.getTarget(value, this.target), false, buffer);
                 }
             }
 

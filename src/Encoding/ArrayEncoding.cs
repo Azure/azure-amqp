@@ -53,22 +53,39 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         protected override int OnGetSize(Array value, int arrayIndex)
         {
-            IEncoding encoding = AmqpEncoding.GetEncoding(value.GetType().GetElementType());
-            return encoding.GetArraySize(value);
+            int valueSize = 0;
+            if (value.Length > 0)
+            {
+                EncodingBase encoding = AmqpEncoding.GetEncoding(value.GetValue(0).GetType());
+                valueSize = encoding.GetArrayEncodeSize(value);
+            }
+
+            return PrefixSize + valueSize;
         }
 
         protected override void OnWrite(Array value, ByteBuffer buffer, int arrayIndex)
         {
-            IEncoding encoding = AmqpEncoding.GetEncoding(value.GetType().GetElementType());
-            encoding.WriteArray(value, buffer);
+            AmqpBitConverter.WriteUByte(buffer, FormatCode.Array32);
+            var sizeTracker = SizeTracker.Track(buffer);
+            AmqpBitConverter.WriteInt(buffer, FixedWidth.Int);
+            AmqpBitConverter.WriteInt(buffer, value.Length);
+
+            if (value.Length > 0)
+            {
+                EncodingBase encoding = AmqpEncoding.GetEncoding(value.GetValue(0).GetType());
+                AmqpBitConverter.WriteUByte(buffer, encoding.FormatCode);
+                encoding.EncodeArray(value, buffer);
+            }
+
+            sizeTracker.CommitExclusive(0);
         }
 
         protected override Array OnRead(ByteBuffer buffer, FormatCode formatCode)
         {
             AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.Array8, FormatCode.Array32, out var size, out var count);
             formatCode = AmqpEncoding.ReadFormatCode(buffer);
-            IEncoding encoding = AmqpEncoding.GetEncoding(formatCode);
-            return encoding.ReadArray(buffer, formatCode, count);
+            EncodingBase encoding = AmqpEncoding.GetEncoding(formatCode);
+            return encoding.DecodeArray(buffer, formatCode, count);
         }
     }
 }

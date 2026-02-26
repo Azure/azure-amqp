@@ -3,7 +3,10 @@
 
 namespace Microsoft.Azure.Amqp
 {
-    sealed class StateTransition
+    /// <summary>
+    /// Represents a state transition in the AMQP object state machine.
+    /// </summary>
+    public sealed class StateTransition
     {
         static StateTransition[] sendHeader = new StateTransition[]
         {

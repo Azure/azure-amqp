@@ -537,7 +537,13 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal StateTransition TransitState(string operation, StateTransition[] states)
+        /// <summary>
+        /// Transitions the object state based on the allowed state transitions.
+        /// </summary>
+        /// <param name="operation">The operation name.</param>
+        /// <param name="states">The allowed state transitions.</param>
+        /// <returns>The matching state transition, or null if no transition is valid.</returns>
+        public StateTransition TransitState(string operation, StateTransition[] states)
         {
             StateTransition state = null;
 

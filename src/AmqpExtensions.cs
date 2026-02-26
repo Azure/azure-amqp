@@ -127,6 +127,26 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Gets a <see cref="Framing.Terminus"/> from the attach performative.
+        /// </summary>
+        /// <param name="attach">The <see cref="Attach"/> performative.</param>
+        /// <returns>A <see cref="Framing.Terminus"/> object, or null.</returns>
+        [Obsolete("Use Source and Target directly.")]
+        public static Terminus Terminus(this Attach attach)
+        {
+            if (attach.IsReceiver())
+            {
+                Source source = attach.Source as Source;
+                return source == null ? null : new Terminus(source);
+            }
+            else
+            {
+                Target target = attach.Target as Target;
+                return target == null ? null : new Terminus(target);
+            }
+        }
+
+        /// <summary>
         /// Gets the value of attach.max-message-size or false it is not set.
         /// </summary>
         /// <param name="attach">The <see cref="Attach"/> performative.</param>

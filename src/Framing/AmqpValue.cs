@@ -27,7 +27,8 @@ namespace Microsoft.Azure.Amqp.Framing
         {
         }
 
-        internal override int GetValueEncodeSize()
+        /// <inheritdoc/>
+        public override int GetValueEncodeSize()
         {
             IAmqpSerializable amqpSerializable = this.Value as IAmqpSerializable;
             if (amqpSerializable != null)
@@ -40,7 +41,8 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        internal override void EncodeValue(ByteBuffer buffer)
+        /// <inheritdoc/>
+        public override void EncodeValue(ByteBuffer buffer)
         {
             IAmqpSerializable amqpSerializable = this.Value as IAmqpSerializable;
             if (amqpSerializable != null)
@@ -53,7 +55,8 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        internal override void DecodeValue(ByteBuffer buffer)
+        /// <inheritdoc/>
+        public override void DecodeValue(ByteBuffer buffer)
         {
             this.Value = AmqpCodec.DecodeObject(buffer);
         }

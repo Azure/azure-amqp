@@ -884,7 +884,7 @@ namespace Microsoft.Azure.Amqp
                 {
                     if (source != null)
                     {
-                        AmqpBitConverter.WriteBytes(buffer, source.Buffer, section.Offset, section.Length);
+                        AmqpBitConverter.WriteBytes(buffer, source.Buffer, (int)section.Offset, (int)section.Length);
                     }
                     else
                     {

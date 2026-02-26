@@ -31,17 +31,20 @@ namespace Microsoft.Azure.Amqp.Framing
             get { return this.innerMap; }
         }
 
-        internal override int GetValueEncodeSize()
+        /// <inheritdoc/>
+        public override int GetValueEncodeSize()
         {
             return AmqpCodec.GetMapEncodeSize(this.innerMap);
         }
 
-        internal override void EncodeValue(ByteBuffer buffer)
+        /// <inheritdoc/>
+        public override void EncodeValue(ByteBuffer buffer)
         {
             AmqpCodec.EncodeMap(this.innerMap, buffer);
         }
 
-        internal override void DecodeValue(ByteBuffer buffer)
+        /// <inheritdoc/>
+        public override void DecodeValue(ByteBuffer buffer)
         {
             this.innerMap = AmqpCodec.DecodeMap(buffer);
         }

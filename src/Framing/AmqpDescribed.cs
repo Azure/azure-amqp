@@ -58,11 +58,14 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        internal int Offset { get; set; }
+        /// <summary>Gets or sets the offset of the described object in the buffer.</summary>
+        public long Offset { get; set; }
 
-        internal int Length { get; set; }
+        /// <summary>Gets or sets the length of the described object in the buffer.</summary>
+        public long Length { get; set; }
 
-        static void DecodeDescriptor(ByteBuffer buffer, out AmqpSymbol name, out ulong code)
+        /// <summary>Decodes the descriptor from a buffer.</summary>
+        public static void DecodeDescriptor(ByteBuffer buffer, out AmqpSymbol name, out ulong code)
         {
             name = default(AmqpSymbol);
             code = 0;
@@ -121,17 +124,20 @@ namespace Microsoft.Azure.Amqp.Framing
             this.DecodeValue(buffer);
         }
 
-        internal virtual int GetValueEncodeSize()
+        /// <summary>Gets the encode size of the value.</summary>
+        public virtual int GetValueEncodeSize()
         {
             return AmqpEncoding.GetObjectEncodeSize(this.Value);
         }
 
-        internal virtual void EncodeValue(ByteBuffer buffer)
+        /// <summary>Encodes the value to a buffer.</summary>
+        public virtual void EncodeValue(ByteBuffer buffer)
         {
             AmqpEncoding.EncodeObject(this.Value, buffer);
         }
 
-        internal virtual void DecodeValue(ByteBuffer buffer)
+        /// <summary>Decodes the value from a buffer.</summary>
+        public virtual void DecodeValue(ByteBuffer buffer)
         {
             this.Value = AmqpEncoding.DecodeObject(buffer);
         }

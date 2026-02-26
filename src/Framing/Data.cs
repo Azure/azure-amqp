@@ -12,9 +12,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Data : AmqpDescribed
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:data:binary";
+        public static readonly string Name = "amqp:data:binary";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000075;
+        public static readonly ulong Code = 0x0000000000000075;
 
         ArraySegment<byte> segment;
 

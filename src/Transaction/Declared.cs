@@ -13,9 +13,9 @@ namespace Microsoft.Azure.Amqp.Transaction
     public sealed class Declared : Outcome
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:declared:list";
+        public static readonly string Name = "amqp:declared:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000033;
+        public static readonly ulong Code = 0x0000000000000033;
 
         /// <summary>
         /// Initializes the object.

@@ -12,9 +12,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Target : DescribedList
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:target:list";
+        public static readonly string Name = "amqp:target:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000029;
+        public static readonly ulong Code = 0x0000000000000029;
 
         /// <summary>
         /// Initializes the object.

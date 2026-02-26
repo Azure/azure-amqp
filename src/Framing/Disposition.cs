@@ -12,9 +12,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Disposition : Performative
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:disposition:list";
+        public static readonly string Name = "amqp:disposition:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000015;
+        public static readonly ulong Code = 0x0000000000000015;
 
         /// <summary>
         /// Initializes the object.

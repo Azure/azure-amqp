@@ -15,11 +15,11 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// The descriptor name.
         /// </summary>
-        public const string Name = "amqp:sasl-response:list";
+        public static readonly string Name = "amqp:sasl-response:list";
         /// <summary>
         /// The descriptor code.
         /// </summary>
-        public const ulong Code = 0x0000000000000043;
+        public static readonly ulong Code = 0x0000000000000043;
 
         /// <summary>
         /// Initializes the object.

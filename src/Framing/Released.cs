@@ -9,9 +9,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Released : Outcome
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:released:list";
+        public static readonly string Name = "amqp:released:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000026;
+        public static readonly ulong Code = 0x0000000000000026;
 
         /// <summary>
         /// Initializes the object.

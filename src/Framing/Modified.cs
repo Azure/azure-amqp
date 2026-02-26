@@ -11,9 +11,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Modified : Outcome
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:modified:list";
+        public static readonly string Name = "amqp:modified:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000027;
+        public static readonly ulong Code = 0x0000000000000027;
 
         /// <summary>
         /// Initializes the object.

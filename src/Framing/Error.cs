@@ -15,9 +15,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Error : DescribedList, ISerializable
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:error:list";
+        public static readonly string Name = "amqp:error:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x000000000000001d;
+        public static readonly ulong Code = 0x000000000000001d;
 
         /// <summary>
         /// Initializes the object.

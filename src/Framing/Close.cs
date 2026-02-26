@@ -11,9 +11,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Close : Performative
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:close:list";
+        public static readonly string Name = "amqp:close:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000018;
+        public static readonly ulong Code = 0x0000000000000018;
 
         /// <summary>
         /// Initializes the object.

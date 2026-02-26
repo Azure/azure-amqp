@@ -11,9 +11,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Header : DescribedList
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:header:list";
+        public static readonly string Name = "amqp:header:list";
         /// <summary>Descriptor name.</summary>
-        public const ulong Code = 0x0000000000000070;
+        public static readonly ulong Code = 0x0000000000000070;
 
         /// <summary>
         /// Initializes the object.

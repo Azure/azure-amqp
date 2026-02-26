@@ -12,9 +12,9 @@ namespace Microsoft.Azure.Amqp.Transaction
     public sealed class Coordinator : DescribedList
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:coordinator:list";
+        public static readonly string Name = "amqp:coordinator:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000030;
+        public static readonly ulong Code = 0x0000000000000030;
 
         /// <summary>
         /// Initializes the object.

@@ -11,9 +11,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Received : DeliveryState
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:received:list";
+        public static readonly string Name = "amqp:received:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000023;
+        public static readonly ulong Code = 0x0000000000000023;
 
         /// <summary>
         /// Initializes the object.

@@ -12,9 +12,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public class Begin : Performative
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:begin:list";
+        public static readonly string Name = "amqp:begin:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000011;
+        public static readonly ulong Code = 0x0000000000000011;
 
         /// <summary>
         /// Initializes the object.

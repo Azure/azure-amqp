@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp.Transport
@@ -77,7 +77,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 catch (Exception exception)
                 {
-                    AmqpTrace.Provider.AmqpLogError(this, "accept-loop", exception);
+                    AmqpTrace.OnLogError(this, "accept-loop", exception);
                 }
             }
         }
@@ -118,7 +118,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
             catch (Exception exception)
             {
-                AmqpTrace.Provider.AmqpLogError(this, "handle-context", exception);
+                AmqpTrace.OnLogError(this, "handle-context", exception);
 
                 context.Response.StatusCode = 500;
                 context.Response.OutputStream.Dispose();

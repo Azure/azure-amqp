@@ -159,7 +159,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    AmqpTrace.Provider.AmqpListenSocketAcceptError(this, false, exception.Message);
+                    AmqpTrace.OnListenSocketAcceptError(this, false, exception.Message);
                     args.Dispose();
                     this.SafeClose(exception);
                     break;
@@ -210,7 +210,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
             else
             {
-                AmqpTrace.Provider.AmqpListenSocketAcceptError(this, true, error.ToString());
+                AmqpTrace.OnListenSocketAcceptError(this, true, error.ToString());
                 return true;
             }
         }

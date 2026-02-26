@@ -105,14 +105,14 @@ namespace Microsoft.Azure.Amqp.Transport
             {
                 // If we weren't shutting down then this class needs to Close itself (with the TerminalException) since
                 // it is no longer doing all the listening it is supposed to do.
-                AmqpTrace.Provider.AmqpLogError(this, "OnListenerClosed", innerListener.TerminalException);
+                AmqpTrace.OnLogError(this, "OnListenerClosed", innerListener.TerminalException);
                 this.SafeClose(innerListener.TerminalException);
             }
         }
 
         void OnAcceptTransport(TransportListener innerListener, TransportAsyncCallbackArgs args)
         {
-            AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, "OnAcceptTransport");
+            AmqpTrace.OnLogOperationVerbose(this, TraceOperation.Execute, "OnAcceptTransport");
             TransportHandler.SpawnHandler(this, innerListener, args);
         }
 
@@ -187,7 +187,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 catch (Exception exp) when (!Fx.IsFatal(exp))
                 {
-                    AmqpTrace.Provider.AmqpLogError(thisPtr, "HandleTransportOpened", exp);
+                    AmqpTrace.OnLogError(thisPtr, "HandleTransportOpened", exp);
                     thisPtr.args.Exception = exp;
                     thisPtr.parent.OnHandleTransportComplete(thisPtr.args);
                 }
@@ -195,7 +195,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
             void ReadProtocolHeader()
             {
-                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, "ReadHeader");
+                AmqpTrace.OnLogOperationVerbose(this, TraceOperation.Execute, "ReadHeader");
                 this.args.SetBuffer(this.buffer, 0, this.buffer.Length);
                 this.args.CompletedCallback = TransportHandler.readCompleteCallback;
                 this.bufferReader.ReadBuffer(this.args);
@@ -217,7 +217,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 catch (Exception exp) when (!Fx.IsFatal(exp))
                 {
-                    AmqpTrace.Provider.AmqpLogError(thisPtr, "OnProtocolHeader", exp);
+                    AmqpTrace.OnLogError(thisPtr, "OnProtocolHeader", exp);
                     args.Exception = exp;
                     thisPtr.parent.OnHandleTransportComplete(args);
                 }
@@ -255,7 +255,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 {
                     // treat this the same as protocol ID/version failure
                     // which are all client config issues
-                    AmqpTrace.Provider.AmqpLogError(this, "CreateTransport", ioe);
+                    AmqpTrace.OnLogError(this, "CreateTransport", ioe);
                     this.WriteReplyHeader(new ProtocolHeader(ProtocolId.Amqp, AmqpVersion.V100), true);
                     return;
                 }
@@ -265,7 +265,7 @@ namespace Microsoft.Azure.Amqp.Transport
                     if ((this.parent.settings.RequireSecureTransport && !newTransport.IsSecure) ||
                         (!this.parent.settings.AllowAnonymousConnection && !newTransport.IsAuthenticated))
                     {
-                        AmqpTrace.Provider.AmqpInsecureTransport(this.parent, newTransport, newTransport.IsSecure, newTransport.IsAuthenticated);
+                        AmqpTrace.OnInsecureTransport(this.parent, newTransport, newTransport.IsSecure, newTransport.IsAuthenticated);
                         this.WriteReplyHeader(this.parent.settings.GetDefaultHeader(), true);
                     }
                     else
@@ -276,7 +276,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 }
                 else
                 {
-                    AmqpTrace.Provider.AmqpUpgradeTransport(this, args.Transport, newTransport);
+                    AmqpTrace.OnUpgradeTransport(this, args.Transport, newTransport);
                     this.args.Transport = newTransport;
                     this.WriteReplyHeader(header, false);
                 }

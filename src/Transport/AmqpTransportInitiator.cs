@@ -56,7 +56,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// <returns>true if connect is pending, false otherwise.</returns>
         public override bool ConnectAsync(TimeSpan timeout, TransportAsyncCallbackArgs callbackArgs)
         {
-            AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Connect, this.transportSettings);
+            AmqpTrace.OnLogOperationInformational(this, TraceOperation.Connect, this.transportSettings);
             TransportInitiator innerInitiator = this.transportSettings.CreateInitiator();
             TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();
             args.UserToken = this;
@@ -191,7 +191,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 return;
             }
 
-            AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "ReadHeader");
+            AmqpTrace.OnLogOperationInformational(this, TraceOperation.Execute, "ReadHeader");
             byte[] headerBuffer = new byte[AmqpConstants.ProtocolHeaderSize];
             args.SetBuffer(headerBuffer, 0, headerBuffer.Length);
             args.CompletedCallback = this.OnReadHeaderComplete;
@@ -202,7 +202,7 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             if (args.Exception != null)
             {
-                AmqpTrace.Provider.AmqpLogError(this, "ReadHeader", args.Exception);
+                AmqpTrace.OnLogError(this, "ReadHeader", args.Exception);
                 this.Complete(args);
                 return;
             }
@@ -221,7 +221,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
                 // upgrade transport
                 TransportBase secureTransport = this.settings.TransportProviders[this.providerIndex].CreateTransport(args.Transport, true);
-                AmqpTrace.Provider.AmqpUpgradeTransport(this, args.Transport, secureTransport);
+                AmqpTrace.OnUpgradeTransport(this, args.Transport, secureTransport);
                 args.Transport = secureTransport;
                 IAsyncResult result = args.Transport.BeginOpen(this.timeoutHelper.RemainingTime(), this.OnTransportOpenCompete, args);
                 if (result.CompletedSynchronously)
@@ -231,7 +231,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
             catch (Exception exp) when (!Fx.IsFatal(exp))
             {
-                AmqpTrace.Provider.AmqpLogError(this, "OnProtocolHeader", exp);
+                AmqpTrace.OnLogError(this, "OnProtocolHeader", exp);
                 args.Exception = exp;
                 this.Complete(args);
             }

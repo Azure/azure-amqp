@@ -337,7 +337,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 if (this.writeTracker != null &&
                     this.writeTracker.TryUpdateBufferSize(writeSize, out newSize))
                 {
-                    AmqpTrace.Provider.AmqpDynamicBufferSizeChange(this.Transport, "write", this.bufferSize, newSize);
+                    AmqpTrace.OnDynamicBufferSizeChange(this.Transport, "write", this.bufferSize, newSize);
 
                     this.bufferSize = newSize;
                     this.Transport.socket.SendBufferSize = Math.Max(this.bufferSize, MinSocketBufferSize);
@@ -398,7 +398,7 @@ namespace Microsoft.Azure.Amqp.Transport
                 if (this.readTracker != null &&
                     this.readTracker.TryUpdateBufferSize(count, out newSize))
                 {
-                    AmqpTrace.Provider.AmqpDynamicBufferSizeChange(this.Transport, "read", this.bufferSize, newSize);
+                    AmqpTrace.OnDynamicBufferSizeChange(this.Transport, "read", this.bufferSize, newSize);
 
                     this.bufferSize = newSize;
                     this.Transport.socket.ReceiveBufferSize = Math.Max(this.bufferSize, MinSocketBufferSize);

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -294,7 +294,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                AmqpTrace.Provider.AmqpLogError(this, nameof(ProcessFrame), exception);
+                AmqpTrace.OnLogError(this, nameof(ProcessFrame), exception);
                 this.SafeClose(exception);
             }
         }
@@ -356,7 +356,7 @@ namespace Microsoft.Azure.Amqp
 
             if (!canSend)
             {
-                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Send, "NoCredit");
+                AmqpTrace.OnLogOperationVerbose(this, TraceOperation.Send, "NoCredit");
                 return false;
             }
 
@@ -441,7 +441,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                AmqpTrace.Provider.AmqpDeliveryNotFound(this, Extensions.GetString(deliveryTag));
+                AmqpTrace.OnDeliveryNotFound(this, Extensions.GetString(deliveryTag));
                 return false;
             }
         }
@@ -685,7 +685,7 @@ namespace Microsoft.Azure.Amqp
             EventHandler temp = this.PropertyReceived;
             if (temp != null)
             {
-                AmqpTrace.Provider.AmqpIoEvent(this, ioEvent, (long)this.linkCredit);
+                AmqpTrace.OnIoEvent(this, ioEvent, (long)this.linkCredit);
 
                 Fields properties = new Fields();
                 properties.Add(AmqpConstants.IoEvent, (int)ioEvent);
@@ -966,7 +966,7 @@ namespace Microsoft.Azure.Amqp
 
             if (!more)
             {
-                AmqpTrace.Provider.AmqpSentMessage(this, delivery.DeliveryId.Value, delivery.BytesTransfered);
+                AmqpTrace.OnSentMessage(this, delivery.DeliveryId.Value, delivery.BytesTransfered);
 
                 if (delivery.Settled)
                 {
@@ -1014,7 +1014,7 @@ namespace Microsoft.Azure.Amqp
 
         internal void OnLinkStolen()
         {
-            AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Close, "LinkStealing");
+            AmqpTrace.OnLogOperationInformational(this, TraceOperation.Close, "LinkStealing");
             this.SafeClose(new AmqpException(AmqpErrorCode.Stolen, AmqpResources.GetString(AmqpResources.AmqpLinkStolen, this.LinkIdentifier)));
         }
 
@@ -1033,7 +1033,7 @@ namespace Microsoft.Azure.Amqp
 
         void DisposeDeliveryInternal(Delivery delivery, bool settled, DeliveryState state, bool noFlush)
         {
-            AmqpTrace.Provider.AmqpDispose(this, delivery.DeliveryId.Value, settled, state);
+            AmqpTrace.OnDispose(this, delivery.DeliveryId.Value, settled, state);
             if (settled && !delivery.Settled)
             {
                 lock (this.syncRoot)
@@ -1102,7 +1102,7 @@ namespace Microsoft.Azure.Amqp
 
             this.Session.SendCommand(detach);
 
-            AmqpTrace.Provider.AmqpLinkDetach(this, this.Name, this.LocalHandle ?? 0u, "S:DETACH",
+            AmqpTrace.OnLinkDetach(this, this.Name, this.LocalHandle ?? 0u, "S:DETACH",
                 detach.Error != null ? detach.Error.Condition.Value : string.Empty);
 
             return transition.To;
@@ -1192,7 +1192,7 @@ namespace Microsoft.Azure.Amqp
 
         void OnReceiveDetach(Detach detach)
         {
-            AmqpTrace.Provider.AmqpLinkDetach(this, this.Name, this.LocalHandle ?? 0u, "R:DETACH",
+            AmqpTrace.OnLinkDetach(this, this.Name, this.LocalHandle ?? 0u, "R:DETACH",
                 detach.Error != null ? detach.Error.Condition.Value : string.Empty);
 
             this.OnReceiveCloseCommand("R:DETACH", detach.Error);
@@ -1277,7 +1277,7 @@ namespace Microsoft.Azure.Amqp
         static void OnProviderLinkOpened(IAsyncResult result)
         {
             var thisPtr = (AmqpLink)result.AsyncState;
-            AmqpTrace.Provider.AmqpLogOperationVerbose(thisPtr, TraceOperation.Execute, nameof(OnProviderLinkOpened));
+            AmqpTrace.OnLogOperationVerbose(thisPtr, TraceOperation.Execute, nameof(OnProviderLinkOpened));
             Exception openException = null;
 
             // Capture the exception from provider first
@@ -1287,7 +1287,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                AmqpTrace.Provider.AmqpLogError(thisPtr, "EndOpenLink", exception);
+                AmqpTrace.OnLogError(thisPtr, "EndOpenLink", exception);
                 openException = exception;
             }
 
@@ -1306,7 +1306,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                AmqpTrace.Provider.AmqpLogError(thisPtr, "CompleteOpenLink", exception);
+                AmqpTrace.OnLogError(thisPtr, "CompleteOpenLink", exception);
                 thisPtr.OnLinkOpenFailed(exception);
             }
         }

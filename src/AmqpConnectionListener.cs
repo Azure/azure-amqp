@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -148,7 +148,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception ex) when (!Fx.IsFatal(ex))
             {
-                AmqpTrace.Provider.AmqpLogError(connection, "EndOpen", ex);
+                AmqpTrace.OnLogError(connection, "EndOpen", ex);
 
                 connection.SafeClose(ex);
             }
@@ -181,7 +181,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception ex) when (!Fx.IsFatal(ex))
             {
-                AmqpTrace.Provider.AmqpLogError(innerListener, operation, ex);
+                AmqpTrace.OnLogError(innerListener, operation, ex);
 
                 if (connection != null)
                 {

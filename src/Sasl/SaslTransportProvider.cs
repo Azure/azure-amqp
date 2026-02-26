@@ -56,7 +56,7 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <param name="handler">The SASL handler.</param>
         public void AddHandler(SaslHandler handler)
         {
-            AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Add, handler);
+            AmqpTrace.OnLogOperationInformational(this, TraceOperation.Add, handler);
             this.handlers.Add(handler.Mechanism, handler);
         }
 
@@ -72,7 +72,7 @@ namespace Microsoft.Azure.Amqp.Sasl
             if (!this.handlers.TryGetValue(mechanism, out handler))
             {
                 var exception = new AmqpException(AmqpErrorCode.NotImplemented, mechanism);
-                AmqpTrace.Provider.AmqpLogError(this, "GetHandler", exception);
+                AmqpTrace.OnLogError(this, "GetHandler", exception);
                 throw exception;
             }
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -252,7 +252,7 @@ namespace Microsoft.Azure.Amqp
         /// remote peer.</remarks>
         protected override bool OpenInternal()
         {
-            AmqpTrace.Provider.AmqpOpenConnection(this, this);
+            AmqpTrace.OnOpenConnection(this, this);
             if (this.Settings.ContainerId == null)
             {
                 throw new ArgumentNullException("AmqpConnectionSettings.ContainerId", Resources.AmqpContainerIdRequired);
@@ -286,7 +286,7 @@ namespace Microsoft.Azure.Amqp
         /// remote peer.</remarks>
         protected override bool CloseInternal()
         {
-            AmqpTrace.Provider.AmqpCloseConnection(this, this, false);
+            AmqpTrace.OnCloseConnection(this, this, false);
             this.heartBeat.Stop();
             this.CloseSessions(!this.SessionFrameAllowed());
 
@@ -322,7 +322,7 @@ namespace Microsoft.Azure.Amqp
         /// with the remote peer.</remarks>
         protected override void AbortInternal()
         {
-            AmqpTrace.Provider.AmqpCloseConnection(this, this, true);
+            AmqpTrace.OnCloseConnection(this, this, true);
             this.heartBeat.Stop();
             this.CloseSessions(true);
             this.AsyncIO.Abort();
@@ -591,7 +591,7 @@ namespace Microsoft.Azure.Amqp
                         this.Settings.IgnoreMissingSessions)
                     {
                         // The session close may timed out already
-                        AmqpTrace.Provider.AmqpMissingHandle(this, "session", channel);
+                        AmqpTrace.OnMissingHandle(this, "session", channel);
                         return;
                     }
 
@@ -647,7 +647,7 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            AmqpTrace.Provider.AmqpAddSession(this, session, session.LocalChannel, channel ?? 0);
+            AmqpTrace.OnAddSession(this, session, session.LocalChannel, channel ?? 0);
         }
 
         static void OnSessionClosed(object sender, EventArgs e)
@@ -666,7 +666,7 @@ namespace Microsoft.Azure.Amqp
                     }
                 }
 
-                AmqpTrace.Provider.AmqpRemoveSession(thisPtr, session, session.LocalChannel, session.RemoteChannel ?? 0);
+                AmqpTrace.OnRemoveSession(thisPtr, session, session.LocalChannel, session.RemoteChannel ?? 0);
             }
         }
 
@@ -777,7 +777,7 @@ namespace Microsoft.Azure.Amqp
                             string message = AmqpResources.GetString(AmqpResources.AmqpConnectionInactive,
                                 thisPtr.localInterval, thisPtr.connection.Settings.ContainerId);
                             var amqpException = new AmqpException(AmqpErrorCode.ConnectionForced, message);
-                            AmqpTrace.Provider.AmqpLogError(thisPtr.connection, "OnHeartBeatTimer", amqpException);
+                            AmqpTrace.OnLogError(thisPtr.connection, "OnHeartBeatTimer", amqpException);
                             thisPtr.connection.SafeClose(amqpException);
 
                             return;
@@ -795,7 +795,7 @@ namespace Microsoft.Azure.Amqp
                     {
                         if (!thisPtr.connection.IsClosing())
                         {
-                            AmqpTrace.Provider.AmqpLogError(thisPtr.connection, "OnHeartBeatTimer", exception);
+                            AmqpTrace.OnLogError(thisPtr.connection, "OnHeartBeatTimer", exception);
                             thisPtr.connection.SafeClose(exception);
                         }
                     }

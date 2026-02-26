@@ -9,9 +9,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class DeleteOnNoLinks : LifeTimePolicy
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:delete-on-no-links:list";
+        public static readonly string Name = "amqp:delete-on-no-links:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x000000000000002c;
+        public static readonly ulong Code = 0x000000000000002c;
 
         /// <summary>
         /// Initializes the object.

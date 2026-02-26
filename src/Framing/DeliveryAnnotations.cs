@@ -9,9 +9,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class DeliveryAnnotations : DescribedAnnotations
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:delivery-annotations:map";
+        public static readonly string Name = "amqp:delivery-annotations:map";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000071;
+        public static readonly ulong Code = 0x0000000000000071;
 
         /// <summary>
         /// Initializes the object.

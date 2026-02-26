@@ -13,9 +13,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Detach : LinkPerformative
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:detach:list";
+        public static readonly string Name = "amqp:detach:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000016;
+        public static readonly ulong Code = 0x0000000000000016;
 
         /// <summary>
         /// Initializes the object.

@@ -11,9 +11,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class End : Performative
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:end:list";
+        public static readonly string Name = "amqp:end:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000017;
+        public static readonly ulong Code = 0x0000000000000017;
 
         /// <summary>
         /// Initializes the object.

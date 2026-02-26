@@ -12,12 +12,12 @@ namespace Microsoft.Azure.Amqp.Framing
     public class Open : Performative
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:open:list";
+        public static readonly string Name = "amqp:open:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000010;
+        public static readonly ulong Code = 0x0000000000000010;
 
         // AMQP spec: To avoid spurious timeouts, the value in idle-time-out
-        // SHOULD be half the peer’s actual timeout threshold.
+        // SHOULD be half the peerï¿½s actual timeout threshold.
         // Behavior of idle timeout depends on how it is set.
         // 1. If set by user, it is the actual timeout. On the protocol level
         //    half of that value is sent to the remote peer.

@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// The name of the ANONYMOUS mechanism.
         /// </summary>
-        public const string Name = "ANONYMOUS";
+        public static readonly string Name = "ANONYMOUS";
 
         /// <summary>
         /// Initializes the object.

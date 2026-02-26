@@ -11,9 +11,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Rejected : Outcome
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:rejected:list";
+        public static readonly string Name = "amqp:rejected:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000025;
+        public static readonly ulong Code = 0x0000000000000025;
 
         /// <summary>
         /// Initializes the object.

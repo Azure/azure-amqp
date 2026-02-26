@@ -13,9 +13,36 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Properties : DescribedList
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:properties:list";
+        public static readonly string Name = "amqp:properties:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000073;
+        public static readonly ulong Code = 0x0000000000000073;
+
+        /// <summary>The "message-id" field name.</summary>
+        public static readonly string MessageIdName = "message-id";
+        /// <summary>The "user-id" field name.</summary>
+        public static readonly string UserIdName = "user-id";
+        /// <summary>The "to" field name.</summary>
+        public static readonly string ToName = "to";
+        /// <summary>The "subject" field name.</summary>
+        public static readonly string SubjectName = "subject";
+        /// <summary>The "reply-to" field name.</summary>
+        public static readonly string ReplyToName = "reply-to";
+        /// <summary>The "correlation-id" field name.</summary>
+        public static readonly string CorrelationIdName = "correlation-id";
+        /// <summary>The "content-type" field name.</summary>
+        public static readonly string ContentTypeName = "content-type";
+        /// <summary>The "content-encoding" field name.</summary>
+        public static readonly string ContentEncodingName = "content-encoding";
+        /// <summary>The "absolute-expiry-time" field name.</summary>
+        public static readonly string AbsoluteExpiryTimeName = "absolute-expiry-time";
+        /// <summary>The "creation-time" field name.</summary>
+        public static readonly string CreationTimeName = "creation-time";
+        /// <summary>The "group-id" field name.</summary>
+        public static readonly string GroupIdName = "group-id";
+        /// <summary>The "group-sequence" field name.</summary>
+        public static readonly string GroupSequenceName = "group-sequence";
+        /// <summary>The "reply-to-group-id" field name.</summary>
+        public static readonly string ReplyToGroupIdName = "reply-to-group-id";
 
         /// <summary>
         /// Initializes the object.

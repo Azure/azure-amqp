@@ -11,9 +11,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Flow : LinkPerformative
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:flow:list";
+        public static readonly string Name = "amqp:flow:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000013;
+        public static readonly ulong Code = 0x0000000000000013;
 
         /// <summary>
         /// Initializes the object.

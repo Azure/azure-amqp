@@ -12,9 +12,9 @@ namespace Microsoft.Azure.Amqp.Transaction
     public sealed class Declare : Performative
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:declare:list";
+        public static readonly string Name = "amqp:declare:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000031;
+        public static readonly ulong Code = 0x0000000000000031;
 
         /// <summary>
         /// Initializes the object.

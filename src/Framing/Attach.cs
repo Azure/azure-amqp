@@ -12,9 +12,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public class Attach : LinkPerformative
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:attach:list";
+        public static readonly string Name = "amqp:attach:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000012;
+        public static readonly ulong Code = 0x0000000000000012;
 
         /// <summary>
         /// Initializes the object.

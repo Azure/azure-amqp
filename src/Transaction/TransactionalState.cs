@@ -13,9 +13,9 @@ namespace Microsoft.Azure.Amqp.Transaction
     public sealed class TransactionalState : DeliveryState
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:transactional-state:list";
+        public static readonly string Name = "amqp:transactional-state:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000034;
+        public static readonly ulong Code = 0x0000000000000034;
 
         /// <summary>
         /// Initializes the object.

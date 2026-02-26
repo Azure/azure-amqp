@@ -13,9 +13,9 @@ namespace Microsoft.Azure.Amqp.Framing
     public sealed class Transfer : LinkPerformative
     {
         /// <summary>Descriptor name.</summary>
-        public const string Name = "amqp:transfer:list";
+        public static readonly string Name = "amqp:transfer:list";
         /// <summary>Descriptor code.</summary>
-        public const ulong Code = 0x0000000000000014;
+        public static readonly ulong Code = 0x0000000000000014;
 
         /// <summary>
         /// Initializes the object.

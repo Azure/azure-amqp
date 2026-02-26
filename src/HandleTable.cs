@@ -7,7 +7,11 @@ namespace Microsoft.Azure.Amqp
     using System.Collections;
     using System.Collections.Generic;
 
-    sealed class HandleTable<T> where T : class
+    /// <summary>
+    /// A table that maps uint handles to objects of type <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of objects stored in the table.</typeparam>
+    public sealed class HandleTable<T> where T : class
     {
         const int InitialCapacity = 4;
         const int ResetThreshold = 4 * 1024;
@@ -15,12 +19,19 @@ namespace Microsoft.Azure.Amqp
         T[] handleArray;
         int count;
 
+        /// <summary>
+        /// Initializes a new instance with the specified maximum handle value.
+        /// </summary>
+        /// <param name="maxHandle">The maximum handle value.</param>
         public HandleTable(uint maxHandle)
         {
             this.maxHandle = maxHandle;
             this.handleArray = new T[InitialCapacity];
         }
 
+        /// <summary>
+        /// Gets the values in the table.
+        /// </summary>
         public IEnumerable<T> Values
         {
             get
@@ -38,16 +49,30 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Sets the maximum handle value.
+        /// </summary>
+        /// <param name="maxHandle">The maximum handle value.</param>
         public void SetMaxHandle(uint maxHandle)
         {
             this.maxHandle = maxHandle;
         }
 
+        /// <summary>
+        /// Gets an enumerator that is safe to use when the table may be modified concurrently.
+        /// </summary>
+        /// <returns>An enumerator over the values.</returns>
         public IEnumerator<T> GetSafeEnumerator()
         {
             return new SafeEnumerator(this);
         }
 
+        /// <summary>
+        /// Tries to get the object associated with the specified handle.
+        /// </summary>
+        /// <param name="handle">The handle to look up.</param>
+        /// <param name="value">The object if found.</param>
+        /// <returns>True if found; false otherwise.</returns>
         public bool TryGetObject(uint handle, out T value)
         {
             value = null;
@@ -59,6 +84,11 @@ namespace Microsoft.Azure.Amqp
             return value != null;
         }
 
+        /// <summary>
+        /// Adds a value and returns the assigned handle.
+        /// </summary>
+        /// <param name="value">The value to add.</param>
+        /// <returns>The assigned handle.</returns>
         public uint Add(T value)
         {
             if (this.count > this.maxHandle)
@@ -91,6 +121,11 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Adds a value at the specified handle.
+        /// </summary>
+        /// <param name="handle">The handle to use.</param>
+        /// <param name="value">The value to add.</param>
         public void Add(uint handle, T value)
         {
             if (handle > this.maxHandle)
@@ -113,6 +148,10 @@ namespace Microsoft.Azure.Amqp
             this.count++;
         }
 
+        /// <summary>
+        /// Removes the value at the specified handle.
+        /// </summary>
+        /// <param name="handle">The handle to remove.</param>
         public void Remove(uint handle)
         {
             int index = (int)handle;
@@ -129,6 +168,9 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Removes all values from the table.
+        /// </summary>
         public void Clear()
         {
             this.count = 0;

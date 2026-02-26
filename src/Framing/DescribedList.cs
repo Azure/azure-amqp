@@ -29,7 +29,8 @@ namespace Microsoft.Azure.Amqp.Framing
         /// </summary>
         public int FieldCount { get { return this.fieldCount; } }
 
-        internal override int GetValueEncodeSize()
+        /// <inheritdoc/>
+        public override int GetValueEncodeSize()
         {
             if (this.FieldCount == 0)
             {
@@ -40,7 +41,8 @@ namespace Microsoft.Azure.Amqp.Framing
             return FixedWidth.FormatCode + FixedWidth.Int + FixedWidth.Int + valueSize;
         }
 
-        internal override void EncodeValue(ByteBuffer buffer)
+        /// <inheritdoc/>
+        public override void EncodeValue(ByteBuffer buffer)
         {
             int fieldCount = this.FieldCount;
             if (fieldCount == 0)
@@ -66,7 +68,8 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        internal override void DecodeValue(ByteBuffer buffer)
+        /// <inheritdoc/>
+        public override void DecodeValue(ByteBuffer buffer)
         {
             FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
             if (formatCode == FormatCode.List0)

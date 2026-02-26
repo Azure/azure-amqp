@@ -12,8 +12,8 @@ namespace Microsoft.Azure.Amqp.Encoding
     /// </summary>
     public static class AmqpEncoding
     {
-        static Dictionary<Type, IEncoding> encodingsByType;
-        static Dictionary<FormatCode, IEncoding> encodingsByCode;
+        static Dictionary<Type, EncodingBase> encodingsByType;
+        static Dictionary<FormatCode, EncodingBase> encodingsByCode;
 
         internal static BooleanEncoding Boolean = new BooleanEncoding();
         internal static UByteEncoding UByte = new UByteEncoding();
@@ -40,7 +40,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         static AmqpEncoding()
         {
-            encodingsByType = new Dictionary<Type, IEncoding>()
+            encodingsByType = new Dictionary<Type, EncodingBase>()
             {
                 { typeof(bool),             Boolean },
                 { typeof(byte),             UByte },
@@ -63,7 +63,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 { typeof(AmqpMap),          Map },
             };
 
-            encodingsByCode = new Dictionary<FormatCode, IEncoding>()
+            encodingsByCode = new Dictionary<FormatCode, EncodingBase>()
             {
                 { FormatCode.BooleanFalse,  Boolean },
                 { FormatCode.BooleanTrue,   Boolean },
@@ -105,9 +105,14 @@ namespace Microsoft.Azure.Amqp.Encoding
             };
         }
 
-        internal static IEncoding GetEncoding(FormatCode formatCode)
+        /// <summary>
+        /// Gets the encoding for the specified format code.
+        /// </summary>
+        /// <param name="formatCode">The format code.</param>
+        /// <returns>The encoding.</returns>
+        public static EncodingBase GetEncoding(FormatCode formatCode)
         {
-            if (encodingsByCode.TryGetValue(formatCode, out IEncoding encoding))
+            if (encodingsByCode.TryGetValue(formatCode, out EncodingBase encoding))
             {
                 return encoding;
             }
@@ -120,7 +125,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             return (EncodingBase<T>)GetEncoding(typeof(T));
         }
 
-        internal static bool TryGetEncoding(Type type, out IEncoding encoding)
+        internal static bool TryGetEncoding(Type type, out EncodingBase encoding)
         {
             if (encodingsByType.TryGetValue(type, out encoding))
             {
@@ -148,9 +153,14 @@ namespace Microsoft.Azure.Amqp.Encoding
             return false;
         }
 
-        internal static IEncoding GetEncoding(Type type)
+        /// <summary>
+        /// Gets the encoding for the specified type.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>The encoding.</returns>
+        public static EncodingBase GetEncoding(Type type)
         {
-            if (TryGetEncoding(type, out IEncoding encoding))
+            if (TryGetEncoding(type, out EncodingBase encoding))
             {
                 return encoding;
             }
@@ -158,17 +168,48 @@ namespace Microsoft.Azure.Amqp.Encoding
             throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, type.FullName));
         }
 
-        internal static int GetEncodeWidthBySize(int size)
+        /// <summary>
+        /// Gets the encoding for the specified value.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>The encoding.</returns>
+        public static EncodingBase GetEncoding(object value)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            return GetEncoding(value.GetType());
+        }
+
+        /// <summary>
+        /// Gets the encode width (1 or 4 bytes) based on the size.
+        /// </summary>
+        /// <param name="size">The size value.</param>
+        /// <returns>The encode width.</returns>
+        public static int GetEncodeWidthBySize(int size)
         {
             return size <= byte.MaxValue ? FixedWidth.UByte : FixedWidth.UInt;
         }
 
-        internal static int GetEncodeWidthByCountAndSize(int count, int valueSize)
+        /// <summary>
+        /// Gets the encode width (1 or 4 bytes) based on count and size.
+        /// </summary>
+        /// <param name="count">The element count.</param>
+        /// <param name="valueSize">The value size.</param>
+        /// <returns>The encode width.</returns>
+        public static int GetEncodeWidthByCountAndSize(int count, int valueSize)
         {
             return count < byte.MaxValue && valueSize < byte.MaxValue ? FixedWidth.UByte : FixedWidth.UInt;
         }
 
-        internal static FormatCode ReadFormatCode(ByteBuffer buffer)
+        /// <summary>
+        /// Reads a format code from the buffer.
+        /// </summary>
+        /// <param name="buffer">The source buffer.</param>
+        /// <returns>The format code.</returns>
+        public static FormatCode ReadFormatCode(ByteBuffer buffer)
         {
             byte type = AmqpBitConverter.ReadUByte(buffer);
             byte extType = 0;
@@ -180,7 +221,15 @@ namespace Microsoft.Azure.Amqp.Encoding
             return new FormatCode(type, extType);
         }
 
-        internal static void ReadCount(ByteBuffer buffer, FormatCode formatCode, FormatCode formatCode8, FormatCode formatCode32, out int count)
+        /// <summary>
+        /// Reads the count from the buffer based on the format code width.
+        /// </summary>
+        /// <param name="buffer">The source buffer.</param>
+        /// <param name="formatCode">The actual format code.</param>
+        /// <param name="formatCode8">The 1-byte width format code.</param>
+        /// <param name="formatCode32">The 4-byte width format code.</param>
+        /// <param name="count">The count read.</param>
+        public static void ReadCount(ByteBuffer buffer, FormatCode formatCode, FormatCode formatCode8, FormatCode formatCode32, out int count)
         {
             if (formatCode == formatCode8)
             {
@@ -196,7 +245,16 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
         }
 
-        internal static void ReadSizeAndCount(ByteBuffer buffer, FormatCode formatCode, FormatCode formatCode8, FormatCode formatCode32, out int size, out int count)
+        /// <summary>
+        /// Reads the size and count from the buffer based on the format code width.
+        /// </summary>
+        /// <param name="buffer">The source buffer.</param>
+        /// <param name="formatCode">The actual format code.</param>
+        /// <param name="formatCode8">The 1-byte width format code.</param>
+        /// <param name="formatCode32">The 4-byte width format code.</param>
+        /// <param name="size">The size read.</param>
+        /// <param name="count">The count read.</param>
+        public static void ReadSizeAndCount(ByteBuffer buffer, FormatCode formatCode, FormatCode formatCode8, FormatCode formatCode32, out int size, out int count)
         {
             if (formatCode == formatCode8)
             {
@@ -232,11 +290,15 @@ namespace Microsoft.Azure.Amqp.Encoding
                 return serializable.EncodeSize;
             }
 
-            IEncoding encoding = GetEncoding(value.GetType());
-            return encoding.GetSize(value);
+            EncodingBase encoding = GetEncoding(value.GetType());
+            return encoding.GetObjectEncodeSize(value, false);
         }
 
-        internal static void EncodeNull(ByteBuffer buffer)
+        /// <summary>
+        /// Encodes a null value into the buffer.
+        /// </summary>
+        /// <param name="buffer">The buffer to write.</param>
+        public static void EncodeNull(ByteBuffer buffer)
         {
             AmqpBitConverter.WriteUByte(buffer, FormatCode.Null);
         }
@@ -260,9 +322,9 @@ namespace Microsoft.Azure.Amqp.Encoding
                 return;
             }
 
-            if (TryGetEncoding(value.GetType(), out IEncoding encoding))
+            if (TryGetEncoding(value.GetType(), out EncodingBase encoding))
             {
-                encoding.Write(value, buffer, -1);
+                encoding.EncodeObject(value, false, buffer);
                 return;
             }
 
@@ -285,18 +347,29 @@ namespace Microsoft.Azure.Amqp.Encoding
             return DecodeObject(buffer, formatCode);
         }
 
-        internal static object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
+        /// <summary>
+        /// Decodes an object from the buffer using the specified format code.
+        /// </summary>
+        /// <param name="buffer">The source buffer.</param>
+        /// <param name="formatCode">The format code.</param>
+        /// <returns>An object.</returns>
+        public static object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
-            IEncoding encoding;
+            EncodingBase encoding;
             if (encodingsByCode.TryGetValue(formatCode, out encoding))
             {
-                return encoding.Read(buffer, formatCode);
+                return encoding.DecodeObject(buffer, formatCode);
             }
 
             throw GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
         }
 
-        internal static AmqpException GetEncodingException(string message)
+        /// <summary>
+        /// Creates an encoding exception with the specified message.
+        /// </summary>
+        /// <param name="message">The error message.</param>
+        /// <returns>An <see cref="AmqpException"/>.</returns>
+        public static AmqpException GetEncodingException(string message)
         {
             return new AmqpException(AmqpErrorCode.InvalidField, message);
         }

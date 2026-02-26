@@ -716,13 +716,28 @@
             ArrayTest<IList>(
                 new IList[] { list1, list2, list1, list2 },
                 (n1, n2) => { EnsureEqual(n1, n2); });
+        }
 
-            // array of described types
+        [Fact]
+        public void AmqpCodecArrayOfDescribedTest()
+        {
+            ArrayTest<DescribedType>(
+                new DescribedType[] { described1 },
+                (n1, n2) => { });
+
+            ArrayTest<DescribedType>(
+                new DescribedType[] { described2, described2 },
+                (n1, n2) => { });
+
+            ArrayTest<DescribedType>(
+                new DescribedType[] { described3, described3, described3 },
+                (n1, n2) => { });
+
             ArrayTest<DescribedType>(
                 new DescribedType[] { described4, described4, described4, described4 },
                 (n1, n2) => { });
         }
-        
+
         [Fact]
         public void AmqpCodecArraySmallFixedTest()
         {

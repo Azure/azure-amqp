@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -243,7 +243,7 @@ namespace Microsoft.Azure.Amqp
         public void EndOpen(IAsyncResult result)
         {
             OpenAsyncResult.End(result);
-            AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(EndOpen));
+            AmqpTrace.OnLogOperationVerbose(this, TraceOperation.Execute, nameof(EndOpen));
         }
 
         /// <summary>
@@ -352,7 +352,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(EndClose));
+                AmqpTrace.OnLogOperationVerbose(this, TraceOperation.Execute, nameof(EndClose));
                 CloseAsyncResult.End(result);
             }
         }
@@ -380,7 +380,7 @@ namespace Microsoft.Azure.Amqp
             catch (Exception exception)
             {
                 // No one is supposed to throw but it someone does, we need to investigate
-                AmqpTrace.Provider.AmqpAbortThrowingException(exception);
+                AmqpTrace.OnAbortThrowingException(exception);
                 throw;
             }
             finally
@@ -411,7 +411,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception exp) when (!Fx.IsFatal(exp))
             {
-                AmqpTrace.Provider.AmqpLogError(this, nameof(SafeClose), exp);
+                AmqpTrace.OnLogError(this, nameof(SafeClose), exp);
 
                 this.Abort();
             }
@@ -559,7 +559,7 @@ namespace Microsoft.Azure.Amqp
                 throw new AmqpException(AmqpErrorCode.IllegalState, AmqpResources.GetString(AmqpResources.AmqpIllegalOperationState, operation, this.State));
             }
 
-            AmqpTrace.Provider.AmqpStateTransition(this, operation, state.From, state.To);
+            AmqpTrace.OnStateTransition(this, operation, state.From, state.To);
 
             return state;
         }
@@ -593,7 +593,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (AmqpException exception)
             {
-                AmqpTrace.Provider.AmqpLogError(this, command, exception);
+                AmqpTrace.OnLogError(this, command, exception);
                 this.Abort();
             }
         }
@@ -629,7 +629,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception exception) when (!Fx.IsFatal(exception))
             {
-                AmqpTrace.Provider.AmqpLogError(thisPtr, "SafeCloseComplete", exception);
+                AmqpTrace.OnLogError(thisPtr, "SafeCloseComplete", exception);
 
                 thisPtr.Abort();
             }
@@ -647,7 +647,7 @@ namespace Microsoft.Azure.Amqp
                 this.openCalled = true;
             }
 
-            AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(BeginOpen));
+            AmqpTrace.OnLogOperationVerbose(this, TraceOperation.Execute, nameof(BeginOpen));
             return new OpenAsyncResult(this, timeout, cancellationToken, callback, state);
         }
 
@@ -669,7 +669,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, nameof(BeginClose));
+                AmqpTrace.OnLogOperationVerbose(this, TraceOperation.Execute, nameof(BeginClose));
                 return new CloseAsyncResult(this, timeout, cancellationToken, callback, state);
             }
         }
@@ -741,7 +741,7 @@ namespace Microsoft.Azure.Amqp
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    AmqpTrace.Provider.AmqpLogError(this.amqpObject, "OnStart", exception);
+                    AmqpTrace.OnLogError(this.amqpObject, "OnStart", exception);
 
                     shouldComplete = true;
                     completeException = exception;

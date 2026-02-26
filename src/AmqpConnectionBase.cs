@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -191,7 +191,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (!this.IsClosing())
             {
-                AmqpTrace.Provider.AmqpLogError(this, "AsyncIoFault", exception);
+                AmqpTrace.OnLogError(this, "AsyncIoFault", exception);
             }
 
             this.TerminalException = exception;
@@ -202,7 +202,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (!this.IsClosing())
             {
-                AmqpTrace.Provider.AmqpIoEvent(this, ioEvent, queueSize);
+                AmqpTrace.OnIoEvent(this, ioEvent, queueSize);
                 this.HandleIoEvent(ioEvent);
             }
         }
@@ -220,7 +220,7 @@ namespace Microsoft.Azure.Amqp
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    AmqpTrace.Provider.AmqpLogError(this, "OnProtocolHeader", exception);
+                    AmqpTrace.OnLogError(this, "OnProtocolHeader", exception);
 
                     this.TerminalException = exception;
                     this.Abort();
@@ -234,7 +234,7 @@ namespace Microsoft.Azure.Amqp
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    AmqpTrace.Provider.AmqpLogError(this, "OnFrame", exception);
+                    AmqpTrace.OnLogError(this, "OnFrame", exception);
 
                     this.SafeClose(exception);
                 }

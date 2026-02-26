@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -214,7 +214,7 @@ namespace Microsoft.Azure.Amqp
                         cancellationToken,
                         link).ConfigureAwait(false);
 
-                    AmqpTrace.Provider.AmqpOpenEntitySucceeded(this, link.Name, address);
+                    AmqpTrace.OnOpenEntitySucceeded(this, link.Name, address);
                     return link;
                 }
                 catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
@@ -225,7 +225,7 @@ namespace Microsoft.Azure.Amqp
                     }
 
                     lastException = ExceptionDispatchInfo.Capture(exception);
-                    AmqpTrace.Provider.AmqpOpenEntityFailed(this, this.GetType().Name, address, exception);
+                    AmqpTrace.OnOpenEntityFailed(this, this.GetType().Name, address, exception);
                 }
 
                 await Task.Delay(1000, cancellationToken).ConfigureAwait(false);

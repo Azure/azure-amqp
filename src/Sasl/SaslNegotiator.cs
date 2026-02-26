@@ -68,7 +68,7 @@ namespace Microsoft.Azure.Amqp.Sasl
             else
             {
                 this.state = SaslState.WaitingForServerMechanisms;
-                AmqpTrace.Provider.AmqpLogOperationVerbose(this, TraceOperation.Execute, "WaitingForServerMechanisms");
+                AmqpTrace.OnLogOperationVerbose(this, TraceOperation.Execute, "WaitingForServerMechanisms");
                 this.ReadFrame();
             }
 
@@ -190,7 +190,7 @@ namespace Microsoft.Azure.Amqp.Sasl
 
         void HandleException(string action, Exception exception)
         {
-            AmqpTrace.Provider.AmqpLogError(this, action, exception);
+            AmqpTrace.OnLogError(this, action, exception);
             this.state = SaslState.End;
             this.completeException = exception;
             this.CompleteTransport();
@@ -241,7 +241,7 @@ namespace Microsoft.Azure.Amqp.Sasl
             }
             catch (Exception exp) when (!Fx.IsFatal(exp))
             {
-                AmqpTrace.Provider.AmqpLogError(this, "SaslDecode", exp);
+                AmqpTrace.OnLogError(this, "SaslDecode", exp);
                 this.CompleteNegotiation(SaslCode.Sys, exp);
                 return;
             }
@@ -252,12 +252,12 @@ namespace Microsoft.Azure.Amqp.Sasl
             }
             catch (UnauthorizedAccessException authzExp)
             {
-                AmqpTrace.Provider.AmqpLogError(this, "Authorize", authzExp);
+                AmqpTrace.OnLogError(this, "Authorize", authzExp);
                 this.CompleteNegotiation(SaslCode.Auth, authzExp);
             }
             catch (Exception exp) when (!Fx.IsFatal(exp))
             {
-                AmqpTrace.Provider.AmqpLogError(this, "HandleSaslCommand", exp);
+                AmqpTrace.OnLogError(this, "HandleSaslCommand", exp);
                 this.CompleteNegotiation(SaslCode.Sys, exp);
             }
         }

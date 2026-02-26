@@ -86,7 +86,7 @@ namespace Microsoft.Azure.Amqp
             }
             catch (Exception ex) when (!Fx.IsFatal(ex))
             {
-                AmqpTrace.Provider.AmqpLogError(thisPtr.Target, "OnTimerCallback", ex);
+                AmqpTrace.OnLogError(thisPtr.Target, "OnTimerCallback", ex);
             }
         }
 

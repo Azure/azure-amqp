@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -474,7 +474,7 @@ namespace Microsoft.Azure.Amqp
         {
             // This happens when the sender sends a disposition after the receiver's disposition
             // in the EO delivery scenario, and also in transaction case.
-            AmqpTrace.Provider.AmqpDispose(this, delivery.DeliveryId.Value, delivery.Settled, delivery.State);
+            AmqpTrace.OnDispose(this, delivery.DeliveryId.Value, delivery.Settled, delivery.State);
             DeliveryState deliveryState = delivery.State;
 
             if (deliveryState != null)
@@ -530,7 +530,7 @@ namespace Microsoft.Azure.Amqp
                 AmqpMessage message = this.currentMessage;
                 this.currentMessage = null;
 
-                AmqpTrace.Provider.AmqpReceiveMessage(this, message.DeliveryId.Value, message.Segments);
+                AmqpTrace.OnReceiveMessage(this, message.DeliveryId.Value, message.Segments);
 
                 if (delivery.Resume && this.IsRecoverable)
                 {
@@ -744,7 +744,7 @@ namespace Microsoft.Azure.Amqp
             }
             else
             {
-                AmqpTrace.Provider.AmqpCacheMessage(this, message.DeliveryId.Value, message.Segments, this.Settings.TotalLinkCredit, this.LinkCredit);
+                AmqpTrace.OnCacheMessage(this, message.DeliveryId.Value, message.Segments, this.Settings.TotalLinkCredit, this.LinkCredit);
                 this.prefetchSizeTracker?.Track(message);
                 this.messageQueue.Enqueue(message);
                 this.CheckWaiter();

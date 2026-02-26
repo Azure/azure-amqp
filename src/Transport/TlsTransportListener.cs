@@ -87,7 +87,7 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             Fx.Assert(innerArgs.Exception == null, "Should not be called with an exception.");
             Fx.Assert(innerArgs.Transport != null, "Should be called with a transport.");
-            AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Accept, innerArgs.Transport);
+            AmqpTrace.OnLogOperationInformational(this, TraceOperation.Accept, innerArgs.Transport);
 
             try
             {

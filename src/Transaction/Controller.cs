@@ -61,7 +61,7 @@ namespace Microsoft.Azure.Amqp.Transaction
         /// <returns>A task that returns a transaction id when it completes.</returns>
         public async Task<ArraySegment<byte>> DeclareAsync(CancellationToken cancellationToken)
         {
-            AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "BeginDeclare");
+            AmqpTrace.OnLogOperationInformational(this, TraceOperation.Execute, "BeginDeclare");
             Declare declare = new Declare();
 
             AmqpMessage message = Controller.CreateCommandMessage(declare);
@@ -77,7 +77,7 @@ namespace Microsoft.Azure.Amqp.Transaction
                 this).ConfigureAwait(false);
 
             this.ThrowIfRejected(deliveryState);
-            AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "EndDeclare");
+            AmqpTrace.OnLogOperationInformational(this, TraceOperation.Execute, "EndDeclare");
             return ((Declared)deliveryState).TxnId;
         }
 
@@ -101,7 +101,7 @@ namespace Microsoft.Azure.Amqp.Transaction
         /// <returns>A task for the async operation.</returns>
         public async Task DischargeAsync(ArraySegment<byte> txnId, bool fail, CancellationToken cancellationToken)
         {
-            AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "BeginDischange");
+            AmqpTrace.OnLogOperationInformational(this, TraceOperation.Execute, "BeginDischange");
             Discharge discharge = new Discharge
             {
                 TxnId = txnId,
@@ -121,7 +121,7 @@ namespace Microsoft.Azure.Amqp.Transaction
                 this).ConfigureAwait(false);
 
             this.ThrowIfRejected(deliveryState);
-            AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "EndDischange");
+            AmqpTrace.OnLogOperationInformational(this, TraceOperation.Execute, "EndDischange");
         }
 
         /// <summary>

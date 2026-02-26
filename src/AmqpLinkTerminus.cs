@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -153,7 +153,7 @@ namespace Microsoft.Azure.Amqp
                 negotiatedUnsettledDeliveries = await this.NegotiateUnsettledDeliveriesFromSender(remoteAttach, localUnsettledDeliveries);
             }
 
-            AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.LinkRecoveryNegotiateResult, this + "::" + Extensions.GetString(negotiatedUnsettledDeliveries));
+            AmqpTrace.OnLogOperationInformational(this, TraceOperation.LinkRecoveryNegotiateResult, this + "::" + Extensions.GetString(negotiatedUnsettledDeliveries));
             return negotiatedUnsettledDeliveries;
         }
 
@@ -276,7 +276,7 @@ namespace Microsoft.Azure.Amqp
                     "or else the event handler should have been removed.");
                 if (!this.disposed && !link.IsStolen())
                 {
-                    AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.TerminusStateOnClose, this + "::" + Extensions.GetString(link.UnsettledMap));
+                    AmqpTrace.OnLogOperationInformational(this, TraceOperation.TerminusStateOnClose, this + "::" + Extensions.GetString(link.UnsettledMap));
                     this.TerminusStore.SaveDeliveriesAsync(this, link.UnsettledMap).GetAwaiter().GetResult();
                 }
             }
@@ -328,7 +328,7 @@ namespace Microsoft.Azure.Amqp
                     bool remoteReachedTerminal = peerDeliveryState.IsTerminal();
 
                     string details = $"DeliveryTag: {Extensions.GetString(deliveryTag)}, LocalDeliveryState: {localDeliveryState}, PeerDeliveryState: {peerDeliveryState}, PeerHasDelivery: {peerHasDelivery}, RemoteReachedTerminalState: {remoteReachedTerminal}";
-                    AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.LinkRecoveryNegotiate, details);
+                    AmqpTrace.OnLogOperationInformational(this, TraceOperation.LinkRecoveryNegotiate, details);
 
                     if (localDeliveryState == null || localDeliveryState.DescriptorCode == Received.Code)
                     {

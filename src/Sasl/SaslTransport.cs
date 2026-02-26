@@ -72,7 +72,7 @@ namespace Microsoft.Azure.Amqp.Sasl
 
         internal void OnNegotiationSucceed(IPrincipal principal)
         {
-            AmqpTrace.Provider.AmqpLogOperationInformational(this, TraceOperation.Execute, "OnNegotiationSucceed");
+            AmqpTrace.OnLogOperationInformational(this, TraceOperation.Execute, "OnNegotiationSucceed");
             this.negotiator = null;
             this.Principal = principal;
             this.CompleteOpen(false, null);
@@ -80,7 +80,7 @@ namespace Microsoft.Azure.Amqp.Sasl
 
         internal void OnNegotiationFail(Exception exception)
         {
-            AmqpTrace.Provider.AmqpLogError(this, "OnNegotiationFail", exception);
+            AmqpTrace.OnLogError(this, "OnNegotiationFail", exception);
             this.negotiator = null;
             this.innerTransport.SafeClose(exception);
             this.CompleteOpen(false, exception);

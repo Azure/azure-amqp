@@ -28,6 +28,15 @@ namespace Microsoft.Azure.Amqp.Encoding
         }
 
         /// <summary>
+        /// Gets the encoded value size of the symbol.
+        /// </summary>
+        [Obsolete("Obsolete")]
+        public int ValueSize
+        {
+            get { return SymbolEncoding.GetEncodeSize(this) - FixedWidth.FormatCode; }
+        }
+
+        /// <summary>
         /// Creates a symbol from a string.
         /// </summary>
         /// <param name="value">The string.</param>

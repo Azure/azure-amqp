@@ -100,6 +100,19 @@ namespace Microsoft.Azure.Amqp.Encoding
             return BinaryPrimitives.ReadUInt32BigEndian(buffer.AsSpan<byte>(offset, count));
         }
 
+        /// <summary>
+        /// Peeks a 32-bit unsigned number from a buffer without advancing the read cursor.
+        /// </summary>
+        /// <param name="buffer">The input buffer.</param>
+        /// <returns>A 32-bit unsigned number.</returns>
+        [Obsolete("Obsolete")]
+        public static uint PeekUInt(ByteBuffer buffer)
+        {
+            buffer.ValidateRead(FixedWidth.UInt);
+            uint data = ReadUInt(buffer.Buffer, buffer.Offset, buffer.Length);
+            return data;
+        }
+
         internal static ushort ReadUShort(byte[] buffer, int offset, int count)
         {
             return BinaryPrimitives.ReadUInt16BigEndian(buffer.AsSpan<byte>(offset, count));
@@ -241,6 +254,18 @@ namespace Microsoft.Azure.Amqp.Encoding
             buffer.ValidateWrite(FixedWidth.UByte);
             buffer.Buffer[buffer.WritePos] = data;
             buffer.Append(FixedWidth.UByte);
+        }
+
+        /// <summary>
+        /// Writes an 8-bit unsigned number to a byte array.
+        /// </summary>
+        /// <param name="buffer">The byte array to write.</param>
+        /// <param name="offset">The offset in the array to write.</param>
+        /// <param name="data">The 8-bit unsigned number.</param>
+        [Obsolete("Obsolete")]
+        public static void WriteUByte(byte[] buffer, int offset, byte data)
+        {
+            buffer[offset] = data;
         }
 
         /// <summary>

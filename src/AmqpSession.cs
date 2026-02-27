@@ -111,6 +111,45 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Gets the cached remote channel number.
+        /// </summary>
+        [Obsolete("Obsolete")]
+        public ushort CachedRemoteChannel
+        {
+            get { return this.settings.RemoteChannel ?? 0; }
+        }
+
+        /// <summary>
+        /// Gets the links by remote handle.
+        /// </summary>
+        [Obsolete("Obsolete")]
+        protected HandleTable<AmqpLink> LinksByRemoteHandle
+        {
+            get
+            {
+                return this.linksByRemoteHandle;
+            }
+        }
+
+        /// <summary>
+        /// Gets the links dictionary keyed by name.
+        /// </summary>
+        [Obsolete("Obsolete")]
+        protected Dictionary<string, AmqpLink> Links
+        {
+            get
+            {
+                var result = new Dictionary<string, AmqpLink>();
+                foreach (var kvp in this.links)
+                {
+                    result[kvp.Key.LinkName] = kvp.Value;
+                }
+
+                return result;
+            }
+        }
+
+        /// <summary>
         /// Attaches a link to the session. The link is assigned a local handle on success.
         /// </summary>
         /// <param name="link">The link to attach.</param>
@@ -1374,7 +1413,7 @@ namespace Microsoft.Azure.Amqp
                 return base.CloseInternal();
             }
 
-            protected override bool CreateDelivery(Transfer transfer, out Delivery delivery)
+            public override bool CreateDelivery(Transfer transfer, out Delivery delivery)
             {
                 throw new NotImplementedException();
             }

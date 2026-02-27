@@ -20,10 +20,23 @@ namespace Microsoft.Azure.Amqp.Framing
         public static readonly ulong Code = 0x000000000000001d;
 
         /// <summary>
+        /// Gets or sets whether to include error details in the error description.
+        /// </summary>
+        public static bool IncludeErrorDetails;
+
+        /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Error() : base(Name, Code, 3)
+        public Error() : base(Name, Code)
         {
+        }
+
+        const int Fields = 3;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
         }
 
         Error(SerializationInfo info, StreamingContext context)
@@ -48,7 +61,17 @@ namespace Microsoft.Azure.Amqp.Framing
         /// </summary>
         public Fields Info { get; set; }
 
-        internal static Error FromException(Exception exception, bool includeErrorDetails = false)
+        /// <summary>
+        /// Creates an Error from an exception.
+        /// </summary>
+        /// <param name="exception">The exception.</param>
+        /// <returns>An Error object.</returns>
+        public static Error FromException(Exception exception)
+        {
+            return FromException(exception, IncludeErrorDetails);
+        }
+
+        internal static Error FromException(Exception exception, bool includeErrorDetails)
         {
             AmqpException amqpException = exception as AmqpException;
             if (amqpException != null)

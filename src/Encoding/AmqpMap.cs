@@ -103,6 +103,15 @@ namespace Microsoft.Azure.Amqp.Encoding
         }
 
         /// <summary>
+        /// Gets the encoded value size of the map.
+        /// </summary>
+        [Obsolete("Obsolete")]
+        public int ValueSize
+        {
+            get { return MapEncoding.GetEncodeSize(this) - FixedWidth.FormatCode; }
+        }
+
+        /// <summary>
         /// Gets a string to represent the object.
         /// </summary>
         /// <returns></returns>

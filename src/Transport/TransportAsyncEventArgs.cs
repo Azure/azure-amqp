@@ -177,6 +177,17 @@ namespace Microsoft.Azure.Amqp.Transport
         }
 
         /// <summary>
+        /// Sets a buffer from a ByteBuffer.
+        /// </summary>
+        /// <param name="byteBuffer">The byte buffer.</param>
+        [Obsolete("Obsolete")]
+        public void SetBuffer(ByteBuffer byteBuffer)
+        {
+            this.SetBuffer(byteBuffer.Buffer, byteBuffer.Offset, byteBuffer.Length);
+            this.ByteBuffer = byteBuffer;
+        }
+
+        /// <summary>
         /// Sets a list of buffers to write.
         /// </summary>
         /// <param name="byteBufferList">The list of buffers.</param>

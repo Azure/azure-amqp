@@ -13,7 +13,10 @@ namespace Microsoft.Azure.Amqp.Framing
     /// </summary>
     public sealed class Frame : IDisposable
     {
-        internal const int HeaderSize = 8;
+        /// <summary>
+        /// The size of the frame header.
+        /// </summary>
+        public const int HeaderSize = 8;
         const byte DefaultDataOffset = 2;
 
         /// <summary>

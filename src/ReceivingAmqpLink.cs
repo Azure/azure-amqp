@@ -67,6 +67,28 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Gets the total cache size in bytes.
+        /// </summary>
+        [Obsolete("Obsolete")]
+        public long? TotalCacheSizeInBytes
+        {
+            get
+            {
+                return this.Settings.TotalCacheSizeInBytes;
+            }
+        }
+
+        /// <summary>
+        /// Sets the cache size in bytes.
+        /// </summary>
+        /// <param name="cacheSizeInBytes">The cache size in bytes.</param>
+        [Obsolete("Obsolete")]
+        public void SetCacheSizeInBytes(long? cacheSizeInBytes)
+        {
+            this.Settings.TotalCacheSizeInBytes = cacheSizeInBytes;
+        }
+
+        /// <summary>
         /// Starts the operation to receive a message with the default wait timeout.
         /// </summary>
         /// <returns>A message when the task is completed. Null if there is no message available.</returns>
@@ -239,6 +261,16 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Drains the credits on the link.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        [Obsolete("Obsolete")]
+        public Task DrainAsyc(CancellationToken cancellationToken)
+        {
+            return this.DrainAsync(cancellationToken);
+        }
+
+        /// <summary>
         /// Updates the outcome of a received message.
         /// </summary>
         /// <param name="deliveryTag">The delivery-tag of the message.</param>
@@ -292,6 +324,20 @@ namespace Microsoft.Azure.Amqp
         public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, Outcome outcome, CancellationToken cancellationToken)
         {
             return this.DisposeMessageAsync(deliveryTag, AmqpConstants.NullBinary, outcome, true, cancellationToken);
+        }
+
+        /// <summary>
+        /// Updates the outcome of a received message.
+        /// </summary>
+        /// <param name="deliveryTag">The delivery-tag of the message.</param>
+        /// <param name="outcome">The outcome.</param>
+        /// <param name="batchable"><see cref="Delivery.Batchable"/></param>
+        /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
+        /// <returns>An <see cref="Outcome"/> from remote peer when the task is completed.</returns>
+        [Obsolete("Obsolete")]
+        public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, Outcome outcome, bool batchable, CancellationToken cancellationToken)
+        {
+            return this.DisposeMessageAsync(deliveryTag, AmqpConstants.NullBinary, outcome, batchable, cancellationToken);
         }
 
         /// <summary>
@@ -436,7 +482,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="transfer">The received transfer.</param>
         /// <param name="delivery">The returned delivery.</param>
         /// <returns>True if a delivery is created.</returns>
-        protected override bool CreateDelivery(Transfer transfer, out Delivery delivery)
+        public override bool CreateDelivery(Transfer transfer, out Delivery delivery)
         {
             if (this.currentMessage != null)
             {

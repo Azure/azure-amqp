@@ -73,6 +73,14 @@ namespace Microsoft.Azure.Amqp.Transport
         }
 
         /// <summary>
+        /// Gets a value indicating whether the transport requires complete frames.
+        /// </summary>
+        public virtual bool RequiresCompleteFrames
+        {
+            get { return false; }
+        }
+
+        /// <summary>
         /// Sets a transport monitor for transport I/O operations.
         /// </summary>
         /// <param name="usageMeter">The transport monitor.</param>

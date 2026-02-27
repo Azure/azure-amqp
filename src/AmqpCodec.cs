@@ -1091,6 +1091,16 @@ namespace Microsoft.Azure.Amqp
         /// Decodes a map from the buffer and advances the buffer's position.
         /// </summary>
         /// <param name="buffer">The buffer to read.</param>
+        /// <returns>A map.</returns>
+        public static AmqpMap DecodeMap(ByteBuffer buffer)
+        {
+            return DecodeMap(buffer, null);
+        }
+
+        /// <summary>
+        /// Decodes a map from the buffer and advances the buffer's position.
+        /// </summary>
+        /// <param name="buffer">The buffer to read.</param>
         /// <param name="comparer">Use custom comparer to compare keys in the map</param>
         /// <returns>A map.</returns>
         public static AmqpMap DecodeMap(ByteBuffer buffer, IEqualityComparer<MapKey> comparer = null)

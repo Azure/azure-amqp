@@ -20,8 +20,16 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Detach() : base(Name, Code, 3)
+        public Detach() : base(Name, Code)
         {
+        }
+
+        const int Fields = 3;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
         }
 
         /// <summary>

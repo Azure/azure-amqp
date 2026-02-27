@@ -36,9 +36,15 @@ namespace Microsoft.Azure.Amqp.Framing
         /// </summary>
         /// <param name="innerList">The list containing objects in the sequence.</param>
         public AmqpSequence(IList innerList)
-            : base(Name, Code, innerList.Count)
+            : base(Name, Code)
         {
             this.innerList = innerList;
+        }
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return this.innerList.Count; }
         }
 
         /// <summary>

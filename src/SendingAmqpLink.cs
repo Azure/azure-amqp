@@ -147,7 +147,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="transfer"></param>
         /// <param name="delivery"></param>
         /// <returns></returns>
-        protected override bool CreateDelivery(Transfer transfer, out Delivery delivery)
+        public override bool CreateDelivery(Transfer transfer, out Delivery delivery)
         {
             throw new NotImplementedException();
         }

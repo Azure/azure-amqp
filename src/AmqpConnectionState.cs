@@ -61,5 +61,9 @@ namespace Microsoft.Azure.Amqp
         /// A close/end/detach is exchanged with the peer.
         /// </summary>
         End = 12,
+        /// <summary>
+        /// The object is in a faulted state.
+        /// </summary>
+        Faulted = 13,
     }
 }

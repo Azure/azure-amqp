@@ -16,8 +16,16 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <param name="name">The descriptor name.</param>
         /// <param name="code">The descriptor code.</param>
         protected LifeTimePolicy(AmqpSymbol name, ulong code)
-            : base(name, code, 0)
+            : base(name, code)
         {
+        }
+
+        const int Fields = 0;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
         }
 
         /// <summary>

@@ -13,7 +13,10 @@ namespace Microsoft.Azure.Amqp.Sasl
     /// </summary>
     public class SaslTransport : TransportBase
     {
-        readonly TransportBase innerTransport;
+        /// <summary>
+        /// The inner transport.
+        /// </summary>
+        public readonly TransportBase innerTransport;
         SaslNegotiator negotiator;
 
         /// <summary>
@@ -34,6 +37,9 @@ namespace Microsoft.Azure.Amqp.Sasl
 
         /// <inheritdoc cref="TransportBase.RemoteEndPoint"/>
         public override EndPoint RemoteEndPoint => this.innerTransport.RemoteEndPoint;
+
+        /// <inheritdoc cref="TransportBase.RequiresCompleteFrames"/>
+        public override bool RequiresCompleteFrames => this.innerTransport.RequiresCompleteFrames;
 
         /// <inheritdoc cref="TransportBase.IsSecure"/>
         public override bool IsSecure

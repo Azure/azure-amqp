@@ -76,6 +76,54 @@ namespace Microsoft.Azure.Amqp
     }
 
     /// <summary>
+    /// A factory to create and delete nodes.
+    /// </summary>
+    [Obsolete("Obsolete")]
+    public interface INodeFactory
+    {
+        /// <summary>
+        /// Starts an asynchronous operation to create a node.
+        /// </summary>
+        /// <param name="address">The address of the node.</param>
+        /// <param name="properties">The properties of the node.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The object associated with this operation.</param>
+        /// <returns>An <see cref="IAsyncResult"/> for the operation.</returns>
+        IAsyncResult BeginCreateNode(string address, Framing.Fields properties, TimeSpan timeout, AsyncCallback callback, object state);
+
+        /// <summary>
+        /// Ends an asynchronous operation to create a node.
+        /// </summary>
+        /// <param name="result">The <see cref="IAsyncResult"/> object.</param>
+        void EndCreateNode(IAsyncResult result);
+
+        /// <summary>
+        /// Starts an asynchronous operation to delete a node.
+        /// </summary>
+        /// <param name="address">The address of the node.</param>
+        /// <param name="timeout">The operation timeout.</param>
+        /// <param name="callback">The callback to invoke when the operation completes.</param>
+        /// <param name="state">The object associated with this operation.</param>
+        /// <returns>An <see cref="IAsyncResult"/> for the operation.</returns>
+        IAsyncResult BeginDeleteNode(string address, TimeSpan timeout, AsyncCallback callback, object state);
+
+        /// <summary>
+        /// Ends an asynchronous operation to delete a node.
+        /// </summary>
+        /// <param name="result">The <see cref="IAsyncResult"/> object.</param>
+        void EndDeleteNode(IAsyncResult result);
+    }
+
+    /// <summary>
+    /// A provider that combines runtime and node factory functionality.
+    /// </summary>
+    [Obsolete("Obsolete")]
+    public interface IAmqpProvider : IRuntimeProvider, INodeFactory
+    {
+    }
+
+    /// <summary>
     /// Monitors the I/O operations of a transport.
     /// </summary>
     public interface ITransportMonitor

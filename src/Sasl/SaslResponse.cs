@@ -24,7 +24,15 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public SaslResponse() : base(Name, Code, 1) { }
+        public SaslResponse() : base(Name, Code) { }
+
+        const int Fields = 1;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
+        }
 
         /// <summary>
         /// Gets or sets the security response data.

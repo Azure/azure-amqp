@@ -3,12 +3,14 @@
 
 namespace Microsoft.Azure.Amqp
 {
+    using System;
+    using System.Diagnostics.CodeAnalysis;
     using Microsoft.Azure.Amqp.Encoding;
 
     /// <summary>
     /// Constants useful for CBS scenarios
     /// </summary>
-    static class CbsConstants
+    public static class CbsConstants
     {
         /// <summary>
         /// The Property name for setting timeouts
@@ -19,6 +21,25 @@ namespace Microsoft.Azure.Amqp
         /// The address of the CBS Node ($cbs)
         /// </summary>
         public const string CbsAddress = "$cbs";
+
+        /// <summary>
+        /// The Sas token type used by IotHub (azure-devices.net:sastoken)
+        /// </summary>
+        [Obsolete("Obsolete")]
+        public const string IotHubSasTokenType = "azure-devices.net:sastoken";
+
+        /// <summary>
+        /// The Sas token type used by ServiceBus (servicebus.windows.net:sastoken)
+        /// </summary>
+        [Obsolete("Obsolete")]
+        public const string ServiceBusSasTokenType = "servicebus.windows.net:sastoken";
+
+        /// <summary>
+        /// Supported token types.
+        /// </summary>
+        [Obsolete("Obsolete")]
+        [SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly", Justification = "Should be a constant")]
+        public static readonly string[] SupportedTokenTypes = { IotHubSasTokenType, ServiceBusSasTokenType };
 
         /// <summary>
         /// The operation property name

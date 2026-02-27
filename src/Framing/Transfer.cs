@@ -20,7 +20,15 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Transfer() : base(Name, Code, 11) { }
+        public Transfer() : base(Name, Code) { }
+
+        const int Fields = 11;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
+        }
 
         /// <summary>
         /// Gets or sets the "delivery-id" field.

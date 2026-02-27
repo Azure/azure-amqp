@@ -25,7 +25,15 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public SaslOutcome() : base(Name, Code, 2) { }
+        public SaslOutcome() : base(Name, Code) { }
+
+        const int Fields = 2;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
+        }
 
         /// <summary>
         /// Gets or sets the code that indicates the outcome of the sasl dialog.

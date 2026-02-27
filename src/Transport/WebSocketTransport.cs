@@ -26,6 +26,19 @@ namespace Microsoft.Azure.Amqp.Transport
         /// <inheritdoc cref="TransportBase.RemoteEndPoint"/>
         public override EndPoint RemoteEndPoint => this.remote;
 
+        /// <summary>
+        /// Initializes the object.
+        /// </summary>
+        /// <param name="webSocket">The web socket.</param>
+        /// <param name="uri">The URI.</param>
+        [Obsolete("Obsolete")]
+        public WebSocketTransport(WebSocket webSocket, Uri uri)
+            : base(WebSocketTransportSettings.WebSockets)
+        {
+            this.webSocket = webSocket;
+            this.uri = uri;
+        }
+
         internal WebSocketTransport(WebSocket webSocket, Uri uri, EndPoint local, EndPoint remote)
             : base(WebSocketTransportSettings.WebSockets)
         {

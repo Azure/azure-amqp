@@ -32,11 +32,17 @@ namespace Microsoft.Azure.Amqp.Sasl
             this.negotiator = new SaslNegotiator(this, provider, isInitiator);
         }
 
-        /// <inheritdoc cref="TransportBase.LocalEndPoint"/>
-        public override EndPoint LocalEndPoint => this.innerTransport.LocalEndPoint;
+        /// <inheritdoc cref="TransportBase.Local"/>
+        internal override EndPoint Local => this.innerTransport.Local;
 
-        /// <inheritdoc cref="TransportBase.RemoteEndPoint"/>
-        public override EndPoint RemoteEndPoint => this.innerTransport.RemoteEndPoint;
+        /// <inheritdoc cref="TransportBase.Remote"/>
+        internal override EndPoint Remote => this.innerTransport.Remote;
+
+        /// <inheritdoc/>
+        public override string LocalEndPoint => this.innerTransport.LocalEndPoint;
+
+        /// <inheritdoc/>
+        public override string RemoteEndPoint => this.innerTransport.RemoteEndPoint;
 
         /// <inheritdoc cref="TransportBase.RequiresCompleteFrames"/>
         public override bool RequiresCompleteFrames => this.innerTransport.RequiresCompleteFrames;

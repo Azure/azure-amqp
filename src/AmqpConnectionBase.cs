@@ -60,7 +60,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets the local endpoint.
         /// </summary>
-        public EndPoint LocalEndpoint
+        public string LocalEndpoint
         {
             get { return this.asyncIO.Transport.LocalEndPoint; }
         }
@@ -68,7 +68,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets the remote endpoint.
         /// </summary>
-        public EndPoint RemoteEndpoint
+        public string RemoteEndpoint
         {
             get { return this.asyncIO.Transport.RemoteEndPoint; }
         }

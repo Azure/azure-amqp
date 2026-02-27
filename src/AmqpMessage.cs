@@ -494,23 +494,13 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Appends a buffer to the message.
-        /// </summary>
-        /// <param name="payload">The payload buffer.</param>
-        /// <param name="isLast">True if it is the last part of the message.</param>
-        public override void AddPayload(ByteBuffer payload, bool isLast)
-        {
-            throw new InvalidOperationException();
-        }
-
-        /// <summary>
         /// Gets a buffer of the message payload from the current read position and advances
         /// the read position.
         /// </summary>
         /// <param name="payloadSize">The size of the buffer to return.</param>
         /// <param name="more">True if there is no more data in the message's buffer.</param>
         /// <returns>A buffer of the requested payload. It can be smaller than the requested size.</returns>
-        public override ByteBuffer GetPayload(int payloadSize, out bool more)
+        internal override ByteBuffer GetPayloadBuffer(int payloadSize, out bool more)
         {
             this.Initialize(SectionFlag.All);
             return GetPayload(this.buffer, payloadSize, out more);
@@ -518,12 +508,13 @@ namespace Microsoft.Azure.Amqp
 
         /// <summary>
         /// Gets the payload segments of the serialized message. It should not be used.
-        /// Use <see cref="GetPayload(int, out bool)"/> instead.
+        /// Use <see cref="GetPayloadBuffer(int, out bool)"/> instead.
         /// </summary>
         /// <returns>The serialized message bytes in an array of byte segments.</returns>
+        [Obsolete("Use GetPayloadBuffer instead.")]
         public ArraySegment<byte>[] GetPayload()
         {
-            var buffer = this.GetPayload(int.MaxValue, out _);
+            var buffer = this.GetPayloadBuffer(int.MaxValue, out _);
             return buffer == null ? null : new ArraySegment<byte>[] { buffer.AsSegment() };
         }
 
@@ -727,6 +718,13 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         abstract class AmqpSectionMessage : AmqpMessage
         {
+            [Obsolete("Use GetPayloadBuffer instead.")]
+            public override ArraySegment<byte>[] GetPayload(int payloadSize, out bool more)
+            {
+                var buffer = this.GetPayloadBuffer(payloadSize, out more);
+                return buffer == null ? null : new ArraySegment<byte>[] { buffer.AsSegment() };
+            }
+
             protected override void Initialize(SectionFlag desiredSections, bool force = false)
             {
                 if (force || this.buffer == null)
@@ -737,10 +735,9 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            public override void CompletePayload(int payloadSize)
+            protected override void OnCompletePayload(int payloadSize)
             {
                 Fx.Assert(this.buffer != null, "buffer not initialized");
-                base.CompletePayload(payloadSize);
                 this.buffer.Complete(payloadSize);
             }
 
@@ -994,16 +991,28 @@ namespace Microsoft.Azure.Amqp
                 this.messageSize = buffer.Length;
             }
 
+            [Obsolete("Use GetPayloadBuffer instead.")]
+            public override ArraySegment<byte>[] GetPayload(int payloadSize, out bool more)
+            {
+                var buffer = this.GetPayloadBuffer(payloadSize, out more);
+                return buffer == null ? null : new ArraySegment<byte>[] { buffer.AsSegment() };
+            }
+
             public override void AddPayload(ByteBuffer payload, bool isLast)
             {
                 this.BytesTransfered += payload.Length;
-                this.buffer = AddPayload(this.buffer, payload, isLast);
+                this.buffer = Delivery.AddPayload(this.buffer, payload, isLast);
                 this.messageSize = this.buffer.Length;
             }
 
-            public override ByteBuffer GetPayload(int payloadSize, out bool more)
+            internal override ByteBuffer GetPayloadBuffer(int payloadSize, out bool more)
             {
                 return GetPayload(this.buffer, payloadSize, out more);
+            }
+
+            protected override void OnCompletePayload(int payloadSize)
+            {
+                this.buffer.Complete(payloadSize);
             }
 
             protected override void Initialize(SectionFlag desiredSections, bool force = false)

@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Generic;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
@@ -99,13 +100,13 @@ namespace Microsoft.Azure.Amqp
         public long BytesTransfered
         {
             get;
-            internal set;
+            protected set;
         }
 
         /// <summary>
-        /// Gets or sets the number of transfers of the delivery.
+        /// Gets or sets the raw byte buffers of the delivery.
         /// </summary>
-        public int Segments
+        public List<ByteBuffer> RawByteBuffers
         {
             get;
             protected set;
@@ -124,6 +125,12 @@ namespace Microsoft.Azure.Amqp
         /// Gets or sets the next delivery for creating a linked list of deliveries.
         /// </summary>
         public Delivery Next
+        {
+            get;
+            set;
+        }
+
+        internal int Segments
         {
             get;
             set;
@@ -199,24 +206,46 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="payloadSize">The requested size in bytes.</param>
         /// <param name="more">true if more bytes are available.</param>
-        /// <returns>A buffer containing the payload.</returns>
-        public abstract ByteBuffer GetPayload(int payloadSize, out bool more);
+        /// <returns>An array of byte segments containing the payload.</returns>
+        [Obsolete("Use GetPayloadBuffer instead.")]
+        public abstract ArraySegment<byte>[] GetPayload(int payloadSize, out bool more);
 
         /// <summary>
         /// Adds a buffer to the payload.
         /// </summary>
         /// <param name="payload">The buffer.</param>
         /// <param name="isLast">true if the buffer is the last segment of the payload.</param>
-        public abstract void AddPayload(ByteBuffer payload, bool isLast);
+        public virtual void AddPayload(ByteBuffer payload, bool isLast)
+        {
+            throw new InvalidOperationException();
+        }
 
         /// <summary>
         /// Advances the position in the payload.
         /// </summary>
-        /// <param name="payloadSize"></param>
-        public virtual void CompletePayload(int payloadSize)
+        /// <param name="payloadSize">The size of the completed payload.</param>
+        public void CompletePayload(int payloadSize)
         {
             this.Segments++;
             this.BytesTransfered += payloadSize;
+            this.OnCompletePayload(payloadSize);
+        }
+
+        /// <summary>
+        /// Called when a payload transfer is completed.
+        /// </summary>
+        /// <param name="payloadSize">The size of the completed payload.</param>
+        protected abstract void OnCompletePayload(int payloadSize);
+
+        internal abstract ByteBuffer GetPayloadBuffer(int payloadSize, out bool more);
+
+        /// <summary>
+        /// Prepares the delivery for sending.
+        /// </summary>
+        [Obsolete("Use Reset instead.")]
+        public void PrepareForSend()
+        {
+            this.BytesTransfered = 0;
         }
 
         /// <inheritdoc />
@@ -235,6 +264,13 @@ namespace Microsoft.Azure.Amqp
         /// </param>
         protected virtual void Dispose(bool disposing)
         {
+            if (disposing && this.RawByteBuffers != null)
+            {
+                foreach (ByteBuffer rawByteBuffer in this.RawByteBuffers)
+                {
+                    rawByteBuffer.Dispose();
+                }
+            }
         }
 
         /// <summary>

@@ -940,7 +940,7 @@ namespace Microsoft.Azure.Amqp
                     }
 
                     int payloadSize = (int)maxFrameSize - overhead;
-                    payload = delivery.GetPayload(payloadSize, out more);
+                    payload = delivery.GetPayloadBuffer(payloadSize, out more);
                     transfer.More = more;
 
                     if (payload == null)

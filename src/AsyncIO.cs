@@ -20,7 +20,8 @@ namespace Microsoft.Azure.Amqp
         readonly AsyncWriter writer;
         readonly AsyncReader reader;
 
-        internal AsyncIO(IIoHandler parent, int maxFrameSize, int writeQueueFullLimit,
+        /// <summary>Initializes a new instance.</summary>
+        public AsyncIO(IIoHandler parent, int maxFrameSize, int writeQueueFullLimit,
             int writeQueueEmptyLimit, TransportBase transport, bool isInitiator)
             : base("async-io", transport.Identifier)
         {
@@ -31,19 +32,29 @@ namespace Microsoft.Azure.Amqp
             this.reader = new AsyncReader(this, maxFrameSize, isInitiator);
         }
 
-        internal TransportBase Transport
+        /// <summary>Gets the transport.</summary>
+        public TransportBase Transport
         {
             get { return this.transport; }
         }
 
-        internal long WriteBufferQueueSize
+        /// <summary>Gets the write buffer queue size.</summary>
+        public long WriteBufferQueueSize
         {
             get { return this.writer.BufferQueueSize; }
         }
 
-        internal void WriteBuffer(ByteBuffer buffer)
+        /// <summary>Writes a buffer.</summary>
+        public void WriteBuffer(ByteBuffer buffer)
         {
             this.writer.WriteBuffer(buffer);
+        }
+
+        /// <summary>Writes a list of buffers.</summary>
+        [Obsolete("Use WriteBuffer(ByteBuffer) instead.")]
+        public void WriteBuffer(IList<ByteBuffer> buffers)
+        {
+            this.writer.WriteBuffer(buffers);
         }
 
         internal void WriteBuffer(ByteBuffer buffer, ByteBuffer extra)
@@ -323,16 +334,19 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// A reader that reads specified bytes and notifies caller upon completion (pull).
         /// </summary>
-        internal class AsyncBufferReader
+        /// <summary>Reads a buffer from the transport.</summary>
+        public class AsyncBufferReader
         {
             static Action<TransportAsyncCallbackArgs> onReadComplete = OnReadComplete;
             readonly TransportBase transport;
 
+            /// <summary>Initializes a new instance.</summary>
             public AsyncBufferReader(TransportBase transport)
             {
                 this.transport = transport;
             }
 
+            /// <summary>Reads data into the buffer.</summary>
             public void ReadBuffer(TransportAsyncCallbackArgs args)
             {
                 TransportAsyncCallbackArgs wrapperArgs = new TransportAsyncCallbackArgs();
@@ -409,7 +423,8 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// A reader that reads AMQP frame buffers. Not thread safe.
         /// </summary>
-        internal sealed class FrameBufferReader
+        /// <summary>Reads frames from the transport.</summary>
+        public sealed class FrameBufferReader
         {
             static readonly Action<TransportAsyncCallbackArgs> onSizeComplete = OnReadSizeComplete;
             static readonly Action<TransportAsyncCallbackArgs> onFrameComplete = OnReadFrameComplete;
@@ -418,6 +433,7 @@ namespace Microsoft.Azure.Amqp
             readonly byte[] sizeBuffer;
             IIoHandler parent;
 
+            /// <summary>Initializes a new instance.</summary>
             public FrameBufferReader(IIoHandler parent, TransportBase transport, int maxFrameSize)
             {
                 this.parent = parent;
@@ -426,6 +442,7 @@ namespace Microsoft.Azure.Amqp
                 this.sizeBuffer = new byte[FixedWidth.UInt];
             }
 
+            /// <summary>Reads a frame from the transport.</summary>
             public void ReadFrame()
             {
                 TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();
@@ -550,7 +567,8 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// A writer that writes buffers. Buffer writes may be batched. Writer owns closing the transport.
         /// </summary>
-        internal class AsyncWriter
+        /// <summary>Writes buffers to the transport asynchronously.</summary>
+        public class AsyncWriter
         {
             const int MaxBatchSize = 32 * 1024;
             static readonly Action<TransportAsyncCallbackArgs> writeCompleteCallback = WriteCompleteCallback;
@@ -565,6 +583,7 @@ namespace Microsoft.Azure.Amqp
             bool closed;
             bool isQueueFull;
 
+            /// <summary>Initializes a new instance.</summary>
             public AsyncWriter(TransportBase transport, int writeQueueFullLimit, int writeQueueEmptyLimit, IIoHandler parent)
             {
                 this.transport = transport;
@@ -576,6 +595,7 @@ namespace Microsoft.Azure.Amqp
                 this.writeAsyncEventArgs.CompletedCallback = writeCompleteCallback;
             }
 
+            /// <summary>Gets the buffer queue size in bytes.</summary>
             public long BufferQueueSize
             {
                 get { return this.bufferQueueSize; }
@@ -586,8 +606,8 @@ namespace Microsoft.Azure.Amqp
                 get { return this.bufferQueue; }
             }
 
-            public void WriteBuffer(ByteBuffer buffer)
-            {
+            /// <summary>Writes a buffer to the transport.</summary>
+            public void WriteBuffer(ByteBuffer buffer)            {
                 lock (this.SyncRoot)
                 {
                     if (this.writing)
@@ -606,6 +626,7 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
+            /// <summary>Writes two buffers to the transport.</summary>
             public virtual void WriteBuffer(ByteBuffer buffer, ByteBuffer extra)
             {
                 lock (this.SyncRoot)
@@ -627,6 +648,33 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
+            /// <summary>Writes a list of buffers.</summary>
+            [Obsolete("Use WriteBuffer(ByteBuffer) instead.")]
+            public virtual void WriteBuffer(IList<ByteBuffer> buffers)
+            {
+                lock (this.SyncRoot)
+                {
+                    if (this.writing)
+                    {
+                        for (int i = 0; i < buffers.Count; i++)
+                        {
+                            this.EnqueueBuffer(buffers[i]);
+                        }
+
+                        return;
+                    }
+
+                    this.writing = true;
+                }
+
+                this.writeAsyncEventArgs.SetBuffer(buffers);
+                if (this.WriteCore())
+                {
+                    this.ContinueWrite();
+                }
+            }
+
+            /// <summary>Issues a close on the writer.</summary>
             public void IssueClose()
             {
                 lock (this.SyncRoot)
@@ -765,16 +813,52 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// A writer that writes fixed-size buffer and notify caller upon completion.
         /// </summary>
-        internal class AsyncBufferWriter
+        /// <summary>Combines multiple buffers into a single write.</summary>
+        [Obsolete("Use AsyncWriter directly.")]
+        public class AsyncFrameWriter : AsyncWriter
+        {
+            /// <summary>Initializes a new instance.</summary>
+            public AsyncFrameWriter(TransportBase transport, int writeQueueFullLimit, int writeQueueEmptyLimit, IIoHandler parent)
+                : base(transport, writeQueueFullLimit, writeQueueEmptyLimit, parent)
+            {
+            }
+
+            /// <inheritdoc/>
+            [Obsolete("Use AsyncWriter directly.")]
+            public override void WriteBuffer(IList<ByteBuffer> buffers)
+            {
+                Fx.Assert(buffers.Count > 0, "buffers.Count should be set");
+                int count = 0;
+                foreach (ByteBuffer byteBuffer in buffers)
+                {
+                    count += byteBuffer.Length;
+                }
+
+                ByteBuffer bigBuffer = new ByteBuffer(count, false, false);
+                foreach (ByteBuffer byteBuffer in buffers)
+                {
+                    Buffer.BlockCopy(byteBuffer.Buffer, byteBuffer.Offset, bigBuffer.Buffer, bigBuffer.Length, byteBuffer.Length);
+                    bigBuffer.Append(byteBuffer.Length);
+                    byteBuffer.Dispose();
+                }
+
+                base.WriteBuffer(bigBuffer);
+            }
+        }
+
+        /// <summary>Writes buffers to the transport.</summary>
+        public class AsyncBufferWriter
         {
             readonly TransportBase transport;
             static Action<TransportAsyncCallbackArgs> onWriteComplete = OnWriteComplete;
 
+            /// <summary>Initializes a new instance.</summary>
             public AsyncBufferWriter(TransportBase transport)
             {
                 this.transport = transport;
             }
 
+            /// <summary>Writes data from the buffer to the transport.</summary>
             public void WriteBuffer(TransportAsyncCallbackArgs args)
             {
                 TransportAsyncCallbackArgs wrapperArgs = new TransportAsyncCallbackArgs();

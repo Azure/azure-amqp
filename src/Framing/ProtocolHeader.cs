@@ -13,6 +13,15 @@ namespace Microsoft.Azure.Amqp.Framing
     {
         const uint AmqpPrefix = 0x414D5150;
 
+        /// <summary>The AMQP 1.0.0 protocol header.</summary>
+        public static readonly ProtocolHeader Amqp100 = new ProtocolHeader(ProtocolId.Amqp, new AmqpVersion(1, 0, 0));
+
+        /// <summary>The AMQP TLS 1.0.0 protocol header.</summary>
+        public static readonly ProtocolHeader AmqpTls100 = new ProtocolHeader(ProtocolId.AmqpTls, new AmqpVersion(1, 0, 0));
+
+        /// <summary>The AMQP SASL 1.0.0 protocol header.</summary>
+        public static readonly ProtocolHeader AmqpSasl100 = new ProtocolHeader(ProtocolId.AmqpSasl, new AmqpVersion(1, 0, 0));
+
         ProtocolId protocolId;
         AmqpVersion version;
 

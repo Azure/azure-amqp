@@ -60,7 +60,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="messageListener">The message listener.</param>
         public void RegisterMessageListener(Action<AmqpMessage> messageListener)
         {
-            if (Interlocked.Exchange(ref this.messageListener, messageListener) != null)
+            if (Interlocked.CompareExchange(ref this.messageListener, messageListener, null) != null)
             {
                 throw new InvalidOperationException(CommonResources.MessageListenerAlreadyRegistered);
             }
@@ -409,6 +409,18 @@ namespace Microsoft.Azure.Amqp
         {
             bool settled = this.Settings.SettleType != SettleMode.SettleOnDispose;
             this.AcceptMessage(message, settled, message.Batchable);
+        }
+
+        /// <summary>
+        /// Accepts a message. The method does not wait for a response from the peer.
+        /// </summary>
+        /// <param name="message">The message to accept.</param>
+        /// <param name="batchable"><see cref="Delivery.Batchable"/></param>
+        [Obsolete("Obsolete")]
+        public void AcceptMessage(AmqpMessage message, bool batchable)
+        {
+            bool settled = this.Settings.SettleType != SettleMode.SettleOnDispose;
+            this.AcceptMessage(message, settled, batchable);
         }
 
         /// <summary>

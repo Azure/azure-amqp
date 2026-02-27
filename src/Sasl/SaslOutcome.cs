@@ -51,7 +51,8 @@ namespace Microsoft.Azure.Amqp.Sasl
             return sb.ToString();
         }
 
-        internal override void EnsureRequired()
+        /// <inheritdoc/>
+        protected override void EnsureRequired()
         {
             if (this.OutcomeCode == null)
             {

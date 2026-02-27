@@ -114,7 +114,8 @@ namespace Microsoft.Azure.Amqp
             set;
         }
 
-        internal T GetTransportProvider<T>() where T : TransportProvider
+        /// <summary>Gets the transport provider of the specified type.</summary>
+        public T GetTransportProvider<T>() where T : TransportProvider
         {
             if (this.transportProviders != null)
             {
@@ -130,7 +131,8 @@ namespace Microsoft.Azure.Amqp
             return null;
         }
 
-        internal bool TryGetTransportProvider(ProtocolHeader header, out TransportProvider provider)
+        /// <summary>Tries to get the transport provider matching the protocol header.</summary>
+        public bool TryGetTransportProvider(ProtocolHeader header, out TransportProvider provider)
         {
             if (this.TransportProviders.Count == 0)
             {
@@ -152,13 +154,15 @@ namespace Microsoft.Azure.Amqp
             return false;
         }
 
-        internal ProtocolHeader GetDefaultHeader()
+        /// <summary>Gets the default protocol header.</summary>
+        public ProtocolHeader GetDefaultHeader()
         {
             TransportProvider provider = this.GetDefaultProvider();
             return new ProtocolHeader(provider.ProtocolId, provider.DefaultVersion);
         }
 
-        internal ProtocolHeader GetSupportedHeader(ProtocolHeader requestedHeader)
+        /// <summary>Gets the supported protocol header for a requested header.</summary>
+        public ProtocolHeader GetSupportedHeader(ProtocolHeader requestedHeader)
         {
             // Protocol id negotiation
             TransportProvider provider = null;
@@ -193,7 +197,8 @@ namespace Microsoft.Azure.Amqp
             return settings;
         }
 
-        internal void ValidateInitiatorSettings()
+        /// <summary>Validates settings required for an initiator.</summary>
+        public void ValidateInitiatorSettings()
         {
             if (this.TransportProviders.Count == 0)
             {
@@ -201,7 +206,8 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal void ValidateListenerSettings()
+        /// <summary>Validates settings required for a listener.</summary>
+        public void ValidateListenerSettings()
         {
             if (this.TransportProviders.Count == 0)
             {

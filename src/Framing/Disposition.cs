@@ -71,7 +71,8 @@ namespace Microsoft.Azure.Amqp.Framing
             return sb.ToString();
         }
 
-        internal override void EnsureRequired()
+        /// <inheritdoc/>
+        protected override void EnsureRequired()
         {
             if (!this.Role.HasValue)
             {

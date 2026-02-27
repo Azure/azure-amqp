@@ -97,7 +97,8 @@ namespace Microsoft.Azure.Amqp.Framing
             private set; 
         }
 
-        internal static ByteBuffer EncodeCommand(FrameType type, ushort channel, Performative command, int payloadSize)
+        /// <summary>Encodes a command into a frame buffer.</summary>
+        public static ByteBuffer EncodeCommand(FrameType type, ushort channel, Performative command, int payloadSize)
         {
             // frameSize is used to allocate a buffer. It may not be the exact encoding size.
             // however, it should be always greater.

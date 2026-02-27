@@ -14,7 +14,8 @@ namespace Microsoft.Azure.Amqp.Framing
     {
         AmqpMap innerMap;
 
-        internal AmqpMap InnerMap
+        /// <summary>Gets the inner AMQP map.</summary>
+        public AmqpMap InnerMap
         {
             get 
             {
@@ -27,7 +28,8 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        internal void SetMap(AmqpMap map)
+        /// <summary>Sets the inner AMQP map.</summary>
+        public void SetMap(AmqpMap map)
         {
             this.innerMap = map;
         }

@@ -92,7 +92,8 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        internal void DecodeValue(ByteBuffer buffer, int size, int count)
+        /// <summary>Decodes the described list value from the buffer.</summary>
+        public void DecodeValue(ByteBuffer buffer, int size, int count)
         {
             if (count > 0)
             {
@@ -101,7 +102,8 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        internal virtual void EnsureRequired()
+        /// <summary>Validates that required fields are present.</summary>
+        protected virtual void EnsureRequired()
         {
         }
 

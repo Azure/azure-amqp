@@ -43,7 +43,8 @@ namespace Microsoft.Azure.Amqp.Framing
         {
         }
 
-        internal static int GetEncodeSize(Multiple<T> multiple)
+        /// <summary>Gets the encode size of the multiple value.</summary>
+        public static int GetEncodeSize(Multiple<T> multiple)
         {
             if (multiple == null)
             {
@@ -65,7 +66,8 @@ namespace Microsoft.Azure.Amqp.Framing
             return size;
         }
 
-        internal static void Encode(Multiple<T> multiple, ByteBuffer buffer)
+        /// <summary>Encodes the multiple value into the buffer.</summary>
+        public static void Encode(Multiple<T> multiple, ByteBuffer buffer)
         {
             if (multiple == null)
             {
@@ -91,7 +93,8 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
-        internal static Multiple<T> Decode(ByteBuffer buffer)
+        /// <summary>Decodes a multiple value from the buffer.</summary>
+        public static Multiple<T> Decode(ByteBuffer buffer)
         {
             FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
             if (formatCode == FormatCode.Null)

@@ -131,7 +131,8 @@ namespace Microsoft.Azure.Amqp
             protected set;
         }
 
-        internal object ThisLock
+        /// <summary>Gets the synchronization lock object.</summary>
+        public object ThisLock
         {
             get { return this.thisLock; }
         }
@@ -510,7 +511,8 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         protected abstract void AbortInternal();
 
-        internal void NotifyOpening(Performative command)
+        /// <summary>Notifies that the object is opening with the given command.</summary>
+        public void NotifyOpening(Performative command)
         {
             EventHandler<OpenEventArgs> opening = this.Opening;
             if (opening != null)
@@ -519,7 +521,8 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal void CompleteOpen(bool syncComplete, Exception exception)
+        /// <summary>Completes the pending open operation.</summary>
+        public void CompleteOpen(bool syncComplete, Exception exception)
         {
             OpenAsyncResult openResult = Interlocked.Exchange(ref this.pendingOpen, null);
             if (openResult != null)
@@ -528,7 +531,8 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal void CompleteClose(bool syncComplete, Exception exception)
+        /// <summary>Completes the pending close operation.</summary>
+        public void CompleteClose(bool syncComplete, Exception exception)
         {
             CloseAsyncResult closeResult = Interlocked.Exchange(ref this.pendingClose, null);
             if (closeResult != null)
@@ -570,7 +574,8 @@ namespace Microsoft.Azure.Amqp
             return state;
         }
 
-        internal void OnReceiveCloseCommand(string command, Error error)
+        /// <summary>Handles a received close command.</summary>
+        public void OnReceiveCloseCommand(string command, Error error)
         {
             Exception remoteException = null;
             if (error != null && this.TerminalException == null)
@@ -604,7 +609,8 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal void ThrowIfClosed()
+        /// <summary>Throws an exception if the object is closed.</summary>
+        public void ThrowIfClosed()
         {
             if (this.closeCalled)
             {

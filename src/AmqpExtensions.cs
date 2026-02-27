@@ -771,35 +771,6 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Adds an object to a connection's extension.
-        /// </summary>
-        /// <param name="connection">The connection.</param>
-        /// <param name="extension">The extension object.</param>
-        public static void AddExtension(this AmqpConnection connection, object extension)
-        {
-            connection.Extensions.Add(extension.GetType(), extension);
-        }
-
-        /// <summary>
-        /// Tries to get an object from a connection's extension.
-        /// </summary>
-        /// <typeparam name="T">The object type.</typeparam>
-        /// <param name="connection">The connection.</param>
-        /// <param name="extension">The extension object.</param>
-        /// <returns>true if the object is found or false otherwise.</returns>
-        public static bool TryGetExtension<T>(this AmqpConnection connection, out T extension)
-        {
-            if (connection.Extensions.TryGetValue(typeof(T), out object obj))
-            {
-                extension = (T)obj;
-                return true;
-            }
-
-            extension = default(T);
-            return false;
-        }
-
-        /// <summary>
         /// Gets an array segment for a given buffer.
         /// </summary>
         /// <param name="buffer">The input buffer.</param>

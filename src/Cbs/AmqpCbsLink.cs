@@ -24,7 +24,9 @@ namespace Microsoft.Azure.Amqp
         public AmqpCbsLink(AmqpConnection connection)
         {
             this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
-            this.connection.AddExtension(this);
+#pragma warning disable CS0436, CS0612
+            this.connection.Extensions.Add(this);
+#pragma warning restore CS0436, CS0612
             this.linkFactory = new FaultTolerantAmqpObject<RequestResponseAmqpLink>(
                 (t, c) => this.CreateCbsLinkAsync(t, c),
                 static link => CloseLink(link));

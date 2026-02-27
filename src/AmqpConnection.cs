@@ -25,7 +25,9 @@ namespace Microsoft.Azure.Amqp
         readonly HandleTable<AmqpSession> sessionsByLocalHandle;
         readonly HandleTable<AmqpSession> sessionsByRemoteHandle;
         HeartBeat heartBeat;
+#pragma warning disable CS0436, CS0612
         KeyedByTypeCollection<object> extensions;
+#pragma warning restore CS0436, CS0612
 
         /// <summary>
         /// The default factory instance to create connections.
@@ -115,9 +117,8 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets a key-value collection for storing objects with the connection.
         /// </summary>
-        /// <remarks><see cref="Extensions.AddExtension(AmqpConnection, object)"/> and
-        /// <see cref="Extensions.TryGetExtension{T}(AmqpConnection, out T)"/> should be used
-        /// to add or find objects from the collection.</remarks>
+#pragma warning disable CS0436, CS0612
+        [Obsolete]
         public KeyedByTypeCollection<object> Extensions
         {
             get
@@ -130,6 +131,7 @@ namespace Microsoft.Azure.Amqp
                 return this.extensions;
             }
         }
+#pragma warning restore CS0436, CS0612
 
         /// <summary>
         /// Gets a boolean value that indicates if the connection is the initiator.

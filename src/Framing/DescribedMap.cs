@@ -49,7 +49,8 @@ namespace Microsoft.Azure.Amqp.Framing
             this.innerMap = AmqpCodec.DecodeMap(buffer);
         }
 
-        internal void DecodeValue(ByteBuffer buffer, int size, int count)
+        /// <summary>Decodes the described map value from the buffer.</summary>
+        public void DecodeValue(ByteBuffer buffer, int size, int count)
         {
             MapEncoding.ReadMapValue(buffer, this.innerMap, size, count);
         }

@@ -325,7 +325,8 @@ namespace Microsoft.Azure.Amqp
             return link;
         }
 
-        internal void OnFlow(Flow flow)
+        /// <summary>Handles an incoming flow performative.</summary>
+        public void OnFlow(Flow flow)
         {
             this.OnReceiveFlow(flow);
         }
@@ -513,7 +514,8 @@ namespace Microsoft.Azure.Amqp
             return true;
         }
 
-        internal void NotifySessionCredit(int credit)
+        /// <summary>Notifies the link that session credit is available.</summary>
+        public void NotifySessionCredit(int credit)
         {
             if (this.inflightDeliveries != null)
             {
@@ -525,8 +527,8 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        // bottom-up: from session disposition to link to application
-        internal void OnDisposeDelivery(Delivery delivery)
+        /// <summary>Handles a delivery disposition from the session.</summary>
+        public void OnDisposeDelivery(Delivery delivery)
         {
             if (delivery.Settled)
             {
@@ -551,7 +553,8 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal void CompleteDelivery(ArraySegment<byte> deliveryTag)
+        /// <summary>Completes a delivery by its delivery tag.</summary>
+        public void CompleteDelivery(ArraySegment<byte> deliveryTag)
         {
             Delivery delivery = null;
             bool result = false;
@@ -890,7 +893,8 @@ namespace Microsoft.Azure.Amqp
         /// <param name="remoteAttach">The incoming Attach from remote which contains the remote's unsettled delivery states.</param>
         protected abstract void ProcessUnsettledDeliveries(Attach remoteAttach);
 
-        internal bool SendDelivery(Delivery delivery)
+        /// <summary>Sends a delivery over the link.</summary>
+        public bool SendDelivery(Delivery delivery)
         {
             bool settled = delivery.Settled;
             bool more = true;
@@ -978,8 +982,8 @@ namespace Microsoft.Azure.Amqp
             return !more;
         }
 
-        // call this method if the operation should not be performed after close
-        internal bool DoActionIfNotClosed<T1, T2, T3, T4>(Func<AmqpLink, T1, T2, T3, T4, bool> action, T1 p1, T2 p2, T3 p3, T4 p4)
+        /// <summary>Executes an action if the link is not closed.</summary>
+        public bool DoActionIfNotClosed<T1, T2, T3, T4>(Func<AmqpLink, T1, T2, T3, T4, bool> action, T1 p1, T2 p2, T3 p3, T4 p4)
         {
             int temp = Interlocked.Increment(ref this.references);
             try
@@ -1378,7 +1382,8 @@ namespace Microsoft.Azure.Amqp
             this.SendFlow(echo, drain, properties);
         }
 
-        internal void SendFlow(bool echo, bool drain, Fields properties)
+        /// <summary>Sends a flow performative with the specified properties.</summary>
+        public void SendFlow(bool echo, bool drain, Fields properties)
         {
             this.DoActionIfNotClosed(
                 (thisPtr, paramEcho, paramDrain, paramProperties, p5) =>

@@ -114,7 +114,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets or sets the previous delivery for creating a linked list of deliveries.
         /// </summary>
-        internal Delivery Previous
+        public Delivery Previous
         {
             get;
             set;
@@ -123,7 +123,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets or sets the next delivery for creating a linked list of deliveries.
         /// </summary>
-        internal Delivery Next
+        public Delivery Next
         {
             get;
             set;
@@ -147,7 +147,8 @@ namespace Microsoft.Azure.Amqp
             set;
         }
 
-        internal static void Add(ref Delivery first, ref Delivery last, Delivery delivery)
+        /// <summary>Adds a delivery to the linked list.</summary>
+        public static void Add(ref Delivery first, ref Delivery last, Delivery delivery)
         {
             Fx.Assert(delivery.Previous == null && delivery.Next == null, "delivery is already in a list");
             if (first == null)
@@ -163,7 +164,8 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal static void Remove(ref Delivery first, ref Delivery last, Delivery delivery)
+        /// <summary>Removes a delivery from the linked list.</summary>
+        public static void Remove(ref Delivery first, ref Delivery last, Delivery delivery)
         {
             if (delivery == first)
             {

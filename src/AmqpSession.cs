@@ -280,7 +280,8 @@ namespace Microsoft.Azure.Amqp
 
         internal override TimeSpan OperationTimeout => this.connection.OperationTimeout;
 
-        internal void SendCommand(Performative command)
+        /// <summary>Sends a command performative without a payload.</summary>
+        public void SendCommand(Performative command)
         {
             this.SendCommand(command, null);
         }
@@ -324,7 +325,8 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal bool OnAcceptTransfer(Delivery delivery, Transfer transfer, bool newDelivery)
+        /// <summary>Accepts an incoming transfer on the session.</summary>
+        public bool OnAcceptTransfer(Delivery delivery, Transfer transfer, bool newDelivery)
         {
             try
             {
@@ -433,7 +435,8 @@ namespace Microsoft.Azure.Amqp
             return transition.To;
         }
 
-        internal bool TryCreateRemoteLink(Attach attach, out AmqpLink link)
+        /// <summary>Tries to create a remote link from an incoming attach.</summary>
+        public bool TryCreateRemoteLink(Attach attach, out AmqpLink link)
         {
             link = null;
             if (this.linkFactory == null)

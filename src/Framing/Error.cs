@@ -122,7 +122,8 @@ namespace Microsoft.Azure.Amqp.Framing
             info.AddValue("Description", this.Description);
         }
 
-        internal override void EnsureRequired()
+        /// <inheritdoc/>
+        protected override void EnsureRequired()
         {
             if (this.Condition.Value == null)
             {

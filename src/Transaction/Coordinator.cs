@@ -28,7 +28,8 @@ namespace Microsoft.Azure.Amqp.Transaction
         /// </summary>
         public Multiple<AmqpSymbol> Capabilities { get; set; }
 
-        internal override void EnsureRequired()
+        /// <inheritdoc/>
+        protected override void EnsureRequired()
         {
         }
 

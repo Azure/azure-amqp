@@ -223,9 +223,10 @@ namespace Microsoft.Azure.Amqp.Serialization
             return (TAs)type.ReadObject(buffer);
         }
 
+        /// <summary>Gets the serializable type for the specified CLR type.</summary>
         [RequiresUnreferencedCode(TrimWarning)]
         [RequiresDynamicCode(AotWarning)]
-        internal SerializableType GetType(Type type)
+        public SerializableType GetType(Type type)
         {
             return this.GetOrCompileType(type, false);
         }

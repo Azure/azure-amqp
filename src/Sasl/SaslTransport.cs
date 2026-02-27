@@ -70,7 +70,8 @@ namespace Microsoft.Azure.Amqp.Sasl
             return this.innerTransport.ReadAsync(args);
         }
 
-        internal void OnNegotiationSucceed(IPrincipal principal)
+        /// <summary>Called when SASL negotiation succeeds.</summary>
+        public void OnNegotiationSucceed(IPrincipal principal)
         {
             AmqpTrace.OnLogOperationInformational(this, TraceOperation.Execute, "OnNegotiationSucceed");
             this.negotiator = null;
@@ -78,7 +79,8 @@ namespace Microsoft.Azure.Amqp.Sasl
             this.CompleteOpen(false, null);
         }
 
-        internal void OnNegotiationFail(Exception exception)
+        /// <summary>Called when SASL negotiation fails.</summary>
+        public void OnNegotiationFail(Exception exception)
         {
             AmqpTrace.OnLogError(this, "OnNegotiationFail", exception);
             this.negotiator = null;

@@ -5,7 +5,6 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.Text;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Encoding;
@@ -17,34 +16,47 @@ namespace Microsoft.Azure.Amqp
     /// </summary>
     public static class Extensions
     {
-        // methods for tracing
-        internal static string GetString(this ArraySegment<byte> binary, int count = int.MaxValue, StringBuilder output = null)
+        /// <summary>
+        /// Gets a hex string representation of the binary data.
+        /// </summary>
+        public static string GetString(this ArraySegment<byte> binary)
         {
-            if (binary.Count == 0)
+            return GetString(binary, int.MaxValue);
+        }
+
+        internal static string GetString(this ArraySegment<byte> binary, int max)
+        {
+            if (binary.Array == null || binary.Count == 0)
             {
                 return string.Empty;
             }
 
-            StringBuilder sb = output ?? new StringBuilder(binary.Count * 2);
-            for (int i = 0; i < Math.Min(count, binary.Count); ++i)
+            int count = binary.Count <= max ? binary.Count : max;
+            char[] chars = new char[count * 2];
+            int ci = 0;
+            for (int i = 0; i < count; i++)
             {
-                sb.AppendFormat(CultureInfo.InvariantCulture, "{0:X2}", binary.Array[binary.Offset + i]);
+                byte b = binary.Array[binary.Offset + i];
+                int high = b >> 4;
+                chars[ci++] = (char)(55 + high + (((high - 10) >> 31) & -7));
+                int low = b & 0xF;
+                chars[ci++] = (char)(55 + low + (((low - 10) >> 31) & -7));
             }
 
-            if (count < binary.Count)
+            if (binary.Count > max)
             {
-                sb.Append("...");
+                chars[chars.Length - 1] = '.';
             }
 
-            return output == null ? sb.ToString() : null;
+            return new string(chars);
         }
 
-        internal static string GetString(IDictionary<ArraySegment<byte>, Delivery> deliveries)
+        internal static string GetString(this IDictionary<ArraySegment<byte>, Delivery> deliveries)
         {
             StringBuilder sb = new StringBuilder();
             foreach (var item in deliveries)
             {
-                sb.Append(Extensions.GetString(item.Key));
+                sb.Append(item.Key.GetString());
                 sb.Append(":");
                 sb.Append(item.Value.State);
                 sb.Append(",");
@@ -86,6 +98,15 @@ namespace Microsoft.Azure.Amqp
 
         // begin
         /// <summary>
+        /// Gets the value of begin.remote-channel or 0 if it is not set.
+        /// </summary>
+        [Obsolete("Access Begin.RemoteChannel directly.")]
+        public static ushort RemoteChannel(this Begin begin)
+        {
+            return begin.RemoteChannel == null ? (ushort)0 : begin.RemoteChannel.Value;
+        }
+
+        /// <summary>
         /// Gets the value of begin.handle-max or uint.MaxValue it is not set.
         /// </summary>
         /// <param name="begin">The <see cref="Begin"/> performative.</param>
@@ -124,6 +145,15 @@ namespace Microsoft.Azure.Amqp
         public static bool IsReceiver(this Attach attach)
         {
             return attach.Role.HasValue && attach.Role.Value;
+        }
+
+        /// <summary>
+        /// Gets the value of attach.incomplete-unsettled or false if it is not set.
+        /// </summary>
+        [Obsolete("Access Attach.IncompleteUnsettled directly.")]
+        public static bool IncompleteUnsettled(this Attach attach)
+        {
+            return attach.IncompleteUnsettled == null ? false : attach.IncompleteUnsettled.Value;
         }
 
         /// <summary>
@@ -210,6 +240,147 @@ namespace Microsoft.Azure.Amqp
                 {
                     return SettleMode.SettleOnDispose;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets whether the attach target or source is dynamic.
+        /// </summary>
+        [Obsolete("Access Source.Dynamic or Target.Dynamic directly.")]
+        public static bool Dynamic(this Attach attach)
+        {
+            if (attach.IsReceiver())
+            {
+                Fx.Assert(attach.Source != null && attach.Source is Source, "Source is not valid.");
+                return ((Source)attach.Source).Dynamic();
+            }
+            else
+            {
+                Fx.Assert(attach.Target != null && attach.Target is Target, "Target is not valid.");
+                return ((Target)attach.Target).Dynamic();
+            }
+        }
+
+        /// <summary>
+        /// Clones an Attach performative.
+        /// </summary>
+        [Obsolete("Create a new Attach and copy properties directly.")]
+        public static Attach Clone(this Attach attach)
+        {
+            Attach clone = new Attach();
+            clone.LinkName = attach.LinkName;
+            clone.Role = attach.Role;
+            clone.SndSettleMode = attach.SndSettleMode;
+            clone.RcvSettleMode = attach.RcvSettleMode;
+            clone.Source = attach.Source;
+            clone.Target = attach.Target;
+            clone.Unsettled = attach.Unsettled;
+            clone.IncompleteUnsettled = attach.IncompleteUnsettled;
+            clone.InitialDeliveryCount = attach.InitialDeliveryCount;
+            clone.MaxMessageSize = attach.MaxMessageSize;
+            clone.OfferedCapabilities = attach.OfferedCapabilities;
+            clone.DesiredCapabilities = attach.DesiredCapabilities;
+            clone.Properties = attach.Properties;
+
+            return clone;
+        }
+
+        /// <summary>
+        /// Clones an AmqpLinkSettings object.
+        /// </summary>
+        [Obsolete("Create a new AmqpLinkSettings and copy properties directly.")]
+        public static AmqpLinkSettings Clone(this AmqpLinkSettings settings, bool deepClone)
+        {
+            AmqpLinkSettings clone = new AmqpLinkSettings();
+
+            clone.LinkName = settings.LinkName;
+            clone.Role = settings.Role;
+            clone.SndSettleMode = settings.SndSettleMode;
+            clone.RcvSettleMode = settings.RcvSettleMode;
+            clone.Source = settings.Source;
+            clone.Target = settings.Target;
+            clone.Unsettled = settings.Unsettled;
+            clone.IncompleteUnsettled = settings.IncompleteUnsettled;
+            clone.InitialDeliveryCount = settings.InitialDeliveryCount;
+            clone.MaxMessageSize = settings.MaxMessageSize;
+            clone.OfferedCapabilities = settings.OfferedCapabilities;
+            clone.DesiredCapabilities = settings.DesiredCapabilities;
+
+            if (deepClone)
+            {
+                if (settings.Properties != null)
+                {
+                    clone.Properties = new Fields();
+                    foreach (var p in settings.Properties)
+                    {
+                        clone.Properties[p.Key] = p.Value;
+                    }
+                }
+            }
+            else
+            {
+                clone.Properties = settings.Properties;
+            }
+
+            clone.TotalLinkCredit = settings.TotalLinkCredit;
+            clone.TotalCacheSizeInBytes = settings.TotalCacheSizeInBytes;
+            clone.FlowThreshold = settings.FlowThreshold;
+            clone.AutoSendFlow = settings.AutoSendFlow;
+            clone.SettleType = settings.SettleType;
+
+            return clone;
+        }
+
+        /// <summary>
+        /// Clones a Source object.
+        /// </summary>
+        [Obsolete("Create a new Source and copy properties directly.")]
+        public static Source Clone(this Source source)
+        {
+            Source clone = new Source();
+            clone.Address = source.Address;
+            clone.Durable = source.Durable;
+            clone.ExpiryPolicy = source.ExpiryPolicy;
+            clone.Timeout = source.Timeout;
+            clone.DistributionMode = source.DistributionMode;
+            clone.FilterSet = source.FilterSet;
+            clone.DefaultOutcome = source.DefaultOutcome;
+            clone.Outcomes = source.Outcomes;
+            clone.Capabilities = source.Capabilities;
+
+            return clone;
+        }
+
+        /// <summary>
+        /// Clones a Target object.
+        /// </summary>
+        [Obsolete("Create a new Target and copy properties directly.")]
+        public static Target Clone(this Target target)
+        {
+            Target clone = new Target();
+            clone.Address = target.Address;
+            clone.Durable = target.Durable;
+            clone.ExpiryPolicy = target.ExpiryPolicy;
+            clone.Timeout = target.Timeout;
+            clone.Capabilities = target.Capabilities;
+
+            return clone;
+        }
+
+        /// <summary>
+        /// Sets a property on the attach if the value is not the default.
+        /// </summary>
+        [Obsolete("Access Attach.Properties directly.")]
+        public static void UpsertPropertyIfNotDefault<T>(this Attach attach, AmqpSymbol symbol, T value)
+        {
+            if (!object.Equals(value, default(T)))
+            {
+                if (attach.Properties == null)
+                {
+                    attach.Properties = new Fields();
+                }
+
+                attach.Properties[symbol] = value;
             }
         }
 
@@ -399,6 +570,28 @@ namespace Microsoft.Azure.Amqp
             return properties.GroupSequence == null ? 0 : properties.GroupSequence.Value;
         }
 
+        /// <summary>
+        /// Gets a tracking ID from the message properties.
+        /// </summary>
+        [Obsolete("Access Properties.CorrelationId or Properties.MessageId directly.")]
+        public static string TrackingId(this Properties properties)
+        {
+            if (properties.CorrelationId != null)
+            {
+                return properties.CorrelationId.ToString();
+            }
+            else if (properties.MessageId != null)
+            {
+                return properties.MessageId.ToString();
+            }
+            else
+            {
+                Guid trackingId = Guid.NewGuid();
+                properties.MessageId = trackingId;
+                return properties.MessageId.ToString();
+            }
+        }
+
         // delivery
         /// <summary>
         /// Gets the value that indicates if the delivery is part of a transaction.
@@ -408,6 +601,15 @@ namespace Microsoft.Azure.Amqp
         public static bool Transactional(this DeliveryState deliveryState)
         {
             return deliveryState != null && deliveryState.DescriptorCode == TransactionalState.Code;
+        }
+
+        /// <summary>
+        /// Gets the value that indicates if the delivery is part of a transaction.
+        /// </summary>
+        [Obsolete("Use Transactional(DeliveryState) instead.")]
+        public static bool Transactional(this Delivery delivery)
+        {
+            return delivery.State != null && delivery.State.DescriptorCode == TransactionalState.Code;
         }
 
         /// <summary>

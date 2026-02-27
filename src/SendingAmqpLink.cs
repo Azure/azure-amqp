@@ -19,6 +19,7 @@ namespace Microsoft.Azure.Amqp
         readonly SerializedWorker<AmqpMessage> pendingDeliveries;   // need link credit
         readonly WorkCollection<ArraySegment<byte>, SendAsyncResult, Outcome> inflightSends;
         Action<Delivery> dispositionListener;
+        Action<uint, bool, ArraySegment<byte>> creditListener;
         DateTime lastFlowRequestTime;
         ICollection<Delivery> deliveriesToBeResentUponRecovery;
 
@@ -46,12 +47,24 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
+        /// Registers a callback which is invoked when credits are updated by received flow commands.
+        /// </summary>
+        /// <param name="creditListener">The callback that is invoked with credit, drain and txn-id arguments.</param>
+        public void RegisterCreditListener(Action<uint, bool, ArraySegment<byte>> creditListener)
+        {
+            if (Interlocked.CompareExchange(ref this.creditListener, creditListener, null) != null)
+            {
+                throw new InvalidOperationException(CommonResources.CreditListenerAlreadyRegistered);
+            }
+        }
+
+        /// <summary>
         /// Registers a disposition listener to handler delivery state changes.
         /// </summary>
         /// <param name="dispositionListener"></param>
         public void RegisterDispositionListener(Action<Delivery> dispositionListener)
         {
-            if (Interlocked.Exchange(ref this.dispositionListener, dispositionListener) != null)
+            if (Interlocked.CompareExchange(ref this.dispositionListener, dispositionListener, null) != null)
             {
                 throw new InvalidOperationException(CommonResources.DispositionListenerAlreadyRegistered);
             }
@@ -219,6 +232,11 @@ namespace Microsoft.Azure.Amqp
             {
                 this.pendingDeliveries.ContinueWork();
             }
+        }
+
+        internal override void NotifyCreditAvailable(uint credit, bool drain, ArraySegment<byte> txnId)
+        {
+            this.creditListener?.Invoke(credit, drain, txnId);
         }
 
         /// <summary>

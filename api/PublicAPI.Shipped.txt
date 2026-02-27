@@ -1,4 +1,4 @@
-﻿﻿abstract Microsoft.Azure.Amqp.AmqpConnectionBase.OnFrameBuffer(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
+﻿abstract Microsoft.Azure.Amqp.AmqpConnectionBase.OnFrameBuffer(Microsoft.Azure.Amqp.ByteBuffer buffer) -> void
 abstract Microsoft.Azure.Amqp.AmqpConnectionBase.OnProtocolHeader(Microsoft.Azure.Amqp.Framing.ProtocolHeader header) -> void
 abstract Microsoft.Azure.Amqp.AmqpLink.CreateDelivery(Microsoft.Azure.Amqp.Framing.Transfer transfer, out Microsoft.Azure.Amqp.Delivery delivery) -> bool
 abstract Microsoft.Azure.Amqp.AmqpLink.OnCreditAvailable(int session, uint link, bool drain, System.ArraySegment<byte> txnId) -> void
@@ -534,12 +534,8 @@ Microsoft.Azure.Amqp.Delivery.TxnId.set -> void
 Microsoft.Azure.Amqp.Encoding.AmqpBitConverter
 Microsoft.Azure.Amqp.Encoding.AmqpEncoding
 Microsoft.Azure.Amqp.Encoding.AmqpMap
-Microsoft.Azure.Amqp.Encoding.AmqpMap.Add(Microsoft.Azure.Amqp.Encoding.MapKey key, object value) -> void
 Microsoft.Azure.Amqp.Encoding.AmqpMap.AmqpMap() -> void
-Microsoft.Azure.Amqp.Encoding.AmqpMap.AmqpMap(System.Collections.Generic.IDictionary<Microsoft.Azure.Amqp.Encoding.MapKey, object> value) -> void
 Microsoft.Azure.Amqp.Encoding.AmqpMap.AmqpMap(System.Collections.IDictionary value) -> void
-Microsoft.Azure.Amqp.Encoding.AmqpMap.Count.get -> int
-Microsoft.Azure.Amqp.Encoding.AmqpMap.GetEnumerator() -> System.Collections.Generic.Dictionary<Microsoft.Azure.Amqp.Encoding.MapKey, object>.Enumerator
 Microsoft.Azure.Amqp.Encoding.AmqpMap.this[Microsoft.Azure.Amqp.Encoding.MapKey key].get -> object
 Microsoft.Azure.Amqp.Encoding.AmqpMap.this[Microsoft.Azure.Amqp.Encoding.MapKey key].set -> void
 Microsoft.Azure.Amqp.Encoding.AmqpMap.TryGetValue<TValue>(Microsoft.Azure.Amqp.Encoding.MapKey key, out TValue value) -> bool
@@ -791,8 +787,6 @@ Microsoft.Azure.Amqp.Framing.Modified.Modified() -> void
 Microsoft.Azure.Amqp.Framing.Modified.UndeliverableHere.get -> bool?
 Microsoft.Azure.Amqp.Framing.Modified.UndeliverableHere.set -> void
 Microsoft.Azure.Amqp.Framing.Multiple<T>
-Microsoft.Azure.Amqp.Framing.Multiple<T>.Add(T item) -> void
-Microsoft.Azure.Amqp.Framing.Multiple<T>.Contains(T item) -> bool
 Microsoft.Azure.Amqp.Framing.Multiple<T>.Multiple() -> void
 Microsoft.Azure.Amqp.Framing.Multiple<T>.Multiple(System.Collections.Generic.IList<T> value) -> void
 Microsoft.Azure.Amqp.Framing.Open

@@ -322,7 +322,18 @@ namespace Microsoft.Azure.Amqp
         /// <summary>Sends a command performative without a payload.</summary>
         public void SendCommand(Performative command)
         {
-            this.SendCommand(command, null);
+            this.SendCommand(command, (ByteBuffer)null);
+        }
+
+        /// <summary>
+        /// Sends a command with payload segments.
+        /// </summary>
+        /// <param name="command">The command to send.</param>
+        /// <param name="payload">The payload segments.</param>
+        [Obsolete("Use SendCommand(Performative) instead.")]
+        public void SendCommand(Performative command, ArraySegment<byte>[] payload)
+        {
+            throw new InvalidOperationException();
         }
 
         internal void SendCommand(Performative command, ByteBuffer payload)
@@ -342,6 +353,19 @@ namespace Microsoft.Azure.Amqp
         {
             // delivery MUST be null for continued transfer fragments
             return this.outgoingChannel.TrySendTransfer(delivery, transfer, payload);
+        }
+
+        /// <summary>
+        /// Attempts to send the transfer with payload segments.
+        /// </summary>
+        /// <param name="delivery">The delivery owning the transfer.</param>
+        /// <param name="transfer">The transfer command to send.</param>
+        /// <param name="payload">The payload segments.</param>
+        /// <returns>True if the transfer is sent; false if session window is 0.</returns>
+        [Obsolete("Use TrySendTransfer(Delivery, Transfer, ByteBuffer) instead.")]
+        public bool TrySendTransfer(Delivery delivery, Transfer transfer, ArraySegment<byte>[] payload)
+        {
+            throw new InvalidOperationException();
         }
 
         /// <summary>
@@ -1221,7 +1245,7 @@ namespace Microsoft.Azure.Amqp
                     // Outgoing state needs to be sync'ed with transfers
                     this.AddFlowState(flow, false);
                     this.Session.incomingChannel.AddFlowState(flow, true);
-                    this.Session.SendCommand(flow, null);
+                    this.Session.SendCommand(flow, (ByteBuffer)null);
                 }
             }
 

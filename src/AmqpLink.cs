@@ -20,7 +20,6 @@ namespace Microsoft.Azure.Amqp
         readonly AmqpLinkSettings settings;
         readonly Outcome defaultOutcome;
         readonly SerializedWorker<Delivery> inflightDeliveries; // has link credit, may need session credit
-        Action<uint, bool, ArraySegment<byte>> creditListener;
 
         // flow control state
         SequenceNumber deliveryCount;
@@ -179,7 +178,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets the map of unsettled deliveries.
         /// </summary>
-        public IDictionary<ArraySegment<byte>, Delivery> UnsettledMap { get; }
+        public Dictionary<ArraySegment<byte>, Delivery> UnsettledMap { get; }
 
         /// <summary>
         /// Gets an object that synchronizes access to shared link endpoint state.
@@ -242,23 +241,6 @@ namespace Microsoft.Azure.Amqp
             this.Session = session;
             this.LinkIdentifier = new AmqpLinkIdentifier(this.Name, this.settings.IsReceiver(), this.Session.Connection.Settings.ContainerId);
             session.AttachLink(this);
-        }
-
-        /// <summary>
-        /// Registers a callback which is invoked when credits are updated by received flow commands.
-        /// </summary>
-        /// <param name="creditListener">The callback that is invoked with credit, drain and txn-id arguments.</param>
-        public void RegisterCreditListener(Action<uint, bool, ArraySegment<byte>> creditListener)
-        {
-            lock (this.syncRoot)
-            {
-                if (this.creditListener != null)
-                {
-                    throw new InvalidOperationException("Credit listener already registered.");
-                }
-
-                this.creditListener = creditListener;
-            }
         }
 
         /// <summary>
@@ -655,7 +637,7 @@ namespace Microsoft.Azure.Amqp
                 this.OnCreditAvailable(0, moreCredit, flowDrain, txnId);
                 if (this.linkCredit > 0 || flowDrain)
                 {
-                    this.creditListener?.Invoke(moreCredit, this.drain, txnId);
+                    this.NotifyCreditAvailable(moreCredit, this.drain, txnId);
                 }
 
                 if (flowDrain && !this.IsReceiver)
@@ -887,6 +869,10 @@ namespace Microsoft.Azure.Amqp
         /// <param name="drain"><see cref="Flow.Drain"/></param>
         /// <param name="txnId">The transaction identifier in the flow.</param>
         protected abstract void OnCreditAvailable(int session, uint link, bool drain, ArraySegment<byte> txnId);
+
+        internal virtual void NotifyCreditAvailable(uint credit, bool drain, ArraySegment<byte> txnId)
+        {
+        }
 
         /// <summary>
         /// A method to override to handle a delivery state update by the remote peer.

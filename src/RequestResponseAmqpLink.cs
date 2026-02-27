@@ -110,7 +110,10 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public string Name { get; private set; }
 
-        internal SendingAmqpLink SendingLink
+        /// <summary>
+        /// Gets the sending link.
+        /// </summary>
+        public SendingAmqpLink SendingLink
         {
             get
             {
@@ -118,7 +121,10 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        internal ReceivingAmqpLink ReceivingLink
+        /// <summary>
+        /// Gets the receiving link.
+        /// </summary>
+        public ReceivingAmqpLink ReceivingLink
         {
             get
             {

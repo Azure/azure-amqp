@@ -42,6 +42,34 @@ namespace Microsoft.Azure.Amqp
         ByteBuffer innerBuffer;
 
         /// <summary>
+        /// Initializes buffer managers with default pool size.
+        /// </summary>
+        [Obsolete("Obsolete")]
+        public static void InitBufferManagers()
+        {
+            InitBufferManagers(48 * 1024 * 1024);
+        }
+
+        /// <summary>
+        /// Initializes buffer managers with the specified max pool size.
+        /// </summary>
+        /// <param name="maxPoolSizeInBytes">The maximum pool size in bytes.</param>
+        [Obsolete("Obsolete")]
+        public static void InitBufferManagers(long maxPoolSizeInBytes)
+        {
+            if (TransportBufferManager == null)
+            {
+                lock (syncRoot)
+                {
+                    if (TransportBufferManager == null)
+                    {
+                        TransportBufferManager = InternalBufferManager.CreatePooledBufferManager();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Initializes the pool of buffers used for transport read and write.
         /// </summary>
         /// <param name="bufferSize">The buffer size in bytes.</param>
@@ -384,6 +412,17 @@ namespace Microsoft.Azure.Amqp
                 throw new InvalidOperationException(AmqpResources.AmqpBufferAlreadyReclaimed);
             }
 
+            return this;
+        }
+
+        /// <summary>
+        /// Clones the buffer by adding a reference.
+        /// </summary>
+        /// <returns>The current buffer.</returns>
+        [Obsolete("Call AddReference instead.")]
+        public object Clone()
+        {
+            this.AddReference();
             return this;
         }
 

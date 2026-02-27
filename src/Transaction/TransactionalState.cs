@@ -20,7 +20,15 @@ namespace Microsoft.Azure.Amqp.Transaction
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public TransactionalState() : base(Name, Code, 2) { }
+        public TransactionalState() : base(Name, Code) { }
+
+        const int Fields = 2;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
+        }
 
         /// <summary>
         /// Gets or sets the txn-id field.

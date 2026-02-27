@@ -4,8 +4,10 @@
 namespace Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
     // ============= State Diagram ====================
@@ -129,6 +131,38 @@ namespace Microsoft.Azure.Amqp
         {
             get;
             protected set;
+        }
+
+        /// <summary>
+        /// Gets or sets the default open timeout.
+        /// </summary>
+        [Obsolete("Obsolete")]
+        public TimeSpan DefaultOpenTimeout
+        {
+            get { return AmqpConstants.DefaultTimeout; }
+            protected set { }
+        }
+
+        /// <summary>
+        /// Gets or sets the default close timeout.
+        /// </summary>
+        [Obsolete("Obsolete")]
+        public TimeSpan DefaultCloseTimeout
+        {
+            get { return AmqpConstants.DefaultTimeout; }
+            protected set { }
+        }
+
+        /// <summary>
+        /// Gets the mutual capabilities negotiated with the remote peer.
+        /// </summary>
+        [Obsolete("Obsolete")]
+        public IList<AmqpSymbol> MutualCapabilities
+        {
+            get
+            {
+                return Array.Empty<AmqpSymbol>();
+            }
         }
 
         /// <summary>Gets the synchronization lock object.</summary>
@@ -616,6 +650,16 @@ namespace Microsoft.Azure.Amqp
             {
                 throw new AmqpException(AmqpErrorCode.IllegalState, $"'{this.name}' is closed");
             }
+        }
+
+        /// <summary>
+        /// Finds the mutual capabilities between desired and offered capabilities.
+        /// </summary>
+        /// <param name="desired">The desired capabilities.</param>
+        /// <param name="offered">The offered capabilities.</param>
+        [Obsolete("Obsolete")]
+        public void FindMutualCapabilites(Multiple<AmqpSymbol> desired, Multiple<AmqpSymbol> offered)
+        {
         }
 
         /// <summary>

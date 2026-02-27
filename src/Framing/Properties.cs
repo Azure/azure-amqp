@@ -47,7 +47,15 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Properties() : base(Name, Code, 13) { }
+        public Properties() : base(Name, Code) { }
+
+        const int Fields = 13;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
+        }
 
         /// <summary>
         /// Gets or sets the "message-id" field..

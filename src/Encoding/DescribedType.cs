@@ -20,12 +20,12 @@ namespace Microsoft.Azure.Amqp.Encoding
         }
 
         /// <summary>
-        /// Gets the descriptor.
+        /// Gets or sets the descriptor.
         /// </summary>
         public object Descriptor
         {
             get;
-            private set;
+            set;
         }
 
         /// <summary>

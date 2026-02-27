@@ -19,7 +19,10 @@ namespace Microsoft.Azure.Amqp.Transport
         static readonly AsyncCallback onWriteComplete = OnWriteComplete;
         static readonly AsyncCallback onReadComplete = OnReadComplete;
         readonly TransportBase innerTransport;
-        readonly CustomSslStream sslStream;
+        /// <summary>
+        /// The SSL stream.
+        /// </summary>
+        public readonly CustomSslStream sslStream;
         TlsTransportSettings tlsSettings;
         OperationState writeState;
         OperationState readState;

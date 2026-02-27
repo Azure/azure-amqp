@@ -20,8 +20,16 @@ namespace Microsoft.Azure.Amqp.Transaction
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Discharge() : base(Name, Code, 2)
+        public Discharge() : base(Name, Code)
         {
+        }
+
+        const int Fields = 2;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
         }
 
         /// <summary>

@@ -24,7 +24,15 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public SaslChallenge() : base(Name, Code, 1) { }
+        public SaslChallenge() : base(Name, Code) { }
+
+        const int Fields = 1;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
+        }
 
         /// <summary>
         /// Gets or sets the security challenge data.

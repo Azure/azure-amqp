@@ -14,7 +14,10 @@ namespace Microsoft.Azure.Amqp.Transport
     public class TlsTransportSettings : TransportSettings
     {
         const SslProtocols DefaultSslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
-        readonly TransportSettings innerSettings;
+        /// <summary>
+        /// The inner transport settings.
+        /// </summary>
+        public readonly TransportSettings innerSettings;
 
         /// <summary>
         /// Initializes the object.

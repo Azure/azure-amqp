@@ -139,7 +139,17 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <param name="value">The value of the element to add.</param>
         public void Add(TKey key, object value)
         {
-            this.InnerMap.Add(new MapKey(key), value);
+            this.InnerMap.Add(this.GetKey(key), value);
+        }
+
+        /// <summary>
+        /// Gets the map key for the given key.
+        /// </summary>
+        /// <param name="key">The key to convert.</param>
+        /// <returns>A MapKey for the given key.</returns>
+        protected virtual MapKey GetKey(TKey key)
+        {
+            return new MapKey(key);
         }
 
         /// <summary>

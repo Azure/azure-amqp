@@ -19,8 +19,16 @@ namespace Microsoft.Azure.Amqp.Transaction
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Coordinator() : base(Name, Code, 1)
+        public Coordinator() : base(Name, Code)
         {
+        }
+
+        const int Fields = 1;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
         }
 
         /// <summary>

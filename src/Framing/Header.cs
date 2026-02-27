@@ -18,8 +18,16 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Header() : base(Name, Code, 5)
+        public Header() : base(Name, Code)
         {
+        }
+
+        const int Fields = 5;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
         }
 
         /// <summary>

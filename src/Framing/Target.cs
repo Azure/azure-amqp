@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.Amqp.Framing
 {
+    using System;
     using System.Text;
     using Microsoft.Azure.Amqp.Encoding;
 
@@ -19,7 +20,25 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Target() : base(Name, Code, 7) { }
+        public Target() : base(Name, Code) { }
+
+        /// <summary>
+        /// Initializes the object with a URI address.
+        /// </summary>
+        /// <param name="uri">The URI address.</param>
+        [Obsolete("Obsolete")]
+        public Target(Uri uri) : this()
+        {
+            this.Address = uri.AbsoluteUri;
+        }
+
+        const int Fields = 7;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
+        }
 
         /// <summary>
         /// Gets or sets the "address" field.

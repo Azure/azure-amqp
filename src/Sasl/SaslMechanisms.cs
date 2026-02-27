@@ -24,7 +24,15 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public SaslMechanisms() : base(Name, Code, 1) { }
+        public SaslMechanisms() : base(Name, Code) { }
+
+        const int Fields = 1;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
+        }
 
         /// <summary>
         /// Gets or sets the supported sasl mechanisms.

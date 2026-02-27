@@ -26,6 +26,17 @@ namespace Microsoft.Azure.Amqp
             this.syncLock = new object();
         }
 
+        /// <summary>
+        /// Gets the task completion source used for singleton creation.
+        /// </summary>
+        protected TaskCompletionSource<TValue> TaskCompletionSource
+        {
+            get
+            {
+                return this.taskCompletionSource;
+            }
+        }
+
         // Test verification only
         internal TValue Value
         {

@@ -62,7 +62,12 @@ namespace Microsoft.Azure.Amqp
             set;
         }
 
-        internal static AmqpSessionSettings Create(Begin begin)
+        /// <summary>
+        /// Creates session settings from a Begin performative.
+        /// </summary>
+        /// <param name="begin">The begin performative.</param>
+        /// <returns>A new settings object.</returns>
+        public static AmqpSessionSettings Create(Begin begin)
         {
             AmqpSessionSettings settings = new AmqpSessionSettings();
             settings.Properties = begin.Properties;

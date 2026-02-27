@@ -18,7 +18,15 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Received() : base(Name, Code, 2) { }
+        public Received() : base(Name, Code) { }
+
+        const int Fields = 2;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
+        }
 
         /// <summary>
         /// Gets or sets the "section-number" field.

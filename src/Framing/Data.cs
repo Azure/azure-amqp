@@ -26,6 +26,32 @@ namespace Microsoft.Azure.Amqp.Framing
         }
 
         /// <summary>
+        /// Gets the encoded prefix bytes for a data section with the given value length.
+        /// </summary>
+        /// <param name="valueLength">The length of the binary value.</param>
+        /// <returns>An array segment containing the encoded prefix.</returns>
+        [Obsolete("Obsolete")]
+        public static ArraySegment<byte> GetEncodedPrefix(int valueLength)
+        {
+            byte[] buffer = new byte[8] { FormatCode.Described, FormatCode.SmallULong, (byte)Data.Code, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            int count;
+            if (valueLength <= byte.MaxValue)
+            {
+                buffer[3] = FormatCode.Binary8;
+                buffer[4] = (byte)valueLength;
+                count = 5;
+            }
+            else
+            {
+                buffer[3] = FormatCode.Binary32;
+                AmqpBitConverter.WriteUInt(buffer, 4, (uint)valueLength);
+                count = 8;
+            }
+
+            return new ArraySegment<byte>(buffer, 0, count);
+        }
+
+        /// <summary>
         /// Gets or sets the value. If this property is used, the <see cref="DescribedType.Value"/>
         /// base property must not be used.
         /// </summary>

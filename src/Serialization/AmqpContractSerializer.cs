@@ -223,6 +223,58 @@ namespace Microsoft.Azure.Amqp.Serialization
             return (TAs)type.ReadObject(buffer);
         }
 
+        /// <summary>
+        /// Writes an object to a buffer.
+        /// </summary>
+        /// <param name="buffer">The destination buffer.</param>
+        /// <param name="graph">The object to serialize.</param>
+        [Obsolete("Obsolete")]
+        [RequiresUnreferencedCode(TrimWarning)]
+        [RequiresDynamicCode(AotWarning)]
+        public void WriteObjectInternal(ByteBuffer buffer, object graph)
+        {
+            if (graph == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+            }
+            else
+            {
+                SerializableType type = this.GetType(graph.GetType());
+                type.WriteObject(buffer, graph);
+            }
+        }
+
+        /// <summary>
+        /// Reads an object from a buffer.
+        /// </summary>
+        /// <typeparam name="T">The expected type.</typeparam>
+        /// <param name="buffer">The source buffer.</param>
+        /// <returns>An object of T.</returns>
+        [Obsolete("Obsolete")]
+        [RequiresUnreferencedCode(TrimWarning)]
+        [RequiresDynamicCode(AotWarning)]
+        public T ReadObjectInternal<T>(ByteBuffer buffer)
+        {
+            SerializableType type = this.GetType(typeof(T));
+            return (T)type.ReadObject(buffer);
+        }
+
+        /// <summary>
+        /// Reads an object from a buffer.
+        /// </summary>
+        /// <typeparam name="T">The expected type.</typeparam>
+        /// <typeparam name="TAs">The returned type.</typeparam>
+        /// <param name="buffer">The source buffer.</param>
+        /// <returns>An object of TAs.</returns>
+        [Obsolete("Obsolete")]
+        [RequiresUnreferencedCode(TrimWarning)]
+        [RequiresDynamicCode(AotWarning)]
+        public TAs ReadObjectInternal<T, TAs>(ByteBuffer buffer)
+        {
+            SerializableType type = this.GetType(typeof(T));
+            return (TAs)type.ReadObject(buffer);
+        }
+
         /// <summary>Gets the serializable type for the specified CLR type.</summary>
         [RequiresUnreferencedCode(TrimWarning)]
         [RequiresDynamicCode(AotWarning)]

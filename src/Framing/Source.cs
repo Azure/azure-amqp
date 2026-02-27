@@ -20,7 +20,25 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public Source() : base(Name, Code, 11) { }
+        public Source() : base(Name, Code) { }
+
+        /// <summary>
+        /// Initializes the object with a URI address.
+        /// </summary>
+        /// <param name="uri">The URI address.</param>
+        [Obsolete("Obsolete")]
+        public Source(Uri uri) : this()
+        {
+            this.Address = uri.AbsoluteUri;
+        }
+
+        const int Fields = 11;
+
+        /// <inheritdoc/>
+        protected override int FieldCount
+        {
+            get { return Fields; }
+        }
 
         /// <summary>
         /// Gets or sets the "address" field.

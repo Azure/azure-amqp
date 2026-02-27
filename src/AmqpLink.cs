@@ -681,7 +681,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="delivery">The delivery.</param>
         /// <returns>True if the transfer is for a new delivery; false if it is
         /// for the existing delivery.</returns>
-        protected abstract bool CreateDelivery(Transfer transfer, out Delivery delivery);
+        public abstract bool CreateDelivery(Transfer transfer, out Delivery delivery);
 
         internal virtual void OnIoEvent(IoEvent ioEvent)
         {
@@ -800,7 +800,14 @@ namespace Microsoft.Azure.Amqp
             this.SendFlow(echo, false, properties: null);
         }
 
-        void ProcessTransfer(Transfer transfer, Frame rawFrame, Delivery delivery, bool newDelivery)
+        /// <summary>
+        /// Processes a received transfer performative.
+        /// </summary>
+        /// <param name="transfer">The transfer performative.</param>
+        /// <param name="rawFrame">The raw frame containing the transfer.</param>
+        /// <param name="delivery">The delivery associated with the transfer.</param>
+        /// <param name="newDelivery">True if this is a new delivery.</param>
+        public void ProcessTransfer(Transfer transfer, Frame rawFrame, Delivery delivery, bool newDelivery)
         {
             if (newDelivery)
             {
@@ -886,6 +893,15 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="delivery">The delivery whose state is updated.</param>
         protected abstract void OnDisposeDeliveryInternal(Delivery delivery);
+
+        /// <summary>
+        /// Called when an attach is received in the OpenSent state.
+        /// </summary>
+        /// <param name="attach">The attach performative.</param>
+        [Obsolete("Obsolete")]
+        protected virtual void OnReceiveStateOpenSent(Attach attach)
+        {
+        }
 
         /// <summary>
         /// Process and consolidate the unsettled deliveries sent with the remote Attach frame, by checking against the unsettled deliveries for this link terminus.

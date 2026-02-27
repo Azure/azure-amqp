@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Amqp.Transport
             this.receiveEventArgs.Completed += onReadComplete;
         }
 
-        public override EndPoint LocalEndPoint
+        internal override EndPoint Local
         {
             get
             {
@@ -42,12 +42,24 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
-        public override EndPoint RemoteEndPoint
+        internal override EndPoint Remote
         {
             get
             {
                 return this.remoteEndPoint;
             }
+        }
+
+        /// <inheritdoc/>
+        public override string LocalEndPoint
+        {
+            get { return this.localEndPoint?.ToString(); }
+        }
+
+        /// <inheritdoc/>
+        public override string RemoteEndPoint
+        {
+            get { return this.remoteEndPoint?.ToString(); }
         }
 
         public override void SetMonitor(ITransportMonitor monitor)

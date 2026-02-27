@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// <summary>
         /// Gets the local endpoint.
         /// </summary>
-        public abstract EndPoint LocalEndPoint
+        internal abstract EndPoint Local
         {
             get; 
         }
@@ -42,7 +42,23 @@ namespace Microsoft.Azure.Amqp.Transport
         /// <summary>
         /// Gets the remote endpoint.
         /// </summary>
-        public abstract EndPoint RemoteEndPoint
+        internal abstract EndPoint Remote
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the local endpoint string.
+        /// </summary>
+        public abstract string LocalEndPoint
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Gets the remote endpoint string.
+        /// </summary>
+        public abstract string RemoteEndPoint
         {
             get;
         }

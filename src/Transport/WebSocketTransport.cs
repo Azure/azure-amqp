@@ -20,11 +20,17 @@ namespace Microsoft.Azure.Amqp.Transport
         readonly EndPoint remote;
         ITransportMonitor usageMeter;
 
-        /// <inheritdoc cref="TransportBase.LocalEndPoint"/>
-        public override EndPoint LocalEndPoint => this.local;
+        /// <inheritdoc cref="TransportBase.Local"/>
+        internal override EndPoint Local => this.local;
 
-        /// <inheritdoc cref="TransportBase.RemoteEndPoint"/>
-        public override EndPoint RemoteEndPoint => this.remote;
+        /// <inheritdoc cref="TransportBase.Remote"/>
+        internal override EndPoint Remote => this.remote;
+
+        /// <inheritdoc/>
+        public override string LocalEndPoint => string.Empty;
+
+        /// <inheritdoc/>
+        public override string RemoteEndPoint => this.uri?.OriginalString;
 
         /// <summary>
         /// Initializes the object.

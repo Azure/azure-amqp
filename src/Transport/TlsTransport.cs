@@ -44,11 +44,17 @@ namespace Microsoft.Azure.Amqp.Transport
                 new CustomSslStream(new TransportStream(this.innerTransport), false, this.ValidateRemoteCertificate, tlsSettings.IsInitiator);
         }
 
-        /// <inheritdoc cref="TransportBase.LocalEndPoint"/>
-        public override EndPoint LocalEndPoint => this.innerTransport.LocalEndPoint;
+        /// <inheritdoc cref="TransportBase.Local"/>
+        internal override EndPoint Local => this.innerTransport.Local;
 
-        /// <inheritdoc cref="TransportBase.RemoteEndPoint"/>
-        public override EndPoint RemoteEndPoint => this.innerTransport.RemoteEndPoint;
+        /// <inheritdoc cref="TransportBase.Remote"/>
+        internal override EndPoint Remote => this.innerTransport.Remote;
+
+        /// <inheritdoc/>
+        public override string LocalEndPoint => this.innerTransport.LocalEndPoint;
+
+        /// <inheritdoc/>
+        public override string RemoteEndPoint => this.innerTransport.RemoteEndPoint;
 
         /// <summary>
         /// true since the transport is encrypted.

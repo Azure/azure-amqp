@@ -804,6 +804,16 @@
         }
 
         [Fact]
+        public void AmqpCodecArrayDecimalTest()
+        {
+            ArrayTest<decimal>(new decimal[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<decimal>(new decimal[] { 0m }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<decimal>(
+                new decimal[] { decimal.MinValue, -234934.092348m, 0, 38743947394.2349324m, decimal.MaxValue },
+                (n1, n2) => Assert.Equal(n1, n2));
+        }
+
+        [Fact]
         public void AmqpCodecArrayDecodeBooleanTrueTest()
         {
             ArrayDecodeTest<bool>(FormatCode.BooleanTrue, new byte[0], 0, new bool[0]);

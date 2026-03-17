@@ -19,7 +19,11 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static int GetEncodeSize<T>(IReadOnlyList<T> value)
         {
-            Debug.Assert(value != null);
+            if (value == null)
+            {
+                return FixedWidth.NullEncoded;
+            }
+
             int valueSize = 0;
 #if NET8_0_OR_GREATER
             foreach (T item in value)
@@ -47,7 +51,12 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static void Encode<T>(IReadOnlyList<T> value, ByteBuffer buffer)
         {
-            Debug.Assert(value != null);
+            if (value == null)
+            {
+                AmqpEncoding.EncodeNull(buffer);
+                return;
+            }
+
             var itemEncoding = AmqpEncoding.GetEncoding(typeof(T));
             AmqpBitConverter.WriteUByte(buffer, FormatCode.Array32);
             int offset = buffer.WritePos;
@@ -229,6 +238,11 @@ namespace Microsoft.Azure.Amqp.Encoding
                 case FormatCode.Described:
                     array = ArrayEncoding.Decode<DescribedType>(buffer, size, count, formatCode);
                     break;
+                case FormatCode.Decimal32:
+                case FormatCode.Decimal64:
+                case FormatCode.Decimal128:
+                    array = ArrayEncoding.Decode<decimal>(buffer, size, count, formatCode);
+                    break;
                 default:
                     throw new NotSupportedException(CommonResources.GetString(CommonResources.NotSupportFrameCode, formatCode));
             }
@@ -251,6 +265,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             else if (typeof(T) == typeof(long)) return FixedWidth.Long;
             else if (typeof(T) == typeof(float)) return FixedWidth.Float;
             else if (typeof(T) == typeof(double)) return FixedWidth.Double;
+            else if (typeof(T) == typeof(decimal)) return FixedWidth.Decimal128;
             else if (typeof(T) == typeof(char)) return FixedWidth.Char;
             else if (typeof(T) == typeof(DateTime)) return FixedWidth.TimeStamp;
             else if (typeof(T) == typeof(Guid)) return FixedWidth.Uuid;
@@ -316,10 +331,13 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 AmqpBitConverter.WriteDouble(buffer, Unsafe.As<T, double>(ref value));
             }
+            else if (typeof(T) == typeof(decimal))
+            {
+                DecimalEncoding.EncodeValue(Unsafe.As<T, decimal>(ref value), buffer);
+            }
             else if (typeof(T) == typeof(char))
             {
-                char c = Unsafe.As<T, char>(ref value);
-                AmqpBitConverter.WriteInt(buffer, char.ConvertToUtf32(new string(c, 1), 0));
+                CharEncoding.EncodeValue(Unsafe.As<T, char>(ref value), buffer);
             }
             else if (typeof(T) == typeof(DateTime))
             {
@@ -337,8 +355,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
             else if (typeof(T) == typeof(AmqpSymbol))
             {
-                string strValue = Unsafe.As<T, AmqpSymbol>(ref value).Value;
-                AmqpEncoding.GetEncoding(typeof(string)).EncodeObject(strValue, true, buffer);
+                SymbolEncoding.EncodeValue(Unsafe.As<T, AmqpSymbol>(ref value), buffer);
             }
             else
             {
@@ -419,6 +436,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 double result = AmqpBitConverter.ReadDouble(buffer);
                 return Unsafe.As<double, T>(ref result);
+            }
+            else if (typeof(T) == typeof(decimal))
+            {
+                decimal result = DecimalEncoding.DecodeValue(buffer, formatCode);
+                return Unsafe.As<decimal, T>(ref result);
             }
             else if (typeof(T) == typeof(char))
             {

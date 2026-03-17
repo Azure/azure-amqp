@@ -77,7 +77,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             return DecimalEncoding.Decode(buffer, formatCode);
         }
 
-        static unsafe void EncodeValue(decimal value, ByteBuffer buffer)
+        internal static unsafe void EncodeValue(decimal value, ByteBuffer buffer)
         {
             int[] bits = Decimal.GetBits(value);
             int lowSignificant = bits[0];
@@ -115,7 +115,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             AmqpBitConverter.WriteBytes(buffer, bytes, 0, bytes.Length);
         }
 
-        static decimal DecodeValue(ByteBuffer buffer, FormatCode formatCode)
+        internal static decimal DecodeValue(ByteBuffer buffer, FormatCode formatCode)
         {
             decimal value = 0;
             switch (formatCode)

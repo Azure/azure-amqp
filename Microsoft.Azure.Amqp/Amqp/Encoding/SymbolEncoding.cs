@@ -84,19 +84,24 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (arrayEncoding)
             {
-                string strValue = ((AmqpSymbol)value).Value;
-                int stringSize = SystemEncoding.ASCII.GetByteCount(strValue);
-                AmqpBitConverter.WriteUInt(buffer, (uint)stringSize);
-
-                buffer.Validate(true, stringSize);
-                int bytes = SystemEncoding.ASCII.GetBytes(strValue, 0, strValue.Length, buffer.Buffer, buffer.WritePos);
-                Fx.Assert(bytes == stringSize, "size wrong");
-                buffer.Append(stringSize);
+                EncodeValue((AmqpSymbol)value, buffer);
             }
             else
             {
                 SymbolEncoding.Encode((AmqpSymbol)value, buffer);
             }
+        }
+
+        internal static void EncodeValue(AmqpSymbol value, ByteBuffer buffer)
+        {
+            string strValue = value.Value;
+            int stringSize = SystemEncoding.ASCII.GetByteCount(strValue);
+            AmqpBitConverter.WriteUInt(buffer, (uint)stringSize);
+
+            buffer.Validate(true, stringSize);
+            int bytes = SystemEncoding.ASCII.GetBytes(strValue, 0, strValue.Length, buffer.Buffer, buffer.WritePos);
+            Fx.Assert(bytes == stringSize, "size wrong");
+            buffer.Append(stringSize);
         }
 
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)

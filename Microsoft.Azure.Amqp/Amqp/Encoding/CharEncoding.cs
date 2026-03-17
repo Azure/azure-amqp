@@ -22,12 +22,22 @@ namespace Microsoft.Azure.Amqp.Encoding
             if (value.HasValue)
             {
                 AmqpBitConverter.WriteUByte(buffer, FormatCode.Char);
-                AmqpBitConverter.WriteInt(buffer, char.ConvertToUtf32(new string(value.Value, 1), 0));
+                EncodeValue(value.Value, buffer);
             }
             else
             {
                 AmqpEncoding.EncodeNull(buffer);
             }
+        }
+
+        internal static void EncodeValue(char value, ByteBuffer buffer)
+        {
+            if (char.IsSurrogate(value))
+            {
+                throw new ArgumentOutOfRangeException(CommonResources.ErrorConvertingToChar);
+            }
+
+            AmqpBitConverter.WriteInt(buffer, (int)value);
         }
 
         public static char? Decode(ByteBuffer buffer, FormatCode formatCode)
@@ -63,7 +73,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (arrayEncoding)
             {
-                AmqpBitConverter.WriteInt(buffer, char.ConvertToUtf32(new string((char)value, 1), 0));
+                CharEncoding.EncodeValue((char)value, buffer);
             }
             else
             {

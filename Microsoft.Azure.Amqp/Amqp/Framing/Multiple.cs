@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
             else
             {
-                return ArrayEncoding.GetEncodeSize(multiple.value.ToArray());
+                return ArrayEncoding.GetEncodeSize(multiple.value);
             }
         }
 

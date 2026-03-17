@@ -627,100 +627,244 @@
         }
 
         [Fact]
-        public void AmqpCodecArrayTest()
+        public void AmqpCodecArrayBoolTest()
         {
-            ArrayTest<bool>(
-                new bool[] { true, false, false, true, false, false, true },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+            ArrayTest<bool>(new bool[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<bool>(new bool[] { true }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<bool>(new bool[] { true, false, false, true, false, false, true }, (n1, n2) => Assert.Equal(n1, n2));
+        }
 
-            ArrayTest<byte>(
-                new byte[] { 0, 1, 2, 3, 4, 200, 255 },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+        [Fact]
+        public void AmqpCodecArrayByteTest()
+        {
+            ArrayTest<byte>(new byte[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<byte>(new byte[] { 128 }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<byte>(new byte[] { 0, 1, 2, 3, 4, 200, 255 }, (n1, n2) => Assert.Equal(n1, n2));
+        }
 
-            ArrayTest<ushort>(
-                new ushort[] { 0, 1, 2, 0x1234, 0xab00, 0xffff },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+        [Fact]
+        public void AmqpCodecArraySByteTest()
+        {
+            ArrayTest<sbyte>(new sbyte[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<sbyte>(new sbyte[] { -1 }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<sbyte>(new sbyte[] { -127, -9, 0, 9, 127 }, (n1, n2) => Assert.Equal(n1, n2));
+        }
 
-            ArrayTest<uint>(
-                new uint[] { 0, 1, 2, 0x1234, 0xab00, 0xffff, 0x239d9e, 0xffffffff },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+        [Fact]
+        public void AmqpCodecArrayUShortTest()
+        {
+            ArrayTest<ushort>(new ushort[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<ushort>(new ushort[] { 1234 }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<ushort>(new ushort[] { 0, 1, 2, 0x1234, 0xab00, 0xffff }, (n1, n2) => Assert.Equal(n1, n2));
+        }
 
-            ArrayTest<ulong>(
-                new ulong[] { 0, 1, 2, 0x1234, 0xab00, 0xffff, 0x239d9e, 0xffffffff, 0x329999999, 0xffffffffffffffff },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+        [Fact]
+        public void AmqpCodecArrayShortTest()
+        {
+            ArrayTest<short>(new short[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<short>(new short[] { -1 }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<short>(new short[] { short.MinValue, -127, -9, 0, 9, 127, short.MaxValue }, (n1, n2) => Assert.Equal(n1, n2));
+        }
 
-            ArrayTest<sbyte>(
-                new sbyte[] { -127, -9, 0, 9, 127 },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+        [Fact]
+        public void AmqpCodecArrayUIntTest()
+        {
+            ArrayTest<uint>(new uint[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<uint>(new uint[] { 42 }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<uint>(new uint[] { 0, 1, 2, 0x1234, 0xab00, 0xffff, 0x239d9e, 0xffffffff }, (n1, n2) => Assert.Equal(n1, n2));
+            // Array with uint0 value (0) mixed with larger values
+            ArrayTest<uint>(new uint[] { 0, 0xffffffff, 0, 42, 0 }, (n1, n2) => Assert.Equal(n1, n2));
+        }
 
-            ArrayTest<short>(
-                new short[] { short.MinValue, -127, -9, 0, 9, 127, short.MaxValue},
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+        [Fact]
+        public void AmqpCodecArrayIntTest()
+        {
+            ArrayTest<int>(new int[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<int>(new int[] { 0 }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<int>(new int[] { int.MinValue, short.MinValue, -127, -9, 0, 9, 127, short.MaxValue, int.MaxValue }, (n1, n2) => Assert.Equal(n1, n2));
+        }
 
-            ArrayTest<int>(
-                new int[] { int.MinValue, short.MinValue, - 127, -9, 0, 9, 127, short.MaxValue, int.MaxValue },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+        [Fact]
+        public void AmqpCodecArrayULongTest()
+        {
+            ArrayTest<ulong>(new ulong[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<ulong>(new ulong[] { 42 }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<ulong>(new ulong[] { 0, 1, 2, 0x1234, 0xab00, 0xffff, 0x239d9e, 0xffffffff, 0x329999999, 0xffffffffffffffff }, (n1, n2) => Assert.Equal(n1, n2));
+            // Array with ulong0 value (0) mixed with larger values
+            ArrayTest<ulong>(new ulong[] { 0, 0xffffffffffffffff, 0, 42, 0 }, (n1, n2) => Assert.Equal(n1, n2));
+        }
 
-            ArrayTest<long>(
-                new long[] { long.MinValue, int.MinValue, short.MinValue, -127, -9, 0, 9, 127, short.MaxValue, int.MaxValue, long.MaxValue },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+        [Fact]
+        public void AmqpCodecArrayLongTest()
+        {
+            ArrayTest<long>(new long[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<long>(new long[] { 0 }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<long>(new long[] { long.MinValue, int.MinValue, short.MinValue, -127, -9, 0, 9, 127, short.MaxValue, int.MaxValue, long.MaxValue }, (n1, n2) => Assert.Equal(n1, n2));
+        }
 
-            ArrayTest<float>(
-                new float[] { float.MinValue, -238.233453f, 0, 89234.92394f, float.MaxValue },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+        [Fact]
+        public void AmqpCodecArrayFloatTest()
+        {
+            ArrayTest<float>(new float[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<float>(new float[] { 0f }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<float>(new float[] { float.MinValue, -238.233453f, 0, 89234.92394f, float.MaxValue }, (n1, n2) => Assert.Equal(n1, n2));
+        }
 
-            ArrayTest<double>(
-                new double[] { double.MinValue, float.MinValue, -238.233453f, 0, 89234.92394f, float.MaxValue, double.MaxValue },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+        [Fact]
+        public void AmqpCodecArrayDoubleTest()
+        {
+            ArrayTest<double>(new double[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<double>(new double[] { 3.14 }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<double>(new double[] { double.MinValue, float.MinValue, -238.233453f, 0, 89234.92394f, float.MaxValue, double.MaxValue }, (n1, n2) => Assert.Equal(n1, n2));
+        }
 
-            ArrayTest<decimal>(
-                new decimal[] { decimal.MinValue, -234934.092348m, 0, 38743947394.2349324m, decimal.MaxValue },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+        [Fact]
+        public void AmqpCodecArrayCharTest()
+        {
+            ArrayTest<char>(new char[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<char>(new char[] { 'Z' }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<char>(new char[] { 'a', 'b', 'A', 'C' }, (n1, n2) => Assert.Equal(n1, n2));
+        }
 
-            ArrayTest<char>(
-                new char[] { 'a', 'b', 'A', 'C' },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
-
+        [Fact]
+        public void AmqpCodecArrayDateTimeTest()
+        {
+            ArrayTest<DateTime>(new DateTime[0], (n1, n2) => EnsureEqual(n1, n2));
+            ArrayTest<DateTime>(new DateTime[] { DateTime.UtcNow }, (n1, n2) => EnsureEqual(n1, n2));
             ArrayTest<DateTime>(
                 new DateTime[] { DateTime.Now - TimeSpan.FromDays(100), DateTime.Now, DateTime.Now + TimeSpan.FromDays(100) },
-                (n1, n2) => { EnsureEqual(n1, n2); });
+                (n1, n2) => EnsureEqual(n1, n2));
+        }
 
-            ArrayTest<Guid>(
-                new Guid[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+        [Fact]
+        public void AmqpCodecArrayGuidTest()
+        {
+            ArrayTest<Guid>(new Guid[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<Guid>(new Guid[] { Guid.NewGuid() }, (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<Guid>(new Guid[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() }, (n1, n2) => Assert.Equal(n1, n2));
+        }
 
+        [Fact]
+        public void AmqpCodecArrayBinaryTest()
+        {
+            ArrayTest<ArraySegment<byte>>(new ArraySegment<byte>[0], (n1, n2) => Assert.Equal(n1.Count, n2.Count));
+            ArrayTest<ArraySegment<byte>>(
+                new ArraySegment<byte>[] { new ArraySegment<byte>(new byte[] { 1, 2, 3 }) },
+                (n1, n2) => Assert.Equal(n1.Count, n2.Count));
+            // Mixed bin8 and bin32 sizes
             ArrayTest<ArraySegment<byte>>(
                 new ArraySegment<byte>[] { bin8Value, bin32Value, new ArraySegment<byte>(new byte[0]) },
-                (n1, n2) => { Assert.True(n1.Count == n2.Count, "Value count not equal."); });
+                (n1, n2) => Assert.Equal(n1.Count, n2.Count));
+        }
 
+        [Fact]
+        public void AmqpCodecArrayStringTest()
+        {
+            ArrayTest<string>(new string[0], (n1, n2) => Assert.Equal(n1, n2));
+            ArrayTest<string>(new string[] { "hello" }, (n1, n2) => Assert.Equal(n1, n2));
+            // Mixed str8 (<256 bytes) and str32 (>=256 bytes) strings
             ArrayTest<string>(
                 new string[] { new string('A', 10), new string('B', 300), new string('C', 100) },
-                (n1, n2) => { Assert.True(n1 == n2, "Value not equal."); });
+                (n1, n2) => Assert.Equal(n1, n2));
+            // All str32 strings
+            ArrayTest<string>(
+                new string[] { new string('X', 300), new string('Y', 500) },
+                (n1, n2) => Assert.Equal(n1, n2));
+        }
 
+        [Fact]
+        public void AmqpCodecArraySymbolTest()
+        {
+            ArrayTest<AmqpSymbol>(new AmqpSymbol[0], (n1, n2) => Assert.True(n1.Equals(n2)));
+            ArrayTest<AmqpSymbol>(new AmqpSymbol[] { "sym1" }, (n1, n2) => Assert.True(n1.Equals(n2)));
+            // Mixed sym8 and sym32 sizes
             ArrayTest<AmqpSymbol>(
                 new AmqpSymbol[] { new string('A', 10), new string('B', 300), new string('C', 100) },
-                (n1, n2) => { Assert.True(n1.Equals(n2), "Value not equal."); });
+                (n1, n2) => Assert.True(n1.Equals(n2)));
+        }
 
-            // array of lists
+        [Fact]
+        public void AmqpCodecArrayListTest()
+        {
+            ArrayTest<IList>(new IList[0], (n1, n2) => { });
             Guid uuid = Guid.NewGuid();
-            List<object> list1 = new List<object>();
-            list1.Add(str32Value);
-            list1.Add(new AmqpSymbol(strValue));
-            list1.Add(uuid);
-            list1.Add(8.88d);
+            List<object> list1 = new List<object> { str32Value, new AmqpSymbol(strValue), uuid, 8.88d };
+            List<object> list2 = new List<object> { strValue, 3333u };
+            ArrayTest<IList>(new IList[] { list1 }, (n1, n2) => EnsureEqual(n1, n2));
+            ArrayTest<IList>(new IList[] { list1, list2, list1, list2 }, (n1, n2) => EnsureEqual(n1, n2));
+        }
 
-            List<object> list2 = new List<object>();
-            list2.Add(strValue);
-            list2.Add(3333u);
-
-            ArrayTest<IList>(
-                new IList[] { list1, list2, list1, list2 },
-                (n1, n2) => { EnsureEqual(n1, n2); });
-
-            // array of described types
+        [Fact]
+        public void AmqpCodecArrayDescribedTypeTest()
+        {
+            ArrayTest<DescribedType>(new DescribedType[] { described4 }, (n1, n2) => { });
             ArrayTest<DescribedType>(
                 new DescribedType[] { described4, described4, described4, described4 },
                 (n1, n2) => { });
+        }
+
+        [Fact]
+        public void AmqpCodecArrayDecodeBooleanTrueTest()
+        {
+            ArrayDecodeTest<bool>(FormatCode.BooleanTrue, new byte[0], 0, new bool[0]);
+            // BooleanTrue (0x41): zero-width, all elements are true
+            ArrayDecodeTest<bool>(FormatCode.BooleanTrue, new byte[0], 3, new bool[] { true, true, true });
+        }
+
+        [Fact]
+        public void AmqpCodecArrayDecodeBooleanFalseTest()
+        {
+            ArrayDecodeTest<bool>(FormatCode.BooleanFalse, new byte[0], 0, new bool[0]);
+            // BooleanFalse (0x42): zero-width, all elements are false
+            ArrayDecodeTest<bool>(FormatCode.BooleanFalse, new byte[0], 3, new bool[] { false, false, false });
+        }
+
+        [Fact]
+        public void AmqpCodecArrayDecodeUInt0Test()
+        {
+            ArrayDecodeTest<uint>(FormatCode.UInt0, new byte[0], 0, new uint[0]);
+            // UInt0 (0x43): zero-width, all elements are 0
+            ArrayDecodeTest<uint>(FormatCode.UInt0, new byte[0], 3, new uint[] { 0, 0, 0 });
+        }
+
+        [Fact]
+        public void AmqpCodecArrayDecodeSmallUIntTest()
+        {
+            ArrayDecodeTest<uint>(FormatCode.SmallUInt, new byte[0], 0, new uint[0]);
+            // SmallUInt (0x52): 1 byte per element
+            ArrayDecodeTest<uint>(FormatCode.SmallUInt, new byte[] { 0, 42, 255 }, 3, new uint[] { 0, 42, 255 });
+        }
+
+        [Fact]
+        public void AmqpCodecArrayDecodeULong0Test()
+        {
+            ArrayDecodeTest<ulong>(FormatCode.ULong0, new byte[0], 0, new ulong[0]);
+            // ULong0 (0x44): zero-width, all elements are 0
+            ArrayDecodeTest<ulong>(FormatCode.ULong0, new byte[0], 3, new ulong[] { 0, 0, 0 });
+        }
+
+        [Fact]
+        public void AmqpCodecArrayDecodeSmallULongTest()
+        {
+            ArrayDecodeTest<ulong>(FormatCode.SmallULong, new byte[0], 0, new ulong[0]);
+            // SmallULong (0x53): 1 byte per element
+            ArrayDecodeTest<ulong>(FormatCode.SmallULong, new byte[] { 0, 42, 255 }, 3, new ulong[] { 0, 42, 255 });
+        }
+
+        [Fact]
+        public void AmqpCodecArrayDecodeSmallIntTest()
+        {
+            ArrayDecodeTest<int>(FormatCode.SmallInt, new byte[0], 0, new int[0]);
+            // SmallInt (0x54): 1 signed byte per element
+            ArrayDecodeTest<int>(FormatCode.SmallInt, new byte[] { 0xFF, 0x00, 0x7F }, 3, new int[] { -1, 0, 127 });
+        }
+
+        [Fact]
+        public void AmqpCodecArrayDecodeSmallLongTest()
+        {
+            ArrayDecodeTest<long>(FormatCode.SmallLong, new byte[0], 0, new long[0]);
+            // SmallLong (0x55): 1 signed byte per element
+            ArrayDecodeTest<long>(FormatCode.SmallLong, new byte[] { 0xFF, 0x00, 0x7F }, 3, new long[] { -1, 0, 127 });
         }
 
         [Fact]
@@ -885,16 +1029,82 @@
 
         static void ArrayTest<T>(T[] array, Action<T, T> validate)
         {
-            Debug.WriteLine(string.Format("Array testing for type {0}", typeof(T).ToString()));
             byte[] workBuffer = new byte[4096];
-            ByteBuffer buffer = null;
-            AmqpCodec.EncodeArray(array, buffer = new ByteBuffer(workBuffer));
+            ByteBuffer buffer;
+            EncodingBase arrayEncoding = AmqpEncoding.GetEncoding(FormatCode.Array32);
 
+            // Path 1: static Encode<T> → static Decode<T>
+            AmqpCodec.EncodeArray(array, buffer = new ByteBuffer(workBuffer));
+            ValidateArraySizeField(buffer);
             T[] decodedArray = AmqpCodec.DecodeArray<T>(buffer);
-            Assert.True(array.Length == decodedArray.Length, "Count not equal.");
+            Assert.Equal(array.Length, decodedArray.Length);
             for (int i = 0; i < decodedArray.Length; ++i)
             {
                 validate(array[i], decodedArray[i]);
+            }
+
+            // Path 2: static Encode<T> → instance DecodeObject
+            AmqpCodec.EncodeArray(array, buffer = new ByteBuffer(workBuffer));
+            ValidateArraySizeField(buffer);
+            decodedArray = (T[])arrayEncoding.DecodeObject(buffer, 0);
+            Assert.Equal(array.Length, decodedArray.Length);
+            for (int i = 0; i < decodedArray.Length; ++i)
+            {
+                validate(array[i], decodedArray[i]);
+            }
+
+            // Path 3: instance EncodeObject → static Decode<T>
+            buffer = new ByteBuffer(workBuffer);
+            arrayEncoding.EncodeObject(array, false, buffer);
+            ValidateArraySizeField(buffer);
+            decodedArray = AmqpCodec.DecodeArray<T>(buffer);
+            Assert.Equal(array.Length, decodedArray.Length);
+            for (int i = 0; i < decodedArray.Length; ++i)
+            {
+                validate(array[i], decodedArray[i]);
+            }
+
+            // Path 4: instance EncodeObject → instance DecodeObject
+            buffer = new ByteBuffer(workBuffer);
+            arrayEncoding.EncodeObject(array, false, buffer);
+            ValidateArraySizeField(buffer);
+            decodedArray = (T[])arrayEncoding.DecodeObject(buffer, 0);
+            Assert.Equal(array.Length, decodedArray.Length);
+            for (int i = 0; i < decodedArray.Length; ++i)
+            {
+                validate(array[i], decodedArray[i]);
+            }
+        }
+
+        // Validates the size field in an encoded Array32: size should equal total length - FC(1) - sizeField(4).
+        static void ValidateArraySizeField(ByteBuffer buffer)
+        {
+            byte[] raw = buffer.Buffer;
+            int start = buffer.Offset;
+            Assert.True(raw[start] == FormatCode.Array32, "Expected Array32 format code.");
+            uint size = (uint)(raw[start + 1] << 24 | raw[start + 2] << 16 | raw[start + 3] << 8 | raw[start + 4]);
+            Assert.Equal((uint)(buffer.Length - 1 - 4), size);
+        }
+
+        // Builds a raw AMQP array8 byte sequence and decodes it, verifying against expected values.
+        static void ArrayDecodeTest<T>(byte elementFormatCode, byte[] valueBytes, int count, T[] expected)
+        {
+            // Wire format: Array8(1) | size(1) | count(1) | elementFC(1) | valueBytes
+            int size = 1 + 1 + valueBytes.Length; // count(1) + element FC(1) + values
+            byte[] raw = new byte[1 + 1 + size]; // Array8 FC + size field + payload
+            int offset = 0;
+            raw[offset++] = FormatCode.Array8;
+            raw[offset++] = (byte)size;
+            raw[offset++] = (byte)count;
+            raw[offset++] = elementFormatCode;
+            Array.Copy(valueBytes, 0, raw, offset, valueBytes.Length);
+
+            ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(raw));
+            T[] decoded = AmqpCodec.DecodeArray<T>(buffer);
+            Assert.Equal(expected.Length, decoded.Length);
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.Equal(expected[i], decoded[i]);
             }
         }
 

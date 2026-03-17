@@ -11,6 +11,7 @@
         <license type="expression">MIT</license>
         <description>Package for Azure AMQP</description>
         <icon>images\icon.png</icon>
+        <readme>readme.md</readme>
         <language>en-US</language>
         <dependencies>
           <group targetFramework="net8.0" />
@@ -26,6 +27,7 @@
         </dependencies>
     </metadata>
     <files>
+      <file src="$InputDirectory$\readme.md" target="readme.md"/>
       <file src="$InputDirectory$\images\**" target="images"/>
       <file src="$InputDirectory$\lib\**" target="lib"/>
     </files>

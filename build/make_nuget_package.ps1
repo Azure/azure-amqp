@@ -14,7 +14,7 @@ function GetAssemblyVersionFromFile($filename) {
 $PSScriptRoot = Split-Path -Parent -Path $MyInvocation.MyCommand.Definition
 $NugetPath = "$PSScriptRoot\NuGet.exe"
 $AssemblyInfoFile = "$PSScriptRoot\..\Microsoft.Azure.Amqp\Properties\Version.cs"
-$InputDirectory = [IO.Path]::GetFullPath("$PSScriptRoot\..\bin\Payload\")
+$InputDirectory = [IO.Path]::GetFullPath("$PSScriptRoot\..\bin\Payload")
 $OutputDirectory = [IO.Path]::GetFullPath("$PSScriptRoot\..\bin\Package\")
 
 echo "$InputDirectory -> $OutputDirectory"

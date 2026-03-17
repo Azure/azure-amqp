@@ -59,6 +59,10 @@ rem ----------------------------------------------------------------------------
 rem -- build solution
 rem -----------------------------------------------------------------------------
 
+rem // Pass JAVA_HOME to msbuild for Xamarin Android if set
+set java-sdk-prop=
+if defined JAVA_HOME set "java-sdk-prop=/p:JavaSdkDirectory=%JAVA_HOME%"
+
 call "%current-path%\nuget.exe" restore "%build-root%\microsoft_azure_amqp.sln"
 if %build-clean%==1 (
     call :clean-a-solution "%build-root%\microsoft_azure_amqp.sln" "%build-config%" "%build-platform%"
@@ -104,6 +108,7 @@ set dest-path=%1
 rd /s /q "%dest-path%"
 mkdir "%dest-path%"
 xcopy "%build-root%\icon.png" "%dest-path%\images\" /F
+copy "%build-root%\readme.md" "%dest-path%\readme.md"
 xcopy "%build-root%\Microsoft.Azure.Amqp\bin\%build-config%\net8.0\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\net8.0\" /F
 xcopy "%build-root%\Microsoft.Azure.Amqp\bin\%build-config%\net8.0\Microsoft.Azure.Amqp.xml" "%dest-path%\lib\net8.0\" /F
 xcopy "%build-root%\Microsoft.Azure.Amqp\bin\%build-config%\net45\Microsoft.Azure.Amqp.dll" "%dest-path%\lib\net45\" /F
@@ -124,7 +129,7 @@ rem -- helper subroutines
 rem -----------------------------------------------------------------------------
 
 :_run-msbuild
-echo msbuild /t:%1 /v:m "/p:Configuration=%~3;Platform=%~4" %2
-msbuild /t:%1 /v:m "/p:Configuration=%~3;Platform=%~4" %2
+echo msbuild /t:%1 /v:m "/p:Configuration=%~3;Platform=%~4" %java-sdk-prop% %2
+msbuild /t:%1 /v:m "/p:Configuration=%~3;Platform=%~4" %java-sdk-prop% %2
 if not %errorlevel%==0 exit /b %errorlevel%
 goto :eof

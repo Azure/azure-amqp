@@ -1,16 +1,16 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Test.Microsoft.Azure.Amqp
 {
     using System;
     using System.Reflection;
-    using Xunit;
+    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    [Trait("Category", TestCategory.Current)]
+    [TestClass]
     public class ResourcesTests
     {
-        [Fact]
+        [TestMethod]
         public void AmqpResourcesTest()
         {
             TestResource(Type.GetType("Microsoft.Azure.Amqp.Resources, Microsoft.Azure.Amqp"));
@@ -28,11 +28,11 @@ namespace Test.Microsoft.Azure.Amqp
                     object value = pi.GetValue(null);
                     System.Diagnostics.Debug.WriteLine("{0}={1}", pi.Name, value);
                     count++;
-                    Assert.NotNull(value);
-                    Assert.True(value is string);
+                    Assert.IsNotNull(value);
+                    Assert.IsTrue(value is string);
                 }
             }
-            Assert.True(count > 0, "didn't find any resource strings.");
+            Assert.IsTrue(count > 0, "didn't find any resource strings.");
         }
     }
 }

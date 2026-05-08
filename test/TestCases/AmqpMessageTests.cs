@@ -1,4 +1,4 @@
-﻿namespace Test.Microsoft.Azure.Amqp
+namespace Test.Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
@@ -7,12 +7,12 @@
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Encoding;
     using global::Microsoft.Azure.Amqp.Framing;
-    using Xunit;
+    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    [Trait("Category", TestCategory.Current)]
+    [TestClass]
     public class AmqpMessageTests
     {
-        [Fact]
+        [TestMethod]
         public void AmqpMessageReceiveResendTest()
         {
             var message = AmqpMessage.Create(new AmqpValue { Value = "Hello, AMQP!" });
@@ -29,18 +29,18 @@
             // send
             var payload2 = outMessage.GetBuffer();
             var value = (string)outMessage.MessageAnnotations.Map["key"];
-            Assert.Equal("update", value);
+            Assert.AreEqual("update", value);
 
             // receive
             var receivedMessage = AmqpMessage.CreateBufferMessage(payload2);
-            Assert.Equal(99, receivedMessage.Header.Priority.Value);
+            Assert.AreEqual(99, receivedMessage.Header.Priority.Value);
             value = (string)outMessage.DeliveryAnnotations.Map["key"];
-            Assert.Equal("da-update", value);
+            Assert.AreEqual("da-update", value);
             value = (string)outMessage.MessageAnnotations.Map["key"];
-            Assert.Equal("update", value);
+            Assert.AreEqual("update", value);
         }
 
-        [Fact]
+        [TestMethod]
         public void AmqpMessageSerializationTest()
         {
             // empty message
@@ -93,7 +93,7 @@
             ValidateMessage(message, message3);
         }
 
-        [Fact]
+        [TestMethod]
         public void AmqpMessageSerializedSizeTest()
         {
             var messages = new AmqpMessage[]
@@ -105,25 +105,25 @@
             foreach (var message in messages)
             {
                 long size = message.Serialize(true);
-                Assert.True(size > 0);
+                Assert.IsTrue(size > 0);
 
                 message.Properties.MessageId = Guid.NewGuid();
                 long size2 = message.Serialize(true);
-                Assert.True(size2 > size);
+                Assert.IsTrue(size2 > size);
 
                 message.MessageAnnotations.Map["property"] = "v1";
                 long size3 = message.Serialize(true);
-                Assert.True(size3 > size2);
+                Assert.IsTrue(size3 > size2);
 
                 var message2 = AmqpMessage.CreateBufferMessage(message.GetBuffer());
-                Assert.Equal("v1", message2.MessageAnnotations.Map["property"]);
+                Assert.AreEqual("v1", message2.MessageAnnotations.Map["property"]);
 
                 message.Properties.MessageId = "12345";
                 message.MessageAnnotations.Map["property"] = "v2";
                 message.Serialize(true);
                 var message3 = AmqpMessage.CreateBufferMessage(message.GetBuffer());
-                Assert.Equal((MessageId)"12345", message3.Properties.MessageId);
-                Assert.Equal("v2", message3.MessageAnnotations.Map["property"]);
+                Assert.AreEqual((MessageId)"12345", message3.Properties.MessageId);
+                Assert.AreEqual("v2", message3.MessageAnnotations.Map["property"]);
             }
         }
 
@@ -144,17 +144,17 @@
             return buffers.ToArray();
         }
 
-        [Fact]
+        [TestMethod]
         public void AmqpMessageStreamTest()
         {
             AmqpMessage message = AmqpMessage.Create(new MemoryStream(new byte[12]), true);
-            Assert.Equal(12, message.BodyStream.Length);
+            Assert.AreEqual(12, message.BodyStream.Length);
 
             AmqpMessage message2 = AmqpMessage.Create(new MemoryStream(new byte[12]), false);
-            Assert.Equal(12, message2.BodyStream.Length);
+            Assert.AreEqual(12, message2.BodyStream.Length);
         }
 
-        [Fact]
+        [TestMethod]
         public void AmqpMessageDisposeTest()
         {
             var message = AmqpMessage.Create();
@@ -183,7 +183,7 @@
             var buffer = message.GetBuffer();
             var message2 = AmqpMessage.CreateBufferMessage(buffer.AddReference());
             var uid = message2.Properties.UserId;
-            Assert.Equal(16, uid.Count);
+            Assert.AreEqual(16, uid.Count);
             message2.Dispose();
             message.Dispose();
 
@@ -249,52 +249,52 @@
 
         static void ValidateMessage(AmqpMessage original, AmqpMessage deserialized)
         {
-            Assert.Equal(original.Sections, deserialized.Sections);
+            Assert.AreEqual(original.Sections, deserialized.Sections);
 
             if ((original.Sections & SectionFlag.Header) != 0)
             {
-                Assert.Equal(original.Header.Priority.Value, deserialized.Header.Priority.Value);
-                Assert.Equal(original.Header.Ttl.Value, deserialized.Header.Ttl.Value);
+                Assert.AreEqual(original.Header.Priority.Value, deserialized.Header.Priority.Value);
+                Assert.AreEqual(original.Header.Ttl.Value, deserialized.Header.Ttl.Value);
             }
 
             if ((original.Sections & SectionFlag.DeliveryAnnotations) != 0)
             {
-                Assert.Equal(original.DeliveryAnnotations.Map.Count(), deserialized.DeliveryAnnotations.Map.Count());
+                Assert.AreEqual(original.DeliveryAnnotations.Map.Count(), deserialized.DeliveryAnnotations.Map.Count());
                 foreach (var pair in original.DeliveryAnnotations.Map)
                 {
-                    Assert.Equal(original.DeliveryAnnotations.Map[pair.Key], deserialized.DeliveryAnnotations.Map[pair.Key]);
+                    Assert.AreEqual(original.DeliveryAnnotations.Map[pair.Key], deserialized.DeliveryAnnotations.Map[pair.Key]);
                 }
             }
 
             if ((original.Sections & SectionFlag.MessageAnnotations) != 0)
             {
-                Assert.Equal(original.MessageAnnotations.Map.Count(), deserialized.MessageAnnotations.Map.Count());
+                Assert.AreEqual(original.MessageAnnotations.Map.Count(), deserialized.MessageAnnotations.Map.Count());
                 foreach (var pair in original.MessageAnnotations.Map)
                 {
-                    Assert.Equal(original.MessageAnnotations.Map[pair.Key], deserialized.MessageAnnotations.Map[pair.Key]);
+                    Assert.AreEqual(original.MessageAnnotations.Map[pair.Key], deserialized.MessageAnnotations.Map[pair.Key]);
                 }
             }
 
             if ((original.Sections & SectionFlag.Properties) != 0)
             {
-                Assert.Equal(original.Properties.MessageId.ToString(), deserialized.Properties.MessageId.ToString());
+                Assert.AreEqual(original.Properties.MessageId.ToString(), deserialized.Properties.MessageId.ToString());
             }
 
             if ((original.Sections & SectionFlag.ApplicationProperties) != 0)
             {
-                Assert.Equal(original.ApplicationProperties.Map.Count(), deserialized.ApplicationProperties.Map.Count());
+                Assert.AreEqual(original.ApplicationProperties.Map.Count(), deserialized.ApplicationProperties.Map.Count());
                 foreach (var pair in original.ApplicationProperties.Map)
                 {
-                    Assert.Equal(original.ApplicationProperties.Map[pair.Key], deserialized.ApplicationProperties.Map[pair.Key]);
+                    Assert.AreEqual(original.ApplicationProperties.Map[pair.Key], deserialized.ApplicationProperties.Map[pair.Key]);
                 }
             }
 
             if ((original.Sections & SectionFlag.Footer) != 0)
             {
-                Assert.Equal(original.Footer.Map.Count(), deserialized.Footer.Map.Count());
+                Assert.AreEqual(original.Footer.Map.Count(), deserialized.Footer.Map.Count());
                 foreach (var pair in original.Footer.Map)
                 {
-                    Assert.Equal(original.Footer.Map[pair.Key], deserialized.Footer.Map[pair.Key]);
+                    Assert.AreEqual(original.Footer.Map[pair.Key], deserialized.Footer.Map[pair.Key]);
                 }
             }
 
@@ -302,7 +302,7 @@
             {
                 try
                 {
-                    Assert.Equal(original.DataBody.Count(), deserialized.DataBody.Count());
+                    Assert.AreEqual(original.DataBody.Count(), deserialized.DataBody.Count());
                     using (IEnumerator<Data> enumerator1 = original.DataBody.GetEnumerator())
                     using (IEnumerator<Data> enumerator2 = deserialized.DataBody.GetEnumerator())
                     {
@@ -310,7 +310,7 @@
                         {
                             ArraySegment<byte> data1 = enumerator1.Current.Segment;
                             ArraySegment<byte> data2 = (ArraySegment<byte>)enumerator2.Current.Value;
-                            Assert.Equal(data1.Count, data2.Count);
+                            Assert.AreEqual(data1.Count, data2.Count);
                         }
                     }
                 }
@@ -319,27 +319,27 @@
                     // some messages do not support DataBody property
                     Stream bodyStream1 = original.BodyStream;
                     Stream bodyStream2 = deserialized.BodyStream;
-                    Assert.Equal(bodyStream1.Length, bodyStream2.Length);
+                    Assert.AreEqual(bodyStream1.Length, bodyStream2.Length);
                 }
             }
 
             if ((original.Sections & SectionFlag.AmqpValue) != 0)
             {
-                Assert.Equal(original.ValueBody.Value, deserialized.ValueBody.Value);
+                Assert.AreEqual(original.ValueBody.Value, deserialized.ValueBody.Value);
             }
 
             if ((original.Sections & SectionFlag.AmqpSequence) != 0)
             {
-                Assert.Equal(original.SequenceBody.Count(), deserialized.SequenceBody.Count());
+                Assert.AreEqual(original.SequenceBody.Count(), deserialized.SequenceBody.Count());
                 using(IEnumerator<AmqpSequence> enumerator1 = original.SequenceBody.GetEnumerator())
                 using(IEnumerator<AmqpSequence> enumerator2 = deserialized.SequenceBody.GetEnumerator())
                 {
                     while (enumerator1.MoveNext() && enumerator2.MoveNext())
                     {
-                        Assert.Equal(enumerator1.Current.List.Count, enumerator2.Current.List.Count);
+                        Assert.AreEqual(enumerator1.Current.List.Count, enumerator2.Current.List.Count);
                         for(int i = 0; i < enumerator1.Current.List.Count; i++)
                         {
-                            Assert.Equal(enumerator1.Current.List[i], enumerator2.Current.List[i]);
+                            Assert.AreEqual(enumerator1.Current.List[i], enumerator2.Current.List[i]);
                         }
                     }
                 }

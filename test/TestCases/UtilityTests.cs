@@ -1,4 +1,4 @@
-﻿namespace Test.Microsoft.Azure.Amqp
+namespace Test.Microsoft.Azure.Amqp
 {
     using System;
     using System.Diagnostics;
@@ -7,12 +7,12 @@
     using System.Threading.Tasks;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Encoding;
-    using Xunit;
+    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    [Trait("Category", TestCategory.Current)]
+    [TestClass]
     public class UtilityTests
     {
-        [Fact]
+        [TestMethod]
         public void SerializedWorkerTest()
         {
             const int workerCount = 3;
@@ -71,15 +71,15 @@
             Debug.WriteLine(string.Format("total: {0}, completed: {1}", totalCount, completedCount));
             if (!waitOne)
             {
-                Assert.True(false, "Worker did not complete in time");
+                Assert.IsTrue(false, "Worker did not complete in time");
             }
             else
             {
-                Assert.True(totalCount == completedCount, "Completed count is not correct.");
+                Assert.IsTrue(totalCount == completedCount, "Completed count is not correct.");
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void SerializedWorkerRaceTest()
         {
             int callCount = 0;
@@ -104,10 +104,10 @@
 
             SerializedWorker<object> serialziedWorker = new SerializedWorker<object>(new Worker<object>(func));
             serialziedWorker.DoWork(serialziedWorker);
-            Assert.True(callCount == 100, "the work is not done even if continue is called.");
+            Assert.IsTrue(callCount == 100, "the work is not done even if continue is called.");
         }
 
-        [Fact]
+        [TestMethod]
         public void SequenceNumberTest()
         {
             SequenceNumber sn0 = 0u;
@@ -120,35 +120,35 @@
             SequenceNumber sn7 = 0xFFFFFFF8u;
             SequenceNumber sn8 = 0xFFFFFFFFu;
 
-            Assert.True(sn1 == 10u, "sn1 should be 10");
-            Assert.False(sn1 == sn3, "sn1 != sn3");
-            Assert.True(sn1 != sn5, "sn1 != sn5");
-            Assert.False(sn1 != 10u, "sn1 == 10u");
-            Assert.True(sn1 >= 10u, "sn1 should not be less than 10");
-            Assert.True(sn1 < sn2, "10 should be less than 2 ^ 31 + 1");
-            Assert.True(sn1 <= sn2, "10 should not be greater than 2 ^ 31 + 1");
-            Assert.True(sn1 > sn3, "10 should be greater than uint.MaxValue - 2");
-            Assert.True(0 > sn2, "0 should be greater than 2 ^ 31 + 1");
+            Assert.IsTrue(sn1 == 10u, "sn1 should be 10");
+            Assert.IsFalse(sn1 == sn3, "sn1 != sn3");
+            Assert.IsTrue(sn1 != sn5, "sn1 != sn5");
+            Assert.IsFalse(sn1 != 10u, "sn1 == 10u");
+            Assert.IsTrue(sn1 >= 10u, "sn1 should not be less than 10");
+            Assert.IsTrue(sn1 < sn2, "10 should be less than 2 ^ 31 + 1");
+            Assert.IsTrue(sn1 <= sn2, "10 should not be greater than 2 ^ 31 + 1");
+            Assert.IsTrue(sn1 > sn3, "10 should be greater than uint.MaxValue - 2");
+            Assert.IsTrue(0 > sn2, "0 should be greater than 2 ^ 31 + 1");
 
-            Assert.True(sn1 + 5 == 15, "10 plus 5 should be 15");
-            Assert.True(sn3 + 3 == 0, "sn3 plus 3 should be 0");
-            Assert.True(sn3 + 103 == 100, "sn3 plus 103 should be 100");
-            Assert.True(sn1 + 212 == sn4, "10 plus 212 = 212");
-            Assert.True(sn1 - sn4 == -212, "10 - 222 = -212");
-            Assert.True(sn4 - sn1 == 212, "222 - 10 = 212");
-            Assert.True(sn1 - sn3 == 13, "sn1 - sn3 == 13");
-            Assert.True(sn3 - sn1 == -13, "sn3 - sn1 == -13");
-            Assert.True(sn1 + (-2) == 8u, "sn1 + (-2) == 8u");
+            Assert.IsTrue(sn1 + 5 == 15, "10 plus 5 should be 15");
+            Assert.IsTrue(sn3 + 3 == 0, "sn3 plus 3 should be 0");
+            Assert.IsTrue(sn3 + 103 == 100, "sn3 plus 103 should be 100");
+            Assert.IsTrue(sn1 + 212 == sn4, "10 plus 212 = 212");
+            Assert.IsTrue(sn1 - sn4 == -212, "10 - 222 = -212");
+            Assert.IsTrue(sn4 - sn1 == 212, "222 - 10 = 212");
+            Assert.IsTrue(sn1 - sn3 == 13, "sn1 - sn3 == 13");
+            Assert.IsTrue(sn3 - sn1 == -13, "sn3 - sn1 == -13");
+            Assert.IsTrue(sn1 + (-2) == 8u, "sn1 + (-2) == 8u");
 
-            Assert.True(sn0 < sn5);
-            Assert.Equal(sn5 + 1, sn6);
-            Assert.Equal(1, sn6 - sn5);
-            Assert.Equal(new SequenceNumber(1u) + int.MaxValue, sn6);
-            Assert.Equal(-7, sn7 - sn8);
-            Assert.Equal(sn8 + 1, sn0);
-            Assert.Equal(sn8 + 11, sn1);
-            Assert.True(sn6 < sn8);
-            Assert.True(sn0 > new SequenceNumber(2147483649u));
+            Assert.IsTrue(sn0 < sn5);
+            Assert.AreEqual(sn5 + 1, sn6);
+            Assert.AreEqual(1, sn6 - sn5);
+            Assert.AreEqual(new SequenceNumber(1u) + int.MaxValue, sn6);
+            Assert.AreEqual(-7, sn7 - sn8);
+            Assert.AreEqual(sn8 + 1, sn0);
+            Assert.AreEqual(sn8 + 11, sn1);
+            Assert.IsTrue(sn6 < sn8);
+            Assert.IsTrue(sn0 > new SequenceNumber(2147483649u));
 
             // invalid comparisons
             Action<SequenceNumber, SequenceNumber> invalidCompare = (a, b) =>
@@ -160,7 +160,7 @@
                         temp = a > b;
                         temp = a <= b;
                         temp = a >= b;
-                        Assert.True(false, "Invalid comparisons should fail");
+                        Assert.IsTrue(false, "Invalid comparisons should fail");
                     }
                     catch (InvalidOperationException)
                     {
@@ -171,7 +171,7 @@
             invalidCompare(2147483647u, 4294967295u);
         }
 
-        [Fact]
+        [TestMethod]
         public void BufferListStreamTest()
         {
             byte[] buffer = new byte[256];
@@ -192,28 +192,28 @@
             };
 
             BufferListStream stream = new BufferListStream(segments);
-            Assert.True(stream.CanRead);
-            Assert.True(stream.CanSeek);
-            Assert.True(!stream.CanWrite);
-            Assert.Equal(buffer.Length, stream.Length);
+            Assert.IsTrue(stream.CanRead);
+            Assert.IsTrue(stream.CanSeek);
+            Assert.IsTrue(!stream.CanWrite);
+            Assert.AreEqual(buffer.Length, stream.Length);
 
             stream.Seek(119, SeekOrigin.Begin);
-            Assert.Equal(119, stream.Position);
-            Assert.Equal(119, stream.ReadByte());
+            Assert.AreEqual(119, stream.Position);
+            Assert.AreEqual(119, stream.ReadByte());
 
             stream.Seek(256, SeekOrigin.Begin);
-            Assert.Equal(-1, stream.ReadByte());
+            Assert.AreEqual(-1, stream.ReadByte());
 
             stream.Seek(-1, SeekOrigin.Current);
-            Assert.Equal(255, stream.ReadByte());
+            Assert.AreEqual(255, stream.ReadByte());
 
             stream.Seek(-256, SeekOrigin.End);
-            Assert.Equal(0, stream.ReadByte());
+            Assert.AreEqual(0, stream.ReadByte());
 
             try
             {
                 stream.Seek(-198, SeekOrigin.Current);
-                Assert.True(false, "Seek should fail with argument out of range exception");
+                Assert.IsTrue(false, "Seek should fail with argument out of range exception");
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -223,80 +223,80 @@
 
             // The position is 120 now
             stream.Seek(99, SeekOrigin.Current);
-            Assert.Equal(219, stream.Position);
-            Assert.Equal(219, stream.ReadByte());
+            Assert.AreEqual(219, stream.Position);
+            Assert.AreEqual(219, stream.ReadByte());
 
             // The position is 220 now
             stream.Seek(-177, SeekOrigin.Current);
-            Assert.Equal(43, stream.Position);
-            Assert.Equal(43, stream.ReadByte());
+            Assert.AreEqual(43, stream.Position);
+            Assert.AreEqual(43, stream.ReadByte());
 
             stream.Seek(0, SeekOrigin.Begin);
             for (int i = 0; i < buffer.Length; i++)
             {
-               Assert.Equal(i, stream.Position);
-               Assert.Equal(i, stream.ReadByte());
+               Assert.AreEqual(i, stream.Position);
+               Assert.AreEqual(i, stream.ReadByte());
             }
-            Assert.Equal(-1, stream.ReadByte());
+            Assert.AreEqual(-1, stream.ReadByte());
 
             stream.Seek(25, SeekOrigin.Begin);
             byte[] tempBuffer = new byte[86];
             int count = stream.Read(tempBuffer, 0, tempBuffer.Length);
-            Assert.Equal(tempBuffer.Length, count);
-            Assert.Equal(111, stream.Position);
-            Assert.Equal(111, stream.ReadByte());
+            Assert.AreEqual(tempBuffer.Length, count);
+            Assert.AreEqual(111, stream.Position);
+            Assert.AreEqual(111, stream.ReadByte());
             for (int i = 0; i < tempBuffer.Length; i++)
             {
-               Assert.Equal(i + 25, tempBuffer[i]);
+               Assert.AreEqual(i + 25, tempBuffer[i]);
             }
 
             stream.Seek(25, SeekOrigin.Begin);
             tempBuffer = new byte[255];
             count = stream.Read(tempBuffer, 0, tempBuffer.Length);
-            Assert.Equal(231, count);
-            Assert.Equal(-1, stream.ReadByte());
+            Assert.AreEqual(231, count);
+            Assert.AreEqual(-1, stream.ReadByte());
 
             stream.Seek(25, SeekOrigin.Begin);
             bool more = false;
             ArraySegment<byte>[] buffers = stream.ReadBuffers(229, true, out more);
-            Assert.True(more);
-            Assert.Equal(4, buffers.Length);
-            Assert.Equal(24, buffers[0].Count);
-            Assert.Equal(62, buffers[1].Count);
-            Assert.Equal(88, buffers[2].Count);
-            Assert.Equal(55, buffers[3].Count);
-            Assert.Equal(254, stream.Position);
+            Assert.IsTrue(more);
+            Assert.AreEqual(4, buffers.Length);
+            Assert.AreEqual(24, buffers[0].Count);
+            Assert.AreEqual(62, buffers[1].Count);
+            Assert.AreEqual(88, buffers[2].Count);
+            Assert.AreEqual(55, buffers[3].Count);
+            Assert.AreEqual(254, stream.Position);
 
             stream.Seek(25, SeekOrigin.Begin);
             more = false;
             buffers = stream.ReadBuffers(int.MaxValue, true, out more);
-            Assert.False(more);
-            Assert.Equal(5, buffers.Length);
-            Assert.Equal(24, buffers[0].Count);
-            Assert.Equal(62, buffers[1].Count);
-            Assert.Equal(88, buffers[2].Count);
-            Assert.Equal(55, buffers[3].Count);
-            Assert.Equal(2, buffers[4].Count);
-            Assert.Equal(256, stream.Position);
+            Assert.IsFalse(more);
+            Assert.AreEqual(5, buffers.Length);
+            Assert.AreEqual(24, buffers[0].Count);
+            Assert.AreEqual(62, buffers[1].Count);
+            Assert.AreEqual(88, buffers[2].Count);
+            Assert.AreEqual(55, buffers[3].Count);
+            Assert.AreEqual(2, buffers[4].Count);
+            Assert.AreEqual(256, stream.Position);
 
             stream.Seek(25, SeekOrigin.Begin);
             more = false;
             buffers = stream.ReadBuffers(231, false, out more);
-            Assert.False(more);
-            Assert.Equal(25, stream.Position);
+            Assert.IsFalse(more);
+            Assert.AreEqual(25, stream.Position);
 
             stream.Dispose();
             try
             {
                 stream.Position = 100;
-                Assert.True(false, "Stream is disposed!!");
+                Assert.IsTrue(false, "Stream is disposed!!");
             }
             catch (ObjectDisposedException)
             {
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void ByteBufferTest()
         {
             // wrapping a byte[]
@@ -381,7 +381,7 @@
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void FaultTolerantAmqpObjectShouldInvokeCloseMethodOnClose()
         {
             bool isCloseHandlerInvoked = false;
@@ -390,16 +390,16 @@
                 amqpObject => { isCloseHandlerInvoked = true; });
             var testAmqpObject = faultTolerantObject.GetOrCreateAsync(CancellationToken.None).Result;
             testAmqpObject.Close();
-            Assert.True(isCloseHandlerInvoked);
+            Assert.IsTrue(isCloseHandlerInvoked);
         }
 
         static void AssertBufferProperties(ByteBuffer buffer, int capacity, int size, int length, int offset, int writePos)
         {
-            Assert.Equal(capacity, buffer.Capacity);
-            Assert.Equal(size, buffer.Size);
-            Assert.Equal(length, buffer.Length);
-            Assert.Equal(offset, buffer.Offset);
-            Assert.Equal(writePos, buffer.WritePos);
+            Assert.AreEqual(capacity, buffer.Capacity);
+            Assert.AreEqual(size, buffer.Size);
+            Assert.AreEqual(length, buffer.Length);
+            Assert.AreEqual(offset, buffer.Offset);
+            Assert.AreEqual(writePos, buffer.WritePos);
         }
 
         static void TryWrite(ByteBuffer buffer, int newData, bool fail, AmqpSymbol error)
@@ -409,14 +409,14 @@
                 AmqpBitConverter.WriteBytes(buffer, new byte[newData], 0, newData);
                 if (fail)
                 {
-                    Assert.True(false, "write should fail because buffer is smaller");
+                    Assert.IsTrue(false, "write should fail because buffer is smaller");
                 }
             }
             catch (AmqpException exp)
             {
                 if (fail)
                 {
-                   Assert.Equal(AmqpErrorCode.DecodeError, exp.Error.Condition);
+                   Assert.AreEqual(AmqpErrorCode.DecodeError, exp.Error.Condition);
                 }
                 else
                 {

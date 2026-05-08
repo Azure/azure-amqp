@@ -1,30 +1,30 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Test.Microsoft.Azure.Amqp
 {
-    using global::Microsoft.Azure.Amqp;
     using System;
     using System.Collections.Generic;
-    using Xunit;
+    using global::Microsoft.Azure.Amqp;
+    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    [Trait("Category", TestCategory.Current)]
+    [TestClass]
     public class AmqpExtensionsTests
     {
-        [Fact]
+        [TestMethod]
         public void TestFind()
         {
             Dictionary<Type, object> dictionary = new Dictionary<Type, object>();
 
-            Assert.Null(dictionary.Find<TestClass>());
+            Assert.IsNull(dictionary.Find<TestClass>());
             
             var testValue = new TestClass();
             dictionary.Add(typeof(TestClass), testValue);
-            Assert.Same(testValue, dictionary.Find<TestClass>());
+            Assert.AreSame(testValue, dictionary.Find<TestClass>());
 
             dictionary.Remove(typeof(TestClass));
 
-            Assert.Null(dictionary.Find<TestClass>());
+            Assert.IsNull(dictionary.Find<TestClass>());
         }
 
         private class TestClass

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Test.Microsoft.Azure.Amqp
@@ -10,10 +10,10 @@ namespace Test.Microsoft.Azure.Amqp
     using global::Microsoft.Azure.Amqp.Framing;
     using global::Microsoft.Azure.Amqp.Sasl;
     using global::Microsoft.Azure.Amqp.Transport;
+    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestAmqpBroker;
-    using Xunit;
 
-    [Trait("Category", TestCategory.Current)]
+    [TestClass]
     public class CancellationTokenTests
     {
         static CancellationTokenTests()
@@ -23,13 +23,13 @@ namespace Test.Microsoft.Azure.Amqp
 
         Uri addressUri = new Uri("amqp://guest:guest@localhost:5678");
 
-        [Fact]
+        [TestMethod]
         public Task TransportTest()
         {
             return this.RunTransportTest(false);
         }
 
-        [Fact]
+        [TestMethod]
         public Task TransportCanceledTest()
         {
             return this.RunTransportTest(true);
@@ -44,7 +44,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+                await Assert.ThrowsExceptionAsync<TaskCanceledException>(async () =>
                 {
                     AmqpSettings settings = new AmqpSettings();
                     settings.TransportProviders.Add(new SaslTransportProvider(AmqpVersion.V100));
@@ -73,13 +73,13 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public Task ConnectionFactoryTest()
         {
             return this.RunConnectionFactoryTest(false);
         }
 
-        [Fact]
+        [TestMethod]
         public Task ConnectionFactoryCanceledTest()
         {
             return this.RunConnectionFactoryTest(true);
@@ -91,7 +91,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
+                await AssertExtensions.ThrowsAnyAsync<TaskCanceledException>(async () =>
                 {
                     var factory = new AmqpConnectionFactory();
                     var cts = new CancellationTokenSource();
@@ -116,13 +116,13 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public Task ConnectionOpenTest()
         {
             return this.RunConnectionOpenTest(false);
         }
 
-        [Fact]
+        [TestMethod]
         public Task ConnectionOpenCanceledTest()
         {
             return this.RunConnectionOpenTest(true);
@@ -134,7 +134,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
+                await AssertExtensions.ThrowsAnyAsync<TaskCanceledException>(async () =>
                 {
                     var transportSettings = new TcpTransportSettings() { Host = addressUri.Host, Port = addressUri.Port };
                     AmqpSettings settings = new AmqpSettings();
@@ -166,13 +166,13 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public Task ConnectionCloseTest()
         {
             return this.RunConnectionCloseTest(false);
         }
 
-        [Fact]
+        [TestMethod]
         public Task ConnectionCloseCanceledTest()
         {
             return this.RunConnectionCloseTest(true);
@@ -184,7 +184,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
+                await AssertExtensions.ThrowsAnyAsync<TaskCanceledException>(async () =>
                 {
                     var transportSettings = new TcpTransportSettings() { Host = addressUri.Host, Port = addressUri.Port };
                     AmqpSettings settings = new AmqpSettings();
@@ -217,13 +217,13 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public Task SessionOpenTest()
         {
             return this.RunSessionOpenTest(false);
         }
 
-        [Fact]
+        [TestMethod]
         public Task SessionOpenCanceledTest()
         {
             return this.RunSessionOpenTest(true);
@@ -235,7 +235,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
+                await AssertExtensions.ThrowsAnyAsync<TaskCanceledException>(async () =>
                 {
                     var factory = new AmqpConnectionFactory();
                     var connection = await factory.OpenConnectionAsync(this.addressUri);
@@ -263,13 +263,13 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public Task SessionCloseTest()
         {
             return this.RunSessionCloseTest(false);
         }
 
-        [Fact]
+        [TestMethod]
         public Task SessionCloseCanceledTest()
         {
             return this.RunSessionCloseTest(true);
@@ -281,7 +281,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
+                await AssertExtensions.ThrowsAnyAsync<TaskCanceledException>(async () =>
                 {
                     var factory = new AmqpConnectionFactory();
                     var connection = await factory.OpenConnectionAsync(this.addressUri);
@@ -310,13 +310,13 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public Task LinkOpenTest()
         {
             return this.RunLinkOpenTest(false);
         }
 
-        [Fact]
+        [TestMethod]
         public Task LinkOpenCanceledTest()
         {
             return this.RunLinkOpenTest(true);
@@ -328,7 +328,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
+                await AssertExtensions.ThrowsAnyAsync<TaskCanceledException>(async () =>
                 {
                     var factory = new AmqpConnectionFactory();
                     var connection = await factory.OpenConnectionAsync(this.addressUri);
@@ -358,13 +358,13 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public Task LinkCloseTest()
         {
             return this.RunLinkCloseTest(false);
         }
 
-        [Fact]
+        [TestMethod]
         public Task LinkCloseCanceledTest()
         {
             return this.RunLinkCloseTest(true);
@@ -376,7 +376,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
+                await AssertExtensions.ThrowsAnyAsync<TaskCanceledException>(async () =>
                 {
                     var factory = new AmqpConnectionFactory();
                     var connection = await factory.OpenConnectionAsync(this.addressUri);
@@ -408,13 +408,13 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public Task LinkSendTest()
         {
             return this.RunLinkSendTest(false);
         }
 
-        [Fact]
+        [TestMethod]
         public Task LinkSendCanceledTest()
         {
             return this.RunLinkSendTest(true);
@@ -431,7 +431,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
+                await AssertExtensions.ThrowsAnyAsync<TaskCanceledException>(async () =>
                 {
                     var factory = new AmqpConnectionFactory();
                     var connection = await factory.OpenConnectionAsync(this.addressUri);
@@ -463,13 +463,13 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public Task LinkReceiveTest()
         {
             return this.RunLinkReceiveTest(false);
         }
 
-        [Fact]
+        [TestMethod]
         public Task LinkReceiveCanceledTest()
         {
             return this.RunLinkReceiveTest(true);
@@ -507,7 +507,7 @@ namespace Test.Microsoft.Azure.Amqp
                     cts.Cancel();
                 }
 
-                await Assert.ThrowsAsync<TaskCanceledException>(async () => await task);
+                await Assert.ThrowsExceptionAsync<TaskCanceledException>(async () => await task);
             }
             finally
             {
@@ -515,13 +515,13 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public Task LinkDispositionTest()
         {
             return this.RunLinkDispositionTest(false);
         }
 
-        [Fact]
+        [TestMethod]
         public Task LinkDispositionCanceledTest()
         {
             return this.RunLinkDispositionTest(true);
@@ -538,7 +538,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
+                await AssertExtensions.ThrowsAnyAsync<TaskCanceledException>(async () =>
                 {
                     var factory = new AmqpConnectionFactory();
                     var connection = await factory.OpenConnectionAsync(this.addressUri);
@@ -549,7 +549,7 @@ namespace Test.Microsoft.Azure.Amqp
                     await link.OpenAsync();
 
                     var message = await link.ReceiveMessageAsync();
-                    Assert.NotNull(message);
+                    Assert.IsNotNull(message);
 
                     var cts = new CancellationTokenSource();
                     if (cancelBefore)
@@ -573,19 +573,19 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public Task LinkDrainTest()
         {
             return this.RunLinkDrainTest(false);
         }
 
-        [Fact]
+        [TestMethod]
         public Task LinkDrainCanceledTest()
         {
             return this.RunLinkDrainTest(true);
         }
 
-        [Fact]
+        [TestMethod]
         public Task LinkDrainTimeoutTest()
         {
             return this.RunLinkDrainTest(false, 800);
@@ -632,17 +632,17 @@ namespace Test.Microsoft.Azure.Amqp
 
                     await task;
 
-                    Assert.True(false, "Exception not thrown");
+                    Assert.IsTrue(false, "Exception not thrown");
                 }
                 catch (Exception exception)
                 {
                     if (timeoutMilliseconds > 0)
                     {
-                        Assert.Equal(typeof(TimeoutException), exception.GetType());
+                        Assert.AreEqual(typeof(TimeoutException), exception.GetType());
                     }
                     else
                     {
-                        Assert.Equal(typeof(TaskCanceledException), exception.GetType());
+                        Assert.AreEqual(typeof(TaskCanceledException), exception.GetType());
                     }
                 }
             }
@@ -652,7 +652,7 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public async Task CbsSendTokenNoCancelTest()
         {
             var broker = new TestAmqpBroker(new[] { addressUri.AbsoluteUri }, addressUri.UserInfo, null, null);
@@ -674,13 +674,13 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public Task CbsSendTokenTest()
         {
             return this.RunCbsSendTokenTest(false);
         }
 
-        [Fact]
+        [TestMethod]
         public Task CbsSendTokenCancelledTest()
         {
             return this.RunCbsSendTokenTest(true);
@@ -694,7 +694,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             try
             {
-                await Assert.ThrowsAnyAsync<TaskCanceledException>(async () =>
+                await AssertExtensions.ThrowsAnyAsync<TaskCanceledException>(async () =>
                 {
                     var factory = new AmqpConnectionFactory();
                     var connection = await factory.OpenConnectionAsync(this.addressUri, CancellationToken.None);

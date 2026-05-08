@@ -1,14 +1,15 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Amqp;
-using Xunit;
+using global::Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Test.Microsoft.Azure.Amqp
 {
+    [TestClass]
     public class SingletonTests
     {
-        [Fact]
+        [TestMethod]
         public async Task SingletonConcurrentCloseOpenTests()
         {
             var createTcs = new TaskCompletionSource<object>();
@@ -25,10 +26,10 @@ namespace Test.Microsoft.Azure.Amqp
             createTcs.SetResult(new object());
             await creating;
 
-            await Assert.ThrowsAsync<ObjectDisposedException>(() => singleton.GetOrCreateAsync(CancellationToken.None));
+            await Assert.ThrowsExceptionAsync<ObjectDisposedException>(() => singleton.GetOrCreateAsync(CancellationToken.None));
 
             var createdObj = GetInternalProperty<object>(singleton, "Value");
-            Assert.Null(createdObj);
+            Assert.IsNull(createdObj);
         }
 
         private class SingletonTester : Singleton<object>

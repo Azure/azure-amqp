@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Test.Microsoft.Azure.Amqp
@@ -9,14 +9,14 @@ namespace Test.Microsoft.Azure.Amqp
     using global::Microsoft.Azure.Amqp.Framing;
     using global::Microsoft.Azure.Amqp.Sasl;
     using global::Microsoft.Azure.Amqp.Transport;
-    using Xunit;
+    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    [Trait("Category", TestCategory.Current)]
+    [TestClass]
     public class AmqpConnectionListenerTests
     {
         string queue = "q1";
 
-        [Fact]
+        [TestMethod]
         public async Task ListenerTcpTest()
         {
             string address = "amqp://localhost:5676";
@@ -34,7 +34,7 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ListenerTlsTest()
         {
             string address = "amqps://localhost:5676";
@@ -55,7 +55,7 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ListenerSaslTlsTest()
         {
             string address = "amqps://guest:guest@localhost:5676";
@@ -94,15 +94,15 @@ namespace Test.Microsoft.Azure.Amqp
 
             AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "AmqpConnectionFactoryTest" });
             Outcome outcome = await sLink.SendMessageAsync(message, TestRuntimeProvider.EmptyBinary, TestRuntimeProvider.NullBinary, TimeSpan.FromSeconds(10));
-            Assert.Equal(Accepted.Code, outcome.DescriptorCode);
+            Assert.AreEqual(Accepted.Code, outcome.DescriptorCode);
 
             ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnDispose, 10));
             await rLink.OpenAsync(TimeSpan.FromSeconds(20));
 
             var receivedMessage = await rLink.ReceiveMessageAsync(TimeSpan.FromSeconds(20));
-            Assert.NotNull(receivedMessage);
+            Assert.IsNotNull(receivedMessage);
             outcome = await rLink.DisposeMessageAsync(receivedMessage.DeliveryTag, new Accepted(), false, TimeSpan.FromSeconds(20));
-            Assert.Equal(Accepted.Code, outcome.DescriptorCode);
+            Assert.AreEqual(Accepted.Code, outcome.DescriptorCode);
 
             await connection.CloseAsync(TimeSpan.FromSeconds(20));
         }

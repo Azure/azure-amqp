@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Test.Microsoft.Azure.Amqp
@@ -6,31 +6,31 @@ namespace Test.Microsoft.Azure.Amqp
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Xunit;
-    using TestAmqpBroker;
-    using global::Microsoft.Azure.Amqp.Transport;
     using global::Microsoft.Azure.Amqp;
+    using global::Microsoft.Azure.Amqp.Transport;
+    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using TestAmqpBroker;
 
-    [Collection("AmqpLinkTests")]
-    [Trait("Category", TestCategory.Current)]
-    public class AmqpLinkStealingTests : IClassFixture<TestAmqpBrokerFixture>, IDisposable
+    [TestClass]
+    public class AmqpLinkStealingTests
     {
         static Uri connectionAddressUri;
         static TestAmqpBroker broker;
         static bool enableLinkRecovery;
 
-        public AmqpLinkStealingTests(TestAmqpBrokerFixture testAmqpBrokerFixture)
+        [TestInitialize]
+        public void TestInitialize()
         {
             connectionAddressUri = TestAmqpBrokerFixture.Address;
-            broker = testAmqpBrokerFixture.Broker;
+            broker = TestAmqpBrokerFixture.Broker;
             if (enableLinkRecovery)
             {
                 broker.SetTerminusStore(new AmqpInMemoryTerminusStore());
             }
         }
 
-        // This would be run after each test case.
-        public void Dispose()
+        [TestCleanup]
+        public void TestCleanup()
         {
             broker.SetTerminusStore(null);
         }
@@ -38,7 +38,7 @@ namespace Test.Microsoft.Azure.Amqp
         /// <summary>
         /// Test link stealing where two links have the same link name but different link types. They should both be able to open without interfering each other.
         /// </summary>
-        [Fact]
+        [TestMethod]
         public async Task LinkStealingDifferentLinkTypesTest()
         {
             await LinkStealingTestCase(sameType: false, closeLink1BeforeOpenLink2: false, linkRecoveryEnabled: false);
@@ -47,7 +47,7 @@ namespace Test.Microsoft.Azure.Amqp
         /// <summary>
         /// Test link stealing where two links have the same link name and type, but link1 is closed before link2 is opened. This should not trigger any link stealing at all.
         /// </summary>
-        [Fact]
+        [TestMethod]
         public async Task LinkStealingCloseLink1TypesTest()
         {
             await LinkStealingTestCase(sameType: true, closeLink1BeforeOpenLink2: true, linkRecoveryEnabled: false);
@@ -56,7 +56,7 @@ namespace Test.Microsoft.Azure.Amqp
         /// <summary>
         /// Test link stealing where two links have the same link name and type. This should trigger link stealing and close link1 due to link stealing.
         /// </summary>
-        [Fact]
+        [TestMethod]
         public async Task LinkStealingTest()
         {
             await LinkStealingTestCase(sameType: true, closeLink1BeforeOpenLink2: false, linkRecoveryEnabled: false);
@@ -67,7 +67,7 @@ namespace Test.Microsoft.Azure.Amqp
         /// With link recovery enabled, link stealing would occur at the provider scope instead of the session scope.
         /// They should both be able to open without interfering each other.
         /// </summary>
-        [Fact]
+        [TestMethod]
         public async Task LinkTerminusStealingDifferentLinkTypesTest()
         {
             await LinkStealingTestCase(sameType: false, closeLink1BeforeOpenLink2: false, linkRecoveryEnabled: true);
@@ -78,7 +78,7 @@ namespace Test.Microsoft.Azure.Amqp
         /// With link recovery enabled, link stealing would occur at the provider scope instead of the session scope.
         /// This should not trigger any link stealing at all.
         /// </summary>
-        [Fact]
+        [TestMethod]
         public async Task LinkTerminusStealingCloseLink1TypesTest()
         {
             await LinkStealingTestCase(sameType: true, closeLink1BeforeOpenLink2: true, linkRecoveryEnabled: true);
@@ -89,7 +89,7 @@ namespace Test.Microsoft.Azure.Amqp
         /// With link recovery enabled, link stealing would occur at the provider scope instead of the session scope.
         /// This should trigger link stealing and close link1 due to link stealing.
         /// </summary>
-        [Fact]
+        [TestMethod]
         public async Task LinkTerminusStealingTest()
         {
             await LinkStealingTestCase(sameType: true, closeLink1BeforeOpenLink2: false, linkRecoveryEnabled: true);
@@ -99,7 +99,7 @@ namespace Test.Microsoft.Azure.Amqp
         /// Abort the link locally, which does not send a Detach to remote session, so the remote (broker) session will still have record of this link opened.
         /// Link stealing should happen at remote session, and remote session should discard its existing link record and allow the new link to be attached.
         /// </summary>
-        [Fact]
+        [TestMethod]
         public async Task RemoteLinkStealingTest()
         {
             await LinkStealingTestCase(sameType: true, closeLink1BeforeOpenLink2: false, linkRecoveryEnabled: false, abortLink1: true);
@@ -109,7 +109,7 @@ namespace Test.Microsoft.Azure.Amqp
         /// Abort the link locally, which does not send a Detach to remote session, so the remote (broker) terminus will still have record of this link opened.
         /// Link stealing should happen at remote terminus, and remote terminus should discard its existing link record and allow the new link to be attached.
         /// </summary>
-        [Fact]
+        [TestMethod]
         public async Task RemoteLinkTerminusStealingTest()
         {
             await LinkStealingTestCase(sameType: true, closeLink1BeforeOpenLink2: false, linkRecoveryEnabled: true, abortLink1: true);
@@ -179,14 +179,14 @@ namespace Test.Microsoft.Azure.Amqp
                 link2 = await link2Session.OpenLinkAsync<ReceivingAmqpLink>(linkName, queueName);
             }
 
-            Assert.True(link2.State == AmqpObjectState.Opened);
+            Assert.IsTrue(link2.State == AmqpObjectState.Opened);
             if (shouldLinkBeStolen)
             {
-                Assert.True(link1.IsStolen());
+                Assert.IsTrue(link1.IsStolen());
             }
             else if (!sameType)
             {
-                Assert.True(link1.State == AmqpObjectState.Opened);
+                Assert.IsTrue(link1.State == AmqpObjectState.Opened);
             }
 
             await connection.CloseAsync();

@@ -1,4 +1,4 @@
-﻿namespace Test.Microsoft.Azure.Amqp
+namespace Test.Microsoft.Azure.Amqp
 {
     using System;
     using System.Diagnostics;
@@ -8,14 +8,14 @@
     using System.Threading;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Transport;
-    using Xunit;
+    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    [Trait("Category", TestCategory.Current)]
+    [TestClass]
     public class AmqpTransportTests
     {
         const int TestMaxNumber = 9999;
 
-        [Fact]
+        [TestMethod]
         public void TcpTransportTest()
         {
             const string localHost = "localhost";
@@ -25,7 +25,7 @@
             this.RunTransportTest("TcpTransportTest", localHost, port, client, server);
         }
 
-        [Fact]
+        [TestMethod]
         public void TcpTransportClientDynamicBufferTest()
         {
             const string localHost = "localhost";
@@ -36,7 +36,7 @@
             this.RunTransportTest("TcpTransportClientDynamicBufferTest", localHost, port, client, server);
         }
 
-        [Fact]
+        [TestMethod]
         public void TcpTransportClientFixedBufferTest()
         {
             const string localHost = "localhost";
@@ -47,7 +47,7 @@
             this.RunTransportTest("TcpTransportClientFixedBufferTest", localHost, port, client, server);
         }
 
-        [Fact]
+        [TestMethod]
         public void TcpTransportServerDynamicBufferTest()
         {
             const string localHost = "localhost";
@@ -58,7 +58,7 @@
             this.RunTransportTest("TcpTransportClientFixedBufferTest", localHost, port, client, server);
         }
 
-        [Fact]
+        [TestMethod]
         public void TcpTransportServerPooledBufferTest()
         {
             const string localHost = "localhost";
@@ -76,7 +76,7 @@
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TcpTransportServerDynamicPooledBufferTest()
         {
             const string localHost = "localhost";
@@ -95,7 +95,7 @@
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void TcpTransportServerFixedBufferTest()
         {
             const string localHost = "localhost";
@@ -106,7 +106,7 @@
             this.RunTransportTest("TcpTransportServerFixedBufferTest", localHost, port, client, server);
         }
 
-        [Fact]
+        [TestMethod]
         public void ConnectTimeoutTest()
         {
             const int port = 30888;
@@ -122,15 +122,15 @@
                 amqp.TransportProviders.Add(new AmqpTransportProvider());
                 var initiator = new AmqpTransportInitiator(amqp, tcp);
                 var task = initiator.ConnectAsync(TimeSpan.FromSeconds(1));
-                Assert.False(task.IsCompleted);
+                Assert.IsFalse(task.IsCompleted);
 
                 Thread.Sleep(2000);
-                Assert.True(task.IsFaulted);
-                Assert.NotNull(task.Exception);
+                Assert.IsTrue(task.IsFaulted);
+                Assert.IsNotNull(task.Exception);
 
                 var ex = task.Exception.GetBaseException() as SocketException;
-                Assert.NotNull(ex);
-                Assert.Equal(SocketError.TimedOut, (SocketError)ex.ErrorCode);
+                Assert.IsNotNull(ex);
+                Assert.AreEqual(SocketError.TimedOut, (SocketError)ex.ErrorCode);
             }
             finally
             {
@@ -160,7 +160,7 @@
             initiatorThread.Join();
 
             Debug.WriteLine($"Test '{test}' end.");
-            Assert.True(context.Success, context.Exception?.ToString());
+            Assert.IsTrue(context.Success, context.Exception?.ToString());
         }
 
         static TransportBase AcceptServerTransport(TransportTestContext testContext)

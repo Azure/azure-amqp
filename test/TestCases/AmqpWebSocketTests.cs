@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Test.Microsoft.Azure.Amqp
@@ -6,21 +6,21 @@ namespace Test.Microsoft.Azure.Amqp
     using System;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Framing;
-    using Xunit;
+    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestAmqpBroker;
 
-    [Collection("AmqpLinkTests")]
-    [Trait("Category", TestCategory.Current)]
-    public class AmqpWebSocketTests : IClassFixture<TestAmqpBrokerFixture>
+    [TestClass]
+    public class AmqpWebSocketTests
     {
         TestAmqpBroker broker;
 
-        public AmqpWebSocketTests(TestAmqpBrokerFixture testAmqpBrokerFixture)
+        [TestInitialize]
+        public void TestInitialize()
         {
-            broker = testAmqpBrokerFixture.Broker;
+            broker = TestAmqpBrokerFixture.Broker;
         }
 
-        [Fact]
+        [TestMethod]
         public void AmqpWebSocketTransportTest()
         {
             string queue = "AmqpWebSocketTransportTest";
@@ -50,7 +50,7 @@ namespace Test.Microsoft.Azure.Amqp
             for (int i = 0; i < messageCount; i++)
             {
                 AmqpMessage message2 = rLink.ReceiveMessageAsync(TimeSpan.FromSeconds(60)).GetAwaiter().GetResult();
-                Assert.NotNull(message2);
+                Assert.IsNotNull(message2);
 
                 rLink.AcceptMessage(message2);
                 message2.Dispose();

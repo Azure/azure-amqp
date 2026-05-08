@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Test.Microsoft.Azure.Amqp
@@ -6,22 +6,23 @@ namespace Test.Microsoft.Azure.Amqp
     using System;
     using System.Threading.Tasks;
     using global::Microsoft.Azure.Amqp;
+    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestAmqpBroker;
-    using Xunit;
 
-    [Trait("Category", TestCategory.Current)]
-    public class AmqpSamples : IClassFixture<TestAmqpBrokerFixture>
+    [TestClass]
+    public class AmqpSamples
     {
         Uri addressUri;
         TestAmqpBroker broker;
 
-        public AmqpSamples(TestAmqpBrokerFixture testAmqpBrokerFixture)
+        [TestInitialize]
+        public void TestInitialize()
         {
             addressUri = TestAmqpBrokerFixture.Address;
-            broker = testAmqpBrokerFixture.Broker;
+            broker = TestAmqpBrokerFixture.Broker;
         }
 
-        [Fact]
+        [TestMethod]
         public async Task SendReceiveSample()
         {
             string queue = "SendReceiveSample";
@@ -44,7 +45,7 @@ namespace Test.Microsoft.Azure.Amqp
             await connection.CloseAsync();
         }
 
-        [Fact]
+        [TestMethod]
         public async Task LinkRecoverySample()
         {
             string queueName = "LinkRecoverySample";
@@ -82,7 +83,7 @@ namespace Test.Microsoft.Azure.Amqp
                 broker.SetTerminusStore(broker.TerminusStore);
 
                 // Try to complete the received message now. Should throw exception because the link is closed.
-                Assert.Throws<AmqpException>(() => receiver.AcceptMessage(message));
+                Assert.ThrowsException<AmqpException>(() => receiver.AcceptMessage(message));
 
                 // Need to reconnect with the same containerId and link identifier for link recovery.
                 AmqpConnectionSettings connectionRecoverySettings = new AmqpConnectionSettings() { ContainerId = containerId };

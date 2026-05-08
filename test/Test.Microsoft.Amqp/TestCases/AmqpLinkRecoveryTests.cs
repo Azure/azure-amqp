@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Test.Microsoft.Azure.Amqp
@@ -9,17 +9,16 @@ namespace Test.Microsoft.Azure.Amqp
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using TestAmqpBroker;
-    using Xunit;
-    using static TestAmqpBroker.TestAmqpBroker;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Framing;
     using global::Microsoft.Azure.Amqp.Transaction;
     using global::Microsoft.Azure.Amqp.Transport;
+    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using TestAmqpBroker;
+    using static TestAmqpBroker.TestAmqpBroker;
 
-    [Collection("AmqpLinkTests")]
-    [Trait("Category", TestCategory.Current)]
-    public class AmqpLinkRecoveryTests : IClassFixture<TestAmqpBrokerFixture>, IDisposable
+    [TestClass]
+    public class AmqpLinkRecoveryTests
     {
         static Uri connectionAddressUri;
         static TestAmqpBroker broker;
@@ -27,10 +26,11 @@ namespace Test.Microsoft.Azure.Amqp
         int expectedResumedTransfers;
         ManualResetEvent receivedAllTransfers;
 
-        public AmqpLinkRecoveryTests(TestAmqpBrokerFixture testAmqpBrokerFixture)
+        [TestInitialize]
+        public void TestInitialize()
         {
             connectionAddressUri = TestAmqpBrokerFixture.Address;
-            broker = testAmqpBrokerFixture.Broker;
+            broker = TestAmqpBrokerFixture.Broker;
             broker.SetTerminusStore(new AmqpInMemoryTerminusStore());
 
             expectedResumedTransfers = -1;
@@ -59,8 +59,8 @@ namespace Test.Microsoft.Azure.Amqp
             };
         }
 
-        // This would be run after each test case.
-        public void Dispose()
+        [TestCleanup]
+        public void TestCleanup()
         {
             broker.SetTerminusStore(null);
             this.ReceivedPerformativesByConnection?.Clear();
@@ -72,7 +72,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Test recovering a sender link using LinkTerminus and verify that after recovery transfers are resumed
         // with clean close of link.
-        [Fact]
+        [TestMethod]
         public async Task SenderRecoveryE2ETest_WithLinkClose()
         {
             await SenderRecoveryE2ETestBase(close: true);
@@ -80,7 +80,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Test recovering a sender link using LinkTerminus and verify that after recovery transfers are resumed
         // while aborting the link.
-        [Fact]
+        [TestMethod]
         public async Task SenderRecoveryE2ETest_WithLinkAbort()
         {
             await SenderRecoveryE2ETestBase(close: false);
@@ -88,7 +88,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Test recovering a receiver link using LinkTerminus and verify that after recovery transfers are resumed
         // with clean close of link.
-        [Fact]
+        [TestMethod]
         public async Task ReceiverRecoveryE2ETest_WithLinkClose()
         {
             await ReceiverRecoveryE2ETestBase(close: true);
@@ -96,31 +96,31 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Test recovering a receiver link using LinkTerminus and verify that after recovery transfers are resumed
         // while aborting the link.
-        [Fact]
+        [TestMethod]
         public async Task ReceiverRecoveryE2ETest_WithLinkAbort()
         {
             await ReceiverRecoveryE2ETestBase(close: true);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task SenderLinkExpiryPolicyNoTimeoutTests()
         {
             await LinkExpiryPolicyTest<SendingAmqpLink>(nameof(SenderLinkExpiryPolicyNoTimeoutTests), TimeSpan.Zero);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task SenderLinkExpiryPolicyWithTimeoutTests()
         {
             await LinkExpiryPolicyTest<SendingAmqpLink>(nameof(SenderLinkExpiryPolicyNoTimeoutTests), TimeSpan.FromSeconds(2));
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ReceiverLinkExpiryPolicyNoTimeoutTests()
         {
             await LinkExpiryPolicyTest<ReceivingAmqpLink>(nameof(ReceiverLinkExpiryPolicyNoTimeoutTests), TimeSpan.Zero);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ReceiverLinkExpiryPolicyWithTimeoutTests()
         {
             await LinkExpiryPolicyTest<ReceivingAmqpLink>(nameof(ReceiverLinkExpiryPolicyNoTimeoutTests), TimeSpan.FromSeconds(2));
@@ -130,7 +130,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Local sender has DeliveryState = null, remote receiver does not have this unsettled delivery.
         // Expected behavior is that the sender will immediately resend this delivery with field resume=false
         // if settle mode is not settle-on-send.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderNullDeliveryStateBrokerNoDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -146,7 +146,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Local receiver has DeliveryState = null, remote sender does not have this unsettled delivery.
         // Expected behavior is that the sender will not be sending anything, the client side receiver should
         // just remove this unsettled delivery.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverNullDeliveryStateBrokerNoDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -162,7 +162,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Local sender has DeliveryState = null, remote receiver has DeliveryState = Received.
         // Expected behavior is that the sender will immediately resend this delivery from the start
         // with field resume=true.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderNullDeliveryStateBrokerReceivedDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -178,7 +178,7 @@ namespace Test.Microsoft.Azure.Amqp
         // same as example delivery tag 9. Local receiver has DeliveryState = null, remote sender has
         // DeliveryState = Received. Expected behavior is that the sender will immediately resend this delivery
         // with resume=true and aborted=true.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverNullDeliveryStateBrokerReceivedDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -194,7 +194,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Oasis AMQP doc section 3.4.6, example delivery tag 3.
         // Local sender has DeliveryState = null, remote receiver has reached terminal DeliveryState.
         // Expected behavior is that the sender will just settle the delivery locally with nothing being sent.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderNullDeliveryStateBrokerTerminalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -210,7 +210,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Oasis AMQP doc section 3.4.6, example delivery tag 3 with sender/receiver swapped. This is essentially
         // the same as example delivery tag 14. Local receiver has DeliveryState = null, remote sender has terminal
         // DeliveryState. Expected behavior is that the sender will resend the delivery with resume=true and aborted=true.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverNullDeliveryStateBrokerTerminalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -227,7 +227,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Local sender has DeliveryState = null, remote receiver has DeliveryState = null.
         // Expected behavior is that the sender will immediately resend this delivery
         // with field resume=true if settle mode is not settle-on-send.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderNullDeliveryStateBrokerNullDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -243,7 +243,7 @@ namespace Test.Microsoft.Azure.Amqp
         // the same as example delivery tag 14. Local receiver has DeliveryState = null, remote sender has
         // DeliveryState = null. Expected behavior is that the sender will immediately resend this delivery
         // with field resume=true if settle mode is not settle-on-send.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverNullDeliveryStateBrokerNullDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -259,7 +259,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Local sender has DeliveryState = Received, remote receiver DeliveryState does not exist.
         // Expected behavior is that the sender will immediately resend this delivery
         // with field resume=false if settle mode is not settle-on-send.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderReceivedDeliveryStateBrokerNoDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -275,7 +275,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Local receiver has DeliveryState = Received, remote sender DeliveryState does not exist.
         // Expected behavior is that the sender will not be sending anything, the client side receiver
         // should just remove this unsettled delivery.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverNoDeliveryStateBrokerReceivedDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -291,7 +291,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Local sender has DeliveryState = Received, remote receiver has DeliveryState = Received.
         // Expected behavior is that the sender will immediately resend this delivery from the start
         // with field resume=true and aborted=true.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderReceivedDeliveryStateBrokerReceivedDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -308,7 +308,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Local receiver has DeliveryState = Received, remote sender has DeliveryState = Received.
         // Expected behavior is that the sender will immediately resend this delivery from the start
         // with field resume=true and aborted=true.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverReceivedDeliveryStateBrokerReceivedDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -324,7 +324,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Oasis AMQP doc section 3.4.6, example delivery tag 8.
         // Local sender has DeliveryState = Received, remote receiver has reached terminal outcome.
         // Expected behavior is that the sender will just settle the delivery locally without resending the delivery.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderReceivedDeliveryStateBrokerTerminalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -341,7 +341,7 @@ namespace Test.Microsoft.Azure.Amqp
         // the same as example delivery tag 11. Local receiver has DeliveryState = Received, remote sender has
         // reached terminal outcome. Expected behavior is that the sender will resend the delivery
         // with resume=true and aborted=true.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverReceivedDeliveryStateBrokerTerminalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -357,7 +357,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Oasis AMQP doc section 3.4.6, example delivery tag 9.
         // Local sender has DeliveryState = Received, remote receiver has DeliveryState = null.
         // Expected behavior is that the sender will immediately resend this delivery with resume=true and aborted=true.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderReceivedDeliveryStateBrokerNullDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -374,7 +374,7 @@ namespace Test.Microsoft.Azure.Amqp
         // the same as example delivery tag 2. Local receiver has DeliveryState = Received, remote sender has
         // DeliveryState = null. Expected behavior is that the sender will immediately resend this delivery
         // with resume=true and aborted=true.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverReceivedDeliveryStateBrokerNullDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -389,7 +389,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Oasis AMQP doc section 3.4.6, example delivery tag 10
         // Local sender has terminal DeliveryState, remote receiver does not have this DeliveryState.
         // Expected behavior is that the sender will just settle the delivery locally without resending the delivery.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTerminalDeliveryStateBrokerNoDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -404,7 +404,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Oasis AMQP doc section 3.4.6, example delivery tag 10 with sender/receiver swapped.
         // Local receiver has terminal DeliveryState, remote sender does not have this DeliveryState.
         // Expected behavior is that the sender will not be sending anything, the client side receiver should just remove this unsettled delivery.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTerminalDeliveryStateBrokerNoDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -419,7 +419,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Oasis AMQP doc section 3.4.6, example delivery tag 11
         // Local sender has terminal DeliveryState, remote receiver has DeliveryState = Received.
         // Expected behavior is that the sender will resend the delivery with resume=true and aborted=true.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTerminalDeliveryStateBrokerReceivedDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -435,7 +435,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Oasis AMQP doc section 3.4.6, example delivery tag 11 with sender/receiver swapped. This is essentially
         // the same as example delivery tag 8. Local receiver has terminal DeliveryState, remote sender
         // has DeliveryState = Received. Expected behavior is that the sender will just resend the delivery to settle it.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTerminalDeliveryStateBrokerReceivedDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -451,7 +451,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Oasis AMQP doc section 3.4.6, example delivery tag 12
         // Local sender has terminal DeliveryState, remote receiver has the same terminal DeliveryState.
         // Expected behavior is that the sender will resend the delivery with resume=true to settle the delivery.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTerminalDeliveryStateBrokerSameTerminalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -467,7 +467,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Oasis AMQP doc section 3.4.6, example delivery tag 12 with sender/receiver swapped. 
         // Local receiver has terminal DeliveryState, remote sender has the same terminal DeliveryState.
         // Expected behavior is that the sender will resend the delivery with resume=true to settle the delivery.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTerminalDeliveryStateBrokerSameTerminalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -484,7 +484,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Local sender has terminal DeliveryState, remote receiver has the different terminal DeliveryState.
         // Expected behavior is that the sender will resend the delivery with resume=true and DeliveryState
         // equal to the sender's DeliveryState to settle the delivery.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTerminalDeliveryStateBrokerDiffTerminalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -501,7 +501,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Local receiver has terminal DeliveryState, remote sender has the different terminal DeliveryState.
         // Expected behavior is that the sender will resend the delivery with resume=true and DeliveryState
         // equal to the sender's DeliveryState to settle the delivery.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTerminalDeliveryStateBrokerDiffTerminalDeliveryStateTest()
         {
             // Note: This test will actually fail if Released state is used instead of Rejected,
@@ -520,7 +520,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Oasis AMQP doc section 3.4.6, example delivery tag 14.
         // Local sender has terminal DeliveryState, remote receiver has null DeliveryState.
         // Expected behavior is that the sender will resend the delivery with resume=true and aborted=true.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTerminalDeliveryStateBrokerNullDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -537,7 +537,7 @@ namespace Test.Microsoft.Azure.Amqp
         // the same as example delivery tag 3. Local receiver has terminal DeliveryState, remote sender has null
         // DeliveryState. Expected behavior is that the sender will just settle the delivery locally with
         // nothing being sent.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTerminalDeliveryStateBrokerNullDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -553,7 +553,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Test when local sender is in pending transactional delivery state and remote has no record of this delivery.
         // Expected behavior is that the sender should resend the message if settle mode is not settle-on-send,
         // similar to Oasis AMQP doc section 3.4.6, example delivery tag 1.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTransactionalDeliveryStateBrokerNoDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -568,7 +568,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Test when local sender is in pending transactional delivery state and remote has DeliveryState = null.
         // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's
         // state of delivery. Similar to Oasis AMQP doc section 3.4.6, example delivery tag 9.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTransactionalDeliveryStateBrokerNullDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -584,7 +584,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Test when local sender is in pending transactional delivery state and remote has DeliveryState = Received.
         // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's
         // state of delivery. Similar to Oasis AMQP doc section 3.4.6, example delivery tag 9.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTransactionalDeliveryStateBrokerReceivedDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -600,7 +600,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Test when local sender is in pending transactional delivery state and remote has reached non-transactional
         // terminal state. Expected behavior is that the sender should abort the delivery because the receiver should
         // not have been able to become non-transactional.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTransactionalDeliveryStateBrokerTerminalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -616,7 +616,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Test when local sender and remote receiver are both in pending transactional delivery state.
         // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's
         // state of delivery. Similar to Oasis AMQP doc section 3.4.6, example delivery tag 7.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTransactionalDeliveryStateBrokerTransactionalDeliveryStateTest()
         {
             var txnId = new ArraySegment<byte>(Guid.NewGuid().ToByteArray());
@@ -634,7 +634,7 @@ namespace Test.Microsoft.Azure.Amqp
         // transactional delivery state. Expected behavior is that the sender should abort the delivery because
         // we are unsure of the sender's state of delivery. Similar to Oasis AMQP doc section 3.4.6,
         // example delivery tag 3, 8.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTransactionalDeliveryStateBrokerTerminalTransactionalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -651,7 +651,7 @@ namespace Test.Microsoft.Azure.Amqp
         // delivery. Expected behavior is that the sender should not resend any deliveries because the receiver must
         // have already processed and settled this delivery. Similar to Oasis AMQP doc section 3.4.6,
         // example delivery tag 10.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTerminalTransactionalDeliveryStateBrokerNoDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -667,7 +667,7 @@ namespace Test.Microsoft.Azure.Amqp
         // transactional delivery state. Expected behavior is that the sender should abort the delivery because
         // the sender cannot resume the delivery. Similar to Oasis AMQP doc section 3.4.6,
         // example delivery tag 11, 14.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTerminalTransactionalDeliveryStateBrokerTransactionalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -683,7 +683,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Test when local sender and remote receiver are both in the same terminal transactional state.
         // Expected behavior is that the sender should send a delivery to settle the delivery.
         // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 12.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTerminalTransactionalDeliveryStateBrokerSameTerminalTransactionalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -699,7 +699,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Test when local sender and remote receiver are both in the different terminal transactional states.
         // Expected behavior is that the sender should send a delivery with the sender's delivery state to
         // settle the delivery. Similar to Oasis AMQP doc section 3.4.6, example delivery tag 13.
-        [Fact]
+        [TestMethod]
         public async Task ClientSenderTerminalTransactionalDeliveryStateBrokerDiffTerminalTransactionalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<SendingAmqpLink>(
@@ -714,7 +714,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Test when local receiver is in pending transactional delivery state and remote has no record of this delivery.
         // Expected behavior is that the should not be sending anything because it has no record of this delivery to send.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTransactionalDeliveryStateBrokerNoDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -729,7 +729,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Test when local receiver is in pending transactional delivery state and remote has DeliveryState = null.
         // Expected behavior is that the sender should abort the delivery because the local receiver should not have
         // been transactional.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTransactionalDeliveryStateBrokerNullDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -745,7 +745,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Test when local receiver is in pending transactional delivery state and remote has DeliveryState = Received.
         // Expected behavior is that the sender should abort the delivery because the local receiver should not
         // have been transactional.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTransactionalDeliveryStateBrokerReceivedDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -761,7 +761,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Test when local receiver is in pending transactional delivery state and remote has terminal non-transactional
         // delivery state.Expected behavior is that the sender should abort the delivery because the local receiver
         // should not have been transactional.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTransactionalDeliveryStateBrokerTerminalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -777,7 +777,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Test when local sender and remote receiver are both in pending transactional delivery state.
         // Expected behavior is that the sender should abort the delivery because we are unsure of the sender's
         // state of delivery. Similar to Oasis AMQP doc section 3.4.6, example delivery tag 7.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTransactionalDeliveryStateBrokerTransactionalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -794,7 +794,7 @@ namespace Test.Microsoft.Azure.Amqp
         // transactional delivery state. Expected behavior is that the sender should abort the delivery because
         // we are unsure of the sender's state of delivery. Similar to Oasis AMQP doc section 3.4.6,
         // example delivery tag 11, 14.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTransactionalDeliveryStateBrokerTerminalTransactionalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -811,7 +811,7 @@ namespace Test.Microsoft.Azure.Amqp
         // transactional delivery state. Expected behavior is that the sender should not be sending anything
         // because the receiver has already reached terminal state. Similar to Oasis AMQP doc section 3.4.6,
         // example delivery tag 3, 8.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTerminalTransactionalDeliveryStateBrokerTransactionalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -826,7 +826,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         // Test when local receiver is in terminal transactional delivery state and remote sender does not have this delivery.
         // Expected behavior is that the sender should not be sending anything because it does not have this delivery.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTerminalTransactionalDeliveryStateBrokerNoDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -841,7 +841,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Test when local receiver and remote sender are both in the same terminal transactional state.
         // Expected behavior is that the sender should send a delivery to settle the delivery.
         // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 12.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTerminalTransactionalDeliveryStateBrokerSameTerminalTransactionalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -857,7 +857,7 @@ namespace Test.Microsoft.Azure.Amqp
         // Test when local receiver and remote sender are both in the different terminal transactional state.
         // Expected behavior is that the sender should send a delivery with the sender's delivery state to settle the delivery.
         // Similar to Oasis AMQP doc section 3.4.6, example delivery tag 13.
-        [Fact]
+        [TestMethod]
         public async Task ClientReceiverTerminalTransactionalDeliveryStateBrokerDiffTerminalTransactionalDeliveryStateTest()
         {
             await NegotiateUnsettledDeliveryTestAsync<ReceivingAmqpLink>(
@@ -870,7 +870,7 @@ namespace Test.Microsoft.Azure.Amqp
                 shouldExpectProcessableMessage: false);
         }
 
-        [Fact]
+        [TestMethod]
         public async Task ConsecutiveLinkRecoveryTest()
         {
             AmqpConnection connection = null;
@@ -893,7 +893,7 @@ namespace Test.Microsoft.Azure.Amqp
 
                 // Receive a message.
                 var message = await receiver.ReceiveMessageAsync();
-                Assert.NotNull(message);
+                Assert.IsNotNull(message);
 
                 // Restart the broker. All connections should be disconnected from the broker side.
                 var savedTerminusStore = broker.TerminusStore;
@@ -912,7 +912,7 @@ namespace Test.Microsoft.Azure.Amqp
                 AmqpSession newSession = await connection.OpenSessionAsync();
                 var recoveredReceiver = await newSession.OpenLinkAsync<ReceivingAmqpLink>(receiver.Settings);
                 var receivedMessage = await recoveredReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000));
-                Assert.NotNull(receivedMessage);
+                Assert.IsNotNull(receivedMessage);
 
                 // Restart the broker again. All connections should be disconnected from the broker side.
                 savedTerminusStore = broker.TerminusStore;
@@ -926,7 +926,7 @@ namespace Test.Microsoft.Azure.Amqp
                 newSession = await connection.OpenSessionAsync();
                 receiver.Settings.Unsettled.Clear();
                 var recoveredReceiver2 = await newSession.OpenLinkAsync<ReceivingAmqpLink>(receiver.Settings);
-                Assert.NotNull(await recoveredReceiver2.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000)));
+                Assert.IsNotNull(await recoveredReceiver2.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000)));
                 recoveredReceiver2.AcceptMessage(message);
             }
             finally
@@ -974,11 +974,11 @@ namespace Test.Microsoft.Azure.Amqp
                 // Get Terminus from TerminusStore and Verify that Unsettled deliveries contain the 10 messages.
                 await terminusStore.TryGetLinkTerminusAsync(sender.LinkIdentifier, out AmqpLinkTerminus linkTerminus);
                 var localUnsettledDeliveries = await terminusStore.RetrieveDeliveriesAsync(linkTerminus);
-                Assert.NotNull(linkTerminus);
+                Assert.IsNotNull(linkTerminus);
                 foreach (AmqpMessage m in sentMessages)
                 {
                     localUnsettledDeliveries.TryGetValue(m.DeliveryTag, out Delivery savedUnsettledDelivery);
-                    Assert.NotNull(savedUnsettledDelivery);
+                    Assert.IsNotNull(savedUnsettledDelivery);
                 }
 
                 // Open link with the same linkIdentifier, this time update the linkSettings to SettleOnSend so messages can actually settle this time.
@@ -988,21 +988,21 @@ namespace Test.Microsoft.Azure.Amqp
 
                 await Task.Yield();
                 bool signaled = receivedAllTransfers.WaitOne(4000);
-                Assert.True(signaled, "Transfers not received in time");
+                Assert.IsTrue(signaled, "Transfers not received in time");
 
                 // Open receiverSide of the Connection and verify 'NumberOfMessages' were resumed.
                 AmqpConnection brokerConnection = broker.FindConnection(connection.Settings.ContainerId);
                 this.ReceivedPerformativesByConnection.TryGetValue(brokerConnection.Identifier.Value, out LinkedList<Performative> receivedPerformatives);
                 var resumedTransfers = receivedPerformatives.Where(p => p is Transfer t && t.Settled()).ToArray();
 
-                Assert.Equal(NumberOfMessages, resumedTransfers.Length);
+                Assert.AreEqual(NumberOfMessages, resumedTransfers.Length);
                 foreach (var item in resumedTransfers)
                 {
-                    Assert.True(item is Transfer);
+                    Assert.IsTrue(item is Transfer);
                     var transfer = (Transfer)item;
-                    Assert.True(transfer.Resume == true);
-                    Assert.True(transfer.Settled == true);
-                    Assert.True(transfer.More == false);
+                    Assert.IsTrue(transfer.Resume == true);
+                    Assert.IsTrue(transfer.Settled == true);
+                    Assert.IsTrue(transfer.More == false);
                 }
 
                 // Create a ReceiverLink and receive messages.
@@ -1011,7 +1011,7 @@ namespace Test.Microsoft.Azure.Amqp
                 for (int i = 0; i < NumberOfMessages; i++)
                 {
                     receivedMessage = await testReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(5000));
-                    Assert.NotNull(receivedMessage);
+                    Assert.IsNotNull(receivedMessage);
                     testReceiver.AcceptMessage(receivedMessage);
                 }
 
@@ -1020,7 +1020,7 @@ namespace Test.Microsoft.Azure.Amqp
 
                 // Receive one more new message, should succeed.
                 receivedMessage = await testReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(5000));
-                Assert.NotNull(receivedMessage);
+                Assert.IsNotNull(receivedMessage);
                 testReceiver.AcceptMessage(receivedMessage);
             }
             finally
@@ -1067,7 +1067,7 @@ namespace Test.Microsoft.Azure.Amqp
                 for (int i = 0; i < NumberOfMessages; i++)
                 {
                     receivedMessage = await originalReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000));
-                    Assert.NotNull(receivedMessage);
+                    Assert.IsNotNull(receivedMessage);
                 }
 
                 if (close)
@@ -1082,30 +1082,30 @@ namespace Test.Microsoft.Azure.Amqp
                 // Verify that the link terminus has been captured upon link close.
                 await terminusStore.TryGetLinkTerminusAsync(originalReceiver.LinkIdentifier, out AmqpLinkTerminus linkTerminus);
                 var localUnsettledDeliveries = await terminusStore.RetrieveDeliveriesAsync(linkTerminus);
-                Assert.NotNull(linkTerminus);
-                Assert.Equal(NumberOfMessages, localUnsettledDeliveries.Count);
+                Assert.IsNotNull(linkTerminus);
+                Assert.AreEqual(NumberOfMessages, localUnsettledDeliveries.Count);
 
                 // Reopen the link again and verify that is has the same properties as before.
                 expectedResumedTransfers = NumberOfMessages;
                 ReceivingAmqpLink newReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>(originalReceiver.Settings);
-                Assert.Equal(originalReceiver.Name, newReceiver.Name);
-                Assert.Equal(originalReceiver.IsReceiver, newReceiver.IsReceiver);
+                Assert.AreEqual(originalReceiver.Name, newReceiver.Name);
+                Assert.AreEqual(originalReceiver.IsReceiver, newReceiver.IsReceiver);
 
                 await Task.Yield();
                 bool signaled = receivedAllTransfers.WaitOne(4000);
-                Assert.True(signaled, "Transfers not received in time");
+                Assert.IsTrue(signaled, "Transfers not received in time");
 
                 // Verify resumed transfers
                 this.ReceivedPerformativesByConnection.TryGetValue(connection.Identifier.Value, out LinkedList<Performative> receivedPerformatives);
                 var resumedTransfers = receivedPerformatives.Where(p => p is Transfer t && t.Resume()).ToArray();
-                Assert.Equal(NumberOfMessages, resumedTransfers.Length);
+                Assert.AreEqual(NumberOfMessages, resumedTransfers.Length);
 
                 // Receive and Complete the 10 messages.
                 for (int i = 0; i < NumberOfMessages; i++)
                 {
                     receivedMessage = await newReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000));
-                    Assert.NotNull(receivedMessage);
-                    Assert.Equal(sentMessages[i].ValueBody.Value, receivedMessage.ValueBody.Value);
+                    Assert.IsNotNull(receivedMessage);
+                    Assert.AreEqual(sentMessages[i].ValueBody.Value, receivedMessage.ValueBody.Value);
                     newReceiver.AcceptMessage(receivedMessage);
                 }
 
@@ -1115,8 +1115,8 @@ namespace Test.Microsoft.Azure.Amqp
 
                 // Verify receive works fine.
                 receivedMessage = await newReceiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(1000));
-                Assert.NotNull(receivedMessage);
-                Assert.Equal(newMessage.ValueBody.Value, receivedMessage.ValueBody.Value);
+                Assert.IsNotNull(receivedMessage);
+                Assert.AreEqual(newMessage.ValueBody.Value, receivedMessage.ValueBody.Value);
                 newReceiver.AcceptMessage(receivedMessage);
             }
             finally
@@ -1209,8 +1209,8 @@ namespace Test.Microsoft.Azure.Amqp
             AmqpLinkIdentifier localLinkIdentifier,
             AmqpLinkIdentifier brokerLinkIdentifier)
         {
-            Assert.Equal(shouldExist, localLinkTerminusStore.TryGetLinkTerminusAsync(localLinkIdentifier, out _).GetAwaiter().GetResult());
-            Assert.Equal(shouldExist, brokerLinkTerminusStore.TryGetLinkTerminusAsync(brokerLinkIdentifier, out _).GetAwaiter().GetResult());
+            Assert.AreEqual(shouldExist, localLinkTerminusStore.TryGetLinkTerminusAsync(localLinkIdentifier, out _).GetAwaiter().GetResult());
+            Assert.AreEqual(shouldExist, brokerLinkTerminusStore.TryGetLinkTerminusAsync(brokerLinkIdentifier, out _).GetAwaiter().GetResult());
         }
 
         /// <summary>
@@ -1299,17 +1299,17 @@ namespace Test.Microsoft.Azure.Amqp
                 {
                     await Task.Yield();
                     bool signaled = receivedAllTransfers.WaitOne(4000);
-                    Assert.True(signaled, "Transfers not received in time");
+                    Assert.IsTrue(signaled, "Transfers not received in time");
 
                     Transfer expectedTransfer = receivedPerformatives.Last.Value as Transfer;
                     bool transferSettled = expectedTransfer?.Settled == true;
                     bool shouldSetResumeFlag = typeof(T) == typeof(SendingAmqpLink) ? hasRemoteDeliveryState : hasLocalDeliveryState;
 
                     // We are expecting some messages to be transferred as a result of consolidating unsettled deliveries from both sides.
-                    Assert.NotNull(expectedTransfer);
-                    Assert.Equal(expectedTransfer.Resume, shouldSetResumeFlag);
-                    Assert.Equal(expectedTransfer.Aborted, shouldAbortDelivery);
-                    Assert.Equal(shouldSettleDelivery, transferSettled);
+                    Assert.IsNotNull(expectedTransfer);
+                    Assert.AreEqual(expectedTransfer.Resume, shouldSetResumeFlag);
+                    Assert.AreEqual(expectedTransfer.Aborted, shouldAbortDelivery);
+                    Assert.AreEqual(shouldSettleDelivery, transferSettled);
 
                     if (txController != null)
                     {
@@ -1335,7 +1335,7 @@ namespace Test.Microsoft.Azure.Amqp
                 }
                 else
                 {
-                    Assert.True(receivedPerformatives.Last.Value is Attach); // ensure no message was redelivered since the link open.
+                    Assert.IsTrue(receivedPerformatives.Last.Value is Attach); // ensure no message was redelivered since the link open.
                     if (typeof(T) == typeof(SendingAmqpLink))
                     {
                         var testDummyReceiver = await session.OpenLinkAsync<ReceivingAmqpLink>($"{testName}1-testReceiver", queueName);
@@ -1391,15 +1391,15 @@ namespace Test.Microsoft.Azure.Amqp
                 AmqpMessage received = await receiver.ReceiveMessageAsync(TimeSpan.FromMilliseconds(waitTimeMs));
                 if (expectedMessage == null)
                 {
-                    Assert.Null(received);
+                    Assert.IsNull(received);
                 }
                 else
                 {
-                    Assert.NotNull(received);
+                    Assert.IsNotNull(received);
                     // On ResumedTransfers that are already in TerminalState payload may not be re-sent.
                     if (!received.Resume && !received.State.IsTerminal())
                     {
-                        Assert.Equal(expectedMessage.ValueBody.Value, received.ValueBody.Value.ToString());
+                        Assert.AreEqual(expectedMessage.ValueBody.Value, received.ValueBody.Value.ToString());
                     }
                     receiver.AcceptMessage(received);
                 }

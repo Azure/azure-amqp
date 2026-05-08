@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Test.Microsoft.Azure.Amqp
@@ -7,17 +7,13 @@ namespace Test.Microsoft.Azure.Amqp
     using System.Threading.Tasks;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Transport;
+    using global::Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestAmqpBroker;
-    using Xunit;
 
-    [CollectionDefinition(nameof(SequentialTests), DisableParallelization = true)]
-    public class SequentialTests { }
-
-    [Collection(nameof(SequentialTests))]
-    [Trait("Category", TestCategory.Current)]
+    [TestClass]
     public class AmqpConnectionTests
     {
-        [Fact]
+        [TestMethod]
         public async Task AmqpsConnectionLoopTest()
         {
             const string address = "amqps://[::1]:15672";
@@ -35,7 +31,7 @@ namespace Test.Microsoft.Azure.Amqp
             broker.Stop();
         }
 
-        [Fact]
+        [TestMethod]
         public void AmqpConnectionNullContainerIdTest()
         {
             const string address = "amqp://localhost:15672";
@@ -49,7 +45,7 @@ namespace Test.Microsoft.Azure.Amqp
                 AmqpSettings settings = AmqpUtils.GetAmqpSettings(true, null, false);
                 var connectionSettings = new AmqpConnectionSettings();
                 var connection = new AmqpConnection(transport, settings, connectionSettings);
-                Assert.Throws<ArgumentNullException>(() => connection.Open());
+                Assert.ThrowsException<ArgumentNullException>(() => connection.Open());
                 transport.Close();
             }
             finally
@@ -58,7 +54,7 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
-        [Fact]
+        [TestMethod]
         public void AmqpConcurrentConnectionsTest()
         {
             const string address = "amqp://localhost:15672";
@@ -95,7 +91,7 @@ namespace Test.Microsoft.Azure.Amqp
 
             broker.Stop();
 
-            Assert.True(lastException == null, string.Format("Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString()));
+            Assert.IsTrue(lastException == null, string.Format("Failed. Last exception {0}", lastException == null ? string.Empty : lastException.ToString()));
         }
     }
 }

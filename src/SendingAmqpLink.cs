@@ -86,7 +86,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <returns>A task that completes with the delivery outcome.</returns>
-        internal Task<Outcome> SendMessageAsync(AmqpMessage message)
+        public Task<Outcome> SendMessageAsync(AmqpMessage message)
         {
             return this.SendMessageAsync(message, CreateTag(), AmqpConstants.NullBinary, CancellationToken.None);
         }

@@ -1,4 +1,8 @@
-﻿Microsoft.Azure.Amqp.IIoHandler.CreateBuffer(int frameSize) -> Microsoft.Azure.Amqp.ByteBuffer
+﻿Microsoft.Azure.Amqp.AmqpObject.CloseAsync() -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.AmqpObject.OpenAsync() -> System.Threading.Tasks.Task
+Microsoft.Azure.Amqp.IIoHandler.CreateBuffer(int frameSize) -> Microsoft.Azure.Amqp.ByteBuffer
+Microsoft.Azure.Amqp.ReceivingAmqpLink.ReceiveMessageAsync() -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.AmqpMessage>
+Microsoft.Azure.Amqp.SendingAmqpLink.SendMessageAsync(Microsoft.Azure.Amqp.AmqpMessage message) -> System.Threading.Tasks.Task<Microsoft.Azure.Amqp.Framing.Outcome>
 override Microsoft.Azure.Amqp.AmqpException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
 override Microsoft.Azure.Amqp.Encoding.AmqpSymbol.Equals(object obj) -> bool
 override Microsoft.Azure.Amqp.Encoding.MapKey.Equals(object obj) -> bool
@@ -9,4 +13,5 @@ Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.this[Microsoft.Azure.Amqp.Encod
 Microsoft.Azure.Amqp.Encoding.FormatCode.Equals(Microsoft.Azure.Amqp.Encoding.FormatCode other) -> bool
 Microsoft.Azure.Amqp.Framing.TerminusExpiryPolicy.TerminusExpiryPolicy() -> void
 Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.this[Microsoft.Azure.Amqp.Encoding.MapKey key].set -> void
+Microsoft.Azure.Amqp.AmqpConnectionFactory.Settings.get -> Microsoft.Azure.Amqp.AmqpSettings
 static Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.implicit operator Microsoft.Azure.Amqp.Encoding.AmqpMap(Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey> restrictedMap) -> Microsoft.Azure.Amqp.Encoding.AmqpMap

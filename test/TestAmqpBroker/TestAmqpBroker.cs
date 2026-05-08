@@ -477,6 +477,7 @@ namespace TestAmqpBroker
 
             public override long SerializedMessageSize => this.Buffer?.Length ?? 0;
 
+            [Obsolete]
             public override ArraySegment<byte>[] GetPayload(int payloadSize, out bool more)
             {
                 var buffer = this.GetPayloadBuffer(payloadSize, out more);

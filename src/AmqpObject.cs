@@ -225,7 +225,7 @@ namespace Microsoft.Azure.Amqp
         /// Starts a task to open the object with default timeout.
         /// </summary>
         /// <returns>A task.</returns>
-        internal Task OpenAsync()
+        public Task OpenAsync()
         {
             return this.OpenAsync(this.OperationTimeout);
         }
@@ -329,7 +329,7 @@ namespace Microsoft.Azure.Amqp
         /// Starts a task to close the object with default timeout.
         /// </summary>
         /// <returns>A task.</returns>
-        internal Task CloseAsync()
+        public Task CloseAsync()
         {
             return this.CloseAsync(this.OperationTimeout);
         }

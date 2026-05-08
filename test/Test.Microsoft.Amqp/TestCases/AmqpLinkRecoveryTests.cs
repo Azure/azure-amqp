@@ -904,12 +904,9 @@ namespace Test.Microsoft.Azure.Amqp
 
                 // Need to reconnect with the same containerId and link identifier for link recovery.
                 AmqpConnectionSettings connectionRecoverySettings = new AmqpConnectionSettings() { ContainerId = connection.Settings.ContainerId };
-                var amqpSettings = new AmqpSettings
-                {
-                    RuntimeProvider = runtimeProvider,
-                    TerminusStore = localDeliveryStore
-                };
-                var factory = new AmqpConnectionFactory(amqpSettings);
+                var factory = new AmqpConnectionFactory();
+                factory.Settings.RuntimeProvider = runtimeProvider;
+                factory.Settings.TerminusStore = localDeliveryStore;
                 connection = await factory.OpenConnectionAsync(connectionAddressUri, connectionRecoverySettings, AmqpConstants.DefaultTimeout);
 
                 AmqpSession newSession = await connection.OpenSessionAsync();

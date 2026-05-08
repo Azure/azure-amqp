@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -29,7 +29,7 @@ namespace Microsoft.Azure.Amqp
         /// Initializes a factory with protocol settings.
         /// </summary>
         /// <param name="settings"></param>
-        public AmqpConnectionFactory(AmqpSettings settings)
+        internal AmqpConnectionFactory(AmqpSettings settings)
         {
             this.settings = settings;
         }
@@ -37,7 +37,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets the protocol settings of the factory.
         /// </summary>
-        public AmqpSettings Settings => this.settings;
+        internal AmqpSettings Settings => this.settings;
 
         /// <summary>
         /// Gets the TLS transport settings.
@@ -81,7 +81,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="addressUri">The address.</param>
         /// <returns>An AMQP connection.</returns>
-        public Task<AmqpConnection> OpenConnectionAsync(Uri addressUri)
+        internal Task<AmqpConnection> OpenConnectionAsync(Uri addressUri)
         {
             return this.OpenConnectionAsync(addressUri, AmqpConstants.DefaultTimeout);
         }
@@ -105,7 +105,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="connectionSettings">existing settings which may be taken from a previously existing connection.</param>
         /// <param name="timeout">The operation timeout.</param>
         /// <returns>An AMQP connection.</returns>
-        public Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, AmqpConnectionSettings connectionSettings, TimeSpan timeout)
+        internal Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, AmqpConnectionSettings connectionSettings, TimeSpan timeout)
         {
             SaslHandler saslHandler = CreateDefaultSaslHandlerIfPossible(addressUri);
             return this.OpenConnectionAsync(addressUri, saslHandler, connectionSettings, timeout, CancellationToken.None);
@@ -131,7 +131,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="connectionSettings">existing settings which may be taken from a previously existing connection.</param>
         /// <param name="timeout">The operation timeout.</param>
         /// <returns>An AMQP connection.</returns>
-        public Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, SaslHandler saslHandler, AmqpConnectionSettings connectionSettings, TimeSpan timeout)
+        internal Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, SaslHandler saslHandler, AmqpConnectionSettings connectionSettings, TimeSpan timeout)
         {
             return this.OpenConnectionAsync(addressUri, saslHandler, connectionSettings, timeout, CancellationToken.None);
         }
@@ -142,7 +142,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="address">The address of the remote peer.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
         /// <returns>An AMQP connection.</returns>
-        public Task<AmqpConnection> OpenConnectionAsync(string address, CancellationToken cancellationToken)
+        internal Task<AmqpConnection> OpenConnectionAsync(string address, CancellationToken cancellationToken)
         {
             return this.OpenConnectionAsync(new Uri(address), null, null, TimeSpan.MaxValue, cancellationToken);
         }
@@ -166,7 +166,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="connectionSettings">existing settings which may be taken from a previously existing connection.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
         /// <returns>An AMQP connection.</returns>
-        public Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, AmqpConnectionSettings connectionSettings, CancellationToken cancellationToken)
+        internal Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, AmqpConnectionSettings connectionSettings, CancellationToken cancellationToken)
         {
             SaslHandler saslHandler = CreateDefaultSaslHandlerIfPossible(addressUri);
             return this.OpenConnectionAsync(addressUri, saslHandler, connectionSettings, TimeSpan.MaxValue, cancellationToken);
@@ -192,7 +192,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="connectionSettings">existing settings which may be taken from a previously existing connection.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
         /// <returns>An AMQP connection.</returns>
-        public Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, SaslHandler saslHandler, AmqpConnectionSettings connectionSettings, CancellationToken cancellationToken)
+        internal Task<AmqpConnection> OpenConnectionAsync(Uri addressUri, SaslHandler saslHandler, AmqpConnectionSettings connectionSettings, CancellationToken cancellationToken)
         {
             return this.OpenConnectionAsync(addressUri, saslHandler, connectionSettings, TimeSpan.MaxValue, cancellationToken);
         }
@@ -231,7 +231,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="timeout">The operation timeout.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
         /// <returns>An AMQP connection.</returns>
-        protected virtual async Task<AmqpConnection> CreateAndOpenConnectionAsync(
+        internal virtual async Task<AmqpConnection> CreateAndOpenConnectionAsync(
             TransportBase transport, 
             AmqpSettings settings, 
             AmqpConnectionSettings connectionSettings, 

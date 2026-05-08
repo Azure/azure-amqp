@@ -349,7 +349,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="transfer">The transfer command to send.</param>
         /// <param name="payload">The payload to carry in the transfer frame.</param>
         /// <returns>True if the transfer is sent; false if session window is 0.</returns>
-        public bool TrySendTransfer(Delivery delivery, Transfer transfer, ByteBuffer payload)
+        internal bool TrySendTransfer(Delivery delivery, Transfer transfer, ByteBuffer payload)
         {
             // delivery MUST be null for continued transfer fragments
             return this.outgoingChannel.TrySendTransfer(delivery, transfer, payload);
@@ -1457,7 +1457,7 @@ namespace Microsoft.Azure.Amqp
                 throw new NotImplementedException();
             }
 
-            protected override void ProcessUnsettledDeliveries(Attach remoteAttach)
+            internal override void ProcessUnsettledDeliveries(Attach remoteAttach)
             {
                 throw new NotImplementedException();
             }

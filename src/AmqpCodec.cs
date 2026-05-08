@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -1103,7 +1103,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="buffer">The buffer to read.</param>
         /// <param name="comparer">Use custom comparer to compare keys in the map</param>
         /// <returns>A map.</returns>
-        public static AmqpMap DecodeMap(ByteBuffer buffer, IEqualityComparer<MapKey> comparer = null)
+        internal static AmqpMap DecodeMap(ByteBuffer buffer, IEqualityComparer<MapKey> comparer = null)
         {
             FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
             if (formatCode == FormatCode.Null)

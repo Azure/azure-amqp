@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// </summary>
         /// <param name="tlsSettings">The TLS transport settings.</param>
         /// <param name="version">The supported version.</param>
-        public TlsTransportProvider(TlsTransportSettings tlsSettings, AmqpVersion version)
+        internal TlsTransportProvider(TlsTransportSettings tlsSettings, AmqpVersion version)
             : this(tlsSettings)
         {
             this.Versions.Add(version);

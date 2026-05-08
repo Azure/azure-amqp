@@ -180,7 +180,7 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// <param name="graph"></param>
         [RequiresUnreferencedCode(TrimWarning)]
         [RequiresDynamicCode(AotWarning)]
-        public void WriteObjectToBuffer(ByteBuffer buffer, object graph)
+        internal void WriteObjectToBuffer(ByteBuffer buffer, object graph)
         {
             if (graph == null)
             {
@@ -201,7 +201,7 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// <returns>An object of T.</returns>
         [RequiresUnreferencedCode(TrimWarning)]
         [RequiresDynamicCode(AotWarning)]
-        public T ReadObjectFromBuffer<T>(ByteBuffer buffer)
+        internal T ReadObjectFromBuffer<T>(ByteBuffer buffer)
         {
             return this.ReadObjectFromBuffer<T, T>(buffer);
         }
@@ -217,7 +217,7 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// types and returns the decoded object as TAs.</remarks>
         [RequiresUnreferencedCode(TrimWarning)]
         [RequiresDynamicCode(AotWarning)]
-        public TAs ReadObjectFromBuffer<T, TAs>(ByteBuffer buffer)
+        internal TAs ReadObjectFromBuffer<T, TAs>(ByteBuffer buffer)
         {
             SerializableType type = this.GetType(typeof(T));
             return (TAs)type.ReadObject(buffer);

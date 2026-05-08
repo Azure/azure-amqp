@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Amqp.Sasl
         /// <summary>
         /// Initializes the object.
         /// </summary>
-        public SaslTransportProvider(AmqpVersion version)
+        internal SaslTransportProvider(AmqpVersion version)
             : this()
         {
             this.Versions.Add(version);

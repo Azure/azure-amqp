@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -38,7 +38,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="createObjectAsync">The function to create the AmqpObject.</param>
         /// <param name="closeObject">The action to close the AmqpObject.</param>
-        public FaultTolerantAmqpObject(Func<CancellationToken, Task<T>> createObjectAsync, Action<T> closeObject)
+        internal FaultTolerantAmqpObject(Func<CancellationToken, Task<T>> createObjectAsync, Action<T> closeObject)
             : this(closeObject)
         {
             this.createObjectAsync = createObjectAsync;

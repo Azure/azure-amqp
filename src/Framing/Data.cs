@@ -55,7 +55,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// Gets or sets the value. If this property is used, the <see cref="DescribedType.Value"/>
         /// base property must not be used.
         /// </summary>
-        public ArraySegment<byte> Segment
+        internal ArraySegment<byte> Segment
         {
             get
             {

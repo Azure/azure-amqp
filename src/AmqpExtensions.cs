@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -598,7 +598,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="deliveryState">The <see cref="DeliveryState"/>.</param>
         /// <returns>true if the delivery is transactional or false otherwise.</returns>
-        public static bool Transactional(this DeliveryState deliveryState)
+        internal static bool Transactional(this DeliveryState deliveryState)
         {
             return deliveryState != null && deliveryState.DescriptorCode == TransactionalState.Code;
         }
@@ -775,7 +775,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="buffer">The input buffer.</param>
         /// <returns>The array segment.</returns>
-        public static ArraySegment<byte> AsSegment(this ByteBuffer buffer)
+        internal static ArraySegment<byte> AsSegment(this ByteBuffer buffer)
         {
             if (buffer == null)
             {
@@ -791,7 +791,7 @@ namespace Microsoft.Azure.Amqp
         /// <typeparam name="T">The type to find.</typeparam>
         /// <param name="extensions">The dictionary.</param>
         /// <returns>The object matching the type, or default(T) if not found.</returns>
-        public static T Find<T>(this IDictionary<Type, object> extensions)
+        internal static T Find<T>(this IDictionary<Type, object> extensions)
         {
             if (extensions.TryGetValue(typeof(T), out object value) &&
                 value is T typedValue)

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -78,7 +78,7 @@ namespace Microsoft.Azure.Amqp
         /// be called as early as possible when the process starts, so that
         /// when a buffer is pinned for pending I/O, it doesn't cause significant
         /// heap fragmentation.</remarks>
-        public static void InitTransportBufferManager(int bufferSize, int maxCount)
+        internal static void InitTransportBufferManager(int bufferSize, int maxCount)
         {
             if (TransportBufferManager == null)
             {
@@ -251,7 +251,7 @@ namespace Microsoft.Azure.Amqp
         /// Validates if the buffer has sufficient bytes for read.
         /// </summary>
         /// <param name="dataSize">The requested size.</param>
-        public void ValidateRead(int dataSize)
+        internal void ValidateRead(int dataSize)
         {
             if (this.Length < dataSize)
             {
@@ -263,7 +263,7 @@ namespace Microsoft.Azure.Amqp
         /// Validates if the buffer has sufficient space for write.
         /// </summary>
         /// <param name="dataSize">The requested size.</param>
-        public void ValidateWrite(int dataSize)
+        internal void ValidateWrite(int dataSize)
         {
             if (this.Size < dataSize)
             {
@@ -383,7 +383,7 @@ namespace Microsoft.Azure.Amqp
         /// Tries to add a reference on the buffer.
         /// </summary>
         /// <returns>true on success, false if the buffer is already disposed.</returns>
-        public bool TryAddReference()
+        internal bool TryAddReference()
         {
             if (Interlocked.Increment(ref this.references) <= 1)
             {

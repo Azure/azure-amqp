@@ -43,7 +43,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets or set the resume field.
         /// </summary>
-        public bool Resume
+        internal bool Resume
         {
             get;
             set;

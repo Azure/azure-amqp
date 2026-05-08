@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -330,7 +330,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets or sets a buffer of the message.
         /// </summary>
-        protected ByteBuffer Buffer
+        internal ByteBuffer Buffer
         {
             get { return this.buffer; }
             set { this.buffer = value; }
@@ -388,7 +388,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="value">The AMQP object.</param>
         /// <returns>An AmqpMessage.</returns>
-        public static AmqpMessage Create(object value)
+        internal static AmqpMessage Create(object value)
         {
             return new AmqpValueMessage(new AmqpValue() { Value = value });
         }
@@ -440,7 +440,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="buffer">The buffer.</param>
         /// <returns>An AmqpMessage.</returns>
-        public static AmqpMessage CreateBufferMessage(ByteBuffer buffer)
+        internal static AmqpMessage CreateBufferMessage(ByteBuffer buffer)
         {
             return new AmqpBufferMessage(buffer);
         }
@@ -558,7 +558,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="force">True to force update the buffer if it exists.</param>
         /// <returns>An AmqpMessage.</returns>
-        public long Serialize(bool force)
+        internal long Serialize(bool force)
         {
             this.Initialize(SectionFlag.All, force);
             return this.messageSize;
@@ -593,7 +593,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="deepCopy">True to perform a deep copy of all mutable sections.</param>
         /// <returns>An AmqpMessage.</returns>
-        public AmqpMessage Clone(bool deepCopy)
+        internal AmqpMessage Clone(bool deepCopy)
         {
             if (this.Link != null && !this.Link.IsReceiver)
             {
@@ -689,7 +689,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="desiredSections">The sections to initialize.</param>
         /// <param name="force">Force the initialization if it was done before.</param>
-        protected abstract void Initialize(SectionFlag desiredSections, bool force = false);
+        internal abstract void Initialize(SectionFlag desiredSections, bool force = false);
 
         /// <summary>
         /// Deserializes the message sections.
@@ -870,7 +870,7 @@ namespace Microsoft.Azure.Amqp
                 return buffer == null ? null : new ArraySegment<byte>[] { buffer.AsSegment() };
             }
 
-            protected override void Initialize(SectionFlag desiredSections, bool force = false)
+            internal override void Initialize(SectionFlag desiredSections, bool force = false)
             {
                 if (force || this.buffer == null)
                 {
@@ -976,7 +976,7 @@ namespace Microsoft.Azure.Amqp
                 this.source = source.buffer?.AddReference();
             }
 
-            protected override void Initialize(SectionFlag desiredSections, bool force = false)
+            internal override void Initialize(SectionFlag desiredSections, bool force = false)
             {
                 if (this.buffer != null && !force)
                 {
@@ -1165,7 +1165,7 @@ namespace Microsoft.Azure.Amqp
                 this.buffer.Complete(payloadSize);
             }
 
-            protected override void Initialize(SectionFlag desiredSections, bool force = false)
+            internal override void Initialize(SectionFlag desiredSections, bool force = false)
             {
                 if (this.sectionFlags > 0)
                 {

@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Amqp.Transaction
     /// <summary>
     /// Defines the AMQP transaction capabilities.
     /// </summary>
-    public static class TxnCapabilities
+    internal static class TxnCapabilities
     {
         /// <summary>
         /// Support local transactions.

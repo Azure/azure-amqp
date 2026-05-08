@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Amqp
     /// This class is the in-memory implementation of <see cref="IAmqpTerminusStore"/>
     /// Will be used to store and retrieve both linkTerminus information and deliveries associated with the termini.
     /// </summary>
-    public sealed class AmqpInMemoryTerminusStore : IAmqpTerminusStore
+    internal sealed class AmqpInMemoryTerminusStore : IAmqpTerminusStore
     {
         readonly object thisLock;
         readonly IDictionary<AmqpLinkIdentifier, AmqpLinkTerminus> linkTermini;

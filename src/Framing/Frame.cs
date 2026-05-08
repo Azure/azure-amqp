@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp.Framing
@@ -132,7 +132,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// Serializes the frame. Payload is not copied to <see cref="RawByteBuffer"/>.
         /// </summary>
-        public void Encode()
+        internal void Encode()
         {
             this.RawByteBuffer = EncodeCommand(this.Type, this.Channel, this.Command, this.Payload.Count);
         }

@@ -8,30 +8,35 @@ namespace Microsoft.Azure.Amqp.Serialization
     /// </summary>
     public sealed class SerialiableMember
     {
+        /// <summary>Gets or sets the member name.</summary>
         public string Name
         {
             get;
             set;
         }
 
+        /// <summary>Gets or sets the member order in the serialized form.</summary>
         public int Order
         {
             get;
             set;
         }
 
+        /// <summary>Gets or sets a value indicating whether the member is mandatory.</summary>
         public bool Mandatory
         {
             get;
             set;
         }
 
+        /// <summary>Gets or sets the member accessor.</summary>
         public MemberAccessor Accessor
         {
             get;
             set;
         }
 
+        /// <summary>Gets or sets the serializable type of the member.</summary>
         public SerializableType Type
         {
             get;

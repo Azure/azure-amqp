@@ -53,12 +53,9 @@ namespace Test.Microsoft.Azure.Amqp
 
             // Need to provide a TerminusStore implementation in order to track the link terminus and unsettled deliveries in order to do link recovery.
             // The life-cycle of the store should be managed by the client/application that is using this AMQP library.
-            var amqpSettings = new AmqpSettings
-            {
-                RuntimeProvider = new TestRuntimeProvider(),
-                TerminusStore = new AmqpInMemoryTerminusStore()
-            };
-            var factory = new AmqpConnectionFactory(amqpSettings);
+            var factory = new AmqpConnectionFactory();
+            factory.Settings.RuntimeProvider = new TestRuntimeProvider();
+            factory.Settings.TerminusStore = new AmqpInMemoryTerminusStore();
 
             // Need to use the same containId later to identify and recover this link endpoint.
             string containerId = Guid.NewGuid().ToString();

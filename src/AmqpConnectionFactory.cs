@@ -21,23 +21,14 @@ namespace Microsoft.Azure.Amqp
         /// Initializes a factory with default protocol settings.
         /// </summary>
         public AmqpConnectionFactory()
-            : this(new AmqpSettings())
         {
-        }
-
-        /// <summary>
-        /// Initializes a factory with protocol settings.
-        /// </summary>
-        /// <param name="settings"></param>
-        internal AmqpConnectionFactory(AmqpSettings settings)
-        {
-            this.settings = settings;
+            this.settings = new AmqpSettings();
         }
 
         /// <summary>
         /// Gets the protocol settings of the factory.
         /// </summary>
-        internal AmqpSettings Settings => this.settings;
+        public AmqpSettings Settings => this.settings;
 
         /// <summary>
         /// Gets the TLS transport settings.

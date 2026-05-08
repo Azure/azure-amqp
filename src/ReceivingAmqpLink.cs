@@ -92,7 +92,7 @@ namespace Microsoft.Azure.Amqp
         /// Starts the operation to receive a message with the default wait timeout.
         /// </summary>
         /// <returns>A message when the task is completed. Null if there is no message available.</returns>
-        internal Task<AmqpMessage> ReceiveMessageAsync()
+        public Task<AmqpMessage> ReceiveMessageAsync()
         {
             return this.ReceiveMessageAsync(this.OperationTimeout);
         }

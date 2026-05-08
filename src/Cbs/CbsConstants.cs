@@ -46,6 +46,9 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public const string Operation = "operation";
 
+        /// <summary>
+        /// Constants for the put-token operation.
+        /// </summary>
         public static class PutToken
         {
             /// <summary>

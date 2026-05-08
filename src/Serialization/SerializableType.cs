@@ -17,12 +17,19 @@ namespace Microsoft.Azure.Amqp.Serialization
     /// </summary>
     public enum AmqpType
     {
+        /// <summary>A primitive AMQP type.</summary>
         Primitive,
+        /// <summary>A described AMQP type.</summary>
         Described,
+        /// <summary>A composite AMQP type.</summary>
         Composite,
+        /// <summary>A type that implements IAmqpSerializable.</summary>
         Serializable,
+        /// <summary>An AMQP list type.</summary>
         List,
+        /// <summary>An AMQP map type.</summary>
         Map,
+        /// <summary>A converted type.</summary>
         Converted,
     }
 
@@ -111,11 +118,13 @@ namespace Microsoft.Azure.Amqp.Serialization
                 this.encoder = encoder;
             }
 
+            /// <inheritdoc/>
             public override void WriteObject(ByteBuffer buffer, object value)
             {
                 this.encoder.EncodeObject(value, false, buffer);
             }
 
+            /// <inheritdoc/>
             public override object ReadObject(ByteBuffer buffer)
             {
                 FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
@@ -131,12 +140,14 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// <summary>A serializable type that implements IAmqpSerializable.</summary>
         public sealed class Serializable : SerializableType
         {
+            /// <summary>Initializes a new instance.</summary>
             public Serializable(AmqpContractSerializer serializer, Type type)
                 : base(serializer, type)
             {
                 this.AmqpType = AmqpType.Serializable;
             }
 
+            /// <inheritdoc/>
             public override void WriteObject(ByteBuffer buffer, object value)
             {
                 if (value == null)
@@ -149,6 +160,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 }
             }
 
+            /// <inheritdoc/>
             public override object ReadObject(ByteBuffer buffer)
             {
                 buffer.ValidateRead(FixedWidth.FormatCode);
@@ -174,6 +186,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             readonly Func<object, Type, object> getTarget;
             readonly Func<object, Type, object> getSource;
 
+            /// <summary>Initializes a new instance.</summary>
             public Converted(AmqpType amqpType, Type source, Type target,
                 Func<object, Type, object> getTarget, Func<object, Type, object> getSource)
                 : base(null, target)
@@ -186,16 +199,19 @@ namespace Microsoft.Azure.Amqp.Serialization
                 this.encoder = AmqpEncoding.GetEncoding(target);
             }
 
+            /// <summary>Converts the value to the target type.</summary>
             public object GetTarget(object value)
             {
                 return this.getTarget(value, this.target);
             }
 
+            /// <summary>Converts the value to the source type.</summary>
             public object GetSource(object value)
             {
                 return this.getSource(value, this.source);
             }
 
+            /// <inheritdoc/>
             public override void WriteObject(ByteBuffer buffer, object value)
             {
                 if (value == null)
@@ -208,6 +224,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 }
             }
 
+            /// <inheritdoc/>
             public override object ReadObject(ByteBuffer buffer)
             {
                 object value = AmqpEncoding.DecodeObject(buffer);
@@ -225,17 +242,20 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// <summary>A serializable type for generic objects.</summary>
         public sealed class Object : SerializableType
         {
+            /// <summary>Initializes a new instance.</summary>
             public Object(Type type)
                 : base(null, type)
             {
                 this.AmqpType = AmqpType.Primitive;
             }
 
+            /// <inheritdoc/>
             public override void WriteObject(ByteBuffer buffer, object value)
             {
                 AmqpEncoding.EncodeObject(value, buffer);
             }
 
+            /// <inheritdoc/>
             public override object ReadObject(ByteBuffer buffer)
             {
                 return AmqpEncoding.DecodeObject(buffer);
@@ -245,20 +265,26 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// <summary>A collection serializable type.</summary>
         public abstract class Collection : SerializableType
         {
+            /// <summary>Initializes a new instance.</summary>
             protected Collection(AmqpContractSerializer serializer, Type type)
                 : base(serializer, type)
             {
             }
 
+            /// <summary>Writes the collection members to the buffer.</summary>
             public abstract int WriteMembers(ByteBuffer buffer, object container);
 
+            /// <summary>Reads the collection members from the buffer.</summary>
             public abstract void ReadMembers(ByteBuffer buffer, object container, ref int count);
 
+            /// <summary>Writes the format code for the collection type.</summary>
             protected abstract bool WriteFormatCode(ByteBuffer buffer);
 
+            /// <summary>Initializes the collection from the buffer.</summary>
             protected abstract void Initialize(ByteBuffer buffer, FormatCode formatCode,
                 out int size, out int count, out int encodeWidth, out Collection effectiveType);
 
+            /// <inheritdoc/>
             public override void WriteObject(ByteBuffer buffer, object graph)
             {
                 if (graph == null)
@@ -281,6 +307,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 AmqpBitConverter.WriteUInt(buffer.Buffer, pos + FixedWidth.UInt, (uint)count);
             }
 
+            /// <inheritdoc/>
             public override object ReadObject(ByteBuffer buffer)
             {
                 FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
@@ -320,6 +347,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             readonly SerializableType itemType;
             readonly MethodAccessor addMethodAccessor;
 
+            /// <summary>Initializes a new instance.</summary>
             public List(AmqpContractSerializer serializer, Type type, Type itemType, MethodAccessor addAccessor)
                 : base(serializer, type)
             {
@@ -328,22 +356,26 @@ namespace Microsoft.Azure.Amqp.Serialization
                 this.addMethodAccessor = addAccessor;
             }
 
+            /// <summary>Gets the item type.</summary>
             public SerializableType ItemType
             {
                 get { return this.itemType; }
             }
 
+            /// <summary>Gets the add method accessor.</summary>
             public MethodAccessor Add
             {
                 get { return this.addMethodAccessor; }
             }
 
+            /// <inheritdoc/>
             protected override bool WriteFormatCode(ByteBuffer buffer)
             {
                 AmqpBitConverter.WriteUByte(buffer, FormatCode.List32);
                 return true;
             }
 
+            /// <inheritdoc/>
             public override int WriteMembers(ByteBuffer buffer, object container)
             {
                 int count = 0;
@@ -367,6 +399,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 return count;
             }
 
+            /// <inheritdoc/>
             protected override void Initialize(ByteBuffer buffer, FormatCode formatCode,
                 out int size, out int count, out int encodeWidth, out Collection effectiveType)
             {
@@ -382,6 +415,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 effectiveType = this;
             }
 
+            /// <inheritdoc/>
             public override void ReadMembers(ByteBuffer buffer, object container, ref int count)
             {
                 for (; count > 0; count--)
@@ -403,6 +437,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             readonly MemberAccessor valueAccessor;
             readonly MethodAccessor addMethodAccessor;
 
+            /// <summary>Initializes a new instance.</summary>
             public Map(AmqpContractSerializer serializer, Type type, MemberAccessor keyAccessor,
                 MemberAccessor valueAccessor, MethodAccessor addAccessor)
                 : base(serializer, type)
@@ -415,18 +450,23 @@ namespace Microsoft.Azure.Amqp.Serialization
                 this.addMethodAccessor = addAccessor;
             }
 
+            /// <summary>Gets the key accessor.</summary>
             public MemberAccessor Key { get { return this.keyAccessor; } }
 
+            /// <summary>Gets the value accessor.</summary>
             public MemberAccessor Value { get { return this.valueAccessor; } }
 
+            /// <summary>Gets the add method accessor.</summary>
             public MethodAccessor Add { get { return this.addMethodAccessor; } }
 
+            /// <inheritdoc/>
             protected override bool WriteFormatCode(ByteBuffer buffer)
             {
                 AmqpBitConverter.WriteUByte(buffer, FormatCode.Map32);
                 return true;
             }
 
+            /// <inheritdoc/>
             public override int WriteMembers(ByteBuffer buffer, object container)
             {
                 int count = 0;
@@ -451,6 +491,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 return count;
             }
 
+            /// <inheritdoc/>
             protected override void Initialize(ByteBuffer buffer, FormatCode formatCode,
                 out int size, out int count, out int encodeWidth, out Collection effectiveType)
             {
@@ -459,6 +500,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 effectiveType = this;
             }
 
+            /// <inheritdoc/>
             public override void ReadMembers(ByteBuffer buffer, object container, ref int count)
             {
                 for (; count > 0; count -= 2)
@@ -482,6 +524,7 @@ namespace Microsoft.Azure.Amqp.Serialization
             readonly MethodAccessor onDeserialized;
             IList<Type> knownTypes;
 
+            /// <summary>Initializes a new instance.</summary>
             protected Composite(
                 AmqpContractSerializer serializer,
                 Type type,
@@ -502,37 +545,44 @@ namespace Microsoft.Azure.Amqp.Serialization
                 this.knownTypes = knownTypes;
             }
 
+            /// <summary>Gets the descriptor name.</summary>
             public AmqpSymbol Name
             {
                 get { return this.descriptorName; }
             }
 
+            /// <summary>Gets the members.</summary>
             public SerialiableMember[] Members
             {
                 get { return this.members; }
             }
 
+            /// <summary>Gets the encoding type.</summary>
             public EncodingType EncodingType
             {
                 get;
                 protected set;
             }
 
+            /// <summary>Gets the known types for polymorphic deserialization.</summary>
             public IList<Type> KnownTypes
             {
                 get { return this.knownTypes; }
             }
 
+            /// <summary>Gets the descriptor code.</summary>
             protected abstract byte Code
             {
                 get;
             }
 
+            /// <summary>Gets the base composite type.</summary>
             protected Composite BaseType
             {
                 get { return this.baseType; }
             }
 
+            /// <inheritdoc/>
             protected override bool WriteFormatCode(ByteBuffer buffer)
             {
                 AmqpBitConverter.WriteUByte(buffer, (byte)FormatCode.Described);
@@ -549,6 +599,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 return true;
             }
 
+            /// <inheritdoc/>
             protected override void Initialize(ByteBuffer buffer, FormatCode formatCode,
                 out int size, out int count, out int encodeWidth, out Collection effectiveType)
             {
@@ -618,6 +669,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 }
             }
 
+            /// <summary>Invokes the deserialized callback on the container.</summary>
             protected void InvokeDeserialized(object container)
             {
                 if (this.baseType != null)
@@ -647,11 +699,12 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        /// <summary>A composite list serializable type.</summary>
+        /// <summary>A composite type encoded as a list.</summary>
         [RequiresUnreferencedCode(AmqpContractSerializer.AotWarning)]
         [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
         public sealed class CompositeList : Composite
         {
+            /// <summary>Initializes a new instance.</summary>
             public CompositeList(
                 AmqpContractSerializer serializer,
                 Type type,
@@ -666,11 +719,13 @@ namespace Microsoft.Azure.Amqp.Serialization
                 this.EncodingType = EncodingType.List;
             }
 
+            /// <inheritdoc/>
             protected override byte Code
             {
                 get { return FormatCode.List32; }
             }
 
+            /// <inheritdoc/>
             public override int WriteMembers(ByteBuffer buffer, object container)
             {
                 foreach (SerialiableMember member in this.Members)
@@ -695,6 +750,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 return this.Members.Length;
             }
 
+            /// <inheritdoc/>
             public override void ReadMembers(ByteBuffer buffer, object container, ref int count)
             {
                 for (int i = 0; i < this.Members.Length && count > 0; ++i, --count)
@@ -707,11 +763,12 @@ namespace Microsoft.Azure.Amqp.Serialization
             }
         }
 
-        /// <summary>A composite map serializable type.</summary>
+        /// <summary>A composite type encoded as a map.</summary>
         [RequiresUnreferencedCode(AmqpContractSerializer.AotWarning)]
         [RequiresDynamicCode(AmqpContractSerializer.AotWarning)]
         public sealed class CompositeMap : Composite
         {
+            /// <summary>Initializes a new instance.</summary>
             public CompositeMap(
                 AmqpContractSerializer serializer,
                 Type type,
@@ -726,11 +783,13 @@ namespace Microsoft.Azure.Amqp.Serialization
                 this.EncodingType = EncodingType.Map;
             }
 
+            /// <inheritdoc/>
             protected override byte Code
             {
                 get { return FormatCode.Map32; }
             }
 
+            /// <inheritdoc/>
             public override int WriteMembers(ByteBuffer buffer, object container)
             {
                 int count = 0;
@@ -752,6 +811,7 @@ namespace Microsoft.Azure.Amqp.Serialization
                 return count;
             }
 
+            /// <inheritdoc/>
             public override void ReadMembers(ByteBuffer buffer, object container, ref int count)
             {
                 for (int i = 0; i < this.Members.Length && count > 0; ++i, count -= 2)

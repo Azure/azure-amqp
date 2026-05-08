@@ -133,7 +133,7 @@
             bool more = true;
             while (more)
             {
-               ByteBuffer buffer = message.GetPayload(payloadSize, out more);
+               ByteBuffer buffer = message.GetPayloadBuffer(payloadSize, out more);
                 if (buffer != null)
                 {
                     buffers.Add(buffer);

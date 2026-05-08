@@ -822,7 +822,7 @@ namespace Test.Microsoft.Azure.Amqp
                 return this.closeHang ? false : base.CloseInternal();
             }
 
-            protected override bool CreateDelivery(Transfer transfer, out Delivery delivery)
+            public override bool CreateDelivery(Transfer transfer, out Delivery delivery)
             {
                 delivery = AmqpMessage.CreateReceivedMessage();
                 return true;
@@ -863,7 +863,7 @@ namespace Test.Microsoft.Azure.Amqp
                 }
             }
 
-            protected override void ProcessUnsettledDeliveries(Attach remoteAttach)
+            internal override void ProcessUnsettledDeliveries(Attach remoteAttach)
             {
                 throw new NotImplementedException();
             }

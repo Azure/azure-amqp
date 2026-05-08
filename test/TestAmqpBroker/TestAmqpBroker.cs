@@ -60,9 +60,9 @@ namespace TestAmqpBroker
             }
         }
 
-        public IAmqpTerminusStore TerminusStore => this.settings.TerminusStore;
+        internal IAmqpTerminusStore TerminusStore => this.settings.TerminusStore;
 
-        public void SetTerminusStore(IAmqpTerminusStore amqpTerminusStore)
+        internal void SetTerminusStore(IAmqpTerminusStore amqpTerminusStore)
         {
             this.settings.TerminusStore = amqpTerminusStore;
         }
@@ -453,7 +453,7 @@ namespace TestAmqpBroker
 
             public BrokerMessage(AmqpMessage message)
             {
-                this.Buffer = message.GetPayload(int.MaxValue, out bool more);
+                this.Buffer = message.GetPayloadBuffer(int.MaxValue, out _);
                 this.pos = this.Buffer.Offset;
             }
 
@@ -475,13 +475,26 @@ namespace TestAmqpBroker
                 this.BytesTransfered = 0;
             }
 
-            public override void CompletePayload(int payloadSize)
+            public override long SerializedMessageSize => this.Buffer?.Length ?? 0;
+
+            public override ArraySegment<byte>[] GetPayload(int payloadSize, out bool more)
             {
-                base.CompletePayload(payloadSize);
+                var buffer = this.GetPayloadBuffer(payloadSize, out more);
+                return buffer == null ? null : new ArraySegment<byte>[] { buffer.AsSegment() };
+            }
+
+            internal override ByteBuffer GetPayloadBuffer(int payloadSize, out bool more)
+            {
+                more = false;
+                return this.Buffer;
+            }
+
+            protected override void OnCompletePayload(int payloadSize)
+            {
                 this.Buffer.Complete(payloadSize);
             }
 
-            protected override void Initialize(SectionFlag desiredSections, bool force)
+            internal override void Initialize(SectionFlag desiredSections, bool force)
             {
             }
         }

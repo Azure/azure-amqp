@@ -142,7 +142,7 @@ namespace Test.Microsoft.Azure.Amqp
 
         public static ByteBuffer GetBuffer(this AmqpMessage message)
         {
-            return message.GetPayload(int.MaxValue, out bool more);
+            return message.GetPayloadBuffer(int.MaxValue, out bool more);
         }
 
         public static AmqpTransportListener CreateListener(string host, int port, string certFindValue, bool doSslUpgrade, SaslHandler saslHandler)

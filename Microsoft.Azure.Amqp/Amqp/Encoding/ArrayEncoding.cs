@@ -558,13 +558,14 @@ namespace Microsoft.Azure.Amqp.Encoding
 
                 for (int i = 0; i < count; ++i)
                 {
+                    AmqpEncoding.TrackUnboundedSize(ref totalUnboundedSize, unboundedSize);
+
                     if (i >= capacity)
                     {
                         capacity += Math.Min(count - i, Math.Min(capacity * 2, MaxGrowFactor));
                         Array.Resize(ref array, capacity);
                     }
 
-                    AmqpEncoding.TrackUnboundedSize(ref totalUnboundedSize, unboundedSize);
                     object value = encoding.DecodeObject(buffer, formatCode, depth + 1, ref totalUnboundedSize);
                     if (descriptor != null)
                     {

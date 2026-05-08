@@ -86,7 +86,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <returns>A task that completes with the delivery outcome.</returns>
-        public Task<Outcome> SendMessageAsync(AmqpMessage message)
+        internal Task<Outcome> SendMessageAsync(AmqpMessage message)
         {
             return this.SendMessageAsync(message, CreateTag(), AmqpConstants.NullBinary, CancellationToken.None);
         }
@@ -262,7 +262,7 @@ namespace Microsoft.Azure.Amqp
         /// Process and consolidate the unsettled deliveries sent with the remote Attach frame, by checking against the unsettled deliveries for this link terminus.
         /// </summary>
         /// <param name="remoteAttach">The incoming Attach from remote which contains the remote's unsettled delivery states.</param>
-        protected override void ProcessUnsettledDeliveries(Attach remoteAttach)
+        internal override void ProcessUnsettledDeliveries(Attach remoteAttach)
         {
             if (this.Session.Connection.TerminusStore.TryGetLinkTerminusAsync(this.LinkIdentifier, out AmqpLinkTerminus linkTerminus).Result)
             {

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -9,7 +9,7 @@ namespace Microsoft.Azure.Amqp
     /// <summary>
     /// An object used to uniquely identify a link endpoint.
     /// </summary>
-    public class AmqpLinkIdentifier
+    internal class AmqpLinkIdentifier
     {
         /// <summary>
         /// Construct an object used to uniquely identify a link endpoint by using the link name, the link's role (receiver/sender), and the containerId.

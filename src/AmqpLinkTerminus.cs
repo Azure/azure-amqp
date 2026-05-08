@@ -15,7 +15,7 @@ namespace Microsoft.Azure.Amqp
     /// A class which represents a link endpoint, which contains information about the link's identifier,
     /// settings and a store of unsettled deliveries.
     /// </summary>
-    public class AmqpLinkTerminus : IDisposable
+    internal class AmqpLinkTerminus : IDisposable
     {
         readonly object thisLock;
         bool disposed;

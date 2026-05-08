@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Amqp
     /// <summary>
     /// Determines when the link terminus object should be deleted and forgotten.
     /// </summary>
-    public enum LinkTerminusExpiryPolicy
+    internal enum LinkTerminusExpiryPolicy
     {
         /// <summary>
         /// This would indicate that link recovery should not be applied.

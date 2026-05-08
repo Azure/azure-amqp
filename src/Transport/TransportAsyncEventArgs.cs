@@ -160,7 +160,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// Sets a buffer for a write operation.
         /// </summary>
         /// <param name="byteBuffer">The write buffer.</param>
-        public void SetWriteBuffer(ByteBuffer byteBuffer)
+        internal void SetWriteBuffer(ByteBuffer byteBuffer)
         {
             this.SetBuffer(byteBuffer.Buffer, byteBuffer.Offset, byteBuffer.Length);
             this.ByteBuffer = byteBuffer;
@@ -170,7 +170,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// Sets a buffer for a read operation.
         /// </summary>
         /// <param name="byteBuffer">The read buffer.</param>
-        public void SetReadBuffer(ByteBuffer byteBuffer)
+        internal void SetReadBuffer(ByteBuffer byteBuffer)
         {
             this.SetBuffer(byteBuffer.Buffer, byteBuffer.WritePos, byteBuffer.Size);
             this.ByteBuffer = byteBuffer;

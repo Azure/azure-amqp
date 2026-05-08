@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>
         /// Gets the map that stores the key-value items.
         /// </summary>
-        protected AmqpMap InnerMap
+        internal AmqpMap InnerMap
         {
             get { return this.innerMap; }
         }

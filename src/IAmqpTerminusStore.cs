@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Amqp
     /// 1. Storage and retrieval of LinkTerminus (either in-memory or disk).
     /// 2. Storage and retrieval of deliveries associated with the LinkTerminus (either in-memory or disk).
     /// </summary>
-    public interface IAmqpTerminusStore
+    internal interface IAmqpTerminusStore
     {
         #region TerminusManagement
 

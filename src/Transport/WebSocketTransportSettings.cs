@@ -56,7 +56,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// <summary>
         /// Gets or sets the websocket keep alive interval.
         /// </summary>
-        public TimeSpan? WebsocketKeepAliveInterval
+        internal TimeSpan? WebsocketKeepAliveInterval
         {
             get;
             set;

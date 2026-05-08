@@ -64,7 +64,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// <summary>
         /// Gets the SslStream of this transport.
         /// </summary>
-        protected CustomSslStream SslStream
+        internal CustomSslStream SslStream
         {
             get { return this.sslStream; }
         }

@@ -83,7 +83,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// A handler to handle custom properties received in a flow command.
         /// </summary>
-        public event EventHandler PropertyReceived;
+        internal event EventHandler PropertyReceived;
 
         /// <summary>
         /// Gets the link name.
@@ -194,12 +194,12 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// Gets the drain state of the link endpoint.
         /// </summary>
-        public bool Drain => this.drain;
+        internal bool Drain => this.drain;
 
         /// <summary>
         /// Return the <see cref="AmqpLinkIdentifier"/> for this link.
         /// </summary>
-        public AmqpLinkIdentifier LinkIdentifier { get; private set; }
+        internal AmqpLinkIdentifier LinkIdentifier { get; private set; }
 
         internal override TimeSpan OperationTimeout
         {
@@ -491,7 +491,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="amqpLinkSettings">The linkSettings for the existing link that is about to be stolen.</param>
         /// <returns>True if link stealing this link should be allowed.</returns>
-        internal protected virtual bool AllowLinkStealing(AmqpLinkSettings amqpLinkSettings)
+        internal virtual bool AllowLinkStealing(AmqpLinkSettings amqpLinkSettings)
         {
             return true;
         }
@@ -893,7 +893,7 @@ namespace Microsoft.Azure.Amqp
         /// Process and consolidate the unsettled deliveries sent with the remote Attach frame, by checking against the unsettled deliveries for this link terminus.
         /// </summary>
         /// <param name="remoteAttach">The incoming Attach from remote which contains the remote's unsettled delivery states.</param>
-        protected abstract void ProcessUnsettledDeliveries(Attach remoteAttach);
+        internal abstract void ProcessUnsettledDeliveries(Attach remoteAttach);
 
         /// <summary>Sends a delivery over the link.</summary>
         public bool SendDelivery(Delivery delivery)

@@ -130,7 +130,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="cmdBuffer">The first buffer.</param>
         /// <param name="payload">The second buffer.</param>
-        public void SendBuffer(ByteBuffer cmdBuffer, ByteBuffer payload)
+        internal void SendBuffer(ByteBuffer cmdBuffer, ByteBuffer payload)
         {
             this.asyncIO.WriteBuffer(cmdBuffer, payload);
         }

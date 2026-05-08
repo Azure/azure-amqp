@@ -20,7 +20,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// Initializes the object.
         /// </summary>
         /// <param name="version">The supported version.</param>
-        public AmqpTransportProvider(AmqpVersion version)
+        internal AmqpTransportProvider(AmqpVersion version)
             : this()
         {
             this.Versions.Add(version);

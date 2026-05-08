@@ -92,7 +92,7 @@ namespace Microsoft.Azure.Amqp
         /// Starts the operation to receive a message with the default wait timeout.
         /// </summary>
         /// <returns>A message when the task is completed. Null if there is no message available.</returns>
-        public Task<AmqpMessage> ReceiveMessageAsync()
+        internal Task<AmqpMessage> ReceiveMessageAsync()
         {
             return this.ReceiveMessageAsync(this.OperationTimeout);
         }
@@ -250,7 +250,7 @@ namespace Microsoft.Azure.Amqp
         /// Drains the credits on the link.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
-        public Task DrainAsync(CancellationToken cancellationToken)
+        internal Task DrainAsync(CancellationToken cancellationToken)
         {
             return Task.Factory.FromAsync(
                 static (thisPtr, k, c, s) => new DrainAsyncResult(thisPtr, thisPtr.OperationTimeout, k, c, s),
@@ -276,7 +276,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="deliveryTag">The delivery-tag of the message.</param>
         /// <param name="outcome">The outcome.</param>
         /// <returns>An <see cref="Outcome"/> from remote peer when the task is completed.</returns>
-        public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, Outcome outcome)
+        internal Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, Outcome outcome)
         {
             return this.DisposeMessageAsync(deliveryTag, AmqpConstants.NullBinary, outcome, true, this.OperationTimeout);
         }
@@ -321,7 +321,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="outcome">The outcome.</param>
         /// <param name="cancellationToken">A cancellation token that can be used to signal the asynchronous operation should be canceled.</param>
         /// <returns>An <see cref="Outcome"/> from remote peer when the task is completed.</returns>
-        public Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, Outcome outcome, CancellationToken cancellationToken)
+        internal Task<Outcome> DisposeMessageAsync(ArraySegment<byte> deliveryTag, Outcome outcome, CancellationToken cancellationToken)
         {
             return this.DisposeMessageAsync(deliveryTag, AmqpConstants.NullBinary, outcome, true, cancellationToken);
         }
@@ -405,7 +405,7 @@ namespace Microsoft.Azure.Amqp
         /// Accepts a message. The method does not wait for a response from the peer.
         /// </summary>
         /// <param name="message">The message to accept.</param>
-        public void AcceptMessage(AmqpMessage message)
+        internal void AcceptMessage(AmqpMessage message)
         {
             bool settled = this.Settings.SettleType != SettleMode.SettleOnDispose;
             this.AcceptMessage(message, settled, message.Batchable);
@@ -714,7 +714,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="remoteAttach">The incoming Attach from remote which contains the remote's
         /// unsettled delivery states.</param>
-        protected override void ProcessUnsettledDeliveries(Attach remoteAttach)
+        internal override void ProcessUnsettledDeliveries(Attach remoteAttach)
         {
         }
 

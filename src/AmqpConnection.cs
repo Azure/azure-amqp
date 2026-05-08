@@ -181,7 +181,7 @@ namespace Microsoft.Azure.Amqp
         /// Opens a <see cref="AmqpSession"/> in the connection with default session settings.
         /// </summary>
         /// <returns>A task that returns an AmqpSession on completion.</returns>
-        public Task<AmqpSession> OpenSessionAsync()
+        internal Task<AmqpSession> OpenSessionAsync()
         {
             return this.OpenSessionAsync(new AmqpSessionSettings());
         }
@@ -191,7 +191,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="sessionSettings">The session settings.</param>
         /// <returns>A task that returns an AmqpSession on completion.</returns>
-        public async Task<AmqpSession> OpenSessionAsync(AmqpSessionSettings sessionSettings)
+        internal async Task<AmqpSession> OpenSessionAsync(AmqpSessionSettings sessionSettings)
         {
             AmqpSession session = this.CreateSession(sessionSettings);
             try
@@ -219,7 +219,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// For internal implementation only.
         /// </summary>
-        public void SendCommand(Performative command, ushort channel, ByteBuffer payload)
+        internal void SendCommand(Performative command, ushort channel, ByteBuffer payload)
         {
             int frameSize;
             if (payload == null)
@@ -449,7 +449,7 @@ namespace Microsoft.Azure.Amqp
         /// Process an AMQP frame given to this connection.
         /// </summary>
         /// <param name="frame"></param>
-        protected void ProcessFrame(Frame frame)
+        internal void ProcessFrame(Frame frame)
         {
             Performative command = frame.Command;
             Fx.Assert(command != null, "Must have a valid command");

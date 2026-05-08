@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -627,7 +627,7 @@ namespace Microsoft.Azure.Amqp
             }
 
             /// <summary>Writes two buffers to the transport.</summary>
-            public virtual void WriteBuffer(ByteBuffer buffer, ByteBuffer extra)
+            internal virtual void WriteBuffer(ByteBuffer buffer, ByteBuffer extra)
             {
                 lock (this.SyncRoot)
                 {

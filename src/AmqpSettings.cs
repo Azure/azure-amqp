@@ -108,7 +108,7 @@ namespace Microsoft.Azure.Amqp
         /// storing and retrieving Terminus details as well as the deliveries associated
         /// with the terminus.
         /// </summary>
-        public IAmqpTerminusStore TerminusStore
+        internal IAmqpTerminusStore TerminusStore
         {
             get;
             set;

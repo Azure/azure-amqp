@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp
@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>
         /// The 1.0.0 version.
         /// </summary>
-        public static AmqpVersion V100 = new AmqpVersion(1, 0, 0);
+        internal static AmqpVersion V100 = new AmqpVersion(1, 0, 0);
 
         readonly byte major;
         readonly byte minor;

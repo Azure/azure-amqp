@@ -225,7 +225,7 @@ namespace Microsoft.Azure.Amqp
         /// Starts a task to open the object with default timeout.
         /// </summary>
         /// <returns>A task.</returns>
-        public Task OpenAsync()
+        internal Task OpenAsync()
         {
             return this.OpenAsync(this.OperationTimeout);
         }
@@ -329,7 +329,7 @@ namespace Microsoft.Azure.Amqp
         /// Starts a task to close the object with default timeout.
         /// </summary>
         /// <returns>A task.</returns>
-        public Task CloseAsync()
+        internal Task CloseAsync()
         {
             return this.CloseAsync(this.OperationTimeout);
         }
@@ -671,7 +671,7 @@ namespace Microsoft.Azure.Amqp
         /// Once any async work is finished the overriding class should continue
         /// by calling base.HandleCloseCommand (or this.Close).
         /// </summary>
-        protected virtual void HandleCloseCommand()
+        internal virtual void HandleCloseCommand()
         {
             this.Close();
         }

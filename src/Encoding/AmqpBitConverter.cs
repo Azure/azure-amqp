@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.Amqp.Encoding
@@ -340,7 +340,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         /// <param name="buffer">The byte array to write.</param>
         /// <param name="offset">The offset in the array to write.</param>
         /// <param name="data">The 64-bit unsigned number.</param>
-        public static void WriteULong(byte[] buffer, int offset, ulong data)
+        internal static void WriteULong(byte[] buffer, int offset, ulong data)
         {
             BinaryPrimitives.WriteUInt64BigEndian(buffer.AsSpan(offset, FixedWidth.ULong), data);
         }

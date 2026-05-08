@@ -115,7 +115,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <param name="key">The key.</param>
         /// <param name="value">The returned value.</param>
         /// <returns>True if the key is found and the type matches; false otherwise.</returns>
-        public bool TryGetValue<TValue>(MapKey key, out TValue value)
+        internal bool TryGetValue<TValue>(MapKey key, out TValue value)
         {
             return this.InnerMap.TryGetValue(key, out value);
         }
@@ -157,7 +157,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// </summary>
         /// <param name="key">The key of the element to add.</param>
         /// <param name="value">The value of the element to add.</param>
-        public void Add(MapKey key, object value)
+        internal void Add(MapKey key, object value)
         {
             this.InnerMap.Add(key, value);
         }

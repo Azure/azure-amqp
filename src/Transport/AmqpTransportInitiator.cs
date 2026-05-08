@@ -122,7 +122,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// </summary>
         /// <param name="timeout">The operation timeout.</param>
         /// <returns>A task that returns a transport when it is completed.</returns>
-        public Task<TransportBase> ConnectAsync(TimeSpan timeout)
+        internal Task<TransportBase> ConnectAsync(TimeSpan timeout)
         {
             return this.ConnectAsync(timeout, CancellationToken.None);
         }

@@ -202,6 +202,11 @@ namespace Microsoft.Azure.Amqp
                 this.EnsureBodyType(SectionFlag.Data);
                 return this.dataList;
             }
+
+            set
+            {
+                throw new InvalidOperationException();
+            }
         }
 
         /// <summary>
@@ -214,6 +219,11 @@ namespace Microsoft.Azure.Amqp
                 this.EnsureBodyType(SectionFlag.AmqpSequence);
                 return this.sequenceList;
             }
+
+            set
+            {
+                throw new InvalidOperationException();
+            }
         }
 
         /// <summary>
@@ -225,6 +235,11 @@ namespace Microsoft.Azure.Amqp
             {
                 this.EnsureBodyType(SectionFlag.AmqpValue);
                 return this.amqpValue;
+            }
+
+            set
+            {
+                throw new InvalidOperationException();
             }
         }
 
@@ -246,6 +261,11 @@ namespace Microsoft.Azure.Amqp
                 }
 
                 return new MemoryStream(this.buffer.Buffer, this.bodyOffset, this.BodyLength);
+            }
+
+            set
+            {
+                throw new InvalidOperationException();
             }
         }
 
@@ -300,11 +320,11 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Gets the number of bytes of the serialized message.
+        /// Gets the number of bytes of the serialized message. This may incur serialization cost.
         /// </summary>
-        public virtual long SerializedMessageSize
+        public abstract long SerializedMessageSize
         {
-            get => this.Serialize(true);
+            get;
         }
 
         /// <summary>
@@ -429,12 +449,108 @@ namespace Microsoft.Azure.Amqp
         /// Creates a message from a stream.
         /// </summary>
         /// <param name="messageStream">The message stream.</param>
-        /// <param name="ownStream">true if the stream will be owned by the message.</param>
+        /// <param name="payloadInitialized">true if the message payload is already initialized.</param>
         /// <returns>An AmqpMessage.</returns>
-        public static AmqpMessage CreateAmqpStreamMessage(BufferListStream messageStream, bool ownStream = true)
+        [Obsolete]
+        public static AmqpMessage CreateAmqpStreamMessage(BufferListStream messageStream, bool payloadInitialized)
         {
             ArraySegment<byte> payload = messageStream.ReadBytes(int.MaxValue);
             return new AmqpBufferMessage(new ByteBuffer(payload));
+        }
+
+        /// <summary>
+        /// Creates a message from a stream.
+        /// </summary>
+        /// <param name="messageStream">The message stream.</param>
+        /// <returns>An AmqpMessage.</returns>
+        [Obsolete]
+        public static AmqpMessage CreateAmqpStreamMessage(BufferListStream messageStream)
+        {
+            return CreateAmqpStreamMessage(messageStream, true);
+        }
+
+        /// <summary>
+        /// Creates a message from non-body and body streams.
+        /// </summary>
+        [Obsolete]
+        public static AmqpMessage CreateAmqpStreamMessage(Stream nonBodyStream, Stream bodyStream, bool forceCopyStream)
+        {
+            if (nonBodyStream == null)
+            {
+                throw new ArgumentNullException(nameof(nonBodyStream));
+            }
+
+            using (BufferListStream headerStream = BufferListStream.Create(nonBodyStream, AmqpConstants.SegmentSize, forceCopyStream))
+            {
+                ArraySegment<byte> headerBytes = headerStream.ReadBytes(int.MaxValue);
+                if (bodyStream == null)
+                {
+                    return new AmqpBufferMessage(new ByteBuffer(headerBytes));
+                }
+
+                using (BufferListStream bodyBls = BufferListStream.Create(bodyStream, AmqpConstants.SegmentSize, forceCopyStream))
+                {
+                    ArraySegment<byte> bodyBytes = bodyBls.ReadBytes(int.MaxValue);
+                    ByteBuffer buffer = new ByteBuffer(headerBytes.Count + bodyBytes.Count, true);
+                    AmqpBitConverter.WriteBytes(buffer, headerBytes.Array, headerBytes.Offset, headerBytes.Count);
+                    AmqpBitConverter.WriteBytes(buffer, bodyBytes.Array, bodyBytes.Offset, bodyBytes.Count);
+                    return new AmqpBufferMessage(buffer);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a message with a stream body.
+        /// </summary>
+        [Obsolete]
+        public static AmqpMessage CreateAmqpStreamMessageBody(Stream bodyStream)
+        {
+            using (BufferListStream bls = BufferListStream.Create(bodyStream, AmqpConstants.SegmentSize))
+            {
+                ArraySegment<byte> payload = bls.ReadBytes(int.MaxValue);
+                return new AmqpBufferMessage(new ByteBuffer(payload));
+            }
+        }
+
+        /// <summary>
+        /// Creates a message with a stream header.
+        /// </summary>
+        [Obsolete]
+        public static AmqpMessage CreateAmqpStreamMessageHeader(BufferListStream nonBodyStream)
+        {
+            ArraySegment<byte> payload = nonBodyStream.ReadBytes(int.MaxValue);
+            return new AmqpBufferMessage(new ByteBuffer(payload));
+        }
+
+        /// <summary>
+        /// Creates an input message from a stream.
+        /// </summary>
+        [Obsolete]
+        public static AmqpMessage CreateInputMessage(BufferListStream stream)
+        {
+            ArraySegment<byte> payload = stream.ReadBytes(int.MaxValue);
+            return new AmqpBufferMessage(new ByteBuffer(payload));
+        }
+
+        /// <summary>
+        /// Creates an output message from a stream.
+        /// </summary>
+        [Obsolete]
+        public static AmqpMessage CreateOutputMessage(BufferListStream stream, bool ownStream)
+        {
+            BufferListStream source = ownStream ? stream : (BufferListStream)stream.Clone();
+            try
+            {
+                ArraySegment<byte> payload = source.ReadBytes(int.MaxValue);
+                return new AmqpBufferMessage(new ByteBuffer(payload));
+            }
+            finally
+            {
+                if (!ownStream)
+                {
+                    source.Dispose();
+                }
+            }
         }
 
         /// <summary>
@@ -491,6 +607,18 @@ namespace Microsoft.Azure.Amqp
             }
 
             return new AmqpClonedMessage(this, deepCopy);
+        }
+
+        /// <summary>
+        /// Modifies the message annotations with the given modified outcome.
+        /// </summary>
+        /// <param name="modified">The modified outcome containing annotations to apply.</param>
+        public void Modify(Modified modified)
+        {
+            foreach (KeyValuePair<MapKey, object> pair in modified.MessageAnnotations)
+            {
+                this.MessageAnnotations.Map[pair.Key] = pair.Value;
+            }
         }
 
         /// <summary>
@@ -563,7 +691,19 @@ namespace Microsoft.Azure.Amqp
         /// <param name="force">Force the initialization if it was done before.</param>
         protected abstract void Initialize(SectionFlag desiredSections, bool force = false);
 
-        internal virtual void EnsureInitialized<T>(ref T obj, SectionFlag section) where T : class, new()
+        /// <summary>
+        /// Deserializes the message sections.
+        /// </summary>
+        /// <param name="desiredSections">The sections to deserialize.</param>
+        [Obsolete]
+        public virtual void Deserialize(SectionFlag desiredSections)
+        {
+        }
+
+        /// <summary>
+        /// Ensures the section object is initialized.
+        /// </summary>
+        protected virtual void EnsureInitialized<T>(ref T obj, SectionFlag section) where T : class, new()
         {
             if (AmqpMessage.EnsureInitialized(ref obj))
             {
@@ -718,6 +858,11 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         abstract class AmqpSectionMessage : AmqpMessage
         {
+            public override long SerializedMessageSize
+            {
+                get => this.Serialize(true);
+            }
+
             [Obsolete("Use GetPayloadBuffer instead.")]
             public override ArraySegment<byte>[] GetPayload(int payloadSize, out bool more)
             {
@@ -991,6 +1136,11 @@ namespace Microsoft.Azure.Amqp
                 this.messageSize = buffer.Length;
             }
 
+            public override long SerializedMessageSize
+            {
+                get => this.Serialize(true);
+            }
+
             [Obsolete("Use GetPayloadBuffer instead.")]
             public override ArraySegment<byte>[] GetPayload(int payloadSize, out bool more)
             {
@@ -1036,7 +1186,7 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            internal override void EnsureInitialized<T>(ref T obj, SectionFlag section)
+            protected override void EnsureInitialized<T>(ref T obj, SectionFlag section)
             {
                 this.Initialize(SectionFlag.All);
             }

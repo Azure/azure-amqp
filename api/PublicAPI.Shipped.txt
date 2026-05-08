@@ -1803,7 +1803,7 @@ static Microsoft.Azure.Amqp.AmqpMessage.Create(Microsoft.Azure.Amqp.Framing.Data
 static Microsoft.Azure.Amqp.AmqpMessage.Create(System.Collections.Generic.IEnumerable<Microsoft.Azure.Amqp.Framing.AmqpSequence> amqpSequence) -> Microsoft.Azure.Amqp.AmqpMessage
 static Microsoft.Azure.Amqp.AmqpMessage.Create(System.Collections.Generic.IEnumerable<Microsoft.Azure.Amqp.Framing.Data> dataList) -> Microsoft.Azure.Amqp.AmqpMessage
 static Microsoft.Azure.Amqp.AmqpMessage.Create(System.IO.Stream stream, bool ownStream) -> Microsoft.Azure.Amqp.AmqpMessage
-static Microsoft.Azure.Amqp.AmqpMessage.CreateAmqpStreamMessage(Microsoft.Azure.Amqp.BufferListStream messagerStream, bool payloadInitialized) -> Microsoft.Azure.Amqp.AmqpMessage
+static Microsoft.Azure.Amqp.AmqpMessage.CreateAmqpStreamMessage(Microsoft.Azure.Amqp.BufferListStream messageStream, bool payloadInitialized) -> Microsoft.Azure.Amqp.AmqpMessage
 static Microsoft.Azure.Amqp.AmqpMessage.CreateAmqpStreamMessage(Microsoft.Azure.Amqp.BufferListStream messageStream) -> Microsoft.Azure.Amqp.AmqpMessage
 static Microsoft.Azure.Amqp.AmqpMessage.CreateAmqpStreamMessage(System.IO.Stream nonBodyStream, System.IO.Stream bodyStream, bool forceCopyStream) -> Microsoft.Azure.Amqp.AmqpMessage
 static Microsoft.Azure.Amqp.AmqpMessage.CreateAmqpStreamMessageBody(System.IO.Stream bodyStream) -> Microsoft.Azure.Amqp.AmqpMessage

@@ -486,8 +486,7 @@ namespace TestAmqpBroker
 
             internal override ByteBuffer GetPayloadBuffer(int payloadSize, out bool more)
             {
-                more = false;
-                return this.Buffer;
+                return GetPayload(this.Buffer, payloadSize, out more);
             }
 
             protected override void OnCompletePayload(int payloadSize)

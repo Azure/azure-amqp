@@ -55,12 +55,12 @@ namespace Microsoft.Azure.Amqp.Transport
                 var (transport, callbackArgs, cws) = (Tuple<WebSocketTransportInitiator, TransportAsyncCallbackArgs, ClientWebSocket>) s;
                 if (t.IsFaulted)
                 {
-                    cws.Abort();
+                    cws.Dispose();
                     callbackArgs.Exception = t.Exception?.InnerException;
                 }
                 else if (t.IsCanceled)
                 {
-                    cws.Abort();
+                    cws.Dispose();
                     callbackArgs.Exception = new OperationCanceledException();
                 }
                 else

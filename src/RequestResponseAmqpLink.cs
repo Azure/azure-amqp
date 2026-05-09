@@ -447,7 +447,7 @@ namespace Microsoft.Azure.Amqp
 
             public override void Cancel(bool isSynchronous)
             {
-                if (this.parent.inflightRequests.TryRemoveWork(this.requestId, out _))
+                if (this.parent.inflightRequests.RemoveWork(this.requestId, this))
                 {
                     this.CompleteSelf(isSynchronous, new TaskCanceledException());
                 }
@@ -466,8 +466,7 @@ namespace Microsoft.Azure.Amqp
 
             protected override void CompleteOnTimer()
             {
-                RequestAsyncResult thisPtr;
-                if (this.parent.inflightRequests.TryRemoveWork(this.requestId, out thisPtr))
+                if (this.parent.inflightRequests.RemoveWork(this.requestId, this))
                 {
                     base.CompleteOnTimer();
                 }

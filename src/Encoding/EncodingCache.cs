@@ -3,14 +3,25 @@
 
 namespace Microsoft.Azure.Amqp
 {
+    using System;
     using System.Collections.Generic;
+    using System.Threading;
     using Microsoft.Azure.Amqp.Encoding;
 
     static class EncodingCache
     {
         static readonly object[] boolCache = new object[] { true, false };
-        static readonly BoxedCache<int> intCache = new BoxedCache<int>(17, EqualityComparer<int>.Default);
-        static readonly BoxedCache<AmqpSymbol> symbolCache = new BoxedCache<AmqpSymbol>(40, SymbolComparer.Default);
+        static readonly object[] intCache = new object[] { 0, 1, 2, 3, 4, 5, 6, 7 };
+        static readonly KeyValueCache<AmqpSymbol, object> boxedSymbolCache = new KeyValueCache<AmqpSymbol, object>(
+            capacity: 43,
+            comparer: SymbolComparer.Default,
+            keyFunc: s => s,
+            valueFunc: s => (object)s);
+        static readonly KeyValueCache<ArraySegment<byte>, string> encodedSymbolCache = new KeyValueCache<ArraySegment<byte>, string>(
+            capacity: 43,
+            comparer: ByteArrayComparer.Instance,
+            keyFunc: a => Copy(a),
+            valueFunc: a => System.Text.Encoding.ASCII.GetString(a.Array, a.Offset, a.Count));
 
         static readonly UlongCache performativeCodes = new UlongCache(0x10ul, 0x19ul);
         static readonly UlongCache outcomeCodes = new UlongCache(0x23ul, 0x29ul);
@@ -26,17 +37,22 @@ namespace Microsoft.Azure.Amqp
 
         public static object Box(int value)
         {
-            return intCache.Box(value);
+            if (value >= 0 && value < intCache.Length)
+            {
+                return intCache[value];
+            }
+
+            return value;
         }
 
         public static object Box(AmqpSymbol symbol)
         {
             if (symbol.Value == null)
             {
-                return BoxedCache<AmqpSymbol>.Default;
+                return KeyValueCache<AmqpSymbol, object>.Default;
             }
 
-            return symbolCache.Box(symbol);
+            return boxedSymbolCache.Get(symbol);
         }
 
         public static object Box(ulong code)
@@ -70,6 +86,18 @@ namespace Microsoft.Azure.Amqp
             return code;
         }
 
+        public static AmqpSymbol GetSymbol(ArraySegment<byte> bytes)
+        {
+            return encodedSymbolCache.Get(bytes);
+        }
+
+        static ArraySegment<byte> Copy(ArraySegment<byte> a)
+        {
+            var b = new byte[a.Count];
+            Buffer.BlockCopy(a.Array, a.Offset, b, 0, a.Count);
+            return new ArraySegment<byte>(b);
+        }
+
         sealed class SymbolComparer : IEqualityComparer<AmqpSymbol>
         {
             public static readonly SymbolComparer Default = new SymbolComparer();
@@ -85,36 +113,88 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
-        sealed class BoxedCache<T> where T : struct
+        sealed class KeyValueCache<TKey, TValue> where TValue : class
         {
-            public static readonly object Default = default(T);
+            public static readonly object Default = default(TValue);
 
             struct Entry
             {
-                public T Value;
-                public object Boxed;
+                public TKey Key;
+                public TValue Value;
+
+                public bool TrySet(TKey key, TValue value, Func<TKey, TKey> keyFunc)
+                {
+                    if (Interlocked.CompareExchange(ref this.Value, value, null) == null)
+                    {
+                        this.Key = keyFunc(key);
+                        return true;
+                    }
+
+                    return false;
+                }
             }
 
-            readonly IEqualityComparer<T> comparer;
-            readonly Entry[] cache;
+            readonly IEqualityComparer<TKey> comparer;
+            readonly Func<TKey, TKey> keyFunc;
+            readonly Func<TKey, TValue> valueFunc;
+            readonly Entry[] cache1;
+            readonly Entry[] cache2;
+            readonly Entry[] cache3;
 
-            public BoxedCache(int capacity, IEqualityComparer<T> comparer)
+            public KeyValueCache(int capacity, IEqualityComparer<TKey> comparer, Func<TKey, TKey> keyFunc, Func<TKey, TValue> valueFunc)
             {
                 this.comparer = comparer;
-                this.cache = new Entry[capacity];
+                this.keyFunc = keyFunc;
+                this.valueFunc = valueFunc;
+                this.cache1 = new Entry[29];
+                this.cache2 = new Entry[11];
+                this.cache3 = new Entry[5];
             }
 
-            public object Box(T t)
+            public TValue Get(TKey key)
             {
-                int slot = (int)((uint)this.comparer.GetHashCode(t) % (uint)this.cache.Length);
-                Entry entry = this.cache[slot];
-                if (entry.Boxed == null || !this.comparer.Equals(t, entry.Value))
+                int hash = this.comparer.GetHashCode(key);
+                TValue value;
+                if (this.TryGet(key, hash, this.cache1, out value))
                 {
-                    entry = new Entry { Value = t, Boxed = t };
-                    this.cache[slot] = entry;
+                    return value;
                 }
 
-                return entry.Boxed;
+                if (this.TryGet(key, hash, this.cache2, out value))
+                {
+                    return value;
+                }
+
+                if (this.TryGet(key, hash, this.cache3, out value))
+                {
+                    return value;
+                }
+
+                // The entry is occupied by another value.
+                return this.valueFunc(key);
+            }
+
+            bool TryGet(TKey key, int hash, Entry[] entries, out TValue value)
+            {
+                int slot = (int)((uint)hash % (uint)entries.Length);
+                Entry entry = entries[slot];
+                if (entry.Value == null)
+                {
+                    value = this.valueFunc(key);
+                    // Do not use 'entry' which is a copy of the item
+                    if (entries[slot].TrySet(key, value, this.keyFunc))
+                    {
+                        return true;
+                    }
+                }
+                else if (this.comparer.Equals(key, entry.Key))
+                {
+                    value = entry.Value;
+                    return true;
+                }
+
+                value = null;
+                return false;
             }
         }
 

@@ -73,33 +73,31 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <summary>Decodes a message id from the buffer.</summary>
         public static MessageId Decode(ByteBuffer buffer)
         {
-            object value = AmqpEncoding.DecodeObject(buffer);
-            if (value == null)
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            switch (formatCode)
             {
-                return null;
+                case FormatCode.Null:
+                    return null;
+                case FormatCode.String8Utf8:
+                case FormatCode.String32Utf8:
+                    string str = StringEncoding.Decode(buffer, formatCode);
+                    return new MessageIdString(str);
+                case FormatCode.ULong0:
+                    return new MessageIdUlong(0ul);
+                case FormatCode.SmallULong:
+                case FormatCode.ULong:
+                    ulong ulongValue = ULongEncoding.Decode(buffer, formatCode);
+                    return new MessageIdUlong(ulongValue);
+                case FormatCode.Uuid:
+                    Guid uuidValue = UuidEncoding.Decode(buffer, formatCode);
+                    return new MessageIdUuid(uuidValue);
+                case FormatCode.Binary8:
+                case FormatCode.Binary32:
+                    ArraySegment<byte> bin = BinaryEncoding.Decode(buffer, formatCode, false);
+                    return new MessageIdBinary(bin);
+                default:
+                    throw new AmqpException(AmqpErrorCode.InvalidField, $"Format code {formatCode} is not valid for a message ID type.");
             }
-
-            if (value is ulong)
-            {
-                return (ulong)value;
-            }
-
-            if (value is Guid)
-            {
-                return (Guid)value;
-            }
-
-            if (value is ArraySegment<byte>)
-            {
-                return (ArraySegment<byte>)value;
-            }
-
-            if (value is string)
-            {
-                return (string)value;
-            }
-
-            throw new NotSupportedException(value.GetType().ToString());
         }
 
         /// <summary>Encodes the message id value into the buffer.</summary>

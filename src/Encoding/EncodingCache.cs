@@ -8,7 +8,9 @@ namespace Microsoft.Azure.Amqp
 
     static class EncodingCache
     {
-        static readonly BoxedCache<AmqpSymbol> symbolCache = new BoxedCache<AmqpSymbol>(40, new SymbolComparer());
+        static readonly object[] boolCache = new object[] { true, false };
+        static readonly BoxedCache<int> intCache = new BoxedCache<int>(17, EqualityComparer<int>.Default);
+        static readonly BoxedCache<AmqpSymbol> symbolCache = new BoxedCache<AmqpSymbol>(40, SymbolComparer.Default);
 
         static readonly UlongCache performativeCodes = new UlongCache(0x10ul, 0x19ul);
         static readonly UlongCache outcomeCodes = new UlongCache(0x23ul, 0x29ul);
@@ -17,8 +19,23 @@ namespace Microsoft.Azure.Amqp
         static readonly UlongCache txnCodes = new UlongCache(0x30ul, 0x34ul);
         static readonly UlongCache errorCode = new UlongCache(0x1dul, 0x1dul);
 
+        public static object Box(bool value)
+        {
+            return value ? boolCache[0] : boolCache[1];
+        }
+
+        public static object Box(int value)
+        {
+            return intCache.Box(value);
+        }
+
         public static object Box(AmqpSymbol symbol)
         {
+            if (symbol.Value == null)
+            {
+                return BoxedCache<AmqpSymbol>.Default;
+            }
+
             return symbolCache.Box(symbol);
         }
 
@@ -55,6 +72,8 @@ namespace Microsoft.Azure.Amqp
 
         sealed class SymbolComparer : IEqualityComparer<AmqpSymbol>
         {
+            public static readonly SymbolComparer Default = new SymbolComparer();
+
             bool IEqualityComparer<AmqpSymbol>.Equals(AmqpSymbol x, AmqpSymbol y)
             {
                 return x.Equals(y);
@@ -68,6 +87,8 @@ namespace Microsoft.Azure.Amqp
 
         sealed class BoxedCache<T> where T : struct
         {
+            public static readonly object Default = default(T);
+
             struct Entry
             {
                 public T Value;

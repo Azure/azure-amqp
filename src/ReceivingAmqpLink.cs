@@ -1355,13 +1355,16 @@ namespace Microsoft.Azure.Amqp
                     deliveryState = this.outcome;
                 }
 
-                if (!link.DisposeDelivery(deliveryTag, false, deliveryState, batchable))
+                if (!this.link.DisposeDelivery(deliveryTag, false, deliveryState, batchable))
                 {
                     // Delivery tag not found
-                    link.pendingDispositions.CompleteWork(deliveryTag, true, AmqpConstants.RejectedNotFoundOutcome);
+                    this.link.pendingDispositions.RemoveWork(this.deliveryTag, this);
+                    this.Done(true, AmqpConstants.RejectedNotFoundOutcome);
                 }
-
-                this.StartTracking();
+                else
+                {
+                    this.StartTracking();
+                }
             }
 
             public void Done(bool completedSynchronously, DeliveryState state)
@@ -1388,10 +1391,8 @@ namespace Microsoft.Azure.Amqp
 
             public override void Cancel(bool isSynchronous)
             {
-                if (this.link.pendingDispositions.TryRemoveWork(this.deliveryTag, out _))
-                {
-                    this.CompleteSelf(isSynchronous, new TaskCanceledException());
-                }
+                this.link.pendingDispositions.RemoveWork(this.deliveryTag, this);
+                this.CompleteSelf(isSynchronous, new TaskCanceledException());
             }
 
             public void Cancel(bool completedSynchronously, Exception exception)
@@ -1407,10 +1408,8 @@ namespace Microsoft.Azure.Amqp
             protected override void CompleteOnTimer()
             {
                 // Timeout
-                if (this.link.pendingDispositions.TryRemoveWork(this.deliveryTag, out var disposeAsyncResult))
-                {
-                    base.CompleteOnTimer();
-                }
+                this.link.pendingDispositions.RemoveWork(this.deliveryTag, this);
+                base.CompleteOnTimer();
             }
         }
     }

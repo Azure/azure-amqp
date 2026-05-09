@@ -276,6 +276,9 @@
   <data name="AmqpManagementOperationFailed" xml:space="preserve">
     <value>Management operation failed. status-code: {0}, status-description: {1}.</value>
   </data>
+  <data name="AmqpTransportClosed" xml:space="preserve">
+    <value>The AMQP transport failed to open because the inner transport {0} is closed.</value>
+  </data>
   <data name="AmqpTransportNotSecure" xml:space="preserve">
     <value>The current transport is not secure. Establish a secure transport by setting AmqpTransportSettings.UseSslStreamSecurity to true.</value>
   </data>

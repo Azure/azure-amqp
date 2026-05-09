@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
     using System.ComponentModel;
+    using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Framing;
@@ -282,6 +283,11 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             if (args.Exception != null && args.Transport != null)
             {
+                if (args.Exception is ObjectDisposedException)
+                {
+                    args.Exception = new IOException(AmqpResources.GetString(AmqpResources.AmqpTransportClosed, args.Transport.ToString()));
+                }
+
                 args.Transport.SafeClose(args.Exception);
                 args.Transport = null;
             }

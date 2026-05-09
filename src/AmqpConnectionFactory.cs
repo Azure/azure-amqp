@@ -289,7 +289,7 @@ namespace Microsoft.Azure.Amqp
                     tls.CertificateValidationCallback = tlsProvider.Settings.CertificateValidationCallback;
                     tls.CheckCertificateRevocation = tlsProvider.Settings.CheckCertificateRevocation;
                     tls.Certificate = tlsProvider.Settings.Certificate;
-                    tls.Protocols = tlsProvider.Settings.Protocols;
+                    tls.UserProtocols = tlsProvider.Settings.UserProtocols;
                 }
 
                 if (this.tlsSettings != null)
@@ -297,7 +297,7 @@ namespace Microsoft.Azure.Amqp
                     tls.CertificateValidationCallback = this.tlsSettings.CertificateValidationCallback;
                     tls.CheckCertificateRevocation = this.tlsSettings.CheckCertificateRevocation;
                     tls.Certificate = this.tlsSettings.Certificate;
-                    tls.Protocols = this.tlsSettings.Protocols;
+                    tls.UserProtocols = this.tlsSettings.UserProtocols;
                 }
 
                 transportSettings = tls;

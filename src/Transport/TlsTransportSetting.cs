@@ -13,7 +13,15 @@ namespace Microsoft.Azure.Amqp.Transport
     /// </summary>
     public class TlsTransportSettings : TransportSettings
     {
-        const SslProtocols DefaultSslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
+        // SslProtocols.None to use system default is only supported on net47+, netstandard2.0+, and net5+.
+        // When the app (not the lib) targets lower versions, using SslProtocols.None results in an argument error.
+        // The lib cannot control the app's target framework, so we handle the argument error on lower platforms
+        // and revert back to the legacy default SslProtocols to maintain backward compatibility.
+        // https://learn.microsoft.com/en-us/dotnet/framework/network-programming/tls
+        const SslProtocols LegacyDefaultSslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
+        static SslProtocols? systemSslProtocols;
+        SslProtocols? userSslProtocols;
+
         /// <summary>
         /// The inner transport settings.
         /// </summary>
@@ -48,8 +56,6 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             this.innerSettings = innerSettings;
             this.IsInitiator = isInitiator;
-            this.Protocols = DefaultSslProtocols;
-            this.CheckCertificateRevocation = true;
         }
 
         /// <summary>
@@ -80,8 +86,8 @@ namespace Microsoft.Azure.Amqp.Transport
         /// </summary>
         public SslProtocols Protocols
         {
-            get;
-            set;
+            get { return this.userSslProtocols ?? SslProtocols.None; }
+            set { this.userSslProtocols = value; }
         }
 
         /// <summary>
@@ -111,6 +117,27 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             get;
             set;
+        }
+
+        internal SslProtocols? UserProtocols
+        {
+            get { return this.userSslProtocols; }
+            set { this.userSslProtocols = value; }
+        }
+
+        internal SslProtocols InternalProtocols
+        {
+            get { return this.userSslProtocols ?? systemSslProtocols ?? SslProtocols.None; }
+        }
+
+        internal SslProtocols RefreshProtocolsOnArgumentError()
+        {
+            if (this.userSslProtocols == null && systemSslProtocols == null)
+            {
+                systemSslProtocols = LegacyDefaultSslProtocols;
+            }
+
+            return this.InternalProtocols;
         }
 
         /// <summary>

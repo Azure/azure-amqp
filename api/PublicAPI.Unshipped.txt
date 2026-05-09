@@ -9,9 +9,6 @@ override Microsoft.Azure.Amqp.Encoding.MapKey.Equals(object obj) -> bool
 Microsoft.Azure.Amqp.TraceOperation.LinkRecoveryNegotiate = 20 -> Microsoft.Azure.Amqp.TraceOperation
 Microsoft.Azure.Amqp.TraceOperation.LinkRecoveryNegotiateResult = 21 -> Microsoft.Azure.Amqp.TraceOperation
 Microsoft.Azure.Amqp.TraceOperation.TerminusStateOnClose = 22 -> Microsoft.Azure.Amqp.TraceOperation
-Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.this[Microsoft.Azure.Amqp.Encoding.MapKey key].get -> object
 Microsoft.Azure.Amqp.Encoding.FormatCode.Equals(Microsoft.Azure.Amqp.Encoding.FormatCode other) -> bool
 Microsoft.Azure.Amqp.Framing.TerminusExpiryPolicy.TerminusExpiryPolicy() -> void
-Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.this[Microsoft.Azure.Amqp.Encoding.MapKey key].set -> void
 Microsoft.Azure.Amqp.AmqpConnectionFactory.Settings.get -> Microsoft.Azure.Amqp.AmqpSettings
-static Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey>.implicit operator Microsoft.Azure.Amqp.Encoding.AmqpMap(Microsoft.Azure.Amqp.Framing.RestrictedMap<TKey> restrictedMap) -> Microsoft.Azure.Amqp.Encoding.AmqpMap

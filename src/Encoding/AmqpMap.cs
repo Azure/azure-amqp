@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Amqp.Encoding
     /// <summary>
     /// This class implements an AMQP map.
     /// </summary>
-    public sealed class AmqpMap : Dictionary<MapKey, object>
+    public class AmqpMap : Dictionary<MapKey, object>
     {
         /// <summary>
         /// Initializes the object.

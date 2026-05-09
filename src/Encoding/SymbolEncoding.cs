@@ -66,9 +66,10 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
 
             buffer.ValidateRead(length);
-            string value = Encoding.ASCII.GetString(buffer.Buffer, buffer.Offset, length);
+            var segment = new ArraySegment<byte>(buffer.Buffer, buffer.Offset, length);
+            var symbol = EncodingCache.GetSymbol(segment);
             buffer.Complete(length);
-            return value;
+            return symbol;
         }
 
         public override int GetArrayValueSize(AmqpSymbol[] array)

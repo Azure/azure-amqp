@@ -23,7 +23,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <param name="name">The descriptor name.</param>
         /// <param name="code">The descriptor code.</param>
         public AmqpDescribed(AmqpSymbol name, ulong code)
-            : base(name.Value, null)
+            : base(EncodingCache.Box(code), null)
         {
             this.name = name;
             this.code = code;

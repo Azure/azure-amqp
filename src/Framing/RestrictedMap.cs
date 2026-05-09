@@ -81,8 +81,8 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <returns>The value. Null if the key doesn't exist.</returns>
         public object this[TKey key]
         {
-            get { return this.InnerMap[new MapKey(key)]; }
-            set { this.InnerMap[new MapKey(key)] = value; }
+            get { return this.InnerMap[this.GetKey(key)]; }
+            set { this.InnerMap[this.GetKey(key)] = value; }
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <returns>True if the key is found and the type matches; false otherwise.</returns>
         public bool TryGetValue<TValue>(TKey key, out TValue value)
         {
-            return this.InnerMap.TryGetValue(new MapKey(key), out value);
+            return this.InnerMap.TryGetValue(this.GetKey(key), out value);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace Microsoft.Azure.Amqp.Framing
         /// <returns>True if the key is found and the type matches; false otherwise.</returns>
         public bool TryRemoveValue<TValue>(TKey key, out TValue value)
         {
-            return this.InnerMap.TryRemoveValue(new MapKey(key), out value);
+            return this.InnerMap.TryRemoveValue(this.GetKey(key), out value);
         }
 
         /// <summary>
@@ -181,6 +181,11 @@ namespace Microsoft.Azure.Amqp.Framing
     /// </summary>
     public sealed class Fields : RestrictedMap<AmqpSymbol>
     {
+        /// <inheritdoc/>
+        protected override MapKey GetKey(AmqpSymbol key)
+        {
+            return new MapKey(EncodingCache.Box(key));
+        }
     }
 
     /// <summary>
@@ -188,6 +193,11 @@ namespace Microsoft.Azure.Amqp.Framing
     /// </summary>
     public sealed class FilterSet : RestrictedMap<AmqpSymbol>
     {
+        /// <inheritdoc/>
+        protected override MapKey GetKey(AmqpSymbol key)
+        {
+            return new MapKey(EncodingCache.Box(key));
+        }
     }
 
     /// <summary>
@@ -202,5 +212,10 @@ namespace Microsoft.Azure.Amqp.Framing
     /// </summary>
     public sealed class Annotations : RestrictedMap<AmqpSymbol>
     {
+        /// <inheritdoc/>
+        protected override MapKey GetKey(AmqpSymbol key)
+        {
+            return new MapKey(EncodingCache.Box(key));
+        }
     }
 }

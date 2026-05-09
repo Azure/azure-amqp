@@ -869,7 +869,6 @@ Microsoft.Azure.Amqp.Framing.Rejected.Rejected() -> void
 Microsoft.Azure.Amqp.Framing.Released
 Microsoft.Azure.Amqp.Framing.Released.Released() -> void
 Microsoft.Azure.Amqp.Framing.RestrictedMap
-Microsoft.Azure.Amqp.Framing.RestrictedMap.GetEnumerator() -> System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<Microsoft.Azure.Amqp.Encoding.MapKey, object>>
 Microsoft.Azure.Amqp.Framing.RestrictedMap.InnerMap.get -> Microsoft.Azure.Amqp.Encoding.AmqpMap
 Microsoft.Azure.Amqp.Framing.RestrictedMap.RestrictedMap() -> void
 Microsoft.Azure.Amqp.Framing.RestrictedMap.SetMap(Microsoft.Azure.Amqp.Encoding.AmqpMap map) -> void
@@ -1572,7 +1571,6 @@ override Microsoft.Azure.Amqp.Framing.ProtocolHeader.ToString() -> string
 override Microsoft.Azure.Amqp.Framing.Received.ToString() -> string
 override Microsoft.Azure.Amqp.Framing.Rejected.ToString() -> string
 override Microsoft.Azure.Amqp.Framing.Released.ToString() -> string
-override Microsoft.Azure.Amqp.Framing.RestrictedMap.ToString() -> string
 override Microsoft.Azure.Amqp.Framing.Source.ToString() -> string
 override Microsoft.Azure.Amqp.Framing.Target.ToString() -> string
 override Microsoft.Azure.Amqp.Framing.Transfer.ToString() -> string

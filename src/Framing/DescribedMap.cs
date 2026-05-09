@@ -10,8 +10,6 @@ namespace Microsoft.Azure.Amqp.Framing
     /// </summary>
     public abstract class DescribedMap : AmqpDescribed
     {
-        AmqpMap innerMap;
-
         /// <summary>
         /// Initializes the object.
         /// </summary>
@@ -20,39 +18,40 @@ namespace Microsoft.Azure.Amqp.Framing
         public DescribedMap(AmqpSymbol name, ulong code)
             : base(name, code)
         {
-            this.innerMap = new AmqpMap();
         }
 
         /// <summary>
         /// Gets the map that stores the key-value items.
         /// </summary>
-        internal AmqpMap InnerMap
-        {
-            get { return this.innerMap; }
-        }
+        internal abstract AmqpMap InnerMap { get; }
 
         /// <inheritdoc/>
         public override int GetValueEncodeSize()
         {
-            return AmqpCodec.GetMapEncodeSize(this.innerMap);
+            return MapEncoding.GetEncodeSize(this.InnerMap);
         }
 
         /// <inheritdoc/>
         public override void EncodeValue(ByteBuffer buffer)
         {
-            AmqpCodec.EncodeMap(this.innerMap, buffer);
+            MapEncoding.Encode(this.InnerMap, buffer);
         }
 
         /// <inheritdoc/>
         public override void DecodeValue(ByteBuffer buffer)
         {
-            this.innerMap = AmqpCodec.DecodeMap(buffer);
+            var formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            if (formatCode != FormatCode.Null)
+            {
+                AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.Map8, FormatCode.Map32, out int size, out int count);
+                MapEncoding.ReadMapValue(buffer, this.InnerMap, size, count);
+            }
         }
 
         /// <summary>Decodes the described map value from the buffer.</summary>
         public void DecodeValue(ByteBuffer buffer, int size, int count)
         {
-            MapEncoding.ReadMapValue(buffer, this.innerMap, size, count);
+            MapEncoding.ReadMapValue(buffer, this.InnerMap, size, count);
         }
     }
 }

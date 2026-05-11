@@ -82,28 +82,24 @@ namespace Microsoft.Azure.Amqp
         {
             get
             {
-                // fast‐path: already created?
-                var resetEvent = Volatile.Read(ref this.manualResetEvent);
-                if (resetEvent != null)
+                if (Volatile.Read(ref this.manualResetEvent) != null)
                 {
-                    return resetEvent;
+                    return this.manualResetEvent;
                 }
 
-                // otherwise build one with initial signaled = IsCompleted
-                var newResetEvent = new ManualResetEventSlim(this.IsCompleted);
-                var original = Interlocked.CompareExchange(ref this.manualResetEvent, newResetEvent, null);
-                if (original != null)
+                var newEvent = new ManualResetEventSlim(false);
+                if (Interlocked.CompareExchange(ref this.manualResetEvent, newEvent, null) != null)
                 {
-                    // someone else installed theirs first
-                    newResetEvent.Dispose();
-                    resetEvent = original;
+                    newEvent.Dispose();
                 }
-                else
+                else if (this.IsCompleted)
                 {
-                    resetEvent = newResetEvent;
+                    // TryComplete may have already set isCompleted but missed signaling
+                    // because manualResetEvent was still null at that point.
+                    this.manualResetEvent.Set();
                 }
 
-                return resetEvent;
+                return this.manualResetEvent;
             }
         }
 
@@ -340,16 +336,10 @@ namespace Microsoft.Azure.Amqp
 
             asyncResult.endCalled = true;
 
-            var resetEvent = Volatile.Read(ref asyncResult.manualResetEvent);
-            if (resetEvent == null && !asyncResult.IsCompleted)
+            if (!asyncResult.IsCompleted)
             {
-                resetEvent = asyncResult.SyncEvent;
-            }
-
-            if (resetEvent != null)
-            {
-                resetEvent.Wait();
-                resetEvent.Dispose();
+                asyncResult.SyncEvent.Wait();
+                asyncResult.manualResetEvent.Dispose();
             }
 
             if (asyncResult.exception != null)

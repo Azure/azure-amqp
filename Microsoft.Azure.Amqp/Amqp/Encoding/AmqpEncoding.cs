@@ -201,6 +201,45 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 throw GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
             }
+
+            if (count < 0 || count > buffer.Length)
+            {
+                throw new AmqpException(AmqpErrorCode.DecodeError,
+                    string.Format("AMQP variable width {0} exceeds buffer length ({1}).", count, buffer.Length));
+            }
+        }
+
+        /// <summary>
+        /// Maximum cumulative size (in bytes) of unbounded (zero-width) elements
+        /// across the entire decode call. Ensures decoding correctness by bounding
+        /// allocations for zero-width format codes (UInt0, ULong0, BooleanTrue, etc.)
+        /// whose element count is not constrained by the buffer length.
+        /// </summary>
+        internal const int MaxUnboundedSize = 64 * 1024;
+
+        /// <summary>
+        /// Maximum nesting depth for compound AMQP types (described, list, map, array).
+        /// Ensures decoding correctness by preventing stack overflow from deeply nested structures.
+        /// </summary>
+        internal const int MaxNestingDepth = 64;
+
+        internal static void TrackUnboundedSize(ref int totalUnboundedSize, int elementSize)
+        {
+            totalUnboundedSize += elementSize;
+            if (totalUnboundedSize > MaxUnboundedSize)
+            {
+                throw new AmqpException(AmqpErrorCode.DecodeError,
+                    string.Format("Total unbounded element size {0} exceeds maximum allowed ({1}).", totalUnboundedSize, MaxUnboundedSize));
+            }
+        }
+
+        internal static void CheckMaxNestingDepth(int depth)
+        {
+            if (depth > MaxNestingDepth)
+            {
+                throw new AmqpException(AmqpErrorCode.DecodeError,
+                    string.Format("AMQP object graph depth {0} exceeds maximum ({1}).", depth, MaxNestingDepth));
+            }
         }
 
         public static void ReadSizeAndCount(ByteBuffer buffer, FormatCode formatCode, FormatCode formatCode8, FormatCode formatCode32, out int size, out int count)
@@ -218,6 +257,25 @@ namespace Microsoft.Azure.Amqp.Encoding
             else
             {
                 throw GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
+            }
+
+            // AMQP size includes the count field but not the size field itself.
+            // After reading both, buffer.Length is the remaining data bytes.
+            // Adding FixedWidth.UInt accounts for the already-consumed count field.
+            if (size < 0 || size > buffer.Length + FixedWidth.UInt)
+            {
+                throw new AmqpException(AmqpErrorCode.DecodeError,
+                    string.Format("AMQP collection size {0} exceeds buffer length ({1}).", size, buffer.Length));
+            }
+
+            // The AMQP spec defines count as uint. We cast to int, so values > int.MaxValue
+            // appear negative. Reject those as they indicate a corrupt payload.
+            // No upper cap is enforced here: list/map are dynamically sized and bounded by
+            // buffer length; array allocation is protected separately in ArrayEncoding.
+            if (count < 0)
+            {
+                throw new AmqpException(AmqpErrorCode.DecodeError,
+                    string.Format("AMQP collection count {0} is not supported.", (uint)count));
             }
         }
         
@@ -264,21 +322,45 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static object DecodeObject(ByteBuffer buffer)
         {
+            return DecodeObject(buffer, 0);
+        }
+
+        internal static object DecodeObject(ByteBuffer buffer, int depth)
+        {
+            int totalUnboundedSize = 0;
+            return DecodeObject(buffer, depth, ref totalUnboundedSize);
+        }
+
+        internal static object DecodeObject(ByteBuffer buffer, int depth, ref int totalUnboundedSize)
+        {
+            CheckMaxNestingDepth(depth);
+
             FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
             if (formatCode == FormatCode.Null)
             {
                 return null;
             }
 
-            return DecodeObject(buffer, formatCode);
+            return DecodeObject(buffer, formatCode, depth, ref totalUnboundedSize);
         }
 
         public static object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
+            return DecodeObject(buffer, formatCode, 0);
+        }
+
+        internal static object DecodeObject(ByteBuffer buffer, FormatCode formatCode, int depth)
+        {
+            int totalUnboundedSize = 0;
+            return DecodeObject(buffer, formatCode, depth, ref totalUnboundedSize);
+        }
+
+        internal static object DecodeObject(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
+        {
             EncodingBase encoding;
             if (encodingsByCode.TryGetValue(formatCode, out encoding))
             {
-                return encoding.DecodeObject(buffer, formatCode);
+                return encoding.DecodeObject(buffer, formatCode, depth, ref totalUnboundedSize);
             }
 
             throw GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));

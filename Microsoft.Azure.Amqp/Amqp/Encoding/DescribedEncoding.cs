@@ -39,7 +39,8 @@ namespace Microsoft.Azure.Amqp.Encoding
                 return null;
             }
 
-            return DescribedEncoding.Decode(buffer, formatCode);
+            int totalUnboundedSize = 0;
+            return DescribedEncoding.Decode(buffer, formatCode, 0, ref totalUnboundedSize);
         }
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
@@ -72,25 +73,31 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
+            int totalUnboundedSize = 0;
+            return DecodeObject(buffer, formatCode, 0, ref totalUnboundedSize);
+        }
+
+        internal override object DecodeObject(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
+        {
             if (formatCode == FormatCode.Described)
             {
-                return DescribedEncoding.Decode(buffer, formatCode);
+                return DescribedEncoding.Decode(buffer, formatCode, depth, ref totalUnboundedSize);
             }
             else
             {
-                return AmqpEncoding.DecodeObject(buffer, formatCode);
+                return AmqpEncoding.DecodeObject(buffer, formatCode, depth, ref totalUnboundedSize);
             }
         }
 
-        static DescribedType Decode(ByteBuffer buffer, FormatCode formatCode)
+        static DescribedType Decode(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
         {
             if (formatCode != FormatCode.Described)
             {
                 throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
             }
 
-            object descriptor = AmqpEncoding.DecodeObject(buffer);
-            object value = AmqpEncoding.DecodeObject(buffer);
+            object descriptor = AmqpEncoding.DecodeObject(buffer, depth + 1, ref totalUnboundedSize);
+            object value = AmqpEncoding.DecodeObject(buffer, depth + 1, ref totalUnboundedSize);
             return new DescribedType(descriptor, value);
         }
     }

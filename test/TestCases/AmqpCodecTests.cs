@@ -1149,5 +1149,1021 @@
         {
             Assert.True(Math.Abs((d1.ToUniversalTime() - d2.ToUniversalTime()).TotalMilliseconds) < 5, "Datetime difference is greater than 5ms.");
         }
+
+        [Fact]
+        public void AmqpCodecArrayCountBoundsCheckTest()
+        {
+            // Validates that an Array32 payload with COUNT exceeding the collection
+            // limit throws AmqpException (decode error).
+            RunAmqpCodecArrayCountBoundsCheckTest<bool>(FormatCode.Boolean);
+            RunAmqpCodecArrayCountBoundsCheckTest<bool>(FormatCode.BooleanTrue);
+            RunAmqpCodecArrayCountBoundsCheckTest<bool>(FormatCode.BooleanFalse);
+            RunAmqpCodecArrayCountBoundsCheckTest<byte>(FormatCode.UByte);
+            RunAmqpCodecArrayCountBoundsCheckTest<ushort>(FormatCode.UShort);
+            RunAmqpCodecArrayCountBoundsCheckTest<uint>(FormatCode.UInt);
+            RunAmqpCodecArrayCountBoundsCheckTest<uint>(FormatCode.SmallUInt);
+            RunAmqpCodecArrayCountBoundsCheckTest<uint>(FormatCode.UInt0);
+            RunAmqpCodecArrayCountBoundsCheckTest<ulong>(FormatCode.ULong);
+            RunAmqpCodecArrayCountBoundsCheckTest<ulong>(FormatCode.SmallULong);
+            RunAmqpCodecArrayCountBoundsCheckTest<ulong>(FormatCode.ULong0);
+            RunAmqpCodecArrayCountBoundsCheckTest<sbyte>(FormatCode.Byte);
+            RunAmqpCodecArrayCountBoundsCheckTest<short>(FormatCode.Short);
+            RunAmqpCodecArrayCountBoundsCheckTest<int>(FormatCode.Int);
+            RunAmqpCodecArrayCountBoundsCheckTest<int>(FormatCode.SmallInt);
+            RunAmqpCodecArrayCountBoundsCheckTest<long>(FormatCode.Long);
+            RunAmqpCodecArrayCountBoundsCheckTest<long>(FormatCode.SmallLong);
+            RunAmqpCodecArrayCountBoundsCheckTest<float>(FormatCode.Float);
+            RunAmqpCodecArrayCountBoundsCheckTest<double>(FormatCode.Double);
+            RunAmqpCodecArrayCountBoundsCheckTest<char>(FormatCode.Char);
+            RunAmqpCodecArrayCountBoundsCheckTest<DateTime>(FormatCode.TimeStamp);
+            RunAmqpCodecArrayCountBoundsCheckTest<Guid>(FormatCode.Uuid);
+            RunAmqpCodecArrayCountBoundsCheckTest<decimal>(FormatCode.Decimal128);
+            RunAmqpCodecArrayCountBoundsCheckTest<ArraySegment<byte>>(FormatCode.Binary8);
+            RunAmqpCodecArrayCountBoundsCheckTest<ArraySegment<byte>>(FormatCode.Binary32);
+            RunAmqpCodecArrayCountBoundsCheckTest<string>(FormatCode.String8Utf8);
+            RunAmqpCodecArrayCountBoundsCheckTest<string>(FormatCode.String32Utf8);
+            RunAmqpCodecArrayCountBoundsCheckTest<AmqpSymbol>(FormatCode.Symbol8);
+            RunAmqpCodecArrayCountBoundsCheckTest<AmqpSymbol>(FormatCode.Symbol32);
+            RunAmqpCodecArrayCountBoundsCheckTest<IList>(FormatCode.List0);
+            RunAmqpCodecArrayCountBoundsCheckTest<IList>(FormatCode.List8);
+            RunAmqpCodecArrayCountBoundsCheckTest<IList>(FormatCode.List32);
+            RunAmqpCodecArrayCountBoundsCheckTest<AmqpMap>(FormatCode.Map8);
+            RunAmqpCodecArrayCountBoundsCheckTest<AmqpMap>(FormatCode.Map32);
+            RunAmqpCodecArrayCountBoundsCheckTest<Array>(FormatCode.Array8);
+            RunAmqpCodecArrayCountBoundsCheckTest<Array>(FormatCode.Array32);
+            RunAmqpCodecArrayCountBoundsCheckTest<DescribedType>(FormatCode.Described);
+        }
+
+        static void RunAmqpCodecArrayCountBoundsCheckTest<T>(FormatCode formatCode)
+        {
+            byte[] payload = new byte[10];
+            payload[0] = FormatCode.Array32;
+            payload[1] = 0x00; payload[2] = 0x00; payload[3] = 0x00; payload[4] = 0x05;
+            payload[5] = 0x7F; payload[6] = 0xFF; payload[7] = 0xFF; payload[8] = 0xFF;
+            payload[9] = formatCode;
+
+            {
+                ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+                AmqpException ex = Assert.Throws<AmqpException>(() => AmqpEncoding.GetEncoding(FormatCode.Array32).DecodeObject(buffer, 0));
+                Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+            }
+
+            {
+                ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+                AmqpException ex = Assert.Throws<AmqpException>(() => AmqpCodec.DecodeArray<T>(buffer));
+                Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+            }
+        }
+
+        [Fact]
+        public void AmqpCodecArrayCountLimitFrameTest()
+        {
+            byte[] reproFrame = new byte[]
+            {
+                0x00, 0x00, 0x00, 0x27, 0x02, 0x00, 0x00, 0x00,
+                0x00, 0x53, 0x10, 0xd0, 0x00, 0x00, 0x00, 0x17,
+                0x00, 0x00, 0x00, 0x08, 0xa1, 0x01, 0x78, 0x40,
+                0x40, 0x40, 0x40, 0x40, 0x40, 0xf0, 0x00, 0x00,
+                0x00, 0x09, 0x7f, 0xff, 0xff, 0xff, 0xa3
+            };
+
+            ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(reproFrame));
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+            {
+                Frame frame = new Frame();
+                frame.Decode(buffer);
+            });
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [Fact]
+        public void AmqpCodecBinaryCountBoundsCheckTest()
+        {
+            byte[] payload = new byte[] { 0xb0, 0x7f, 0xff, 0xff, 0xff };
+            ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            AmqpException ex = Assert.Throws<AmqpException>(() => AmqpCodec.DecodeBinary(buffer));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+
+            byte[] payload8 = new byte[] { 0xa0, 0xff };
+            buffer = new ByteBuffer(new ArraySegment<byte>(payload8));
+            ex = Assert.Throws<AmqpException>(() => AmqpCodec.DecodeBinary(buffer));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [Fact]
+        public void AmqpCodecArrayIntegerOverflowTest()
+        {
+            byte[] payload = new byte[]
+            {
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x05,
+                0x7F, 0xFF, 0xFF, 0xFF,
+                FormatCode.ULong
+            };
+
+            {
+                ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+                EncodingBase encoding = AmqpEncoding.GetEncoding(FormatCode.Array32);
+                AmqpException ex = Assert.Throws<AmqpException>(() => encoding.DecodeObject(buffer, 0));
+                Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+            }
+
+            {
+                ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+                AmqpException ex = Assert.Throws<AmqpException>(() => AmqpCodec.DecodeArray<ulong>(buffer));
+                Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+            }
+        }
+
+        [Fact]
+        public void AmqpCodecZeroWidthCountExceedsLimitTest()
+        {
+            // Single array of UInt0 unbounded elements exceeding MaxUnboundedSize.
+            // count=20000 × FixedWidth.UInt (4) = 80000 bytes > MaxUnboundedSize (65536).
+            int count = 20000;
+            byte[] payload = new byte[]
+            {
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x05,     // size = 5 (count field + constructor)
+                (byte)(count >> 24), (byte)(count >> 16), (byte)(count >> 8), (byte)count,
+                FormatCode.UInt0,           // constructor = uint0
+            };
+
+            ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            EncodingBase encoding = AmqpEncoding.GetEncoding(FormatCode.Array32);
+            AmqpException ex = Assert.Throws<AmqpException>(() => encoding.DecodeObject(buffer, 0));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+            Assert.Contains("unbounded", ex.Error.Description);
+        }
+
+        [Fact]
+        public void AmqpCodecNestedArrayDepthTest()
+        {
+            // Nested arrays exceeding MaxNestingDepth (64).
+            // Build 70 nesting levels of Array32, each containing 1 element
+            // of the next level. Innermost is a single uint0.
+            int levels = 70;
+
+            // Build from inside out. Innermost: Array32 with 1 uint0
+            byte[] inner = new byte[]
+            {
+                0x00, 0x00, 0x00, 0x05,     // size = 5
+                0x00, 0x00, 0x00, 0x01,     // count = 1
+                FormatCode.UInt0,           // constructor = uint0
+            };
+
+            for (int i = 1; i < levels; i++)
+            {
+                int contentSize = inner.Length;
+                int size = 4 + 1 + contentSize; // count(4) + constructor(1) + inner
+                byte[] outer = new byte[8 + 1 + contentSize]; // size(4) + count(4) + constructor(1) + inner
+                outer[0] = (byte)(size >> 24);
+                outer[1] = (byte)(size >> 16);
+                outer[2] = (byte)(size >> 8);
+                outer[3] = (byte)size;
+                outer[4] = 0; outer[5] = 0; outer[6] = 0; outer[7] = 1; // count = 1
+                outer[8] = FormatCode.Array32; // constructor
+                Buffer.BlockCopy(inner, 0, outer, 9, contentSize);
+                inner = outer;
+            }
+
+            // Prepend the outermost Array32 format code
+            byte[] payload = new byte[1 + inner.Length];
+            payload[0] = FormatCode.Array32;
+            Buffer.BlockCopy(inner, 0, payload, 1, inner.Length);
+
+            ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            EncodingBase encoding = AmqpEncoding.GetEncoding(FormatCode.Array32);
+            AmqpException ex = Assert.Throws<AmqpException>(() => encoding.DecodeObject(buffer, 0));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [Fact]
+        public void AmqpCodecNestedArrayValidTest()
+        {
+            byte[] payload = new byte[]
+            {
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x17,
+                0x00, 0x00, 0x00, 0x02,
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x05,
+                0x00, 0x00, 0x00, 0x03,
+                FormatCode.UInt0,
+                0x00, 0x00, 0x00, 0x05,
+                0x00, 0x00, 0x00, 0x02,
+                FormatCode.UInt0,
+            };
+
+            ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            EncodingBase encoding = AmqpEncoding.GetEncoding(FormatCode.Array32);
+            object result = encoding.DecodeObject(buffer, 0);
+
+            Assert.NotNull(result);
+            Array[] arrays = (Array[])result;
+            Assert.Equal(2, arrays.Length);
+            Assert.Equal(3, arrays[0].Length);
+            Assert.Equal(2, arrays[1].Length);
+
+            buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            uint[][] staticResult = AmqpCodec.DecodeArray<uint[]>(buffer);
+
+            Assert.NotNull(staticResult);
+            Assert.Equal(2, staticResult.Length);
+            Assert.Equal(3, staticResult[0].Length);
+            Assert.Equal(2, staticResult[1].Length);
+        }
+
+        [Fact]
+        public void AmqpCodecArrayCountLimitStaticDecodeTest()
+        {
+            byte[] payload = new byte[]
+            {
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x05,
+                0x7F, 0xFF, 0xFF, 0xFF,
+                FormatCode.UInt,
+            };
+
+            {
+                ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+                AmqpException ex = Assert.Throws<AmqpException>(() => AmqpCodec.DecodeArray<uint>(buffer));
+                Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+            }
+
+            {
+                ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+                EncodingBase encoding = AmqpEncoding.GetEncoding(FormatCode.Array32);
+                AmqpException ex = Assert.Throws<AmqpException>(() => encoding.DecodeObject(buffer, FormatCode.Array32));
+                Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+            }
+        }
+
+        [Fact]
+        public void AmqpCodecNestedDescribedTypeDepthTest()
+        {
+            int depth = 10000;
+            byte[] payload = new byte[(depth * 3) + 1];
+            int offset = 0;
+            for (int i = 0; i < depth; i++)
+            {
+                payload[offset++] = FormatCode.Described;
+                payload[offset++] = FormatCode.SmallULong;
+                payload[offset++] = 0x01;
+            }
+            payload[offset] = FormatCode.Null;
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpEncoding.DecodeObject(new ByteBuffer(new ArraySegment<byte>(payload))));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [Fact]
+        public void AmqpCodecNestedDescribedDescriptorDepthTest()
+        {
+            int depth = 10000;
+            byte[] payload = new byte[depth + 2];
+            for (int i = 0; i < depth; i++)
+            {
+                payload[i] = FormatCode.Described;
+            }
+            payload[depth] = FormatCode.Null;
+            payload[depth + 1] = FormatCode.Null;
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpEncoding.DecodeObject(new ByteBuffer(new ArraySegment<byte>(payload))));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [Fact]
+        public void AmqpCodecNestedListDepthTest()
+        {
+            int depth = 150;
+            byte[] inner = new byte[] { FormatCode.Null };
+            for (int i = 0; i < depth; i++)
+            {
+                int contentSize = inner.Length;
+                byte[] outer = new byte[contentSize + 9];
+                outer[0] = FormatCode.List32;
+                int size = 4 + contentSize;
+                outer[1] = (byte)(size >> 24);
+                outer[2] = (byte)(size >> 16);
+                outer[3] = (byte)(size >> 8);
+                outer[4] = (byte)size;
+                outer[5] = 0; outer[6] = 0; outer[7] = 0; outer[8] = 1;
+                Buffer.BlockCopy(inner, 0, outer, 9, contentSize);
+                inner = outer;
+            }
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpEncoding.DecodeObject(new ByteBuffer(new ArraySegment<byte>(inner))));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [Fact]
+        public void AmqpCodecNestedDescribedListDepthTest()
+        {
+            int depth = 100;
+            byte[] inner = new byte[] { FormatCode.Null };
+            for (int i = 0; i < depth; i++)
+            {
+                int contentSize = inner.Length;
+                byte[] listed = new byte[contentSize + 9];
+                listed[0] = FormatCode.List32;
+                int size = 4 + contentSize;
+                listed[1] = (byte)(size >> 24);
+                listed[2] = (byte)(size >> 16);
+                listed[3] = (byte)(size >> 8);
+                listed[4] = (byte)size;
+                listed[5] = 0; listed[6] = 0; listed[7] = 0; listed[8] = 1;
+                Buffer.BlockCopy(inner, 0, listed, 9, contentSize);
+
+                byte[] described = new byte[listed.Length + 3];
+                described[0] = FormatCode.Described;
+                described[1] = FormatCode.SmallULong;
+                described[2] = 0x01;
+                Buffer.BlockCopy(listed, 0, described, 3, listed.Length);
+
+                inner = described;
+            }
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpEncoding.DecodeObject(new ByteBuffer(new ArraySegment<byte>(inner))));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [Fact]
+        public void AmqpCodecNestedMapDepthTest()
+        {
+            int depth = 150;
+            byte[] inner = new byte[] { FormatCode.Null };
+            for (int i = 0; i < depth; i++)
+            {
+                int contentSize = 1 + inner.Length;
+                byte[] outer = new byte[contentSize + 9];
+                outer[0] = FormatCode.Map32;
+                int size = 4 + contentSize;
+                outer[1] = (byte)(size >> 24);
+                outer[2] = (byte)(size >> 16);
+                outer[3] = (byte)(size >> 8);
+                outer[4] = (byte)size;
+                outer[5] = 0; outer[6] = 0; outer[7] = 0; outer[8] = 2;
+                outer[9] = FormatCode.Null;
+                Buffer.BlockCopy(inner, 0, outer, 10, inner.Length);
+                inner = outer;
+            }
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpEncoding.DecodeObject(new ByteBuffer(new ArraySegment<byte>(inner))));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [Fact]
+        public void AmqpCodecNestedDescribedMapDepthTest()
+        {
+            int depth = 100;
+            byte[] inner = new byte[] { FormatCode.Null };
+            for (int i = 0; i < depth; i++)
+            {
+                int contentSize = 1 + inner.Length;
+                byte[] mapped = new byte[contentSize + 9];
+                mapped[0] = FormatCode.Map32;
+                int size = 4 + contentSize;
+                mapped[1] = (byte)(size >> 24);
+                mapped[2] = (byte)(size >> 16);
+                mapped[3] = (byte)(size >> 8);
+                mapped[4] = (byte)size;
+                mapped[5] = 0; mapped[6] = 0; mapped[7] = 0; mapped[8] = 2;
+                mapped[9] = FormatCode.Null;
+                Buffer.BlockCopy(inner, 0, mapped, 10, inner.Length);
+
+                byte[] described = new byte[mapped.Length + 3];
+                described[0] = FormatCode.Described;
+                described[1] = FormatCode.SmallULong;
+                described[2] = 0x01;
+                Buffer.BlockCopy(mapped, 0, described, 3, mapped.Length);
+
+                inner = described;
+            }
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpEncoding.DecodeObject(new ByteBuffer(new ArraySegment<byte>(inner))));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [Fact]
+        public void AmqpCodecNestedMapCompoundKeyDepthTest()
+        {
+            int nestingDepth = 200;
+            byte[] key = new byte[nestingDepth + 2];
+            for (int i = 0; i < nestingDepth; i++)
+            {
+                key[i] = FormatCode.Described;
+            }
+            key[nestingDepth] = FormatCode.Null;
+            key[nestingDepth + 1] = FormatCode.Null;
+
+            int contentSize = key.Length + 1;
+            byte[] payload = new byte[contentSize + 9];
+            payload[0] = FormatCode.Map32;
+            int size = 4 + contentSize;
+            payload[1] = (byte)(size >> 24);
+            payload[2] = (byte)(size >> 16);
+            payload[3] = (byte)(size >> 8);
+            payload[4] = (byte)size;
+            payload[5] = 0; payload[6] = 0; payload[7] = 0; payload[8] = 2;
+            Buffer.BlockCopy(key, 0, payload, 9, key.Length);
+            payload[payload.Length - 1] = FormatCode.Null;
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpEncoding.DecodeObject(new ByteBuffer(new ArraySegment<byte>(payload))));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [Fact]
+        public void AmqpCodecNestedDescribedListMapRotationDepthTest()
+        {
+            int rotations = 50;
+            byte[] inner = new byte[] { FormatCode.Null };
+            for (int i = 0; i < rotations; i++)
+            {
+                int mapContentSize = 1 + inner.Length;
+                byte[] mapped = new byte[mapContentSize + 9];
+                mapped[0] = FormatCode.Map32;
+                int mapSize = 4 + mapContentSize;
+                mapped[1] = (byte)(mapSize >> 24);
+                mapped[2] = (byte)(mapSize >> 16);
+                mapped[3] = (byte)(mapSize >> 8);
+                mapped[4] = (byte)mapSize;
+                mapped[5] = 0; mapped[6] = 0; mapped[7] = 0; mapped[8] = 2;
+                mapped[9] = FormatCode.Null;
+                Buffer.BlockCopy(inner, 0, mapped, 10, inner.Length);
+
+                int listContentSize = mapped.Length;
+                byte[] listed = new byte[listContentSize + 9];
+                listed[0] = FormatCode.List32;
+                int listSize = 4 + listContentSize;
+                listed[1] = (byte)(listSize >> 24);
+                listed[2] = (byte)(listSize >> 16);
+                listed[3] = (byte)(listSize >> 8);
+                listed[4] = (byte)listSize;
+                listed[5] = 0; listed[6] = 0; listed[7] = 0; listed[8] = 1;
+                Buffer.BlockCopy(mapped, 0, listed, 9, mapped.Length);
+
+                byte[] described = new byte[listed.Length + 3];
+                described[0] = FormatCode.Described;
+                described[1] = FormatCode.SmallULong;
+                described[2] = 0x01;
+                Buffer.BlockCopy(listed, 0, described, 3, listed.Length);
+
+                inner = described;
+            }
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpEncoding.DecodeObject(new ByteBuffer(new ArraySegment<byte>(inner))));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [Fact]
+        public void AmqpCodecNestedListMapArrayRotationDepthTest()
+        {
+            // Mixed compound nesting: list(map(null => array[list(map(null => array[...]))]))
+            // Each rotation = map(+1) + array(+1) + list(+1) = 3 depth increments.
+            // 25 rotations + 1 outer list = 76 depth > MaxNestingDepth (64).
+            int rotations = 25;
+
+            // Innermost: a single UInt value
+            byte[] inner = new byte[] { FormatCode.UInt, 0x00, 0x00, 0x00, 0x01 };
+
+            for (int i = 0; i < rotations; i++)
+            {
+                // 1. Wrap inner in List32(count=1)
+                int listContentSize = inner.Length;
+                int listSize = 4 + listContentSize;
+                byte[] listed = new byte[9 + listContentSize];
+                listed[0] = FormatCode.List32;
+                listed[1] = (byte)(listSize >> 24);
+                listed[2] = (byte)(listSize >> 16);
+                listed[3] = (byte)(listSize >> 8);
+                listed[4] = (byte)listSize;
+                listed[5] = 0; listed[6] = 0; listed[7] = 0; listed[8] = 1;
+                Buffer.BlockCopy(inner, 0, listed, 9, inner.Length);
+
+                // 2. Wrap in Array32(count=1, constructor=List32)
+                int elemBodyLen = listed.Length - 1;
+                int arraySize = 4 + 1 + elemBodyLen;
+                byte[] arrayed = new byte[10 + elemBodyLen];
+                arrayed[0] = FormatCode.Array32;
+                arrayed[1] = (byte)(arraySize >> 24);
+                arrayed[2] = (byte)(arraySize >> 16);
+                arrayed[3] = (byte)(arraySize >> 8);
+                arrayed[4] = (byte)arraySize;
+                arrayed[5] = 0; arrayed[6] = 0; arrayed[7] = 0; arrayed[8] = 1;
+                arrayed[9] = FormatCode.List32;
+                Buffer.BlockCopy(listed, 1, arrayed, 10, elemBodyLen);
+
+                // 3. Wrap in Map32(count=2: null key + array value)
+                int mapContentSize = 1 + arrayed.Length;
+                int mapSize = 4 + mapContentSize;
+                byte[] mapped = new byte[9 + mapContentSize];
+                mapped[0] = FormatCode.Map32;
+                mapped[1] = (byte)(mapSize >> 24);
+                mapped[2] = (byte)(mapSize >> 16);
+                mapped[3] = (byte)(mapSize >> 8);
+                mapped[4] = (byte)mapSize;
+                mapped[5] = 0; mapped[6] = 0; mapped[7] = 0; mapped[8] = 2;
+                mapped[9] = FormatCode.Null;
+                Buffer.BlockCopy(arrayed, 0, mapped, 10, arrayed.Length);
+
+                inner = mapped;
+            }
+
+            // Final wrap in List32
+            int outerContentSize = inner.Length;
+            int outerSize = 4 + outerContentSize;
+            byte[] payload = new byte[9 + outerContentSize];
+            payload[0] = FormatCode.List32;
+            payload[1] = (byte)(outerSize >> 24);
+            payload[2] = (byte)(outerSize >> 16);
+            payload[3] = (byte)(outerSize >> 8);
+            payload[4] = (byte)outerSize;
+            payload[5] = 0; payload[6] = 0; payload[7] = 0; payload[8] = 1;
+            Buffer.BlockCopy(inner, 0, payload, 9, inner.Length);
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpEncoding.DecodeObject(new ByteBuffer(new ArraySegment<byte>(payload))));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [Fact]
+        public void AmqpCodecArrayDynamicResizingTest()
+        {
+            // Array with count=500, constructor=UInt, 500 x 4-byte uint values.
+            // Dynamic resizing should handle this without pre-allocating count elements.
+            int itemCount = 500;
+            int itemSize = 4;
+            int contentSize = itemCount * itemSize;
+            int size = 4 + 1 + contentSize;
+            byte[] payload = new byte[1 + 4 + 4 + 1 + contentSize];
+
+            int offset = 0;
+            payload[offset++] = FormatCode.Array32;
+            payload[offset++] = (byte)(size >> 24);
+            payload[offset++] = (byte)(size >> 16);
+            payload[offset++] = (byte)(size >> 8);
+            payload[offset++] = (byte)size;
+            payload[offset++] = (byte)(itemCount >> 24);
+            payload[offset++] = (byte)(itemCount >> 16);
+            payload[offset++] = (byte)(itemCount >> 8);
+            payload[offset++] = (byte)itemCount;
+            payload[offset++] = FormatCode.UInt;
+            for (int i = 0; i < itemCount; i++)
+            {
+                payload[offset++] = 0;
+                payload[offset++] = 0;
+                payload[offset++] = (byte)(i >> 8);
+                payload[offset++] = (byte)i;
+            }
+
+            ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            uint[] result = AmqpCodec.DecodeArray<uint>(buffer);
+
+            Assert.Equal(itemCount, result.Length);
+            for (int i = 0; i < itemCount; i++)
+            {
+                Assert.Equal((uint)i, result[i]);
+            }
+        }
+
+        [Fact]
+        public void AmqpCodecZeroWidthBooleanTrackingTest()
+        {
+            // Array of BooleanTrue items exceeding MaxUnboundedSize.
+            int count = 65536 / 1 + 1;
+            byte[] payload = new byte[]
+            {
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x05,
+                (byte)(count >> 24), (byte)(count >> 16), (byte)(count >> 8), (byte)count,
+                FormatCode.BooleanTrue,
+            };
+
+            ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            AmqpException ex = Assert.Throws<AmqpException>(() => AmqpCodec.DecodeObject(buffer));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+            Assert.Contains("unbounded", ex.Error.Description);
+        }
+
+        [Fact]
+        public void AmqpCodecZeroWidthULongTrackingTest()
+        {
+            // Array of ULong0 items exceeding MaxUnboundedSize.
+            int count = 65536 / 8 + 1;
+            byte[] payload = new byte[]
+            {
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x05,
+                (byte)(count >> 24), (byte)(count >> 16), (byte)(count >> 8), (byte)count,
+                FormatCode.ULong0,
+            };
+
+            ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            AmqpException ex = Assert.Throws<AmqpException>(() => AmqpCodec.DecodeObject(buffer));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+            Assert.Contains("unbounded", ex.Error.Description);
+        }
+
+        [Fact]
+        public void AmqpCodecZeroWidthList0TrackingTest()
+        {
+            // Array of List0 items — List0 is unbounded but lists are reference types.
+            // Buffer is too small to contain 12000 items, so it fails from buffer exhaustion.
+            int count = 12000;
+            byte[] payload = new byte[]
+            {
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x05,
+                (byte)(count >> 24), (byte)(count >> 16), (byte)(count >> 8), (byte)count,
+                FormatCode.List0,
+            };
+
+            // Expected: buffer underflow (AmqpException or ArgumentOutOfRange)
+            ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            Assert.ThrowsAny<Exception>(() => AmqpCodec.DecodeObject(buffer));
+        }
+
+        [Fact]
+        public void AmqpCodecZeroWidthUnderLimitTest()
+        {
+            // Array of UInt0 items at exactly MaxUnboundedSize — should succeed.
+            int count = 65536 / 4; // 16384 × 4 = 65536 = limit
+            byte[] payload = new byte[]
+            {
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x05,
+                (byte)(count >> 24), (byte)(count >> 16), (byte)(count >> 8), (byte)count,
+                FormatCode.UInt0,
+            };
+
+            ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            object result = AmqpCodec.DecodeObject(buffer);
+
+            Assert.NotNull(result);
+            uint[] arr = (uint[])result;
+            Assert.Equal(count, arr.Length);
+        }
+
+        [Fact]
+        public void AmqpCodecMapKeyZeroWidthArrayTrackingTest()
+        {
+            // Map with many keys that are ULong0 arrays. The cumulative unbounded size
+            // across all map keys should exceed MaxUnboundedSize.
+            int itemsPerKey = 65536 / 8 / 4; // ~2048
+            int numKeys = 8; // 8 keys × 2048 × 8 = 131072 > MaxUnboundedSize (65536)
+
+            byte[] arrayKey = new byte[]
+            {
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x05,
+                (byte)(itemsPerKey >> 24), (byte)(itemsPerKey >> 16), (byte)(itemsPerKey >> 8), (byte)itemsPerKey,
+                FormatCode.ULong0,
+            };
+
+            int entrySize = arrayKey.Length + 1; // +1 for FormatCode.Null
+            int mapCount = numKeys * 2;
+            int mapContentSize = numKeys * entrySize;
+            int mapSize = 4 + mapContentSize;
+
+            byte[] payload = new byte[1 + 4 + 4 + mapContentSize];
+            int offset = 0;
+            payload[offset++] = FormatCode.Map32;
+            payload[offset++] = (byte)(mapSize >> 24);
+            payload[offset++] = (byte)(mapSize >> 16);
+            payload[offset++] = (byte)(mapSize >> 8);
+            payload[offset++] = (byte)mapSize;
+            payload[offset++] = (byte)(mapCount >> 24);
+            payload[offset++] = (byte)(mapCount >> 16);
+            payload[offset++] = (byte)(mapCount >> 8);
+            payload[offset++] = (byte)mapCount;
+
+            for (int i = 0; i < numKeys; i++)
+            {
+                Buffer.BlockCopy(arrayKey, 0, payload, offset, arrayKey.Length);
+                offset += arrayKey.Length;
+                payload[offset++] = FormatCode.Null;
+            }
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpEncoding.DecodeObject(new ByteBuffer(new ArraySegment<byte>(payload))));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+            Assert.Contains("unbounded", ex.Error.Description);
+        }
+
+        [Fact]
+        public void AmqpCodecDecodeObjectFormatCodeOverloadTest()
+        {
+            // Regression test: DecodeObject(buffer, formatCode) must dispatch via FormatCode
+            // overload, NOT interpret formatCode as depth.
+            ByteBuffer bf = new ByteBuffer(256, true);
+            AmqpCodec.EncodeList(new List<object> { "hello", 42 }, bf);
+
+            FormatCode formatCode = AmqpEncoding.ReadFormatCode(bf);
+            object result = AmqpEncoding.DecodeObject(bf, formatCode);
+
+            Assert.NotNull(result);
+            List<object> list = result as List<object>;
+            Assert.NotNull(list);
+            Assert.Equal(2, list.Count);
+            Assert.Equal("hello", list[0]);
+            Assert.Equal(42, list[1]);
+        }
+
+        [Fact]
+        public void AmqpCodecListSiblingDepthTest()
+        {
+            // Flat list with 100 items should not accumulate depth across siblings.
+            int itemCount = 100;
+            ByteBuffer bf = new ByteBuffer(4096, true);
+            var list = new List<object>();
+            for (int i = 0; i < itemCount; i++)
+            {
+                list.Add(i);
+            }
+            AmqpCodec.EncodeList(list, bf);
+
+            object result = AmqpCodec.DecodeObject(bf);
+            List<object> decoded = result as List<object>;
+            Assert.NotNull(decoded);
+            Assert.Equal(itemCount, decoded.Count);
+            for (int i = 0; i < itemCount; i++)
+            {
+                Assert.Equal(i, decoded[i]);
+            }
+        }
+
+        [Fact]
+        public void AmqpCodecMapSiblingDepthTest()
+        {
+            // Flat map with 100 entries should not accumulate depth across siblings.
+            int entryCount = 100;
+            ByteBuffer bf = new ByteBuffer(8192, true);
+            AmqpMap map = new AmqpMap();
+            for (int i = 0; i < entryCount; i++)
+            {
+                map.Add(new MapKey("key" + i), i);
+            }
+            AmqpCodec.EncodeMap(map, bf);
+
+            object result = AmqpCodec.DecodeObject(bf);
+            AmqpMap decoded = result as AmqpMap;
+            Assert.NotNull(decoded);
+            Assert.Equal(entryCount, decoded.Count);
+        }
+
+        [Fact]
+        public void AmqpCodecLargeListNoCountCapTest()
+        {
+            // Lists exceeding the old MaxAmqpCollectionCount (65536) should decode correctly.
+            int itemCount = 70000;
+            ByteBuffer bf = new ByteBuffer(itemCount * 2 + 64, true);
+            var list = new List<object>();
+            for (int i = 0; i < itemCount; i++)
+            {
+                list.Add((byte)(i % 256));
+            }
+            AmqpCodec.EncodeList(list, bf);
+
+            object result = AmqpCodec.DecodeObject(bf);
+            List<object> decoded = result as List<object>;
+            Assert.NotNull(decoded);
+            Assert.Equal(itemCount, decoded.Count);
+        }
+
+        [Fact]
+        public void AmqpCodecDescribedTypeSiblingDepthTest()
+        {
+            // A list of described types should not accumulate depth across siblings.
+            int count = 50;
+            ByteBuffer bf = new ByteBuffer(4096, true);
+            var list = new List<object>();
+            for (int i = 0; i < count; i++)
+            {
+                list.Add(new DescribedType((ulong)i, "value" + i));
+            }
+            AmqpCodec.EncodeList(list, bf);
+
+            object result = AmqpCodec.DecodeObject(bf);
+            List<object> decoded = result as List<object>;
+            Assert.NotNull(decoded);
+            Assert.Equal(count, decoded.Count);
+            for (int i = 0; i < count; i++)
+            {
+                DescribedType dt = decoded[i] as DescribedType;
+                Assert.NotNull(dt);
+                Assert.Equal((ulong)i, dt.Descriptor);
+                Assert.Equal("value" + i, dt.Value);
+            }
+        }
+
+        [Fact]
+        public void AmqpCodecNestedArraysAccumulateUnboundedTest()
+        {
+            // Multiple arrays of unbounded elements inside a list share one counter.
+            // 3 arrays × 6000 UInt0 items × 4 bytes/item = 72000 > 65536.
+            int perArrayCount = 6000;
+            int numArrays = 3;
+
+            byte[] innerArray = new byte[]
+            {
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x05,
+                (byte)(perArrayCount >> 24), (byte)(perArrayCount >> 16), (byte)(perArrayCount >> 8), (byte)perArrayCount,
+                FormatCode.UInt0,
+            };
+
+            int listItemsSize = numArrays * innerArray.Length;
+            int listSize = 4 + listItemsSize;
+            byte[] payload = new byte[1 + 4 + 4 + listItemsSize];
+            int offset = 0;
+            payload[offset++] = FormatCode.List32;
+            payload[offset++] = (byte)(listSize >> 24);
+            payload[offset++] = (byte)(listSize >> 16);
+            payload[offset++] = (byte)(listSize >> 8);
+            payload[offset++] = (byte)listSize;
+            payload[offset++] = (byte)(numArrays >> 24);
+            payload[offset++] = (byte)(numArrays >> 16);
+            payload[offset++] = (byte)(numArrays >> 8);
+            payload[offset++] = (byte)numArrays;
+            for (int a = 0; a < numArrays; a++)
+            {
+                Buffer.BlockCopy(innerArray, 0, payload, offset, innerArray.Length);
+                offset += innerArray.Length;
+            }
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpCodec.DecodeObject(new ByteBuffer(new ArraySegment<byte>(payload))));
+            Assert.Contains("unbounded", ex.Error.Description);
+        }
+
+        [Fact]
+        public void AmqpCodecMapContainingUnboundedArrayTest()
+        {
+            // Map value is an array of UInt0 exceeding MaxUnboundedSize.
+            int count = (65536 / 4) + 1;
+
+            byte[] key = new byte[] { FormatCode.SmallULong, 0x01 };
+            byte[] value = new byte[]
+            {
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x05,
+                (byte)(count >> 24), (byte)(count >> 16), (byte)(count >> 8), (byte)count,
+                FormatCode.UInt0,
+            };
+
+            int mapItemsSize = key.Length + value.Length;
+            int mapSize = 4 + mapItemsSize;
+            int mapCount = 2;
+            byte[] payload = new byte[1 + 4 + 4 + mapItemsSize];
+            int offset = 0;
+            payload[offset++] = FormatCode.Map32;
+            payload[offset++] = (byte)(mapSize >> 24);
+            payload[offset++] = (byte)(mapSize >> 16);
+            payload[offset++] = (byte)(mapSize >> 8);
+            payload[offset++] = (byte)mapSize;
+            payload[offset++] = (byte)(mapCount >> 24);
+            payload[offset++] = (byte)(mapCount >> 16);
+            payload[offset++] = (byte)(mapCount >> 8);
+            payload[offset++] = (byte)mapCount;
+            Buffer.BlockCopy(key, 0, payload, offset, key.Length);
+            offset += key.Length;
+            Buffer.BlockCopy(value, 0, payload, offset, value.Length);
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpCodec.DecodeObject(new ByteBuffer(new ArraySegment<byte>(payload))));
+            Assert.Contains("unbounded", ex.Error.Description);
+        }
+
+        [Fact]
+        public void AmqpCodecDescribedContainingUnboundedArrayTest()
+        {
+            // Described type containing an array of UInt0 exceeding MaxUnboundedSize.
+            int count = (65536 / 4) + 1;
+
+            byte[] payload = new byte[]
+            {
+                FormatCode.Described,
+                FormatCode.SmallULong, 0x09,
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x05,
+                (byte)(count >> 24), (byte)(count >> 16), (byte)(count >> 8), (byte)count,
+                FormatCode.UInt0,
+            };
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpCodec.DecodeObject(new ByteBuffer(new ArraySegment<byte>(payload))));
+            Assert.Contains("unbounded", ex.Error.Description);
+        }
+
+        [Fact]
+        public void AmqpCodecBooleanFalseUnboundedTest()
+        {
+            // BooleanFalse (0x42) is also unbounded — verify it's tracked.
+            int count = (65536 / 1) + 1;
+            byte[] payload = new byte[]
+            {
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x05,
+                (byte)(count >> 24), (byte)(count >> 16), (byte)(count >> 8), (byte)count,
+                FormatCode.BooleanFalse,
+            };
+
+            ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            AmqpException ex = Assert.Throws<AmqpException>(() => AmqpCodec.DecodeObject(buffer));
+            Assert.Contains("unbounded", ex.Error.Description);
+        }
+
+        [Fact]
+        public void AmqpCodecDynamicResizeLargeNormalArrayTest()
+        {
+            // Dynamic resizing for normal arrays with count > MaxInitialSize (1024).
+            int count = 2000;
+            ByteBuffer bf = new ByteBuffer(count * 8, true);
+            int[] original = new int[count];
+            for (int i = 0; i < count; i++)
+            {
+                original[i] = i * 7 + 3;
+            }
+
+            AmqpCodec.EncodeObject(original, bf);
+            int[] decoded = (int[])AmqpCodec.DecodeObject(bf);
+
+            Assert.Equal(count, decoded.Length);
+            for (int i = 0; i < count; i++)
+            {
+                Assert.Equal(original[i], decoded[i]);
+            }
+        }
+
+        [Fact]
+        public void AmqpCodecNegativeCountRejectedTest()
+        {
+            // Craft a payload with count = -1 (0xFFFFFFFF as int32), verify rejection.
+            byte[] payload = new byte[]
+            {
+                FormatCode.Array32,
+                0x00, 0x00, 0x00, 0x08,
+                0xFF, 0xFF, 0xFF, 0xFF,
+                FormatCode.UInt,
+                0x00, 0x00, 0x00, 0x01,
+            };
+
+            ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            AmqpException ex = Assert.Throws<AmqpException>(() => AmqpCodec.DecodeObject(buffer));
+            Assert.Equal((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [Fact]
+        public void AmqpCodecArrayOfArraysUnboundedAccumulationTest()
+        {
+            // Array of arrays of UInt0. Each inner array contributes to shared unbounded counter.
+            // 5 inner arrays × 4000 UInt0 × 4 = 80000 > 65536.
+            int innerCount = 4000;
+            int numInner = 5;
+
+            int innerBodySize = 9; // size(4) + count(4) + constructor(1)
+            int innerSize = 5; // count(4) + constructor(1)
+
+            int outerSize = 4 + 1 + (numInner * innerBodySize);
+
+            byte[] payload = new byte[1 + 4 + 4 + 1 + (numInner * innerBodySize)];
+            int offset = 0;
+            payload[offset++] = FormatCode.Array32;
+            payload[offset++] = (byte)(outerSize >> 24);
+            payload[offset++] = (byte)(outerSize >> 16);
+            payload[offset++] = (byte)(outerSize >> 8);
+            payload[offset++] = (byte)outerSize;
+            payload[offset++] = (byte)(numInner >> 24);
+            payload[offset++] = (byte)(numInner >> 16);
+            payload[offset++] = (byte)(numInner >> 8);
+            payload[offset++] = (byte)numInner;
+            payload[offset++] = FormatCode.Array32; // shared constructor
+
+            for (int i = 0; i < numInner; i++)
+            {
+                payload[offset++] = (byte)(innerSize >> 24);
+                payload[offset++] = (byte)(innerSize >> 16);
+                payload[offset++] = (byte)(innerSize >> 8);
+                payload[offset++] = (byte)innerSize;
+                payload[offset++] = (byte)(innerCount >> 24);
+                payload[offset++] = (byte)(innerCount >> 16);
+                payload[offset++] = (byte)(innerCount >> 8);
+                payload[offset++] = (byte)innerCount;
+                payload[offset++] = FormatCode.UInt0;
+            }
+
+            AmqpException ex = Assert.Throws<AmqpException>(() =>
+                AmqpCodec.DecodeObject(new ByteBuffer(new ArraySegment<byte>(payload))));
+            Assert.Contains("unbounded", ex.Error.Description);
+        }
     }
 }

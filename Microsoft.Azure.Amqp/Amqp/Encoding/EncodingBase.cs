@@ -23,6 +23,16 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public abstract object DecodeObject(ByteBuffer buffer, FormatCode formatCode);
 
+        internal virtual object DecodeObject(ByteBuffer buffer, FormatCode formatCode, int depth)
+        {
+            return this.DecodeObject(buffer, formatCode);
+        }
+
+        internal virtual object DecodeObject(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
+        {
+            return this.DecodeObject(buffer, formatCode, depth);
+        }
+
         public static void VerifyFormatCode(FormatCode formatCode, int offset, FormatCode expected)
         {
             if (formatCode != expected)

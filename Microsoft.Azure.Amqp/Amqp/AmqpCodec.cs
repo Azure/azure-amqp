@@ -510,6 +510,12 @@ namespace Microsoft.Azure.Amqp
 
         public static object DecodeObject(ByteBuffer buffer)
         {
+            int totalUnboundedSize = 0;
+            return DecodeObject(buffer, 0, ref totalUnboundedSize);
+        }
+
+        internal static object DecodeObject(ByteBuffer buffer, int depth, ref int totalUnboundedSize)
+        {
             FormatCode formatCode = AmqpEncoding.ReadFormatCode(buffer);
             if (formatCode == FormatCode.Null)
             {
@@ -517,7 +523,7 @@ namespace Microsoft.Azure.Amqp
             }
             else if (formatCode == FormatCode.Described)
             {
-                object descriptor = AmqpCodec.DecodeObject(buffer);
+                object descriptor = AmqpCodec.DecodeObject(buffer, depth + 1, ref totalUnboundedSize);
                 Func<AmqpDescribed> knownTypeCtor = null;
                 if (descriptor is AmqpSymbol)
                 {
@@ -536,13 +542,13 @@ namespace Microsoft.Azure.Amqp
                 }
                 else
                 {
-                    object value = AmqpCodec.DecodeObject(buffer);
+                    object value = AmqpCodec.DecodeObject(buffer, depth + 1, ref totalUnboundedSize);
                     return new DescribedType(descriptor, value);
                 }
             }
             else
             {
-                return AmqpEncoding.DecodeObject(buffer, formatCode);
+                return AmqpEncoding.DecodeObject(buffer, formatCode, depth, ref totalUnboundedSize);
             }
         }
 

@@ -12,6 +12,16 @@ namespace Microsoft.Azure.Amqp.Encoding
 
     sealed class ArrayEncoding : EncodingBase
     {
+        /// <summary>
+        /// Initial allocation size and growth increment for dynamically-resized arrays.
+        /// Ensures decoding correctness by allocating only what is needed as items are
+        /// actually decoded, rather than trusting the count field in the payload.
+        /// The actual max size of the array is bounded by the buffer length plus the max
+        /// unbounded size for zero-width types.
+        /// </summary>
+        const int MaxInitialSize = 1024;
+        const int MaxGrowFactor = 8 * 1024;
+
         public ArrayEncoding()
             : base(FormatCode.Array32)
         {
@@ -93,7 +103,9 @@ namespace Microsoft.Azure.Amqp.Encoding
             AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.Array8, FormatCode.Array32, out size, out count);
 
             formatCode = AmqpEncoding.ReadFormatCode(buffer);
-            return ArrayEncoding.Decode<T>(buffer, size, count, formatCode);
+
+            int totalUnboundedSize = 0;
+            return ArrayEncoding.Decode<T>(buffer, size, count, formatCode, 0, ref totalUnboundedSize);
         }
 
         public override int GetObjectEncodeSize(object value, bool arrayEncoding)
@@ -152,6 +164,14 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
+            int totalUnboundedSize = 0;
+            return DecodeObject(buffer, formatCode, 0, ref totalUnboundedSize);
+        }
+
+        internal override object DecodeObject(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
+        {
+            AmqpEncoding.CheckMaxNestingDepth(depth);
+
             if (formatCode == 0 && (formatCode = AmqpEncoding.ReadFormatCode(buffer)) == FormatCode.Null)
             {
                 return null;
@@ -166,82 +186,87 @@ namespace Microsoft.Azure.Amqp.Encoding
             switch (formatCode)
             {
                 case FormatCode.Boolean:
-                    array = ArrayEncoding.Decode<bool>(buffer, size, count, formatCode);
+                case FormatCode.BooleanTrue:
+                case FormatCode.BooleanFalse:
+                    array = ArrayEncoding.Decode<bool>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.UByte:
-                    array = ArrayEncoding.Decode<byte>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<byte>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.UShort:
-                    array = ArrayEncoding.Decode<ushort>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<ushort>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.UInt:
                 case FormatCode.SmallUInt:
-                    array = ArrayEncoding.Decode<uint>(buffer, size, count, formatCode);
+                case FormatCode.UInt0:
+                    array = ArrayEncoding.Decode<uint>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.ULong:
                 case FormatCode.SmallULong:
-                    array = ArrayEncoding.Decode<ulong>(buffer, size, count, formatCode);
+                case FormatCode.ULong0:
+                    array = ArrayEncoding.Decode<ulong>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Byte:
-                    array = ArrayEncoding.Decode<sbyte>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<sbyte>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Short:
-                    array = ArrayEncoding.Decode<short>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<short>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Int:
                 case FormatCode.SmallInt:
-                    array = ArrayEncoding.Decode<int>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<int>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Long:
                 case FormatCode.SmallLong:
-                    array = ArrayEncoding.Decode<long>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<long>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Float:
-                    array = ArrayEncoding.Decode<float>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<float>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Double:
-                    array = ArrayEncoding.Decode<double>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<double>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Char:
-                    array = ArrayEncoding.Decode<char>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<char>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.TimeStamp:
-                    array = ArrayEncoding.Decode<DateTime>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<DateTime>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Uuid:
-                    array = ArrayEncoding.Decode<Guid>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<Guid>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Binary32:
                 case FormatCode.Binary8:
-                    array = ArrayEncoding.Decode<ArraySegment<byte>>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<ArraySegment<byte>>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.String32Utf8:
                 case FormatCode.String8Utf8:
-                    array = ArrayEncoding.Decode<string>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<string>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Symbol32:
                 case FormatCode.Symbol8:
-                    array = ArrayEncoding.Decode<AmqpSymbol>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<AmqpSymbol>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.List32:
                 case FormatCode.List8:
-                    array = ArrayEncoding.Decode<IList>(buffer, size, count, formatCode);
+                case FormatCode.List0:
+                    array = ArrayEncoding.Decode<IList>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Map32:
                 case FormatCode.Map8:
-                    array = ArrayEncoding.Decode<AmqpMap>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<AmqpMap>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Array32:
                 case FormatCode.Array8:
-                    array = ArrayEncoding.Decode<Array>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<Array>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Described:
-                    array = ArrayEncoding.Decode<DescribedType>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<DescribedType>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 case FormatCode.Decimal32:
                 case FormatCode.Decimal64:
                 case FormatCode.Decimal128:
-                    array = ArrayEncoding.Decode<decimal>(buffer, size, count, formatCode);
+                    array = ArrayEncoding.Decode<decimal>(buffer, size, count, formatCode, depth, ref totalUnboundedSize);
                     break;
                 default:
                     throw new NotSupportedException(CommonResources.GetString(CommonResources.NotSupportFrameCode, formatCode));
@@ -363,143 +388,184 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
         }
 
-        // Optimized path: reads raw value bytes directly, returning T without boxing.
-        static T DecodeValue<T>(ByteBuffer buffer, FormatCode formatCode)
+        static Func<ByteBuffer, T> GetReader<T>(FormatCode formatCode, out int unboundedSize)
         {
-            if (typeof(T) == typeof(bool))
+            unboundedSize = 0;
+            Func<ByteBuffer, T> reader = null;
+            switch (formatCode)
             {
-                bool result = formatCode == FormatCode.BooleanTrue
-                    ? true
-                    : formatCode == FormatCode.BooleanFalse
-                    ? false
-                    : AmqpBitConverter.ReadUByte(buffer) != 0;
-                return Unsafe.As<bool, T>(ref result);
+                case FormatCode.Boolean:
+                    reader = static b => { bool r = AmqpBitConverter.ReadUByte(b) != 0; return Unsafe.As<bool, T>(ref r); };
+                    break;
+                case FormatCode.BooleanTrue:
+                    unboundedSize = FixedWidth.BooleanVar;
+                    reader = static b => { bool r = true; return Unsafe.As<bool, T>(ref r); };
+                    break;
+                case FormatCode.BooleanFalse:
+                    unboundedSize = FixedWidth.BooleanVar;
+                    reader = static b => { bool r = false; return Unsafe.As<bool, T>(ref r); };
+                    break;
+                case FormatCode.UByte:
+                    reader = static b => { byte r = AmqpBitConverter.ReadUByte(b); return Unsafe.As<byte, T>(ref r); };
+                    break;
+                case FormatCode.UShort:
+                    reader = static b => { ushort r = AmqpBitConverter.ReadUShort(b); return Unsafe.As<ushort, T>(ref r); };
+                    break;
+                case FormatCode.UInt0:
+                    unboundedSize = FixedWidth.UInt;
+                    reader = static b => { uint r = 0; return Unsafe.As<uint, T>(ref r); };
+                    break;
+                case FormatCode.UInt:
+                    reader = static b => { uint r = AmqpBitConverter.ReadUInt(b); return Unsafe.As<uint, T>(ref r); };
+                    break;
+                case FormatCode.SmallUInt:
+                    reader = static b => { uint r = AmqpBitConverter.ReadUByte(b); return Unsafe.As<uint, T>(ref r); };
+                    break;
+                case FormatCode.ULong0:
+                    unboundedSize = FixedWidth.ULong;
+                    reader = static b => { ulong r = 0; return Unsafe.As<ulong, T>(ref r); };
+                    break;
+                case FormatCode.ULong:
+                    reader = static b => { ulong r = AmqpBitConverter.ReadULong(b); return Unsafe.As<ulong, T>(ref r); };
+                    break;
+                case FormatCode.SmallULong:
+                    reader = static b => { ulong r = AmqpBitConverter.ReadUByte(b); return Unsafe.As<ulong, T>(ref r); };
+                    break;
+                case FormatCode.Byte:
+                    reader = static b => { sbyte r = AmqpBitConverter.ReadByte(b); return Unsafe.As<sbyte, T>(ref r); };
+                    break;
+                case FormatCode.Short:
+                    reader = static b => { short r = AmqpBitConverter.ReadShort(b); return Unsafe.As<short, T>(ref r); };
+                    break;
+                case FormatCode.Int:
+                    reader = static b => { int r = AmqpBitConverter.ReadInt(b); return Unsafe.As<int, T>(ref r); };
+                    break;
+                case FormatCode.SmallInt:
+                    reader = static b => { int r = AmqpBitConverter.ReadByte(b); return Unsafe.As<int, T>(ref r); };
+                    break;
+                case FormatCode.Long:
+                    reader = static b => { long r = AmqpBitConverter.ReadLong(b); return Unsafe.As<long, T>(ref r); };
+                    break;
+                case FormatCode.SmallLong:
+                    reader = static b => { long r = AmqpBitConverter.ReadByte(b); return Unsafe.As<long, T>(ref r); };
+                    break;
+                case FormatCode.Float:
+                    reader = static b => { float r = AmqpBitConverter.ReadFloat(b); return Unsafe.As<float, T>(ref r); };
+                    break;
+                case FormatCode.Double:
+                    reader = static b => { double r = AmqpBitConverter.ReadDouble(b); return Unsafe.As<double, T>(ref r); };
+                    break;
+                case FormatCode.Char:
+                    reader = static b => { char r = char.ConvertFromUtf32(AmqpBitConverter.ReadInt(b))[0]; return Unsafe.As<char, T>(ref r); };
+                    break;
+                case FormatCode.TimeStamp:
+                    reader = static b => { DateTime r = TimeStampEncoding.ToDateTime(AmqpBitConverter.ReadLong(b)); return Unsafe.As<DateTime, T>(ref r); };
+                    break;
+                case FormatCode.Uuid:
+                    reader = static b => { Guid r = AmqpBitConverter.ReadUuid(b); return Unsafe.As<Guid, T>(ref r); };
+                    break;
+                case FormatCode.Symbol32:
+                    reader = static b => { AmqpSymbol r = SymbolEncoding.Decode(b, FormatCode.Symbol32); return Unsafe.As<AmqpSymbol, T>(ref r); };
+                    break;
+                case FormatCode.Symbol8:
+                    reader = static b => { AmqpSymbol r = SymbolEncoding.Decode(b, FormatCode.Symbol8); return Unsafe.As<AmqpSymbol, T>(ref r); };
+                    break;
+                case FormatCode.Decimal32:
+                    reader = static b => { decimal r = DecimalEncoding.DecodeValue(b, FormatCode.Decimal32); return Unsafe.As<decimal, T>(ref r); };
+                    break;
+                case FormatCode.Decimal64:
+                    reader = static b => { decimal r = DecimalEncoding.DecodeValue(b, FormatCode.Decimal64); return Unsafe.As<decimal, T>(ref r); };
+                    break;
+                case FormatCode.Decimal128:
+                    reader = static b => { decimal r = DecimalEncoding.DecodeValue(b, FormatCode.Decimal128); return Unsafe.As<decimal, T>(ref r); };
+                    break;
+                case FormatCode.List0:
+                    unboundedSize = IntPtr.Size;
+                    break;
+                default:
+                    break;
             }
-            else if (typeof(T) == typeof(byte))
+
+            return reader;
+        }
+#else
+        /// <summary>
+        /// Returns the in-memory element size for unbounded (zero-width) format codes.
+        /// Returns 0 for format codes that consume buffer bytes during decode.
+        /// </summary>
+        static int GetUnboundedElementSize(FormatCode formatCode)
+        {
+            switch (formatCode)
             {
-                byte result = AmqpBitConverter.ReadUByte(buffer);
-                return Unsafe.As<byte, T>(ref result);
-            }
-            else if (typeof(T) == typeof(sbyte))
-            {
-                sbyte result = AmqpBitConverter.ReadByte(buffer);
-                return Unsafe.As<sbyte, T>(ref result);
-            }
-            else if (typeof(T) == typeof(ushort))
-            {
-                ushort result = AmqpBitConverter.ReadUShort(buffer);
-                return Unsafe.As<ushort, T>(ref result);
-            }
-            else if (typeof(T) == typeof(short))
-            {
-                short result = AmqpBitConverter.ReadShort(buffer);
-                return Unsafe.As<short, T>(ref result);
-            }
-            else if (typeof(T) == typeof(uint))
-            {
-                uint result = formatCode == FormatCode.UInt0
-                    ? 0
-                    : formatCode == FormatCode.SmallUInt
-                    ? AmqpBitConverter.ReadUByte(buffer)
-                    : AmqpBitConverter.ReadUInt(buffer);
-                return Unsafe.As<uint, T>(ref result);
-            }
-            else if (typeof(T) == typeof(int))
-            {
-                int result = formatCode == FormatCode.SmallInt
-                    ? AmqpBitConverter.ReadByte(buffer)
-                    : AmqpBitConverter.ReadInt(buffer);
-                return Unsafe.As<int, T>(ref result);
-            }
-            else if (typeof(T) == typeof(ulong))
-            {
-                ulong result = formatCode == FormatCode.ULong0
-                    ? 0
-                    : formatCode == FormatCode.SmallULong
-                    ? AmqpBitConverter.ReadUByte(buffer)
-                    : AmqpBitConverter.ReadULong(buffer);
-                return Unsafe.As<ulong, T>(ref result);
-            }
-            else if (typeof(T) == typeof(long))
-            {
-                long result = formatCode == FormatCode.SmallLong
-                    ? AmqpBitConverter.ReadByte(buffer)
-                    : AmqpBitConverter.ReadLong(buffer);
-                return Unsafe.As<long, T>(ref result);
-            }
-            else if (typeof(T) == typeof(float))
-            {
-                float result = AmqpBitConverter.ReadFloat(buffer);
-                return Unsafe.As<float, T>(ref result);
-            }
-            else if (typeof(T) == typeof(double))
-            {
-                double result = AmqpBitConverter.ReadDouble(buffer);
-                return Unsafe.As<double, T>(ref result);
-            }
-            else if (typeof(T) == typeof(decimal))
-            {
-                decimal result = DecimalEncoding.DecodeValue(buffer, formatCode);
-                return Unsafe.As<decimal, T>(ref result);
-            }
-            else if (typeof(T) == typeof(char))
-            {
-                char result = char.ConvertFromUtf32(AmqpBitConverter.ReadInt(buffer))[0];
-                return Unsafe.As<char, T>(ref result);
-            }
-            else if (typeof(T) == typeof(DateTime))
-            {
-                DateTime result = TimeStampEncoding.ToDateTime(AmqpBitConverter.ReadLong(buffer));
-                return Unsafe.As<DateTime, T>(ref result);
-            }
-            else if (typeof(T) == typeof(Guid))
-            {
-                Guid result = AmqpBitConverter.ReadUuid(buffer);
-                return Unsafe.As<Guid, T>(ref result);
-            }
-            else if (typeof(T) == typeof(AmqpSymbol))
-            {
-                AmqpSymbol result = SymbolEncoding.Decode(buffer, formatCode);
-                return Unsafe.As<AmqpSymbol, T>(ref result);
-            }
-            else
-            {
-                // Reference types and variable-size types - fall back to DecodeObject
-                return (T)AmqpEncoding.GetEncoding(formatCode).DecodeObject(buffer, formatCode);
+                case FormatCode.BooleanTrue:
+                case FormatCode.BooleanFalse:
+                    return FixedWidth.BooleanVar;
+                case FormatCode.UInt0:
+                    return FixedWidth.UInt;
+                case FormatCode.ULong0:
+                    return FixedWidth.ULong;
+                case FormatCode.List0:
+                    return IntPtr.Size;
+                default:
+                    return 0;
             }
         }
 #endif
 
-        static T[] Decode<T>(ByteBuffer buffer, int size, int count, FormatCode formatCode)
+        static T[] Decode<T>(ByteBuffer buffer, int size, int count, FormatCode formatCode, int depth, ref int totalUnboundedSize)
         {
-            T[] array = new T[count];
+            int capacity = Math.Min(count, MaxInitialSize);
+            T[] array = new T[capacity];
             EncodingBase encoding = AmqpEncoding.GetEncoding(formatCode);
             object descriptor = null;
             if (formatCode == FormatCode.Described)
             {
-                descriptor = AmqpEncoding.DecodeObject(buffer);
+                descriptor = AmqpEncoding.DecodeObject(buffer, depth + 1, ref totalUnboundedSize);
                 formatCode = AmqpEncoding.ReadFormatCode(buffer);
                 encoding = AmqpEncoding.GetEncoding(formatCode);
             }
 
 #if NET8_0_OR_GREATER
+            Func<ByteBuffer, T> reader = GetReader<T>(formatCode, out int unboundedSize);
+
             for (int i = 0; i < count; ++i)
             {
+                AmqpEncoding.TrackUnboundedSize(ref totalUnboundedSize, unboundedSize);
+
+                if (i >= capacity)
+                {
+                    capacity += Math.Min(count - i, Math.Min(capacity * 2, MaxGrowFactor));
+                    Array.Resize(ref array, capacity);
+                }
+
                 if (descriptor != null)
                 {
-                    object value = new DescribedType(descriptor, encoding.DecodeObject(buffer, formatCode));
+                    object value = new DescribedType(descriptor, encoding.DecodeObject(buffer, formatCode, depth + 1, ref totalUnboundedSize));
                     array[i] = (T)value;
+                }
+                else if (reader != null)
+                {
+                    array[i] = reader(buffer);
                 }
                 else
                 {
-                    array[i] = DecodeValue<T>(buffer, formatCode);
+                    array[i] = (T)encoding.DecodeObject(buffer, formatCode, depth + 1, ref totalUnboundedSize);
                 }
             }
 #else
             {
+                int unboundedSize = GetUnboundedElementSize(formatCode);
+
                 for (int i = 0; i < count; ++i)
                 {
-                    object value = encoding.DecodeObject(buffer, formatCode);
+                    if (i >= capacity)
+                    {
+                        capacity += Math.Min(count - i, Math.Min(capacity * 2, MaxGrowFactor));
+                        Array.Resize(ref array, capacity);
+                    }
+
+                    AmqpEncoding.TrackUnboundedSize(ref totalUnboundedSize, unboundedSize);
+                    object value = encoding.DecodeObject(buffer, formatCode, depth + 1, ref totalUnboundedSize);
                     if (descriptor != null)
                     {
                         value = new DescribedType(descriptor, value);

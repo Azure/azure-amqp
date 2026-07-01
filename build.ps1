@@ -38,7 +38,11 @@ function Run-Tests
 	    [String] $Configuration = 'Debug'
 	)
 
-	dotnet.exe test -c $Configuration --no-build .\test\Test.Microsoft.Amqp\Test.Microsoft.Amqp.csproj --logger "GitHubActions;report-warnings=false"
+	dotnet.exe test -c $Configuration --no-build .\test\Test.Microsoft.Amqp\Test.Microsoft.Amqp.csproj `
+		--logger "GitHubActions;report-warnings=false" `
+		--blame-hang-timeout 3m --blame-hang-dump-type full `
+		--diag "$PWD\test-diag\test.log" `
+		--results-directory "$PWD\test-results"
 	if (-Not $?)
 	{
 		throw "Test failed."

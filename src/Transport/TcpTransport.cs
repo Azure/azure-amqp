@@ -128,7 +128,6 @@ namespace Microsoft.Azure.Amqp.Transport
             }
 
             this.receiveEventArgs.Args = args;
-            Fx.Assert(this.receiveEventArgs.Count > 0, "Must have a count to read");
             bool pending;
             try
             {

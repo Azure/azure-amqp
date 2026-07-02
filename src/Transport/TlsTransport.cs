@@ -20,10 +20,9 @@ namespace Microsoft.Azure.Amqp.Transport
         static readonly AsyncCallback onWriteComplete = OnWriteComplete;
         static readonly AsyncCallback onReadComplete = OnReadComplete;
         readonly TransportBase innerTransport;
-        /// <summary>
-        /// The SSL stream.
-        /// </summary>
-        public readonly CustomSslStream sslStream;
+        readonly TransportStream transportStream;
+        /// <summary>The SSL stream (internal use only).</summary>
+        protected readonly CustomSslStream sslStream;
         TlsTransportSettings tlsSettings;
         OperationState writeState;
         OperationState readState;
@@ -40,9 +39,10 @@ namespace Microsoft.Azure.Amqp.Transport
                 tlsSettings.IsInitiator ? "Must have a target host for the client." : "Must have a certificate for the server.");
             this.innerTransport = innerTransport;
             this.tlsSettings = tlsSettings;
+            this.transportStream = new TransportStream(this.innerTransport);
             this.sslStream = tlsSettings.CertificateValidationCallback == null ?
-                new CustomSslStream(new TransportStream(this.innerTransport), false, tlsSettings.IsInitiator) :
-                new CustomSslStream(new TransportStream(this.innerTransport), false, this.ValidateRemoteCertificate, tlsSettings.IsInitiator);
+                new CustomSslStream(this.transportStream, false, tlsSettings.IsInitiator) :
+                new CustomSslStream(this.transportStream, false, this.ValidateRemoteCertificate, tlsSettings.IsInitiator);
         }
 
         /// <inheritdoc cref="TransportBase.Local"/>
@@ -87,43 +87,28 @@ namespace Microsoft.Azure.Amqp.Transport
         public override bool WriteAsync(TransportAsyncCallbackArgs args)
         {
             Fx.Assert(this.writeState.Args == null, "Cannot write when a write is still in progress");
-            ArraySegment<byte> buffer;
-            if (args.Buffer != null)
-            {
-                buffer = new ArraySegment<byte>(args.Buffer, args.Offset, args.Count);
-                this.writeState.Args = args;
-            }
-            else
-            {
-                Fx.Assert(args.ByteBufferList != null, "Buffer list should not be null when buffer is null");
-                if (args.ByteBufferList.Count == 1)
-                {
-                    ByteBuffer byteBuffer = args.ByteBufferList[0];
-                    buffer = new ArraySegment<byte>(byteBuffer.Buffer, byteBuffer.Offset, byteBuffer.Length);
-                    this.writeState.Args = args;
-                }
-                else
-                {
-                    // Copy all buffers into one big buffer to avoid SSL overhead
-                    Fx.Assert(args.Count > 0, "args.Count should be set");
-                    ByteBuffer temp = new ByteBuffer(args.Count, false, false);
-                    for (int i = 0; i < args.ByteBufferList.Count; ++i)
-                    {
-                        ByteBuffer byteBuffer = args.ByteBufferList[i];
-                        Buffer.BlockCopy(byteBuffer.Buffer, byteBuffer.Offset, temp.Buffer, temp.Length, byteBuffer.Length);
-                        temp.Append(byteBuffer.Length);
-                    }
+            this.writeState.Args = args;
 
-                    buffer = new ArraySegment<byte>(temp.Buffer, 0, temp.Length);
-                    this.writeState.Args = args;
-                    this.writeState.Buffer = temp;
-                }
-            }
-
+            // Encrypt each source segment in place via a sync SslStream.Write and issue
+            // a single async I/O to flush the accumulated ciphertext to the inner transport.
             IAsyncResult result;
             try
             {
-                result = this.sslStream.BeginWrite(buffer.Array, buffer.Offset, buffer.Count, onWriteComplete, this);
+                if (args.Buffer != null)
+                {
+                    this.sslStream.Write(args.Buffer, args.Offset, args.Count);
+                }
+                else
+                {
+                    Fx.Assert(args.ByteBufferList != null, "Buffer list should not be null when buffer is null");
+                    for (int i = 0; i < args.ByteBufferList.Count; ++i)
+                    {
+                        ByteBuffer byteBuffer = args.ByteBufferList[i];
+                        this.sslStream.Write(byteBuffer.Buffer, byteBuffer.Offset, byteBuffer.Length);
+                    }
+                }
+
+                result = this.transportStream.BeginFlushWrite(onWriteComplete, this);
             }
             catch (ObjectDisposedException ode)
             {
@@ -349,15 +334,9 @@ namespace Microsoft.Azure.Amqp.Transport
                 if (write)
                 {
                     args = this.writeState.Args;
-                    ByteBuffer buffer = this.writeState.Buffer;
                     this.writeState.Reset();
 
-                    if (buffer != null)
-                    {
-                        buffer.Dispose();
-                    }
-
-                    this.sslStream.EndWrite(result);
+                    this.transportStream.EndWrite(result);
                     args.BytesTransfered = args.Count;
                 }
                 else
@@ -400,12 +379,9 @@ namespace Microsoft.Azure.Amqp.Transport
         {
             public TransportAsyncCallbackArgs Args;
 
-            public ByteBuffer Buffer;
-
             public void Reset()
             {
                 this.Args = null;
-                this.Buffer = null;
             }
         }
     }

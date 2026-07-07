@@ -14,10 +14,16 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static void ReadMapValue(ByteBuffer buffer, AmqpMap map, int size, int count)
         {
+            int totalUnboundedSize = 0;
+            ReadMapValue(buffer, map, size, count, 0, ref totalUnboundedSize);
+        }
+
+        internal static void ReadMapValue(ByteBuffer buffer, AmqpMap map, int size, int count, int depth, ref int totalUnboundedSize)
+        {
             for (; count > 0; count -= 2)
             {
-                object key = AmqpEncoding.DecodeObject(buffer);
-                object item = AmqpCodec.DecodeObject(buffer);
+                object key = AmqpEncoding.DecodeObject(buffer, depth + 1, ref totalUnboundedSize);
+                object item = AmqpCodec.DecodeObject(buffer, depth + 1, ref totalUnboundedSize);
                 map[new MapKey(key)] = item;
             }
         }
@@ -59,9 +65,15 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static AmqpMap Decode(ByteBuffer buffer, FormatCode formatCode, IEqualityComparer<MapKey> comparer = null)
         {
+            int totalUnboundedSize = 0;
+            return Decode(buffer, formatCode, 0, ref totalUnboundedSize, comparer);
+        }
+
+        internal static AmqpMap Decode(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize, IEqualityComparer<MapKey> comparer = null)
+        {
             AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.Map8, FormatCode.Map32, out int size, out int count);
             AmqpMap map = comparer != null ? new AmqpMap(comparer) : new AmqpMap();
-            ReadMapValue(buffer, map, size, count);
+            ReadMapValue(buffer, map, size, count, depth, ref totalUnboundedSize);
             return map;
         }
 
@@ -85,6 +97,11 @@ namespace Microsoft.Azure.Amqp.Encoding
         protected override AmqpMap OnRead(ByteBuffer buffer, FormatCode formatCode)
         {
             return Decode(buffer, formatCode);
+        }
+
+        internal override object DecodeObject(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
+        {
+            return Decode(buffer, formatCode, depth, ref totalUnboundedSize);
         }
 
         static int GetMapSize(AmqpMap value)

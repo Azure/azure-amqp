@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
+    using System;
     using System.Collections;
     using System.Collections.Generic;
 
@@ -56,16 +57,22 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static IList Decode(ByteBuffer buffer, FormatCode formatCode)
         {
+            int totalUnboundedSize = 0;
+            return Decode(buffer, formatCode, 0, ref totalUnboundedSize);
+        }
+
+        internal static IList Decode(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
+        {
             if (formatCode == FormatCode.List0)
             {
-                return new object[0];
+                return Array.Empty<object>();
             }
 
             AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.List8, FormatCode.List32, out int size, out int count);
-            List<object> list = new List<object>(count);
+            List<object> list = new List<object>(Math.Min(count, 1024));
             for (int i = 0; i < count; i++)
             {
-                list.Add(AmqpEncoding.DecodeObject(buffer));
+                list.Add(AmqpEncoding.DecodeObject(buffer, depth + 1, ref totalUnboundedSize));
             }
 
             return list;
@@ -91,6 +98,11 @@ namespace Microsoft.Azure.Amqp.Encoding
         protected override IList OnRead(ByteBuffer buffer, FormatCode formatCode)
         {
             return Decode(buffer, formatCode);
+        }
+
+        internal override object DecodeObject(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
+        {
+            return Decode(buffer, formatCode, depth, ref totalUnboundedSize);
         }
 
         static int GetListSize(IList value)

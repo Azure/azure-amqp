@@ -57,8 +57,13 @@ namespace Microsoft.Azure.Amqp.Encoding
         /// <summary>Decodes an object from the buffer.</summary>
         public abstract object DecodeObject(ByteBuffer buffer, FormatCode formatCode);
 
-        internal abstract Array DecodeArray(ByteBuffer buffer, FormatCode formatCode, int count);
+        internal virtual object DecodeObject(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
+        {
+            return this.DecodeObject(buffer, formatCode);
+        }
 
+        internal abstract Array DecodeArray(ByteBuffer buffer, FormatCode formatCode, int count, int depth, ref int totalUnboundedSize);
+        
         internal abstract int GetArrayEncodeSize(Array value);
 
         internal abstract void EncodeArray(Array value, ByteBuffer buffer);
@@ -182,23 +187,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         /// <inheritdoc/>
         public override object DecodeObject(ByteBuffer buffer, FormatCode formatCode)
         {
-            if (formatCode == Encoding.FormatCode.Null)
-            {
-                return null;
-            }
-
             return this.Read(buffer, formatCode);
-        }
-
-        internal override Array DecodeArray(ByteBuffer buffer, FormatCode formatCode, int count)
-        {
-            T[] array = new T[count];
-            if (count > 0)
-            {
-                array = this.ReadArrayValue(buffer, formatCode, array);
-            }
-
-            return array;
         }
 
         internal override int GetArrayEncodeSize(Array value)
@@ -209,6 +198,55 @@ namespace Microsoft.Azure.Amqp.Encoding
         internal override void EncodeArray(Array value, ByteBuffer buffer)
         {
             this.WriteArrayValue((T[])value, buffer);
+        }
+
+        internal override Array DecodeArray(ByteBuffer buffer, FormatCode formatCode, int count, int depth, ref int totalUnboundedSize)
+        {
+            int unboundedElementSize = GetUnboundedElementSize(formatCode);
+            AmqpEncoding.TrackUnboundedSize(count, unboundedElementSize, buffer.Length, ref totalUnboundedSize);
+
+            if (count == 0)
+            {
+                return Array.Empty<T>();
+            }
+
+            T[] array = new T[count];
+            if (IsCompoundType(formatCode))
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    array[i] = (T)this.DecodeObject(buffer, formatCode, depth + 1, ref totalUnboundedSize);
+                }
+
+                return array;
+            }
+
+            return this.ReadArrayValue(buffer, formatCode, array);
+        }
+
+        static bool IsCompoundType(FormatCode formatCode)
+        {
+            return formatCode == FormatCode.Array8 || formatCode == FormatCode.Array32
+                || formatCode == FormatCode.List8  || formatCode == FormatCode.List32
+                || formatCode == FormatCode.Map8   || formatCode == FormatCode.Map32;
+        }
+
+        static int GetUnboundedElementSize(FormatCode formatCode)
+        {
+            switch (formatCode)
+            {
+                case FormatCode.BooleanTrue:
+                case FormatCode.BooleanFalse:
+                    return FixedWidth.BooleanVar;
+                case FormatCode.UInt0:
+                    return FixedWidth.UInt;
+                case FormatCode.ULong0:
+                    return FixedWidth.ULong;
+                case FormatCode.List0:
+                    return IntPtr.Size;
+                default:
+                    return 0;
+            }
         }
     }
 }

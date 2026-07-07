@@ -3,6 +3,8 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
+    using System;
+
     sealed class DescribedEncoding : EncodingBase<DescribedType>
     {
         public DescribedEncoding()
@@ -24,22 +26,28 @@ namespace Microsoft.Azure.Amqp.Encoding
             AmqpEncoding.EncodeObject(value.Value, buffer);
         }
 
-        public static DescribedType Decode(ByteBuffer buffer, FormatCode formatCode)
+        internal static DescribedType Decode(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
         {
             AmqpEncoding.VerifyFormatCode(formatCode, buffer.Offset, FormatCode.Described);
-            object descriptor = AmqpEncoding.DecodeObject(buffer);
-            object value = AmqpEncoding.DecodeObject(buffer);
+            object descriptor = AmqpEncoding.DecodeObject(buffer, depth + 1, ref totalUnboundedSize);
+            object value = AmqpEncoding.DecodeObject(buffer, depth + 1, ref totalUnboundedSize);
             return new DescribedType(descriptor, value);
         }
 
         public override DescribedType[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, DescribedType[] array)
         {
-            object descriptor = AmqpEncoding.DecodeObject(buffer);
+            int totalUnboundedSize = 0;
+            return ReadArrayValue(buffer, formatCode, array, 0, ref totalUnboundedSize);
+        }
+
+        internal DescribedType[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, DescribedType[] array, int depth, ref int totalUnboundedSize)
+        {
+            object descriptor = AmqpEncoding.DecodeObject(buffer, depth + 1, ref totalUnboundedSize);
             formatCode = AmqpEncoding.ReadFormatCode(buffer);
             EncodingBase encoding = AmqpEncoding.GetEncoding(formatCode);
             for (int i = 0; i < array.Length; i++)
             {
-                object value = encoding.DecodeObject(buffer, formatCode);
+                object value = encoding.DecodeObject(buffer, formatCode, depth + 1, ref totalUnboundedSize);
                 array[i] = new DescribedType(descriptor, value);
             }
 
@@ -65,7 +73,25 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         protected override DescribedType OnRead(ByteBuffer buffer, FormatCode formatCode)
         {
-            return Decode(buffer, formatCode);
+            int totalUnboundedSize = 0;
+            return Decode(buffer, formatCode, 0, ref totalUnboundedSize);
+        }
+
+        internal override object DecodeObject(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
+        {
+            return Decode(buffer, formatCode, depth, ref totalUnboundedSize);
+        }
+
+        internal override Array DecodeArray(ByteBuffer buffer, FormatCode formatCode, int count, int depth, ref int totalUnboundedSize)
+        {
+            AmqpEncoding.TrackUnboundedSize(count, 0, buffer.Length, ref totalUnboundedSize);
+            if (count == 0)
+            {
+                return Array.Empty<DescribedType>();
+            }
+
+            DescribedType[] array = new DescribedType[count];
+            return ReadArrayValue(buffer, formatCode, array, depth, ref totalUnboundedSize);
         }
 
         static int GetArrayItemSize(DescribedType value, int index)

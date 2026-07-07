@@ -33,7 +33,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             sizeTracker.CommitExclusive(0);
         }
 
-        public static T[] Decode<T>(ByteBuffer buffer, FormatCode formatCode, EncodingBase<T> encoding)
+        internal static T[] Decode<T>(ByteBuffer buffer, FormatCode formatCode, EncodingBase<T> encoding, int depth, ref int totalUnboundedSize)
         {
             AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.Array8, FormatCode.Array32, out var size, out var count);
             formatCode = AmqpEncoding.ReadFormatCode(buffer);
@@ -42,13 +42,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 throw new AmqpException(AmqpErrorCode.DecodeError, $"Format code '{formatCode}' is different from expected '{encoding.FormatCode}'.");
             }
 
-            T[] array = new T[count];
-            if (count > 0)
-            {
-                array = encoding.ReadArrayValue(buffer, formatCode, array);
-            }
-
-            return array;
+            return (T[])encoding.DecodeArray(buffer, formatCode, count, depth, ref totalUnboundedSize);
         }
 
         protected override int OnGetSize(Array value, int arrayIndex)
@@ -82,10 +76,22 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         protected override Array OnRead(ByteBuffer buffer, FormatCode formatCode)
         {
+            int totalUnboundedSize = 0;
+            return DecodeArrayInternal(buffer, formatCode, 0, ref totalUnboundedSize);
+        }
+
+        internal override object DecodeObject(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
+        {
+            return DecodeArrayInternal(buffer, formatCode, depth, ref totalUnboundedSize);
+        }
+
+        Array DecodeArrayInternal(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
+        {
+            AmqpEncoding.CheckMaxNestingDepth(depth);
             AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.Array8, FormatCode.Array32, out var size, out var count);
             formatCode = AmqpEncoding.ReadFormatCode(buffer);
             EncodingBase encoding = AmqpEncoding.GetEncoding(formatCode);
-            return encoding.DecodeArray(buffer, formatCode, count);
+            return encoding.DecodeArray(buffer, formatCode, count, depth + 1, ref totalUnboundedSize);
         }
     }
 }

@@ -422,6 +422,11 @@ namespace Microsoft.Azure.Amqp.Transport
 
             public void CopyTo(ArraySegment<byte>[] array, int arrayIndex)
             {
+                if (array == null)
+                {
+                    throw new ArgumentNullException("array");
+                }
+
                 if (this.segments != null)
                 {
                     Array.Copy(this.segments, 0, array, arrayIndex, this.count);

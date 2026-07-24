@@ -281,7 +281,7 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [TestMethod]
-        public void AmqpMessageEmptyTest()
+        public async Task AmqpMessageEmptyTest()
         {
             string queue = "AmqpMessageEmptyTest";
             broker.AddQueue(queue);
@@ -295,18 +295,18 @@ namespace Test.Microsoft.Azure.Amqp
             SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnSend));
             sLink.Open();
 
-            AssertExtensions.ThrowsAny<InvalidOperationException>(() =>
+            await AssertExtensions.ThrowsAnyAsync<InvalidOperationException>(async () =>
             {
                 var message = AmqpMessage.Create();
-                sLink.SendMessageAsync(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary,
-                    TimeSpan.FromSeconds(30)).GetAwaiter().GetResult();
+                await sLink.SendMessageAsync(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary,
+                    TimeSpan.FromSeconds(30));
             });
 
-            AssertExtensions.ThrowsAny<InvalidOperationException>(() =>
+            await AssertExtensions.ThrowsAnyAsync<InvalidOperationException>(async () =>
             {
                 var message = AmqpMessage.Create(new Data[0]);
-                sLink.SendMessageAsync(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary,
-                    TimeSpan.FromSeconds(30)).GetAwaiter().GetResult();
+                await sLink.SendMessageAsync(message, AmqpConstants.EmptyBinary, AmqpConstants.NullBinary,
+                    TimeSpan.FromSeconds(30));
             });
 
             connection.Close();
@@ -590,7 +590,7 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [TestMethod]
-        public void AmqpTransactionTest()
+        public async Task AmqpTransactionTest()
         {
             const int messageCount = 6;
             string queue = "AmqpTransactionCommitTest";
@@ -605,7 +605,7 @@ namespace Test.Microsoft.Azure.Amqp
             Controller txController = new Controller(session, TimeSpan.FromSeconds(10));
             txController.Open();
 
-            ArraySegment<byte> txnId = txController.DeclareAsync().Result;
+            ArraySegment<byte> txnId = await txController.DeclareAsync();
 
             SendingAmqpLink sendLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnReceive));
             sendLink.Open();
@@ -621,9 +621,9 @@ namespace Test.Microsoft.Azure.Amqp
             }
 
             // rollback txn
-            txController.DischargeAsync(txnId, true).Wait(TimeSpan.FromSeconds(10));
+            await txController.DischargeAsync(txnId, true);
 
-            txnId = txController.DeclareAsync().Result;
+            txnId = await txController.DeclareAsync();
 
             // send message again
             for (int i = 0; i < messageCount; ++i)
@@ -636,13 +636,13 @@ namespace Test.Microsoft.Azure.Amqp
             }
 
             // commit txn
-            txController.DischargeAsync(txnId, false).Wait(TimeSpan.FromSeconds(10));
+            await txController.DischargeAsync(txnId, false);
 
             ReceivingAmqpLink receiveLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnReceive, 20));
             receiveLink.Open();
 
             TransactionalState txnState = new TransactionalState() { Outcome = new Accepted() };
-            txnState.TxnId = txController.DeclareAsync().Result;
+            txnState.TxnId = await txController.DeclareAsync();
 
             // receive message
             AmqpMessage[] messages = new AmqpMessage[messageCount];
@@ -655,9 +655,9 @@ namespace Test.Microsoft.Azure.Amqp
             receiveLink.Session.Flush();    // force dispositions out before discharge frames
 
             // rollback txn
-            txController.DischargeAsync(txnState.TxnId, true).Wait(TimeSpan.FromSeconds(10));
+            await txController.DischargeAsync(txnState.TxnId, true);
 
-            txnState.TxnId = txController.DeclareAsync().Result;
+            txnState.TxnId = await txController.DeclareAsync();
 
             // complete message again
             for (int i = 0; i < messageCount; ++i)
@@ -667,7 +667,7 @@ namespace Test.Microsoft.Azure.Amqp
             receiveLink.Session.Flush();
 
             // commit txn
-            txController.DischargeAsync(txnState.TxnId, false).Wait(TimeSpan.FromSeconds(10));
+            await txController.DischargeAsync(txnState.TxnId, false);
 
             txController.Close(TimeSpan.FromSeconds(5));
             sendLink.Close();
@@ -676,7 +676,7 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [TestMethod]
-        public void AmqpLinkDrainTest()
+        public async Task AmqpLinkDrainTest()
         {
             string entity = "AmqpLinkDrainTest";
             broker.AddQueue(entity);
@@ -704,7 +704,7 @@ namespace Test.Microsoft.Azure.Amqp
                 rLink.AcceptMessage(message);
             }
 
-            rLink.DrainAsync(CancellationToken.None).GetAwaiter().GetResult();
+            await rLink.DrainAsync(CancellationToken.None);
             Assert.AreEqual(0u, rLink.LinkCredit);
             Assert.IsFalse(rLink.Drain);
 
@@ -1033,7 +1033,7 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [TestMethod]
-        public void AmqpLinkCreditMaxValueTest()
+        public async Task AmqpLinkCreditMaxValueTest()
         {
             string queue = "AmqpLinkCreditMaxValueTest-" + Guid.NewGuid().ToString("N").Substring(6);
             broker.AddQueue(queue);
@@ -1060,7 +1060,7 @@ namespace Test.Microsoft.Azure.Amqp
             bool hasMessage = rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(20), null, null), out message);
             Assert.IsTrue(hasMessage);
             Assert.IsNotNull(message);
-            outcome = rLink.DisposeMessageAsync(message.DeliveryTag, new Accepted(), false, TimeSpan.FromSeconds(15)).Result;
+            outcome = await rLink.DisposeMessageAsync(message.DeliveryTag, new Accepted(), false, TimeSpan.FromSeconds(15));
             Assert.AreEqual(Accepted.Code, outcome.DescriptorCode);
 
             connection.Close();

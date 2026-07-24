@@ -4,6 +4,8 @@
 namespace Microsoft.Azure.Amqp.Transport
 {
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Net;
     using System.Net.Sockets;
     using Microsoft.Azure.Amqp.Encoding;
@@ -82,13 +84,7 @@ namespace Microsoft.Azure.Amqp.Transport
             }
             else
             {
-                ArraySegment<byte>[] buffers = new ArraySegment<byte>[args.ByteBufferList.Count];
-                for (int i = 0; i < buffers.Length; ++i)
-                {
-                    buffers[i] = new ArraySegment<byte>(args.ByteBufferList[i].Buffer, args.ByteBufferList[i].Offset, args.ByteBufferList[i].Length);
-                }
-
-                this.sendEventArgs.BufferList = buffers;
+                this.sendEventArgs.PrepareBufferList(args.ByteBufferList);
             }
 
             this.sendEventArgs.Args = args;
@@ -319,6 +315,7 @@ namespace Microsoft.Azure.Amqp.Transport
         sealed class WriteAsyncEventArgs : SocketAsyncEventArgs
         {
             readonly BufferSizeTracker writeTracker;
+            readonly WriteBufferListAdapter bufferListAdapter = new WriteBufferListAdapter();
             Timestamp startTime;
             int bufferSize;
 
@@ -339,6 +336,12 @@ namespace Microsoft.Azure.Amqp.Transport
             public TcpTransport Transport { get; private set; }
 
             public TransportAsyncCallbackArgs Args { get; set; }
+
+            public void PrepareBufferList(IList<ByteBuffer> buffers)
+            {
+                this.bufferListAdapter.Prepare(buffers);
+                this.BufferList = this.bufferListAdapter;
+            }
 
             public void PrepareWrite(int writeSize)
             {
@@ -365,7 +368,86 @@ namespace Microsoft.Azure.Amqp.Transport
                 this.Args = null;
                 this.SetBuffer(null, 0, 0);
                 this.BufferList = null;
+                this.bufferListAdapter.Reset();
             }
+        }
+
+        sealed class WriteBufferListAdapter : IList<ArraySegment<byte>>
+        {
+            ArraySegment<byte>[] segments;
+            int count;
+
+            public int Count
+            {
+                get { return this.count; }
+            }
+
+            public bool IsReadOnly
+            {
+                get { return true; }
+            }
+
+            public ArraySegment<byte> this[int index]
+            {
+                get { return this.segments[index]; }
+                set { throw new NotSupportedException(); }
+            }
+
+            public void Prepare(IList<ByteBuffer> buffers)
+            {
+                int size = buffers.Count;
+                if (this.segments == null || this.segments.Length < size)
+                {
+                    this.segments = new ArraySegment<byte>[size];
+                }
+
+                for (int i = 0; i < size; ++i)
+                {
+                    ByteBuffer buffer = buffers[i];
+                    this.segments[i] = new ArraySegment<byte>(buffer.Buffer, buffer.Offset, buffer.Length);
+                }
+
+                this.count = size;
+            }
+
+            public void Reset()
+            {
+                if (this.segments != null)
+                {
+                    Array.Clear(this.segments, 0, this.segments.Length);
+                }
+
+                this.count = 0;
+            }
+
+            public void CopyTo(ArraySegment<byte>[] array, int arrayIndex)
+            {
+                if (this.segments != null)
+                {
+                    Array.Copy(this.segments, 0, array, arrayIndex, this.count);
+                }
+            }
+
+            public IEnumerator<ArraySegment<byte>> GetEnumerator()
+            {
+                for (int i = 0; i < this.count; ++i)
+                {
+                    yield return this.segments[i];
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return this.GetEnumerator();
+            }
+
+            public int IndexOf(ArraySegment<byte> item) { throw new NotSupportedException(); }
+            public void Insert(int index, ArraySegment<byte> item) { throw new NotSupportedException(); }
+            public void RemoveAt(int index) { throw new NotSupportedException(); }
+            public void Add(ArraySegment<byte> item) { throw new NotSupportedException(); }
+            public void Clear() { throw new NotSupportedException(); }
+            public bool Contains(ArraySegment<byte> item) { throw new NotSupportedException(); }
+            public bool Remove(ArraySegment<byte> item) { throw new NotSupportedException(); }
         }
 
         sealed class ReadAsyncEventArgs : SocketAsyncEventArgs

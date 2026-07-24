@@ -1,7 +1,9 @@
 namespace Test.Microsoft.Azure.Amqp
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Net;
     using System.Net.Sockets;
     using System.Reflection;
@@ -104,6 +106,224 @@ namespace Test.Microsoft.Azure.Amqp
             var server = AmqpUtils.GetTcpSettings(localHost, port, false);
             server.SendBufferSize = server.ReceiveBufferSize = 16 * 1024;
             this.RunTransportTest("TcpTransportServerFixedBufferTest", localHost, port, client, server);
+        }
+
+        [TestMethod]
+        public void TcpTransportMultiBufferOnlyTest()
+        {
+            // Isolation check: a single multi-buffer send through the real transport.
+            IPAddress address = IPAddress.Loopback;
+            var listener = new TcpListener(address, 0);
+            listener.Start();
+            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            Socket serverSocket = null;
+            var accepted = new ManualResetEventSlim(false);
+            ThreadPool.QueueUserWorkItem(s => { serverSocket = ((TcpListener)s).AcceptSocket(); accepted.Set(); }, listener);
+            var clientSocket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+            clientSocket.Connect(address, port);
+            accepted.Wait(TimeSpan.FromSeconds(5));
+            listener.Stop();
+
+            var settings = new TcpTransportSettings();
+            settings.SendBufferSize = settings.ReceiveBufferSize = 16 * 1024;
+            var transport = new TcpTransport(clientSocket, settings);
+
+            var bbList = new List<ByteBuffer>
+            {
+                new ByteBuffer(new byte[] { 1, 2, 3 }, 0, 3),
+                new ByteBuffer(new byte[] { 4, 5 }, 0, 2),
+            };
+            var args = new TransportAsyncCallbackArgs();
+            var done = new ManualResetEventSlim(false);
+            Exception error = null;
+            args.CompletedCallback = a => { error = a.Exception; done.Set(); };
+            args.SetBuffer(bbList);
+
+            bool pending = transport.WriteAsync(args);
+            if (pending) done.Wait(TimeSpan.FromSeconds(5));
+            Console.WriteLine($"MultiOnly: pending={pending} transferred={args.BytesTransfered} error={error}");
+            Assert.IsNull(error, error?.Message);
+            Assert.AreEqual(5, args.BytesTransfered);
+
+            try { clientSocket.Shutdown(SocketShutdown.Both); } catch { }
+            byte[] buf = new byte[16];
+            int total = 0;
+            try { total = serverSocket.Receive(buf); } catch { }
+            Assert.AreEqual(5, total);
+            clientSocket.Dispose();
+            serverSocket.Dispose();
+            done.Dispose();
+            accepted.Dispose();
+        }
+
+        [TestMethod]
+        public void TcpTransportMultiBufferAdapterReuseTest()
+        {
+            // Drives the reusable write adapter through grow -> shrink -> reuse and
+            // single/multi path switching on a real loopback socket. Verifies byte-for-byte
+            // integrity of the whole stream and that the adapter retains no segment
+            // references after Reset (full-array clear, including the grown tail). Data
+            // integrity alone cannot catch retention because the active Count gates what
+            // is sent, so the adapter's backing array is inspected directly.
+            IPAddress address = IPAddress.Loopback;
+            TcpListener listener = new TcpListener(address, 0);
+            listener.Start();
+            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+
+            Socket serverSocket = null;
+            var accepted = new ManualResetEventSlim(false);
+            ThreadPool.QueueUserWorkItem(s =>
+            {
+                serverSocket = ((TcpListener)s).AcceptSocket();
+                accepted.Set();
+            }, listener);
+
+            var clientSocket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+            clientSocket.Connect(address, port);
+            Assert.IsTrue(accepted.Wait(TimeSpan.FromSeconds(5)), "server did not accept the connection");
+            Assert.IsNotNull(serverSocket);
+            listener.Stop();
+
+            var settings = new TcpTransportSettings();
+            settings.SendBufferSize = settings.ReceiveBufferSize = 16 * 1024;
+            var transport = new TcpTransport(clientSocket, settings);
+
+            // Each inner array is one ByteBuffer (one AMQP frame). Counts are chosen to
+            // force a grow (10) then a shrink (3) so the grown tail must be cleared,
+            // then a reuse (2), with single-buffer sends mixed in.
+            int[][] batches =
+            {
+                new[] { 1 },                                       // single-buffer path
+                new[] { 2, 3 },                                    // multi, count 2
+                new[] { 5, 7, 11, 13, 17, 19, 23, 29, 31, 37 },   // multi, count 10 (grow)
+                new[] { 100, 101, 102 },                           // multi, count 3 (shrink -> tail clear)
+                new[] { 9, 8 },                                    // multi, count 2 (reuse)
+                new[] { 1 },                                       // single-buffer path again
+            };
+
+            var expected = new MemoryStream();
+            var sends = new List<byte[][]>();
+            byte next = 1;
+            foreach (int[] sizes in batches)
+            {
+                var frame = new byte[sizes.Length][];
+                for (int i = 0; i < sizes.Length; i++)
+                {
+                    byte[] b = new byte[sizes[i]];
+                    for (int j = 0; j < b.Length; j++)
+                    {
+                        b[j] = next;
+                        expected.WriteByte(next);
+                        next++;
+                    }
+
+                    frame[i] = b;
+                }
+
+                sends.Add(frame);
+            }
+
+            byte[] expectedBytes = expected.ToArray();
+
+            // Drain the server side to EOF concurrently with the writes.
+            var received = new MemoryStream();
+            var readerDone = new ManualResetEventSlim(false);
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                byte[] buf = new byte[8192];
+                int n;
+                try
+                {
+                    while ((n = serverSocket.Receive(buf, 0, buf.Length, SocketFlags.None)) > 0)
+                    {
+                        received.Write(buf, 0, n);
+                    }
+                }
+                catch (SocketException)
+                {
+                    // transport close may race with the final receive; tolerated
+                }
+
+                readerDone.Set();
+            });
+
+            var args = new TransportAsyncCallbackArgs();
+            var done = new ManualResetEventSlim(false);
+            Exception writeError = null;
+            args.CompletedCallback = a =>
+            {
+                writeError = a.Exception;
+                done.Set();
+            };
+
+            try
+            {
+                foreach (byte[][] buffers in sends)
+                {
+                    writeError = null;
+                    done.Reset();
+
+                    int total = 0;
+                    if (buffers.Length == 1)
+                    {
+                        total = buffers[0].Length;
+                        args.SetBuffer(buffers[0], 0, buffers[0].Length);
+                    }
+                    else
+                    {
+                        var bbList = new List<ByteBuffer>(buffers.Length);
+                        for (int i = 0; i < buffers.Length; i++)
+                        {
+                            bbList.Add(new ByteBuffer(buffers[i], 0, buffers[i].Length));
+                            total += buffers[i].Length;
+                        }
+
+                        args.SetBuffer(bbList);
+                    }
+
+                    bool pending = transport.WriteAsync(args);
+                    if (pending)
+                    {
+                        Assert.IsTrue(done.Wait(TimeSpan.FromSeconds(5)), "write did not complete in time");
+                    }
+
+                    Assert.IsNull(writeError, writeError?.Message);
+                    Assert.AreEqual(total, args.BytesTransfered, "bytes transferred mismatch");
+                    args.Reset();
+                }
+
+                // The adapter is cleared inside HandleWriteComplete, so after the last
+                // write it must hold no active segments and no stale references in the
+                // grown tail (the slots Prepare never overwrites on a shrinking batch).
+                BindingFlags nonPublic = BindingFlags.Instance | BindingFlags.NonPublic;
+                object sendArgs = typeof(TcpTransport).GetField("sendEventArgs", nonPublic).GetValue(transport);
+                Assert.IsNotNull(sendArgs, "sendEventArgs field not found");
+                object adapter = sendArgs.GetType().GetField("bufferListAdapter", nonPublic).GetValue(sendArgs);
+                Assert.IsNotNull(adapter, "bufferListAdapter field not found");
+                Array segments = (Array)adapter.GetType().GetField("segments", nonPublic).GetValue(adapter);
+                int adapterCount = (int)adapter.GetType().GetField("count", nonPublic).GetValue(adapter);
+                Assert.AreEqual(0, adapterCount, "adapter active count should be 0 after reset");
+                if (segments != null)
+                {
+                    for (int i = 0; i < segments.Length; i++)
+                    {
+                        Assert.AreEqual(default(ArraySegment<byte>), (ArraySegment<byte>)segments.GetValue(i),
+                            "adapter retained a stale segment after reset at index " + i);
+                    }
+                }
+
+                transport.Close();
+                Assert.IsTrue(readerDone.Wait(TimeSpan.FromSeconds(5)), "server did not reach EOF");
+                CollectionAssert.AreEqual(expectedBytes, received.ToArray());
+            }
+            finally
+            {
+                clientSocket.Dispose();
+                serverSocket.Dispose();
+                done.Dispose();
+                accepted.Dispose();
+                readerDone.Dispose();
+            }
         }
 
         [TestMethod]

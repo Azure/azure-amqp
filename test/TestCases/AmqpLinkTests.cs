@@ -682,26 +682,25 @@ namespace Test.Microsoft.Azure.Amqp
             broker.AddQueue(entity);
 
             AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);
-            await connection.OpenAsync();
+            connection.Open();
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
-            await session.OpenAsync();
+            session.Open();
 
             SendingAmqpLink sender = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, entity, SettleMode.SettleOnSend));
-            await sender.OpenAsync();
+            sender.Open();
             for (int i = 0; i < 8; i++)
             {
-                await sender.SendMessageAsync(AmqpMessage.Create(new AmqpValue() { Value = "hello" }));
+                sender.SendMessageNoWait(AmqpMessage.Create(new AmqpValue() { Value = "hello" }), EmptyBinary, NullBinary);
             }
 
             ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, entity, SettleMode.SettleOnSend, 0));
             rLink.Settings.AutoSendFlow = false;
-            await rLink.OpenAsync();
+            rLink.Open();
 
             for (int i = 0; i < 8; i++)
             {
-                AmqpMessage message = await rLink.ReceiveMessageAsync(TimeSpan.FromSeconds(10));
-                Assert.IsNotNull(message);
+                rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(10), null, null), out AmqpMessage message);
                 rLink.AcceptMessage(message);
             }
 

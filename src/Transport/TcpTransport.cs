@@ -415,9 +415,8 @@ namespace Microsoft.Azure.Amqp.Transport
                 if (this.segments != null)
                 {
                     Array.Clear(this.segments, 0, this.segments.Length);
+                    this.count = 0;
                 }
-
-                this.count = 0;
             }
 
             public void CopyTo(ArraySegment<byte>[] array, int arrayIndex)

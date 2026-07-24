@@ -430,15 +430,49 @@ namespace Microsoft.Azure.Amqp.Transport
 
             public IEnumerator<ArraySegment<byte>> GetEnumerator()
             {
-                for (int i = 0; i < this.count; ++i)
-                {
-                    yield return this.segments[i];
-                }
+                return new Enumerator(this);
             }
 
             IEnumerator IEnumerable.GetEnumerator()
             {
-                return this.GetEnumerator();
+                return new Enumerator(this);
+            }
+
+            struct Enumerator : IEnumerator<ArraySegment<byte>>
+            {
+                readonly WriteBufferListAdapter adapter;
+                int index;
+
+                public Enumerator(WriteBufferListAdapter adapter)
+                {
+                    this.adapter = adapter;
+                    this.index = -1;
+                }
+
+                public ArraySegment<byte> Current
+                {
+                    get { return this.adapter.segments[this.index]; }
+                }
+
+                object IEnumerator.Current
+                {
+                    get { return this.Current; }
+                }
+
+                public bool MoveNext()
+                {
+                    ++this.index;
+                    return this.index < this.adapter.count;
+                }
+
+                public void Reset()
+                {
+                    this.index = -1;
+                }
+
+                public void Dispose()
+                {
+                }
             }
 
             public int IndexOf(ArraySegment<byte> item) { throw new NotSupportedException(); }

@@ -31,10 +31,10 @@ namespace Test.Microsoft.Azure.Amqp
                 TestAmqpBrokerFixture.WsAddress.OriginalString);
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
-            session.Open();
+            await session.OpenAsync();
 
             SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnSend));
-            sLink.Open();
+            await sLink.OpenAsync();
 
             int messageCount = 1800;
             for (int i = 0; i < messageCount; i++)
@@ -43,10 +43,10 @@ namespace Test.Microsoft.Azure.Amqp
                 await sLink.SendMessageAsync(message);
             }
 
-            sLink.Close();
+            await sLink.CloseAsync();
 
             ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnReceive, 100));
-            rLink.Open();
+            await rLink.OpenAsync();
 
             for (int i = 0; i < messageCount; i++)
             {
@@ -57,9 +57,9 @@ namespace Test.Microsoft.Azure.Amqp
                 message2.Dispose();
             }
 
-            rLink.Close();
+            await rLink.CloseAsync();
 
-            connection.Close();
+            await connection.CloseAsync();
         }
     }
 }

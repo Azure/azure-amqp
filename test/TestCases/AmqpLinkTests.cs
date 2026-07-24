@@ -682,25 +682,26 @@ namespace Test.Microsoft.Azure.Amqp
             broker.AddQueue(entity);
 
             AmqpConnection connection = AmqpUtils.CreateConnection(addressUri, null, false, null, 65536);
-            connection.Open();
+            await connection.OpenAsync();
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
-            session.Open();
+            await session.OpenAsync();
 
             SendingAmqpLink sender = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, entity, SettleMode.SettleOnSend));
-            sender.Open();
+            await sender.OpenAsync();
             for (int i = 0; i < 8; i++)
             {
-                sender.SendMessageNoWait(AmqpMessage.Create(new AmqpValue() { Value = "hello" }), EmptyBinary, NullBinary);
+                await sender.SendMessageAsync(AmqpMessage.Create(new AmqpValue() { Value = "hello" }));
             }
 
             ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, entity, SettleMode.SettleOnSend, 0));
             rLink.Settings.AutoSendFlow = false;
-            rLink.Open();
+            await rLink.OpenAsync();
 
             for (int i = 0; i < 8; i++)
             {
-                rLink.EndReceiveMessage(rLink.BeginReceiveMessage(TimeSpan.FromSeconds(10), null, null), out AmqpMessage message);
+                AmqpMessage message = await rLink.ReceiveMessageAsync(TimeSpan.FromSeconds(10));
+                Assert.IsNotNull(message);
                 rLink.AcceptMessage(message);
             }
 
@@ -708,7 +709,7 @@ namespace Test.Microsoft.Azure.Amqp
             Assert.AreEqual(0u, rLink.LinkCredit);
             Assert.IsFalse(rLink.Drain);
 
-            connection.Close();
+            await connection.CloseAsync();
         }
 
         [TestMethod]

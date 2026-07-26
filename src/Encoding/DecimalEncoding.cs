@@ -16,6 +16,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         const int Decimal32Bias = 101;
         const int Decimal64Bias = 398;
         const int Decimal128Bias = 6176;
+        static readonly bool decimalDataLayoutCompatible = IsDecimalDataLayoutCompatible();
 
         public DecimalEncoding()
             : base(FormatCode.Decimal128)
@@ -102,6 +103,24 @@ namespace Microsoft.Azure.Amqp.Encoding
             public uint Mid;
         }
 
+        static bool IsDecimalDataLayoutCompatible()
+        {
+            decimal value = new decimal(
+                unchecked((int)0x89ABCDEF),
+                0x01234567,
+                0x76543210,
+                true,
+                28);
+
+            int[] bits = decimal.GetBits(value);
+            var data = new DecimalData { Value = value };
+
+            return data.Low == unchecked((uint)bits[0])
+                && data.Mid == unchecked((uint)bits[1])
+                && data.High == unchecked((uint)bits[2])
+                && data.Flags == unchecked((uint)bits[3]);
+        }
+
         static void GetDecimalBits(decimal value, Span<uint> destination)
         {
             if (destination.Length < 4)
@@ -109,7 +128,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 throw new ArgumentException("Destination is too short.", nameof(destination));
             }
 
-            if (BitConverter.IsLittleEndian)
+            if (decimalDataLayoutCompatible)
             {
                 var data = new DecimalData { Value = value };
                 destination[0] = data.Low;

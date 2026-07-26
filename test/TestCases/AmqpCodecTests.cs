@@ -1462,6 +1462,184 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [TestMethod]
+        public void AmqpCodecDecimal128CanonicalWireBytesTest()
+        {
+            // Canonical decimal128 wire bytes.
+            // Each test encodes a C# decimal and compares all 17 bytes
+            // (format code 0x94 + 16 payload bytes) against hard-coded expected values.
+
+            void AssertEncoded(decimal value, byte[] expectedPayload)
+            {
+                byte[] expected = new byte[1 + expectedPayload.Length];
+                expected[0] = 0x94;
+                Array.Copy(expectedPayload, 0, expected, 1, expectedPayload.Length);
+
+                var buffer = new ByteBuffer(new byte[FixedWidth.Decimal128Encoded]);
+                AmqpCodec.EncodeDecimal(value, buffer);
+
+                EnsureEqual(expected, 0, expected.Length, buffer.Buffer, buffer.Offset, buffer.Length);
+            }
+
+            // 0m
+            AssertEncoded(0m, new byte[]
+                { 0x30, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+
+            // 1m
+            AssertEncoded(1m, new byte[]
+                { 0x30, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 });
+
+            // -1m
+            AssertEncoded(-1m, new byte[]
+                { 0xB0, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 });
+
+            // 1.00m
+            AssertEncoded(1.00m, new byte[]
+                { 0x30, 0x3C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64 });
+
+            // decimal.MaxValue
+            AssertEncoded(decimal.MaxValue, new byte[]
+                { 0x30, 0x40, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF });
+
+            // decimal.MinValue
+            AssertEncoded(decimal.MinValue, new byte[]
+                { 0xB0, 0x40, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF });
+
+            // 0.0000000000000000000000000001m (smallest positive with scale 28)
+            AssertEncoded(0.0000000000000000000000000001m, new byte[]
+                { 0x30, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 });
+
+            // Negative zero
+            decimal negativeZero = new decimal(0, 0, 0, true, 0);
+            AssertEncoded(negativeZero, new byte[]
+                { 0xB0, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+        }
+
+        [TestMethod]
+        public void AmqpCodecDecimal128PreservesScaleAndSignTest()
+        {
+            // Values that are numerically equal but have different representations
+            // must produce different wire bytes.
+
+            byte[] EncodeToBytes(decimal value)
+            {
+                var buffer = new ByteBuffer(new byte[FixedWidth.Decimal128Encoded]);
+                AmqpCodec.EncodeDecimal(value, buffer);
+                byte[] result = new byte[buffer.Length];
+                Array.Copy(buffer.Buffer, buffer.Offset, result, 0, buffer.Length);
+                return result;
+            }
+
+            byte[] one = EncodeToBytes(1m);
+            byte[] onePointZero = EncodeToBytes(1.0m);
+            byte[] onePointZeroZero = EncodeToBytes(1.00m);
+
+            // All three must produce different wire representations
+            Assert.AreNotEqual(one.Length, 0);
+            bool oneEqOneZero = true;
+            bool oneEqOneZeroZero = true;
+            bool oneZeroEqOneZeroZero = true;
+            for (int i = 0; i < one.Length; i++)
+            {
+                if (one[i] != onePointZero[i]) oneEqOneZero = false;
+                if (one[i] != onePointZeroZero[i]) oneEqOneZeroZero = false;
+                if (onePointZero[i] != onePointZeroZero[i]) oneZeroEqOneZeroZero = false;
+            }
+            Assert.IsFalse(oneEqOneZero, "1m and 1.0m must differ");
+            Assert.IsFalse(oneEqOneZeroZero, "1m and 1.00m must differ");
+            Assert.IsFalse(oneZeroEqOneZeroZero, "1.0m and 1.00m must differ");
+
+            // Verify sign and scale using decimal.GetBits as reference
+            int[] bits1 = decimal.GetBits(1m);
+            int[] bits10 = decimal.GetBits(1.0m);
+            int[] bits100 = decimal.GetBits(1.00m);
+
+            // All positive (sign bit in bits[3] bit 31)
+            Assert.IsTrue((bits1[3] & unchecked((int)0x80000000)) == 0);
+            Assert.IsTrue((bits10[3] & unchecked((int)0x80000000)) == 0);
+            Assert.IsTrue((bits100[3] & unchecked((int)0x80000000)) == 0);
+
+            // Scales differ: 0, 1, 2
+            Assert.AreEqual(0, (bits1[3] >> 16) & 0xFF);
+            Assert.AreEqual(1, (bits10[3] >> 16) & 0xFF);
+            Assert.AreEqual(2, (bits100[3] >> 16) & 0xFF);
+        }
+
+        [TestMethod]
+        public void AmqpCodecDecimal128RoundTripTest()
+        {
+            void AssertRoundTrip(decimal value)
+            {
+                var buffer = new ByteBuffer(new byte[FixedWidth.Decimal128Encoded]);
+                AmqpCodec.EncodeDecimal(value, buffer);
+                decimal decoded = AmqpCodec.DecodeDecimal(buffer).Value;
+                Assert.AreEqual(value, decoded);
+            }
+
+            // Zero and negative zero
+            AssertRoundTrip(0m);
+            AssertRoundTrip(new decimal(0, 0, 0, true, 0));
+
+            // Positive and negative values
+            AssertRoundTrip(1m);
+            AssertRoundTrip(-1m);
+            AssertRoundTrip(42m);
+            AssertRoundTrip(-42m);
+
+            // Various scales
+            AssertRoundTrip(1.0m);
+            AssertRoundTrip(1.00m);
+            AssertRoundTrip(3.14159m);
+            AssertRoundTrip(0.0000000000000000000000000001m);
+
+            // Min/Max
+            AssertRoundTrip(decimal.MinValue);
+            AssertRoundTrip(decimal.MaxValue);
+
+            // Values with all three coefficient words non-zero
+            AssertRoundTrip(1234567890123456789012345678m);
+            AssertRoundTrip(-1234567890123456789012345678m);
+        }
+
+        [TestMethod]
+        public void AmqpCodecDecimal128ArrayRoundTripTest()
+        {
+            decimal[] values = new decimal[]
+            {
+                decimal.MinValue,
+                -234934.092348m,
+                0m,
+                new decimal(0, 0, 0, true, 0), // negative zero
+                38743947394.2349324m,
+                decimal.MaxValue
+            };
+
+            int size = AmqpCodec.GetArrayEncodeSize(values);
+            ByteBuffer buffer = new ByteBuffer(size, true);
+            AmqpCodec.EncodeArray(values, buffer);
+
+            decimal[] decoded = AmqpCodec.DecodeArray<decimal>(buffer);
+            Assert.AreEqual(values.Length, decoded.Length);
+            for (int i = 0; i < values.Length; i++)
+            {
+                Assert.AreEqual(values[i], decoded[i]);
+            }
+        }
+
+        [TestMethod]
+        public void AmqpCodecDecimal128ExistingFixturesTest()
+        {
+            // Existing decode fixtures must continue to work.
+            decimal? dec32 = AmqpCodec.DecodeDecimal(new ByteBuffer(new ArraySegment<byte>(decimal32ValueBin)));
+            Assert.IsTrue(dec32.Value == decimal32Value, "Decimal32 value is not equal");
+
+            decimal? dec64 = AmqpCodec.DecodeDecimal(new ByteBuffer(new ArraySegment<byte>(decimal64ValueBin)));
+            Assert.IsTrue(dec64.Value == decimal64Value, "Decimal64 value is not equal");
+
+            decimal? dec128 = AmqpCodec.DecodeDecimal(new ByteBuffer(new ArraySegment<byte>(decimal128ValueBin)));
+            Assert.IsTrue(dec128.Value == decimal128Value, "Decimal128 value is not equal");
+        }
+
+        [TestMethod]
         public void AmqpCodecNestedDescribedMapDepthTest()
         {
             int depth = 100;

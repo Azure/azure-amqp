@@ -3,6 +3,8 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
+    using System;
+
     sealed class ByteEncoding : EncodingBase<sbyte>
     {
         public ByteEncoding()
@@ -34,22 +36,14 @@ namespace Microsoft.Azure.Amqp.Encoding
         public override void WriteArrayValue(sbyte[] array, ByteBuffer buffer)
         {
             buffer.ValidateWrite(array.Length);
-            for (int i = 0, pos = buffer.WritePos; i < array.Length; i++, pos++)
-            {
-                buffer.Buffer[pos] = (byte)array[i];
-            }
-
+            Buffer.BlockCopy(array, 0, buffer.Buffer, buffer.WritePos, array.Length);
             buffer.Append(array.Length);
         }
 
         public override sbyte[] ReadArrayValue(ByteBuffer buffer, FormatCode formatCode, sbyte[] array)
         {
             buffer.ValidateRead(array.Length);
-            for (int i = 0, pos = buffer.Offset; i < array.Length; i++, pos++)
-            {
-                array[i] = (sbyte)buffer.Buffer[pos];
-            }
-
+            Buffer.BlockCopy(buffer.Buffer, buffer.Offset, array, 0, array.Length);
             buffer.Complete(array.Length);
             return array;
         }

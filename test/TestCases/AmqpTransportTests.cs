@@ -292,25 +292,17 @@ namespace Test.Microsoft.Azure.Amqp
                     args.Reset();
                 }
 
-                // The adapter is cleared inside HandleWriteComplete, so after the last
-                // write it must hold no active segments and no stale references in the
-                // grown tail (the slots Prepare never overwrites on a shrinking batch).
+                // The adapter is detached inside HandleWriteComplete, so after the last
+                // write it must not retain the source list.
                 BindingFlags nonPublic = BindingFlags.Instance | BindingFlags.NonPublic;
                 object sendArgs = typeof(TcpTransport).GetField("sendEventArgs", nonPublic).GetValue(transport);
                 Assert.IsNotNull(sendArgs, "sendEventArgs field not found");
                 object adapter = sendArgs.GetType().GetField("bufferListAdapter", nonPublic).GetValue(sendArgs);
                 Assert.IsNotNull(adapter, "bufferListAdapter field not found");
-                Array segments = (Array)adapter.GetType().GetField("segments", nonPublic).GetValue(adapter);
-                int adapterCount = (int)adapter.GetType().GetField("count", nonPublic).GetValue(adapter);
+                int adapterCount = (int)adapter.GetType().GetProperty("Count").GetValue(adapter);
                 Assert.AreEqual(0, adapterCount, "adapter active count should be 0 after reset");
-                if (segments != null)
-                {
-                    for (int i = 0; i < segments.Length; i++)
-                    {
-                        Assert.AreEqual(default(ArraySegment<byte>), (ArraySegment<byte>)segments.GetValue(i),
-                            "adapter retained a stale segment after reset at index " + i);
-                    }
-                }
+                Assert.IsNull(adapter.GetType().GetField("source", nonPublic).GetValue(adapter),
+                    "adapter retained the source list after reset");
 
                 transport.Close();
                 Assert.IsTrue(readerDone.Wait(TimeSpan.FromSeconds(5)), "server did not reach EOF");

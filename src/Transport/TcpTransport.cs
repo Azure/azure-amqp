@@ -315,7 +315,9 @@ namespace Microsoft.Azure.Amqp.Transport
         sealed class WriteAsyncEventArgs : SocketAsyncEventArgs
         {
             readonly BufferSizeTracker writeTracker;
-            readonly WriteBufferListAdapter bufferListAdapter = new WriteBufferListAdapter();
+            static readonly Func<ByteBuffer, ArraySegment<byte>> toArraySegment = ToArraySegment;
+            readonly ListAdapter<ByteBuffer, ArraySegment<byte>> bufferListAdapter =
+                new ListAdapter<ByteBuffer, ArraySegment<byte>>(toArraySegment);
             Timestamp startTime;
             int bufferSize;
 
@@ -339,7 +341,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
             public void PrepareBufferList(IList<ByteBuffer> buffers)
             {
-                this.bufferListAdapter.Prepare(buffers);
+                this.bufferListAdapter.Attach(buffers);
                 this.BufferList = this.bufferListAdapter;
             }
 
@@ -368,124 +370,13 @@ namespace Microsoft.Azure.Amqp.Transport
                 this.Args = null;
                 this.SetBuffer(null, 0, 0);
                 this.BufferList = null;
-                this.bufferListAdapter.Reset();
+                this.bufferListAdapter.Detach();
             }
-        }
 
-        sealed class WriteBufferListAdapter : IList<ArraySegment<byte>>
-        {
-            ArraySegment<byte>[] segments;
-            int count;
-
-            public int Count
+            static ArraySegment<byte> ToArraySegment(ByteBuffer buffer)
             {
-                get { return this.count; }
+                return new ArraySegment<byte>(buffer.Buffer, buffer.Offset, buffer.Length);
             }
-
-            public bool IsReadOnly
-            {
-                get { return true; }
-            }
-
-            public ArraySegment<byte> this[int index]
-            {
-                get { return this.segments[index]; }
-                set { throw new NotSupportedException(); }
-            }
-
-            public void Prepare(IList<ByteBuffer> buffers)
-            {
-                int size = buffers.Count;
-                if (this.segments == null || this.segments.Length < size)
-                {
-                    this.segments = new ArraySegment<byte>[size];
-                }
-
-                for (int i = 0; i < size; ++i)
-                {
-                    ByteBuffer buffer = buffers[i];
-                    this.segments[i] = new ArraySegment<byte>(buffer.Buffer, buffer.Offset, buffer.Length);
-                }
-
-                this.count = size;
-            }
-
-            public void Reset()
-            {
-                if (this.segments != null)
-                {
-                    Array.Clear(this.segments, 0, this.segments.Length);
-                    this.count = 0;
-                }
-            }
-
-            public void CopyTo(ArraySegment<byte>[] array, int arrayIndex)
-            {
-                if (array == null)
-                {
-                    throw new ArgumentNullException("array");
-                }
-
-                if (this.segments != null)
-                {
-                    Array.Copy(this.segments, 0, array, arrayIndex, this.count);
-                }
-            }
-
-            public IEnumerator<ArraySegment<byte>> GetEnumerator()
-            {
-                return new Enumerator(this);
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return new Enumerator(this);
-            }
-
-            struct Enumerator : IEnumerator<ArraySegment<byte>>
-            {
-                readonly WriteBufferListAdapter adapter;
-                int index;
-
-                public Enumerator(WriteBufferListAdapter adapter)
-                {
-                    this.adapter = adapter;
-                    this.index = -1;
-                }
-
-                public ArraySegment<byte> Current
-                {
-                    get { return this.adapter.segments[this.index]; }
-                }
-
-                object IEnumerator.Current
-                {
-                    get { return this.Current; }
-                }
-
-                public bool MoveNext()
-                {
-                    ++this.index;
-                    return this.index < this.adapter.count;
-                }
-
-                public void Reset()
-                {
-                    this.index = -1;
-                }
-
-                public void Dispose()
-                {
-                }
-            }
-
-            public int IndexOf(ArraySegment<byte> item) { throw new NotSupportedException(); }
-            public void Insert(int index, ArraySegment<byte> item) { throw new NotSupportedException(); }
-            public void RemoveAt(int index) { throw new NotSupportedException(); }
-            public void Add(ArraySegment<byte> item) { throw new NotSupportedException(); }
-            public void Clear() { throw new NotSupportedException(); }
-            public bool Contains(ArraySegment<byte> item) { throw new NotSupportedException(); }
-            public bool Remove(ArraySegment<byte> item) { throw new NotSupportedException(); }
         }
 
         sealed class ReadAsyncEventArgs : SocketAsyncEventArgs

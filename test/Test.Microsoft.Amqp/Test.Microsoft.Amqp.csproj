@@ -32,6 +32,7 @@
     <Compile Include="..\TestCases\AmqpMessageTests.cs" Link="TestCases\AmqpMessageTests.cs" />
     <Compile Include="..\TestCases\AmqpSamples.cs" Link="TestCases\AmqpSamples.cs" />
     <Compile Include="..\TestCases\AmqpTransportTests.cs" Link="TestCases\AmqpTransportTests.cs" />
+    <Compile Include="..\TestCases\ListAdapterTests.cs" Link="TestCases\ListAdapterTests.cs" />
     <Compile Include="..\TestCases\AmqpWebSocketTests.cs" Link="TestCases\AmqpWebSocketTests.cs" />
     <Compile Include="..\TestCases\CancellationTokenTests.cs" Link="TestCases\CancellationTokenTests.cs" />
     <Compile Include="..\TestCases\ResourcesTests.cs" Link="TestCases\ResourcesTests.cs" />

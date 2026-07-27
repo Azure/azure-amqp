@@ -142,7 +142,6 @@ namespace Microsoft.Azure.Amqp.Encoding
         /// <returns>A 64-bit unsigned number.</returns>
         public static ulong ReadULong(ByteBuffer buffer)
         {
-            buffer.ValidateRead(FixedWidth.ULong);
             ulong data = BinaryPrimitives.ReadUInt64BigEndian(buffer.GetReadSpan(FixedWidth.ULong));
             buffer.Complete(FixedWidth.ULong);
             return data;

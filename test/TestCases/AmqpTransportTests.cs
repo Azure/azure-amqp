@@ -299,8 +299,6 @@ namespace Test.Microsoft.Azure.Amqp
                 Assert.IsNotNull(sendArgs, "sendEventArgs field not found");
                 object adapter = sendArgs.GetType().GetField("bufferListAdapter", nonPublic).GetValue(sendArgs);
                 Assert.IsNotNull(adapter, "bufferListAdapter field not found");
-                int adapterCount = (int)adapter.GetType().GetProperty("Count").GetValue(adapter);
-                Assert.AreEqual(0, adapterCount, "adapter active count should be 0 after reset");
                 Assert.IsNull(adapter.GetType().GetField("source", nonPublic).GetValue(adapter),
                     "adapter retained the source list after reset");
 

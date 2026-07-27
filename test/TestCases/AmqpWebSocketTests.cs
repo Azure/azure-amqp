@@ -4,6 +4,7 @@
 namespace Test.Microsoft.Azure.Amqp
 {
     using System;
+    using System.Threading.Tasks;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Framing;
     using global::Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -21,44 +22,44 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [TestMethod]
-        public void AmqpWebSocketTransportTest()
+        public async Task AmqpWebSocketTransportTest()
         {
             string queue = "AmqpWebSocketTransportTest";
             broker.AddQueue(queue);
 
-            AmqpConnection connection = AmqpConnection.Factory.OpenConnectionAsync(
-                TestAmqpBrokerFixture.WsAddress.OriginalString).GetAwaiter().GetResult();
+            AmqpConnection connection = await AmqpConnection.Factory.OpenConnectionAsync(
+                TestAmqpBrokerFixture.WsAddress.OriginalString);
 
             AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
-            session.Open();
+            await session.OpenAsync();
 
             SendingAmqpLink sLink = new SendingAmqpLink(session, AmqpUtils.GetLinkSettings(true, queue, SettleMode.SettleOnSend));
-            sLink.Open();
+            await sLink.OpenAsync();
 
             int messageCount = 1800;
             for (int i = 0; i < messageCount; i++)
             {
                 AmqpMessage message = AmqpMessage.Create(new AmqpValue() { Value = "message" + i });
-                sLink.SendMessageAsync(message).Wait();
+                await sLink.SendMessageAsync(message);
             }
 
-            sLink.Close();
+            await sLink.CloseAsync();
 
             ReceivingAmqpLink rLink = new ReceivingAmqpLink(session, AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnReceive, 100));
-            rLink.Open();
+            await rLink.OpenAsync();
 
             for (int i = 0; i < messageCount; i++)
             {
-                AmqpMessage message2 = rLink.ReceiveMessageAsync(TimeSpan.FromSeconds(60)).GetAwaiter().GetResult();
+                AmqpMessage message2 = await rLink.ReceiveMessageAsync(TimeSpan.FromSeconds(60));
                 Assert.IsNotNull(message2);
 
                 rLink.AcceptMessage(message2);
                 message2.Dispose();
             }
 
-            rLink.Close();
+            await rLink.CloseAsync();
 
-            connection.Close();
+            await connection.CloseAsync();
         }
     }
 }

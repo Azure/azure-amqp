@@ -382,13 +382,13 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [TestMethod]
-        public void FaultTolerantAmqpObjectShouldInvokeCloseMethodOnClose()
+        public async Task FaultTolerantAmqpObjectShouldInvokeCloseMethodOnClose()
         {
             bool isCloseHandlerInvoked = false;
             var faultTolerantObject = new FaultTolerantAmqpObject<TestAmqpObject>(
                 (CancellationToken ct) => Task.FromResult(new TestAmqpObject("string")),
                 amqpObject => { isCloseHandlerInvoked = true; });
-            var testAmqpObject = faultTolerantObject.GetOrCreateAsync(CancellationToken.None).Result;
+            var testAmqpObject = await faultTolerantObject.GetOrCreateAsync(CancellationToken.None);
             testAmqpObject.Close();
             Assert.IsTrue(isCloseHandlerInvoked);
         }

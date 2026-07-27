@@ -50,7 +50,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             int valueSize = 0;
             if (value.Length > 0)
             {
-                EncodingBase encoding = AmqpEncoding.GetEncoding(value.GetValue(0).GetType());
+                EncodingBase encoding = AmqpEncoding.GetEncoding(value.GetType().GetElementType());
                 valueSize = encoding.GetArrayEncodeSize(value);
             }
 
@@ -66,7 +66,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
             if (value.Length > 0)
             {
-                EncodingBase encoding = AmqpEncoding.GetEncoding(value.GetValue(0).GetType());
+                EncodingBase encoding = AmqpEncoding.GetEncoding(value.GetType().GetElementType());
                 AmqpBitConverter.WriteUByte(buffer, encoding.FormatCode);
                 encoding.EncodeArray(value, buffer);
             }

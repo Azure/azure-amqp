@@ -17,19 +17,32 @@ namespace Microsoft.Azure.Amqp
             this.converter = converter ?? throw new ArgumentNullException(nameof(converter));
         }
 
-        public int Count => this.source?.Count ?? 0;
+        IList<TFrom> Source =>
+            this.source ?? throw new InvalidOperationException("The adapter is not attached.");
+
+        public int Count => this.Source.Count;
 
         public bool IsReadOnly => true;
 
         public TTo this[int index]
         {
-            get => this.converter(this.source[index]);
+            get => this.converter(this.Source[index]);
             set => throw new NotSupportedException();
         }
 
         public void Attach(IList<TFrom> source)
         {
-            this.source = source ?? throw new ArgumentNullException(nameof(source));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (this.source != null)
+            {
+                throw new InvalidOperationException("The adapter is already attached.");
+            }
+
+            this.source = source;
         }
 
         public void Detach()
@@ -41,9 +54,10 @@ namespace Microsoft.Azure.Amqp
 
         public int IndexOf(TTo item)
         {
-            for (int i = 0; i < this.source.Count; i++)
+            IList<TFrom> source = this.Source;
+            for (int i = 0; i < source.Count; i++)
             {
-                if (EqualityComparer<TTo>.Default.Equals(item, this.converter(this.source[i])))
+                if (EqualityComparer<TTo>.Default.Equals(item, this.converter(source[i])))
                 {
                     return i;
                 }
@@ -54,23 +68,25 @@ namespace Microsoft.Azure.Amqp
 
         public void CopyTo(TTo[] array, int arrayIndex)
         {
+            IList<TFrom> source = this.Source;
+            int count = source.Count;
             if (array == null)
             {
                 throw new ArgumentNullException(nameof(array));
             }
 
-            if (arrayIndex < 0 || arrayIndex > array.Length - this.Count)
+            if (arrayIndex < 0 || arrayIndex > array.Length - count)
             {
                 throw new ArgumentOutOfRangeException(nameof(arrayIndex));
             }
 
-            for (int i = 0; i < this.source.Count; i++)
+            for (int i = 0; i < count; i++)
             {
-                array[arrayIndex + i] = this.converter(this.source[i]);
+                array[arrayIndex + i] = this.converter(source[i]);
             }
         }
 
-        public IEnumerator<TTo> GetEnumerator() => new Enumerator(this.source, this.converter);
+        public IEnumerator<TTo> GetEnumerator() => new Enumerator(this.Source, this.converter);
 
         public void Add(TTo item) => throw new NotSupportedException();
         public void Clear() => throw new NotSupportedException();

@@ -28,7 +28,8 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static void Encode(IList value, ByteBuffer buffer)
         {
-            if (value.Count == 0)
+            int count = value.Count;
+            if (count == 0)
             {
                 AmqpBitConverter.WriteUByte(buffer, FormatCode.List0);
                 return;
@@ -37,17 +38,17 @@ namespace Microsoft.Azure.Amqp.Encoding
             var tracker = SizeTracker.Track(buffer);
             AmqpBitConverter.WriteUByte(buffer, FormatCode.List32);
             AmqpBitConverter.WriteInt(buffer, FixedWidth.Int);
-            AmqpBitConverter.WriteInt(buffer, value.Count);
-            foreach (object item in value)
+            AmqpBitConverter.WriteInt(buffer, count);
+            for (int i = 0; i < count; i++)
             {
-                AmqpEncoding.EncodeObject(item, buffer);
+                AmqpEncoding.EncodeObject(value[i], buffer);
             }
 
             // compact if necessary
             int size = tracker.Length - 9;
-            if (size < byte.MaxValue && value.Count <= byte.MaxValue)
+            if (size < byte.MaxValue && count <= byte.MaxValue)
             {
-                tracker.Compact(FormatCode.List8, (byte)(size + 1), (byte)value.Count, 9);
+                tracker.Compact(FormatCode.List8, (byte)(size + 1), (byte)count, 9);
             }
             else
             {
@@ -108,11 +109,12 @@ namespace Microsoft.Azure.Amqp.Encoding
         static int GetListSize(IList value)
         {
             int size = 0;
-            if (value.Count > 0)
+            int count = value.Count;
+            if (count > 0)
             {
-                foreach (object item in value)
+                for (int i = 0; i < count; i++)
                 {
-                    size += AmqpEncoding.GetObjectEncodeSize(item);
+                    size += AmqpEncoding.GetObjectEncodeSize(value[i]);
                 }
             }
 
@@ -122,13 +124,14 @@ namespace Microsoft.Azure.Amqp.Encoding
         static void EncodeArrayItem(IList value, int index, ByteBuffer buffer)
         {
             var tracker = SizeTracker.Track(buffer);
+            int count = value.Count;
             AmqpBitConverter.WriteInt(buffer, FixedWidth.Int);
-            AmqpBitConverter.WriteInt(buffer, value.Count);
-            if (value.Count > 0)
+            AmqpBitConverter.WriteInt(buffer, count);
+            if (count > 0)
             {
-                foreach (object item in value)
+                for (int i = 0; i < count; i++)
                 {
-                    AmqpEncoding.EncodeObject(item, buffer);
+                    AmqpEncoding.EncodeObject(value[i], buffer);
                 }
 
                 tracker.CommitExclusive(0);

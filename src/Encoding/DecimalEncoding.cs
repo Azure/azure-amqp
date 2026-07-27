@@ -4,6 +4,8 @@
 namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
+    using System.Buffers.Binary;
+    using System.Runtime.InteropServices;
 
     /// <summary>
     /// Decoding from AMQP decimal to C# decimal can lose precision and
@@ -14,6 +16,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         const int Decimal32Bias = 101;
         const int Decimal64Bias = 398;
         const int Decimal128Bias = 6176;
+        static readonly bool decimalDataLayoutCompatible = IsDecimalDataLayoutCompatible();
 
         public DecimalEncoding()
             : base(FormatCode.Decimal128)
@@ -81,40 +84,94 @@ namespace Microsoft.Azure.Amqp.Encoding
             return DecodeValue(buffer, formatCode);
         }
 
-        static unsafe void EncodeValue(decimal value, ByteBuffer buffer)
+        [StructLayout(LayoutKind.Explicit)]
+        struct DecimalData
         {
-            int[] bits = Decimal.GetBits(value);
-            int lowSignificant = bits[0];
-            int middleSignificant = bits[1];
-            int highSignificant = bits[2];
-            int signAndExponent = bits[3];
+            [FieldOffset(0)]
+            public decimal Value;
+
+            [FieldOffset(0)]
+            public uint Flags;
+
+            [FieldOffset(4)]
+            public uint High;
+
+            [FieldOffset(8)]
+            public uint Low;
+
+            [FieldOffset(12)]
+            public uint Mid;
+        }
+
+        static bool IsDecimalDataLayoutCompatible()
+        {
+            decimal value = new decimal(
+                unchecked((int)0x89ABCDEF),
+                0x01234567,
+                0x76543210,
+                true,
+                28);
+
+            int[] bits = decimal.GetBits(value);
+            var data = new DecimalData { Value = value };
+
+            return data.Low == unchecked((uint)bits[0])
+                && data.Mid == unchecked((uint)bits[1])
+                && data.High == unchecked((uint)bits[2])
+                && data.Flags == unchecked((uint)bits[3]);
+        }
+
+        static void GetDecimalBits(decimal value, Span<uint> destination)
+        {
+            if (destination.Length < 4)
+            {
+                throw new ArgumentException("Destination is too short.", nameof(destination));
+            }
+
+            if (decimalDataLayoutCompatible)
+            {
+                var data = new DecimalData { Value = value };
+                destination[0] = data.Low;
+                destination[1] = data.Mid;
+                destination[2] = data.High;
+                destination[3] = data.Flags;
+                return;
+            }
+
+            // Portable fallback for big-endian or otherwise unusual runtimes.
+            // It allocates, but correctness takes priority on this uncommon path.
+            int[] bits = decimal.GetBits(value);
+            destination[0] = (uint)bits[0];
+            destination[1] = (uint)bits[1];
+            destination[2] = (uint)bits[2];
+            destination[3] = (uint)bits[3];
+        }
+
+        static void EncodeValue(decimal value, ByteBuffer buffer)
+        {
+            Span<uint> bits = stackalloc uint[4];
+            GetDecimalBits(value, bits);
+
+            uint low = bits[0];
+            uint middle = bits[1];
+            uint high = bits[2];
+            uint flags = bits[3];
+
+            int scale = (byte)(flags >> 16);
+            int exponent = Decimal128Bias - scale;
 
             Span<byte> bytes = stackalloc byte[FixedWidth.Decimal128];
-            byte* p = (byte*)&signAndExponent;
-            int exponent = Decimal128Bias - p[2];
-            bytes[0] = p[3];    // sign
-            bytes[0] |= (byte)(exponent >> 9);  // 7 bits in msb
-            bytes[1] = (byte)((exponent & 0x7F) << 1);  // 7 bits in 2nd msb
+
+            // decimal128 finite-value layout:
+            // sign + upper 7 exponent bits, lower 7 exponent bits, coefficient.
+            bytes[0] = (byte)((flags >> 24) | (uint)(exponent >> 7));
+            bytes[1] = (byte)((exponent & 0x7F) << 1);
             bytes[2] = 0;
             bytes[3] = 0;
 
-            p = (byte*)&highSignificant;
-            bytes[4] = p[3];
-            bytes[5] = p[2];
-            bytes[6] = p[1];
-            bytes[7] = p[0];
-
-            p = (byte*)&middleSignificant;
-            bytes[8] = p[3];
-            bytes[9] = p[2];
-            bytes[10] = p[1];
-            bytes[11] = p[0];
-
-            p = (byte*)&lowSignificant;
-            bytes[12] = p[3];
-            bytes[13] = p[2];
-            bytes[14] = p[1];
-            bytes[15] = p[0];
+            BinaryPrimitives.WriteUInt32BigEndian(bytes.Slice(4, 4), high);
+            BinaryPrimitives.WriteUInt32BigEndian(bytes.Slice(8, 4), middle);
+            BinaryPrimitives.WriteUInt32BigEndian(bytes.Slice(12, 4), low);
 
             AmqpBitConverter.WriteBytes(buffer, bytes, 0, bytes.Length);
         }

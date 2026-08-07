@@ -17,3 +17,18 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 ```
 dotnet build -p:Version=3.0.0 src\Microsoft.Azure.Amqp.csproj
 ```
+
+### CFSClean test broker build
+
+Azure SDK pipelines running on CFSClean agents must restore `TestAmqpBroker` with the checked-in `nuget.cfsclean.config`. The config clears inherited package sources and uses the public `azure-sdk-for-net` Azure Artifacts feed, which has a NuGet.org upstream.
+
+Azure DevOps pipelines must run `NuGetAuthenticate@1` before the restore. Authentication allows the feed to serve upstream cache misses while the agent remains isolated from NuGet.org.
+
+Run these commands from the root of a pinned `azure-amqp` clone:
+
+```powershell
+dotnet restore .\test\TestAmqpBroker\TestAmqpBroker.csproj --configfile .\nuget.cfsclean.config
+dotnet build .\test\TestAmqpBroker\TestAmqpBroker.csproj --configuration Debug --framework net10.0 --no-restore
+```
+
+SDK pipeline setup should use the same two commands after `NuGetAuthenticate@1`. Keep the clone unchanged and pass `--configfile` on the restore. Normal developer builds continue to use the root `nuget.config` and its NuGet.org source.

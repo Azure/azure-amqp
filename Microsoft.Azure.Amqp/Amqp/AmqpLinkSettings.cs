@@ -29,6 +29,17 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Gets or sets the target size, in bytes, of the local receive cache.
+        /// </summary>
+        /// <remarks>
+        /// This value is a soft prefetch hint, not a strict memory limit. AMQP
+        /// link credit authorizes messages by count rather than by byte size, so
+        /// messages already authorized by an active credit window are accepted
+        /// even when they cause the cache to exceed this target. New credit is
+        /// withheld while the cache is at or above the target. A value of
+        /// <see langword="null"/> disables size-based prefetch.
+        /// </remarks>
         public long? TotalCacheSizeInBytes
         {
             get;

@@ -41,6 +41,14 @@ namespace Microsoft.Azure.Amqp
         {
         }
 
+        /// <summary>
+        /// Gets the target size, in bytes, of the local receive cache.
+        /// </summary>
+        /// <remarks>
+        /// The target is a soft prefetch hint. The cache can temporarily exceed
+        /// it while accepting messages authorized by the current AMQP credit
+        /// window.
+        /// </remarks>
         public long? TotalCacheSizeInBytes
         {
             get
@@ -81,6 +89,23 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        /// <summary>
+        /// Sets the target size, in bytes, of the local receive cache.
+        /// </summary>
+        /// <param name="cacheSizeInBytes">
+        /// The soft cache-size target, or <see langword="null"/> to disable
+        /// size-based prefetch.
+        /// </param>
+        /// <remarks>
+        /// Changing the target does not revoke credit already advertised to the
+        /// remote peer. For a finite active credit window, the new target is
+        /// applied when that window completes. An open link with unlimited
+        /// credit remains unchanged until it is recreated because it has no safe
+        /// window boundary. Authorized messages can therefore temporarily cause
+        /// the cache to exceed the target. Size-based prefetch does not apply
+        /// when a message listener is registered because listener delivery does
+        /// not use the local receive cache.
+        /// </remarks>
         public void SetCacheSizeInBytes(long? cacheSizeInBytes)
         {
             lock (this.SyncRoot)
@@ -1095,9 +1120,42 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// Tracks queued message bytes and issues discrete size-based credit windows.
-        /// Queue occupancy controls only future credit and never shrinks active credit.
+        /// Tracks queued message bytes and issues discrete size-based credit
+        /// windows without revoking credit already advertised to the peer.
         /// </summary>
+        /// <remarks>
+        /// Credit is estimated by dividing currently available cache bytes by
+        /// the average serialized size observed in the previous completed
+        /// window. The first window uses a 256-KB estimate, every window is
+        /// limited to 500 messages, and a non-positive target uses one-message
+        /// windows.
+        ///
+        /// An active window is never topped up or reduced. All messages
+        /// authorized by that window are accepted, so the byte target is a soft
+        /// hint and the queue can temporarily overshoot it. A new window is
+        /// issued only after the current window is exhausted, its final delivery
+        /// is complete, and the queue has capacity.
+        ///
+        /// State transitions:
+        ///
+        ///   No active window
+        ///          |
+        ///          v
+        ///   Calculate credit from free bytes / estimated message size
+        ///          |
+        ///          v
+        ///   Issue one bounded window
+        ///          |
+        ///          v
+        ///   Accept all authorized deliveries and collect size samples
+        ///          |
+        ///          v
+        ///   Window exhausted and final fragmented delivery complete
+        ///          |
+        ///          +-- queue at or above target --&gt; pause until dequeue
+        ///          |
+        ///          +-- queue below target --------&gt; issue next window
+        /// </remarks>
         sealed class SizeBasedFlowQueue : Queue<AmqpMessage>
         {
             const long DefaultMessageSizeForCacheSizeCalulation = 256 * 1024;
@@ -1333,6 +1391,9 @@ namespace Microsoft.Azure.Amqp
                     return 1;
                 }
 
+                // Use the previous completed window as the estimate for the next
+                // window. This is deliberately a hint: actual message sizes can
+                // vary, but already-issued credit must not be revoked.
                 long freeBytes = this.targetCacheSizeInBytes - this.queuedBytes;
                 long estimatedSize = this.AverageMessageSizeInBytes;
                 long calculatedCredit = freeBytes / estimatedSize;

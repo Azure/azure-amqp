@@ -786,6 +786,214 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [Fact]
+        public void AmqpSizePrefetchAcceptsIssuedWindowAndRejectsNextTransfer()
+        {
+            const int InitialWindow = 3;
+            const int DefaultEstimatedMessageSize = 256 * 1024;
+            AmqpConnection connection;
+            ReceivingAmqpLink link = this.OpenTestReceivingLink(
+                InitialWindow * DefaultEstimatedMessageSize,
+                10,
+                null,
+                out connection);
+
+            uint deliveryId = 0;
+            InjectMessages(link, ref deliveryId, InitialWindow, DefaultEstimatedMessageSize * InitialWindow);
+
+            Assert.Equal(InitialWindow, GetMessageQueueCount(link));
+            Assert.Equal(0u, link.LinkCredit);
+            Assert.Null(link.TerminalException);
+
+            InjectMessages(link, ref deliveryId, 1, 1);
+
+            AmqpException exception = Assert.IsType<AmqpException>(link.TerminalException);
+            Assert.Equal(AmqpErrorCode.TransferLimitExceeded, exception.Error.Condition);
+            connection.Close();
+        }
+
+        [Fact]
+        public void AmqpSizePrefetchDoesNotOverlapWindowsAndResumesAfterDrain()
+        {
+            const int InitialWindow = 3;
+            const int DefaultEstimatedMessageSize = 256 * 1024;
+            AmqpConnection connection;
+            ReceivingAmqpLink link = this.OpenTestReceivingLink(
+                InitialWindow * DefaultEstimatedMessageSize,
+                10,
+                null,
+                out connection);
+
+            uint deliveryId = 0;
+            InjectMessages(link, ref deliveryId, 1, 1);
+            Assert.Equal(2u, link.LinkCredit);
+
+            AmqpMessage message = ReceiveWithZeroTimeout(link);
+            Assert.NotNull(message);
+            message.Dispose();
+            Assert.Equal(2u, link.LinkCredit);
+
+            InjectMessages(link, ref deliveryId, 2, InitialWindow * DefaultEstimatedMessageSize);
+            Assert.Equal(0u, link.LinkCredit);
+            Assert.Equal(2, GetMessageQueueCount(link));
+
+            message = ReceiveWithZeroTimeout(link);
+            Assert.NotNull(message);
+            message.Dispose();
+            Assert.Equal(0u, link.LinkCredit);
+
+            message = ReceiveWithZeroTimeout(link);
+            Assert.NotNull(message);
+            message.Dispose();
+            Assert.Equal(1u, link.LinkCredit);
+            connection.Close();
+        }
+
+        [Fact]
+        public void AmqpSizePrefetchWaitsForFragmentedDeliveryBeforeNextWindow()
+        {
+            const int DefaultEstimatedMessageSize = 256 * 1024;
+            AmqpConnection connection;
+            ReceivingAmqpLink link = this.OpenTestReceivingLink(
+                2 * DefaultEstimatedMessageSize,
+                10,
+                null,
+                out connection);
+
+            uint deliveryId = 0;
+            InjectMessages(link, ref deliveryId, 1, 1024);
+            InjectFragment(link, deliveryId, 1024, true);
+            Assert.Equal(0u, link.LinkCredit);
+
+            AmqpMessage message = ReceiveWithZeroTimeout(link);
+            Assert.NotNull(message);
+            message.Dispose();
+            Assert.Equal(0u, link.LinkCredit);
+
+            InjectFragment(link, deliveryId++, 1024, false);
+            Assert.True(link.LinkCredit > 0);
+            Assert.Equal(1, GetMessageQueueCount(link));
+            connection.Close();
+        }
+
+        [Fact]
+        public void AmqpSizePrefetchAdaptsAtWindowBoundaries()
+        {
+            const int DefaultEstimatedMessageSize = 256 * 1024;
+            const int TargetSize = 4 * DefaultEstimatedMessageSize;
+            AmqpConnection connection;
+            ReceivingAmqpLink link = this.OpenTestReceivingLink(TargetSize, 10, null, out connection);
+
+            uint deliveryId = 0;
+            InjectMessages(link, ref deliveryId, 4, DefaultEstimatedMessageSize / 2);
+            Assert.Equal(4u, link.LinkCredit);
+
+            DrainQueue(link);
+            Assert.Equal(4u, link.LinkCredit);
+
+            InjectMessages(link, ref deliveryId, 4, DefaultEstimatedMessageSize * 2);
+            Assert.Equal(0u, link.LinkCredit);
+
+            DrainQueueConcurrently(link);
+            Assert.Equal(1u, link.LinkCredit);
+
+            InjectMessages(link, ref deliveryId, 1, DefaultEstimatedMessageSize / 2);
+            Assert.Equal(7u, link.LinkCredit);
+            connection.Close();
+        }
+
+        [Fact]
+        public void AmqpSizePrefetchRuntimeChangesWaitForWindowBoundary()
+        {
+            const int DefaultEstimatedMessageSize = 256 * 1024;
+            AmqpConnection connection;
+            ReceivingAmqpLink link = this.OpenTestReceivingLink(null, 3, null, out connection);
+
+            link.SetCacheSizeInBytes(3 * DefaultEstimatedMessageSize);
+            Assert.False(link.Settings.AutoSendFlow);
+            Assert.Equal(3u, link.LinkCredit);
+
+            uint deliveryId = 0;
+            InjectMessages(link, ref deliveryId, 1, 1);
+            link.SetCacheSizeInBytes(null);
+            Assert.False(link.Settings.AutoSendFlow);
+            Assert.Equal(2u, link.LinkCredit);
+
+            InjectMessages(link, ref deliveryId, 2, 1);
+            Assert.True(link.Settings.AutoSendFlow);
+            Assert.Equal(3u, link.LinkCredit);
+            connection.Close();
+
+            link = this.OpenTestReceivingLink(2 * DefaultEstimatedMessageSize, 10, null, out connection);
+            deliveryId = 0;
+            InjectMessages(link, ref deliveryId, 1, 1024);
+            link.SetCacheSizeInBytes(4 * DefaultEstimatedMessageSize);
+            Assert.Equal(1u, link.LinkCredit);
+
+            InjectMessages(link, ref deliveryId, 1, 1024);
+            Assert.Equal(500u, link.LinkCredit);
+            connection.Close();
+        }
+
+        [Fact]
+        public void AmqpSizePrefetchZeroTargetUsesSingleMessageWindows()
+        {
+            AmqpConnection connection;
+            ReceivingAmqpLink link = this.OpenTestReceivingLink(0, 10, null, out connection);
+
+            Assert.Equal(1u, link.LinkCredit);
+            for (int i = 0; i < 5; ++i)
+            {
+                Assert.Null(ReceiveWithZeroTimeout(link));
+                Assert.Equal(1u, link.LinkCredit);
+            }
+
+            uint deliveryId = 0;
+            InjectMessages(link, ref deliveryId, 1, 512 * 1024);
+            Assert.Equal(0u, link.LinkCredit);
+            Assert.Equal(1, GetMessageQueueCount(link));
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            AmqpMessage message = ReceiveWithZeroTimeout(link);
+            stopwatch.Stop();
+            Assert.NotNull(message);
+            Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(1));
+            message.Dispose();
+            Assert.Equal(1u, link.LinkCredit);
+            connection.Close();
+        }
+
+        [Fact]
+        public void AmqpSizePrefetchPreservesCountAndListenerModes()
+        {
+            const int DefaultEstimatedMessageSize = 256 * 1024;
+            AmqpConnection connection;
+            ReceivingAmqpLink link = this.OpenTestReceivingLink(null, 7, null, out connection);
+            Assert.True(link.Settings.AutoSendFlow);
+            Assert.Equal(7u, link.LinkCredit);
+            Assert.Null(ReceiveWithZeroTimeout(link));
+            Assert.Equal(7u, link.LinkCredit);
+            connection.Close();
+
+            int received = 0;
+            link = this.OpenTestReceivingLink(1024, 5, message => ++received, out connection);
+            Assert.True(link.Settings.AutoSendFlow);
+            Assert.Equal(5u, link.LinkCredit);
+
+            uint deliveryId = 0;
+            InjectMessages(link, ref deliveryId, 1, 2048);
+            Assert.Equal(1, received);
+            Assert.Equal(0, GetMessageQueueCount(link));
+            Assert.Equal(4u, link.LinkCredit);
+            connection.Close();
+
+            link = this.OpenTestReceivingLink(null, uint.MaxValue, null, out connection);
+            link.SetCacheSizeInBytes(DefaultEstimatedMessageSize);
+            Assert.True(link.Settings.AutoSendFlow);
+            Assert.Equal(uint.MaxValue, link.LinkCredit);
+            connection.Close();
+        }
+
+        [Fact]
         public void AmqpTransferWithFlowControlTest()
         {
             string entity = "AmqpTransferWithFlowControlTest";
@@ -1301,6 +1509,124 @@ namespace Test.Microsoft.Azure.Amqp
             ByteBuffer buffer = new ByteBuffer(1024, true);
             Frm(buffer, channel, command, payload);
             connection.SendBuffers(new ByteBuffer[] { buffer });
+        }
+
+        ReceivingAmqpLink OpenTestReceivingLink(
+            long? cacheSizeInBytes,
+            uint countCredit,
+            Action<AmqpMessage> listener,
+            out AmqpConnection connection)
+        {
+            string queue = "AmqpSizePrefetch-" + Guid.NewGuid().ToString("N");
+            this.broker.AddQueue(queue);
+            connection = AmqpUtils.CreateConnection(this.addressUri, null, false, null, (int)AmqpConstants.DefaultMaxFrameSize);
+            connection.Open();
+
+            AmqpSession session = connection.CreateSession(new AmqpSessionSettings());
+            session.Open();
+
+            AmqpLinkSettings settings = AmqpUtils.GetLinkSettings(false, queue, SettleMode.SettleOnSend);
+            settings.TotalLinkCredit = countCredit;
+            settings.AutoSendFlow = countCredit > 0;
+            settings.TotalCacheSizeInBytes = cacheSizeInBytes;
+            ReceivingAmqpLink link = new ReceivingAmqpLink(session, settings);
+            if (listener != null)
+            {
+                link.RegisterMessageListener(listener);
+            }
+
+            link.Open();
+            return link;
+        }
+
+        static void InjectMessages(ReceivingAmqpLink link, ref uint deliveryId, int count, int payloadSize)
+        {
+            byte[] payload = new byte[payloadSize];
+            for (int i = 0; i < count; ++i)
+            {
+                uint currentDeliveryId = deliveryId++;
+                ByteBuffer buffer = new ByteBuffer(payloadSize + 256, true);
+                Frm(
+                    buffer,
+                    0,
+                    Cmd(
+                        Transfer.Code,
+                        0u,
+                        currentDeliveryId,
+                        new ArraySegment<byte>(BitConverter.GetBytes(currentDeliveryId)),
+                        0u,
+                        true),
+                    new ArraySegment<byte>(payload));
+                link.ProcessFrame(Frm(buffer));
+            }
+        }
+
+        static void InjectFragment(ReceivingAmqpLink link, uint deliveryId, int payloadSize, bool more)
+        {
+            ByteBuffer buffer = new ByteBuffer(payloadSize + 256, true);
+            object[] transferFields = more ?
+                new object[]
+                {
+                    0u,
+                    deliveryId,
+                    new ArraySegment<byte>(BitConverter.GetBytes(deliveryId)),
+                    0u,
+                    true,
+                    true
+                } :
+                new object[]
+                {
+                    0u,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false
+                };
+            Frm(
+                buffer,
+                0,
+                Cmd(Transfer.Code, transferFields),
+                new ArraySegment<byte>(new byte[payloadSize]));
+            link.ProcessFrame(Frm(buffer));
+        }
+
+        static AmqpMessage ReceiveWithZeroTimeout(ReceivingAmqpLink link)
+        {
+            AmqpMessage message;
+            link.EndReceiveMessage(link.BeginReceiveMessage(TimeSpan.Zero, null, null), out message);
+            return message;
+        }
+
+        static int GetMessageQueueCount(ReceivingAmqpLink link)
+        {
+            FieldInfo messageQueue = typeof(ReceivingAmqpLink).GetField("messageQueue", BindingFlags.NonPublic | BindingFlags.Instance);
+            var queue = (Queue<AmqpMessage>)messageQueue.GetValue(link);
+            return queue.Count;
+        }
+
+        static void DrainQueue(ReceivingAmqpLink link)
+        {
+            while (GetMessageQueueCount(link) > 0)
+            {
+                AmqpMessage message = ReceiveWithZeroTimeout(link);
+                Assert.NotNull(message);
+                message.Dispose();
+            }
+        }
+
+        static void DrainQueueConcurrently(ReceivingAmqpLink link)
+        {
+            int messageCount = GetMessageQueueCount(link);
+            Task<AmqpMessage>[] receiveTasks = Enumerable.Range(0, messageCount)
+                .Select(_ => Task.Run(() => ReceiveWithZeroTimeout(link)))
+                .ToArray();
+            Task.WaitAll(receiveTasks);
+            foreach (Task<AmqpMessage> receiveTask in receiveTasks)
+            {
+                Assert.NotNull(receiveTask.Result);
+                receiveTask.Result.Dispose();
+            }
         }
 
         static void PipeLineSend(string host, int port, string queue, byte[] message)

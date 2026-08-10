@@ -24,6 +24,14 @@ Azure SDK pipelines that run on CFSClean agents must restore `TestAmqpBroker` wi
 
 Downstream repositories clone this repository at a pinned commit and follow this section. Keep the clone unchanged and pass `--configfile` on the restore. A consumer can override the pinned commit with the `TEST_BROKER_COMMIT` environment variable.
 
+#### Package source names
+
+The root `nuget.config` names the NuGet.org source `nuget.org`. Keep that name.
+
+A restricted agent turns off NuGet.org through a `disabledPackageSources` entry, and that entry matches a source by name and not by URL. A source that repeats the same URL under a different name is therefore a different source, and the agent policy does not turn it off. This file used the name `NuGet official package source` until [#318](https://github.com/Azure/azure-amqp/pull/318), so a restore on a restricted agent reached NuGet.org directly and the agent policy had no effect.
+
+Do not rename this source, and do not add a second source that repeats the NuGet.org URL.
+
 #### .NET SDK requirement
 
 `global.json` pins the SDK to version `10.0.100`, with `rollForward: latestFeature` and `allowPrerelease: false`. This policy accepts any released `10.0.x` SDK at version `10.0.100` or later. It does not roll forward to a different major or minor version. It does not accept a prerelease SDK. The agent must have a released 10.0 SDK.

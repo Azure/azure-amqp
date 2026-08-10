@@ -26,13 +26,9 @@ Downstream repositories clone this repository at a pinned commit and follow this
 
 #### Package source names
 
-The root `nuget.config` names the NuGet.org source `nuget.org`. Keep that name.
+The root `nuget.config` names the NuGet.org source `nuget.org`. Keep that name and its case, and do not add a second source that repeats the NuGet.org URL.
 
-A restricted agent turns off NuGet.org through a `disabledPackageSources` entry, and that entry matches a source by name and not by URL. The match needs the exact string, and it is case sensitive. A source that repeats the same URL under any other name is therefore a different source, and the agent policy does not turn it off. This file used the name `NuGet official package source` until [#318](https://github.com/Azure/azure-amqp/pull/318), so a restore on a restricted agent reached NuGet.org directly and the agent policy had no effect.
-
-Do not rename this source, do not change its case, and do not add a second source that repeats the NuGet.org URL.
-
-Two limits are worth knowing. A NuGet configuration cannot stop a build from reaching NuGet.org; only the network can. This name rule makes the repository cooperate with the agent policy, and it is not a boundary. The `dotnet-public` source also stays on, and the policy does not turn it off, so package traffic can still go to that feed.
+A machine policy can turn off NuGet.org with a `disabledPackageSources` entry, and that entry matches a source by exact name and not by URL. A source that repeats the same URL under another name is a different source, and the policy leaves it on. This file used the name `NuGet official package source` until [#318](https://github.com/Azure/azure-amqp/pull/318), so a restore on a machine with such a policy reached NuGet.org directly. A NuGet configuration cannot block NuGet.org on its own, so this rule lets the repository cooperate with a policy and is not a boundary.
 
 #### .NET SDK requirement
 

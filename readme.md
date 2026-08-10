@@ -20,15 +20,51 @@ dotnet build -p:Version=3.0.0 src\Microsoft.Azure.Amqp.csproj
 
 ### CFSClean test broker build
 
-Azure SDK pipelines running on CFSClean agents must restore `TestAmqpBroker` with the checked-in `nuget.cfsclean.config`. The config clears inherited package sources and uses the public `azure-sdk-for-net` Azure Artifacts feed, which has a NuGet.org upstream.
+Azure SDK pipelines that run on CFSClean agents must restore `TestAmqpBroker` with the checked-in `nuget.cfsclean.config`. The config clears inherited package sources. It uses the public `azure-sdk-for-net` Azure Artifacts feed, which has a NuGet.org upstream.
 
-Azure DevOps pipelines must run `NuGetAuthenticate@1` before the restore. Authentication allows the feed to serve upstream cache misses while the agent remains isolated from NuGet.org.
+Downstream repositories clone this repository at a pinned commit and follow this section. Keep the clone unchanged and pass `--configfile` on the restore. A consumer can override the pinned commit with the `TEST_BROKER_COMMIT` environment variable.
 
-Run these commands from the root of a pinned `azure-amqp` clone:
+#### .NET SDK requirement
 
-```powershell
-dotnet restore .\test\TestAmqpBroker\TestAmqpBroker.csproj --configfile .\nuget.cfsclean.config
-dotnet build .\test\TestAmqpBroker\TestAmqpBroker.csproj --configuration Debug --framework net10.0 --no-restore
+`global.json` pins the SDK to version `10.0.100`, with `rollForward: latestFeature` and `allowPrerelease: false`. This policy accepts any released `10.0.x` SDK at version `10.0.100` or later. It does not roll forward to a different major or minor version. It does not accept a prerelease SDK. The agent must have a released 10.0 SDK.
+
+Run both commands with the clone root as the working directory. The `dotnet` muxer searches for `global.json` from the current working directory upward, and not from the project directory. A command that starts in a different directory can select a different SDK, or find no SDK at all.
+
+#### Restore and build
+
+```
+dotnet restore ./test/TestAmqpBroker/TestAmqpBroker.csproj --configfile ./nuget.cfsclean.config
+dotnet build ./test/TestAmqpBroker/TestAmqpBroker.csproj --configuration Debug --framework net10.0 --no-restore
 ```
 
-SDK pipeline setup should use the same two commands after `NuGetAuthenticate@1`. Keep the clone unchanged and pass `--configfile` on the restore. Normal developer builds continue to use the root `nuget.config` and its NuGet.org source.
+The paths use forward slashes. The dotnet CLI accepts forward slashes on Windows, Linux, and macOS.
+
+#### Restore scope
+
+`TestAmqpBroker` targets `net48;net10.0`. The restore resolves both frameworks, but the build makes only `net10.0`. Keep this difference.
+
+Do not try to narrow the restore to one framework. `dotnet restore` has no option for a single target framework. A global property such as `-p:TargetFramework=net10.0` is not a substitute. The property flows into the `netstandard2.0` project reference `src/Microsoft.Azure.Amqp.csproj`. That project then writes an assets file with no `netstandard2.0` target, and the build fails with error `NETSDK1005`.
+
+The `net48` half of the restore adds only reference-assembly packages. Those packages are platform independent, so this restore also succeeds on a Linux agent.
+
+#### Build output
+
+The broker project sets `OutputPath` to `bin/$(Configuration)/$(MSBuildProjectName)/`, relative to the clone root. The project is multi-targeted, and this repository has no `Directory.Build.props` or `Directory.Build.targets`, so MSBuild appends the target framework to the output path. The commands above write the broker to this path, relative to the clone root:
+
+```
+bin/Debug/TestAmqpBroker/net10.0/TestAmqpBroker.dll
+```
+
+A consumer that starts the broker must use that path. The same directory also holds a native `TestAmqpBroker` host executable.
+
+#### Feed access and authentication
+
+The `azure-sdk-for-net` feed answers anonymous reads. The feed already holds every package that this restore needs, so the restore succeeds on an agent with no credentials.
+
+Authentication is necessary only for a cache miss. The feed fetches a package from its NuGet.org upstream only for an authenticated request. Azure DevOps pipelines must therefore run `NuGetAuthenticate@1` before the restore. A new or changed dependency then restores correctly, and the agent stays isolated from NuGet.org.
+
+Normal developer builds do not use this config. They continue to use the root `nuget.config` and its NuGet.org source.
+
+#### No coverage in this repository
+
+No pipeline in this repository uses `nuget.cfsclean.config`. A change to the broker's dependencies can therefore break CFSClean restores with no signal here. The failure appears in the downstream Azure SDK repositories instead.

@@ -41,6 +41,14 @@ namespace Microsoft.Azure.Amqp
         {
         }
 
+        /// <summary>
+        /// Gets the target size, in bytes, of the local receive cache.
+        /// </summary>
+        /// <remarks>
+        /// The target is a soft prefetch hint. The cache can temporarily exceed
+        /// it while accepting messages authorized by the current AMQP credit
+        /// window.
+        /// </remarks>
         public long? TotalCacheSizeInBytes
         {
             get
@@ -74,28 +82,42 @@ namespace Microsoft.Azure.Amqp
                 SizeBasedFlowQueue queue = this.messageQueue;
                 if (queue != null && queue.IsPrefetchingBySize)
                 {
-                    long totalSize = 0;
-                    if (this.TotalCacheSizeInBytes.HasValue)
-                    {
-                        totalSize = this.TotalCacheSizeInBytes.Value;
-                    }
-
-                    return totalSize - queue.CacheSizeCredit;
+                    return queue.QueuedBytes;
                 }
 
                 return 0;
             }
         }
 
+        /// <summary>
+        /// Sets the target size, in bytes, of the local receive cache.
+        /// </summary>
+        /// <param name="cacheSizeInBytes">
+        /// The soft cache-size target, or <see langword="null"/> to disable
+        /// size-based prefetch.
+        /// </param>
+        /// <remarks>
+        /// Changing the target does not revoke credit already advertised to the
+        /// remote peer. For a finite active credit window, the new target is
+        /// applied when that window completes. An open link with unlimited
+        /// credit remains unchanged until it is recreated because it has no safe
+        /// window boundary. Authorized messages can therefore temporarily cause
+        /// the cache to exceed the target. Size-based prefetch does not apply
+        /// when a message listener is registered because listener delivery does
+        /// not use the local receive cache.
+        /// </remarks>
         public void SetCacheSizeInBytes(long? cacheSizeInBytes)
         {
-            if (cacheSizeInBytes != this.Settings.TotalCacheSizeInBytes)
+            lock (this.SyncRoot)
             {
-                this.Settings.TotalCacheSizeInBytes = cacheSizeInBytes;
-                SizeBasedFlowQueue queue = this.messageQueue;
-                if (queue != null)
+                if (cacheSizeInBytes != this.Settings.TotalCacheSizeInBytes)
                 {
-                    queue.SetLinkCreditUsingTotalCacheSize();
+                    this.Settings.TotalCacheSizeInBytes = cacheSizeInBytes;
+                    SizeBasedFlowQueue queue = this.messageQueue;
+                    if (queue != null && this.messageListener == null)
+                    {
+                        queue.SetCacheSize(cacheSizeInBytes);
+                    }
                 }
             }
         }
@@ -105,6 +127,14 @@ namespace Microsoft.Azure.Amqp
             if (Interlocked.Exchange(ref this.messageListener, messageListener) != null)
             {
                 throw new InvalidOperationException(CommonResources.MessageListenerAlreadyRegistered);
+            }
+
+            lock (this.SyncRoot)
+            {
+                if (this.messageQueue != null && this.messageQueue.IsPrefetchingBySize)
+                {
+                    this.messageQueue.DisableSizeBasedPrefetch();
+                }
             }
         }
 
@@ -225,7 +255,9 @@ namespace Microsoft.Azure.Amqp
                         completeWaiter = false;
 
                         // If no auto-flow, trigger a flow to get messages.
-                        int creditToIssue = this.Settings.AutoSendFlow ? 0 : this.GetOnDemandReceiveCredit();
+                        int creditToIssue = this.Settings.AutoSendFlow || this.messageQueue.IsPrefetchingBySize ?
+                            0 :
+                            this.GetOnDemandReceiveCredit();
                         if (creditToIssue > 0)
                         {
                             // Before the credit is issued, waiters could be completed already. In this case, we will queue the incoming
@@ -244,20 +276,6 @@ namespace Microsoft.Azure.Amqp
             }
 
             return new CompletedAsyncResult<IEnumerable<AmqpMessage>>(messages, callback, state);
-        }
-
-        protected override void OnReceiveStateOpenSent(Attach attach)
-        {
-            // If we uses prefetchBySize logic, then we need to
-            // Update link credit based on Gateway's return max message size
-            lock (this.SyncRoot)
-            {
-                var queue = this.messageQueue as SizeBasedFlowQueue;
-                if (queue != null)
-                {
-                    queue.SetLinkCreditUsingTotalCacheSize();
-                }
-            }
         }
 
         public bool EndReceiveMessages(IAsyncResult result, out IEnumerable<AmqpMessage> messages)
@@ -379,6 +397,18 @@ namespace Microsoft.Azure.Amqp
             else
             {
                 delivery = this.currentMessage = AmqpMessage.CreateReceivedMessage();
+                SizeBasedFlowQueue queue = this.messageQueue;
+                if (queue != null && queue.IsPrefetchingBySize)
+                {
+                    lock (this.SyncRoot)
+                    {
+                        if (queue == this.messageQueue && queue.IsPrefetchingBySize)
+                        {
+                            queue.OnDeliveryStarted();
+                        }
+                    }
+                }
+
                 return true;
             }
         }
@@ -388,10 +418,22 @@ namespace Microsoft.Azure.Amqp
             this.messageQueue = new SizeBasedFlowQueue(this);
             this.waiterList = new LinkedList<ReceiveAsyncResult>();
             this.pendingDispositions = new WorkCollection<ArraySegment<byte>, DisposeAsyncResult, DeliveryState>(ByteArrayComparer.Instance);
-            bool syncComplete = base.OpenInternal();
-            if (this.LinkCredit > 0)
+            if (this.messageListener == null && this.Settings.TotalCacheSizeInBytes.HasValue)
             {
-                this.SendFlow(false);
+                this.messageQueue.EnableSizeBasedPrefetch(true);
+            }
+
+            bool syncComplete = base.OpenInternal();
+            lock (this.SyncRoot)
+            {
+                if (this.messageQueue.IsPrefetchingBySize)
+                {
+                    this.messageQueue.TryIssueNextWindow();
+                }
+                else if (this.LinkCredit > 0)
+                {
+                    this.SendFlow(false);
+                }
             }
 
             return syncComplete;
@@ -567,6 +609,18 @@ namespace Microsoft.Azure.Amqp
         {
             if (this.messageListener != null)
             {
+                SizeBasedFlowQueue queue = this.messageQueue;
+                if (queue != null && queue.IsPrefetchingBySize)
+                {
+                    lock (this.SyncRoot)
+                    {
+                        if (queue == this.messageQueue && queue.IsPrefetchingBySize)
+                        {
+                            queue.TrackReceivedMessage(message);
+                        }
+                    }
+                }
+
                 this.messageListener(message);
             }
             else
@@ -580,24 +634,23 @@ namespace Microsoft.Azure.Amqp
                     {
                         var firstWaiter = this.waiterList.First.Value;
 
-                        if (this.messageQueue.IsPrefetchingBySize)
-                        {
-                            if (this.messageQueue.UpdateCreditToIssue(message))
-                            {
-                                this.SetTotalLinkCredit(this.messageQueue.BoundedTotalLinkCredit, true);
-                            }
-                        }
+                        this.messageQueue.TrackReceivedMessage(message);
 
                         firstWaiter.Add(message);
                         if (firstWaiter.RequestedMessageCount == 1 || firstWaiter.MessageCount >= firstWaiter.RequestedMessageCount)
                         {
                             this.waiterList.RemoveFirst();
                             firstWaiter.OnRemoved();
-                            creditToIssue = this.Settings.AutoSendFlow ? 0 : this.GetOnDemandReceiveCredit();
+                            creditToIssue = this.Settings.AutoSendFlow || this.messageQueue.IsPrefetchingBySize ?
+                                0 :
+                                this.GetOnDemandReceiveCredit();
                             waiter = firstWaiter;
                         }
                     }
-                    else if (!this.Settings.AutoSendFlow && this.Settings.SettleType != SettleMode.SettleOnSend)
+                    else if (this.messageQueue != null &&
+                        !this.Settings.AutoSendFlow &&
+                        !this.messageQueue.IsPrefetchingBySize &&
+                        this.Settings.SettleType != SettleMode.SettleOnSend)
                     {
                         releaseMessage = true;
                     }
@@ -1075,54 +1128,72 @@ namespace Microsoft.Azure.Amqp
         }
 
         /// <summary>
-        /// The different this class from the normal Queue is that
-        /// if we specify a size then we will perform Amqp Flow based on
-        /// the size, where:
-        /// - When en-queuing (cache message from service) we will keep sending credit flow as long as size is not over the cache limit.
-        /// - When de-queuing (return message to user) we will issue flow as soon as the size is below the threshold (70%).
-        /// - When issuing credit we always issue in increment of boundedTotalLinkCredit
-        /// - boundedTotalLinkCredit is based on [total cache size] / [max message size]
-        /// - [total cache size] has a 90% cap to try to prevent overflow - but does not enforce it.
-        /// - we keep updating [max message size] as we receive message in flow.
+        /// Tracks queued message bytes and issues discrete size-based credit
+        /// windows without revoking credit already advertised to the peer.
         /// </summary>
+        /// <remarks>
+        /// Credit is estimated by dividing currently available cache bytes by
+        /// the average serialized size observed in the previous completed
+        /// window. The first window uses a 256-KB estimate, every window is
+        /// limited to 500 messages, and a non-positive target uses one-message
+        /// windows.
+        ///
+        /// An active window is never topped up or reduced. All messages
+        /// authorized by that window are accepted, so the byte target is a soft
+        /// hint and the queue can temporarily overshoot it. A new window is
+        /// issued only after the current window is exhausted, its final delivery
+        /// is complete, and the queue has capacity.
+        ///
+        /// State transitions:
+        ///
+        ///   No active window
+        ///          |
+        ///          v
+        ///   Calculate credit from free bytes / estimated message size
+        ///          |
+        ///          v
+        ///   Issue one bounded window
+        ///          |
+        ///          v
+        ///   Accept all authorized deliveries and collect size samples
+        ///          |
+        ///          v
+        ///   Window exhausted and final fragmented delivery complete
+        ///          |
+        ///          +-- queue at or above target --&gt; pause until dequeue
+        ///          |
+        ///          +-- queue below target --------&gt; issue next window
+        /// </remarks>
         sealed class SizeBasedFlowQueue : Queue<AmqpMessage>
         {
-            // Basically we stop issuing credit at 90% of queue size, and start again at 50%
-            const double IssueCreditThresholdRatio = 0.5;
-            const double StoppCreditThresholdRatio = 0.9;
             const long DefaultMessageSizeForCacheSizeCalulation = 256 * 1024;
             const uint maxCreditToIssuePerFlow = 500;
             readonly ReceivingAmqpLink receivingLink;
-
-            // the amount of credit that we have, in terms of size. This is used to calculate boundedTotalLinkCredit
-            // Note: think of this as the "free space" that we can still fit message with.
-            long cacheSizeCredit;
-
-            // average message size that gets updated as message flows in. This is used to calculate boundedTotalLinkCredit
-            long inQueueAverageMessageSizeInBytes;
-
-            // the amount of credit in size at which we will start issuing credit again if amount of data is less than this threshold
-            long thresholdCacheSizeInBytes;
-
-            // the amount of credit in size at which we will stop issuing credit to avoid an overflow
-            long overflowBufferCacheSizeInBytes;
-
-            // the actual credit that we issue over the flow. This can be bounded by maxCreditToIssuePerFlow
-            uint boundedTotalLinkCredit;
+            long targetCacheSizeInBytes;
+            long queuedBytes;
+            long estimatedMessageSizeInBytes;
+            long windowMessageBytes;
+            int windowMessageCount;
+            uint issuedWindowSize;
+            uint countBasedTotalLinkCredit;
+            bool countBasedAutoSendFlow;
+            volatile bool isPrefetchingBySize;
+            bool disableSizeBasedPrefetch;
+            bool deliveryInProgress;
 
             public SizeBasedFlowQueue(ReceivingAmqpLink receivingLink)
             {
                 Fx.AssertAndThrow(receivingLink != null, "Receive link should not be null");
                 Fx.AssertAndThrow(receivingLink.Settings != null, "Setting should not be null");
                 this.receivingLink = receivingLink;
-                this.SetLinkCreditUsingTotalCacheSize(true);
+                this.estimatedMessageSizeInBytes = DefaultMessageSizeForCacheSizeCalulation;
             }
 
             internal long AverageMessageSizeInBytes
             {
                 get
                 {
-                    return this.inQueueAverageMessageSizeInBytes > 0 ? this.inQueueAverageMessageSizeInBytes : DefaultMessageSizeForCacheSizeCalulation;
+                    return this.estimatedMessageSizeInBytes;
                 }
             }
 
@@ -1130,7 +1201,7 @@ namespace Microsoft.Azure.Amqp
             {
                 get
                 {
-                    return this.receivingLink.Settings.TotalCacheSizeInBytes.HasValue;
+                    return this.isPrefetchingBySize;
                 }
             }
 
@@ -1138,7 +1209,15 @@ namespace Microsoft.Azure.Amqp
             {
                 get
                 {
-                    return this.cacheSizeCredit;
+                    return this.targetCacheSizeInBytes - this.queuedBytes;
+                }
+            }
+
+            internal long QueuedBytes
+            {
+                get
+                {
+                    return this.queuedBytes;
                 }
             }
 
@@ -1146,138 +1225,196 @@ namespace Microsoft.Azure.Amqp
             {
                 get
                 {
-                    return this.boundedTotalLinkCredit;
+                    return this.issuedWindowSize;
                 }
             }
 
-            public void SetLinkCreditUsingTotalCacheSize(bool setTotalLinkCredit = false)
+            public void EnableSizeBasedPrefetch(bool initializeLinkCredit)
             {
-                if (this.receivingLink.Settings != null && this.IsPrefetchingBySize)
+                Fx.Assert(this.receivingLink.Settings.TotalCacheSizeInBytes.HasValue, "Cache size must be set.");
+                this.countBasedTotalLinkCredit = this.receivingLink.Settings.TotalLinkCredit;
+                this.countBasedAutoSendFlow = this.receivingLink.Settings.AutoSendFlow;
+                this.targetCacheSizeInBytes = this.receivingLink.Settings.TotalCacheSizeInBytes.Value;
+                this.windowMessageBytes = 0;
+                this.windowMessageCount = 0;
+                this.issuedWindowSize = this.receivingLink.LinkCredit;
+                this.disableSizeBasedPrefetch = false;
+                this.isPrefetchingBySize = true;
+
+                if (initializeLinkCredit)
                 {
-                    this.cacheSizeCredit = this.receivingLink.Settings.TotalCacheSizeInBytes ?? 0;
-                    this.thresholdCacheSizeInBytes = (long)(this.cacheSizeCredit * IssueCreditThresholdRatio);
-                    this.overflowBufferCacheSizeInBytes = (long)(this.cacheSizeCredit * (1 - StoppCreditThresholdRatio));
-                    this.boundedTotalLinkCredit = Convert.ToUInt32(this.cacheSizeCredit / this.AverageMessageSizeInBytes);
-                    if (this.boundedTotalLinkCredit <= 0)
-                    {
-                        // safe guard against cacheSizeCredit being set too low.
-                        this.boundedTotalLinkCredit = 1;
-                    }
-
-                    if (this.boundedTotalLinkCredit > maxCreditToIssuePerFlow)
-                    {
-                        this.boundedTotalLinkCredit = maxCreditToIssuePerFlow;
-                    }
-
-                    this.receivingLink.LinkCredit = this.boundedTotalLinkCredit;
-                    if (setTotalLinkCredit)
-                    {
-                        this.receivingLink.Settings.TotalLinkCredit = this.boundedTotalLinkCredit;
-                    }
-
-                    // This will turn on AutoFlow
-                    this.receivingLink.SetTotalLinkCredit(this.boundedTotalLinkCredit, true, true);
+                    this.receivingLink.InitializeLinkCredit(0, false);
+                    this.issuedWindowSize = 0;
                 }
+                else
+                {
+                    this.receivingLink.Settings.AutoSendFlow = false;
+                }
+            }
+
+            public void SetCacheSize(long? cacheSizeInBytes)
+            {
+                if (cacheSizeInBytes.HasValue)
+                {
+                    if (this.IsPrefetchingBySize)
+                    {
+                        this.targetCacheSizeInBytes = cacheSizeInBytes.Value;
+                        this.disableSizeBasedPrefetch = false;
+                        this.TryIssueNextWindow();
+                    }
+                    else
+                    {
+                        // Unlimited credit has no safe window boundary at which it can be revoked.
+                        // Keep the current link unchanged; the setting will apply when a new link opens.
+                        if (this.receivingLink.LinkCredit < uint.MaxValue)
+                        {
+                            this.EnableSizeBasedPrefetch(false);
+                            this.TryIssueNextWindow();
+                        }
+                    }
+                }
+                else if (this.IsPrefetchingBySize)
+                {
+                    this.DisableSizeBasedPrefetch();
+                }
+            }
+
+            public void DisableSizeBasedPrefetch()
+            {
+                this.disableSizeBasedPrefetch = true;
+                this.TryIssueNextWindow();
             }
 
             public new void Enqueue(AmqpMessage amqpMessage)
             {
-                if (amqpMessage != null)
+                if (amqpMessage == null)
                 {
-                    base.Enqueue(amqpMessage);
-                    if (this.IsPrefetchingBySize)
-                    {
-                        this.cacheSizeCredit -= amqpMessage.SerializedMessageSize;
-                        bool issueCredit = false;
-                        if (this.cacheSizeCredit > 0 && this.cacheSizeCredit > this.overflowBufferCacheSizeInBytes)
-                        {
-                            issueCredit = this.UpdateCreditToIssue();
-                        }
-                        else if (this.cacheSizeCredit <= 0)
-                        {
-                            issueCredit = this.boundedTotalLinkCredit != 0;
-                            this.boundedTotalLinkCredit = 0;
-                        }
-                        else
-                        {
-                            issueCredit = this.boundedTotalLinkCredit != 1;
-                            this.boundedTotalLinkCredit = 1;
-                        }
-
-                        if (issueCredit)
-                        {
-                            this.receivingLink.SetTotalLinkCredit(this.boundedTotalLinkCredit, true);
-                        }
-                    }
+                    return;
                 }
+
+                base.Enqueue(amqpMessage);
+                this.queuedBytes += amqpMessage.SerializedMessageSize;
+                this.TrackReceivedMessage(amqpMessage);
             }
 
             public new AmqpMessage Dequeue()
             {
-                var amqpMessage = base.Dequeue();
-                if (amqpMessage != null && this.IsPrefetchingBySize)
+                AmqpMessage amqpMessage = base.Dequeue();
+                if (amqpMessage != null)
                 {
-                    // if we are draining the cache (i.e. receiving) we should start giving
-                    // credit if we now have credit above the threshold.
-                    this.cacheSizeCredit += amqpMessage.SerializedMessageSize;
-
-                    bool issueCredit = false;
-                    if (this.cacheSizeCredit >= this.thresholdCacheSizeInBytes)
-                    {
-                        issueCredit = this.UpdateCreditToIssue();
-                    }
-                    else if (this.cacheSizeCredit > 0)
-                    {
-                        issueCredit = this.boundedTotalLinkCredit != 1;
-                        this.boundedTotalLinkCredit = 1;
-                    }
-
-                    if (issueCredit)
-                    {
-                        this.receivingLink.SetTotalLinkCredit(this.boundedTotalLinkCredit, true);
-                    }
+                    this.queuedBytes -= amqpMessage.SerializedMessageSize;
+                    Fx.Assert(this.queuedBytes >= 0, "Queued message size cannot be negative.");
+                    this.TryIssueNextWindow();
                 }
 
                 return amqpMessage;
             }
 
-            /// <summary>
-            /// This method updates the credit that we will send to service to fetch more
-            /// data based on the current average message size. Only call this method if
-            /// we already check and cache credit is within range (&gt; 0%, &lt; 90%).
-            /// </summary>
-            internal bool UpdateCreditToIssue(AmqpMessage externalMessage = null)
+            public void TrackReceivedMessage(AmqpMessage amqpMessage)
             {
-                var previousCredit = this.boundedTotalLinkCredit;
-                long totalSize = this.receivingLink.Settings.TotalCacheSizeInBytes ?? 0;
-                long externalMessageSize = externalMessage == null ? 0 : externalMessage.SerializedMessageSize;
-                int count = externalMessage == null ? this.Count : this.Count + 1;
-                if (count > 0)
+                if (!this.IsPrefetchingBySize || amqpMessage == null)
                 {
-                    this.inQueueAverageMessageSizeInBytes = (totalSize - (this.cacheSizeCredit - externalMessageSize)) / count;
-                    if (this.inQueueAverageMessageSizeInBytes <= 0)
+                    return;
+                }
+
+                this.windowMessageBytes += amqpMessage.SerializedMessageSize;
+                ++this.windowMessageCount;
+                this.deliveryInProgress = false;
+                if (!this.receivingLink.HasOutstandingCredit)
+                {
+                    this.CompleteWindow();
+                    this.TryIssueNextWindow();
+                }
+            }
+
+            public void OnDeliveryStarted()
+            {
+                if (this.IsPrefetchingBySize)
+                {
+                    this.deliveryInProgress = true;
+                }
+            }
+
+            public void TryIssueNextWindow()
+            {
+                if (!this.IsPrefetchingBySize ||
+                    this.deliveryInProgress ||
+                    this.receivingLink.HasOutstandingCredit)
+                {
+                    return;
+                }
+
+                if (this.disableSizeBasedPrefetch)
+                {
+                    if (this.receivingLink.TryIssueCredit(
+                        this.countBasedTotalLinkCredit,
+                        this.countBasedAutoSendFlow,
+                        false,
+                        AmqpConstants.NullBinary))
                     {
-                        this.inQueueAverageMessageSizeInBytes = DefaultMessageSizeForCacheSizeCalulation;
+                        this.issuedWindowSize = 0;
+                        this.disableSizeBasedPrefetch = false;
+                        this.isPrefetchingBySize = false;
                     }
+
+                    return;
                 }
 
-                // if cacheSizeCredit is negative that means we are already overflowing.
-                this.boundedTotalLinkCredit = this.cacheSizeCredit > 0 ? Convert.ToUInt32(this.cacheSizeCredit / this.AverageMessageSizeInBytes) : 0;
-                if (this.boundedTotalLinkCredit <= 0 && this.cacheSizeCredit > 0)
+                if (!this.HasFreeCapacity())
                 {
-                    // this condition can only be possible if average message size is larger than the cache credit.
-                    // This is not possible in public stamp as we enforce cache size to be larger than 260k and max message size
-                    // is 256k. However this assumption can be broken - e.g. in private stamp max message size can be 1Mb.
-                    // since technically cache is not full, we set it to 1.
-                    this.boundedTotalLinkCredit = 1;
+                    return;
                 }
 
-                if (this.boundedTotalLinkCredit > maxCreditToIssuePerFlow)
+                uint credit = this.CalculateNextWindow();
+                if (this.receivingLink.TryIssueCredit(credit, false, false, AmqpConstants.NullBinary))
                 {
-                    this.boundedTotalLinkCredit = maxCreditToIssuePerFlow;
+                    this.issuedWindowSize = credit;
+                }
+            }
+
+            void CompleteWindow()
+            {
+                if (this.windowMessageCount > 0)
+                {
+                    long average = this.windowMessageBytes / this.windowMessageCount;
+                    this.estimatedMessageSizeInBytes = average > 0 ? average : DefaultMessageSizeForCacheSizeCalulation;
                 }
 
-                return previousCredit != this.boundedTotalLinkCredit;
+                this.windowMessageBytes = 0;
+                this.windowMessageCount = 0;
+                this.issuedWindowSize = 0;
+            }
+
+            bool HasFreeCapacity()
+            {
+                return this.targetCacheSizeInBytes <= 0 ?
+                    this.queuedBytes == 0 :
+                    this.queuedBytes < this.targetCacheSizeInBytes;
+            }
+
+            uint CalculateNextWindow()
+            {
+                if (this.targetCacheSizeInBytes <= 0)
+                {
+                    return 1;
+                }
+
+                // Use the previous completed window as the estimate for the next
+                // window. This is deliberately a hint: actual message sizes can
+                // vary, but already-issued credit must not be revoked.
+                long freeBytes = this.targetCacheSizeInBytes - this.queuedBytes;
+                long estimatedSize = this.AverageMessageSizeInBytes;
+                long calculatedCredit = freeBytes / estimatedSize;
+                if (calculatedCredit <= 0)
+                {
+                    calculatedCredit = 1;
+                }
+                else if (calculatedCredit > maxCreditToIssuePerFlow)
+                {
+                    calculatedCredit = maxCreditToIssuePerFlow;
+                }
+
+                return (uint)calculatedCredit;
             }
         }
     }

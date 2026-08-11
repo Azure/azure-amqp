@@ -347,6 +347,59 @@ namespace Microsoft.Azure.Amqp
             }
         }
 
+        internal bool HasOutstandingCredit
+        {
+            get
+            {
+                lock (this.syncRoot)
+                {
+                    return this.linkCredit > 0 || this.bufferedCredit > 0;
+                }
+            }
+        }
+
+        internal void InitializeLinkCredit(uint credit, bool autoSendFlow)
+        {
+            Fx.Assert(this.State == AmqpObjectState.Start, "Link credit can only be initialized before the link is opened.");
+            lock (this.syncRoot)
+            {
+                this.settings.AutoSendFlow = autoSendFlow;
+                this.settings.TotalLinkCredit = credit;
+                this.linkCredit = credit;
+                this.tempTotalCredit = null;
+                this.bufferedCredit = 0;
+            }
+        }
+
+        internal bool TryIssueCredit(uint credit, bool autoSendFlow, bool drain, ArraySegment<byte> txnId)
+        {
+            bool issueCredit = false;
+            lock (this.syncRoot)
+            {
+                if (this.tempTotalCredit == this.settings.TotalLinkCredit)
+                {
+                    this.tempTotalCredit = null;
+                }
+
+                if (this.linkCredit == 0 &&
+                    this.bufferedCredit == 0 &&
+                    this.tempTotalCredit == null)
+                {
+                    this.settings.AutoSendFlow = autoSendFlow;
+                    this.settings.TotalLinkCredit = credit;
+                    this.linkCredit = credit;
+                    issueCredit = true;
+                }
+            }
+
+            if (issueCredit && credit > 0)
+            {
+                this.SendFlow(false, drain, txnId);
+            }
+
+            return issueCredit;
+        }
+
         public void NotifySessionCredit(int credit)
         {
             if (this.inflightDeliveries != null)

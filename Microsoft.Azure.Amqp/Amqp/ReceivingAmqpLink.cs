@@ -397,11 +397,15 @@ namespace Microsoft.Azure.Amqp
             else
             {
                 delivery = this.currentMessage = AmqpMessage.CreateReceivedMessage();
-                lock (this.SyncRoot)
+                SizeBasedFlowQueue queue = this.messageQueue;
+                if (queue != null && queue.IsPrefetchingBySize)
                 {
-                    if (this.messageQueue != null)
+                    lock (this.SyncRoot)
                     {
-                        this.messageQueue.OnDeliveryStarted();
+                        if (queue == this.messageQueue && queue.IsPrefetchingBySize)
+                        {
+                            queue.OnDeliveryStarted();
+                        }
                     }
                 }
 
@@ -605,11 +609,15 @@ namespace Microsoft.Azure.Amqp
         {
             if (this.messageListener != null)
             {
-                lock (this.SyncRoot)
+                SizeBasedFlowQueue queue = this.messageQueue;
+                if (queue != null && queue.IsPrefetchingBySize)
                 {
-                    if (this.messageQueue != null && this.messageQueue.IsPrefetchingBySize)
+                    lock (this.SyncRoot)
                     {
-                        this.messageQueue.TrackReceivedMessage(message);
+                        if (queue == this.messageQueue && queue.IsPrefetchingBySize)
+                        {
+                            queue.TrackReceivedMessage(message);
+                        }
                     }
                 }
 
@@ -1169,7 +1177,7 @@ namespace Microsoft.Azure.Amqp
             uint issuedWindowSize;
             uint countBasedTotalLinkCredit;
             bool countBasedAutoSendFlow;
-            bool isPrefetchingBySize;
+            volatile bool isPrefetchingBySize;
             bool disableSizeBasedPrefetch;
             bool deliveryInProgress;
 

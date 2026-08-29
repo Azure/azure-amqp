@@ -571,6 +571,7 @@ namespace Microsoft.Azure.Amqp
         public class AsyncWriter
         {
             const int MaxBatchSize = 32 * 1024;
+            const int MaxRetainedBatchCapacity = 64;
             static readonly Action<TransportAsyncCallbackArgs> writeCompleteCallback = WriteCompleteCallback;
             readonly TransportBase transport;
             readonly int writeQueueFullLimit;
@@ -807,7 +808,20 @@ namespace Microsoft.Azure.Amqp
                 }
 
                 args.Reset();
-                this.batchBufferList?.Clear();
+
+                // Reuse the batch buffer list across writes, but discard it when a burst grew
+                // the backing array beyond the retained capacity so that the oversized array
+                // becomes eligible for garbage collection instead of being pinned for the
+                // lifetime of the connection.
+                if (this.batchBufferList?.Capacity > MaxRetainedBatchCapacity)
+                {
+                    this.batchBufferList = null;
+                }
+                else
+                {
+                    this.batchBufferList?.Clear();
+                }
+
                 return shouldContinue;
             }
         }

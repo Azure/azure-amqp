@@ -85,6 +85,30 @@ namespace Test.Microsoft.Azure.Amqp
             Assert.AreEqual(0, transport.BatchBufferLists[0].Count);
         }
 
+        [TestMethod]
+        public void AsyncWriterDiscardsBatchBufferListAfterLargeBurst()
+        {
+            var transport = new TestTransport();
+            var writer = new AsyncIO.AsyncWriter(transport, int.MaxValue, int.MaxValue, new TestIoHandler());
+
+            writer.WriteBuffer(CreateBuffer(1));
+            for (int i = 0; i < 100; i++)
+            {
+                writer.WriteBuffer(CreateBuffer(1));
+            }
+
+            transport.CompleteWrite();
+            IList<ByteBuffer> largeBatch = transport.BatchBufferLists[0];
+            Assert.AreEqual(100, largeBatch.Count);
+
+            writer.WriteBuffer(CreateBuffer(2));
+            writer.WriteBuffer(CreateBuffer(3));
+
+            transport.CompleteWrite();
+            Assert.AreEqual(2, transport.BatchBufferLists.Count);
+            Assert.AreNotSame(largeBatch, transport.BatchBufferLists[1]);
+        }
+
         static ByteBuffer CreateBuffer(int size)
         {
             return new ByteBuffer(new byte[size], 0, size);

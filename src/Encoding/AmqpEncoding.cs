@@ -70,6 +70,17 @@ namespace Microsoft.Azure.Amqp.Encoding
         /// <returns>The encoding.</returns>
         public static EncodingBase GetEncoding(FormatCode formatCode)
         {
+            EncodingBase encoding = TryGetEncoding(formatCode);
+            if (encoding == null)
+            {
+                throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, formatCode));
+            }
+
+            return encoding;
+        }
+
+        internal static EncodingBase TryGetEncoding(FormatCode formatCode)
+        {
             switch (formatCode.Type)
             {
                 case FormatCode.Described:
@@ -134,7 +145,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 case FormatCode.Array32:
                     return Array;
                 default:
-                    throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, formatCode));
+                    return null;
             }
         }
 
@@ -452,12 +463,8 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         internal static object DecodeObject(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
         {
-            EncodingBase encoding;
-            try
-            {
-                encoding = GetEncoding(formatCode);
-            }
-            catch (NotSupportedException)
+            EncodingBase encoding = TryGetEncoding(formatCode);
+            if (encoding == null)
             {
                 throw GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
             }

@@ -40,6 +40,7 @@ namespace Microsoft.Azure.Amqp.Serialization
     public abstract class SerializableType
     {
         readonly AmqpContractSerializer serializer;
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
         readonly Type type;
         readonly bool hasDefaultCtor;
 
@@ -48,8 +49,8 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// </summary>
         /// <param name="serializer">The serializer that is supported by this type.</param>
         /// <param name="type">The underlying type.</param>
-        [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Reflection-based type inspection is inherent to the AMQP serializer and is gated behind RequiresUnreferencedCode on its public entry points.")]
-        protected SerializableType(AmqpContractSerializer serializer, Type type)
+        protected SerializableType(AmqpContractSerializer serializer,
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type)
         {
             this.serializer = serializer;
             this.type = type;
@@ -78,7 +79,8 @@ namespace Microsoft.Azure.Amqp.Serialization
         }
 
         /// <summary>Creates a primitive serializable type.</summary>
-        public static SerializableType CreatePrimitiveType(Type type)
+        public static SerializableType CreatePrimitiveType(
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type)
         {
             // encoder is pre-determined
             EncodingBase encoder = (EncodingBase)AmqpEncoding.GetEncoding(type);
@@ -86,7 +88,6 @@ namespace Microsoft.Azure.Amqp.Serialization
         }
 
         /// <summary>Creates an instance of the underlying type.</summary>
-        [UnconditionalSuppressMessage("Trimming", "IL2077", Justification = "Reflection-based instance creation is inherent to the AMQP serializer and is gated behind RequiresUnreferencedCode on its public entry points.")]
         public object CreateInstance()
         {
             if (this.hasDefaultCtor)
@@ -121,7 +122,9 @@ namespace Microsoft.Azure.Amqp.Serialization
             readonly EncodingBase encoder;
 
             /// <summary>Initializes a new instance.</summary>
-            public Primitive(Type type, EncodingBase encoder)
+            public Primitive(
+                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type,
+                EncodingBase encoder)
                 : base(null, type)
             {
                 this.AmqpType = AmqpType.Primitive;
@@ -151,7 +154,8 @@ namespace Microsoft.Azure.Amqp.Serialization
         public sealed class Serializable : SerializableType
         {
             /// <summary>Initializes a new instance.</summary>
-            public Serializable(AmqpContractSerializer serializer, Type type)
+            public Serializable(AmqpContractSerializer serializer,
+                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type)
                 : base(serializer, type)
             {
                 this.AmqpType = AmqpType.Serializable;
@@ -197,7 +201,8 @@ namespace Microsoft.Azure.Amqp.Serialization
             readonly Func<object, Type, object> getSource;
 
             /// <summary>Initializes a new instance.</summary>
-            public Converted(AmqpType amqpType, Type source, Type target,
+            public Converted(AmqpType amqpType, Type source,
+                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type target,
                 Func<object, Type, object> getTarget, Func<object, Type, object> getSource)
                 : base(null, target)
             {
@@ -253,7 +258,8 @@ namespace Microsoft.Azure.Amqp.Serialization
         public sealed class Object : SerializableType
         {
             /// <summary>Initializes a new instance.</summary>
-            public Object(Type type)
+            public Object(
+                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type)
                 : base(null, type)
             {
                 this.AmqpType = AmqpType.Primitive;
@@ -276,7 +282,8 @@ namespace Microsoft.Azure.Amqp.Serialization
         public abstract class Collection : SerializableType
         {
             /// <summary>Initializes a new instance.</summary>
-            protected Collection(AmqpContractSerializer serializer, Type type)
+            protected Collection(AmqpContractSerializer serializer,
+                [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type)
                 : base(serializer, type)
             {
             }

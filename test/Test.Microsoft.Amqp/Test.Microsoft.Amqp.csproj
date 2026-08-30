@@ -24,6 +24,7 @@
     <Compile Include="..\Common\TestRuntimeProvider.cs" Link="Common\TestRuntimeProvider.cs" />
     <Compile Include="..\TestAmqpBroker\Node.cs" Link="Node.cs" />
     <Compile Include="..\TestAmqpBroker\TestAmqpBroker.cs" Link="TestAmqpBroker.cs" />
+    <Compile Include="..\TestCases\AsyncIOTests.cs" Link="TestCases\AsyncIOTests.cs" />
     <Compile Include="..\TestCases\AmqpCodecTests.cs" Link="TestCases\AmqpCodecTests.cs" />
     <Compile Include="..\TestCases\AmqpConnectionListenerTests.cs" Link="TestCases\AmqpConnectionListenerTests.cs" />
     <Compile Include="..\TestCases\AmqpConnectionTests.cs" Link="TestCases\AmqpConnectionTests.cs" />

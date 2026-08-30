@@ -13,7 +13,6 @@ namespace Microsoft.Azure.Amqp.Encoding
     public static class AmqpEncoding
     {
         static Dictionary<Type, EncodingBase> encodingsByType;
-        static Dictionary<FormatCode, EncodingBase> encodingsByCode;
 
         internal static BooleanEncoding Boolean = new BooleanEncoding();
         internal static UByteEncoding UByte = new UByteEncoding();
@@ -62,49 +61,6 @@ namespace Microsoft.Azure.Amqp.Encoding
                 { typeof(string),           String },
                 { typeof(AmqpMap),          Map },
             };
-
-            encodingsByCode = new Dictionary<FormatCode, EncodingBase>()
-            {
-                { FormatCode.BooleanFalse,  Boolean },
-                { FormatCode.BooleanTrue,   Boolean },
-                { FormatCode.Boolean,       Boolean },
-                { FormatCode.UByte,         UByte },
-                { FormatCode.UShort,        UShort },
-                { FormatCode.UInt,          UInt },
-                { FormatCode.SmallUInt,     UInt },
-                { FormatCode.UInt0,         UInt },
-                { FormatCode.ULong,         ULong },
-                { FormatCode.SmallULong,    ULong },
-                { FormatCode.ULong0,        ULong },
-                { FormatCode.Byte,          Byte },
-                { FormatCode.Short,         Short },
-                { FormatCode.Int,           Int },
-                { FormatCode.SmallInt,      Int },
-                { FormatCode.Long,          Long },
-                { FormatCode.SmallLong,     Long },
-                { FormatCode.Float,         Float },
-                { FormatCode.Double,        Double },
-                { FormatCode.Decimal32,     Decimal },
-                { FormatCode.Decimal64,     Decimal },
-                { FormatCode.Decimal128,    Decimal },
-                { FormatCode.Char,          Char },
-                { FormatCode.TimeStamp,     Timestamp },
-                { FormatCode.Uuid,          Uuid },
-                { FormatCode.Binary8,       Binary },
-                { FormatCode.Binary32,      Binary },
-                { FormatCode.Symbol8,       Symbol },
-                { FormatCode.Symbol32,      Symbol },
-                { FormatCode.String8Utf8,   String },
-                { FormatCode.String32Utf8,  String },
-                { FormatCode.List0,         List },
-                { FormatCode.List8,         List },
-                { FormatCode.List32,        List },
-                { FormatCode.Map8,          Map },
-                { FormatCode.Map32,         Map },
-                { FormatCode.Array8,        Array },
-                { FormatCode.Array32,       Array },
-                { FormatCode.Described,     Described }
-            };
         }
 
         /// <summary>
@@ -114,12 +70,83 @@ namespace Microsoft.Azure.Amqp.Encoding
         /// <returns>The encoding.</returns>
         public static EncodingBase GetEncoding(FormatCode formatCode)
         {
-            if (encodingsByCode.TryGetValue(formatCode, out EncodingBase encoding))
+            EncodingBase encoding = TryGetEncoding(formatCode);
+            if (encoding == null)
             {
-                return encoding;
+                throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, formatCode));
             }
 
-            throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, formatCode));
+            return encoding;
+        }
+
+        internal static EncodingBase TryGetEncoding(FormatCode formatCode)
+        {
+            switch (formatCode.Type)
+            {
+                case FormatCode.Described:
+                    return Described;
+                case FormatCode.BooleanFalse:
+                case FormatCode.BooleanTrue:
+                case FormatCode.Boolean:
+                    return Boolean;
+                case FormatCode.UByte:
+                    return UByte;
+                case FormatCode.UShort:
+                    return UShort;
+                case FormatCode.UInt:
+                case FormatCode.SmallUInt:
+                case FormatCode.UInt0:
+                    return UInt;
+                case FormatCode.ULong:
+                case FormatCode.SmallULong:
+                case FormatCode.ULong0:
+                    return ULong;
+                case FormatCode.Byte:
+                    return Byte;
+                case FormatCode.Short:
+                    return Short;
+                case FormatCode.Int:
+                case FormatCode.SmallInt:
+                    return Int;
+                case FormatCode.Long:
+                case FormatCode.SmallLong:
+                    return Long;
+                case FormatCode.Float:
+                    return Float;
+                case FormatCode.Double:
+                    return Double;
+                case FormatCode.Decimal32:
+                case FormatCode.Decimal64:
+                case FormatCode.Decimal128:
+                    return Decimal;
+                case FormatCode.Char:
+                    return Char;
+                case FormatCode.TimeStamp:
+                    return Timestamp;
+                case FormatCode.Uuid:
+                    return Uuid;
+                case FormatCode.Binary8:
+                case FormatCode.Binary32:
+                    return Binary;
+                case FormatCode.Symbol8:
+                case FormatCode.Symbol32:
+                    return Symbol;
+                case FormatCode.String8Utf8:
+                case FormatCode.String32Utf8:
+                    return String;
+                case FormatCode.List0:
+                case FormatCode.List8:
+                case FormatCode.List32:
+                    return List;
+                case FormatCode.Map8:
+                case FormatCode.Map32:
+                    return Map;
+                case FormatCode.Array8:
+                case FormatCode.Array32:
+                    return Array;
+                default:
+                    return null;
+            }
         }
 
         internal static EncodingBase<T> GetEncoding<T>()
@@ -436,13 +463,13 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         internal static object DecodeObject(ByteBuffer buffer, FormatCode formatCode, int depth, ref int totalUnboundedSize)
         {
-            EncodingBase encoding;
-            if (encodingsByCode.TryGetValue(formatCode, out encoding))
+            EncodingBase encoding = TryGetEncoding(formatCode);
+            if (encoding == null)
             {
-                return encoding.DecodeObject(buffer, formatCode, depth, ref totalUnboundedSize);
+                throw GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
             }
 
-            throw GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
+            return encoding.DecodeObject(buffer, formatCode, depth, ref totalUnboundedSize);
         }
 
         /// <summary>

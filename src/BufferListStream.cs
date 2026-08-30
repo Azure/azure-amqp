@@ -242,8 +242,8 @@ namespace Microsoft.Azure.Amqp
             {
                 count = Math.Min(count, (int)(this.length - this.position));
                 byte[] buffer = new byte[count];
-                this.Read(buffer, 0, count);
-                segment = new ArraySegment<byte>(buffer);
+                int bytesRead = this.Read(buffer, 0, count);
+                segment = new ArraySegment<byte>(buffer, 0, bytesRead);
             }
 
             return segment;

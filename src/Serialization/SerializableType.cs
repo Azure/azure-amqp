@@ -8,6 +8,7 @@ namespace Microsoft.Azure.Amqp.Serialization
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
     using System.Runtime.Serialization;
     using Microsoft.Azure.Amqp.Encoding;
     using AmqpDescribedType = Microsoft.Azure.Amqp.Encoding.DescribedType;
@@ -47,6 +48,7 @@ namespace Microsoft.Azure.Amqp.Serialization
         /// </summary>
         /// <param name="serializer">The serializer that is supported by this type.</param>
         /// <param name="type">The underlying type.</param>
+        [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "Reflection-based type inspection is inherent to the AMQP serializer and is gated behind RequiresUnreferencedCode on its public entry points.")]
         protected SerializableType(AmqpContractSerializer serializer, Type type)
         {
             this.serializer = serializer;
@@ -84,11 +86,19 @@ namespace Microsoft.Azure.Amqp.Serialization
         }
 
         /// <summary>Creates an instance of the underlying type.</summary>
+        [UnconditionalSuppressMessage("Trimming", "IL2077", Justification = "Reflection-based instance creation is inherent to the AMQP serializer and is gated behind RequiresUnreferencedCode on its public entry points.")]
         public object CreateInstance()
         {
-            return this.hasDefaultCtor ?
-                Activator.CreateInstance(this.type) :
-                FormatterServices.GetUninitializedObject(this.type);
+            if (this.hasDefaultCtor)
+            {
+                return Activator.CreateInstance(this.type);
+            }
+
+#if NET10_0_OR_GREATER
+            return RuntimeHelpers.GetUninitializedObject(this.type);
+#else
+            return FormatterServices.GetUninitializedObject(this.type);
+#endif
         }
 
         /// <summary>

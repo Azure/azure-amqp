@@ -34,11 +34,13 @@ namespace Microsoft.Azure.Amqp
         {
         }
 
+#pragma warning disable SYSLIB0051 // Formatter-based serialization is retained for backward compatibility with .NET Framework BinaryFormatter.
         AmqpException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             this.Error = (Error)info.GetValue("Error", typeof(Error));
         }
+#pragma warning restore SYSLIB0051
 
         /// <summary>
         /// Gets the <see cref="Error"/> of the exception.
@@ -69,11 +71,13 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="info">The SerializationInfo to populate with data.</param>
         /// <param name="context">The destination for this serialization.</param>
+#pragma warning disable SYSLIB0051, CS0672 // Formatter-based serialization is retained for backward compatibility with .NET Framework BinaryFormatter.
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
 
             info.AddValue("Error", this.Error);
         }
+#pragma warning restore SYSLIB0051, CS0672
     }
 }

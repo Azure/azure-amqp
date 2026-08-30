@@ -14,9 +14,11 @@ namespace Microsoft.Azure.Amqp
         {
         }
 
+#pragma warning disable SYSLIB0051 // Formatter-based serialization is retained for backward compatibility with .NET Framework BinaryFormatter.
         protected AssertionFailedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
+#pragma warning restore SYSLIB0051
     }
 }

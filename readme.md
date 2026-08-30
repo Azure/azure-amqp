@@ -12,7 +12,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 - In Visual Studio
   - Open the solution `amqp.sln` and build. Visual Studio 2019 is required.
 - dotnet
-  - The project targets netstandard2.0, so dotnet commands can be used to build the library cross platform.
+  - The project targets netstandard2.0 and net10.0, so dotnet commands can be used to build the library cross platform.
 
 ```
 dotnet build -p:Version=3.0.0 src\Microsoft.Azure.Amqp.csproj

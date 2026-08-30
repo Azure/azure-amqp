@@ -22,6 +22,9 @@ namespace Microsoft.Azure.Amqp
             Fx.Assert(!Fx.IsFatal(innerException), "CallbackException can't be used to wrap fatal exceptions.");
         }
 
+#if NET10_0_OR_GREATER
+        [Obsolete(DiagnosticId = "SYSLIB0051")] // Formatter-based serialization is retained for backward compatibility with .NET Framework BinaryFormatter.
+#endif
         protected CallbackException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {

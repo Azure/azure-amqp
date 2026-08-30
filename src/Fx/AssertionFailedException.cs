@@ -14,6 +14,9 @@ namespace Microsoft.Azure.Amqp
         {
         }
 
+#if NET10_0_OR_GREATER
+        [Obsolete(DiagnosticId = "SYSLIB0051")] // Formatter-based serialization is retained for backward compatibility with .NET Framework BinaryFormatter.
+#endif
         protected AssertionFailedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {

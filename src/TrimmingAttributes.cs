@@ -5,7 +5,7 @@
 
 namespace System.Diagnostics.CodeAnalysis;
 
-#if !NET7_0_OR_GREATER
+#if NETSTANDARD2_0
 /// <summary>
 /// Indicates that the specified method requires the ability to generate new code at runtime,
 /// for example through <see cref="System.Reflection"/>.
@@ -39,9 +39,7 @@ internal sealed class RequiresDynamicCodeAttribute : Attribute
     /// </summary>
     public string? Url { get; set; }
 }
-#endif
 
-#if !NET5_0_OR_GREATER
 /// <summary>
 /// Indicates that the specified method requires dynamic access to code that is not referenced
 /// statically, for example through <see cref="System.Reflection"/>.
@@ -75,6 +73,65 @@ internal sealed class RequiresUnreferencedCodeAttribute : Attribute
     /// why it requires unreferenced code, and what options a consumer has to deal with it.
     /// </summary>
     public string? Url { get; set; }
+}
+
+/// <summary>
+/// Specifies the types of members that are dynamically accessed.
+/// </summary>
+/// <remarks>
+/// This allows tools to understand which members of a type are being accessed dynamically
+/// so that they can be preserved during trimming.
+/// </remarks>
+[Flags]
+internal enum DynamicallyAccessedMemberTypes
+{
+    None = 0,
+    PublicParameterlessConstructor = 0x0001,
+    PublicConstructors = 0x0002 | PublicParameterlessConstructor,
+    NonPublicConstructors = 0x0004,
+    PublicMethods = 0x0008,
+    NonPublicMethods = 0x0010,
+    PublicFields = 0x0020,
+    NonPublicFields = 0x0040,
+    PublicNestedTypes = 0x0080,
+    NonPublicNestedTypes = 0x0100,
+    PublicProperties = 0x0200,
+    NonPublicProperties = 0x0400,
+    PublicEvents = 0x0800,
+    NonPublicEvents = 0x1000,
+    Interfaces = 0x2000,
+    All = ~None,
+}
+
+/// <summary>
+/// Indicates that the specified type members are accessed dynamically.
+/// </summary>
+/// <remarks>
+/// This allows tools to understand which members of a type are being accessed dynamically
+/// so that they can be preserved during trimming.
+/// </remarks>
+[AttributeUsage(
+    AttributeTargets.Field | AttributeTargets.ReturnValue | AttributeTargets.GenericParameter |
+    AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.Method |
+    AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct,
+    Inherited = false)]
+internal sealed class DynamicallyAccessedMembersAttribute : Attribute
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DynamicallyAccessedMembersAttribute"/> class
+    /// with the specified member types.
+    /// </summary>
+    /// <param name="memberTypes">The types of members that are dynamically accessed.</param>
+    public DynamicallyAccessedMembersAttribute(DynamicallyAccessedMemberTypes memberTypes)
+    {
+        MemberTypes = memberTypes;
+    }
+
+    /// <summary>
+    /// Gets the <see cref="DynamicallyAccessedMemberTypes"/> that specify the types of members
+    /// that are dynamically accessed.
+    /// </summary>
+    public DynamicallyAccessedMemberTypes MemberTypes { get; }
 }
 
 /// <summary>

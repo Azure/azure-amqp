@@ -310,7 +310,11 @@ namespace Microsoft.Azure.Amqp.Transport
                     {
                         // Cannot cast from X509Certificate to X509Certificate2
                         // using workaround mentioned here: https://github.com/dotnet/corefx/issues/4510
+#if NET10_0_OR_GREATER
+                        var certificate = X509CertificateLoader.LoadCertificate(sslStream.RemoteCertificate.Export(X509ContentType.Cert));
+#else
                         var certificate = new X509Certificate2(sslStream.RemoteCertificate.Export(X509ContentType.Cert));
+#endif
                         this.Principal = this.CreateX509Principal(certificate);
                     }
                 }

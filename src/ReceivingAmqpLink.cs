@@ -1280,7 +1280,7 @@ namespace Microsoft.Azure.Amqp
                     this.link.drainTasks.Add(this);
                     if (!this.link.Drain)
                     {
-                        this.link.SendFlow(false, true, null);
+                        this.link.SendFlow(false, true, properties: null);
                     }
                 }
 

@@ -18,7 +18,11 @@ namespace Microsoft.Azure.Amqp.Transport
         // The lib cannot control the app's target framework, so we handle the argument error on lower platforms
         // and revert back to the legacy default SslProtocols to maintain backward compatibility.
         // https://learn.microsoft.com/en-us/dotnet/framework/network-programming/tls
+#if NET10_0_OR_GREATER
+        const SslProtocols LegacyDefaultSslProtocols = SslProtocols.Tls12;
+#else
         const SslProtocols LegacyDefaultSslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12;
+#endif
         static SslProtocols? systemSslProtocols;
         SslProtocols? userSslProtocols;
 

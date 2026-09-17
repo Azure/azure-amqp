@@ -398,7 +398,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             Span<byte> span = buffer.GetWriteSpan(FixedWidth.Uuid);
             Span<byte> guidBytes = stackalloc byte[16];
 
+#if NET10_0_OR_GREATER
+            MemoryMarshal.Write(guidBytes, in data);
+#else
             MemoryMarshal.Write(guidBytes, ref data);
+#endif
 
             if (BitConverter.IsLittleEndian)
             {

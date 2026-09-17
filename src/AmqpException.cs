@@ -34,6 +34,9 @@ namespace Microsoft.Azure.Amqp
         {
         }
 
+#if NET10_0_OR_GREATER
+        [Obsolete(DiagnosticId = "SYSLIB0051")] // Formatter-based serialization is retained for backward compatibility with .NET Framework BinaryFormatter.
+#endif
         AmqpException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
@@ -69,6 +72,9 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         /// <param name="info">The SerializationInfo to populate with data.</param>
         /// <param name="context">The destination for this serialization.</param>
+#if NET10_0_OR_GREATER
+        [Obsolete(DiagnosticId = "SYSLIB0051")] // Formatter-based serialization is retained for backward compatibility with .NET Framework BinaryFormatter.
+#endif
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);

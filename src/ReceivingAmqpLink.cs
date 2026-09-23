@@ -549,20 +549,30 @@ namespace Microsoft.Azure.Amqp
         /// <param name="frame">The transfer frame.</param>
         protected override void OnProcessTransfer(Delivery delivery, Transfer transfer, Frame frame)
         {
-            Fx.Assert(delivery == null || delivery == this.currentMessage, "The delivery must be null or must be the same as the current message.");
+            // Snapshot currentMessage once. Abort/Close may null the field concurrently; we work on the
+            // local snapshot to avoid NREs, and use CompareExchange on handoff to decide who owns disposal.
+            AmqpMessage current = Volatile.Read(ref this.currentMessage);
+
+            Fx.Assert(delivery == null || delivery == current, "The delivery must be null or must be the same as the current message.");
 
             // Whether resumed or not, an aborted delivery is considered implicitly settled. Cleanup any pending state and return.
             if (delivery.Aborted)
             {
-                this.currentMessage?.Dispose();
-                this.currentMessage = null;
+                AmqpMessage aborted = Interlocked.Exchange(ref this.currentMessage, null);
+                aborted?.Dispose();
                 this.RemoveUnsettledDeliveryFromTerminusStoreIfNeeded(delivery.DeliveryTag);
+                return;
+            }
+
+            if (current == null)
+            {
+                // Abort/Close raced ahead of us and took ownership. Drop the transfer.
                 return;
             }
 
             if (this.Settings.MaxMessageSize.HasValue && this.Settings.MaxMessageSize.Value > 0)
             {
-                ulong size = (ulong)(this.currentMessage.BytesTransfered + frame.Payload.Count);
+                ulong size = (ulong)(current.BytesTransfered + frame.Payload.Count);
                 if (size > this.Settings.MaxMessageSize.Value)
                 {
                     if (this.IsClosing())
@@ -573,23 +583,25 @@ namespace Microsoft.Azure.Amqp
                     }
 
                     throw new AmqpException(AmqpErrorCode.MessageSizeExceeded,
-                        AmqpResources.GetString(AmqpResources.AmqpMessageSizeExceeded, this.currentMessage.DeliveryId.Value, size, this.Settings.MaxMessageSize.Value));
+                        AmqpResources.GetString(AmqpResources.AmqpMessageSizeExceeded, current.DeliveryId.Value, size, this.Settings.MaxMessageSize.Value));
                 }
             }
 
-            Fx.Assert(this.currentMessage != null, "Current message must have been created!");
             ArraySegment<byte> payload = frame.Payload;
             frame.RawByteBuffer.AdjustPosition(payload.Offset, payload.Count);
-            // no AddReference here: single-transfer messages claim their own reference in
+            // Buffer ownership: single-transfer messages claim their own reference in
             // AddPayload, multi-transfer messages own a merge buffer and release the transfer buffer
-            this.currentMessage.AddPayload(frame.RawByteBuffer, !transfer.More());
+            current.AddPayload(frame.RawByteBuffer, !transfer.More());
 
             if (!transfer.More())
             {
-                AmqpMessage message = this.currentMessage;
-                this.currentMessage = null;
+                // Try to publish the handoff iff we still own the current message.
+                if (Interlocked.CompareExchange(ref this.currentMessage, null, current) != current)
+                {
+                    return;
+                }
 
-                AmqpTrace.OnReceiveMessage(this, message.DeliveryId.Value, message.Segments);
+                AmqpTrace.OnReceiveMessage(this, current.DeliveryId.Value, current.Segments);
 
                 if (delivery.Resume && this.IsRecoverable)
                 {
@@ -615,7 +627,7 @@ namespace Microsoft.Azure.Amqp
                     }
                 }
 
-                this.OnReceiveMessage(message);
+                this.OnReceiveMessage(current);
             }
         }
 
@@ -673,11 +685,8 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            AmqpMessage temp = this.currentMessage;
-            if (temp != null)
-            {
-                temp.Dispose();
-            }
+            AmqpMessage temp = Interlocked.Exchange(ref this.currentMessage, null);
+            temp?.Dispose();
 
             base.AbortInternal();
         }
@@ -700,11 +709,8 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            AmqpMessage temp = this.currentMessage;
-            if (temp != null)
-            {
-                temp.Dispose();
-            }
+            AmqpMessage temp = Interlocked.Exchange(ref this.currentMessage, null);
+            temp?.Dispose();
 
             return base.CloseInternal();
         }

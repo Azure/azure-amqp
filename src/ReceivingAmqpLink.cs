@@ -580,7 +580,8 @@ namespace Microsoft.Azure.Amqp
             Fx.Assert(this.currentMessage != null, "Current message must have been created!");
             ArraySegment<byte> payload = frame.Payload;
             frame.RawByteBuffer.AdjustPosition(payload.Offset, payload.Count);
-            frame.RawByteBuffer.AddReference();    // Message also owns the buffer from now on
+            // no AddReference here: single-transfer messages claim their own reference in
+            // AddPayload, multi-transfer messages own a merge buffer and release the transfer buffer
             this.currentMessage.AddPayload(frame.RawByteBuffer, !transfer.More());
 
             if (!transfer.More())

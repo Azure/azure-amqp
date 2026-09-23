@@ -194,6 +194,51 @@ namespace Test.Microsoft.Azure.Amqp
             message.Dispose();
         }
 
+        [TestMethod]
+        public void ReceivedMessageFrameBufferReturnsToPoolTest()
+        {
+            // mirrors the buffer ownership in ReceivingAmqpLink.OnProcessTransfer
+            AmqpMessage source = AmqpMessage.Create("received");
+            ByteBuffer frameBuffer = CreateFrameBuffer(source);
+            source.Dispose();
+
+            AmqpMessage received = AmqpMessage.CreateReceivedMessage();
+            received.AddPayload(frameBuffer, true);
+            frameBuffer.Dispose();
+            Assert.AreEqual("received", received.ValueBody.Value);
+            received.Dispose();
+            Assert.IsNull(frameBuffer.Buffer);
+
+            // multi transfer: the message owns a merge buffer, the last reference
+            // of each transfer buffer belongs to its frame
+            source = AmqpMessage.Create("received");
+            ByteBuffer encoded = source.GetBuffer();
+            int half = encoded.Length / 2;
+            var first = new ByteBuffer(half, false);
+            var last = new ByteBuffer(encoded.Length - half, false);
+            AmqpBitConverter.WriteBytes(first, encoded.Buffer, encoded.Offset, half);
+            AmqpBitConverter.WriteBytes(last, encoded.Buffer, encoded.Offset + half, encoded.Length - half);
+            source.Dispose();
+
+            received = AmqpMessage.CreateReceivedMessage();
+            received.AddPayload(first, false);
+            received.AddPayload(last, true);
+            first.Dispose();
+            last.Dispose();
+            Assert.IsNull(first.Buffer);
+            Assert.IsNull(last.Buffer);
+            Assert.AreEqual("received", received.ValueBody.Value);
+            received.Dispose();
+        }
+
+        static ByteBuffer CreateFrameBuffer(AmqpMessage message)
+        {
+            ByteBuffer encoded = message.GetBuffer();
+            var buffer = new ByteBuffer(encoded.Length, false);
+            AmqpBitConverter.WriteBytes(buffer, encoded.Buffer, encoded.Offset, encoded.Length);
+            return buffer;
+        }
+
         static void AddSection(AmqpMessage message, SectionFlag sections)
         {
             if ((sections & SectionFlag.Header) != 0)

@@ -212,7 +212,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// <returns>true if close is completed, otherwise false.</returns>
         protected override bool CloseInternal()
         {
-            this.sslStream.Dispose();
+            this.sslStream.Close();
             return true;
         }
 
@@ -221,7 +221,14 @@ namespace Microsoft.Azure.Amqp.Transport
         /// </summary>
         protected override void AbortInternal()
         {
-            this.innerTransport.Abort();
+            try
+            {
+                this.innerTransport.Abort();
+            }
+            finally
+            {
+                this.sslStream.Dispose();
+            }
         }
 
         /// <summary>

@@ -19,13 +19,20 @@ namespace Microsoft.Azure.Amqp.Transport
     //   are used by SslStream during the TLS handshake.
     sealed class TransportStream : Stream
     {
+        const int WriteIdle = 0;
+        const int WriteActive = 1;
+        const int WriteDisposed = 2;
+        const int WriteBufferMaxReuseSize = 85000;  // LOH threshold
+
         static readonly Action<TransportAsyncCallbackArgs> onIOComplete = OnIOComplete;
         readonly TransportBase transport;
         ByteBuffer writeBuffer;
+        int writeState;
 
         public TransportStream(TransportBase transport)
         {
             this.transport = transport;
+            this.writeState = WriteIdle;
         }
 
         public override bool CanSeek
@@ -88,6 +95,13 @@ namespace Microsoft.Azure.Amqp.Transport
                 return;
             }
 
+            // This protects the writeBuffer throughout the Write+Flush sequence.
+            if (Interlocked.CompareExchange(ref this.writeState, WriteActive, WriteIdle) == WriteDisposed)
+            {
+                Interlocked.Exchange(ref this.writeBuffer, null)?.Dispose();
+                throw new ObjectDisposedException(this.transport.ToString());
+            }
+
             // Buffer the ciphertext produced by SslStream. It will be flushed to the
             // inner transport as a single I/O by BeginFlushWrite.
             if (this.writeBuffer == null)
@@ -122,19 +136,15 @@ namespace Microsoft.Azure.Amqp.Transport
         // transport as a single async I/O. Must not be called if Write was never called.
         public IAsyncResult BeginFlushWrite(AsyncCallback callback, object state)
         {
-            if (this.writeBuffer == null)
-            {
-                throw new InvalidOperationException("Write must be called before flushing");
-            }
-
+            Fx.Assert(this.writeBuffer != null, "Write must be called before flushing");
             try
             {
                 return this.BeginWrite(this.writeBuffer.Buffer, this.writeBuffer.Offset, this.writeBuffer.Length, callback, state);
             }
             catch
             {
+                // Leave write state as is. The I/O layer handles the exception and closes the transport.
                 this.writeBuffer.Dispose();
-                this.writeBuffer = null;
                 throw;
             }
         }
@@ -157,11 +167,24 @@ namespace Microsoft.Azure.Amqp.Transport
         public override void EndWrite(IAsyncResult asyncResult)
         {
             var args = (TransportAsyncCallbackArgs)asyncResult;
-            if (this.writeBuffer != null)
+            if (args.Buffer == this.writeBuffer?.Buffer)
             {
-                Fx.Assert(args.Buffer == this.writeBuffer.Buffer, "Wrong write buffer");
-                this.writeBuffer.Dispose();
-                this.writeBuffer = null;
+                // writeBuffer must be valid here since the current operation owns it
+                if (this.writeBuffer.Capacity >= WriteBufferMaxReuseSize)
+                {
+                    Interlocked.Exchange(ref this.writeBuffer, null)?.Dispose();
+                }
+                else
+                {
+                    this.writeBuffer.Reset();
+                }
+
+                // Complete one round of batch write and writeBuffer protection.
+                // Look back for dispose state and release the buffer if necessary.
+                if (Interlocked.CompareExchange(ref this.writeState, WriteIdle, WriteActive) == WriteDisposed)
+                {
+                    Interlocked.Exchange(ref this.writeBuffer, null)?.Dispose();
+                }
             }
 
             if (args.Exception != null)
@@ -217,6 +240,10 @@ namespace Microsoft.Azure.Amqp.Transport
             if (disposing)
             {
                 this.transport.SafeClose();
+                if (Interlocked.Exchange(ref this.writeState, WriteDisposed) == WriteIdle)
+                {
+                    Interlocked.Exchange(ref this.writeBuffer, null)?.Dispose();
+                }
             }
         }
 

@@ -41,6 +41,13 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         }
 
+        internal void PresizeForDecode(int capacity)
+        {
+#if NET8_0_OR_GREATER
+            this.EnsureCapacity(capacity);
+#endif
+        }
+
         /// <summary>
         /// Gets or sets a value for a given key.
         /// </summary>

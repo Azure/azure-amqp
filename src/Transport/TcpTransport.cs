@@ -8,6 +8,7 @@ namespace Microsoft.Azure.Amqp.Transport
     using System.Collections.Generic;
     using System.Net;
     using System.Net.Sockets;
+    using System.Threading;
     using Microsoft.Azure.Amqp.Encoding;
 
     sealed class TcpTransport : TransportBase
@@ -443,8 +444,7 @@ namespace Microsoft.Azure.Amqp.Transport
                         this.startTime = Timestamp.Now;
                         if (this.bufferSize == 0)
                         {
-                            current.Dispose();
-                            this.readBuffer = null;
+                            Interlocked.Exchange(ref this.readBuffer, null)?.Dispose();
                             current = null;
                         }
                     }
@@ -489,11 +489,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
             public new void Dispose()
             {
-                ByteBuffer temp = this.readBuffer;
-                if (temp != null)
-                {
-                    temp.Dispose();
-                }
+                Interlocked.Exchange(ref this.readBuffer, null)?.Dispose();
 
                 ArraySegment<byte> copy = this.segment;
                 if (copy.Array != null)

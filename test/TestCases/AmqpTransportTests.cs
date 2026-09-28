@@ -8,6 +8,7 @@ namespace Test.Microsoft.Azure.Amqp
     using System.Net.Sockets;
     using System.Reflection;
     using System.Threading;
+    using System.Threading.Tasks;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Transport;
     using global::Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -16,6 +17,59 @@ namespace Test.Microsoft.Azure.Amqp
     public class AmqpTransportTests
     {
         const int TestMaxNumber = 9999;
+
+        [TestMethod]
+        public void TcpReadBufferDisposalPreservesPendingReadReference()
+        {
+            SocketAsyncEventArgs args = CreateReadEventArgs();
+            ByteBuffer buffer = (ByteBuffer)args.GetType().GetField("readBuffer", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(args);
+            using (buffer.AddReference())
+            {
+                byte[] array = buffer.Buffer;
+                args.UserToken = buffer;
+                DisposeReadEventArgs(args);
+                DisposeReadEventArgs(args);
+                Assert.IsNull(args.GetType().GetField("readBuffer", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(args));
+                Assert.AreSame(buffer, args.UserToken);
+                Assert.AreSame(array, buffer.Buffer);
+            }
+
+            Assert.IsNull(buffer.Buffer);
+        }
+
+        [TestMethod]
+        public void TcpReadBufferRetirementAndDisposalReleaseCacheOnce()
+        {
+            for (int i = 0; i < 200; i++)
+            {
+                SocketAsyncEventArgs args = CreateReadEventArgs();
+                Type type = args.GetType();
+                ByteBuffer buffer = (ByteBuffer)type.GetField("readBuffer", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(args);
+                type.GetField("bufferSize", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(args, 0);
+                using (buffer.AddReference())
+                {
+                    byte[] array = buffer.Buffer;
+                    Parallel.Invoke(
+                        () => Assert.IsNull(type.GetMethod("PrepareRead").Invoke(args, new object[] { 1 })),
+                        () => DisposeReadEventArgs(args));
+                    Assert.IsNull(type.GetField("readBuffer", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(args));
+                    Assert.AreSame(array, buffer.Buffer);
+                }
+
+                Assert.IsNull(buffer.Buffer);
+            }
+        }
+
+        static SocketAsyncEventArgs CreateReadEventArgs()
+        {
+            Type type = typeof(TcpTransport).GetNestedType("ReadAsyncEventArgs", BindingFlags.NonPublic);
+            return (SocketAsyncEventArgs)Activator.CreateInstance(type, new object[] { null, 16 });
+        }
+
+        static void DisposeReadEventArgs(SocketAsyncEventArgs args)
+        {
+            args.GetType().GetMethod("Dispose", BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly).Invoke(args, null);
+        }
 
         [TestMethod]
         public void TcpTransportTest()

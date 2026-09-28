@@ -4,6 +4,8 @@ namespace Test.Microsoft.Azure.Amqp
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Encoding;
     using global::Microsoft.Azure.Amqp.Framing;
@@ -152,6 +154,120 @@ namespace Test.Microsoft.Azure.Amqp
 
             AmqpMessage message2 = AmqpMessage.Create(new MemoryStream(new byte[12]), false);
             Assert.AreEqual(12, message2.BodyStream.Length);
+        }
+
+        [TestMethod]
+        public void RepeatedMessageDisposeReleasesOnlyOwnedReference()
+        {
+            using (var message = AmqpMessage.Create(new AmqpValue { Value = "retained payload" }))
+            {
+                message.Serialize(true);
+                ByteBuffer buffer = message.Buffer;
+                using (buffer.AddReference())
+                {
+                    byte[] array = buffer.Buffer;
+                    message.Dispose();
+                    message.Dispose();
+                    Assert.ThrowsException<ObjectDisposedException>(() => message.ThrowIfDisposed());
+                    Assert.AreSame(array, buffer.Buffer);
+                }
+
+                Assert.IsNull(buffer.Buffer);
+            }
+        }
+
+        [TestMethod]
+        public void ConcurrentMessageDisposeReleasesOnlyOwnedReference()
+        {
+            for (int i = 0; i < 1000; i++)
+            {
+                using (var message = AmqpMessage.Create(new AmqpValue { Value = "retained payload" }))
+                {
+                    message.Serialize(true);
+                    ByteBuffer buffer = message.Buffer;
+                    using (buffer.AddReference())
+                    {
+                        byte[] array = buffer.Buffer;
+                        Parallel.For(0, 8, _ => message.Dispose());
+                        Assert.ThrowsException<ObjectDisposedException>(() => message.ThrowIfDisposed());
+                        Assert.AreSame(array, buffer.Buffer);
+                    }
+
+                    Assert.IsNull(buffer.Buffer);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void MessageDisposeReleasesDeliveryRawBuffersOnce()
+        {
+            using (var message = AmqpMessage.Create())
+            {
+                var rawBuffer = new ByteBuffer(16, false);
+                typeof(Delivery).GetProperty(nameof(Delivery.RawByteBuffers))
+                    .SetValue(message, new List<ByteBuffer> { rawBuffer });
+                using (rawBuffer.AddReference())
+                {
+                    byte[] array = rawBuffer.Buffer;
+                    Parallel.For(0, 100, _ => message.Dispose());
+                    message.Dispose();
+                    Assert.AreSame(array, rawBuffer.Buffer);
+                }
+
+                Assert.IsNull(rawBuffer.Buffer);
+            }
+        }
+
+        [TestMethod]
+        public void CloneDisposeReleasesSourceOnlyOnce()
+        {
+            using (var source = AmqpMessage.Create(new AmqpValue { Value = "source payload" }))
+            {
+                source.Serialize(true);
+                ByteBuffer sourceBuffer = source.Buffer;
+                byte[] array = sourceBuffer.Buffer;
+                using (var clone = source.Clone())
+                {
+                    clone.Serialize(true);
+                    ByteBuffer cloneBuffer = clone.Buffer;
+                    Parallel.For(0, 100, _ => clone.Dispose());
+                    clone.Dispose();
+                    Assert.ThrowsException<ObjectDisposedException>(() => clone.ThrowIfDisposed());
+                    Assert.IsNull(cloneBuffer.Buffer);
+                    Assert.AreSame(array, sourceBuffer.Buffer);
+                    source.ThrowIfDisposed();
+                }
+
+                source.Dispose();
+                Assert.IsNull(sourceBuffer.Buffer);
+            }
+        }
+
+        [TestMethod]
+        public void StreamMessageDisposeRespectsOwnershipAndRunsOnce()
+        {
+            foreach (bool ownStream in new[] { true, false })
+            {
+                using (var stream = new CountingDisposeStream())
+                using (var message = AmqpMessage.Create(stream, ownStream))
+                {
+                    Parallel.For(0, 100, _ => message.Dispose());
+                    message.Dispose();
+                    Assert.AreEqual(ownStream ? 1 : 0, stream.DisposeCount);
+                    Assert.ThrowsException<ObjectDisposedException>(() => message.ThrowIfDisposed());
+                }
+            }
+        }
+
+        sealed class CountingDisposeStream : MemoryStream
+        {
+            public int DisposeCount;
+
+            protected override void Dispose(bool disposing)
+            {
+                Interlocked.Increment(ref this.DisposeCount);
+                base.Dispose(disposing);
+            }
         }
 
         [TestMethod]

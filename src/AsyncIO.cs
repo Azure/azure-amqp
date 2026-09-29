@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Diagnostics.CodeAnalysis;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Transport;
 
@@ -313,7 +314,7 @@ namespace Microsoft.Azure.Amqp
                 Fx.Assert(frameSize > 0, "frameSize must be positive");
                 if (frameSize <= 0 || frameSize > this.maxFrameSize)
                 {
-                    throw new AmqpException(AmqpErrorCode.FramingError, CommonResources.GetString(CommonResources.InvalidFrameSize, frameSize, this.maxFrameSize));
+                    ThrowInvalidFrameSize(frameSize, this.maxFrameSize);
                 }
 
                 this.SetReadFrameBody(frameSize);
@@ -328,6 +329,12 @@ namespace Microsoft.Azure.Amqp
                 this.asyncIo.ioHandler.OnReceiveBuffer(buffer);
 
                 this.SetReadFrameSize();
+            }
+
+            [DoesNotReturn]
+            static void ThrowInvalidFrameSize(int frameSize, int maxFrameSize)
+            {
+                throw new AmqpException(AmqpErrorCode.FramingError, CommonResources.GetString(CommonResources.InvalidFrameSize, frameSize, maxFrameSize));
             }
         }
 

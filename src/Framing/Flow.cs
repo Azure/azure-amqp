@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Framing
 {
     using System.Text;
+    using Microsoft.Azure.Amqp.Encoding;
 
     /// <summary>
     /// Defines the flow performative.
@@ -108,17 +109,17 @@ namespace Microsoft.Azure.Amqp.Framing
         {
             if (!this.IncomingWindow.HasValue)
             {
-                throw new AmqpException(AmqpErrorCode.InvalidField, "flow.incoming-window");
+                AmqpEncoding.ThrowInvalidField("flow.incoming-window");
             }
 
             if (!this.NextOutgoingId.HasValue)
             {
-                throw new AmqpException(AmqpErrorCode.InvalidField, "flow.next-outgoing-id");
+                AmqpEncoding.ThrowInvalidField("flow.next-outgoing-id");
             }
 
             if (!this.OutgoingWindow.HasValue)
             {
-                throw new AmqpException(AmqpErrorCode.InvalidField, "flow.outgoing-window");
+                AmqpEncoding.ThrowInvalidField("flow.outgoing-window");
             }
         }
 

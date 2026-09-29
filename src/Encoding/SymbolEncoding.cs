@@ -70,7 +70,8 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
             else
             {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
+                AmqpEncoding.ThrowInvalidFormatCodeException(formatCode, buffer.Offset);
+                length = 0;
             }
 
             buffer.ValidateRead(length);
@@ -156,8 +157,13 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (value.Value == null)
             {
-                throw new ArgumentNullException("Array cannot have null symbols.");
+                ThrowNullArrayItem();
             }
+        }
+
+        static void ThrowNullArrayItem()
+        {
+            throw new ArgumentNullException("Array cannot have null symbols.");
         }
     }
 }

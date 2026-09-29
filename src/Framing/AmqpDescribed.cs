@@ -89,7 +89,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
             else
             {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
+                AmqpEncoding.ThrowInvalidFormatCodeException(formatCode, buffer.Offset);
             }
         }
 

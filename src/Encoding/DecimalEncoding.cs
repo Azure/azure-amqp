@@ -125,7 +125,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (destination.Length < 4)
             {
-                throw new ArgumentException("Destination is too short.", nameof(destination));
+                ThrowDestinationTooShort();
             }
 
             if (decimalDataLayoutCompatible)
@@ -191,7 +191,8 @@ namespace Microsoft.Azure.Amqp.Encoding
                     value = DecimalEncoding.DecodeDecimal128(buffer);
                     break;
                 default:
-                    throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
+                    AmqpEncoding.ThrowInvalidFormatCodeException(formatCode, buffer.Offset);
+                    break;
             }
 
             return value;
@@ -308,6 +309,11 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
 
             return value;
+        }
+
+        static void ThrowDestinationTooShort()
+        {
+            throw new ArgumentException("Destination is too short.", "destination");
         }
     }
 }

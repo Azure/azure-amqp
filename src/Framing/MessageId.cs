@@ -96,8 +96,14 @@ namespace Microsoft.Azure.Amqp.Framing
                     ArraySegment<byte> bin = BinaryEncoding.Decode(buffer, formatCode, false);
                     return new MessageIdBinary(bin);
                 default:
-                    throw new AmqpException(AmqpErrorCode.InvalidField, $"Format code {formatCode} is not valid for a message ID type.");
+                    ThrowInvalidMessageIdFormatCode(formatCode);
+                    return null;
             }
+        }
+
+        static void ThrowInvalidMessageIdFormatCode(FormatCode formatCode)
+        {
+            throw new AmqpException(AmqpErrorCode.InvalidField, $"Format code {formatCode} is not valid for a message ID type.");
         }
 
         /// <summary>Encodes the message id value into the buffer.</summary>

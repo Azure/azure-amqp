@@ -51,6 +51,14 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public static AmqpSymbol Decode(ByteBuffer buffer, FormatCode formatCode)
         {
+            ArraySegment<byte> segment = ReadSegment(buffer, formatCode);
+            var symbol = EncodingCache.GetSymbol(segment);
+            buffer.Complete(segment.Count);
+            return symbol;
+        }
+
+        static ArraySegment<byte> ReadSegment(ByteBuffer buffer, FormatCode formatCode)
+        {
             int length;
             if (formatCode == FormatCode.Symbol8)
             {
@@ -66,10 +74,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
 
             buffer.ValidateRead(length);
-            var segment = new ArraySegment<byte>(buffer.Buffer, buffer.Offset, length);
-            var symbol = EncodingCache.GetSymbol(segment);
-            buffer.Complete(length);
-            return symbol;
+            return new ArraySegment<byte>(buffer.Buffer, buffer.Offset, length);
         }
 
         public override int GetArrayValueSize(AmqpSymbol[] array)
@@ -141,7 +146,10 @@ namespace Microsoft.Azure.Amqp.Encoding
                 return null;
             }
 
-            return EncodingCache.Box(Decode(buffer, formatCode));
+            ArraySegment<byte> segment = ReadSegment(buffer, formatCode);
+            object boxed = EncodingCache.GetBoxedSymbol(segment);
+            buffer.Complete(segment.Count);
+            return boxed;
         }
 
         static void ValidateArrayItem(AmqpSymbol value)

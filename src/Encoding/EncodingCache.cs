@@ -15,13 +15,13 @@ namespace Microsoft.Azure.Amqp
         static readonly KeyValueCache<AmqpSymbol, object> boxedSymbolCache = new KeyValueCache<AmqpSymbol, object>(
             capacity: 43,
             comparer: SymbolComparer.Default,
-            keyFunc: s => s,
-            valueFunc: s => (object)s);
-        static readonly KeyValueCache<ArraySegment<byte>, string> encodedSymbolCache = new KeyValueCache<ArraySegment<byte>, string>(
+            keyFunc: static s => s,
+            valueFunc: static s => (object)s);
+        static readonly KeyValueCache<ArraySegment<byte>, object> encodedSymbolCache = new KeyValueCache<ArraySegment<byte>, object>(
             capacity: 43,
             comparer: ByteArrayComparer.Instance,
-            keyFunc: a => Copy(a),
-            valueFunc: a => System.Text.Encoding.ASCII.GetString(a.Array, a.Offset, a.Count));
+            keyFunc: static a => Copy(a),
+            valueFunc: static a => Box(new AmqpSymbol(System.Text.Encoding.ASCII.GetString(a.Array, a.Offset, a.Count))));
 
         static readonly UlongCache performativeCodes = new UlongCache(0x10ul, 0x19ul);
         static readonly UlongCache outcomeCodes = new UlongCache(0x23ul, 0x29ul);
@@ -87,6 +87,11 @@ namespace Microsoft.Azure.Amqp
         }
 
         public static AmqpSymbol GetSymbol(ArraySegment<byte> bytes)
+        {
+            return (AmqpSymbol)encodedSymbolCache.Get(bytes);
+        }
+
+        public static object GetBoxedSymbol(ArraySegment<byte> bytes)
         {
             return encodedSymbolCache.Get(bytes);
         }

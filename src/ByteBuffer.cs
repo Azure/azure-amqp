@@ -255,7 +255,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (this.Length < dataSize)
             {
-                throw new AmqpException(AmqpErrorCode.DecodeError, AmqpResources.GetString(AmqpResources.AmqpInsufficientBufferSize, dataSize, this.Length));
+                ThrowInsufficientBuffer(dataSize, this.Length);
             }
         }
 
@@ -269,7 +269,7 @@ namespace Microsoft.Azure.Amqp
             {
                 if (!this.autoGrow)
                 {
-                    throw new AmqpException(AmqpErrorCode.DecodeError, AmqpResources.GetString(AmqpResources.AmqpInsufficientBufferSize, dataSize, this.Size));
+                    ThrowInsufficientBuffer(dataSize, this.Size);
                 }
 
                 this.GrowBuffer(dataSize);
@@ -409,7 +409,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (!this.TryAddReference())
             {
-                throw new InvalidOperationException(AmqpResources.AmqpBufferAlreadyReclaimed);
+                ThrowBufferAlreadyReclaimed();
             }
 
             return this;
@@ -506,7 +506,7 @@ namespace Microsoft.Azure.Amqp
         {
             if (this.references != 1)
             {
-                throw new InvalidOperationException("Cannot grow the current buffer because it has more than one references");
+                ThrowBufferHasMultipleReferences();
             }
 
             int newSize = Math.Max(this.Capacity * 2, this.Capacity + dataSize);
@@ -537,6 +537,21 @@ namespace Microsoft.Azure.Amqp
 
             this.buffer = newBuffer.Buffer;
             this.bufferManager = newBuffer.BufferManager;
+        }
+
+        internal static void ThrowInsufficientBuffer(int dataSize, int size)
+        {
+            throw new AmqpException(AmqpErrorCode.DecodeError, AmqpResources.GetString(AmqpResources.AmqpInsufficientBufferSize, dataSize, size));
+        }
+
+        static void ThrowBufferAlreadyReclaimed()
+        {
+            throw new InvalidOperationException(AmqpResources.AmqpBufferAlreadyReclaimed);
+        }
+
+        static void ThrowBufferHasMultipleReferences()
+        {
+            throw new InvalidOperationException("Cannot grow the current buffer because it has more than one references");
         }
 
         readonly struct ManagedBuffer

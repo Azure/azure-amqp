@@ -91,13 +91,13 @@ namespace Microsoft.Azure.Amqp.Framing
         {
             if (buffer.Length < AmqpConstants.ProtocolHeaderSize)
             {
-                throw new AmqpException(AmqpErrorCode.DecodeError, AmqpResources.GetString(AmqpResources.AmqpInsufficientBufferSize, AmqpConstants.ProtocolHeaderSize, buffer.Length));
+                ByteBuffer.ThrowInsufficientBuffer(AmqpConstants.ProtocolHeaderSize, buffer.Length);
             }
 
             uint prefix = AmqpBitConverter.ReadUInt(buffer);
             if (prefix != ProtocolHeader.AmqpPrefix)
             {
-                throw new AmqpException(AmqpErrorCode.DecodeError, "ProtocolName" + prefix.ToString("X8"));
+                ThrowInvalidProtocolPrefix(prefix);
             }
 
             this.protocolId = (ProtocolId)AmqpBitConverter.ReadUByte(buffer);
@@ -145,6 +145,11 @@ namespace Microsoft.Azure.Amqp.Framing
                 (this.version.Minor << 8) +
                 this.version.Revision;
             return result.GetHashCode();
+        }
+
+        static void ThrowInvalidProtocolPrefix(uint prefix)
+        {
+            throw new AmqpException(AmqpErrorCode.DecodeError, "ProtocolName" + prefix.ToString("X8"));
         }
     }
 }

@@ -73,7 +73,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             EncodingBase encoding = TryGetEncoding(formatCode);
             if (encoding == null)
             {
-                throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, formatCode));
+                ThrowInvalidType(formatCode);
             }
 
             return encoding;
@@ -194,7 +194,8 @@ namespace Microsoft.Azure.Amqp.Encoding
                 return encoding;
             }
 
-            throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, type.FullName));
+            ThrowInvalidType(type.FullName);
+            return null;
         }
 
         /// <summary>
@@ -270,13 +271,13 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
             else
             {
-                throw GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
+                ThrowInvalidFormatCodeException(formatCode, buffer.Offset);
+                count = 0;
             }
 
             if (count < 0 || count > buffer.Length)
             {
-                throw new AmqpException(AmqpErrorCode.DecodeError,
-                    string.Format("AMQP variable width {0} exceeds buffer length ({1}).", (uint)count, buffer.Length));
+                ThrowVariableWidthExceedsBuffer(count, buffer.Length);
             }
         }
 
@@ -303,7 +304,9 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
             else
             {
-                throw GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
+                ThrowInvalidFormatCodeException(formatCode, buffer.Offset);
+                size = 0;
+                count = 0;
             }
 
             // AMQP size includes the count field but not the size field itself.
@@ -311,14 +314,12 @@ namespace Microsoft.Azure.Amqp.Encoding
             // Adding FixedWidth.UInt accounts for the already-consumed count field.
             if (size < 0 || size > buffer.Length + FixedWidth.UInt)
             {
-                throw new AmqpException(AmqpErrorCode.DecodeError,
-                    string.Format("AMQP collection size {0} exceeds buffer length ({1}).", size, buffer.Length));
+                ThrowCollectionSizeExceedsBuffer(size, buffer.Length);
             }
 
             if (count < 0)
             {
-                throw new AmqpException(AmqpErrorCode.DecodeError,
-                    string.Format("AMQP collection count {0} is not supported.", (uint)count));
+                ThrowUnsupportedCollectionCount(count);
             }
         }
 
@@ -343,9 +344,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 long totalSize = totalUnboundedSize + (long)count * itemUnboundedSize;
                 if (totalSize > AmqpEncoding.MaxUnboundedSize)
                 {
-                    throw new AmqpException(AmqpErrorCode.DecodeError,
-                        string.Format("Total unbounded element size ({0}) exceeds maximum allowed ({1}).",
-                            totalSize, AmqpEncoding.MaxUnboundedSize));
+                    ThrowUnboundedSizeExceedsMaximum(totalSize);
                 }
 
                 totalUnboundedSize = (int)totalSize;
@@ -353,8 +352,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             else if (count > bufferLength)
             {
                 // Non-zero-width element requires >= 1 buffer byte per item.
-                throw new AmqpException(AmqpErrorCode.DecodeError,
-                    string.Format("AMQP array count {0} exceeds buffer length ({1}).", count, bufferLength));
+                ThrowArrayCountExceedsBuffer(count, bufferLength);
             }
         }
 
@@ -362,8 +360,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (depth > MaxNestingDepth)
             {
-                throw new AmqpException(AmqpErrorCode.DecodeError,
-                    string.Format("AMQP object graph depth {0} exceeds maximum ({1}).", depth, MaxNestingDepth));
+                ThrowMaxNestingDepthExceeded(depth);
             }
         }
 
@@ -423,7 +420,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 return;
             }
 
-            throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, value.GetType().FullName));
+            ThrowInvalidType(value.GetType().FullName);
         }
 
         /// <summary>
@@ -466,7 +463,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             EncodingBase encoding = TryGetEncoding(formatCode);
             if (encoding == null)
             {
-                throw GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
+                ThrowInvalidFormatCodeException(formatCode, buffer.Offset);
             }
 
             return encoding.DecodeObject(buffer, formatCode, depth, ref totalUnboundedSize);
@@ -509,6 +506,58 @@ namespace Microsoft.Azure.Amqp.Encoding
         internal static void ThrowInvalidFormatCodeException(FormatCode formatCode, int offset)
         {
             throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, offset));
+        }
+
+        internal static void ThrowRequiredFieldNotSet(string fieldName, string performativeName)
+        {
+            throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpRequiredFieldNotSet, fieldName, performativeName));
+        }
+
+        internal static void ThrowInvalidField(string field)
+        {
+            throw AmqpEncoding.GetEncodingException(field);
+        }
+
+        static void ThrowInvalidType(object type)
+        {
+            throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, type));
+        }
+
+        static void ThrowVariableWidthExceedsBuffer(int count, int bufferLength)
+        {
+            throw new AmqpException(AmqpErrorCode.DecodeError,
+                string.Format("AMQP variable width {0} exceeds buffer length ({1}).", (uint)count, bufferLength));
+        }
+
+        static void ThrowCollectionSizeExceedsBuffer(int size, int bufferLength)
+        {
+            throw new AmqpException(AmqpErrorCode.DecodeError,
+                string.Format("AMQP collection size {0} exceeds buffer length ({1}).", size, bufferLength));
+        }
+
+        static void ThrowUnsupportedCollectionCount(int count)
+        {
+            throw new AmqpException(AmqpErrorCode.DecodeError,
+                string.Format("AMQP collection count {0} is not supported.", (uint)count));
+        }
+
+        static void ThrowUnboundedSizeExceedsMaximum(long totalSize)
+        {
+            throw new AmqpException(AmqpErrorCode.DecodeError,
+                string.Format("Total unbounded element size ({0}) exceeds maximum allowed ({1}).",
+                    totalSize, AmqpEncoding.MaxUnboundedSize));
+        }
+
+        static void ThrowArrayCountExceedsBuffer(int count, int bufferLength)
+        {
+            throw new AmqpException(AmqpErrorCode.DecodeError,
+                string.Format("AMQP array count {0} exceeds buffer length ({1}).", count, bufferLength));
+        }
+
+        static void ThrowMaxNestingDepthExceeded(int depth)
+        {
+            throw new AmqpException(AmqpErrorCode.DecodeError,
+                string.Format("AMQP object graph depth {0} exceeds maximum ({1}).", depth, AmqpEncoding.MaxNestingDepth));
         }
     }
 }

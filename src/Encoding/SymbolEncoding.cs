@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Text;
 
     sealed class SymbolEncoding : EncodingBase<AmqpSymbol>
@@ -161,6 +162,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
         }
 
+        [DoesNotReturn]
         static void ThrowNullArrayItem()
         {
             throw new ArgumentNullException("Array cannot have null symbols.");

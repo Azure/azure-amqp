@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Framing
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using Microsoft.Azure.Amqp.Encoding;
 
     /// <summary>
@@ -101,6 +102,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
+        [DoesNotReturn]
         static void ThrowUnsupportedAddressType(Type type)
         {
             throw new NotSupportedException(type.ToString());

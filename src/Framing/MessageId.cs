@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp.Framing
 {
     using System;
     using System.Globalization;
+    using System.Diagnostics.CodeAnalysis;
     using Microsoft.Azure.Amqp.Encoding;
 
     /// <summary>
@@ -101,6 +102,7 @@ namespace Microsoft.Azure.Amqp.Framing
             }
         }
 
+        [DoesNotReturn]
         static void ThrowInvalidMessageIdFormatCode(FormatCode formatCode)
         {
             throw new AmqpException(AmqpErrorCode.InvalidField, $"Format code {formatCode} is not valid for a message ID type.");

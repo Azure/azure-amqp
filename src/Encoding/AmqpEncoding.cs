@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp.Encoding
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// Encodes and decodes AMQP types.
@@ -503,44 +504,52 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
         }
 
+        [DoesNotReturn]
         internal static void ThrowInvalidFormatCodeException(FormatCode formatCode, int offset)
         {
             throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, offset));
         }
 
+        [DoesNotReturn]
         internal static void ThrowRequiredFieldNotSet(string fieldName, string performativeName)
         {
             throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpRequiredFieldNotSet, fieldName, performativeName));
         }
 
+        [DoesNotReturn]
         internal static void ThrowInvalidField(string field)
         {
             throw AmqpEncoding.GetEncodingException(field);
         }
 
+        [DoesNotReturn]
         static void ThrowInvalidType(object type)
         {
             throw new NotSupportedException(AmqpResources.GetString(AmqpResources.AmqpInvalidType, type));
         }
 
+        [DoesNotReturn]
         static void ThrowVariableWidthExceedsBuffer(int count, int bufferLength)
         {
             throw new AmqpException(AmqpErrorCode.DecodeError,
                 string.Format("AMQP variable width {0} exceeds buffer length ({1}).", (uint)count, bufferLength));
         }
 
+        [DoesNotReturn]
         static void ThrowCollectionSizeExceedsBuffer(int size, int bufferLength)
         {
             throw new AmqpException(AmqpErrorCode.DecodeError,
                 string.Format("AMQP collection size {0} exceeds buffer length ({1}).", size, bufferLength));
         }
 
+        [DoesNotReturn]
         static void ThrowUnsupportedCollectionCount(int count)
         {
             throw new AmqpException(AmqpErrorCode.DecodeError,
                 string.Format("AMQP collection count {0} is not supported.", (uint)count));
         }
 
+        [DoesNotReturn]
         static void ThrowUnboundedSizeExceedsMaximum(long totalSize)
         {
             throw new AmqpException(AmqpErrorCode.DecodeError,
@@ -548,12 +557,14 @@ namespace Microsoft.Azure.Amqp.Encoding
                     totalSize, AmqpEncoding.MaxUnboundedSize));
         }
 
+        [DoesNotReturn]
         static void ThrowArrayCountExceedsBuffer(int count, int bufferLength)
         {
             throw new AmqpException(AmqpErrorCode.DecodeError,
                 string.Format("AMQP array count {0} exceeds buffer length ({1}).", count, bufferLength));
         }
 
+        [DoesNotReturn]
         static void ThrowMaxNestingDepthExceeded(int depth)
         {
             throw new AmqpException(AmqpErrorCode.DecodeError,

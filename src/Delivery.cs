@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
@@ -326,6 +327,7 @@ namespace Microsoft.Azure.Amqp
             return dest;
         }
 
+        [DoesNotReturn]
         static void ThrowPayloadNotSupported()
         {
             throw new InvalidOperationException();

@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
 
     sealed class ArrayEncoding : EncodingBase<Array>
     {
@@ -94,6 +95,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             return encoding.DecodeArray(buffer, formatCode, count, depth + 1, ref totalUnboundedSize);
         }
 
+        [DoesNotReturn]
         static void ThrowFormatCodeMismatch(FormatCode formatCode, FormatCode expected)
         {
             throw new AmqpException(AmqpErrorCode.DecodeError, $"Format code '{formatCode}' is different from expected '{expected}'.");

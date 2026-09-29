@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp
     using Microsoft.Azure.Amqp.Encoding;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// Use this as the comparer for an <see cref="AmqpMap"/> to compare the byte array content instead of a generic reference compare.
@@ -50,6 +51,7 @@ namespace Microsoft.Azure.Amqp
             return ByteArrayComparer.Instance.GetHashCode((ArraySegment<byte>)obj.Key);
         }
 
+        [DoesNotReturn]
         static void ThrowInvalidMapKey(Type type)
         {
             throw new ArgumentException(CommonResources.GetString(CommonResources.InvalidType, nameof(MapKey), nameof(ArraySegment<byte>), type));

@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using Microsoft.Azure.Amqp.Encoding;
 
@@ -539,16 +540,19 @@ namespace Microsoft.Azure.Amqp
             this.bufferManager = newBuffer.BufferManager;
         }
 
+        [DoesNotReturn]
         internal static void ThrowInsufficientBuffer(int dataSize, int size)
         {
             throw new AmqpException(AmqpErrorCode.DecodeError, AmqpResources.GetString(AmqpResources.AmqpInsufficientBufferSize, dataSize, size));
         }
 
+        [DoesNotReturn]
         static void ThrowBufferAlreadyReclaimed()
         {
             throw new InvalidOperationException(AmqpResources.AmqpBufferAlreadyReclaimed);
         }
 
+        [DoesNotReturn]
         static void ThrowBufferHasMultipleReferences()
         {
             throw new InvalidOperationException("Cannot grow the current buffer because it has more than one references");

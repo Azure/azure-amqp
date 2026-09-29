@@ -27,12 +27,14 @@ namespace Microsoft.Azure.Amqp
 
             if (!(x.Key is ArraySegment<byte> xKey))
             {
-                throw new ArgumentException(CommonResources.GetString(CommonResources.InvalidType, nameof(MapKey), nameof(ArraySegment<byte>), x.Key.GetType()));
+                ThrowInvalidMapKey(x.Key.GetType());
+                xKey = default;
             }
 
             if (!(y.Key is ArraySegment<byte> yKey))
             {
-                throw new ArgumentException(CommonResources.GetString(CommonResources.InvalidType, nameof(MapKey), nameof(ArraySegment<byte>), y.Key.GetType()));
+                ThrowInvalidMapKey(y.Key.GetType());
+                yKey = default;
             }
 
             return ByteArrayComparer.Instance.Equals(xKey, yKey);
@@ -42,10 +44,15 @@ namespace Microsoft.Azure.Amqp
         {
             if (!(obj.Key is ArraySegment<byte>))
             {
-                throw new ArgumentException(CommonResources.GetString(CommonResources.InvalidType, nameof(MapKey), nameof(ArraySegment<byte>), obj.Key?.GetType()));
+                ThrowInvalidMapKey(obj.Key?.GetType());
             }
 
             return ByteArrayComparer.Instance.GetHashCode((ArraySegment<byte>)obj.Key);
+        }
+
+        static void ThrowInvalidMapKey(Type type)
+        {
+            throw new ArgumentException(CommonResources.GetString(CommonResources.InvalidType, nameof(MapKey), nameof(ArraySegment<byte>), type));
         }
     }
 }

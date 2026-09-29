@@ -84,12 +84,12 @@ namespace Microsoft.Azure.Amqp.Framing
         {
             if (!this.Role.HasValue)
             {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpRequiredFieldNotSet, "role", Name));
+                AmqpEncoding.ThrowRequiredFieldNotSet("role", Name);
             }
 
             if (!this.First.HasValue)
             {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpRequiredFieldNotSet, "first", Name));
+                AmqpEncoding.ThrowRequiredFieldNotSet("first", Name);
             }
         }
 

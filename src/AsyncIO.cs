@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Transport;
@@ -331,6 +332,7 @@ namespace Microsoft.Azure.Amqp
                 this.SetReadFrameSize();
             }
 
+            [DoesNotReturn]
             static void ThrowInvalidFrameSize(int frameSize, int maxFrameSize)
             {
                 throw new AmqpException(AmqpErrorCode.FramingError, CommonResources.GetString(CommonResources.InvalidFrameSize, frameSize, maxFrameSize));

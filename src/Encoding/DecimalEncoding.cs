@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
     using System.Buffers.Binary;
+    using System.Diagnostics.CodeAnalysis;
     using System.Runtime.InteropServices;
 
     /// <summary>
@@ -311,6 +312,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             return value;
         }
 
+        [DoesNotReturn]
         static void ThrowDestinationTooShort()
         {
             throw new ArgumentException("Destination is too short.", "destination");

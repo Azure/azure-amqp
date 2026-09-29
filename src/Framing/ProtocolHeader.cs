@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Framing
 {
     using System.Globalization;
+    using System.Diagnostics.CodeAnalysis;
     using Microsoft.Azure.Amqp.Encoding;
 
     /// <summary>
@@ -147,6 +148,7 @@ namespace Microsoft.Azure.Amqp.Framing
             return result.GetHashCode();
         }
 
+        [DoesNotReturn]
         static void ThrowInvalidProtocolPrefix(uint prefix)
         {
             throw new AmqpException(AmqpErrorCode.DecodeError, "ProtocolName" + prefix.ToString("X8"));

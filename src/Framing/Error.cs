@@ -150,7 +150,7 @@ namespace Microsoft.Azure.Amqp.Framing
         {
             if (this.Condition.Value == null)
             {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpRequiredFieldNotSet, "condition", Name));
+                AmqpEncoding.ThrowRequiredFieldNotSet("condition", Name);
             }
         }
 

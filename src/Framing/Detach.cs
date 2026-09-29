@@ -62,7 +62,7 @@ namespace Microsoft.Azure.Amqp.Framing
         {
             if (!this.Handle.HasValue)
             {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpRequiredFieldNotSet, "handle", Name));
+                AmqpEncoding.ThrowRequiredFieldNotSet("handle", Name);
             }
         }
 

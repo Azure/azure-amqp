@@ -126,7 +126,7 @@ namespace Microsoft.Azure.Amqp.Framing
         {
             if (this.ContainerId == null)
             {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpRequiredFieldNotSet, "container-id", Name));
+                AmqpEncoding.ThrowRequiredFieldNotSet("container-id", Name);
             }
         }
 

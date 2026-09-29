@@ -222,7 +222,7 @@ namespace Microsoft.Azure.Amqp
         /// <param name="isLast">true if the buffer is the last segment of the payload.</param>
         public virtual void AddPayload(ByteBuffer payload, bool isLast)
         {
-            throw new InvalidOperationException();
+            ThrowPayloadNotSupported();
         }
 
         /// <summary>
@@ -334,6 +334,11 @@ namespace Microsoft.Azure.Amqp
             }
 
             return dest;
+        }
+
+        static void ThrowPayloadNotSupported()
+        {
+            throw new InvalidOperationException();
         }
     }
 }

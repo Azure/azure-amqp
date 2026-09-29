@@ -17,12 +17,7 @@ namespace Microsoft.Azure.Amqp
             comparer: SymbolComparer.Default,
             keyFunc: static s => s,
             valueFunc: static s => (object)s);
-        static readonly KeyValueCache<ArraySegment<byte>, string> encodedSymbolCache = new KeyValueCache<ArraySegment<byte>, string>(
-            capacity: 43,
-            comparer: ByteArrayComparer.Instance,
-            keyFunc: static a => Copy(a),
-            valueFunc: static a => System.Text.Encoding.ASCII.GetString(a.Array, a.Offset, a.Count));
-        static readonly KeyValueCache<ArraySegment<byte>, object> encodedBoxedSymbolCache = new KeyValueCache<ArraySegment<byte>, object>(
+        static readonly KeyValueCache<ArraySegment<byte>, object> encodedSymbolCache = new KeyValueCache<ArraySegment<byte>, object>(
             capacity: 43,
             comparer: ByteArrayComparer.Instance,
             keyFunc: static a => Copy(a),
@@ -93,12 +88,12 @@ namespace Microsoft.Azure.Amqp
 
         public static AmqpSymbol GetSymbol(ArraySegment<byte> bytes)
         {
-            return encodedSymbolCache.Get(bytes);
+            return (AmqpSymbol)encodedSymbolCache.Get(bytes);
         }
 
         public static object GetBoxedSymbol(ArraySegment<byte> bytes)
         {
-            return encodedBoxedSymbolCache.Get(bytes);
+            return encodedSymbolCache.Get(bytes);
         }
 
         static ArraySegment<byte> Copy(ArraySegment<byte> a)

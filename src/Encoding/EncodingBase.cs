@@ -5,7 +5,6 @@ namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
     using System.Diagnostics;
-    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// Implements the AMQP type system.
@@ -74,7 +73,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (formatCode != expected)
             {
-                ThrowInvalidFormatCodeException(formatCode, offset);
+                AmqpEncoding.ThrowInvalidFormatCodeException(formatCode, offset);
             }
         }
 
@@ -83,7 +82,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (formatCode != expected1 && formatCode != expected2)
             {
-                ThrowInvalidFormatCodeException(formatCode, offset);
+                AmqpEncoding.ThrowInvalidFormatCodeException(formatCode, offset);
             }
         }
 
@@ -92,14 +91,8 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (formatCode != expected1 && formatCode != expected2 && formatCode != expected3)
             {
-                ThrowInvalidFormatCodeException(formatCode, offset);
+                AmqpEncoding.ThrowInvalidFormatCodeException(formatCode, offset);
             }
-        }
-
-        [DoesNotReturn]
-        static void ThrowInvalidFormatCodeException(FormatCode formatCode, int offset)
-        {
-            throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, offset));
         }
     }
 

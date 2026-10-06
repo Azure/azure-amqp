@@ -149,6 +149,19 @@ namespace Microsoft.Azure.Amqp.Transport
             }
         }
 
+        // Releases the write buffer when a sync Write (SslStream encrypting a segment)
+        // throws before BeginFlushWrite is ever reached, so writeState stays at WriteActive
+        // and Dispose (which only releases from WriteIdle) would otherwise never free it.
+        // Mirrors EndWrite's handling of a concurrent Dispose.
+        public void FaultWrite()
+        {
+            int old = Interlocked.CompareExchange(ref this.writeState, WriteIdle, WriteActive);
+            if (old == WriteActive || old == WriteDisposed)
+            {
+                Interlocked.Exchange(ref this.writeBuffer, null)?.Dispose();
+            }
+        }
+
         public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
         {
             TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();

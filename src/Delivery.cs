@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
@@ -13,6 +14,10 @@ namespace Microsoft.Azure.Amqp
     /// </summary>
     public abstract class Delivery : IDisposable
     {
+        int disposed;
+
+        internal bool IsDisposed => Volatile.Read(ref this.disposed) != 0;
+
         /// <summary>
         /// Gets or sets the delivery-tag.
         /// </summary>
@@ -251,13 +256,18 @@ namespace Microsoft.Azure.Amqp
         /// <inheritdoc />
         public void Dispose()
         {
-            this.Dispose(true);
+            if (Interlocked.Exchange(ref this.disposed, 1) == 0)
+            {
+                this.Dispose(true);
+            }
+
             GC.SuppressFinalize(this);
         }
 
         /// <summary>
         /// Releases unmanaged resources and optionally releases managed resources.
         /// </summary>
+        /// <remarks>The public Dispose method invokes this cleanup chain only once.</remarks>
         /// <param name="disposing">
         /// true to release both managed and unmanaged resources;
         /// false to release only unmanaged resources.

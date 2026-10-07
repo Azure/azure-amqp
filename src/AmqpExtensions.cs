@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Collections.Generic;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
@@ -16,6 +17,24 @@ namespace Microsoft.Azure.Amqp
     /// </summary>
     public static class Extensions
     {
+        // Acquire only while live; never temporarily resurrect a zero reference count.
+        internal static bool TryAddRef(ref int refs)
+        {
+            int count = Volatile.Read(ref refs);
+            while (count > 0)
+            {
+                int previous = Interlocked.CompareExchange(ref refs, checked(count + 1), count);
+                if (previous == count)
+                {
+                    return true;
+                }
+
+                count = previous;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Gets a hex string representation of the binary data.
         /// </summary>

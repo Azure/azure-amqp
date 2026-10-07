@@ -8,6 +8,7 @@ namespace Microsoft.Azure.Amqp
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Azure.Amqp.Transaction;
 
@@ -23,7 +24,7 @@ namespace Microsoft.Azure.Amqp
         readonly WaiterManager waiterManager;
         readonly PrefetchSizeTracker prefetchSizeTracker;
         Action<AmqpMessage> messageListener;
-        AmqpMessage currentMessage;
+        PendingDelivery currentDelivery;
         int checkWaiterCount;
         HashSet<DrainAsyncResult> drainTasks;
 
@@ -496,16 +497,16 @@ namespace Microsoft.Azure.Amqp
         /// <returns>True if a delivery is created.</returns>
         public override bool CreateDelivery(Transfer transfer, out Delivery delivery)
         {
-            if (this.currentMessage != null)
+            PendingDelivery current = Volatile.Read(ref this.currentDelivery);
+            bool shouldCreate = current == null;
+            if (shouldCreate)
             {
-                delivery = this.currentMessage;
-                return false;
+                current = new PendingDelivery();
+                Volatile.Write(ref this.currentDelivery, current);
             }
-            else
-            {
-                delivery = this.currentMessage = AmqpMessage.CreateReceivedMessage();
-                return true;
-            }
+
+            delivery = current.Message;
+            return shouldCreate;
         }
 
         /// <summary>
@@ -549,59 +550,57 @@ namespace Microsoft.Azure.Amqp
         /// <param name="frame">The transfer frame.</param>
         protected override void OnProcessTransfer(Delivery delivery, Transfer transfer, Frame frame)
         {
-            // Snapshot currentMessage once. Abort/Close may null the field concurrently; we work on the
-            // local snapshot to avoid NREs, and use CompareExchange on handoff to decide who owns disposal.
-            AmqpMessage current = Volatile.Read(ref this.currentMessage);
-
-            Fx.Assert(delivery == null || delivery == current, "The delivery must be null or must be the same as the current message.");
-
-            // Whether resumed or not, an aborted delivery is considered implicitly settled. Cleanup any pending state and return.
-            if (delivery.Aborted)
+            PendingDelivery current = Volatile.Read(ref this.currentDelivery);
+            if (current == null || !current.TryAddReference())
             {
-                AmqpMessage aborted = Interlocked.Exchange(ref this.currentMessage, null);
-                aborted?.Dispose();
-                this.RemoveUnsettledDeliveryFromTerminusStoreIfNeeded(delivery.DeliveryTag);
+                // Close/Abort has already released the pending delivery.
                 return;
             }
 
-            if (current == null)
+            try
             {
-                // Abort/Close raced ahead of us and took ownership. Drop the transfer.
-                return;
-            }
+                Fx.Assert(delivery == current.Message, "The delivery must be the current message.");
 
-            if (this.Settings.MaxMessageSize.HasValue && this.Settings.MaxMessageSize.Value > 0)
-            {
-                ulong size = (ulong)(current.BytesTransfered + frame.Payload.Count);
-                if (size > this.Settings.MaxMessageSize.Value)
+                // An aborted delivery is implicitly settled, including resumed deliveries.
+                if (delivery.Aborted)
                 {
-                    if (this.IsClosing())
+                    if (Interlocked.CompareExchange(ref this.currentDelivery, null, current) == current)
                     {
-                        // The closing sequence has been started, so any
-                        // transfer is meaningless, so we can treat them as no-op
-                        return;
+                        current.Release();
                     }
 
-                    throw new AmqpException(AmqpErrorCode.MessageSizeExceeded,
-                        AmqpResources.GetString(AmqpResources.AmqpMessageSizeExceeded, current.DeliveryId.Value, size, this.Settings.MaxMessageSize.Value));
+                    this.RemoveUnsettledDeliveryFromTerminusStoreIfNeeded(delivery.DeliveryTag);
+                    return;
                 }
-            }
 
-            ArraySegment<byte> payload = frame.Payload;
-            frame.RawByteBuffer.AdjustPosition(payload.Offset, payload.Count);
-            // Buffer ownership: single-transfer messages claim their own reference in
-            // AddPayload, multi-transfer messages own a merge buffer and release the transfer buffer
-            current.AddPayload(frame.RawByteBuffer, !transfer.More());
+                if (this.Settings.MaxMessageSize.HasValue && this.Settings.MaxMessageSize.Value > 0)
+                {
+                    ulong size = (ulong)(current.BytesTransfered + frame.Payload.Count);
+                    if (size > this.Settings.MaxMessageSize.Value)
+                    {
+                        if (this.IsClosing())
+                        {
+                            return;
+                        }
 
-            if (!transfer.More())
-            {
-                // Try to publish the handoff iff we still own the current message.
-                if (Interlocked.CompareExchange(ref this.currentMessage, null, current) != current)
+                        throw new AmqpException(AmqpErrorCode.MessageSizeExceeded,
+                            AmqpResources.GetString(AmqpResources.AmqpMessageSizeExceeded, delivery.DeliveryId.Value, size, this.Settings.MaxMessageSize.Value));
+                    }
+                }
+
+                ArraySegment<byte> payload = frame.Payload;
+                frame.RawByteBuffer.AdjustPosition(payload.Offset, payload.Count);
+                current.AddPayload(frame.RawByteBuffer);
+
+                if (transfer.More() ||
+                    Interlocked.CompareExchange(ref this.currentDelivery, null, current) != current)
                 {
                     return;
                 }
 
-                AmqpTrace.OnReceiveMessage(this, current.DeliveryId.Value, current.Segments);
+                // Drop field ownership. The operation reference now exclusively owns assembly.
+                current.Release();
+                AmqpTrace.OnReceiveMessage(this, delivery.DeliveryId.Value, delivery.Segments);
 
                 if (delivery.Resume && this.IsRecoverable)
                 {
@@ -627,7 +626,11 @@ namespace Microsoft.Azure.Amqp
                     }
                 }
 
-                this.OnReceiveMessage(current);
+                this.OnReceiveMessage(current.CompleteMessage());
+            }
+            finally
+            {
+                current.Release();
             }
         }
 
@@ -674,6 +677,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         protected override void AbortInternal()
         {
+            Interlocked.Exchange(ref this.currentDelivery, null)?.Release();
             Queue<AmqpMessage> messages = null;
             this.CancelPendingOperations(true, out messages);
 
@@ -685,9 +689,6 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            AmqpMessage temp = Interlocked.Exchange(ref this.currentMessage, null);
-            temp?.Dispose();
-
             base.AbortInternal();
         }
 
@@ -697,6 +698,7 @@ namespace Microsoft.Azure.Amqp
         /// <returns>True if close is completed.</returns>
         protected override bool CloseInternal()
         {
+            Interlocked.Exchange(ref this.currentDelivery, null)?.Release();
             Queue<AmqpMessage> messages = null;
             this.CancelPendingOperations(false, out messages);
 
@@ -708,9 +710,6 @@ namespace Microsoft.Azure.Amqp
                     message.Dispose();
                 }
             }
-
-            AmqpMessage temp = Interlocked.Exchange(ref this.currentMessage, null);
-            temp?.Dispose();
 
             return base.CloseInternal();
         }
@@ -798,6 +797,92 @@ namespace Microsoft.Azure.Amqp
             if (this.pendingDispositions != null)
             {
                 this.pendingDispositions.Abort();
+            }
+        }
+
+        sealed class PendingDelivery
+        {
+            // One field-owned reference plus an operation reference while processing a transfer.
+            // Only the serialized receive path mutates the buffers; final release owns cleanup.
+            int references = 1;
+            AmqpMessage message = AmqpMessage.CreateReceivedMessage();
+            ByteBuffer firstBuffer;
+            List<ByteBuffer> moreBuffers;
+
+            public AmqpMessage Message => this.message;
+
+            public long BytesTransfered { get; private set; }
+
+            public bool TryAddReference()
+            {
+                return Extensions.TryAddRef(ref this.references);
+            }
+
+            // An operation reference MUST be acquired before calling this method.
+            public void AddPayload(ByteBuffer buffer)
+            {
+                if (this.firstBuffer == null)
+                {
+                    this.firstBuffer = buffer.AddReference();
+                }
+                else
+                {
+                    this.moreBuffers ??= new List<ByteBuffer>();
+                    this.moreBuffers.Add(buffer.AddReference());
+                }
+
+                this.BytesTransfered += buffer.Length;
+            }
+
+            // An operation reference MUST be acquired before calling this method.
+            public AmqpMessage CompleteMessage()
+            {
+                if (this.moreBuffers == null)
+                {
+                    this.message.AddPayload(this.firstBuffer, true);
+                }
+                else
+                {
+                    using (ByteBuffer buffer = new ByteBuffer(checked((int)this.BytesTransfered), false))
+                    {
+                        AmqpBitConverter.WriteBytes(buffer, this.firstBuffer.Buffer, this.firstBuffer.Offset, this.firstBuffer.Length);
+                        foreach (ByteBuffer payload in this.moreBuffers)
+                        {
+                            AmqpBitConverter.WriteBytes(buffer, payload.Buffer, payload.Offset, payload.Length);
+                        }
+
+                        this.message.AddPayload(buffer, true);
+                    }
+                }
+
+                this.ReleaseBuffers();
+                AmqpMessage completed = this.message;
+                this.message = null;
+                return completed;
+            }
+
+            public void Release()
+            {
+                if (Interlocked.Decrement(ref this.references) == 0)
+                {
+                    this.message?.Dispose();
+                    this.ReleaseBuffers();
+                }
+            }
+
+            void ReleaseBuffers()
+            {
+                this.firstBuffer?.Dispose();
+                this.firstBuffer = null;
+                if (this.moreBuffers != null)
+                {
+                    foreach (ByteBuffer buffer in this.moreBuffers)
+                    {
+                        buffer.Dispose();
+                    }
+
+                    this.moreBuffers = null;
+                }
             }
         }
 

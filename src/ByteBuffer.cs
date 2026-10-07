@@ -385,9 +385,8 @@ namespace Microsoft.Azure.Amqp
         /// <returns>true on success, false if the buffer is already disposed.</returns>
         internal bool TryAddReference()
         {
-            if (Interlocked.Increment(ref this.references) <= 1)
+            if (!Extensions.TryAddRef(ref this.references))
             {
-                Interlocked.Decrement(ref this.references);
                 return false;
             }
 

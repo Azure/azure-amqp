@@ -92,6 +92,7 @@ namespace Microsoft.Azure.Amqp.Transport
             // Encrypt each source segment in place via a sync SslStream.Write and issue
             // a single async I/O to flush the accumulated ciphertext to the inner transport.
             IAsyncResult result;
+            bool flushStarted = false;
             try
             {
                 if (args.Buffer != null)
@@ -108,15 +109,28 @@ namespace Microsoft.Azure.Amqp.Transport
                     }
                 }
 
+                flushStarted = true;
                 result = this.transportStream.BeginFlushWrite(onWriteComplete, this);
             }
-            catch (ObjectDisposedException ode)
+            catch (Exception ex)
             {
-                throw new IOException($"Transport '{this}' is closed", ode);
-            }
-            catch (InvalidOperationException ioe)
-            {
-                throw new IOException($"Transport '{this}' is valid for write operations.", ioe);
+                if (!flushStarted)
+                {
+                    this.transportStream.FaultWrite();
+                }
+
+                // Convert non-retriable exceptions to IOException for caller retry
+                if (ex is ObjectDisposedException)
+                {
+                    throw new IOException($"Transport '{this}' is closed", ex);
+                }
+
+                if (ex is InvalidOperationException)
+                {
+                    throw new IOException($"Transport '{this}' is not valid for write operations.", ex);
+                }
+
+                throw;
             }
 
             bool completedSynchronously = result.CompletedSynchronously;
@@ -212,7 +226,7 @@ namespace Microsoft.Azure.Amqp.Transport
         /// <returns>true if close is completed, otherwise false.</returns>
         protected override bool CloseInternal()
         {
-            this.sslStream.Dispose();
+            this.sslStream.Close();
             return true;
         }
 
@@ -221,7 +235,14 @@ namespace Microsoft.Azure.Amqp.Transport
         /// </summary>
         protected override void AbortInternal()
         {
-            this.innerTransport.Abort();
+            try
+            {
+                this.innerTransport.Abort();
+            }
+            finally
+            {
+                this.sslStream.Dispose();
+            }
         }
 
         /// <summary>

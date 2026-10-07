@@ -7,7 +7,6 @@ namespace Microsoft.Azure.Amqp
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Threading;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Framing;
 
@@ -80,9 +79,6 @@ namespace Microsoft.Azure.Amqp
     /// </summary>
     public abstract class AmqpMessage : Delivery
     {
-        const int MessageDisposed = 1;
-        const int BufferDisposed = 2;
-
         Header header;
         DeliveryAnnotations deliveryAnnotations;
         MessageAnnotations messageAnnotations;
@@ -100,7 +96,6 @@ namespace Microsoft.Azure.Amqp
         int bodyOffset = -1;
         int bodyLength = 0;
         ByteBuffer buffer;
-        int disposeState;
 
         /// <summary>
         /// Gets or sets the header.
@@ -649,8 +644,12 @@ namespace Microsoft.Azure.Amqp
         /// <inheritdoc />
         protected override void Dispose(bool disposing)
         {
-            this.disposeState |= MessageDisposed;
-            this.ReleaseBuffer();
+            if (disposing)
+            {
+                this.buffer?.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -658,7 +657,7 @@ namespace Microsoft.Azure.Amqp
         /// </summary>
         public void ThrowIfDisposed()
         {
-            if ((this.disposeState & MessageDisposed) > 0)
+            if (this.IsDisposed)
             {
                 throw new ObjectDisposedException(this.GetType().Name);
             }
@@ -708,19 +707,6 @@ namespace Microsoft.Azure.Amqp
             if (AmqpMessage.EnsureInitialized(ref obj))
             {
                 this.sectionFlags |= section;
-            }
-        }
-
-        void ReleaseBuffer()
-        {
-            // if other bits are set after unset is computed, the buffer may not be disposed
-            // this is ok as long as the buffer is not double disposed.
-            int unset = this.disposeState & ~BufferDisposed;
-            int set = this.disposeState | BufferDisposed;
-            int original = Interlocked.CompareExchange(ref this.disposeState, set, unset);
-            if ((original & BufferDisposed) == 0)
-            {
-                this.buffer?.Dispose();
             }
         }
 
@@ -1016,7 +1002,11 @@ namespace Microsoft.Azure.Amqp
 
             protected override void Dispose(bool disposing)
             {
-                this.source?.Dispose();
+                if (disposing)
+                {
+                    this.source?.Dispose();
+                }
+
                 base.Dispose(disposing);
             }
 
@@ -1110,11 +1100,12 @@ namespace Microsoft.Azure.Amqp
 
             protected override void Dispose(bool disposing)
             {
-                base.Dispose(disposing);
-                if (this.ownStream)
+                if (disposing && this.ownStream)
                 {
                     this.bodyStream.Dispose();
                 }
+
+                base.Dispose(disposing);
             }
         }
 

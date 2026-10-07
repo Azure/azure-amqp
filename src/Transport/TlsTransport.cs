@@ -127,7 +127,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
                 if (ex is InvalidOperationException)
                 {
-                    throw new IOException($"Transport '{this}' is valid for write operations.", ex);
+                    throw new IOException($"Transport '{this}' is not valid for write operations.", ex);
                 }
 
                 throw;

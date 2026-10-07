@@ -60,6 +60,61 @@ namespace Test.Microsoft.Azure.Amqp
             }
         }
 
+        [TestMethod]
+        public void TlsWriteBufferSurvivesDisposeUntilPendingWriteCompletes()
+        {
+            var transport = new PendingWriteTransport();
+            var stream = new TransportStream(transport);
+            stream.Write(new byte[] { 1, 2, 3 }, 0, 3);
+
+            ByteBuffer writeBuffer = GetWriteBuffer(stream);
+            IAsyncResult result = stream.BeginFlushWrite(null, null);
+            Assert.AreSame(writeBuffer.Buffer, transport.PendingWrite.Buffer);
+
+            stream.Dispose();
+            Assert.IsNotNull(writeBuffer.Buffer);
+            Assert.AreEqual(1, GetReferenceCount(writeBuffer));
+
+            transport.CompleteWrite();
+            stream.EndWrite(result);
+            Assert.IsNull(GetWriteBuffer(stream));
+            Assert.IsNull(writeBuffer.Buffer);
+            Assert.AreEqual(0, GetReferenceCount(writeBuffer));
+
+            stream.Dispose();
+            Assert.AreEqual(0, GetReferenceCount(writeBuffer));
+        }
+
+        [TestMethod]
+        public void TlsFaultWriteReleasesBufferedWrite()
+        {
+            var stream = new TransportStream(new PendingWriteTransport());
+            stream.Write(new byte[] { 1, 2, 3 }, 0, 3);
+            ByteBuffer writeBuffer = GetWriteBuffer(stream);
+
+            stream.FaultWrite();
+            Assert.IsNull(GetWriteBuffer(stream));
+            Assert.IsNull(writeBuffer.Buffer);
+            Assert.AreEqual(0, GetReferenceCount(writeBuffer));
+
+            stream.Dispose();
+            Assert.AreEqual(0, GetReferenceCount(writeBuffer));
+        }
+
+        static ByteBuffer GetWriteBuffer(TransportStream stream)
+        {
+            return (ByteBuffer)typeof(TransportStream)
+                .GetField("writeBuffer", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(stream);
+        }
+
+        static int GetReferenceCount(ByteBuffer buffer)
+        {
+            return (int)typeof(ByteBuffer)
+                .GetField("references", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(buffer);
+        }
+
         static SocketAsyncEventArgs CreateReadEventArgs()
         {
             Type type = typeof(TcpTransport).GetNestedType("ReadAsyncEventArgs", BindingFlags.NonPublic);
@@ -526,6 +581,59 @@ namespace Test.Microsoft.Azure.Amqp
             public TransportSettings Client { get; set; }
             public TransportSettings Server { get; set; }
             public ManualResetEvent ServerReady { get; set; }
+        }
+
+        sealed class PendingWriteTransport : TransportBase
+        {
+            public PendingWriteTransport()
+                : base("pending-write")
+            {
+            }
+
+            internal override EndPoint Local => null;
+
+            internal override EndPoint Remote => null;
+
+            public override string LocalEndPoint => null;
+
+            public override string RemoteEndPoint => null;
+
+            public TransportAsyncCallbackArgs PendingWrite { get; private set; }
+
+            public override void SetMonitor(ITransportMonitor usageMeter)
+            {
+            }
+
+            public override bool WriteAsync(TransportAsyncCallbackArgs args)
+            {
+                Assert.IsNull(this.PendingWrite);
+                this.PendingWrite = args;
+                return true;
+            }
+
+            public override bool ReadAsync(TransportAsyncCallbackArgs args)
+            {
+                throw new NotSupportedException();
+            }
+
+            public void CompleteWrite()
+            {
+                TransportAsyncCallbackArgs args = this.PendingWrite;
+                Assert.IsNotNull(args);
+                this.PendingWrite = null;
+                args.BytesTransfered = args.Count;
+                args.CompletedSynchronously = false;
+                args.CompletedCallback(args);
+            }
+
+            protected override bool CloseInternal()
+            {
+                return true;
+            }
+
+            protected override void AbortInternal()
+            {
+            }
         }
 
         class TransportTestHelper

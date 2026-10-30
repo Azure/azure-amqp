@@ -19,6 +19,82 @@ namespace Test.Microsoft.Azure.Amqp
         const int TestMaxNumber = 9999;
 
         [TestMethod]
+        public void TlsInitiatorInlineAsynchronousCompletionTest()
+        {
+            VerifyTlsInitiatorCompletion(false, true);
+        }
+
+        [TestMethod]
+        public void TlsInitiatorPendingCompletionTest()
+        {
+            VerifyTlsInitiatorCompletion(false, false);
+        }
+
+        [TestMethod]
+        public void TlsInitiatorSynchronousCompletionTest()
+        {
+            VerifyTlsInitiatorCompletion(true, false);
+        }
+
+        static void VerifyTlsInitiatorCompletion(bool tlsSynchronous, bool completeInline)
+        {
+            foreach (bool tcpSynchronous in new[] { true, false })
+            {
+                foreach (bool fail in new[] { false, true })
+                {
+                    var inner = new PendingWriteTransport();
+                    var tcp = new ControlledConnectSettings(inner, tcpSynchronous);
+                    var settings = new TlsTransportSettings(tcp) { TargetHost = "localhost" };
+                    var error = fail ? new InvalidOperationException("TLS open failed.") : null;
+                    using (var tls = new ControlledTlsTransport(inner, settings, tlsSynchronous, completeInline, error))
+                    {
+                        var initiator = new ControlledTlsInitiator(settings, tls);
+                        int callbacks = 0;
+                        var args = new TransportAsyncCallbackArgs();
+                        args.CompletedCallback = completed =>
+                        {
+                            ++callbacks;
+                            Assert.IsFalse(completed.CompletedSynchronously);
+                            Assert.AreSame(error, completed.Exception);
+                            if (fail)
+                            {
+                                Assert.IsNull(completed.Transport);
+                                Assert.AreEqual(AmqpObjectState.End, tls.State, "Cleanup must precede handoff.");
+                            }
+                            else
+                            {
+                                Assert.AreSame(tls, completed.Transport);
+                                Assert.AreEqual(AmqpObjectState.Opened, tls.State);
+                            }
+                        };
+
+                        bool pending = initiator.ConnectAsync(TimeSpan.FromSeconds(10), args);
+                        Assert.AreEqual(!(tcpSynchronous && tlsSynchronous), pending);
+                        if (!tcpSynchronous)
+                        {
+                            Assert.AreEqual(0, callbacks);
+                            tcp.CompleteConnect();
+                        }
+
+                        if (!tlsSynchronous && !completeInline)
+                        {
+                            Assert.AreEqual(0, callbacks);
+                            Assert.IsFalse(args.CompletedSynchronously);
+                            tls.FinishOpen();
+                        }
+
+                        Assert.AreEqual(pending ? 1 : 0, callbacks,
+                            $"TCP synchronous={tcpSynchronous}, TLS failure={fail}, inline={completeInline}");
+                        Assert.AreEqual(!pending, args.CompletedSynchronously);
+                        Assert.AreSame(error, args.Exception);
+                        Assert.AreSame(fail ? null : tls, args.Transport);
+                        tls.SafeClose();
+                    }
+                }
+            }
+        }
+
+        [TestMethod]
         public void TcpReadBufferDisposalPreservesPendingReadReference()
         {
             SocketAsyncEventArgs args = CreateReadEventArgs();
@@ -581,6 +657,117 @@ namespace Test.Microsoft.Azure.Amqp
             public TransportSettings Client { get; set; }
             public TransportSettings Server { get; set; }
             public ManualResetEvent ServerReady { get; set; }
+        }
+
+        sealed class ControlledConnectSettings : TransportSettings
+        {
+            readonly TransportBase transport;
+            readonly bool synchronous;
+            TransportAsyncCallbackArgs args;
+
+            public ControlledConnectSettings(TransportBase transport, bool synchronous)
+            {
+                this.transport = transport;
+                this.synchronous = synchronous;
+            }
+
+            public override TransportInitiator CreateInitiator()
+            {
+                return new ControlledConnectInitiator(this);
+            }
+
+            public override TransportListener CreateListener()
+            {
+                throw new NotSupportedException();
+            }
+
+            public void CompleteConnect()
+            {
+                this.args.Transport = this.transport;
+                this.args.CompletedSynchronously = this.synchronous;
+                if (!this.synchronous)
+                {
+                    this.args.CompletedCallback(this.args);
+                }
+            }
+
+            sealed class ControlledConnectInitiator : TransportInitiator
+            {
+                readonly ControlledConnectSettings settings;
+
+                public ControlledConnectInitiator(ControlledConnectSettings settings)
+                {
+                    this.settings = settings;
+                }
+
+                public override bool ConnectAsync(TimeSpan timeout, TransportAsyncCallbackArgs callbackArgs)
+                {
+                    this.settings.args = callbackArgs;
+                    if (this.settings.synchronous)
+                    {
+                        this.settings.CompleteConnect();
+                    }
+
+                    return !this.settings.synchronous;
+                }
+            }
+        }
+
+        sealed class ControlledTlsInitiator : TlsTransportInitiator
+        {
+            readonly TlsTransport transport;
+
+            public ControlledTlsInitiator(TlsTransportSettings settings, TlsTransport transport)
+                : base(settings)
+            {
+                this.transport = transport;
+            }
+
+            protected override TlsTransport OnCreateTransport(TransportBase innerTransport, TlsTransportSettings tlsTransportSettings)
+            {
+                return this.transport;
+            }
+        }
+
+        sealed class ControlledTlsTransport : TlsTransport
+        {
+            readonly bool synchronous;
+            readonly bool completeInline;
+            readonly Exception error;
+
+            public ControlledTlsTransport(TransportBase inner, TlsTransportSettings settings,
+                bool synchronous, bool completeInline, Exception error)
+                : base(inner, settings)
+            {
+                this.synchronous = synchronous;
+                this.completeInline = completeInline;
+                this.error = error;
+            }
+
+            public void FinishOpen()
+            {
+                this.CompleteOpen(false, this.error);
+            }
+
+            protected override bool OpenInternal()
+            {
+                if (this.synchronous)
+                {
+                    if (this.error != null)
+                    {
+                        throw this.error;
+                    }
+
+                    return true;
+                }
+
+                if (this.completeInline)
+                {
+                    this.FinishOpen();
+                }
+
+                return false;
+            }
         }
 
         sealed class PendingWriteTransport : TransportBase

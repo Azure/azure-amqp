@@ -86,8 +86,14 @@ namespace Microsoft.Azure.Amqp.Encoding
         static long GetMilliseconds(DateTime value)
         {
             DateTime utcValue = value.ToUniversalTime();
-            double millisends = (utcValue - AmqpConstants.StartOfEpoch).TotalMilliseconds;
-            return (long)millisends;
+            long ticks = utcValue.Ticks - AmqpConstants.StartOfEpoch.Ticks;
+            if (utcValue.Ticks == DateTime.MaxValue.Ticks)
+            {
+                // Preserve the legacy wire sentinel for infinite timeouts.
+                return (ticks / TimeSpan.TicksPerMillisecond) + 1;
+            }
+
+            return ticks / TimeSpan.TicksPerMillisecond;
         }
 
         static DateTime ToDateTime(long milliseconds)

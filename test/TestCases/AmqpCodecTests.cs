@@ -300,6 +300,54 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [TestMethod]
+        public void AmqpCodecTimeStampPrecisionTest()
+        {
+            DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            DateTime[] values =
+            {
+                epoch.AddTicks(-10001),
+                epoch.AddTicks(-9999),
+                epoch,
+                epoch.AddTicks(9999),
+                epoch.AddTicks(10000),
+                new DateTime(2026, 8, 18, 22, 1, 54, DateTimeKind.Utc).AddTicks(9999),
+                new DateTime(9999, 12, 31, 23, 59, 59, DateTimeKind.Utc).AddTicks(9999998)
+            };
+
+            foreach (DateTime value in values)
+            {
+                long expected = (value.Ticks - epoch.Ticks) / TimeSpan.TicksPerMillisecond;
+                using (ByteBuffer buffer = new ByteBuffer(32, false))
+                {
+                    AmqpCodec.EncodeTimeStamp(value, buffer);
+                    Assert.AreEqual((byte)FormatCode.TimeStamp, AmqpBitConverter.ReadUByte(buffer));
+                    Assert.AreEqual(expected, AmqpBitConverter.ReadLong(buffer), value.ToString("O"));
+                }
+
+                using (ByteBuffer buffer = new ByteBuffer(32, false))
+                {
+                    AmqpCodec.EncodeArray(new DateTime[] { value }, buffer);
+                    buffer.Complete(buffer.Length - sizeof(long));
+                    Assert.AreEqual(expected, AmqpBitConverter.ReadLong(buffer), value.ToString("O"));
+                }
+            }
+        }
+
+        [TestMethod]
+        public void AmqpCodecTimeStampMaxValueTest()
+        {
+            DateTime value = DateTime.SpecifyKind(DateTime.MaxValue, DateTimeKind.Utc);
+            using (ByteBuffer buffer = new ByteBuffer(32, false))
+            {
+                AmqpCodec.EncodeTimeStamp(value, buffer);
+                Assert.AreEqual(253402300800000L, (long)AmqpBitConverter.ReadULong(buffer.Buffer, buffer.Offset + 1, sizeof(long)));
+                Assert.AreEqual(DateTime.MaxValue, AmqpCodec.DecodeTimeStamp(buffer).Value);
+            }
+
+            ArrayTest(new DateTime[] { value }, (expected, actual) => Assert.AreEqual(expected.Ticks, actual.Ticks));
+        }
+
+        [TestMethod]
         public void AmqpCodecListTest()
         {
             byte[] workBuffer = new byte[4096];

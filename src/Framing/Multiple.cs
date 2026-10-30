@@ -109,11 +109,13 @@ namespace Microsoft.Azure.Amqp.Framing
             }
 
             AmqpEncoding.ReadSizeAndCount(buffer, formatCode, FormatCode.Array8, FormatCode.Array32, out int size, out int count);
-            Multiple<T> multiple = new Multiple<T>(count);
             formatCode = AmqpEncoding.ReadFormatCode(buffer);
+            int totalUnboundedSize = 0;
+            AmqpEncoding.TrackUnboundedSize(count, EncodingBase<T>.GetUnboundedElementSize(formatCode), buffer.Length, ref totalUnboundedSize);
+            Multiple<T> multiple = new Multiple<T>(count);
             for (int i = 0; i < count; i++)
             {
-                T item = encoding.Read(buffer, formatCode);
+                T item = (T)encoding.DecodeObject(buffer, formatCode, 1, ref totalUnboundedSize);
                 multiple.Add(item);
             }
 

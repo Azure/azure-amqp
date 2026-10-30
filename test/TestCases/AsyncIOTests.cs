@@ -3,6 +3,7 @@ namespace Test.Microsoft.Azure.Amqp
     using System;
     using System.Collections.Generic;
     using System.Net;
+    using System.Threading;
     using global::Microsoft.Azure.Amqp;
     using global::Microsoft.Azure.Amqp.Transport;
     using global::Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -70,19 +71,23 @@ namespace Test.Microsoft.Azure.Amqp
         [TestMethod]
         public void AsyncWriterClearsBatchBufferListWhenTransportThrows()
         {
-            var transport = new TestTransport() { ThrowOnWriteNumber = 2 };
-            var ioHandler = new TestIoHandler();
-            var writer = new AsyncIO.AsyncWriter(transport, int.MaxValue, int.MaxValue, ioHandler);
+            using (var faultReceived = new ManualResetEventSlim())
+            {
+                var transport = new TestTransport() { ThrowOnWriteNumber = 2 };
+                var ioHandler = new TestIoHandler() { OnFault = _ => faultReceived.Set() };
+                var writer = new AsyncIO.AsyncWriter(transport, int.MaxValue, int.MaxValue, ioHandler);
 
-            writer.WriteBuffer(CreateBuffer(1));
-            writer.WriteBuffer(CreateBuffer(2));
-            writer.WriteBuffer(CreateBuffer(3));
+                writer.WriteBuffer(CreateBuffer(1));
+                writer.WriteBuffer(CreateBuffer(2));
+                writer.WriteBuffer(CreateBuffer(3));
 
-            transport.CompleteWrite();
+                transport.CompleteWrite();
 
-            Assert.AreSame(transport.WriteException, ioHandler.Exception);
-            Assert.AreEqual(1, transport.BatchBufferLists.Count);
-            Assert.AreEqual(0, transport.BatchBufferLists[0].Count);
+                Assert.IsTrue(faultReceived.Wait(TimeSpan.FromSeconds(10)));
+                Assert.AreSame(transport.WriteException, ioHandler.Exception);
+                Assert.AreEqual(1, transport.BatchBufferLists.Count);
+                Assert.AreEqual(0, transport.BatchBufferLists[0].Count);
+            }
         }
 
         [TestMethod]
@@ -107,6 +112,63 @@ namespace Test.Microsoft.Azure.Amqp
             transport.CompleteWrite();
             Assert.AreEqual(2, transport.BatchBufferLists.Count);
             Assert.AreNotSame(largeBatch, transport.BatchBufferLists[1]);
+        }
+
+        [TestMethod]
+        public void AsyncWriterDefersSynchronousTransportThrow()
+        {
+            AssertSynchronousWriteFaultIsDeferred(new TestTransport() { ThrowOnWriteNumber = 1 });
+        }
+
+        [TestMethod]
+        public void AsyncWriterDefersSynchronousTransportError()
+        {
+            AssertSynchronousWriteFaultIsDeferred(new TestTransport() { CompletesSynchronously = true, FailOnWriteNumber = 1 });
+        }
+
+        [TestMethod]
+        public void AsyncWriterReportsAsynchronousTransportErrorOnCallbackThread()
+        {
+            var transport = new TestTransport();
+            int callbackThread = 0;
+            var ioHandler = new TestIoHandler() { OnFault = _ => callbackThread = Thread.CurrentThread.ManagedThreadId };
+            var writer = new AsyncIO.AsyncWriter(transport, int.MaxValue, int.MaxValue, ioHandler);
+            writer.WriteBuffer(CreateBuffer(1));
+
+            transport.CompleteWrite(transport.WriteException);
+
+            Assert.AreSame(transport.WriteException, ioHandler.Exception);
+            Assert.AreEqual(Thread.CurrentThread.ManagedThreadId, callbackThread);
+        }
+
+        static void AssertSynchronousWriteFaultIsDeferred(TestTransport transport)
+        {
+            using (var faultReceived = new ManualResetEventSlim())
+            {
+                var callerLock = new object();
+                bool faultRanUnderCallerLock = true;
+                int faultCount = 0;
+                var ioHandler = new TestIoHandler()
+                {
+                    OnFault = _ =>
+                    {
+                        faultRanUnderCallerLock = Monitor.IsEntered(callerLock);
+                        Interlocked.Increment(ref faultCount);
+                        faultReceived.Set();
+                    }
+                };
+                var writer = new AsyncIO.AsyncWriter(transport, int.MaxValue, int.MaxValue, ioHandler);
+
+                lock (callerLock)
+                {
+                    writer.WriteBuffer(CreateBuffer(1));
+                }
+
+                Assert.IsTrue(faultReceived.Wait(TimeSpan.FromSeconds(10)));
+                Assert.AreSame(transport.WriteException, ioHandler.Exception);
+                Assert.AreEqual(1, faultCount);
+                Assert.IsFalse(faultRanUnderCallerLock, "Fault handling must not run inline under the sender's locks.");
+            }
         }
 
         static ByteBuffer CreateBuffer(int size)
@@ -137,6 +199,8 @@ namespace Test.Microsoft.Azure.Amqp
 
             public int ThrowOnWriteNumber { get; set; }
 
+            public int FailOnWriteNumber { get; set; }
+
             public Exception WriteException { get; }
 
             public Action<int> OnWrite { get; set; }
@@ -165,6 +229,8 @@ namespace Test.Microsoft.Azure.Amqp
 
                 if (this.CompletesSynchronously)
                 {
+                    args.CompletedSynchronously = true;
+                    args.Exception = this.FailOnWriteNumber == this.writeCount ? this.WriteException : null;
                     args.BytesTransfered = args.Count;
                     return false;
                 }
@@ -179,11 +245,12 @@ namespace Test.Microsoft.Azure.Amqp
                 throw new NotSupportedException();
             }
 
-            public void CompleteWrite()
+            public void CompleteWrite(Exception exception = null)
             {
                 TransportAsyncCallbackArgs args = this.PendingWrite;
                 Assert.IsNotNull(args);
                 this.PendingWrite = null;
+                args.Exception = exception;
                 args.BytesTransfered = args.Count;
                 args.CompletedSynchronously = false;
                 args.CompletedCallback(args);
@@ -203,6 +270,8 @@ namespace Test.Microsoft.Azure.Amqp
         {
             public Exception Exception { get; private set; }
 
+            public Action<Exception> OnFault { get; set; }
+
             public ByteBuffer CreateBuffer(int frameSize)
             {
                 throw new NotSupportedException();
@@ -216,6 +285,7 @@ namespace Test.Microsoft.Azure.Amqp
             public void OnIoFault(Exception exception)
             {
                 this.Exception = exception;
+                this.OnFault?.Invoke(exception);
             }
 
             public void OnIoEvent(IoEvent ioEvent, long queueSize)

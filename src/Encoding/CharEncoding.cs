@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.Amqp.Encoding
 {
+    using System;
     using UTF32Encoding = System.Text.UTF32Encoding;
 
     sealed class CharEncoding : EncodingBase<char>
@@ -37,6 +38,14 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         public override void WriteArrayValue(char[] array, ByteBuffer buffer)
         {
+            for (int i = 0; i < array.Length; ++i)
+            {
+                if (char.IsSurrogate(array[i]))
+                {
+                    throw new ArgumentOutOfRangeException(nameof(array), ResourcesGeneric.ErrorConvertingToChar);
+                }
+            }
+
             int size = FixedWidth.Char * array.Length;
             buffer.ValidateWrite(size);
             AmqpUTF32.GetBytes(array, 0, array.Length, buffer.Buffer, buffer.WritePos);
@@ -74,17 +83,14 @@ namespace Microsoft.Azure.Amqp.Encoding
             return FastDecode(buffer, formatCode);
         }
 
-        static unsafe void FastEncode(char value, ByteBuffer buffer)
+        static void FastEncode(char value, ByteBuffer buffer)
         {
-            buffer.ValidateWrite(FixedWidth.Char);
-            char* array = stackalloc char[1];
-            array[0] = value;
-            fixed (byte* ptr = &buffer.Buffer[buffer.WritePos])
+            if (char.IsSurrogate(value))
             {
-                AmqpUTF32.GetBytes(array, 1, ptr, FixedWidth.Char);
+                throw new ArgumentOutOfRangeException(nameof(value), ResourcesGeneric.ErrorConvertingToChar);
             }
 
-            buffer.Append(FixedWidth.Char);
+            AmqpBitConverter.WriteInt(buffer, value);
         }
 
         static unsafe char FastDecode(ByteBuffer buffer, FormatCode formatCode)

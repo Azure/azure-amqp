@@ -627,6 +627,82 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [TestMethod]
+        public void AmqpCodecCharRejectsSurrogatesTest()
+        {
+            foreach (char value in new char[] { '\uD800', '\uDBFF', '\uDC00', '\uDFFF' })
+            {
+                using (ByteBuffer buffer = new ByteBuffer(32, false))
+                {
+                    Assert.ThrowsException<ArgumentOutOfRangeException>(() => AmqpCodec.EncodeChar(value, buffer));
+                }
+
+                using (ByteBuffer buffer = new ByteBuffer(32, false))
+                {
+                    Assert.ThrowsException<ArgumentOutOfRangeException>(() => AmqpCodec.EncodeObject(value, buffer));
+                }
+            }
+        }
+
+        [TestMethod]
+        public void AmqpCodecCharArrayRejectsSurrogatesTest()
+        {
+            char[][] arrays = new char[][]
+            {
+                new char[] { '\uD800' },
+                new char[] { '\uDBFF' },
+                new char[] { '\uDC00' },
+                new char[] { '\uDFFF' },
+                new char[] { 'a', '\uD83D', '\uDE00', 'b' },
+                new char[] { '\uDE00', '\uD83D' }
+            };
+
+            foreach (char[] array in arrays)
+            {
+                using (ByteBuffer buffer = new ByteBuffer(64, false))
+                {
+                    Assert.ThrowsException<ArgumentOutOfRangeException>(() => AmqpCodec.EncodeArray(array, buffer));
+                }
+
+                using (ByteBuffer buffer = new ByteBuffer(64, false))
+                {
+                    Assert.ThrowsException<ArgumentOutOfRangeException>(() => AmqpCodec.EncodeObject(array, buffer));
+                }
+            }
+        }
+
+        [TestMethod]
+        public void AmqpCodecCharUnicodeBoundariesTest()
+        {
+            char[] values = new char[] { '\0', 'A', '\uD7FF', '\uE000', '\uFFFD', '\uFFFF' };
+            foreach (char value in values)
+            {
+                byte[] expected = new byte[] { 0x73, 0, 0, (byte)(value >> 8), (byte)value };
+                using (ByteBuffer buffer = new ByteBuffer(expected.Length, false))
+                {
+                    AmqpCodec.EncodeChar(value, buffer);
+                    this.EnsureEqual(expected, 0, expected.Length, buffer.Buffer, buffer.Offset, buffer.Length);
+                    Assert.AreEqual(value, AmqpCodec.DecodeChar(buffer).Value);
+                }
+
+                using (ByteBuffer buffer = new ByteBuffer(expected.Length, false))
+                {
+                    AmqpCodec.EncodeObject(value, buffer);
+                    this.EnsureEqual(expected, 0, expected.Length, buffer.Buffer, buffer.Offset, buffer.Length);
+                    Assert.AreEqual(value, (char)AmqpCodec.DecodeObject(buffer));
+                }
+            }
+
+            ArrayTest(values, Assert.AreEqual);
+            ArrayTest(new char[0], Assert.AreEqual);
+            using (ByteBuffer buffer = new ByteBuffer(64, false))
+            {
+                AmqpCodec.EncodeObject(values, buffer);
+                CollectionAssert.AreEqual(values, (char[])AmqpCodec.DecodeObject(buffer));
+                Assert.AreEqual(0, buffer.Length);
+            }
+        }
+
+        [TestMethod]
         public void AmqpCodecArrayTest()
         {
             ArrayTest<bool>(

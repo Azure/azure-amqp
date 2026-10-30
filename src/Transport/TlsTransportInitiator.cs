@@ -134,6 +134,7 @@ namespace Microsoft.Azure.Amqp.Transport
 
         void HandleTransportOpened(IAsyncResult result)
         {
+            this.callbackArgs.CompletedSynchronously &= result.CompletedSynchronously;
             this.callbackArgs.Transport.EndOpen(result);
         }
 

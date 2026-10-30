@@ -6,6 +6,7 @@ namespace Microsoft.Azure.Amqp
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.IO;
     using Microsoft.Azure.Amqp.Encoding;
     using Microsoft.Azure.Amqp.Transport;
 
@@ -426,8 +427,7 @@ namespace Microsoft.Azure.Amqp
         /// <summary>Reads frames from the transport.</summary>
         public sealed class FrameBufferReader
         {
-            static readonly Action<TransportAsyncCallbackArgs> onSizeComplete = OnReadSizeComplete;
-            static readonly Action<TransportAsyncCallbackArgs> onFrameComplete = OnReadFrameComplete;
+            static readonly Action<TransportAsyncCallbackArgs> onReadComplete = OnReadComplete;
             readonly TransportBase transport;
             readonly int maxFrameSize;
             readonly byte[] sizeBuffer;
@@ -448,7 +448,7 @@ namespace Microsoft.Azure.Amqp
                 TransportAsyncCallbackArgs args = new TransportAsyncCallbackArgs();
                 args.UserToken = this;
                 args.SetBuffer(this.sizeBuffer, 0, this.sizeBuffer.Length);
-                args.CompletedCallback = onSizeComplete;
+                args.CompletedCallback = onReadComplete;
                 this.ReadCore(args);
             }
 
@@ -471,21 +471,20 @@ namespace Microsoft.Azure.Amqp
                 }
             }
 
-            static void OnReadSizeComplete(TransportAsyncCallbackArgs args)
+            static void OnReadComplete(TransportAsyncCallbackArgs args)
             {
                 FrameBufferReader thisPtr = (FrameBufferReader)args.UserToken;
-                if (!thisPtr.HandleReadComplete(args))
+                try
                 {
-                    thisPtr.ReadCore(args);
+                    if (!thisPtr.HandleReadComplete(args))
+                    {
+                        thisPtr.ReadCore(args);
+                    }
                 }
-            }
-
-            static void OnReadFrameComplete(TransportAsyncCallbackArgs args)
-            {
-                FrameBufferReader thisPtr = (FrameBufferReader) args.UserToken;
-                if (!thisPtr.HandleReadComplete(args))
+                catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
-                    thisPtr.ReadCore(args);
+                    args.Exception = exception;
+                    thisPtr.HandleReadComplete(args);
                 }
             }
 
@@ -499,14 +498,34 @@ namespace Microsoft.Azure.Amqp
                 }
                 else if (args.BytesTransfered == 0)
                 {
-                    exception = new ObjectDisposedException(this.transport.ToString());
+                    exception = new IOException($"Transport {this.transport} is closed.");
                 }
                 else if (args.BytesTransfered == args.Count)
                 {
-                    args.ByteBuffer?.Append(args.BytesTransfered);
+                    if (args.ByteBuffer == null)
+                    {
+                        // read size completed ok
+                        uint size = AmqpBitConverter.ReadUInt(this.sizeBuffer, 0, this.sizeBuffer.Length);
+                        if (size < AmqpConstants.ProtocolHeaderSize || size > this.maxFrameSize)
+                        {
+                            exception = new AmqpException(AmqpErrorCode.FramingError, CommonResources.GetString(CommonResources.InvalidFrameSize, size, this.maxFrameSize));
+                        }
+                        else
+                        {
+                            // Move to reading the frame body
+                            ByteBuffer buffer = this.parent.CreateBuffer((int)size);
+                            args.SetReadBuffer(buffer);
+                            completed = false;
+                        }
+                    }
+                    else
+                    {
+                        args.ByteBuffer.Append(args.BytesTransfered);
+                    }
                 }
                 else
                 {
+                    // read buffer partially completed, continue reading
                     completed = false;
                     if (args.ByteBuffer == null)
                     {
@@ -521,42 +540,20 @@ namespace Microsoft.Azure.Amqp
 
                 if (completed)
                 {
-                    if (exception != null || object.ReferenceEquals(args.CompletedCallback, onFrameComplete))
+                    try
                     {
-                        ByteBuffer buffer = args.ByteBuffer;
-                        try
+                        if (exception == null)
                         {
-                            if (exception == null)
-                            {
-                                this.parent.OnReceiveBuffer(buffer);
-                            }
-                            else
-                            {
-                                this.parent.OnIoFault(exception);
-                            }
-                        }
-                        finally
-                        {
-                            buffer?.Dispose();
-                        }
-                    }
-                    else
-                    {
-                        // read size completed ok
-                        uint size = AmqpBitConverter.ReadUInt(this.sizeBuffer, 0, this.sizeBuffer.Length);
-                        if (size > this.maxFrameSize)
-                        {
-                            completed = true;
-                            exception = new AmqpException(AmqpErrorCode.FramingError, CommonResources.GetString(CommonResources.InvalidFrameSize, size, this.maxFrameSize));
-                            this.parent.OnIoFault(exception);
+                            this.parent.OnReceiveBuffer(args.ByteBuffer);
                         }
                         else
                         {
-                            ByteBuffer buffer = this.parent.CreateBuffer((int)size);
-                            args.SetReadBuffer(buffer);
-                            args.CompletedCallback = onFrameComplete;
-                            completed = false;
+                            this.parent.OnIoFault(exception);
                         }
+                    }
+                    finally
+                    {
+                        args.Reset();
                     }
                 }
 

@@ -694,7 +694,7 @@ namespace Microsoft.Azure.Amqp
             static void WriteCompleteCallback(TransportAsyncCallbackArgs args)
             {
                 AsyncWriter thisPtr = (AsyncWriter)args.UserToken;
-                if (!thisPtr.HandleWriteBufferComplete(args))
+                if (!thisPtr.HandleWriteBufferComplete(args, false))
                 {
                     return;
                 }
@@ -740,14 +740,14 @@ namespace Microsoft.Azure.Amqp
                     {
                         // completed synchronously
                         Fx.Assert(this.writeAsyncEventArgs.BytesTransfered > 0 || this.writeAsyncEventArgs.Exception != null, "no bytes sent on success");
-                        return this.HandleWriteBufferComplete(this.writeAsyncEventArgs);
+                        return this.HandleWriteBufferComplete(this.writeAsyncEventArgs, true);
                     }
                 }
                 catch (Exception exception) when (!Fx.IsFatal(exception))
                 {
                     this.writeAsyncEventArgs.Exception = exception;
                     this.writeAsyncEventArgs.UserToken = this;
-                    return this.HandleWriteBufferComplete(this.writeAsyncEventArgs);
+                    return this.HandleWriteBufferComplete(this.writeAsyncEventArgs, true);
                 }
             }
 
@@ -793,13 +793,21 @@ namespace Microsoft.Azure.Amqp
                 while (this.WriteCore());
             }
 
-            bool HandleWriteBufferComplete(TransportAsyncCallbackArgs args)
+            bool HandleWriteBufferComplete(TransportAsyncCallbackArgs args, bool completedSynchronously)
             {
                 bool shouldContinue;
+                Exception synchronousException = null;
                 if (args.Exception != null)
                 {
                     shouldContinue = false;
-                    this.parent.OnIoFault(args.Exception);
+                    if (completedSynchronously)
+                    {
+                        synchronousException = args.Exception;
+                    }
+                    else
+                    {
+                        this.parent.OnIoFault(args.Exception);
+                    }
                 }
                 else
                 {
@@ -820,6 +828,12 @@ namespace Microsoft.Azure.Amqp
                 else
                 {
                     this.batchBufferList?.Clear();
+                }
+
+                if (synchronousException != null)
+                {
+                    // Fault handling can abort sessions and must not run under the sender's locks.
+                    ActionItem.Schedule(state => this.parent.OnIoFault((Exception)state), synchronousException);
                 }
 
                 return shouldContinue;

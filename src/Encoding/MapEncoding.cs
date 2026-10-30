@@ -20,6 +20,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 
         internal static void ReadMapValue(ByteBuffer buffer, AmqpMap map, int size, int count, int depth, ref int totalUnboundedSize)
         {
+            buffer.ValidateRead(count);
             map.PresizeForDecode(count / 2);
             for (; count > 0; count -= 2)
             {

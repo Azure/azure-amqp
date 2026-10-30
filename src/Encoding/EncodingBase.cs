@@ -231,7 +231,7 @@ namespace Microsoft.Azure.Amqp.Encoding
                 || formatCode == FormatCode.Map8   || formatCode == FormatCode.Map32;
         }
 
-        static int GetUnboundedElementSize(FormatCode formatCode)
+        internal static int GetUnboundedElementSize(FormatCode formatCode)
         {
             switch (formatCode)
             {

@@ -530,6 +530,72 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [TestMethod]
+        public void AmqpCodecMultipleUnboundedCountTest()
+        {
+            byte[] payload =
+            {
+                FormatCode.Array32,
+                0, 0, 0, 5,
+                0, 0, 0x4E, 0x20,
+                FormatCode.UInt0
+            };
+
+            var buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            AmqpException ex = Assert.ThrowsException<AmqpException>(() => AmqpCodec.DecodeMultiple<uint>(buffer));
+            Assert.AreEqual((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+
+            payload[7] = 0x40;
+            payload[8] = 0;
+            buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            Multiple<uint> values = AmqpCodec.DecodeMultiple<uint>(buffer);
+            Assert.AreEqual(16384, values.Count);
+            foreach (uint value in values)
+            {
+                Assert.AreEqual(0u, value);
+            }
+            Assert.AreEqual(0, buffer.Length);
+        }
+
+        [TestMethod]
+        public void AmqpCodecMultipleNestedUnboundedCountTest()
+        {
+            byte[] payload =
+            {
+                FormatCode.Array32,
+                0, 0, 0, 23,
+                0, 0, 0, 2,
+                FormatCode.Array32,
+                0, 0, 0, 5,
+                0, 0, 0x27, 0x10,
+                FormatCode.UInt0,
+                0, 0, 0, 5,
+                0, 0, 0x27, 0x10,
+                FormatCode.UInt0
+            };
+
+            var buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            AmqpException ex = Assert.ThrowsException<AmqpException>(() => AmqpCodec.DecodeMultiple<Array>(buffer));
+            Assert.AreEqual((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+        }
+
+        [TestMethod]
+        public void AmqpCodecMapCountBeforePresizeTest()
+        {
+            byte[] payload =
+            {
+                FormatCode.Map32,
+                0, 0, 0, 5,
+                0, 1, 0, 0,
+                FormatCode.Null
+            };
+
+            var buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+            AmqpException ex = Assert.ThrowsException<AmqpException>(() => AmqpCodec.DecodeMap(buffer));
+            Assert.AreEqual((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
+            Assert.AreEqual(9, buffer.Offset, "Reject the count before allocating or decoding map entries.");
+        }
+
+        [TestMethod]
         public void AmqpCodecFramingTypeTest()
         {
             byte[] workBuffer = new byte[1024 * 16];
@@ -1240,6 +1306,12 @@ namespace Test.Microsoft.Azure.Amqp
                 {
                     Assert.Fail($"[T={typeof(T).Name}, fc={formatCode}] DecodeArray<T> threw {ex.GetType().Name}: {ex.Message}");
                 }
+            }
+
+            {
+                ByteBuffer buffer = new ByteBuffer(new ArraySegment<byte>(payload));
+                AmqpException ex = Assert.ThrowsException<AmqpException>(() => AmqpCodec.DecodeMultiple<T>(buffer));
+                Assert.AreEqual((AmqpSymbol)AmqpErrorCode.DecodeError, (AmqpSymbol)ex.Error.Condition);
             }
         }
 

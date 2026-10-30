@@ -1047,6 +1047,83 @@ namespace Test.Microsoft.Azure.Amqp
         }
 
         [TestMethod]
+        public void AmqpSerializerRelativeUriEncodingTest()
+        {
+            string[,] values =
+            {
+                { "", "" },
+                { "folder/file", "folder/file" },
+                { "../child%20name?key=value#part", "../child%20name?key=value#part" },
+                { "?query=value", "?query=value" },
+                { "#fragment", "#fragment" },
+                { "a%2Fb", "a%2Fb" },
+                { "caf\u00e9/file name", "caf%C3%A9/file%20name" }
+            };
+
+            AmqpContractSerializer serializer = new AmqpContractSerializer();
+            for (int i = 0; i < values.GetLength(0); ++i)
+            {
+                using (ByteBuffer buffer = new ByteBuffer(256, true))
+                {
+                    serializer.WriteObjectToBuffer(buffer, new Uri(values[i, 0], UriKind.Relative));
+                    DescribedType encoded = (DescribedType)AmqpEncoding.DecodeObject(buffer);
+                    Assert.AreEqual(AmqpConstants.UriName, encoded.Descriptor.ToString());
+                    Assert.AreEqual(values[i, 1], encoded.Value);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void AmqpSerializerRelativeUriDecodingTest()
+        {
+            string[] values = { "", "folder/file", "../child%20name?key=value#part", "?query=value", "#fragment", "a%2Fb", "caf%C3%A9/file%20name" };
+            AmqpContractSerializer serializer = new AmqpContractSerializer();
+            foreach (string value in values)
+            {
+                using (ByteBuffer buffer = new ByteBuffer(256, true))
+                {
+                    AmqpEncoding.EncodeObject(new DescribedType(AmqpConstants.UriName, value), buffer);
+                    Uri decoded = serializer.ReadObjectFromBuffer<Uri, Uri>(buffer);
+                    Assert.IsFalse(decoded.IsAbsoluteUri, value);
+                    Assert.AreEqual(value, decoded.OriginalString);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void AmqpSerializerAbsoluteUriCompatibilityTest()
+        {
+            string[] values =
+            {
+                "https://example.com/a%20b?q=x#part",
+                "amqps://example.com/queue",
+                "file:///C:/data/file.txt",
+                @"\\server\share\file.txt",
+                @"C:\data\file.txt"
+            };
+
+            AmqpContractSerializer serializer = new AmqpContractSerializer();
+            foreach (string value in values)
+            {
+                Uri expected = new Uri(value);
+                using (ByteBuffer buffer = new ByteBuffer(256, true))
+                {
+                    serializer.WriteObjectToBuffer(buffer, expected);
+                    DescribedType encoded = (DescribedType)AmqpEncoding.DecodeObject(buffer);
+                    Assert.AreEqual(expected.AbsoluteUri, encoded.Value);
+                }
+
+                using (ByteBuffer buffer = new ByteBuffer(256, true))
+                {
+                    AmqpEncoding.EncodeObject(new DescribedType(AmqpConstants.UriName, value), buffer);
+                    Uri decoded = serializer.ReadObjectFromBuffer<Uri, Uri>(buffer);
+                    Assert.IsTrue(decoded.IsAbsoluteUri, value);
+                    Assert.AreEqual(expected.AbsoluteUri, decoded.AbsoluteUri);
+                }
+            }
+        }
+
+        [TestMethod]
         public void AmqpSerializerListEncodingTest()
         {
             Action<Person, Person> personValidator = (p1, p2) =>

@@ -62,8 +62,19 @@ namespace Microsoft.Azure.Amqp.Serialization
                 AmqpType.Converted,
                 typeof(Uri),
                 typeof(DescribedType),
-                static (o, t) => new DescribedType(AmqpConstants.UriName, ((Uri)o).AbsoluteUri),
-                static (o, t) => new Uri((string)((DescribedType)o).Value));
+                static (o, t) =>
+                {
+                    Uri uri = (Uri)o;
+                    return new DescribedType(AmqpConstants.UriName, uri.IsAbsoluteUri
+                        ? uri.AbsoluteUri
+                        : uri.GetComponents(UriComponents.SerializationInfoString, UriFormat.UriEscaped));
+                },
+                static (o, t) =>
+                {
+                    string value = (string)((DescribedType)o).Value;
+                    // Preserve the legacy absolute interpretation of network and file paths.
+                    return Uri.TryCreate(value, UriKind.Absolute, out Uri uri) ? uri : new Uri(value, UriKind.Relative);
+                });
             builtInTypes[typeof(DateTimeOffset)] = new SerializableType.Converted(
                 AmqpType.Converted,
                 typeof(DateTimeOffset),

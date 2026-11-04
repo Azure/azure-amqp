@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using UTF32Encoding = System.Text.UTF32Encoding;
 
     sealed class CharEncoding : EncodingBase<char>
@@ -42,7 +43,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             {
                 if (char.IsSurrogate(array[i]))
                 {
-                    throw new ArgumentOutOfRangeException(nameof(array), ResourcesGeneric.ErrorConvertingToChar);
+                    ThrowSurrogateNotAllowed(nameof(array));
                 }
             }
 
@@ -87,7 +88,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (char.IsSurrogate(value))
             {
-                throw new ArgumentOutOfRangeException(nameof(value), ResourcesGeneric.ErrorConvertingToChar);
+                ThrowSurrogateNotAllowed(nameof(value));
             }
 
             AmqpBitConverter.WriteInt(buffer, value);
@@ -104,6 +105,12 @@ namespace Microsoft.Azure.Amqp.Encoding
 
             buffer.Complete(FixedWidth.Char);
             return array[0];
+        }
+
+        [DoesNotReturn]
+        static void ThrowSurrogateNotAllowed(string paramName)
+        {
+            throw new ArgumentOutOfRangeException(paramName, ResourcesGeneric.ErrorConvertingToChar);
         }
     }
 }

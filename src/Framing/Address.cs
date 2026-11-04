@@ -4,6 +4,7 @@
 namespace Microsoft.Azure.Amqp.Framing
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using Microsoft.Azure.Amqp.Encoding;
 
     /// <summary>
@@ -56,7 +57,8 @@ namespace Microsoft.Azure.Amqp.Framing
                 return (string)value;
             }
 
-            throw new NotSupportedException(value.GetType().ToString());
+            ThrowUnsupportedAddressType(value.GetType());
+            return null;
         }
 
         /// <summary>Encodes the address value into the buffer.</summary>
@@ -98,6 +100,12 @@ namespace Microsoft.Azure.Amqp.Framing
                 return obj is AddressString other &&
                     string.Equals(this.address, other.address, StringComparison.Ordinal);
             }
+        }
+
+        [DoesNotReturn]
+        static void ThrowUnsupportedAddressType(Type type)
+        {
+            throw new NotSupportedException(type.ToString());
         }
     }
 }

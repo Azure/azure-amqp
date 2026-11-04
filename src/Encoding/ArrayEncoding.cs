@@ -5,6 +5,7 @@ namespace Microsoft.Azure.Amqp.Encoding
 {
     using System;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
 
     sealed class ArrayEncoding : EncodingBase<Array>
     {
@@ -39,7 +40,7 @@ namespace Microsoft.Azure.Amqp.Encoding
             formatCode = AmqpEncoding.ReadFormatCode(buffer);
             if (!object.ReferenceEquals(encoding, AmqpEncoding.GetEncoding(formatCode)))
             {
-                throw new AmqpException(AmqpErrorCode.DecodeError, $"Format code '{formatCode}' is different from expected '{encoding.FormatCode}'.");
+                ThrowFormatCodeMismatch(formatCode, encoding.FormatCode);
             }
 
             return (T[])encoding.DecodeArray(buffer, formatCode, count, depth, ref totalUnboundedSize);
@@ -92,6 +93,12 @@ namespace Microsoft.Azure.Amqp.Encoding
             formatCode = AmqpEncoding.ReadFormatCode(buffer);
             EncodingBase encoding = AmqpEncoding.GetEncoding(formatCode);
             return encoding.DecodeArray(buffer, formatCode, count, depth + 1, ref totalUnboundedSize);
+        }
+
+        [DoesNotReturn]
+        static void ThrowFormatCodeMismatch(FormatCode formatCode, FormatCode expected)
+        {
+            throw new AmqpException(AmqpErrorCode.DecodeError, $"Format code '{formatCode}' is different from expected '{expected}'.");
         }
     }
 }

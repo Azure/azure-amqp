@@ -96,17 +96,17 @@ namespace Microsoft.Azure.Amqp.Framing
         {
             if (!this.NextOutgoingId.HasValue)
             {
-                throw new AmqpException(AmqpErrorCode.InvalidField, "begin.next-outgoing-id");
+                AmqpEncoding.ThrowInvalidField("begin.next-outgoing-id");
             }
 
             if (!this.IncomingWindow.HasValue)
             {
-                throw new AmqpException(AmqpErrorCode.InvalidField, "begin.incoming-window");
+                AmqpEncoding.ThrowInvalidField("begin.incoming-window");
             }
 
             if (!this.OutgoingWindow.HasValue)
             {
-                throw new AmqpException(AmqpErrorCode.InvalidField, "begin.outgoing-window");
+                AmqpEncoding.ThrowInvalidField("begin.outgoing-window");
             }
         }
 

@@ -1287,7 +1287,7 @@ namespace Microsoft.Azure.Amqp
 
             if (knownTypeCtor == null)
             {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
+                AmqpEncoding.ThrowInvalidFormatCodeException(formatCode, buffer.Offset);
             }
 
             AmqpDescribed value = knownTypeCtor();

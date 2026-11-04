@@ -73,7 +73,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (formatCode != expected)
             {
-                ThrowInvalidFormatCodeException(formatCode, offset);
+                AmqpEncoding.ThrowInvalidFormatCodeException(formatCode, offset);
             }
         }
 
@@ -82,7 +82,7 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (formatCode != expected1 && formatCode != expected2)
             {
-                ThrowInvalidFormatCodeException(formatCode, offset);
+                AmqpEncoding.ThrowInvalidFormatCodeException(formatCode, offset);
             }
         }
 
@@ -91,13 +91,8 @@ namespace Microsoft.Azure.Amqp.Encoding
         {
             if (formatCode != expected1 && formatCode != expected2 && formatCode != expected3)
             {
-                ThrowInvalidFormatCodeException(formatCode, offset);
+                AmqpEncoding.ThrowInvalidFormatCodeException(formatCode, offset);
             }
-        }
-
-        static void ThrowInvalidFormatCodeException(FormatCode formatCode, int offset)
-        {
-            throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, offset));
         }
     }
 

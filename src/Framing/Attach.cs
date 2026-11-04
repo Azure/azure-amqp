@@ -127,17 +127,17 @@ namespace Microsoft.Azure.Amqp.Framing
         {
             if (this.LinkName == null)
             {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpRequiredFieldNotSet, "name", Name));
+                AmqpEncoding.ThrowRequiredFieldNotSet("name", Name);
             }
 
             if (!this.Handle.HasValue)
             {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpRequiredFieldNotSet, "handle", Name));
+                AmqpEncoding.ThrowRequiredFieldNotSet("handle", Name);
             }
 
             if (!this.Role.HasValue)
             {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpRequiredFieldNotSet, "role", Name));
+                AmqpEncoding.ThrowRequiredFieldNotSet("role", Name);
             }
 
             ////if (!this.Role.Value && this.InitialDeliveryCount == null)

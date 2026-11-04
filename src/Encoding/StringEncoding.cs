@@ -50,7 +50,8 @@ namespace Microsoft.Azure.Amqp.Encoding
             }
             else
             {
-                throw AmqpEncoding.GetEncodingException(AmqpResources.GetString(AmqpResources.AmqpInvalidFormatCode, formatCode, buffer.Offset));
+                AmqpEncoding.ThrowInvalidFormatCodeException(formatCode, buffer.Offset);
+                length = 0;
             }
 
             buffer.ValidateRead(length);
